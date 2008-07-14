@@ -53,6 +53,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.queryParser.QueryParser.Operator;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Explanation;
@@ -108,6 +109,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.OntologyIndividual;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.OntologyTerm;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
 
@@ -127,14 +129,29 @@ import ubic.gemma.util.ReflectionUtil;
  */
 public class SearchService implements InitializingBean {
 
-    private static final double INDIRECT_DB_HIT_PENALTY = 0.8;
-
-    private static final double COMPASS_HIT_SCORE_PENALTY_FACTOR = 0.9;
+    /**
+     * Defines the properties we look at for 'highlighting'.
+     */
+    static final String[] propertiesToSearch = new String[] { "all", "name", "description",
+            "expressionExperiment.description", "expressionExperiment.name", "shortName", "abstract",
+            "expressionExperiment.bioAssays.name", "expressionExperiment.bioAssays.description", "title",
+            "expressionExperiment.experimentalDesign.experimentalFactors.name",
+            "expressionExperiment.experimentalDesign.experimentalFactors.description",
+            "expressionExperiment.primaryPublication.title", "expressionExperiment.primaryPublication.abstractText",
+            "expressionExperiment.primaryPublication.authorList",
+            "expressionExperiment.otherRelevantPublications.abstractText",
+            "expressionExperiment.otherRelevantPublications.title" };
 
     /**
-     * Global maximum number of search results that will be returned for index searches.
+     * Penalty applied to scores on hits for entities that derive from an association. For example, if a hit to an EE
+     * came from text associated with one of its biomaterials, the score is penalized by this amount.
      */
-    private static final int MAX_COMPASS_HITS_TO_DETACH = 1000;
+    private static final double INDIRECT_DB_HIT_PENALTY = 0.8;
+
+    /**
+     * Penalty applied to all 'index' hits
+     */
+    private static final double COMPASS_HIT_SCORE_PENALTY_FACTOR = 0.9;
 
     /**
      * How long an item in the cache lasts when it is not accessed.
@@ -146,8 +163,6 @@ public class SearchService implements InitializingBean {
      */
     private static final int ONTOLOGY_CACHE_TIME_TO_DIE = 2000;
 
-    Cache childTermCache;
-
     /**
      * How many term children can stay in memory
      */
@@ -158,6 +173,10 @@ public class SearchService implements InitializingBean {
     private static final int MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH = 3;
 
     private static Log log = LogFactory.getLog( SearchService.class.getName() );
+
+    Analyzer analyzer = new StandardAnalyzer();
+
+    private Cache childTermCache;
 
     private Gene2GOAssociationService gene2GOAssociationService;
 
@@ -189,15 +208,9 @@ public class SearchService implements InitializingBean {
 
     private Compass bibliographicReferenceBean;
 
-    // private Compass probeAndBioSequenceBean;
-
     private Compass biosequenceBean;
 
     private Compass probeBean;
-
-    public void setBiosequenceBean( Compass biosequenceBean ) {
-        this.biosequenceBean = biosequenceBean;
-    }
 
     /*
      * (non-Javadoc)
@@ -350,47 +363,6 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * Add results.
-     * 
-     * @param rawResults To add to
-     * @param newResults To be added
-     */
-    private void accreteResults( List<SearchResult> rawResults, Collection<SearchResult> newResults ) {
-        for ( SearchResult sr : newResults ) {
-            if ( !rawResults.contains( sr ) ) {
-                /*
-                 * We do this because we don't want to clobber results, when the same object comes up more than once in
-                 * different searches. FIXME - perhaps check if the score of the existing one is lower?
-                 */
-                rawResults.add( sr );
-            }
-        }
-    }
-
-    /**
-     * *
-     * 
-     * @param searchString
-     * @param previousGeneSearchResults Can be null, otherwise used to avoid a second search for genes. The biosequences
-     *        for the genes are added to the final results.
-     * @return
-     */
-    private Collection<SearchResult> bioSequenceSearch( SearchSettings settings,
-            Collection<SearchResult> previousGeneSearchResults ) {
-        StopWatch watch = startTiming();
-
-        Collection<SearchResult> allResults = new HashSet<SearchResult>();
-        allResults.addAll( compassBioSequenceSearch( settings, previousGeneSearchResults ) );
-        allResults.addAll( databaseBioSequenceSearch( settings ) );
-
-        watch.stop();
-        if ( watch.getTime() > 1000 )
-            log.info( "Biosequence search for '" + settings + "' took " + watch.getTime() + " ms " + allResults.size()
-                    + " results." );
-        return allResults;
-    }
-
-    /**
      * @param arrayBean the arrayBean to set
      */
     public void setArrayBean( Compass arrayBean ) {
@@ -410,6 +382,10 @@ public class SearchService implements InitializingBean {
 
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    public void setBiosequenceBean( Compass biosequenceBean ) {
+        this.biosequenceBean = biosequenceBean;
     }
 
     /**
@@ -477,6 +453,28 @@ public class SearchService implements InitializingBean {
         this.probeBean = probeBean;
     }
 
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
+    /**
+     * Add results.
+     * 
+     * @param rawResults To add to
+     * @param newResults To be added
+     */
+    private void accreteResults( List<SearchResult> rawResults, Collection<SearchResult> newResults ) {
+        for ( SearchResult sr : newResults ) {
+            if ( !rawResults.contains( sr ) ) {
+                /*
+                 * We do this because we don't want to clobber results, when the same object comes up more than once in
+                 * different searches. FIXME - perhaps check if the score of the existing one is lower?
+                 */
+                rawResults.add( sr );
+            }
+        }
+    }
+
     /**
      * A general search for array designs.
      * <p>
@@ -526,6 +524,49 @@ public class SearchService implements InitializingBean {
             log.info( "Array Design search for '" + settings + "' took " + watch.getTime() + " ms" );
 
         return results;
+    }
+
+    /**
+     * *
+     * 
+     * @param searchString
+     * @param previousGeneSearchResults Can be null, otherwise used to avoid a second search for genes. The biosequences
+     *        for the genes are added to the final results.
+     * @return
+     */
+    private Collection<SearchResult> bioSequenceSearch( SearchSettings settings,
+            Collection<SearchResult> previousGeneSearchResults ) {
+        StopWatch watch = startTiming();
+
+        Collection<SearchResult> allResults = new HashSet<SearchResult>();
+        allResults.addAll( compassBioSequenceSearch( settings, previousGeneSearchResults ) );
+        allResults.addAll( databaseBioSequenceSearch( settings ) );
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "Biosequence search for '" + settings + "' took " + watch.getTime() + " ms " + allResults.size()
+                    + " results." );
+        return allResults;
+    }
+
+    /**
+     * This is needed to unpack the highlighted text from the index. Or something like that. If we don't do this the
+     * highlighted text is always empty (last time I checked...)
+     * 
+     * @param hits
+     */
+    private Map<CompassHit, String> cacheHighlightedText( CompassHits hits ) {
+        Map<CompassHit, String> textMap = new HashMap<CompassHit, String>();
+        for ( int i = 0; i < hits.getLength(); i++ ) {
+            CompassHit hit = hits.hit( i );
+
+            // if you skip this, we get nothing for highlighted text later.
+            String text = getHighlightedText( hits, i );
+            if ( text != null ) {
+                textMap.put( hit, text );
+            }
+        }
+        return textMap;
     }
 
     /**
@@ -633,36 +674,12 @@ public class SearchService implements InitializingBean {
         Map<SearchResult, String> matchMap = new HashMap<SearchResult, String>();
 
         for ( String o : rawTerms ) {
-            log.info( "--- Search : " + o + " ----------" );
+            log.info( "Ontology search term:" + o );
             allResults.addAll( characteristicSearchWord( classes, matchMap, o ) );
         }
 
         return postProcessCharacteristicResults( query, allResults, matchMap );
 
-    }
-
-    /**
-     * @param query
-     * @return
-     */
-    private Set<String> extractTerms( String query ) {
-        Query lquer = this.makeLuceneQuery( query );
-        Set<Term> terms = new HashSet<Term>();
-        Set<String> rawTerms = new HashSet<String>();
-        if ( lquer instanceof BooleanQuery ) {
-            BooleanClause[] clauses = ( ( BooleanQuery ) lquer ).getClauses();
-            for ( BooleanClause booleanClause : clauses ) {
-                rawTerms.add( booleanClause.toString().replaceAll( "^[\\+-]", "" ) );
-            }
-        } else if ( lquer instanceof PhraseQuery ) {
-            rawTerms.add( ( ( PhraseQuery ) lquer ).toString().replaceAll( "\"", "" ) );
-        } else {
-            lquer.extractTerms( terms );
-            for ( Term term : terms ) {
-                rawTerms.add( term.text().replaceAll( "\"", "" ) );
-            }
-        }
-        return rawTerms;
     }
 
     /**
@@ -771,185 +788,6 @@ public class SearchService implements InitializingBean {
             }
         }
         return matchingCharacteristics;
-    }
-
-    /**
-     * Given classes to search and characteristics,
-     * 
-     * @param classes Which classes of entities to look for
-     * @param cs
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<SearchResult> getAnnotatedEntities( Collection<Class> classes, Collection<Characteristic> cs ) {
-
-        Map<Characteristic, Object> characterstic2entity = characteristicService.getParents( cs );
-        Collection<SearchResult> matchedEntities = filterCharacteristicOwnersByClass( classes, characterstic2entity );
-
-        if ( log.isDebugEnabled() ) {
-            debugParentFetch( characterstic2entity );
-        }
-        return matchedEntities;
-    }
-
-    /**
-     * If necessary, screen the results for the logic requested by the user. Thus, "sex AND hypothalamus" will return
-     * only results that have both terms associated with them.
-     * 
-     * @param query
-     * @param unprocessedResults
-     * @param matches Map of SearchResult to the matching String (the characteristic value, basically)
-     * @return
-     */
-    private Collection<SearchResult> postProcessCharacteristicResults( String query,
-            Collection<SearchResult> unprocessedResults, Map<SearchResult, String> matches ) {
-        Query parsedQuery = makeLuceneQuery( query );
-
-        /*
-         * 
-         */
-        // if ( parsedQuery instanceof BooleanQuery || parsedQuery instanceof PhraseQuery ) {
-        // log.info( "Query is boolean, doing fancy footwork" );
-        return doCharacteristicSearchWithLogic( matches, parsedQuery );
-        // } else {
-        /*
-         * single word.
-         */
-        // log.info( "Query is simple" );
-        // return unprocessedResults;
-        // }
-    }
-
-    /**
-     * Deals with the case where the user queried something like "hypothalamus AND sex" (without the quotes).
-     * 
-     * @param matches
-     * @param parsedQuery
-     * @return
-     */
-    private Collection<SearchResult> doCharacteristicSearchWithLogic( Map<SearchResult, String> matches,
-            Query parsedQuery ) {
-        Collection<SearchResult> results = new HashSet<SearchResult>();
-        try {
-            Map<String, Collection<SearchResult>> invertedMatches = new HashMap<String, Collection<SearchResult>>();
-            Directory idx = indexCharacteristicHits( matches, invertedMatches );
-            Searcher searcher = new IndexSearcher( idx );
-            Hits hits = searcher.search( parsedQuery );
-
-            int hitCount = hits.length();
-            /*
-             * If we got hits, it means that some of our results match... so we have to retrive the objects.
-             */
-            for ( int i = 0; i < hitCount; i++ ) {
-                Document doc = hits.doc( i );
-                String match = doc.getField( "" ).stringValue();
-                Collection<SearchResult> resultsMatching = invertedMatches.get( match );
-                if ( resultsMatching != null ) {
-                    log.debug( "All matches to '" + match + "': " + resultsMatching.size() );
-                    for ( SearchResult searchResult : resultsMatching ) {
-                        results.add( searchResult );
-                    }
-                }
-            }
-
-        } catch ( CorruptIndexException e ) {
-            throw new RuntimeException( e );
-        } catch ( LockObtainFailedException e ) {
-            throw new RuntimeException( e );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-        return results;
-    }
-
-    /**
-     * @param matches
-     * @param invertedMatches
-     * @return
-     * @throws CorruptIndexException
-     * @throws LockObtainFailedException
-     * @throws IOException
-     */
-    private RAMDirectory indexCharacteristicHits( Map<SearchResult, String> matches,
-            Map<String, Collection<SearchResult>> invertedMatches ) throws CorruptIndexException,
-            LockObtainFailedException, IOException {
-        /*
-         * make in in-memory index. See http://javatechniques.com/blog/lucene-in-memory-text-search-engine (somewhat out
-         * of date); maybe there is an easier way
-         */
-        RAMDirectory idx = new RAMDirectory();
-        IndexWriter writer = new IndexWriter( idx, this.analyzer, true );
-
-        for ( SearchResult o : matches.keySet() ) {
-            String text = matches.get( o );
-            if ( !invertedMatches.containsKey( text ) ) {
-                invertedMatches.put( text, new HashSet<SearchResult>() );
-                writer.addDocument( createDocument( text ) );
-            }
-            invertedMatches.get( text ).add( o );
-        }
-
-        writer.close();
-        return idx;
-    }
-
-    Analyzer analyzer = new StandardAnalyzer();
-
-    /**
-     * Turn query into a Lucene query.
-     * 
-     * @param query
-     * @return
-     */
-    private Query makeLuceneQuery( String query ) {
-        QueryParser parser = new QueryParser( "", this.analyzer );
-        Query parsedQuery;
-        try {
-            parsedQuery = parser.parse( query );
-        } catch ( ParseException e ) {
-            throw new RuntimeException( e );
-        }
-        return parsedQuery;
-    }
-
-    /**
-     * @param parentMap
-     */
-    private void debugParentFetch( Map<Characteristic, Object> parentMap ) {
-        /*
-         * This is purely debugging.
-         */
-        if ( parentMap.size() > 0 ) {
-            // if ( log.isDebugEnabled() ) log.debug( "Found " + parentMap.size() + " owners for
-            // characteristics:"
-            // );
-            for ( Object obj : parentMap.values() ) {
-                if ( obj instanceof Auditable ) {
-                    if ( log.isDebugEnabled() ) {
-                        // log.debug( " Owner Id: " + ( ( Auditable ) obj ).getId() + " Owner Class: " +
-                        // obj.getClass()
-                        // );
-                    }
-                } else {
-                    if ( log.isDebugEnabled() ) {
-                        // log.debug( " Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Turn a string into a Lucene-indexable document.
-     * 
-     * @param content
-     * @return
-     */
-    private Document createDocument( String content ) {
-        Document doc = new Document();
-        Field f = new Field( "", content, Field.Store.YES, Field.Index.TOKENIZED );
-        doc.add( f );
-        return doc;
     }
 
     /**
@@ -1133,6 +971,19 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * Turn a string into a Lucene-indexable document.
+     * 
+     * @param content
+     * @return
+     */
+    private Document createDocument( String content ) {
+        Document doc = new Document();
+        Field f = new Field( "", content, Field.Store.YES, Field.Index.TOKENIZED );
+        doc.add( f );
+        return doc;
+    }
+
+    /**
      * Searches the DB for array designs which have composite sequences whose names match the given search string.
      * Because of the underlying database search, this is acl aware. That is, returned array designs are filtered based
      * on access control list (ACL) permissions.
@@ -1192,34 +1043,6 @@ public class SearchService implements InitializingBean {
 
         return bioSequenceList;
     }
-
-    // /**
-    // * Does a database search for the exact string treated as a prefix.
-    // *
-    // * @param clazz Class of objects to restrict the search to (typically ExpressionExperiment.class, for example).
-    // * @param settings
-    // * @return Collection of search results for the objects owning the found characteristics, where the owner is of
-    // * class clazz
-    // */
-    // @SuppressWarnings("unchecked")
-    // private Collection<SearchResult> databaseCharacteristicSearchForOwners( Collection<Class> classes,
-    // SearchSettings settings ) {
-    //
-    // /*
-    // * Searches such as 'sex AND female' will not yield any results from findByValue, even if they are should
-    // * be successful. If the terms are in ontologies it won't matter, but if they are 'plain text' they will not.
-    // */
-    // Collection<Characteristic> characteristicValueMatches = characteristicService.findByValue( settings.getQuery()
-    // + "%" );
-    //
-    // //FIXME put this back in.
-    // Collection<Characteristic> characteristicURIMatches = characteristicService.findByUri( settings.getQuery() );
-    //
-    // Map parentMap = characteristicService.getParents( characteristicValueMatches );
-    // parentMap.putAll( characteristicService.getParents( characteristicURIMatches ) );
-    //
-    // return filterCharacteristicOwnersByClass( classes, parentMap );
-    // }
 
     /**
      * Search the DB for genes that are matched
@@ -1403,15 +1226,33 @@ public class SearchService implements InitializingBean {
         return this.dbHitsToSearchResult( entities, null );
     }
 
-    /**
-     * Convert hits from database searches into SearchResults.
-     * 
-     * @param entities
-     * @return
-     */
-    private Collection<SearchResult> dbHitsToSearchResult( Map<? extends Object, String> entities ) {
-        return this.dbHitsToSearchResult( entities, null );
-    }
+    // /**
+    // * Does a database search for the exact string treated as a prefix.
+    // *
+    // * @param clazz Class of objects to restrict the search to (typically ExpressionExperiment.class, for example).
+    // * @param settings
+    // * @return Collection of search results for the objects owning the found characteristics, where the owner is of
+    // * class clazz
+    // */
+    // @SuppressWarnings("unchecked")
+    // private Collection<SearchResult> databaseCharacteristicSearchForOwners( Collection<Class> classes,
+    // SearchSettings settings ) {
+    //
+    // /*
+    // * Searches such as 'sex AND female' will not yield any results from findByValue, even if they are should
+    // * be successful. If the terms are in ontologies it won't matter, but if they are 'plain text' they will not.
+    // */
+    // Collection<Characteristic> characteristicValueMatches = characteristicService.findByValue( settings.getQuery()
+    // + "%" );
+    //
+    // //FIXME put this back in.
+    // Collection<Characteristic> characteristicURIMatches = characteristicService.findByUri( settings.getQuery() );
+    //
+    // Map parentMap = characteristicService.getParents( characteristicValueMatches );
+    // parentMap.putAll( characteristicService.getParents( characteristicURIMatches ) );
+    //
+    // return filterCharacteristicOwnersByClass( classes, parentMap );
+    // }
 
     /**
      * Convert hits from database searches into SearchResults.
@@ -1430,6 +1271,16 @@ public class SearchService implements InitializingBean {
             results.add( esr );
         }
         return results;
+    }
+
+    /**
+     * Convert hits from database searches into SearchResults.
+     * 
+     * @param entities
+     * @return
+     */
+    private Collection<SearchResult> dbHitsToSearchResult( Map<? extends Object, String> entities ) {
+        return this.dbHitsToSearchResult( entities, null );
     }
 
     /**
@@ -1478,6 +1329,75 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * @param parentMap
+     */
+    private void debugParentFetch( Map<Characteristic, Object> parentMap ) {
+        /*
+         * This is purely debugging.
+         */
+        if ( parentMap.size() > 0 ) {
+            // if ( log.isDebugEnabled() ) log.debug( "Found " + parentMap.size() + " owners for
+            // characteristics:"
+            // );
+            for ( Object obj : parentMap.values() ) {
+                if ( obj instanceof Auditable ) {
+                    if ( log.isDebugEnabled() ) {
+                        // log.debug( " Owner Id: " + ( ( Auditable ) obj ).getId() + " Owner Class: " +
+                        // obj.getClass()
+                        // );
+                    }
+                } else {
+                    if ( log.isDebugEnabled() ) {
+                        // log.debug( " Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Deals with the case where the user queried something like "hypothalamus AND sex" (without the quotes).
+     * 
+     * @param matches
+     * @param parsedQuery
+     * @return
+     */
+    private Collection<SearchResult> doCharacteristicSearchWithLogic( Map<SearchResult, String> matches,
+            Query parsedQuery ) {
+        Collection<SearchResult> results = new HashSet<SearchResult>();
+        try {
+            Map<String, Collection<SearchResult>> invertedMatches = new HashMap<String, Collection<SearchResult>>();
+            Directory idx = indexCharacteristicHits( matches, invertedMatches );
+            Searcher searcher = new IndexSearcher( idx );
+            Hits hits = searcher.search( parsedQuery );
+
+            int hitCount = hits.length();
+            /*
+             * If we got hits, it means that some of our results match... so we have to retrive the objects.
+             */
+            for ( int i = 0; i < hitCount; i++ ) {
+                Document doc = hits.doc( i );
+                String match = doc.getField( "" ).stringValue();
+                Collection<SearchResult> resultsMatching = invertedMatches.get( match );
+                if ( resultsMatching != null ) {
+                    log.debug( "All matches to '" + match + "': " + resultsMatching.size() );
+                    for ( SearchResult searchResult : resultsMatching ) {
+                        results.add( searchResult );
+                    }
+                }
+            }
+
+        } catch ( CorruptIndexException e ) {
+            throw new RuntimeException( e );
+        } catch ( LockObtainFailedException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        return results;
+    }
+
+    /**
      * A general search for expression experiments. This search does both an database search and a compass search.
      * 
      * @param settings
@@ -1512,6 +1432,30 @@ public class SearchService implements InitializingBean {
                     + results.size() + " hits." );
 
         return results;
+    }
+
+    /**
+     * @param query
+     * @return
+     */
+    private Set<String> extractTerms( String query ) {
+        Query lquer = this.makeLuceneQuery( query );
+        Set<Term> terms = new HashSet<Term>();
+        Set<String> rawTerms = new HashSet<String>();
+        if ( lquer instanceof BooleanQuery ) {
+            BooleanClause[] clauses = ( ( BooleanQuery ) lquer ).getClauses();
+            for ( BooleanClause booleanClause : clauses ) {
+                rawTerms.add( booleanClause.toString().replaceAll( "^[\\+-]", "" ) );
+            }
+        } else if ( lquer instanceof PhraseQuery ) {
+            rawTerms.add( ( ( PhraseQuery ) lquer ).toString().replaceAll( "\"", "" ) );
+        } else {
+            lquer.extractTerms( terms );
+            for ( Term term : terms ) {
+                rawTerms.add( term.text().replaceAll( "\"", "" ) );
+            }
+        }
+        return rawTerms;
     }
 
     /**
@@ -1608,6 +1552,54 @@ public class SearchService implements InitializingBean {
             log.info( "Gene search for " + searchString + " took " + watch.getTime() + " ms; "
                     + combinedGeneList.size() + " results." );
         return combinedGeneList;
+    }
+
+    /**
+     * Given classes to search and characteristics,
+     * 
+     * @param classes Which classes of entities to look for
+     * @param cs
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> getAnnotatedEntities( Collection<Class> classes, Collection<Characteristic> cs ) {
+
+        Map<Characteristic, Object> characterstic2entity = characteristicService.getParents( cs );
+        Collection<SearchResult> matchedEntities = filterCharacteristicOwnersByClass( classes, characterstic2entity );
+
+        if ( log.isDebugEnabled() ) {
+            debugParentFetch( characterstic2entity );
+        }
+        return matchedEntities;
+    }
+
+    /**
+     * @param hits
+     * @param i
+     */
+    private String getHighlightedText( CompassHits hits, int i ) {
+
+        CompassHighlighter highlighter = hits.highlighter( i );
+
+        for ( String p : propertiesToSearch ) {
+            try {
+                String text = highlighter.fragmentsWithSeparator( p );
+                if ( text != null && StringUtils.isNotBlank( text ) ) {
+                    return text + " (" + p + ")"; // note we don't actually use this.
+                }
+            } catch ( SearchEngineException e ) {
+                // no big deal - we asked for a property it doesn't have. Must be a
+                // better way...
+                // log.debug( e );
+            } catch ( IllegalArgumentException e ) {
+                log.debug( e ); // can be useful for debugging properties searched.
+                // again, the property isn't in the compass bean, ignore.
+            }
+        }
+
+        // Explanation exp = LuceneHelper.getLuceneSearchEngineHits( hits ).explain( i );
+        // log.info( hits.data( i ) + " " + exp.toString() );
+        return null;
     }
 
     /**
@@ -1749,6 +1741,65 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * @param matches
+     * @param invertedMatches
+     * @return
+     * @throws CorruptIndexException
+     * @throws LockObtainFailedException
+     * @throws IOException
+     */
+    private RAMDirectory indexCharacteristicHits( Map<SearchResult, String> matches,
+            Map<String, Collection<SearchResult>> invertedMatches ) throws CorruptIndexException,
+            LockObtainFailedException, IOException {
+        /*
+         * make in in-memory index. See http://javatechniques.com/blog/lucene-in-memory-text-search-engine (somewhat out
+         * of date); maybe there is an easier way
+         */
+        RAMDirectory idx = new RAMDirectory();
+        IndexWriter writer = new IndexWriter( idx, this.analyzer, true );
+
+        for ( SearchResult o : matches.keySet() ) {
+            String text = matches.get( o );
+            if ( !invertedMatches.containsKey( text ) ) {
+                invertedMatches.put( text, new HashSet<SearchResult>() );
+                writer.addDocument( createDocument( text ) );
+            }
+            invertedMatches.get( text ).add( o );
+        }
+
+        writer.close();
+        return idx;
+    }
+
+    /**
+     * Turn query into a Lucene query.
+     * 
+     * @param query
+     * @return
+     */
+    private Query makeLuceneQuery( String query ) {
+        QueryParser parser = new QueryParser( "", this.analyzer );
+        QueryParser.Operator defaultOperator = null;
+        String sDefaultOperator = ConfigUtils.getDefaultSearchOperator();
+        if ( sDefaultOperator.equalsIgnoreCase( ( "or" ) ) ) {
+            defaultOperator = QueryParser.OR_OPERATOR;
+        } else if ( sDefaultOperator.equalsIgnoreCase( ( "and" ) ) ) {
+            defaultOperator = QueryParser.AND_OPERATOR;
+        } else {
+            throw new IllegalArgumentException( "Unknown defaultOperator: " + sDefaultOperator
+                    + ", only OR and AND are supported" );
+        }
+        parser.setDefaultOperator( defaultOperator );
+        Query parsedQuery;
+        try {
+            parsedQuery = parser.parse( query );
+        } catch ( ParseException e ) {
+            throw new RuntimeException( e );
+        }
+        return parsedQuery;
+    }
+
+    /**
      * Attempts to find an exact match for the search term in the characteristic table (by value and value URI). If the
      * search term is found then uses that URI to find the parents and returns them as SearchResults.
      * 
@@ -1801,25 +1852,11 @@ public class SearchService implements InitializingBean {
         CompassHits hits = compassQuery.hits();
 
         watch.stop();
-        if ( watch.getTime() > 1000 )
+        if ( watch.getTime() > 1000 ) {
             log.info( "Getting " + hits.getLength() + " hits for " + query + " took " + watch.getTime() + " ms" );
-        watch.reset();
-        watch.start();
+        }
 
         cacheHighlightedText( hits );
-
-        // Put a limit on the number of hits to detach.
-        // Detaching hits can be time consuming (somewhat like thawing).
-
-        // CompassDetachedHits detachedHits = hits.detach( 0, Math.min( hits.getLength(), MAX_COMPASS_HITS_TO_DETACH )
-        // );
-
-        watch.stop();
-
-        // if ( watch.getTime() > 1000 ) {
-        // log.info( "Detaching " + detachedHits.getLength() + " hits for " + query + " took " + watch.getTime()
-        // + " ms" );
-        // }
 
         Collection<SearchResult> searchResults = getSearchResults( hits );
 
@@ -1827,65 +1864,18 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * This is needed to unpack the highlighted text from the index. Or something like that. If we don't do this the
-     * highlighted text is always empty (last time I checked...)
+     * If necessary, screen the results for the logic requested by the user. Thus, "sex AND hypothalamus" will return
+     * only results that have both terms associated with them.
      * 
-     * @param hits
+     * @param query
+     * @param unprocessedResults
+     * @param matches Map of SearchResult to the matching String (the characteristic value, basically)
+     * @return
      */
-    private Map<CompassHit, String> cacheHighlightedText( CompassHits hits ) {
-        Map<CompassHit, String> textMap = new HashMap<CompassHit, String>();
-        for ( int i = 0; i < hits.getLength(); i++ ) {
-            CompassHit hit = hits.hit( i );
-
-            // if you skip this, we get nothing for highlighted text later.
-            String text = getHighlightedText( hits, i );
-            if ( text != null ) {
-                textMap.put( hit, text );
-            }
-        }
-        return textMap;
-    }
-
-    /**
-     * Defines the properties we look at for 'highlighting'.
-     */
-    static final String[] propertiesToSearch = new String[] { "all", "name", "description",
-            "expressionExperiment.description", "expressionExperiment.name", "shortName", "abstract",
-            "expressionExperiment.bioAssays.name", "expressionExperiment.bioAssays.description", "title",
-            "expressionExperiment.experimentalDesign.experimentalFactors.name",
-            "expressionExperiment.experimentalDesign.experimentalFactors.description",
-            "expressionExperiment.primaryPublication.title", "expressionExperiment.primaryPublication.abstractText",
-            "expressionExperiment.primaryPublication.authorList",
-            "expressionExperiment.otherRelevantPublications.abstractText",
-            "expressionExperiment.otherRelevantPublications.title" };
-
-    /**
-     * @param hits
-     * @param i
-     */
-    private String getHighlightedText( CompassHits hits, int i ) {
-
-        CompassHighlighter highlighter = hits.highlighter( i );
-
-        for ( String p : propertiesToSearch ) {
-            try {
-                String text = highlighter.fragmentsWithSeparator( p );
-                if ( text != null && StringUtils.isNotBlank( text ) ) {
-                    return text + " (" + p + ")"; // note we don't actually use this.
-                }
-            } catch ( SearchEngineException e ) {
-                // no big deal - we asked for a property it doesn't have. Must be a
-                // better way...
-                // log.debug( e );
-            } catch ( IllegalArgumentException e ) {
-                log.debug( e ); // can be useful for debugging properties searched.
-                // again, the property isn't in the compass bean, ignore.
-            }
-        }
-
-        Explanation exp = LuceneHelper.getLuceneSearchEngineHits( hits ).explain( i );
-        log.info( hits.data( i ) + " " + exp.toString() );
-        return null;
+    private Collection<SearchResult> postProcessCharacteristicResults( String query,
+            Collection<SearchResult> unprocessedResults, Map<SearchResult, String> matches ) {
+        Query parsedQuery = makeLuceneQuery( query );
+        return doCharacteristicSearchWithLogic( matches, parsedQuery );
     }
 
     /**
@@ -1919,10 +1909,6 @@ public class SearchService implements InitializingBean {
         StopWatch watch = new StopWatch();
         watch.start();
         return watch;
-    }
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
 }

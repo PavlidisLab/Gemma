@@ -7,28 +7,36 @@
 	</h1>
 
 	<h2>
-		Search terms
+		Search sytax
 	</h2>
 
 	<p>
-		Search terms can be free text ("liver"), gene symbols ("ACAT1") or other accession numbers for specific experiments or
-		probes. Here are some more complicated examples:
+		Search terms can be free text ("
+		<a href="/Gemma/searcher.html?query=liver">liver</a>"), gene symbols ("
+		<a href="/Gemma/searcher.html?query=ACAT1">ACAT1</a>") or other accession numbers for specific experiments or probes.
+		Here are some more complicated examples to explain query logic:
 	<ul class='plainlist'>
 		<li>
-			female AND cortex - Inteserction of items matching terms. Note that 'AND' must be capitalized
+			<a href="/Gemma/searcher.html?query=female%20%20cortex&scope=E">female cortex</a> - Union of items matching either
+			terms; alterantively you can use
+			<a href="/Gemma/searcher.html?query=female%20OR%20cortex&scope=E">female OR cortex</a> .
 		</li>
 		<li>
-			female -cortex - Exclusion
+			<a href="/Gemma/searcher.html?query=female%20AND%20cortex&scope=E">female AND cortex</a> - Inteserction of items
+			matching terms. Note that 'AND' must be capitalized.
 		</li>
 		<li>
-			"cerebral cortex" - search for a phrase.
+			<a href="/Gemma/searcher.html?query=female%20-cortex&scope=E">female -cortex</a> - Exclusion.
+		</li>
+		<li>
+			<a href="/Gemma/searcher.html?query=%22cerebral%20cortex%22&scope=E">"cerebral cortex"</a> - search for a phrase.
 		</li>
 	</ul>
 
 
 	For detailed information on the supported query syntax see
-	<a href="http://lucene.apache.org/java/docs/queryparsersyntax.html">this page</a>, which refers to 'Lucene', the search
-	engine employed by Gemma.
+	<a href="http://lucene.apache.org/java/docs/queryparsersyntax.html">this page</a>, which refers to '
+	<a href="http://lucene.apache.org/">Lucene</a>', the search engine employed by Gemma.
 
 	</p>
 
@@ -80,8 +88,8 @@
 
 	<p>
 		Each category of search result is presented separately in the table. A link is provided to a detailed view of each
-		result items. A separate columns shows the text that matched your query, if available (this will not be shown for
-		searches of exact symbols like Genbank identifiers).
+		result items. If available, the text that your query matched will be shown below the results (hide/show the details
+		using the button on the top of the results table).
 	</p>
 	<p>
 		Note that results are limited to 500 items.
@@ -104,5 +112,32 @@
 		The alternative, of searching for 'probes' with the gene symbol, will yield less precise results.
 	</p>
 
+	<h2>
+		Technical details
+	</h2>
+	<p>
+		Gemma actually employs three different types of searches and combines the results.
+	</p>
+	<ul class="plainlist">
+		<li>
+			Database search - The query term entered is searched against fields in the Gemma database for exact matches. This is
+			how queries for Genbank identifiers are handled.
+		</li>
+		<li>
+			Full text search - Gemma indexes free text such as PubMed abstracts associated with data setts or descriptive text
+			from GEO entries. These queries use
+			<a href="http://lucene.apache.org/">Lucene</a> through a
+			<a href="http://www.compass-project.org/">Compass</a> interface.
+		</li>
+		<li>
+			Structured annotation search - Search terms are looked for in ontologies using
+			<a href="http://jena.sourceforge.net/ARQ/lucene-arq.html">LARQ</a>. Entities in Gemma which are annotated with the
+			returned terms (or subclasses of the returned terms) are returned after the logic of the user's query is applied. For
+			example, '
+			<a href="/Gemma/searcher.html?query=cortex%20AND%20lung&scope=E">cortex AND lung</a>' will only return datasets which
+			are annotated with an ontology term related to 'cortex' and also annotated with a term related to 'lung'. (By
+			related, meaning either the term or a subclass; thus 'cortex' also returns 'hippocampus').
+		</li>
+	</ul>
 
 </body>

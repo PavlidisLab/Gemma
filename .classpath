@@ -226,9 +226,25 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/jawr/jawr/2.4.1/jawr-2.4.1.jar" sourcepath="/JAR_SOURCE/jawr/src/main/java"/>
-	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-core/2.3.2/lucene-core-2.3.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-analyzers/2.3.2/lucene-analyzers-2.3.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-highlighter/2.3.2/lucene-highlighter-2.3.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-snowball/2.3.2/lucene-snowball-2.3.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-core/2.3.2/lucene-core-2.3.2.jar" sourcepath="/JAR_SOURCE/lucene-2.3.2/src/java">
+		<attributes>
+			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-analyzers/2.3.2/lucene-analyzers-2.3.2.jar" sourcepath="/JAR_SOURCE/lucene-2.3.2/contrib/analyzers/src/java">
+		<attributes>
+			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-highlighter/2.3.2/lucene-highlighter-2.3.2.jar" sourcepath="/JAR_SOURCE/lucene-2.3.2/contrib/highlighter/src/java">
+		<attributes>
+			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-snowball/2.3.2/lucene-snowball-2.3.2.jar" sourcepath="/JAR_SOURCE/lucene-2.3.2/contrib/snowball/src/java">
+		<attributes>
+			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>

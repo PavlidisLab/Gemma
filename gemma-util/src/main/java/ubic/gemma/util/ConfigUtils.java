@@ -593,4 +593,13 @@ public class ConfigUtils {
         return getString( "gemma.admin.email" );
     }
 
+    /**
+     * The default value given if none is defined is AND.
+     * 
+     * @return
+     */
+    public static String getDefaultSearchOperator() {
+        return getString( "gemma.search.defaultOperator", "AND" );
+    }
+
 }
