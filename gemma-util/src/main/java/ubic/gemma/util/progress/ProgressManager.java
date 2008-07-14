@@ -16,6 +16,7 @@
 
 package ubic.gemma.util.progress;
 
+import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
@@ -105,9 +106,14 @@ public class ProgressManager {
         if ( ( currentJob.get() == null ) || ( progressJobsByTaskId.get( currentJob.get() ) == null ) ) {
             JobInfo jobI = createnewJobInfo( taskId, userId, description );
 
-            JobInfo createdJobI = jobInfoDao.create( jobI );
+            try {
+                JobInfo createdJobI = jobInfoDao.create( jobI );
+                newJob = new ProgressJobImpl( createdJobI, description );
+            } catch ( Exception e ) {
+                log.warn( "Unable to create jobinfo in database: " + e );
+                newJob = new ProgressJobImpl( jobI, description );
 
-            newJob = new ProgressJobImpl( createdJobI, description );
+            }
 
             currentJob.set( taskId );
 
@@ -349,7 +355,11 @@ public class ProgressManager {
         progressJob.done();
 
         currentJob.set( null );
-        jobInfoDao.update( progressJob.getJobInfo() );
+        try {
+            jobInfoDao.update( progressJob.getJobInfo() );
+        } catch ( RuntimeException e ) {
+            log.warn( "Could not update jobinfo :" + e );
+        }
         return true;
     }
 
