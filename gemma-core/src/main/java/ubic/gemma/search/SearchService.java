@@ -55,6 +55,7 @@ import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.PhraseQuery;
@@ -76,6 +77,7 @@ import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
 import org.compass.core.engine.SearchEngineException;
+import org.compass.core.lucene.util.LuceneHelper;
 import org.springframework.beans.factory.InitializingBean;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
@@ -631,6 +633,7 @@ public class SearchService implements InitializingBean {
         Map<SearchResult, String> matchMap = new HashMap<SearchResult, String>();
 
         for ( String o : rawTerms ) {
+            log.info( "--- Search : " + o + " ----------" );
             allResults.addAll( characteristicSearchWord( classes, matchMap, o ) );
         }
 
@@ -649,7 +652,7 @@ public class SearchService implements InitializingBean {
         if ( lquer instanceof BooleanQuery ) {
             BooleanClause[] clauses = ( ( BooleanQuery ) lquer ).getClauses();
             for ( BooleanClause booleanClause : clauses ) {
-                rawTerms.add( booleanClause.toString() );
+                rawTerms.add( booleanClause.toString().replaceAll( "^[\\+-]", "" ) );
             }
         } else if ( lquer instanceof PhraseQuery ) {
             rawTerms.add( ( ( PhraseQuery ) lquer ).toString().replaceAll( "\"", "" ) );
@@ -843,7 +846,9 @@ public class SearchService implements InitializingBean {
                 Collection<SearchResult> resultsMatching = invertedMatches.get( match );
                 if ( resultsMatching != null ) {
                     log.debug( "All matches to '" + match + "': " + resultsMatching.size() );
-                    results.addAll( resultsMatching );
+                    for ( SearchResult searchResult : resultsMatching ) {
+                        results.add( searchResult );
+                    }
                 }
             }
 
@@ -1747,6 +1752,8 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * Runs inside Compass transaction
+     * 
      * @param query
      * @param session
      * @return
@@ -1807,56 +1814,44 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * Defines the properties we look at for 'highlighting'.
+     */
+    static final String[] propertiesToSearch = new String[] { "name", "description",
+            "expressionExperiment.description", "expressionExperiment.name", "shortName", "abstract",
+            "expressionExperiment.bioAssays.name", "expressionExperiment.bioAssays.description", "title",
+            "expressionExperiment.experimentalDesign.experimentalFactors.name",
+            "expressionExperiment.experimentalDesign.experimentalFactors.description",
+            "expressionExperiment.primaryPublication.title", "expressionExperiment.primaryPublication.abstractText",
+            "expressionExperiment.primaryPublication.authorList",
+            "expressionExperiment.otherRelevantPublications.abstractText",
+            "expressionExperiment.otherRelevantPublications.title", "arrayDesign.designProvider.name",
+            "arrayDesign.alternateNames.name" };
+
+    /**
      * @param hits
      * @param i
      */
     private String getHighlightedText( CompassHits hits, int i ) {
+
         CompassHighlighter highlighter = hits.highlighter( i );
-        String text = null;
-        try {
-            text = highlighter.fragment( "description" );
-            if ( text != null ) {
-                return text;
+
+        for ( String p : propertiesToSearch ) {
+            try {
+                String text = highlighter.fragment( p );
+                if ( text != null ) {
+                    return text + " (" + p + ")"; // note we don't actually use this.
+                }
+            } catch ( SearchEngineException e ) {
+                // no big deal - we asked for a property it doesn't have. Must be a
+                // better way...
+            } catch ( IllegalArgumentException e ) {
+                // log.debug( e ); // can be useful for debugging properties searched.
+                // again, the property isn't in the compass bean, ignore.
             }
-        } catch ( SearchEngineException e ) {
-            // no big deal - we asked for a property it doesn't have. Must be a
-            // better way...
         }
 
-        try {
-            text = highlighter.fragment( "name" );
-            if ( text != null ) {
-                return text;
-            }
-        } catch ( SearchEngineException e ) {
-            // no big deal - we asked for a property it doesn't have. Must be a
-            // better way...
-        }
-
-        try {
-            text = highlighter.fragment( "shortName" );
-            if ( text != null ) {
-                return text;
-            }
-        } catch ( SearchEngineException e ) {
-            // no big deal - we asked for a property it doesn't have. Must be a better way...
-        }
-        try {
-            text = highlighter.fragment( "title" );
-            if ( text != null ) {
-                return text;
-            }
-        } catch ( SearchEngineException e ) {
-            // no big deal - we asked for a property it doesn't have. Must be a better way...
-        }
-        try {
-            text = highlighter.fragment( "abstract" );
-            if ( text != null ) {
-                return text;
-            }
-        } catch ( SearchEngineException e ) {
-            // no big deal - we asked for a property it doesn't have. Must be a better way...
-        }
+        // Explanation exp = LuceneHelper.getLuceneSearchEngineHits( hits ).explain( i );
+        // log.info( hits.detach( i, 1 ).getDatas()[0] + " " + exp.toString() );
         return null;
     }
 

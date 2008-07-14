@@ -1,58 +1,43 @@
 <?xml version="1.0"?>
 <!DOCTYPE compass-core-mapping PUBLIC
-    "-//Compass/Compass Core Mapping DTD 1.0//EN"
-    "http://www.opensymphony.com/compass/dtd/compass-core-mapping.dtd">
-
+    "-//Compass/Compass Core Mapping DTD 2.0//EN"
+    "http://www.compass-project.org/dtd/compass-core-mapping-2.1.dtd">
 <!--
 	This document is a Compass mapping file, allowing the Gemma objects to be 
-	indexed and searched.  All "searchable" expression experiment attributes 
+	indexed and searched.  All "searchable"  attributes 
 	(as well as associations) should be included here.
 	
 	author: klc
 	version: $Id$
 -->
-
 <compass-core-mapping package="ubic.gemma.model">
-	
 	<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign" root="true">
-		
-		<id name="id"/>
-		
+		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>
 			<meta-data>array design name</meta-data>
 		</property>
-		
 		<property name="description">
 			<meta-data>description</meta-data>
 			<meta-data>array design description</meta-data>
 		</property>
-		
 		<property name="shortName">
 			<meta-data>shortName</meta-data>
 			<meta-data>array design short name</meta-data>
 		</property>
-		
-		<component name="designProvider" ref-alias="contact"/>
+		<component name="designProvider" ref-alias="contact" />
 		<component name="alternateNames" ref-alias="alternateName" />
 	</class>
-	
 	<class name="common.auditAndSecurity.ContactImpl" alias="contact" root="false">
-		
-		<id name="id"/>
-		
+		<id name="id" />
 		<property name="name">
 			<meta-data store="no">name</meta-data>
 		</property>
-		
 	</class>
 	<class name="expression.arrayDesign.AlternateNameImpl" alias="alternateName" root="false">
-		
-		<id name="id"/>
-		
+		<id name="id" />
 		<property name="name">
 			<meta-data store="no">name</meta-data>
 		</property>
-		
 	</class>
 </compass-core-mapping>

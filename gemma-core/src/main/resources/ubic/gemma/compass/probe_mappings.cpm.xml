@@ -1,11 +1,10 @@
 <?xml version="1.0"?>
 <!DOCTYPE compass-core-mapping PUBLIC
-    "-//Compass/Compass Core Mapping DTD 1.0//EN"
-    "http://www.opensymphony.com/compass/dtd/compass-core-mapping.dtd">
-
+    "-//Compass/Compass Core Mapping DTD 2.0//EN"
+    "http://www.compass-project.org/dtd/compass-core-mapping-2.1.dtd">
 <!--
 	This document is a Compass mapping file, allowing the Gemma objects to be 
-	indexed and searched.  All "searchable" expression experiment attributes 
+	indexed and searched.  All "searchable" attributes 
 	(as well as associations) should be included here.
 	
 	author: klc
@@ -13,16 +12,16 @@
 -->
 <compass-core-mapping package="ubic.gemma.model">
 	<class name="expression.designElement.CompositeSequenceImpl" alias="compositeSequence" root="true">
-		<id name="id"/>
+		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>
 		</property>
 		<property name="description">
 			<meta-data>description</meta-data>
 		</property>
-		<component name="arrayDesign" ref-alias="arrayDesign"/>
+		<component name="arrayDesign" ref-alias="arrayDesign" />
 	</class>
 	<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign" root="false">
-		<id name="id"/>
+		<id name="id" />
 	</class>
 </compass-core-mapping>

@@ -155,14 +155,11 @@
 			<attribute name="javadoc_location" value="http://people.apache.org/~andyc/neko/doc/html/javadoc/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/compass/compass/2.0M3/compass-2.0M3.jar"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-core/2.3.1/lucene-core-2.3.1.jar" sourcepath="/JAR_SOURCE/lucene-2.0.0/src/java"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-analyzers/2.3.1/lucene-analyzers-2.3.1.jar">
+	<classpathentry kind="var" path="M2_REPO/compass/compass/2.1.0-M1/compass-2.1.0-M1.jar" sourcepath="/JAR_SOURCE/compass-2.1.0-M1-src.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_1/api/"/>
+			<attribute name="javadoc_location" value="http://www.compass-project.org/docs/2.1.0M1/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-highlighter/2.3.1/lucene-highlighter-2.3.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/dumbster/dumbster/1.6/dumbster-1.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/velocity-tools/velocity-tools-view/1.0/velocity-tools-view-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jtidy/jtidy/4aug2000r7-dev/jtidy-4aug2000r7-dev.jar">
@@ -228,7 +225,10 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3.jar"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-snowball/2.3.1/lucene-snowball-2.3.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/jawr/jawr/2.4.1/jawr-2.4.1.jar" sourcepath="/JAR_SOURCE/jawr/src/main/java"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-core/2.3.2/lucene-core-2.3.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-analyzers/2.3.2/lucene-analyzers-2.3.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-highlighter/2.3.2/lucene-highlighter-2.3.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-snowball/2.3.2/lucene-snowball-2.3.2.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
