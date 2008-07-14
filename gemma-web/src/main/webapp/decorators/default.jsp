@@ -21,6 +21,7 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/CompositeSequenceController.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/CustomCompassIndexController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>
