@@ -46,8 +46,9 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 			this.clearMessages();
 			this.selected = eeSet;
 			if (eeSet && eeSet.store.getSelected().get("taxonId")) {
-				var taxon = {id : eeSet.store.getSelected().get("taxonId"),
-							 name: eeSet.store.getSelected().get("taxonName")
+				var taxon = {
+					id : eeSet.store.getSelected().get("taxonId"),
+					name : eeSet.store.getSelected().get("taxonName")
 				}
 				this.taxonChanged(taxon);
 			}
@@ -60,14 +61,14 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 				if (msg.length === 0) {
 					// FIXME add the eeids if the eesetid is -1.
 					var eeSetId = this.selected.get("id");
-					var eeIds = this.selected.get("expressionExperimentIds")
-							.join(",");
-					document.location.href = String
-							.format(
-									"/Gemma/searchCoexpression.html?g={0}&a={1}&s={2}&ees={3}&t={4}",
-									this.geneCombo.getValue(), eeSetId,
-									this.stringencyField.getValue(), eeIds,
-									this.geneCombo.getTaxon().id);
+					var eeIds = this.selected.get("expressionExperimentIds").join(",");
+					if (pageTracker) {
+						pageTracker._trackPageview("/Gemma/coexpressionSearch.doLiteSearch");
+					}
+					document.location.href = String.format(
+							"/Gemma/searchCoexpression.html?g={0}&a={1}&s={2}&ees={3}&t={4}",
+							this.geneCombo.getValue(), eeSetId, this.stringencyField.getValue(), eeIds, this.geneCombo
+									.getTaxon().id);
 				} else {
 					this.handleError(msg);
 				}
@@ -76,7 +77,7 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 
 		this.add(this.stringencyField);
 		this.add(this.eeSetCombo);
-		this.add(this.geneCombo);		
+		this.add(this.geneCombo);
 		this.addButton(submitButton);
 	},
 
@@ -96,8 +97,7 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 	},
 
 	render : function(container, position) {
-		Gemma.CoexpressionSearchFormLite.superclass.render.apply(this,
-				arguments);
+		Gemma.CoexpressionSearchFormLite.superclass.render.apply(this, arguments);
 
 		// initialize from state
 		if (this.csc) {
@@ -108,8 +108,7 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 	getCoexpressionSearchCommand : function() {
 		var csc = {
 			geneIds : [this.geneCombo.getValue()],
-			analysisId : this.eeSetChooserPanel.getSelected().get("id")
-					.getValue(),
+			analysisId : this.eeSetChooserPanel.getSelected().get("id").getValue(),
 			stringency : this.stringencyField.getValue()
 		};
 		return csc;
