@@ -64,6 +64,7 @@ import ubic.gemma.util.TaxonUtility;
  */
 public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
+    private static final int MAX_RESULTS = 100;
     private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
 
     /*
@@ -142,6 +143,19 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         final String query = "select count(*) from GeneImpl";
         List r = getHibernateTemplate().find( query );
         return ( Integer ) r.iterator().next();
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(int, java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    @Override
+    public java.util.Collection findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
+        final String query = "from GeneImpl g where g.officialSymbol like :officialSymbol order by g.officialSymbol";
+        org.hibernate.Query queryObject = this.getSession( false ).createQuery( query );
+        queryObject.setParameter( "officialSymbol", officialSymbol );
+        queryObject.setMaxResults( MAX_RESULTS );
+        return queryObject.list();
     }
 
     /**
