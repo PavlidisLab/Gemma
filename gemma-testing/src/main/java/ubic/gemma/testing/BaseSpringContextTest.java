@@ -45,6 +45,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -83,6 +85,7 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
 
     protected TestPersistentObjectHelper testHelper;
     protected PersisterHelper persisterHelper;
+    protected TaxonService taxonService;
 
     HibernateDaoSupport hibernateSupport = new HibernateDaoSupport() {
     };
@@ -121,6 +124,14 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      */
     public void flushSession() {
         hibernateSupport.getHibernateTemplate().flush();
+    }
+
+    /**
+     * @param commonName e.g. mouse,human,rat
+     * @return
+     */
+    public Taxon getTaxon( String commonName ) {
+        return this.taxonService.findByCommonName( commonName );
     }
 
     /**
@@ -488,6 +499,10 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      */
     public ConfigurableApplicationContext getContext() {
         return this.context;
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
 }

@@ -29,6 +29,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -54,6 +55,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         super.onSetUpInTransaction();
 
         this.analysisService = ( DifferentialExpressionAnalysisService ) getBean( "differentialExpressionAnalysisService" );
+        Taxon mouse = this.getTaxon( "mouse" );
 
         ExpressionExperimentSetDao expressionExperimentSetDao = ( ExpressionExperimentSetDao ) getBean( "expressionExperimentSetDao" );
 
@@ -71,6 +73,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
         ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet.setTaxon( mouse );
         eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
 
         eeSet.getExperiments().add( e1 );
@@ -82,6 +85,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
         eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet.setTaxon( mouse );
         eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
         eeSet.getExperiments().add( e1 );
         eeSet.getExperiments().add( e2 );
@@ -93,6 +97,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
         eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet.setTaxon( mouse );
         eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
         eeSet.getExperiments().add( e1 );
         eeSet.getExperiments().add( e2 );
@@ -105,6 +110,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
         eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet.setTaxon( mouse );
         eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
         eeSet.getExperiments().add( e1 );
         eeSet.getExperiments().add( e2 );

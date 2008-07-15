@@ -28,6 +28,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -66,8 +67,10 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
 
         ProbeCoexpressionAnalysis analysis = ProbeCoexpressionAnalysis.Factory.newInstance();
         analysis.setName( "foo" );
+        Taxon mouse = this.getTaxon( "mouse" );
         ExpressionExperimentSet se = ExpressionExperimentSet.Factory.newInstance();
         se.getExperiments().add( ee );
+        se.setTaxon( mouse );
         se.setName( "bar" );
         analysis.setExpressionExperimentSetAnalyzed( se );
 
