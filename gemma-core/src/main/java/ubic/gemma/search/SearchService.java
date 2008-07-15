@@ -60,6 +60,7 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.store.Directory;
@@ -1149,7 +1150,6 @@ public class SearchService implements InitializingBean {
             result = geneService.findByAccession( searchString, null );
             if ( result != null ) {
                 results.add( this.dbHitToSearchResult( null, result ) );
-
             }
         }
         if ( results.size() > 0 ) {
@@ -1449,6 +1449,8 @@ public class SearchService implements InitializingBean {
             }
         } else if ( lquer instanceof PhraseQuery ) {
             rawTerms.add( ( ( PhraseQuery ) lquer ).toString().replaceAll( "\"", "" ) );
+        } else if ( lquer instanceof PrefixQuery ) {
+            rawTerms.add( ( ( PrefixQuery ) lquer ).getPrefix().field() );
         } else {
             lquer.extractTerms( terms );
             for ( Term term : terms ) {

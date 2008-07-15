@@ -118,14 +118,14 @@ Gemma.Search.app = function() {
 			});
 
 			if (pageTracker) {
-				pageTracker._trackPageview("/Gemma/searcher.search?query=" + query + scopes);
+				pageTracker._trackPageview("/Gemma/searcher.search?query=" + escape(query) + scopes);
 			}
 
 			Ext.DomHelper.overwrite('messages', "");
 			this.form.findById('submit-button').setDisabled(true);
 			Ext.DomHelper.overwrite('search-bookmark', {
 				tag : 'a',
-				href : "/Gemma/searcher.html?query=" + query + scopes,
+				href : "/Gemma/searcher.html?query=" + escape(query) + scopes,
 				html : 'Bookmarkable link'
 			});
 		}
@@ -345,7 +345,9 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 	stripeRows : true,
 	collapsible : false,
 	title : "Search results",
-
+	selModel : new Ext.grid.RowSelectionModel({
+		singleSelect : true
+	}),
 	record : Ext.data.Record.create([{
 		name : "score",
 		type : "float"
@@ -372,6 +374,54 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		view.refresh();
 	},
 
+	getSearchFun : function(text) {
+		var value = new RegExp(Ext.escapeRe(text), 'i');
+		return function(r, id) {
+			var highlightedText = r.get("highlightedText");
+
+			if (value.test(highlightedText)) {
+				return true;
+			}
+
+			var clazz = r.get("resultClass");
+			var obj = r.data.resultObject;
+			if (clazz == "ExpressionExperimentValueObject") {
+				return value.test(obj.shortName) || value.test(obj.name);
+			} else if (clazz == "CompositeSequence") {
+				return value.test(obj.name) || value.test(obj.description) || value.test(obj.arrayDesign.shortName);
+			} else if (clazz == "ArrayDesignValueObject") {
+				return value.test(obj.name) || value.test(obj.description);
+			} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
+				return value.test(obj.name) || value.test(obj.description) || value.test(obj.taxon.commonName);
+			} else if (clazz == "Gene" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
+				return value.test(obj.name) || value.test(obj.officialSymbol) || value.test(obj.officialName)
+						|| value.test(obj.taxon.commonName);
+			} else {
+				return false;
+			}
+		}
+	},
+
+	searchForText : function(button, keyev) {
+		var text = Ext.getCmp('search-in-grid').getValue();
+		if (text.length < 3) {
+			this.getStore().clearFilter();
+			// this.getSelectionModel().clearSelections();
+			return;
+		}
+		this.getStore().filterBy(this.getSearchFun(text), this, 0);
+		// console.log(index);
+		// if (index > -1) {
+		// console.log("Search: " + text);
+		// this.getSelectionModel().selectRow(index);
+		// this.getView().focusRow(index);
+		// Ext.getCmp('search-in-grid').focus(false);
+		// } else {
+		// this.getView().scrollToTop();
+		// this.getSelectionModel().clearSelections();
+		// }
+	},
+
 	initComponent : function() {
 		var proxy = new Ext.data.DWRProxy(SearchService.search);
 
@@ -382,13 +432,30 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 				items : [{
 					pressed : true,
 					enableToggle : true,
-					text : 'Show details',
+					text : 'Toggle details',
+					tooltip : "Click to show/hide details for results",
 					cls : 'x-btn-text-icon details',
 					toggleHandler : this.toggleDetails.createDelegate(this)
+				}, ' ', ' ', {
+					xtype : 'textfield',
+					id : 'search-in-grid',
+					tabIndex : 1,
+					enableKeyEvents : true,
+					emptyText : 'Find in results',
+					listeners : {
+						"keyup" : {
+							fn : this.searchForText.createDelegate(this),
+							scope : this,
+							options : {
+								delay : 100
+							}
+						}
+					}
 				}]
 			}),
 			view : new Ext.grid.GroupingView({
 				enableRowBody : true,
+				showPreview : true,
 				getRowClass : function(record, index, p, store) {
 					if (this.showPreview) {
 						p.body = "<p class='search-result-body' >" + record.get("highlightedText") + "</p>"; // typo.css
