@@ -19,8 +19,11 @@ Gemma.PagingDataStore = Ext.extend(Ext.data.Store, {
 	},
 
 	getRange : function(start, end) {
-		var windowStart = this.currentStartIndex + start;
-		var windowEnd =  this.currentStartIndex + end;
+		
+		//needed incase start or end is null
+		var windowStart = start ? this.currentStartIndex + start:  this.currentStartIndex;
+		var windowEnd =  end ? this.currentStartIndex + end:  this.getTotalCount();
+		
 		if (windowEnd > this.currentStartIndex + this.pageSize - 1) {
 			windowEnd = this.currentStartIndex + this.pageSize - 1;
 		}
