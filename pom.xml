@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
@@ -23,7 +24,7 @@
 		<connection>scm:cvs:ext:@broca.ubic.ca:local:/cvs:Gemma</connection>
 		<developerConnection>scm:cvs:ext:@broca.ubic.ca:/cvs:Gemma</developerConnection>
 		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
-  </scm>
+	</scm>
 	<issueManagement>
 		<system>Bugzilla</system>
 		<url>
@@ -232,8 +233,10 @@
 				<reportSets>
 					<reportSet>
 						<reports>
+							<report>dependencies</report>
+							<report>dependency-convergence</report>
 							<!--	<report>index</report>
-								<report>dependencies</report>
+								
 								<report>project-team</report>
 								
 								<report>cim</report>
@@ -241,7 +244,7 @@
 								<report>license</report>
 								<report>scm</report>
 								<report>summary</report>
-								<report>dependency-convergence</report> <report>mailing-list</report> -->
+								<report>mailing-list</report> -->
 						</reports>
 					</reportSet>
 				</reportSets>
