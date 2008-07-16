@@ -64,15 +64,18 @@ public class RMA extends RCommander implements ProbeSummarizer {
 
         if ( arrayDesign == null ) throw new IllegalStateException( "Must set arrayDesign first" );
         String abName = ab.makeAffyBatch( dataMatrix, arrayDesign );
-        rc.voidEval( "m<-exprs(expresso(" + abName + ", bg.correct=FALSE, normalize=FALSE, "
-                + "pmcorrect.method=\"pmonly\", summary.method=\"medianpolish\"))" );
+        String varname = "m";
+        
+        rc.voidEval( varname + "<-exprs(expresso(" + abName + ", bg.correct=FALSE, normalize=FALSE, "
+                + "pmcorrect.method='pmonly', summary.method='medianpolish'))" );
+         
 
         log.info( "Done with RMA" );
 
-        DoubleMatrixNamed<String, String> resultObject = rc.retrieveMatrix( "m" );
+        DoubleMatrixNamed<String, String> resultObject = rc.retrieveMatrix( varname );
 
         // clean up.
-        rc.voidEval( "rm(m)" );
+        rc.voidEval( "rm(" + varname + ")" );
 
         return resultObject;
     }
