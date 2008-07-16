@@ -34,6 +34,7 @@ import com.hp.hpl.jena.query.larq.ARQLuceneException;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.impl.NodeIteratorImpl;
 
 /**
  * @author pavlidis
@@ -43,12 +44,11 @@ public class OntologySearch {
 
     private static Log log = LogFactory.getLog( OntologySearch.class.getName() );
 
-    //Jena cannot properly parse these characters... gives a query parse error. 
-    //OntologyTerms don't contain them anyway
-    private final static char[] INVALID_CHARS = { ':', '(', ')', '?', '*', '^', '[', ']', '-', '+', '{', '}', '!', '~' };
+    // Jena cannot properly parse these characters... gives a query parse error.
+    // OntologyTerms don't contain them anyway
+    private final static char[] INVALID_CHARS = { ':', '(', ')', '?', '^', '[', ']', '{', '}', '!', '~' };
 
     /**
-     * 
      * Will remove characters that jena is unable to parse. Will also escape and remove leading and trailing white space
      * (which also causes jena to die)
      * 
@@ -56,16 +56,15 @@ public class OntologySearch {
      * @return
      */
     public static String stripInvalidCharacters( String toStrip ) {
-
+        char[] test = new char[] { ':', '(', ')', '?', '^', '[', ']', '{', '}', '!', '~' };
         String result = toStrip;
-        for ( char badChar : INVALID_CHARS ) {
+        for ( char badChar : test ) {
             result = StringUtils.remove( result, badChar );
         }
 
         return StringEscapeUtils.escapeJava( result ).trim();
     }
 
-    
     /**
      * Find classes that match the query string
      * 
@@ -116,6 +115,9 @@ public class OntologySearch {
      */
     private static NodeIterator runSearch( OntModel model, IndexLARQ index, String queryString ) {
         String strippedQuery = StringUtils.strip( queryString );
+        if ( StringUtils.isBlank( strippedQuery ) ) {
+            throw new IllegalArgumentException( "Query cannot be blank" );
+        }
         NodeIterator iterator = index.searchModelByIndex( model, strippedQuery );
         return iterator;
     }

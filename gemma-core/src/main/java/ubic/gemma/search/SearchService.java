@@ -671,6 +671,9 @@ public class SearchService implements InitializingBean {
         Map<SearchResult, String> matchMap = new HashMap<SearchResult, String>();
 
         for ( String o : rawTerms ) {
+            if ( StringUtils.isBlank( o ) ) {
+                continue;
+            }
             log.info( "Ontology search term:" + o );
             allResults.addAll( characteristicSearchWord( classes, matchMap, o ) );
         }
@@ -762,7 +765,8 @@ public class SearchService implements InitializingBean {
          * Add characteristics that have values matching the query; this pulls in items not associated with ontology
          * terms (free text). We do this here so we can apply the query logic to the matches.
          */
-        Collection<Characteristic> valueMatches = characteristicService.findByValue( queryPart + "%" );
+        String dbQueryString = queryPart.replaceAll( "\\*", "" );
+        Collection<Characteristic> valueMatches = characteristicService.findByValue( dbQueryString + "%" );
         cs.addAll( valueMatches );
 
         /*
@@ -1235,13 +1239,13 @@ public class SearchService implements InitializingBean {
     // SearchSettings settings ) {
     //
     // /*
-    // * Searches such as 'sex AND female' will not yield any results from findByValue, even if they are should
-    // * be successful. If the terms are in ontologies it won't matter, but if they are 'plain text' they will not.
+    // * Searches such as 'sex AND female' will not yield any results from findByValue, even if they are should be
+    // * successful. If the terms are in ontologies it won't matter, but if they are 'plain text' they will not.
     // */
     // Collection<Characteristic> characteristicValueMatches = characteristicService.findByValue( settings.getQuery()
     // + "%" );
     //
-    // //FIXME put this back in.
+    // // FIXME put this back in.
     // Collection<Characteristic> characteristicURIMatches = characteristicService.findByUri( settings.getQuery() );
     //
     // Map parentMap = characteristicService.getParents( characteristicValueMatches );
@@ -1436,7 +1440,7 @@ public class SearchService implements InitializingBean {
      */
     private Set<String> extractTerms( String query ) {
         Query lquer = this.makeLuceneQuery( query );
-        Set<Term> terms = new HashSet<Term>();
+
         Set<String> rawTerms = new HashSet<String>();
         if ( lquer instanceof BooleanQuery ) {
             BooleanClause[] clauses = ( ( BooleanQuery ) lquer ).getClauses();
@@ -1448,10 +1452,7 @@ public class SearchService implements InitializingBean {
         } else if ( lquer instanceof PrefixQuery ) {
             rawTerms.add( ( ( PrefixQuery ) lquer ).getPrefix().field() );
         } else {
-            lquer.extractTerms( terms );
-            for ( Term term : terms ) {
-                rawTerms.add( term.text().replaceAll( "\"", "" ) );
-            }
+            rawTerms.add( query );
         }
         return rawTerms;
     }
@@ -1792,7 +1793,7 @@ public class SearchService implements InitializingBean {
         try {
             parsedQuery = parser.parse( query );
         } catch ( ParseException e ) {
-            throw new RuntimeException( e );
+            throw new RuntimeException( "Cannot parse query: " + e.getMessage() );
         }
         return parsedQuery;
     }
@@ -1811,15 +1812,15 @@ public class SearchService implements InitializingBean {
         /*
          * Direct search.
          */
-        StopWatch watch = startTiming();
+        // StopWatch watch = startTiming();
         Collection<SearchResult> results = new HashSet<SearchResult>();
 
         // results.addAll( databaseCharacteristicSearchForOwners( classes, settings ) );
-
-        // if ( watch.getTime() > 1000 ) {
-        log.info( "Search for characteristics exactly matching '" + settings + "' took " + watch.getTime() + " ms, "
-                + results.size() + " hits." );
-        // }
+        //
+        // // if ( watch.getTime() > 1000 ) {
+        // log.info( "Search for characteristics exactly matching '" + settings + "' took " + watch.getTime() + " ms, "
+        // + results.size() + " hits." );
+        // // }
 
         /*
          * Include children in ontologies, if any. This can be slow if there are a lot of children.
