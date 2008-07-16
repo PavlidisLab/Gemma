@@ -34,7 +34,6 @@ import com.hp.hpl.jena.query.larq.ARQLuceneException;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.impl.NodeIteratorImpl;
 
 /**
  * @author pavlidis
@@ -56,9 +55,8 @@ public class OntologySearch {
      * @return
      */
     public static String stripInvalidCharacters( String toStrip ) {
-        char[] test = new char[] { ':', '(', ')', '?', '^', '[', ']', '{', '}', '!', '~' };
         String result = toStrip;
-        for ( char badChar : test ) {
+        for ( char badChar : INVALID_CHARS ) {
             result = StringUtils.remove( result, badChar );
         }
 
