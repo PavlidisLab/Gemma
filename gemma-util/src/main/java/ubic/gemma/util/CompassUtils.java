@@ -115,7 +115,9 @@ public class CompassUtils {
 		gps.getIndexCompass().getSearchEngineIndexManager().createIndex();
 		log.info("indexing now ... ");
 		gps.index();
-
+		log.info( "Indexing done. Now Optimizing index" );
+		gps.getIndexCompass().getSearchEngineOptimizer().optimize();
+		log.info( "Optimizing complete" );
 		/* Return state of device */
 		if (!wasRunningBefore) {
 			disableIndexMirroring(gps);
