@@ -1,17 +1,13 @@
 Ext.namespace('Gemma');
 
 /*
- * Gemma.AnnotationGrid constructor... div is the name of the div in which
- * to render the grid. config is a hash with the following options: readMethod :
- * the DWR method that returns the list of AnnotationValueObjects ( e.g.:
- * ExpressionExperimentController.getAnnotation ) readParams : an array of
- * parameters that will be passed to the readMethod ( e.e.: [ { id:x,
- * classDelegatingFor:"ExpressionExperimentImpl" } ] ) or a pointer to a
- * function that will return the array of parameters editable : if true, the
- * annotations in the grid will be editable showParent : if true, a link to the
- * parent object will appear in the grid noInitialLoad : if true, the grid will
- * not be loaded immediately upon creation pageSize : if defined, the grid will
- * be paged on the client side, with the defined page size
+ * Gemma.AnnotationGrid constructor... div is the name of the div in which to render the grid. config is a hash with the
+ * following options: readMethod : the DWR method that returns the list of AnnotationValueObjects ( e.g.:
+ * ExpressionExperimentController.getAnnotation ) readParams : an array of parameters that will be passed to the
+ * readMethod ( e.e.: [ { id:x, classDelegatingFor:"ExpressionExperimentImpl" } ] ) or a pointer to a function that will
+ * return the array of parameters editable : if true, the annotations in the grid will be editable showParent : if true,
+ * a link to the parent object will appear in the grid noInitialLoad : if true, the grid will not be loaded immediately
+ * upon creation pageSize : if defined, the grid will be paged on the client side, with the defined page size
  */
 Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
@@ -54,29 +50,25 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	}]),
 
 	parentStyler : function(value, metadata, record, row, col, ds) {
-		return this.formatParentWithStyle(record.id, record.expanded,
-				record.data.parentLink, record.data.parentDescription,
-				record.data.parentOfParentLink,
-				record.data.parentOfParentDescription);
+		return this.formatParentWithStyle(record.id, record.expanded, record.data.parentLink,
+				record.data.parentDescription, record.data.parentOfParentLink, record.data.parentOfParentDescription);
 	},
 
-	formatParentWithStyle : function(id, expanded, parentLink,
-			parentDescription, parentOfParentLink, parentOfParentDescription) {
+	formatParentWithStyle : function(id, expanded, parentLink, parentDescription, parentOfParentLink,
+			parentOfParentDescription) {
 		var value;
 		if (parentOfParentLink) {
-			value = String.format("{0}<br> from {1}", parentLink,
-					parentOfParentLink);
+			value = String.format("{0}<br> from {1}", parentLink, parentOfParentLink);
 		} else {
 			value = parentLink;
 		}
-		return expanded ? value.concat(String.format(
-				"<div style='white-space: normal;'>{0}</div>",
-				parentDescription)) : value;
+		return expanded
+				? value.concat(String.format("<div style='white-space: normal;'>{0}</div>", parentDescription))
+				: value;
 	},
 
 	termStyler : function(value, metadata, record, row, col, ds) {
-		return Gemma.GemmaGridPanel.formatTermWithStyle(value,
-				record.data.termUri);
+		return Gemma.GemmaGridPanel.formatTermWithStyle(value, record.data.termUri);
 	},
 
 	convertToCharacteristic : function(record) {
@@ -86,9 +78,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			value : record.termName
 		};
 		/*
-		 * if we don't have a valueURI set, don't return URI fields or a
-		 * VocabCharacteristic will be created when we only want a
-		 * Characteristic...
+		 * if we don't have a valueURI set, don't return URI fields or a VocabCharacteristic will be created when we
+		 * only want a Characteristic...
 		 */
 		if (record.termUri || record.classUri) {
 			c.categoryUri = record.classUri;
@@ -152,12 +143,10 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				tbar : new Gemma.AnnotationToolBar({
 					annotationGrid : this,
 					createHandler : function(characteristic, callback) {
-						OntologyService.saveExpressionExperimentStatement(
-								characteristic, [this.eeId], callback);
+						OntologyService.saveExpressionExperimentStatement(characteristic, [this.eeId], callback);
 					},
 					deleteHandler : function(ids, callback) {
-						OntologyService.removeExpressionExperimentStatement(
-								ids, [this.eeId], callback);
+						OntologyService.removeExpressionExperimentStatement(ids, [this.eeId], callback);
 					},
 					mgedTermKey : "experiment"
 				})
@@ -199,20 +188,17 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var row = e.record.data;
 				var col = this.getColumnModel().getColumnId(e.column);
 				if (col == VALUE_COLUMN) {
-					this.valueCombo.setCategory.call(this.valueCombo,
-							row.className, row.classUri);
+					this.valueCombo.setCategory.call(this.valueCombo, row.className, row.classUri);
 				}
 			});
 			this.on("afteredit", function(e) {
 				var col = this.getColumnModel().getColumnId(e.column);
 				if (col == CATEGORY_COLUMN) {
-					var term = this.categoryCombo.getTerm
-							.call(this.categoryCombo);
+					var term = this.categoryCombo.getTerm.call(this.categoryCombo);
 					e.record.set("className", term.term);
 					e.record.set("classUri", term.uri);
 				} else if (col == VALUE_COLUMN) {
-					var c = this.valueCombo.getCharacteristic
-							.call(this.valueCombo);
+					var c = this.valueCombo.getCharacteristic.call(this.valueCombo);
 					e.record.set("termName", c.value);
 					e.record.set("termUri", c.valueUri);
 				}
@@ -241,9 +227,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	getReadParams : function() {
-		return (typeof this.readParams == "function")
-				? this.readParams()
-				: this.readParams;
+		return (typeof this.readParams == "function") ? this.readParams() : this.readParams;
 	},
 
 	getSelectedCharacteristics : function() {
@@ -263,7 +247,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var row = record.data;
 				chars.push(this.convertToCharacteristic(row));
 			}
-		});
+		}.createDelegate(this), this);
 		return chars;
 	}
 

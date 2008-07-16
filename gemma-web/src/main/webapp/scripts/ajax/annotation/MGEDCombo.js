@@ -7,11 +7,12 @@ Ext.namespace("Gemma");
  */
 Gemma.MGEDCombo = Ext.extend(Ext.form.ComboBox, {
 
-	editable : false,
+	editable : true,
 	mode : 'local',
 	selectOnFocus : true,
 	triggerAction : 'all',
 	typeAhead : true,
+	forceSelection : true,
 	displayField : 'term',
 
 	record : Ext.data.Record.create([{
