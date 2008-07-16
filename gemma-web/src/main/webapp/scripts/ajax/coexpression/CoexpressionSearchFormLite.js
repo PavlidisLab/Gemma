@@ -59,9 +59,14 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 			handler : function() {
 				var msg = this.validateSearch(this.geneCombo.getValue());
 				if (msg.length === 0) {
-					// FIXME add the eeids if the eesetid is -1.
+					
 					var eeSetId = this.selected.get("id");
-					var eeIds = this.selected.get("expressionExperimentIds").join(",");
+					var eeIds = "";
+					
+					if (!eeSetId || eeSetId < 0){
+					 	eeIds = this.selected.get("expressionExperimentIds").join(",");						
+					}
+					
 					if (pageTracker) {
 						pageTracker._trackPageview("/Gemma/coexpressionSearch.doLiteSearch");
 					}
