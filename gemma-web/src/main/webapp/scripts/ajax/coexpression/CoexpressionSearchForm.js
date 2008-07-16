@@ -18,7 +18,7 @@ Gemma.MIN_STRINGENCY = 2;
 Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	layout : 'border',
-	width : 370,
+	width : 390,
 	height : 300,
 	frame : true,
 	stateful : true,
