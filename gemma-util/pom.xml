@@ -1,15 +1,14 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.2-SNAPSHOT</version>
+		<version>1.2</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-util</artifactId>
 	<name>Gemma Util</name>
-	<version>1.2-SNAPSHOT</version>
+	<version>1.2</version>
 	<description>Utility classes for Gemma.</description>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -47,12 +46,9 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<springdoclet
-									destdir="${project.build.directory}/generated-sources/resources/ubic/gemma" force="false" validating="false">
+								<springdoclet destdir="${project.build.directory}/generated-sources/resources/ubic/gemma" force="false" validating="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java/" />
-									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true"
-										destDir="${project.build.directory}/generated-sources/resources/ubic/gemma"
-										destinationFile="applicationContext-persisterBeans.xml" />
+									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true" destDir="${project.build.directory}/generated-sources/resources/ubic/gemma" destinationFile="applicationContext-persisterBeans.xml" />
 								</springdoclet>
 							</tasks>
 						</configuration>
@@ -83,7 +79,7 @@
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-mda</artifactId>
-			<version>1.2-SNAPSHOT</version>
+			<version>1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-collections</groupId>
