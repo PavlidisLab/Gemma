@@ -50,8 +50,12 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
             log.warn( "ontResource is null in hashCode()" );
             return 0;
         }
-        assert this.getUri() != null;
-        return this.getUri().hashCode();
+        // assert this.getUri() != null : "No URI for " + this.getTerm();
+        if ( this.getUri() != null ) {
+            return this.getUri().hashCode();
+        } else {
+            return this.getTerm().hashCode();
+        }
     }
 
     @Override
@@ -69,7 +73,11 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
             log.warn( "argument ontResource is null in equals()" );
         }
 
-        return ObjectUtils.equals( this.getUri(), that.getUri() );
+        if ( this.getUri() != null ) {
+            return ObjectUtils.equals( this.getUri(), that.getUri() );
+        } else {
+            return ObjectUtils.equals( this.getTerm(), that.getTerm() );
+        }
 
     }
 
