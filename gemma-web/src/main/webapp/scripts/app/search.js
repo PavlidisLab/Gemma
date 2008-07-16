@@ -394,7 +394,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
 				return value.test(obj.name) || value.test(obj.description) || value.test(obj.taxon.commonName);
 			} else if (clazz == "Gene" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
-				return value.test(obj.name) || value.test(obj.officialSymbol) || value.test(obj.officialName)
+				return value.test(obj.officialSymbol) || value.test(obj.officialName)
 						|| value.test(obj.taxon.commonName);
 			} else {
 				return false;
@@ -404,22 +404,11 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	searchForText : function(button, keyev) {
 		var text = Ext.getCmp('search-in-grid').getValue();
-		if (text.length < 3) {
+		if (text.length < 2) {
 			this.getStore().clearFilter();
-			// this.getSelectionModel().clearSelections();
 			return;
 		}
 		this.getStore().filterBy(this.getSearchFun(text), this, 0);
-		// console.log(index);
-		// if (index > -1) {
-		// console.log("Search: " + text);
-		// this.getSelectionModel().selectRow(index);
-		// this.getView().focusRow(index);
-		// Ext.getCmp('search-in-grid').focus(false);
-		// } else {
-		// this.getView().scrollToTop();
-		// this.getSelectionModel().clearSelections();
-		// }
 	},
 
 	initComponent : function() {
