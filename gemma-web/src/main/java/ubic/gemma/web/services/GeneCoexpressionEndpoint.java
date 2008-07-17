@@ -45,9 +45,9 @@ import ubic.gemma.model.genome.gene.GeneService;
  * all the expression experiment set ids for all taxons and their corresponding description.
  *The stringency is the miniumum number of times we found a particular relationship. 
  *
- *  Returns a list consisting of 5 columns:
- *  1) the query Gene, 2) the found Gene, 3) the support ( the number of times that coexpression was found ), 4) Sign
- *  (+/-; denotes whehter the correlation between the coexpression pair is positive or negative), and 5)the experiment ids
+ *  Returns a list consisting of 7 columns:
+ *  1) the query Gene, 2) the query gene ID, 3) the found Gene, 4) the found gene ID, 5) the support ( the number of times that coexpression was found ), 
+ *  6) Sign(+/-; denotes whehter the correlation between the coexpression pair is positive or negative), and 7)the experiment ids
  *  that this co-expression was found in (since there should be more than 1 experiment this list will be returned as a 
  *  space delimted string of EE Ids.)
  * 
@@ -174,7 +174,9 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
         }
 
         final String QUERY_GENE_NAME = "query_gene";
+        final String QUERY_GENE_ID = "query_id";
         final String FOUND_GENE_NAME = "found_gene";
+        final String FOUND_GENE_ID = "found_id";
         final String SUPPORT_NAME = "support";
         final String SIGN_NAME = "sign";
         final String EEID_NAME = "eeIdList";
@@ -189,9 +191,17 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             e1.appendChild( document.createTextNode( cvo.getQueryGene().getOfficialSymbol() ) );
             responseElement.appendChild( e1 );
             
-            Element e2 = document.createElement( FOUND_GENE_NAME );
-            e2.appendChild( document.createTextNode( cvo.getFoundGene().getOfficialSymbol() ) );
+            Element e2 = document.createElement( QUERY_GENE_ID );
+            e2.appendChild( document.createTextNode( cvo.getQueryGene().getId().toString() ) );
             responseElement.appendChild( e2 );
+            
+            Element e3 = document.createElement( FOUND_GENE_NAME );
+            e3.appendChild( document.createTextNode( cvo.getFoundGene().getOfficialSymbol() ) );
+            responseElement.appendChild( e3 );
+            
+            Element e4 = document.createElement( FOUND_GENE_ID );
+            e4.appendChild( document.createTextNode( cvo.getFoundGene().getId().toString() ) );
+            responseElement.appendChild( e4 );
 
             Integer support = 0;
             String sign = "";
@@ -207,17 +217,17 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
            
             //If it happens that a result has both neg and pos links, then the pos link and sign will be used
             //TODO: Handle cases where a result can have both neg and pos links 
-            Element e3 = document.createElement( SUPPORT_NAME );
-            e3.appendChild( document.createTextNode( support.toString() ) );
-            responseElement.appendChild( e3 );
-
-            Element e4 = document.createElement( SIGN_NAME );
-            e4.appendChild( document.createTextNode( sign ) );
-            responseElement.appendChild( e4 );
-            
-            Element e5 = document.createElement( EEID_NAME );
-            e5.appendChild( document.createTextNode( encode(cvo.getSupportingExperiments().toArray())) );
+            Element e5 = document.createElement( SUPPORT_NAME );
+            e5.appendChild( document.createTextNode( support.toString() ) );
             responseElement.appendChild( e5 );
+
+            Element e6 = document.createElement( SIGN_NAME );
+            e6.appendChild( document.createTextNode( sign ) );
+            responseElement.appendChild( e6 );
+            
+            Element e7 = document.createElement( EEID_NAME );
+            e7.appendChild( document.createTextNode( encode(cvo.getSupportingExperiments().toArray())) );
+            responseElement.appendChild( e7 );
 
         }
         watch.stop();
