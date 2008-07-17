@@ -93,8 +93,8 @@ public class GeneLinkCoexpressionAnalyzer {
 
         Analysis existingAnalysis = geneCoexpressionAnalysisService.findByName( analysisName );
         if ( existingAnalysis != null ) {
-            throw new IllegalArgumentException( "Analysis with name '" + analysisName + "' exists already (id="
-                    + existingAnalysis.getId() + ")" );
+            throw new IllegalArgumentException( "Analysis with name '" + existingAnalysis.getName()
+                    + "' exists already (id=" + existingAnalysis.getId() + ")" );
         }
 
         if ( !knownGenesOnly ) {

@@ -143,6 +143,10 @@ public class RelationshipPersister extends ExpressionPersister {
     }
 
     protected ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity ) {
+        if ( !isTransient( entity ) ) return entity;
+        if ( entity.getExperiments().size() == 0 ) {
+            throw new IllegalArgumentException( "Attempt to create an empty ExpressionExperimentSet." );
+        }
         return expressionExperimentSetService.create( entity );
     }
 

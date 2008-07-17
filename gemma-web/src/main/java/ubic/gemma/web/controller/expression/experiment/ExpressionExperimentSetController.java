@@ -70,22 +70,32 @@ public class ExpressionExperimentSetController extends BaseFormController {
             throw new IllegalArgumentException( "You must provide a name" );
         }
 
-        ExpressionExperimentSet va = ExpressionExperimentSet.Factory.newInstance();
-        va.setName( obj.getName() );
-        va.setDescription( obj.getDescription() );
-        va.setTaxon( taxonService.load( obj.getTaxonId() ) );
+        /*
+         * Sanity check.
+         */
+        if ( expressionExperimentService.findByName( obj.getName() ) != null ) {
+            throw new IllegalArgumentException( "Sorry, there is already a set with that name (" + obj.getName() + ")" );
+        }
 
-        if ( va.getTaxon() == null ) {
+        ExpressionExperimentSet newSet = ExpressionExperimentSet.Factory.newInstance();
+        newSet.setName( obj.getName() );
+        newSet.setDescription( obj.getDescription() );
+        newSet.setTaxon( taxonService.load( obj.getTaxonId() ) );
+
+        if ( newSet.getTaxon() == null ) {
             throw new IllegalArgumentException( "No such taxon with id=" + obj.getTaxonId() );
         }
 
         Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( obj
                 .getExpressionExperimentIds() );
 
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        eeSet.getExperiments().addAll( datasetsAnalyzed );
+        newSet.getExperiments().addAll( datasetsAnalyzed );
 
-        ExpressionExperimentSet newAnalysis = ( ExpressionExperimentSet ) persisterHelper.persist( va );
+        if ( newSet.getExperiments().size() < 2 ) {
+            throw new IllegalArgumentException( "Attempt to create an ExpressionExperimentSet with only "
+                    + newSet.getExperiments().size() + ", must have at least 2" );
+        }
+        ExpressionExperimentSet newAnalysis = ( ExpressionExperimentSet ) persisterHelper.persist( newSet );
         return newAnalysis.getId();
     }
 
@@ -230,6 +240,10 @@ public class ExpressionExperimentSetController extends BaseFormController {
         }
 
         if ( needUpdate ) {
+            if ( toUpdate.getExperiments().size() < 2 ) {
+                throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has only "
+                        + toUpdate.getExperiments().size() + ", must have at least 2" );
+            }
             expressionExperimentSetService.update( toUpdate );
             log.info( "Updated " + obj.getName() );
         } else {

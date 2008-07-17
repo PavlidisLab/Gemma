@@ -18,6 +18,7 @@
  */
 package ubic.gemma.security;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
@@ -173,8 +174,16 @@ public class SecurityService {
                         }
                         makePrivateOrPublic( ob, mask );// recursive
                     }
+                } catch ( InvocationTargetException e ) {
+                    if ( e.getCause() instanceof UnsupportedOperationException ) {
+                        // no-op, the association isn't valid anyway.
+                    }
                 } catch ( Exception e ) {
-                    throw new RuntimeException( e );
+                    if ( e instanceof UnsupportedOperationException ) {
+                        // no-op, the association isn't valid anyway.
+                    } else {
+                        throw new RuntimeException( e );
+                    }
                 }
             }
 

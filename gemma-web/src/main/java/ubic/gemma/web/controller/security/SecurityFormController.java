@@ -33,6 +33,8 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
@@ -61,6 +63,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name="probeCoexpressionAnalysisService" ref="probeCoexpressionAnalysisService"
  * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
+ * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  * @spring.property name="formView" value="securityManager"
  * @spring.property name="successView" value="securityManager"
  */
@@ -72,12 +75,14 @@ public class SecurityFormController extends BaseFormController {
     private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService = null;
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService = null;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     private final String expressionExperimentType = ExpressionExperiment.class.getSimpleName();
     private final String arrayDesignType = ArrayDesign.class.getSimpleName();
     private final String probeCoexpressionAnalysisType = ProbeCoexpressionAnalysis.class.getSimpleName();
     private final String geneCoexpressionAnalysisType = GeneCoexpressionAnalysis.class.getSimpleName();
     private final String differentialExpressionAnalysisType = DifferentialExpressionAnalysis.class.getSimpleName();
+    private final String expressionExperimentSetType = ExpressionExperimentSet.class.getSimpleName();
 
     private final String PUBLIC = "Public";
     private final String PRIVATE = "Private";
@@ -177,6 +182,7 @@ public class SecurityFormController extends BaseFormController {
         securableTypes.add( probeCoexpressionAnalysisType );
         securableTypes.add( geneCoexpressionAnalysisType );
         securableTypes.add( differentialExpressionAnalysisType );
+        securableTypes.add( expressionExperimentSetType );
 
         dropDownMap.put( "securableTypes", securableTypes );
 
@@ -243,10 +249,12 @@ public class SecurityFormController extends BaseFormController {
         } else if ( StringUtils.equalsIgnoreCase( type, differentialExpressionAnalysisType ) ) {
             ExpressionExperiment investigation = this.expressionExperimentService.findByShortName( shortName );
             target = this.differentialExpressionAnalysisService.findByInvestigation( investigation );
-        }
-
-        else if ( StringUtils.equalsIgnoreCase( type, arrayDesignType ) ) {
-            // target = this.arrayDesignService.findArrayDesignByName( name );//TODO no findById ... maybe use name
+        } else if ( StringUtils.equalsIgnoreCase( type, expressionExperimentSetType ) ) {
+            target = this.expressionExperimentSetService.findByName( shortName );
+        } else if ( StringUtils.equalsIgnoreCase( type, arrayDesignType ) ) {
+            // TODO, before attempting to make an AD
+            // private (or public) make sure the experiments it is associated with are compatible.
+            // target = this.arrayDesignService.findArrayDesignByName( name );
             return processErrors( request, response, command, errors,
                     "Cannot change permissions of array designs at this time." );
         }
@@ -259,15 +267,12 @@ public class SecurityFormController extends BaseFormController {
         String mask = sc.getMask();
         if ( StringUtils.equalsIgnoreCase( mask, PUBLIC ) ) {
             securityService.makePublic( target );
-        }
-
-        else if ( StringUtils.equalsIgnoreCase( mask, PRIVATE ) ) {
+        } else if ( StringUtils.equalsIgnoreCase( mask, PRIVATE ) ) {
             securityService.makePrivate( target );
-        }
-
-        else
+        } else {
             return processErrors( request, response, command, errors,
                     "Supported masks are 0 (private) and 6 (public), not " + mask );
+        }
 
         saveMessage( request, target + " made " + mask + "." );
         String url = "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
@@ -342,6 +347,10 @@ public class SecurityFormController extends BaseFormController {
             this.setComment( "User selections for differential expression search form." );
         }
 
+    }
+
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
     }
 
 }

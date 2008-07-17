@@ -24,6 +24,8 @@ package ubic.gemma.model.analysis.expression;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * @version $Id$
  * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService
@@ -53,6 +55,14 @@ public class ExpressionExperimentSetServiceImpl extends
      */
     protected void handleUpdate( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
             throws java.lang.Exception {
+        if ( expressionExperimentSet.getExperiments().size() == 0 ) {
+            throw new IllegalArgumentException( "Attempt to update ExpressionExperimentSet so it has no members" );
+        }
+
+        if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
+            throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has no name" );
+        }
+
         this.getExpressionExperimentSetDao().update( expressionExperimentSet );
     }
 
