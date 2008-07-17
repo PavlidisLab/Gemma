@@ -165,6 +165,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         investigations.add( e2 );
 
         Analysis results = analysisService.findByUniqueInvestigations( investigations );
+        assertNotNull( results );
         assertEquals( eAnalysis2.getId(), results.getId() );
 
     }
@@ -172,12 +173,13 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     public void testFindByNameExact() {
 
         Analysis result = analysisService.findByName( "Test" );
+        assertNotNull( result );
         assertEquals( "Test", result.getName() );
     }
 
     public void testFindByNameRecent() {
-
-        Analysis result = analysisService.findByName( "TestA" );
+        Analysis result = analysisService.findByName( "TestAnalysis3" );
+        assertNotNull( result );
         assertEquals( "TestAnalysis3", result.getName() );
     }
 
