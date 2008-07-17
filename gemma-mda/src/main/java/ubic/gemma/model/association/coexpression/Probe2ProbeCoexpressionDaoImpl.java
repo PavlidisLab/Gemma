@@ -20,7 +20,6 @@ package ubic.gemma.model.association.coexpression;
 
 import java.math.BigInteger;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
