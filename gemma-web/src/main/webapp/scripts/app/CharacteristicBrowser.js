@@ -46,8 +46,7 @@ Ext.onReady(function() {
 			var searchBMs = bmCheckBox.getValue();
 			var searchFVs = fvCheckBox.getValue();
 			var searchNos = noCheckBox.getValue();
-			Gemma.CharacteristicBrowser.grid.refresh([query, searchNos,
-					searchEEs, searchBMs, searchFVs]);
+			Gemma.CharacteristicBrowser.grid.refresh([query, searchNos, searchEEs, searchBMs, searchFVs]);
 		}
 	});
 
@@ -60,12 +59,9 @@ Ext.onReady(function() {
 			Gemma.CharacteristicBrowser.grid.loadMask.msg = "Saving ...";
 			Gemma.CharacteristicBrowser.grid.loadMask.show();
 			Ext.DomHelper.overwrite("messages", "");
-			var chars = Gemma.CharacteristicBrowser.grid
-					.getEditedCharacteristics();
-			var callback = Gemma.CharacteristicBrowser.grid.refresh
-					.bind(Gemma.CharacteristicBrowser.grid);
-			var errorHandler = Gemma.CharacteristicBrowser.handleError
-					.createDelegate(this, [], true);
+			var chars = Gemma.CharacteristicBrowser.grid.getEditedCharacteristics();
+			var callback = Gemma.CharacteristicBrowser.grid.refresh.bind(Gemma.CharacteristicBrowser.grid);
+			var errorHandler = Gemma.CharacteristicBrowser.handleError.createDelegate(this, [], true);
 			CharacteristicBrowserController.updateCharacteristics(chars, {
 				callback : callback,
 				errorHandler : errorHandler
@@ -85,17 +81,14 @@ Ext.onReady(function() {
 			Ext.DomHelper.overwrite("messages", "");
 			Gemma.CharacteristicBrowser.grid.loadMask.msg = "Deleting ...";
 			Gemma.CharacteristicBrowser.grid.loadMask.show();
-			var chars = Gemma.CharacteristicBrowser.grid
-					.getSelectedCharacteristics();
+			var chars = Gemma.CharacteristicBrowser.grid.getSelectedCharacteristics();
 			CharacteristicBrowserController.removeCharacteristics(chars);
 
 			/*
-			 * remove the records from the data store manually instead of just
-			 * refreshing so that we don't lose any edits that are in
-			 * progress...
+			 * remove the records from the data store manually instead of just refreshing so that we don't lose any
+			 * edits that are in progress...
 			 */
-			var selected = Gemma.CharacteristicBrowser.grid.getSelectionModel()
-					.getSelections();
+			var selected = Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
 			for (var i = 0; i < selected.length; ++i) {
 				Gemma.CharacteristicBrowser.grid.getStore().remove(selected[i]);
 			}
@@ -107,24 +100,22 @@ Ext.onReady(function() {
 			// callback );
 		}
 	});
-	Gemma.CharacteristicBrowser.grid.getSelectionModel().on("selectionchange",
-			function(model) {
-				var selected = model.getSelections();
-				Ext.DomHelper.overwrite("messages", "");
-				if (selected.length > 0) {
-					deleteButton.enable();
-				} else {
-					deleteButton.disable();
-				}
-			});
+	Gemma.CharacteristicBrowser.grid.getSelectionModel().on("selectionchange", function(model) {
+		var selected = model.getSelections();
+		Ext.DomHelper.overwrite("messages", "");
+		if (selected.length > 0) {
+			deleteButton.enable();
+		} else {
+			deleteButton.disable();
+		}
+	});
 
 	var revertButton = new Ext.Toolbar.Button({
 		text : "revert",
 		tooltip : "Undo changes to selected characteristics",
 		disabled : true,
 		handler : function() {
-			var selected = Gemma.CharacteristicBrowser.grid.getSelectionModel()
-					.getSelections();
+			var selected = Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
 			for (var i = 0; i < selected.length; ++i) {
 				var record = selected[i];
 				record.reject();
@@ -132,31 +123,30 @@ Ext.onReady(function() {
 			Gemma.CharacteristicBrowser.grid.getView().refresh();
 		}
 	});
-	Gemma.CharacteristicBrowser.grid.getSelectionModel().on("selectionchange",
-			function(model) {
-				var selected = model.getSelections();
-				revertButton.disable();
-				for (var i = 0; i < selected.length; ++i) {
-					if (selected[i].dirty) {
-						revertButton.enable();
-						break;
-					}
-				}
-			});
+	Gemma.CharacteristicBrowser.grid.getSelectionModel().on("selectionchange", function(model) {
+		var selected = model.getSelections();
+		revertButton.disable();
+		for (var i = 0; i < selected.length; ++i) {
+			if (selected[i].dirty) {
+				revertButton.enable();
+				break;
+			}
+		}
+	});
 	Gemma.CharacteristicBrowser.grid.on("afteredit", function(e) {
 		revertButton.enable();
 	});
 
 	var savedCharacteristic;
 	var copyHandler = function() {
-		var selected = Gemma.CharacteristicBrowser.grid.getSelectionModel()
-				.getSelections();
+		var selected = Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
 		for (var i = 0; i < selected.length; ++i) {
 			var record = selected[i];
 			savedCharacteristic = record.data;
 			break;
 		}
 		pasteButton.enable();
+		pasteCategoryButton.enable();
 	};
 
 	var copyButton = new Ext.Toolbar.Button({
@@ -166,19 +156,17 @@ Ext.onReady(function() {
 		handler : copyHandler
 	});
 
-	Gemma.CharacteristicBrowser.grid.getSelectionModel().on("selectionchange",
-			function(model) {
-				var selected = model.getSelections();
-				if (selected.length > 0) {
-					copyButton.enable();
-				} else {
-					copyButton.disable();
-				}
-			});
+	Gemma.CharacteristicBrowser.grid.getSelectionModel().on("selectionchange", function(model) {
+		var selected = model.getSelections();
+		if (selected.length > 0) {
+			copyButton.enable();
+		} else {
+			copyButton.disable();
+		}
+	});
 
 	var pasteHandler = function() {
-		var selected = Gemma.CharacteristicBrowser.grid.getSelectionModel()
-				.getSelections();
+		var selected = Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
 		for (var i = 0; i < selected.length; ++i) {
 			var record = selected[i];
 			record.set("classUri", savedCharacteristic.classUri);
@@ -190,11 +178,29 @@ Ext.onReady(function() {
 		saveButton.enable();
 	};
 
+	var pasteCategoryHandler = function() {
+		var selected = Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
+		for (var i = 0; i < selected.length; ++i) {
+			var record = selected[i];
+			record.set("classUri", savedCharacteristic.classUri);
+			record.set("className", savedCharacteristic.className);
+		}
+		Gemma.CharacteristicBrowser.grid.getView().refresh();
+		saveButton.enable();
+	};
+
 	var pasteButton = new Ext.Toolbar.Button({
 		text : "paste",
-		tooltip : "Paste copied values onto the selected characteristics",
+		tooltip : "Paste copied values onto the selected characteristics; both Class and Term will be updated.",
 		disabled : true,
 		handler : pasteHandler
+	});
+
+	var pasteCategoryButton = new Ext.Toolbar.Button({
+		text : "paste category",
+		tooltip : "Paste copied Class values onto the selected characteristics. Term will be left alone.",
+		disabled : true,
+		handler : pasteCategoryHandler
 	});
 
 	Gemma.CharacteristicBrowser.grid.on("keypress", function(e) {
@@ -247,6 +253,8 @@ Ext.onReady(function() {
 	toolbar.addField(copyButton);
 	toolbar.addSeparator();
 	toolbar.addField(pasteButton);
+	toolbar.addSeparator();
+	toolbar.addField(pasteCategoryButton);
 	/*
 	 * toolbar.addSeparator(); toolbar.addField( testButton );
 	 */

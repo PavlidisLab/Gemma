@@ -18,6 +18,8 @@
  */
 package ubic.gemma.util;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * Used to generate hyperlinks to various things in Gemma.\
  * 
@@ -62,8 +64,8 @@ public class GemmaLinkUtils {
     }
 
     public static String getExperimentalDesignLink( Long edId, String link, String hover ) {
-        return getLink( String.format( "/Gemma/expressionExperiment/showExperimnetalDesign.html?id=%d", edId ), link,
-                hover );
+        return getLink( String.format( "/Gemma/expressionExperiment/showExperimnetalDesign.html?id=%d", edId ),
+                "ExperimentalDesign " + ( StringUtils.isBlank( link ) ? "" : ": " + link ), hover );
     }
 
     public static String getProbeLink( Long probeId, String link ) {
