@@ -66,7 +66,9 @@
     	 <complexType name="CoexpressionResult">
      		 <sequence>
       	  	<element name="query_gene" type="xsd:string" />
+      	  	<element name="query_id" type="xsd:string" />
       	  	<element name="found_gene" type="xsd:string" />
+      	  	<element name="found_id" type="xsd:string" />
       	  	 <element name="support" type="xsd:string" />
       	  	 <element name="sign" type="xsd:string" />
       		<element name="eeIdList" type="xsd:string" />      			 
