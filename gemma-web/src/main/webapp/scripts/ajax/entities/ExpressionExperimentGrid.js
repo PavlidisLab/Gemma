@@ -45,7 +45,43 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		type : "string"
 	}]),
 
+	searchForText : function(button, keyev) {
+		var text = this.searchInGridField.getValue();
+		if (text.length < 2) {
+			clearFilter();
+			return;
+		}
+		this.getStore().filterBy(this.getSearchFun(text), this, 0);
+	},
+
+	clearFilter : function() {
+		this.getStore().clearFilter();
+	},
+
+	getSearchFun : function(text) {
+		var value = new RegExp(Ext.escapeRe(text), 'i');
+		return function(r, id) {
+			var obj = r.data;
+			return value.match(obj.name) || value.match(obj.shortName);
+		}
+	},
+
 	initComponent : function() {
+		this.searchInGridField = new Ext.form.TextField({
+			enableKeyEvents : true,
+			emptyText : 'Filter',
+			tooltip : "Text typed here will ",
+			listeners : {
+				"keyup" : {
+					fn : this.searchForText.createDelegate(this),
+					scope : this,
+					options : {
+						delay : 100
+					}
+				}
+			}
+		});
+
 		if (this.pageSize) {
 			if (this.records) {
 				Ext.apply(this, {
@@ -69,7 +105,14 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			Ext.apply(this, {
 				bbar : new Gemma.PagingToolbar({
 					pageSize : this.pageSize,
-					store : this.store
+					store : this.store,
+					items : ['->', {
+						xtype : 'button',
+						handler : this.clearFilter.createDelegate(this),
+						scope : this,
+						cls : 'x-btn-text',
+						text : 'Reset filter'
+					}, ' ', this.searchInGridField]
 				})
 			});
 		} else {
@@ -90,6 +133,17 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					})
 				});
 			}
+			Ext.apply(this, {
+				bbar : new Ext.Toolbar({
+					items : ['->', {
+						xtype : 'button',
+						handler : this.clearFilter.createDelegate(this),
+						scope : this,
+						cls : 'x-btn-text',
+						text : 'Reset filter'
+					}, ' ', this.searchInGridField]
+				})
+			});
 		}
 
 		Ext.apply(this, {
@@ -97,6 +151,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				id : 'shortName',
 				header : "Dataset",
 				dataIndex : "shortName",
+				tooltip : "The unique short name for the dataset, often the accession number from the originating source database. Click on the name to view the details page.",
 				renderer : this.formatEE,
 				// width : 80,
 				sortable : true
@@ -104,12 +159,15 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				id : 'name',
 				header : "Name",
 				dataIndex : "name",
+				tooltip : "The descriptive name of the dataset, usually supplied by the submitter",
 				// width : 120,
 				sortable : true
 			}, {
 				id : 'arrays',
 				header : "Arrays",
 				dataIndex : "arrayDesignCount",
+				hidden : true,
+				tooltip : "The number of different types of array platforms used",
 				// width : 50,
 				sortable : true
 			}, {
@@ -117,6 +175,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				header : "Assays",
 				dataIndex : "bioAssayCount",
 				renderer : this.formatAssayCount,
+				tooltip : "The number of arrays (~samples) present in the study",
 				// width : 50,
 				sortable : true
 			}]
@@ -127,6 +186,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				id : 'analyses',
 				header : "Analysis",
 				dataIndex : "differentialExpressionAnalysisId",
+				tooltip : "Indicates whether differential expression data is available for the study",
 				renderer : this.formatAnalysisInfo,
 				sortable : true
 			});

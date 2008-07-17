@@ -140,7 +140,7 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 			scope : this
 		});
 
-		this.addFill();
+		this.addSpacer();
 		this.add(allGrabber);
 		this.addSeparator();
 		this.add(grabber);
