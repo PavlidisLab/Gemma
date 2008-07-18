@@ -371,20 +371,20 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Auditable, AuditEvent> events = null;
         if ( type instanceof ArrayDesignAnalysisEvent ) {
             events = expressionExperimentService.getLastArrayDesignUpdate( ees, type.getClass() );
-       
-        } else if (type instanceof TroubleStatusFlagEvent){
-            //This service unlike the others needs ids not EE objects
+
+        } else if ( type instanceof TroubleStatusFlagEvent ) {
+            // This service unlike the others needs ids not EE objects
             Collection<Long> eeIds = new HashSet<Long>();
-            for(ExpressionExperiment ee : ees){
+            for ( ExpressionExperiment ee : ees ) {
                 eeIds.add( ee.getId() );
             }
             timer.stop();
             if ( timer.getTime() > 1000 ) {
                 log.info( "Retrieved " + type.getClass().getSimpleName() + " in " + timer.getTime() + "ms" );
             }
-            //This service unlike the others returns ids to events
+            // This service unlike the others returns ids to events
             return expressionExperimentService.getLastTroubleEvent( eeIds );
-            
+
         } else {
             events = expressionExperimentService.getLastAuditEvent( ees, type );
         }
@@ -520,6 +520,9 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         };
         File fDir = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
         String[] filenames = fDir.list( filter );
+
+        int numWarnings = 0;
+        int maxWarnings = 5; // don't put 1000 warnings in the logs!
         for ( String objectFile : filenames ) {
             try {
                 FileInputStream fis = new FileInputStream( HOME_DIR + File.separatorChar + EE_REPORT_DIR
@@ -529,10 +532,20 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 ois.close();
                 fis.close();
             } catch ( IOException e ) {
-                log.warn( "Unable to read report object from " + objectFile + ": " + e.getMessage() );
+                if ( numWarnings < maxWarnings ) {
+                    log.warn( "Unable to read report object from " + objectFile + ": " + e.getMessage() );
+                } else if ( numWarnings == maxWarnings ) {
+                    log.warn( "Skipping futher warnings ... reports need refreshing." );
+                }
+                numWarnings++;
                 continue;
             } catch ( ClassNotFoundException e ) {
-                log.warn( "Unable to read report object from " + objectFile + ": " + e.getMessage() );
+                if ( numWarnings < maxWarnings ) {
+                    log.warn( "Unable to read report object from " + objectFile + ": " + e.getMessage() );
+                } else if ( numWarnings == maxWarnings ) {
+                    log.warn( "Skipping futher warnings ... reports need refreshing" );
+                }
+                numWarnings++;
                 continue;
             }
         }
