@@ -22,6 +22,8 @@ import java.util.Calendar;
 
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -34,6 +36,8 @@ import ubic.gemma.model.common.Auditable;
  * @version $Id$
  */
 public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.AuditTrailDaoBase {
+
+    private static Log log = LogFactory.getLog( AuditTrailDaoImpl.class.getName() );
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
@@ -48,9 +52,13 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 if ( auditTrail.getEvents() == null ) return null;
                 for ( AuditEvent ae : auditTrail.getEvents() ) {
                     Hibernate.initialize( ae );
-                    session.lock( ae.getPerformer(), org.hibernate.LockMode.NONE );
-                    Hibernate.initialize( ae.getPerformer() );
-                    session.evict( ae.getPerformer() );
+                    if ( ae.getPerformer() != null ) {
+                        session.lock( ae.getPerformer(), org.hibernate.LockMode.NONE );
+                        Hibernate.initialize( ae.getPerformer() );
+                        session.evict( ae.getPerformer() );
+                    } else {
+                        log.warn( "No performer for audit event: id=" + ae.getId() );
+                    }
                 }
                 session.evict( auditTrail );
                 return null;
