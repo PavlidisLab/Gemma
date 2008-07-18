@@ -256,7 +256,7 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
         final AuditTrail at = d.getAuditTrail();
         assert at != null;
         if ( at.getId() != null ) {
-          //  this.auditTrailDao.thaw( at );
+            // this.auditTrailDao.thaw( at );
             this.getHibernateTemplate().execute( new HibernateCallback() {
                 public Object doInHibernate( Session session ) throws HibernateException {
                     session.lock( at, LockMode.NONE );
@@ -294,13 +294,14 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
 
         if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
             for ( Object object2 : ( Collection<?> ) returnValue ) {
-                if ( object2 instanceof Auditable ) processAfter( m, ( Auditable ) object2, new HashSet<Object>() );
+                if ( object2 instanceof Auditable )
+                    processAfter( m, ( Auditable ) object2, new HashSet<VisitedEntity>() );
             }
         } else if ( !Auditable.class.isAssignableFrom( returnValue.getClass() ) ) {
             return; // no need to look at it!
         } else {
             Auditable d = ( Auditable ) returnValue;
-            processAfter( m, d, new HashSet<Object>() );
+            processAfter( m, d, new HashSet<VisitedEntity>() );
         }
 
     }
@@ -356,7 +357,7 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
      * @param m
      * @param d
      */
-    private void processAfter( Method m, Auditable returnValue, Collection<Object> visited ) {
+    private void processAfter( Method m, Auditable returnValue, Collection<VisitedEntity> visited ) {
 
         if ( returnValue == null ) return;
 
@@ -377,7 +378,7 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
             }
         } else if ( AUDIT_CREATE && CrudUtils.methodIsCreate( m ) ) {
             addCreateAuditEvent( returnValue, "" );
-            visited.add( returnValue );
+            visited.add( new VisitedEntity( returnValue ) );
             processAssociationsAfter( m, returnValue, visited );
         }
 
@@ -390,7 +391,7 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
      * @param m
      * @param object
      */
-    private void processAssociationsAfter( Method m, Object object, Collection<Object> visited ) {
+    private void processAssociationsAfter( Method m, Object object, Collection<VisitedEntity> visited ) {
 
         if ( object instanceof AuditTrail ) return;
         EntityPersister persister = crudUtils.getEntityPersister( object );
@@ -427,7 +428,7 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
                 if ( Auditable.class.isAssignableFrom( propertyType ) ) {
 
                     // break vicious cycle in bidirectional relation
-                    if ( visited.contains( associatedObject ) ) continue;
+                    if ( visited.contains( new VisitedEntity( ( Auditable ) associatedObject ) ) ) continue;
 
                     if ( log.isTraceEnabled() )
                         log.trace( "Processing audit for property " + propertyName + ", Cascade=" + cs );
@@ -438,12 +439,12 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
                     try {
                         for ( Object collectionMember : associatedObjects ) {
 
-                            // break vicious cycle in bidirectional relation
-                            if ( visited.contains( collectionMember ) ) continue;
-
                             if ( !Auditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
                                 break; // all the collection members are Auditable, or none of them are.
                             }
+
+                            // break vicious cycle in bidirectional relation
+                            if ( visited.contains( new VisitedEntity( ( Auditable ) collectionMember ) ) ) continue;
 
                             if ( log.isTraceEnabled() ) {
                                 log.trace( "Processing audit for member " + collectionMember + " of collection "
@@ -603,6 +604,41 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
             throw new IllegalArgumentException( "Shouldn't be getting method " + method );
         }
 
+    }
+
+    class VisitedEntity {
+        private Auditable entity;
+
+        VisitedEntity( Auditable entity ) {
+            this.entity = entity;
+        }
+
+        public boolean equals( Object other ) {
+            if ( this == other ) {
+                return true;
+            }
+            if ( !( other instanceof VisitedEntity ) ) {
+                return false;
+            }
+            final VisitedEntity that = ( VisitedEntity ) other;
+            if ( this.entity.getId() == null || that.getId() == null || !this.entity.getId().equals( that.getId() )
+                    || !this.entity.getClass().equals( that.getEntityClass() ) ) {
+                return false;
+            }
+            return true;
+        }
+
+        public Class getEntityClass() {
+            return entity.getClass();
+        }
+
+        public Long getId() {
+            return entity.getId();
+        }
+
+        public int hashCode() {
+            return 29 * entity.getId().hashCode() + entity.getClass().hashCode();
+        }
     }
 
 }
