@@ -1591,7 +1591,7 @@ public class SearchService implements InitializingBean {
                 // better way...
                 // log.debug( e );
             } catch ( IllegalArgumentException e ) {
-                log.debug( e ); // can be useful for debugging properties searched.
+                // log.debug( e ); // can be useful for debugging properties searched.
                 // again, the property isn't in the compass bean, ignore.
             }
         }
