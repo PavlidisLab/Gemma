@@ -189,6 +189,12 @@ Ext.onReady(function() {
 		saveButton.enable();
 	};
 
+	var toggleDetails = function(btn, e) {
+		var view = Gemma.CharacteristicBrowser.grid.getView();
+		view.showDetails = btn.pressed;
+		view.refresh();
+	};
+
 	var pasteButton = new Ext.Toolbar.Button({
 		text : "paste",
 		tooltip : "Paste copied values onto the selected characteristics; both Class and Term will be updated.",
@@ -201,6 +207,14 @@ Ext.onReady(function() {
 		tooltip : "Paste copied Class values onto the selected characteristics. Term will be left alone.",
 		disabled : true,
 		handler : pasteCategoryHandler
+	});
+
+	var toggleDetailsButton = new Ext.Toolbar.Button({
+		text : "Details",
+		enableToggle : true,
+		tooltip : "Show/hide more information",
+		disabled : false,
+		handler : toggleDetails
 	});
 
 	Gemma.CharacteristicBrowser.grid.on("keypress", function(e) {
@@ -255,6 +269,9 @@ Ext.onReady(function() {
 	toolbar.addField(pasteButton);
 	toolbar.addSeparator();
 	toolbar.addField(pasteCategoryButton);
+	toolbar.addFill();
+	toolbar.add(toggleDetailsButton);
+
 	/*
 	 * toolbar.addSeparator(); toolbar.addField( testButton );
 	 */

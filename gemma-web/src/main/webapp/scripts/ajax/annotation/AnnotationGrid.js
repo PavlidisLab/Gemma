@@ -1,6 +1,8 @@
 Ext.namespace('Gemma');
 
-/*
+/**
+ * The 'Characteristic browser' grid, also used for the basic Annotation view.
+ * 
  * Gemma.AnnotationGrid constructor... div is the name of the div in which to render the grid. config is a hash with the
  * following options: readMethod : the DWR method that returns the list of AnnotationValueObjects ( e.g.:
  * ExpressionExperimentController.getAnnotation ) readParams : an array of parameters that will be passed to the
@@ -15,6 +17,19 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	width : 500,
 	maxHeight : 200,
 	loadMask : true,
+
+	viewConfig : {
+		enableRowBody : true,
+		showDetails : false,
+		getRowClass : function(record, index, p, store) {
+			if (this.showDetails) {
+				p.body = "<p class='characteristic-body' >" + String.format("From {0}", record.data.parentOfParentLink)
+						+ "</p>";
+			}
+			return '';
+		}
+	},
+
 	useDefaultToolbar : true,
 
 	record : Ext.data.Record.create([{
@@ -52,16 +67,17 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	parentStyler : function(value, metadata, record, row, col, ds) {
 		return this.formatParentWithStyle(record.id, record.expanded, record.data.parentLink,
 				record.data.parentDescription, record.data.parentOfParentLink, record.data.parentOfParentDescription);
+		// return parentLink;
 	},
 
 	formatParentWithStyle : function(id, expanded, parentLink, parentDescription, parentOfParentLink,
 			parentOfParentDescription) {
 		var value;
-		if (parentOfParentLink) {
-			value = String.format("{0}<br> from {1}", parentLink, parentOfParentLink);
-		} else {
-			value = parentLink;
-		}
+		// if (parentOfParentLink) {
+		// value = String.format("{0}<br> from {1}", parentLink, parentOfParentLink);
+		// } else {
+		value = parentLink;
+		// }
 		return expanded
 				? value.concat(String.format("<div style='white-space: normal;'>{0}</div>", parentDescription))
 				: value;
@@ -99,7 +115,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				dataIndex : "termName",
 				renderer : this.termStyler.createDelegate(this)
 			}, {
-				header : "Parent",
+				header : "Annotation belongs to:",
 				dataIndex : "parentLink",
 				renderer : this.parentStyler.createDelegate(this),
 				hidden : this.showParent ? false : true
