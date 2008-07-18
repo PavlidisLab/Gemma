@@ -58,6 +58,7 @@
 			</prop>
 			<prop key="/expressionExperiment/visualizeCorrMat.html">expressionExperimentQCController</prop>
 			<prop key="/expressionExperiment/visualizeProbeCorrDist.html">expressionExperimentQCController</prop>
+			<prop key="/expressionExperiment/visualizePvalueDist.html">expressionExperimentQCController</prop>
 			<prop key="/getData.html">expressionExperimentDataFetchController</prop>
 			<prop key="/candidateGeneList*">candidateGeneListController</prop>
 			<prop key="/characteristicBrowser.html">characteristicBrowserController</prop>
@@ -1413,6 +1414,7 @@
 		<props>
 			<prop key="/expressionExperiment/visualizeCorrMat.html">showCorrMat</prop>
 			<prop key="/expressionExperiment/visualizeProbeCorrDist.html">showProbeCorrDist</prop>
+			<prop key="/expressionExperiment/visualizePvalueDist.html">showPvalueDist</prop>
 		</props>
 	</property>
 </bean>

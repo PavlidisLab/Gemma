@@ -89,6 +89,9 @@ public class ExperimentQCTag extends TagSupport {
         buf.append( "<td valign=\"top\" align=\"center\"><strong>Probe correlation</strong><br />" );
         buf.append( " <img src=\"visualizeProbeCorrDist.html?id=" + this.eeid + "\" /></td>" );
 
+        buf.append( "<td valign=\"top\" align=\"center\"><strong>Pvalue distributions</strong><br />" );
+        buf.append( " <img src=\"visualizePvalueDist.html?id=" + this.eeid + "\" /></td>" );
+
         buf.append( "</tr></table></div>" );
         try {
             pageContext.getOut().print( buf.toString() );
