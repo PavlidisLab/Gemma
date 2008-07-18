@@ -63,8 +63,6 @@ public class SecurityService {
     public static final int PUBLIC_MASK = SimpleAclEntry.READ_WRITE;
     public static final int PRIVATE_MASK = SimpleAclEntry.NOTHING;
 
-    private Collection visited = null;
-
     /**
      * Makes the object private. If the object is a {@link Collection}, makes the all the objects private.
      * 
@@ -72,8 +70,8 @@ public class SecurityService {
      */
     @SuppressWarnings("unchecked")
     public void makePrivate( Object object ) {
-        visited = new HashSet();
-        makePrivateOrPublic( object, PRIVATE_MASK );
+        Collection<VisitedEntity> visited = new HashSet<VisitedEntity>();
+        makePrivateOrPublic( object, PRIVATE_MASK, visited );
     }
 
     /**
@@ -83,8 +81,8 @@ public class SecurityService {
      */
     @SuppressWarnings("unchecked")
     public void makePublic( Object object ) {
-        visited = new HashSet();
-        makePrivateOrPublic( object, PUBLIC_MASK );
+        Collection<VisitedEntity> visited = new HashSet<VisitedEntity>();
+        makePrivateOrPublic( object, PUBLIC_MASK, visited );
     }
 
     /**
@@ -92,9 +90,10 @@ public class SecurityService {
      * 
      * @param object
      * @param mask
+     * @param visited
      */
     @SuppressWarnings("unchecked")
-    private void makePrivateOrPublic( Object object, int mask ) {
+    private void makePrivateOrPublic( Object object, int mask, Collection<VisitedEntity> visited ) {
         log.debug( "Changing acl of object " + object + "." );
 
         SecurityContext securityCtx = SecurityContextHolder.getContext();
@@ -102,16 +101,18 @@ public class SecurityService {
         Object principal = authentication.getPrincipal();
 
         if ( object instanceof Securable ) {
-            if ( !visited.contains( object ) ) {
-                visited.add( object );
-                processAssociations( object, mask, authentication, principal );
+            Securable secObject = ( Securable ) object;
+            VisitedEntity visitedEntity = new VisitedEntity( secObject );
+            if ( !visited.contains( visitedEntity ) ) {
+                visited.add( visitedEntity );
+                processAssociations( object, mask, authentication, principal, visited );
             } else {
                 log.debug( "Object " + object.getClass() + " already visited." );
             }
         } else if ( object instanceof Collection ) {
             Collection objects = ( Collection ) object;
             for ( Object o : objects ) {
-                makePrivateOrPublic( o, mask );
+                makePrivateOrPublic( o, mask, visited );
             }
         } else {
             log.error( "Object not Securable.  Cannot change permissions for object of type "
@@ -125,8 +126,11 @@ public class SecurityService {
      * @param mask
      * @param authentication
      * @param principal
+     * @param visited
      */
-    private void processAssociations( Object targetObject, int mask, Authentication authentication, Object principal ) {
+    @SuppressWarnings("unchecked")
+    private void processAssociations( Object targetObject, int mask, Authentication authentication, Object principal,
+            Collection<VisitedEntity> visited ) {
 
         Class clazz = targetObject.getClass();
         Method[] methods = clazz.getMethods();
@@ -159,7 +163,7 @@ public class SecurityService {
                             while ( iter.hasNext() ) {
                                 Object ob = iter.next();
                                 log.debug( "process " + ob );
-                                makePrivateOrPublic( ob, mask );// recursive
+                                makePrivateOrPublic( ob, mask, visited );// recursive
                             }
                         }
                     } else {
@@ -172,7 +176,7 @@ public class SecurityService {
                                 || ( ( Securable ) ob ).getId() == null ) {
                             continue;
                         }
-                        makePrivateOrPublic( ob, mask );// recursive
+                        makePrivateOrPublic( ob, mask, visited );// recursive
                     }
                 } catch ( InvocationTargetException e ) {
                     if ( e.getCause() instanceof UnsupportedOperationException ) {
@@ -350,6 +354,59 @@ public class SecurityService {
      */
     public void setSecurableDao( SecurableDao securableDao ) {
         this.securableDao = securableDao;
+    }
+
+    /**
+     * @author keshav
+     * @version $Id$
+     */
+    public class VisitedEntity {
+
+        private Securable entity;
+
+        /**
+         * @param entity
+         */
+        VisitedEntity( Securable entity ) {
+            this.entity = entity;
+        }
+
+        /**
+         * @return
+         */
+        public Class getEntityClass() {
+            return entity.getClass();
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.lang.Object#hashCode()
+         */
+        public int hashCode() {
+            return 29 * entity.getId().hashCode() + entity.getClass().hashCode();
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.lang.Object#equals(java.lang.Object)
+         */
+        public boolean equals( Object other ) {
+            if ( this == other ) {
+                return true;
+            }
+            if ( !( other instanceof VisitedEntity ) ) {
+                return false;
+            }
+            final VisitedEntity that = ( VisitedEntity ) other;
+            if ( this.entity.getId() == null || that.entity.getId() == null
+                    || !this.entity.getId().equals( that.entity.getId() )
+                    || !this.entity.getClass().equals( that.getEntityClass() ) ) {
+                return false;
+            }
+            return true;
+        }
     }
 
 }
