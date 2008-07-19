@@ -681,7 +681,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " "
                 + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
                 + outKey
-                + " INNER JOIN EXPRESSION_EXPERIMENT ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
+                + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
                 + " WHERE "
                 + eeClause + knownGeneClause + " gcIn.GENE=:id AND gcOut.GENE <> :id  ";
         // log.info( query );

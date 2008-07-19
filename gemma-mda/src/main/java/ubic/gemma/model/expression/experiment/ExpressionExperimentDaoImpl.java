@@ -535,7 +535,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected Collection handleFindByExpressedGene( Gene gene, Double rank ) throws Exception {
 
         final String queryString = "select distinct ee.ID as eeID FROM "
-                + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, DESIGN_ELEMENT_DATA_VECTOR dedv, EXPRESSION_EXPERIMENT ee "
+                + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, DESIGN_ELEMENT_DATA_VECTOR dedv, INVESTIGATION ee "
                 + "WHERE g2s.CS = cs.ID AND cs.ID = dedv.DESIGN_ELEMENT_FK AND dedv.EXPRESSION_EXPERIMENT_FK = ee.ID AND g2s.gene = :geneID AND dedv.RANK >= :rank";
 
         Collection<Long> eeIds = null;
@@ -621,7 +621,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
          * NOTE uses GENE2CS table.
          */
         final String queryString = "select distinct ee.ID as eeID FROM "
-                + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, ARRAY_DESIGN ad, BIO_ASSAY ba, EXPRESSION_EXPERIMENT ee "
+                + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, ARRAY_DESIGN ad, BIO_ASSAY ba, INVESTIGATION ee "
                 + "WHERE g2s.CS = cs.ID AND ad.ID = cs.ARRAY_DESIGN_FK AND ba.ARRAY_DESIGN_USED_FK = ad.ID AND"
                 + " ba.EXPRESSION_EXPERIMENT_FK = ee.ID and g2s.GENE = :geneID";
 
