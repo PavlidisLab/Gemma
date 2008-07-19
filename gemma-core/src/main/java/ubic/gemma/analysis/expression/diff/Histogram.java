@@ -31,6 +31,15 @@ import java.text.DecimalFormat;
 public class Histogram {
     // TODO this is a candidate for basecode, but leaving it here for the moment.
 
+    private double[] m_hist;
+    private String m_name;
+    private double m_min;
+    private double m_max;
+    private int m_nbins;
+    private int m_entries;
+    private double m_overflow;
+    private double m_underflow;
+
     /**
      * @param name
      * @param nbins
@@ -213,14 +222,4 @@ public class Histogram {
     public double[] getArray() {
         return m_hist;
     }
-
-    // private data used internally by this class.
-    private double[] m_hist;
-    private String m_name;
-    private double m_min;
-    private double m_max;
-    private int m_nbins;
-    private int m_entries;
-    private double m_overflow;
-    private double m_underflow;
 }
