@@ -70,6 +70,10 @@ public class SecurityService {
      */
     @SuppressWarnings("unchecked")
     public void makePrivate( Object object ) {
+        if ( object == null ) {
+            log.warn( "Null cannot be made private" );
+            return;
+        }
         Collection<VisitedEntity> visited = new HashSet<VisitedEntity>();
         makePrivateOrPublic( object, PRIVATE_MASK, visited );
     }
@@ -81,6 +85,10 @@ public class SecurityService {
      */
     @SuppressWarnings("unchecked")
     public void makePublic( Object object ) {
+        if ( object == null ) {
+            log.warn( "Null cannot be made public" );
+            return;
+        }
         Collection<VisitedEntity> visited = new HashSet<VisitedEntity>();
         makePrivateOrPublic( object, PUBLIC_MASK, visited );
     }
