@@ -38,7 +38,7 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.expression.experiment.BioAssaySet; 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -106,8 +106,8 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * @return Fully initialized CoexpressionCollectionValueObject.
      */
     @SuppressWarnings("unchecked")
-    public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<BioAssaySet> ees,
-            int stringency, boolean knownGenesOnly, int limit ) {
+    public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<BioAssaySet> ees, int stringency,
+            boolean knownGenesOnly, int limit ) {
 
         if ( stringency <= 0 ) stringency = 1;
 
@@ -283,8 +283,8 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      *        going to be looked at (as in the case of a bulk Gene2Gene analysis).
      */
     @SuppressWarnings("unchecked")
-    private void computeEesTestedIn( Collection<BioAssaySet> ees,
-            CoexpressionCollectionValueObject coexpressions, Collection eesQueryTestedIn, int stringency, int limit ) {
+    private void computeEesTestedIn( Collection<BioAssaySet> ees, CoexpressionCollectionValueObject coexpressions,
+            Collection eesQueryTestedIn, int stringency, int limit ) {
 
         List<CoexpressionValueObject> coexpressionData = coexpressions.getKnownGeneCoexpressionData( stringency );
 
@@ -312,8 +312,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * @param coexpressionData information on the genes needed to be examined.
      */
     @SuppressWarnings("unchecked")
-    private void computeEesTestedInBatch( Collection<BioAssaySet> ees,
-            List<CoexpressionValueObject> coexpressionData ) {
+    private void computeEesTestedInBatch( Collection<BioAssaySet> ees, List<CoexpressionValueObject> coexpressionData ) {
 
         Map<Long, CoexpressionValueObject> gmap = new HashMap<Long, CoexpressionValueObject>();
         for ( CoexpressionValueObject o : coexpressionData ) {
@@ -329,9 +328,9 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
                 if ( log.isDebugEnabled() ) log.debug( "Cache hit" );
                 genes = ( Collection<Long> ) element.getValue();
             } else {
-                log.info( "Caching genes assayed by " + ee );
                 genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
                 eetestedGeneCache.put( new Element( ee.getId(), genes ) );
+                log.info( "Cached " + genes.size() + " genes assayed by " + ee );
             }
 
             for ( Long g : genes ) {
