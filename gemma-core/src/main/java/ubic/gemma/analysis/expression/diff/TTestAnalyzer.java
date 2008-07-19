@@ -152,8 +152,8 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         double[] pvalues = rc.doubleArrayEval( pvalueCommand.toString() );
 
-        /* write out pvalues to a file */
-        writePValuesHistogram( expressionExperiment, pvalues );
+        /* write out histogram */
+        writePValuesHistogram( pvalues, expressionExperiment );
 
         /* handle the t-statistics */
         StringBuffer tstatisticCommand = new StringBuffer();

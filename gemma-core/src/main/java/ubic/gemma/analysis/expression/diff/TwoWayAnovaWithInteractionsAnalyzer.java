@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -136,8 +137,8 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
             }
         }
 
-        /* write out pvalues to a file */
-        writePValuesHistogram( expressionExperiment, filteredPvalues );
+        /* write out histogram */
+        writePValuesHistogram( filteredPvalues, expressionExperiment );
 
         /* F-statistics */
         StringBuffer fstatisticCommand = new StringBuffer();
@@ -170,13 +171,34 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistogram(java.lang.String,
+     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
      *      int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, int numBins, int min, int max,
             double[] pvalues ) {
-        // TODO implement me - make sure you generate distributions for each main effect and interaction
-        return null;
+        Collection<Histogram> hists = new HashSet<Histogram>();
+
+        String nameA = histFileName + "_" + mainEffectAIndex;
+        String nameB = histFileName + "_" + mainEffectBIndex;
+        String nameInteractions = histFileName + "_interactions";
+
+        Histogram histA = new Histogram( nameA, numBins, min, max );
+        Histogram histB = new Histogram( nameB, numBins, min, max );
+        Histogram histInteraction = new Histogram( nameInteractions, numBins, min, max );
+
+        for ( int i = 0; i < pvalues.length; i++ ) {
+            if ( i % maxResults == mainEffectAIndex ) histA.fill( pvalues[i] );
+
+            if ( i % maxResults == mainEffectBIndex ) histB.fill( pvalues[i] );
+
+            if ( i % maxResults == mainEffectInteractionIndex ) histInteraction.fill( pvalues[i] );
+        }
+
+        hists.add( histA );
+        hists.add( histB );
+        hists.add( histInteraction );
+
+        return hists;
     }
 }

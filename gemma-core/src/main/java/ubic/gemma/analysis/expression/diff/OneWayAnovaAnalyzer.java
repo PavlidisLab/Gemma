@@ -151,8 +151,8 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
-        /* write out pvalues to a file */
-        writePValuesHistogram( expressionExperiment, pvalues );
+        /* write out histogram */
+        writePValuesHistogram( pvalues, expressionExperiment );
 
         /* f-statistic */
         StringBuffer fStatisticBuf = new StringBuffer();

@@ -53,10 +53,10 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
     private ExpressionExperiment ee = null;
 
-    private final int mainEffectAIndex = 0;
-    private final int mainEffectBIndex = 1;
-    private final int mainEffectInteractionIndex = 2;
-    private final int maxResults = 3;
+    protected final int mainEffectAIndex = 0;
+    protected final int mainEffectBIndex = 1;
+    protected final int mainEffectInteractionIndex = 2;
+    protected final int maxResults = 3;
 
     /**
      * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results.

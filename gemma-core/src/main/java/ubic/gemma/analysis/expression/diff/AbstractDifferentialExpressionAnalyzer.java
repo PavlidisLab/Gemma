@@ -86,10 +86,10 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     }
 
     /**
-     * @param expressionExperiment
      * @param pvalues
+     * @param expressionExperiment
      */
-    protected void writePValuesHistogram( ExpressionExperiment expressionExperiment, double[] pvalues ) {
+    protected void writePValuesHistogram( double[] pvalues, ExpressionExperiment expressionExperiment ) {
 
         File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
 
