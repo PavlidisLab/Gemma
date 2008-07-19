@@ -122,7 +122,8 @@ public class Histogram {
      */
     public void writeToFile( FileWriter out ) throws IOException {
 
-        DecimalFormat df = new DecimalFormat( " ##0.00;-##0.00" );
+        DecimalFormat dfBin = new DecimalFormat( " ##0.00;-##0.00" );
+        DecimalFormat dfCount = new DecimalFormat( " ##0" );
 
         double step = 0;
 
@@ -132,7 +133,7 @@ public class Histogram {
 
         for ( int i = 0; i < binHeights.length; i++ ) {
 
-            String line = df.format( step ) + "\t" + df.format( binHeights[i] );
+            String line = dfBin.format( step ) + "\t" + dfCount.format( binHeights[i] );
             if ( i < binHeights.length - 1 ) line += "\n";
 
             out.write( line );
