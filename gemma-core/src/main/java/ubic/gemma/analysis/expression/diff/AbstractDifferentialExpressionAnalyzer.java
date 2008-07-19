@@ -97,30 +97,31 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
         String histFileName = expressionExperiment.getShortName() + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
-        String path = dir + File.separator + histFileName;
+        Collection<Histogram> hists = generateHistograms( histFileName, 100, 0, 1, pvalues );
 
-        File outputFile = new File( path );
-        if ( outputFile.exists() ) {
-            outputFile.delete();
+        if ( hists == null || hists.isEmpty() ) {
+            log.error( "Could not generate histogram.  Not writing to file" );
+            return;
         }
-        try {
-            FileWriter out = new FileWriter( outputFile );
-            out.write( "# Differential Expression distribution\n" );
-            out.write( "# date=" + ( new Date() ) + "\n" );
-            out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
-            out.write( "Bin\tCount\n" );
 
-            Collection<Histogram> hists = generateHistograms( histFileName, 100, 0, 1, pvalues );
-            if ( hists == null || hists.isEmpty() ) {
-                log.error( "Could not generate histogram.  Not writing to file" );
-            } else {
-                Histogram hist = hists.iterator().next();
-                hist.writeToFile( out );
+        for ( Histogram hist : hists ) {
+            String path = dir + File.separator + hist.getName();
+
+            File outputFile = new File( path );
+            if ( outputFile.exists() ) {
+                outputFile.delete();
             }
-
-            out.close();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+            try {
+                FileWriter out = new FileWriter( outputFile );
+                out.write( "# Differential Expression distribution\n" );
+                out.write( "# date=" + ( new Date() ) + "\n" );
+                out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
+                out.write( "Bin\tCount\n" );
+                hist.writeToFile( out );
+                out.close();
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
         }
     }
 

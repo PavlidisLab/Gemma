@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -179,9 +180,11 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
             double[] pvalues ) {
         Collection<Histogram> hists = new HashSet<Histogram>();
 
-        String nameA = histFileName + "_" + mainEffectAIndex;
-        String nameB = histFileName + "_" + mainEffectBIndex;
-        String nameInteractions = histFileName + "_interactions";
+        histFileName = StringUtils.removeEnd( histFileName, DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
+
+        String nameA = histFileName + "_mainA" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String nameB = histFileName + "_mainB" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String nameInteractions = histFileName + "_interactions" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
         Histogram histA = new Histogram( nameA, numBins, min, max );
         Histogram histB = new Histogram( nameB, numBins, min, max );

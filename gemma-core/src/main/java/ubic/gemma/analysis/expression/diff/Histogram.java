@@ -168,7 +168,7 @@ public class Histogram {
      * 
      * @return histogram name
      */
-    public String name() {
+    public String getName() {
         return m_name;
     }
 
