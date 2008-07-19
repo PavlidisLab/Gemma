@@ -137,7 +137,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         }
 
         /* write out pvalues to a file */
-        writeRawPValues( expressionExperiment, filteredPvalues );
+        writePValuesHistogram( expressionExperiment, filteredPvalues );
 
         /* F-statistics */
         StringBuffer fstatisticCommand = new StringBuffer();
@@ -165,5 +165,18 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         return createExpressionAnalysis( dmatrix, filteredPvalues, filteredFStatistics, ACTUAL_NUM_RESULTS,
                 experimentalFactorA, experimentalFactorB, quantitationType );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistogram(java.lang.String,
+     *      int, int, int, double[])
+     */
+    @Override
+    protected Collection<Histogram> generateHistograms( String histFileName, int numBins, int min, int max,
+            double[] pvalues ) {
+        // TODO implement me - make sure you generate distributions for each main effect and interaction
+        return null;
     }
 }

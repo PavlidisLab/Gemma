@@ -43,6 +43,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -257,18 +258,16 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
      * @return
      */
     private Collection<File> locatePvalueDistFiles( ExpressionExperiment ee ) {
-        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath();
         String shortName = ee.getShortName();
 
         Collection<File> files = new HashSet<File>();
-        File directory = new File( analysisStoragePath + File.separatorChar + "pvalueDist" + File.separatorChar
-                + shortName );
+        File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
         if ( !directory.exists() ) {
             return files;
         }
 
         String[] fileNames = directory.list();
-        String suffix = ".pvalueDist.txt";
+        String suffix = DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         for ( String fileName : fileNames ) {
             if ( !fileName.endsWith( suffix ) ) {
                 continue;

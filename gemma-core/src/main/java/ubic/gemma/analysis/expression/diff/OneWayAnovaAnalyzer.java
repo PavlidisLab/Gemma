@@ -152,7 +152,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
         /* write out pvalues to a file */
-        writeRawPValues( expressionExperiment, pvalues );
+        writePValuesHistogram( expressionExperiment, pvalues );
 
         /* f-statistic */
         StringBuffer fStatisticBuf = new StringBuffer();
@@ -300,4 +300,27 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         return new FastRowAccessDoubleMatrix2DNamed( ddata );
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     *      int, int, int, double[])
+     */
+    @Override
+    protected Collection<Histogram> generateHistograms( String histFileName, int numBins, int min, int max,
+            double[] pvalues ) {
+
+        Collection<Histogram> hists = new HashSet<Histogram>();
+
+        Histogram hist = new Histogram( histFileName, numBins, min, max );
+        for ( int i = 0; i < pvalues.length; i++ ) {
+            hist.fill( pvalues[i] );
+        }
+
+        hists.add( hist );
+
+        return hists;
+    }
+
 }

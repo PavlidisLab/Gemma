@@ -21,8 +21,8 @@ package ubic.gemma.analysis.expression.diff;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.Collection;
+import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,7 +34,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * An abstract differential expression analyzer to be extended by analyzers which will make use of R. For example, see
@@ -44,10 +43,6 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer {
-
-    protected static final String DIFF_DIR_NAME = "diff";
-
-    protected static final String FILE_SUFFIX = "_pvalues.txt";
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -91,45 +86,54 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     }
 
     /**
-     * Save the raw pvalues to a file.
-     * 
+     * @param expressionExperiment
      * @param pvalues
-     * @param location
-     * @param file
-     * @throws IOException
      */
-    protected void writeRawPValues( double[] pvalues, File location, String file ) {
+    protected void writePValuesHistogram( ExpressionExperiment expressionExperiment, double[] pvalues ) {
 
-        try {
-            File f = new File( location, file );
+        File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
 
-            Writer writer = new FileWriter( f );
-            for ( int i = 0; i < pvalues.length; i++ ) {
-                writer.write( String.valueOf( pvalues[i] ) );
+        FileTools.createDir( dir.toString() );
 
-                if ( i < pvalues.length - 1 ) writer.write( "\t" );
-            }
-            writer.close();
-            log.info( "wrote pvalues to file " + f.toString() );
-        } catch ( IOException e ) {
-            log.error( "Could not write p-values to file" );
+        String histFileName = expressionExperiment.getShortName() + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+
+        String path = dir + File.separator + histFileName;
+
+        File outputFile = new File( path );
+        if ( outputFile.exists() ) {
+            outputFile.delete();
         }
+        try {
+            FileWriter out = new FileWriter( outputFile );
+            out.write( "# Differential Expression distribution\n" );
+            out.write( "# date=" + ( new Date() ) + "\n" );
+            out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
+            out.write( "Bin\tCount\n" );
 
+            Collection<Histogram> hists = generateHistograms( histFileName, 100, 0, 1, pvalues );
+            if ( hists == null || hists.isEmpty() ) {
+                log.error( "Could not generate histogram.  Not writing to file" );
+            } else {
+                Histogram hist = hists.iterator().next();
+                hist.writeToFile( out );
+            }
+
+            out.close();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**
-     * @param expressionExperiment
-     * @param filteredPvalues
+     * @param histFileName
+     * @param numBins
+     * @param min
+     * @param max
+     * @param pvalues
+     * @return
      */
-    protected void writeRawPValues( ExpressionExperiment expressionExperiment, double[] filteredPvalues ) {
-        File dir = FileTools.createDir( ConfigUtils.getAnalysisStoragePath() + File.separatorChar
-                + AbstractDifferentialExpressionAnalyzer.DIFF_DIR_NAME );
-
-        String pvaluesFileName = expressionExperiment.getShortName()
-                + AbstractDifferentialExpressionAnalyzer.FILE_SUFFIX;
-
-        writeRawPValues( filteredPvalues, dir, pvaluesFileName );
-    }
+    protected abstract Collection<Histogram> generateHistograms( String histFileName, int numBins, int min, int max,
+            double[] pvalues );
 
     /**
      * Returns the preferred {@link QuantitationType}.
