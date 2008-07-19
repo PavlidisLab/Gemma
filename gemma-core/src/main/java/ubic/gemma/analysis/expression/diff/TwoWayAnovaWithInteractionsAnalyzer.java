@@ -126,7 +126,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         double[] pvalues = rc.doubleArrayEval( pvalueCommand.toString() );
         if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
-        // removes NA row
+        // removes NA row TODO R can do this for you with "[1,] or "[2,]" or "[3,] in command"
         double[] filteredPvalues = new double[( pvalues.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];
 
         for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {

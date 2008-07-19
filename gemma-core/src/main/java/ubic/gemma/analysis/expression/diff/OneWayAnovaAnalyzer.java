@@ -18,7 +18,6 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,7 +31,6 @@ import org.rosuda.REngine.REXPMismatchException;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -48,7 +46,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * A one way anova implementation as described by P. Pavlidis, Methods 31 (2003) 282-289.
@@ -62,6 +59,14 @@ import ubic.gemma.util.ConfigUtils;
  * apply(matrix,1,function(x){anova(aov(x~factor))$F})
  * <p>
  * where factor is a vector that has first been transposed and then had factor() applied.
+ * <p>
+ * P values are obtained with:
+ * <p>
+ * results<-apply(matrix,1,function(x){anova(aov(x~factor))$Pr})
+ * <p>
+ * pvals<-results[1,]
+ * <p>
+ * Statistics are obtained in the same way.
  * <p>
  * qvalue(pvals)$qvalues
  * 
@@ -132,56 +137,38 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         String matrixName = rc.assignMatrix( filteredNamedMatrix );
 
         /* p-values */
-        StringBuffer pvalueCommand = new StringBuffer();
+        StringBuffer pvalueBuf = new StringBuffer();
 
-        pvalueCommand.append( "apply(" );
-        pvalueCommand.append( matrixName );
-        pvalueCommand.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$Pr}" );
-        pvalueCommand.append( ")" );
+        pvalueBuf.append( "apply(" );
+        pvalueBuf.append( matrixName );
+        pvalueBuf.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$Pr}" );
+        pvalueBuf.append( ")" );
 
-        log.info( pvalueCommand.toString() );
+        String pvalueCmd = pvalueBuf.toString() + "[1,]";
+        log.info( pvalueCmd );
 
-        double[] pvalues = rc.doubleArrayEval( pvalueCommand.toString() );
+        double[] pvalues = rc.doubleArrayEval( pvalueCmd );
 
         if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
-        // removes NA row
-        double[] filteredPvalues = new double[pvalues.length / NUM_RESULTS_FROM_R];
-
-        for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
-            if ( i % NUM_RESULTS_FROM_R == 0 ) {
-                filteredPvalues[j] = pvalues[i];
-                j++;
-            }
-        }
-
         /* write out pvalues to a file */
-        writeRawPValues( expressionExperiment, filteredPvalues );
+        writeRawPValues( expressionExperiment, pvalues );
 
         /* f-statistic */
-        StringBuffer fStatisticCommand = new StringBuffer();
+        StringBuffer fStatisticBuf = new StringBuffer();
 
-        fStatisticCommand.append( "apply(" );
-        fStatisticCommand.append( matrixName );
-        fStatisticCommand.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$F}" );
-        fStatisticCommand.append( ")" );
+        fStatisticBuf.append( "apply(" );
+        fStatisticBuf.append( matrixName );
+        fStatisticBuf.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$F}" );
+        fStatisticBuf.append( ")" );
 
-        log.info( fStatisticCommand.toString() );
+        String fStatisticCmd = fStatisticBuf.toString() + "[1,]";
+        log.info( fStatisticCmd.toString() );
 
-        double[] fstatistics = rc.doubleArrayEval( fStatisticCommand.toString() );
-
-        // removes NA row
-        double[] filteredFStatistics = new double[fstatistics.length / NUM_RESULTS_FROM_R];
-
-        for ( int i = 0, j = 0; j < filteredFStatistics.length; i++ ) {
-            if ( i % NUM_RESULTS_FROM_R == 0 ) {
-                filteredFStatistics[j] = fstatistics[i];
-                j++;
-            }
-        }
+        double[] fstatistics = rc.doubleArrayEval( fStatisticCmd );
 
         /* q-value */
-        double[] qvalues = super.getQValues( filteredPvalues );
+        double[] qvalues = super.getQValues( pvalues );
 
         /* Create the expression analysis and pack the results. */
         // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
@@ -204,9 +191,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
             probeAnalysisResult.setProbe( cs );
-            probeAnalysisResult.setPvalue( filteredPvalues[i] );
+            probeAnalysisResult.setPvalue( pvalues[i] );
             probeAnalysisResult.setCorrectedPvalue( qvalues[i] );
-            probeAnalysisResult.setScore( filteredFStatistics[i] );
+            probeAnalysisResult.setScore( fstatistics[i] );
 
             probeAnalysisResult.setQuantitationType( quantitationType );
 
