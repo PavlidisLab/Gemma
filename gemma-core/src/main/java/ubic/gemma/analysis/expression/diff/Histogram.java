@@ -48,7 +48,7 @@ public class Histogram {
     }
 
     /**
-     * Fill the histogram by taking the x and putting it into the appropriate bin.
+     * Fill the histogram with x.
      * 
      * @param x is the value to add in to the histogram
      */
@@ -71,7 +71,7 @@ public class Histogram {
     }
 
     /**
-     * Private class used internally to store info about which bin of the histogram to use for a number to be filled.
+     *
      */
     private class BinInfo {
         public int index;
@@ -81,7 +81,7 @@ public class Histogram {
     }
 
     /**
-     * Private internal utility method to figure out which bin of the histogram a number falls in.
+     * Determines the bin for a number in the histogram.
      * 
      * @return info on which bin x falls in.
      */
@@ -145,8 +145,7 @@ public class Histogram {
     }
 
     /**
-     * Get number of entries in the histogram. This should correspond to the number of times the fill method has been
-     * used.
+     * The number of entries in the histogram (the number of times fill has been called).
      * 
      * @return number of entries
      */
@@ -155,7 +154,7 @@ public class Histogram {
     }
 
     /**
-     * Get the name of the histogram. The name is an arbitrary label for the user, and is set by the constructor.
+     * The name of the histogram.
      * 
      * @return histogram name
      */
@@ -164,8 +163,8 @@ public class Histogram {
     }
 
     /**
-     * Get the number of bins in the histogram. The range of the histogram defined by min and max is divided into this
-     * many bins.
+     * Get the number of bins in the histogram. The range of the histogram defined by min and max, and the range is
+     * divided into the number of returned.
      * 
      * @return number of bins
      */
@@ -174,8 +173,6 @@ public class Histogram {
     }
 
     /**
-     * Get lower end of histogram range
-     * 
      * @return minimum x value covered by histogram
      */
     public double min() {
@@ -183,8 +180,6 @@ public class Histogram {
     }
 
     /**
-     * Get upper end of histogram range
-     * 
      * @return maximum x value covered by histogram
      */
     public double max() {
@@ -192,8 +187,7 @@ public class Histogram {
     }
 
     /**
-     * Get the height of the overflow bin. Any value passed to the fill method which falls above the range of the
-     * histogram will be counted in the overflow bin.
+     * The height of the overflow bin.
      * 
      * @return number of overflows
      */
@@ -202,8 +196,7 @@ public class Histogram {
     }
 
     /**
-     * Get the height of the underflow bin. Any value passed to the fill method which falls below the range of the
-     * histogram will be counted in the underflow bin.
+     * The height of the underflow bin.
      * 
      * @return number of underflows
      */
@@ -212,8 +205,7 @@ public class Histogram {
     }
 
     /**
-     * This method gives you the bin contents in the form of an array. It might be useful for example if you want to use
-     * the histogram in some other way, for example to pass to a plotting package.
+     * Returns the bin heights.
      * 
      * @return array of bin heights
      */
