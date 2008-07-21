@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.CrudUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -104,6 +105,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+        securityService.setCrudUtils( ( CrudUtils ) this.getBean( "crudUtils" ) );
         securityService.makePrivate( ad );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
@@ -126,6 +128,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+        securityService.setCrudUtils( ( CrudUtils ) this.getBean( "crudUtils" ) );
 
         try {
             securityService.makePrivate( ad );
@@ -145,6 +148,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     // SecurityService securityService = new SecurityService();
     // securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
     // securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+    // securityService.setCrudUtils( ( CrudUtils ) this.getBean( "crudUtils" ) );
     // securityService.makePrivate( ee );
     // /*
     // * uncomment so you can see the acl permission has been changed in the database.
@@ -165,6 +169,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+        securityService.setCrudUtils( ( CrudUtils ) this.getBean( "crudUtils" ) );
         securityService.makePrivate( ee );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
@@ -197,6 +202,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
             securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
             securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+            securityService.setCrudUtils( ( CrudUtils ) this.getBean( "crudUtils" ) );
             securityService.makePrivate( diffAnalyses );
 
             /*
@@ -220,6 +226,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+        securityService.setCrudUtils( ( CrudUtils ) this.getBean( "crudUtils" ) );
 
         boolean priv = securityService.isPrivate( investigation );
         assertFalse( priv );

@@ -18,12 +18,10 @@
  */
 package ubic.gemma.security;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.beans.PropertyDescriptor;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.acegisecurity.Authentication;
@@ -36,11 +34,14 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.util.StringUtils;
+import org.hibernate.engine.CascadeStyle;
+import org.hibernate.persister.entity.EntityPersister;
+import org.springframework.beans.BeanUtils;
 
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.SecurableDao;
-import ubic.gemma.util.EntityUtils;
+import ubic.gemma.persistence.CrudUtils;
+import ubic.gemma.util.ReflectionUtil;
 
 /**
  * @author keshav
@@ -48,16 +49,15 @@ import ubic.gemma.util.EntityUtils;
  * @spring.bean id="securityService"
  * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  * @spring.property name="securableDao" ref="securableDao"
+ * @spring.property name="crudUtils" ref="crudUtils"
  */
 public class SecurityService {
 
     private Log log = LogFactory.getLog( SecurityService.class );
 
-    private static final String ACCESSOR_PREFIX = "get";
-
     private BasicAclExtendedDao basicAclExtendedDao = null;
     private SecurableDao securableDao = null;
-    private UnsecuredSecurableSet unsecuredClasses = new UnsecuredSecurableSet( null );
+    private CrudUtils crudUtils = null;
 
     public static final String ADMIN_AUTHORITY = "admin";
     public static final int PUBLIC_MASK = SimpleAclEntry.READ_WRITE;
@@ -140,65 +140,59 @@ public class SecurityService {
     private void processAssociations( Object targetObject, int mask, Authentication authentication, Object principal,
             Collection<VisitedEntity> visited ) {
 
-        Class clazz = targetObject.getClass();
-        Method[] methods = clazz.getMethods();
+        EntityPersister persister = crudUtils.getEntityPersister( targetObject );
+        if ( persister == null ) {
+            // FIXME this happens when the object is a proxy.
+            log.error( "No Entity Persister found for " + targetObject.getClass().getName() );
+            return;
+        }
+        CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+        String[] propertyNames = persister.getPropertyNames();
 
-        for ( Method method : methods ) {
-            String name = method.getName();
-            if ( StringUtils.startsWithIgnoreCase( name, ACCESSOR_PREFIX ) ) {
-                Class returnType = method.getReturnType();
-                if ( unsecuredClasses.contains( returnType )
-                        || ( returnType != java.util.Collection.class && !Securable.class.isAssignableFrom( returnType
-                                .getClass() ) ) ) {
-                    continue;
-                }
+        for ( int j = 0; j < propertyNames.length; j++ ) {
+            CascadeStyle cs = cascadeStyles[j];
+            if ( !crudUtils.needCascade( cs ) ) {
+                continue;
+            }
 
-                try {
-                    if ( returnType == java.util.Collection.class ) {
+            PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( targetObject.getClass(), propertyNames[j] );
 
-                        Collection returnedCollection = ( Collection ) clazz.getMethod( name, ( Class[] ) null )
-                                .invoke( targetObject, ( Object[] ) null );
-                        if ( returnedCollection == null || returnedCollection.isEmpty() ) continue;
+            Object associatedObject = null;
+            try {
+                associatedObject = ReflectionUtil.getProperty( targetObject, descriptor );
+            } catch ( Exception e ) {
+                throw new RuntimeException( "Error changing permission.  Not changing any of the permissions: " + e );
+            }
 
-                        /* check if an object in collection is in unsecuredCol */
-                        Object objInCol = returnedCollection.iterator().next();
-                        if ( unsecuredClasses.contains( objInCol.getClass() )
-                                || !Securable.class.isAssignableFrom( objInCol.getClass() ) ) {
-                            continue;
-                        } else {
-                            /* if object in collection is not in unsecuredCol and is a Securable, process */
-                            Iterator iter = returnedCollection.iterator();
-                            while ( iter.hasNext() ) {
-                                Object ob = iter.next();
-                                log.debug( "process " + ob );
-                                makePrivateOrPublic( ob, mask, visited );// recursive
-                            }
+            if ( associatedObject == null ) continue;
+
+            Class<?> propertyType = descriptor.getPropertyType();
+
+            if ( Securable.class.isAssignableFrom( propertyType ) ) {
+
+                // if ( !crudUtils.needCascade( cs ) ) continue;
+
+                if ( log.isDebugEnabled() ) log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs );
+                makePrivateOrPublic( associatedObject, mask, visited );
+            } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
+
+                /*
+                 * This block commented out because of lazy-load problems.
+                 */
+                Collection associatedObjects = ( Collection ) associatedObject;
+                for ( Object object2 : associatedObjects ) {
+                    if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
+
+                        // if ( !crudUtils.needCascade( cs ) ) continue;
+
+                        if ( log.isDebugEnabled() ) {
+                            log.debug( "Processing ACL for member " + object2 + " of collection " + propertyNames[j]
+                                    + ", Cascade=" + cs );
                         }
-                    } else {
-                        Object ob = clazz.getMethod( name, ( Class[] ) null ).invoke( targetObject, ( Object[] ) null );
-
-                        ob = EntityUtils.getImplementationForProxy( ob );
-
-                        if ( ob == null || unsecuredClasses.contains( ob.getClass() )
-                                || !Securable.class.isAssignableFrom( ob.getClass() )
-                                || ( ( Securable ) ob ).getId() == null ) {
-                            continue;
-                        }
-                        makePrivateOrPublic( ob, mask, visited );// recursive
-                    }
-                } catch ( InvocationTargetException e ) {
-                    if ( e.getCause() instanceof UnsupportedOperationException ) {
-                        // no-op, the association isn't valid anyway.
-                    }
-                } catch ( Exception e ) {
-                    if ( e instanceof UnsupportedOperationException ) {
-                        // no-op, the association isn't valid anyway.
-                    } else {
-                        throw new RuntimeException( e );
+                        makePrivateOrPublic( object2, mask, visited );
                     }
                 }
             }
-
         }
         String recipient = configureWhoToRunAs( targetObject, mask, authentication, principal );
         if ( recipient != null ) changeMask( targetObject, mask, recipient );
@@ -415,6 +409,10 @@ public class SecurityService {
             }
             return true;
         }
+    }
+
+    public void setCrudUtils( CrudUtils crudUtils ) {
+        this.crudUtils = crudUtils;
     }
 
 }
