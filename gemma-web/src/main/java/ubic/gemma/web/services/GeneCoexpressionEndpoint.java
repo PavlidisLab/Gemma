@@ -142,12 +142,16 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
         
-        Collection<Gene> geneCol = geneService.loadMultiple( geneIDLong );
-        if ( geneCol == null ) {
+        Collection<Gene> rawGeneCol = geneService.loadMultiple( geneIDLong );
+        if ( rawGeneCol == null || rawGeneCol.isEmpty()) {
             String msg = "None of the gene id's can be found.";
             return buildBadResponse( document, msg );
         }
-        
+        Collection<Gene> geneCol = retainGenesInCorrectTaxon(rawGeneCol, taxon);
+        if (geneCol == null || geneCol.isEmpty()){
+            String msg = "Input genes do not match input taxon.";
+            return buildBadResponse( document, msg );
+        }
         geneService.thawLite( geneCol );
 
         int stringency = Integer.parseInt( string );
@@ -236,6 +240,15 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
         log.info( "XML response for coexpression canned result built in " + time + "ms." );
         return responseWrapper;
 
+    }
+
+    private Collection<Gene> retainGenesInCorrectTaxon( Collection<Gene> rawGeneCol, Taxon taxon ) {
+        Collection<Gene> genesToUse = new HashSet<Gene>();
+        for (Gene gene:rawGeneCol){
+            if (gene.getTaxon().getId().equals( taxon.getId() ))
+                genesToUse.add( gene );
+        }
+        return genesToUse;
     }
 
 }
