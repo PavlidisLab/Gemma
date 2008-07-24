@@ -347,7 +347,12 @@ public abstract class AbstractOntologyService {
     private static final String KEEPALIVE_SEARCH_TERM = "dummy";
 
     private synchronized void startKeepAliveThread() {
-        if ( keepAliveThreads.containsKey( this.getClass() ) ) return;
+    	    	
+        if ( keepAliveThreads.containsKey( this.getClass() ) ) {
+        	log.info("Didn't start keep alive thread for: " + this.getClass() + " because already started");
+        	return;
+        }
+        
         Thread keepAliveThread = new KeepAliveThread();
         keepAliveThread.start();
         keepAliveThreads.put( this.getClass(), keepAliveThread );
