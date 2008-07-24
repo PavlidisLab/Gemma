@@ -66,13 +66,14 @@ public class ProgressStatusService {
             // we might just need to wait a little while for the job to register.
             try {
                 Thread.sleep( 1000 );
-                log.warn( "It looks like job " + taskId + " has gone missing; assuming it is dead" );
+                log.warn( "It looks like job " + taskId + " has gone missing; assuming it is dead or finished already" );
                 job = progressManager.getJob( taskId );
                 if ( job == null ) {
                     // We should assume it is dead.
                     ProgressData data = new ProgressData();
                     data.setTaskId( taskId );
                     data.setFailed( true );
+                    data.setDescription("The job has already finished (due to an error or being too fast)");
                     result.add( data );
                 }
             } catch ( InterruptedException e ) {

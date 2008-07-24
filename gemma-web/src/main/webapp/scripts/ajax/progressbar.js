@@ -1,7 +1,17 @@
 /**
- * Progressbar.js. To use this, create a div with id "progress-area" on your
- * page, and a task id in a div with id "taskId". An optional update area
- * "messages" may be used. Arrange for createIndeterminateProgressBar or
+ * Progressbar.js.
+ * 
+ *  
+ *  To use:
+ *  
+ *  Pass the taskId into the progrsesbar constructor
+ *   OR
+ *   (currently doesn't work)
+ *  create a div with id "progress-area" on your
+ * page, and a task id in a div with id "taskId". 
+ * 
+ * An optional update area "messages" may be used. 
+ * Arrange for createIndeterminateProgressBar or
  * createDeterminateProgressBar to be called, followed by startProgress().
  * 
  * @author Kelsey
@@ -66,8 +76,21 @@ Ext.extend(progressbar, Ext.util.Observable, {
 		}
 
 		if (!this.taskId) {
-			alert("no task id");
-			return;
+			//try to get from hidden input field. 
+			var taskId = dwr.util.getValue("taskId");	
+			//FIME: this doesn't work nor does Ext.get("taskId") 
+			//the returned value is always a blank string (from both)
+			//The task id is being returned from the server (checked)
+			//Perhaps is some dom refresh problem
+			
+			if (!taskId){
+					alert("no task id");
+					return;				
+			}
+			console.log("Task Id: " + taskId);
+			
+			this.taskId = taskId;
+			
 		}
 		var callParams = [];
 		var callback = this.updateProgress.createDelegate(this);
@@ -80,7 +103,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 
 	stopProgress : function() {
 		window.clearInterval(this.timeoutid);
-		Ext.DomHelper.overwrite("progress-area", "");
+		//Ext.DomHelper.overwrite("progress-area", "");
 		this.previousMessage = null;
 		this.waiting = false;
 	},

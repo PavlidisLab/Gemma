@@ -22,10 +22,9 @@ function handleWait(data, forward) {
 	try {
 		taskId = data;
 		Ext.DomHelper.overwrite("messages", "");
-		Ext.DomHelper.overwrite("taskId",
-				"<input type = 'hidden' name='taskId' id='taskId' value= '"
-						+ taskId + "'/> ");
+			
 		var p = new progressbar({
+			taskId : taskId,
 			doForward : forward
 		});
 		p.createIndeterminateProgressBar();

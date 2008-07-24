@@ -2,7 +2,9 @@ var uploadButton;
 
 Ext.onReady(function() {
 	uploadButton = new Ext.Button("upload-button", {
-		text : "Start loading"
+		text : "Start loading",
+		width : 100
+		
 	});
 	uploadButton.on("click", submitForm);
 });
@@ -70,7 +72,7 @@ function handleSuccess(taskId) {
 		Ext.DomHelper.overwrite("messages", "");
 
 		var p = new progressbar({
-			taskID : taskId
+			taskId : taskId
 		});
 		p.createIndeterminateProgressBar();
 		p.on('fail', handleFailure);

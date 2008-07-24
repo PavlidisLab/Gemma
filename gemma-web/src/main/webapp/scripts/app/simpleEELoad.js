@@ -109,10 +109,8 @@ function handleSuccess(data) {
 	try {
 		taskId = data;
 		Ext.DomHelper.overwrite("messages", "");
-		Ext.DomHelper.overwrite("taskId",
-				"<input type = 'hidden' name='taskId' id='taskId' value= '"
-						+ taskId + "'/> ");
-		p = new progressbar();
+
+		p = new progressbar({taskId : taskId});
 		p.createIndeterminateProgressBar();
 		p.on("fail", handleFailure);
 		p.on("cancel", handleCancel);
