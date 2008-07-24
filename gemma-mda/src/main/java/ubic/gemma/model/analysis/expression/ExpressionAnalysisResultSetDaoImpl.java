@@ -25,6 +25,7 @@ import org.hibernate.Session;
 import org.springframework.orm.hibernate3.HibernateCallback;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
  * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet
@@ -41,6 +42,10 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         this.getHibernateTemplate().execute( new HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
                 session.lock( resultSet, LockMode.NONE );
+                for ( ExperimentalFactor factor : resultSet.getExperimentalFactor() ) {
+                    Hibernate.initialize( factor );
+                }
+
                 for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
                     Hibernate.initialize( result );
                     if ( result instanceof ProbeAnalysisResult ) {

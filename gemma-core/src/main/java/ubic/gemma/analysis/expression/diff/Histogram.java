@@ -31,14 +31,14 @@ import java.text.DecimalFormat;
 public class Histogram {
     // TODO this is a candidate for basecode, but leaving it here for the moment.
 
-    private double[] m_hist;
-    private String m_name;
-    private double m_min;
-    private double m_max;
-    private int m_nbins;
-    private int m_entries;
-    private double m_overflow;
-    private double m_underflow;
+    private double[] hist;
+    private String name;
+    private double min;
+    private double max;
+    private int nbins;
+    private int entries;
+    private double overflow;
+    private double underflow;
 
     /**
      * @param name
@@ -47,13 +47,13 @@ public class Histogram {
      * @param max
      */
     public Histogram( String name, int nbins, double min, double max ) {
-        m_nbins = nbins;
-        m_min = min;
-        m_max = max;
-        m_name = name;
-        m_hist = new double[m_nbins];
-        m_underflow = 0;
-        m_overflow = 0;
+        this.nbins = nbins;
+        this.min = min;
+        this.max = max;
+        this.name = name;
+        this.hist = new double[this.nbins];
+        this.underflow = 0;
+        this.overflow = 0;
     }
 
     /**
@@ -66,17 +66,17 @@ public class Histogram {
         BinInfo bin = findBin( x );
         // check the result of findBin in case it was an overflow or underflow
         if ( bin.isUnderflow ) {
-            m_underflow++;
+            underflow++;
         }
         if ( bin.isOverflow ) {
-            m_overflow++;
+            overflow++;
         }
         if ( bin.isInRange ) {
-            m_hist[bin.index]++;
+            hist[bin.index]++;
         }
 
         // count the number of entries made by the fill method
-        m_entries++;
+        entries++;
     }
 
     /**
@@ -100,15 +100,15 @@ public class Histogram {
         bin.isUnderflow = false;
         bin.isOverflow = false;
         // first check if x is outside the range of the normal histogram bins
-        if ( x < m_min ) {
+        if ( x < min ) {
             bin.isUnderflow = true;
-        } else if ( x > m_max ) {
+        } else if ( x > max ) {
             bin.isOverflow = true;
         } else {
             // search for histogram bin into which x falls
-            double binWidth = ( m_max - m_min ) / m_nbins;
-            for ( int i = 0; i < m_nbins; i++ ) {
-                double highEdge = m_min + ( i + 1 ) * binWidth;
+            double binWidth = ( max - min ) / nbins;
+            for ( int i = 0; i < nbins; i++ ) {
+                double highEdge = min + ( i + 1 ) * binWidth;
                 if ( x <= highEdge ) {
                     bin.isInRange = true;
                     bin.index = i;
@@ -136,7 +136,7 @@ public class Histogram {
 
         double step = 0;
 
-        double binWidth = ( m_max - m_min ) / m_nbins;
+        double binWidth = ( max - min ) / nbins;
 
         double[] binHeights = this.getArray();
 
@@ -160,7 +160,7 @@ public class Histogram {
      * @return number of entries
      */
     public int entries() {
-        return m_entries;
+        return entries;
     }
 
     /**
@@ -169,7 +169,7 @@ public class Histogram {
      * @return histogram name
      */
     public String getName() {
-        return m_name;
+        return name;
     }
 
     /**
@@ -179,21 +179,21 @@ public class Histogram {
      * @return number of bins
      */
     public int numberOfBins() {
-        return m_nbins;
+        return nbins;
     }
 
     /**
      * @return minimum x value covered by histogram
      */
     public double min() {
-        return m_min;
+        return min;
     }
 
     /**
      * @return maximum x value covered by histogram
      */
     public double max() {
-        return m_max;
+        return max;
     }
 
     /**
@@ -202,7 +202,7 @@ public class Histogram {
      * @return number of overflows
      */
     public double overflow() {
-        return m_overflow;
+        return overflow;
     }
 
     /**
@@ -211,7 +211,7 @@ public class Histogram {
      * @return number of underflows
      */
     public double underflow() {
-        return m_underflow;
+        return underflow;
     }
 
     /**
@@ -220,6 +220,6 @@ public class Histogram {
      * @return array of bin heights
      */
     public double[] getArray() {
-        return m_hist;
+        return hist;
     }
 }

@@ -21,14 +21,9 @@ package ubic.gemma.analysis.expression.diff;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -40,13 +35,13 @@ import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
 
 /**
  * A spring loaded differential expression service to run the differential expression analysis (and persist the results
@@ -55,6 +50,7 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  * @spring.bean id="differentialExpressionAnalyzerService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
+ * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
  * @spring.property name="differentialExpressionAnalyzer" ref="differentialExpressionAnalyzer"
  * @spring.property name="persisterHelper" ref="persisterHelper"
  * @author keshav
@@ -62,15 +58,11 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  */
 public class DifferentialExpressionAnalyzerService {
 
-    private static final String ONE_WAY_ANOVA = "one";
-    private static final String TWO_WAY_ANOVA = "two";
-    private static final int NUM_OWA_RESULT_SETS = 1;// num one way anova sets
-    private static final int NUM_TWA_FACTORS = 2;// num two way anova factors
-
     private Log log = LogFactory.getLog( this.getClass() );
     private ExpressionExperimentService expressionExperimentService = null;
     private DifferentialExpressionAnalyzer differentialExpressionAnalyzer = null;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
     private PersisterHelper persisterHelper = null;
 
     /**
@@ -274,6 +266,8 @@ public class DifferentialExpressionAnalyzerService {
 
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
 
+            differentialExpressionAnalysisResultService.thaw( resultSet );
+
             String factorNames = null;
             Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
             if ( factors.size() > 1 ) {
@@ -364,113 +358,26 @@ public class DifferentialExpressionAnalyzerService {
         this.differentialExpressionAnalyzer = differentialExpressionAnalyzer;
     }
 
+    /**
+     * @param differentialExpressionAnalysisService
+     */
     public void setDifferentialExpressionAnalysisService(
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
+    /**
+     * @param persisterHelper
+     */
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 
     /**
-     * @param ee
-     * @param forceAnalysis
-     * @return
+     * @param differentialExpressionAnalysisResultService
      */
-    private DifferentialExpressionAnalysis getDifferentialExpressionAnalysis( ExpressionExperiment ee,
-            boolean forceAnalysis, String analysisType ) {
-        Collection<DifferentialExpressionAnalysis> analyses = this
-                .getDifferentialExpressionAnalyses( ee, forceAnalysis );
-        if ( analyses.isEmpty() ) {
-            if ( !forceAnalysis ) {
-                log.error( "No analyses associated with experiment: " + ee.getShortName() );
-                return null;
-            }
-            boolean analysisRun = runDifferentialExpressionAnalysis( ee, forceAnalysis );
-            if ( !analysisRun ) {
-                return null;
-            }
-            analyses = this.getDifferentialExpressionAnalyses( ee, forceAnalysis );
-        }
-
-        DifferentialExpressionAnalysis analysis = getDifferentialExpressionAnalysisFromAnalyses( analyses, analysisType );
-
-        if ( analysis == null ) {
-            if ( !forceAnalysis ) {
-                log.error( "Differential expression analysis not found for experiment " + ee.getShortName()
-                        + ".  Returning ..." );
-
-                return null;
-            }
-            log.debug( "Was told to run analyis.  Running now ... " );
-            this.runDifferentialExpressionAnalysis( ee, forceAnalysis );
-            analysis = getDifferentialExpressionAnalysisFromAnalyses( analyses, analysisType );
-        }
-
-        return analysis;
+    public void setDifferentialExpressionAnalysisResultService(
+            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
+        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
     }
-
-    /**
-     * @param analyses
-     * @param analysis
-     * @param analysisType
-     * @return
-     */
-    private DifferentialExpressionAnalysis getDifferentialExpressionAnalysisFromAnalyses(
-            Collection<DifferentialExpressionAnalysis> analyses, String analysisType ) {
-        DifferentialExpressionAnalysis analysis = null;
-        for ( DifferentialExpressionAnalysis a : analyses ) {
-            analysis = a;
-            break;
-        }
-        return analysis;
-    }
-
-    /**
-     * The analysisResults are sorted.
-     * 
-     * @param top
-     * @param analysisResults
-     * @return
-     */
-    private List<DifferentialExpressionAnalysisResult> sortResults( int top,
-            Collection<DifferentialExpressionAnalysisResult> analysisResults ) {
-        // FIXME This is a silly hack. Return a list with analysis.getAnalysisResults since you know this has to be
-        // sorted.
-        DifferentialExpressionAnalysisResult[] analysisResultsAsArray = analysisResults
-                .toArray( new DifferentialExpressionAnalysisResult[analysisResults.size()] );
-        List<DifferentialExpressionAnalysisResult> analysisResultsAsList = Arrays.asList( analysisResultsAsArray );
-        // end fixme
-
-        Collections.sort( analysisResultsAsList, DifferentialExpressionAnalysisResultComparator.Factory.newInstance() );
-
-        Iterator<DifferentialExpressionAnalysisResult> iter = analysisResultsAsList.iterator();
-
-        List<DifferentialExpressionAnalysisResult> topResults = new ArrayList<DifferentialExpressionAnalysisResult>();
-
-        for ( int i = 0; i < top; i++ ) {
-            topResults.add( iter.next() );
-        }
-        return topResults;
-    }
-
-    /**
-     * If the number of desired results (top) is greater than the number of analysis results, all results are returned.
-     * 
-     * @param shortName
-     * @param top
-     * @param analysisResults
-     * @return
-     */
-    private int setTopLimit( String shortName, int top, Collection<DifferentialExpressionAnalysisResult> analysisResults ) {
-        if ( top > analysisResults.size() ) {
-            log.warn( "Number of desired results, " + top
-                    + ", is greater than the number of analysis results for experiment with short name " + shortName
-                    + ".  Will return all results." );
-            top = analysisResults.size();
-        }
-        return top;
-    }
-
 }
