@@ -56,7 +56,7 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
      */
     protected synchronized ModelAndView startJob( BackgroundControllerJob<ModelAndView> job ) {
         String taskId = run( job );
-        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskId=" + taskId ) );
         mnv.addObject( "taskId", taskId );
         return mnv;
     }
