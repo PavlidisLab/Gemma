@@ -13,12 +13,12 @@
 		Ext.onReady(function () {
 		var p = new progressbar();
 	 	p.createIndeterminateProgressBar();
-		p.on('fail', handleFailure);
-		p.on('cancel', reset);
+		p.on('fail', function(error){ alert(error); });
+		p.on('cancel',function(cancel){alert(cancel); });
 	 	p.startProgress(); });
 		</script>
 
-<input type='hidden' name='taskId' id='taskId' value='${taskid }' />
+<input type='hidden' name='taskId' id='taskId' value='${taskid}' />
 <div id="messages" style="margin: 10px; width: 400px"></div>
 <div id="progress-area" style="padding: 5px;"></div>
 
