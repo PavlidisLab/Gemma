@@ -359,6 +359,13 @@ public class SecurityService {
     }
 
     /**
+     * @param crudUtils
+     */
+    public void setCrudUtils( CrudUtils crudUtils ) {
+        this.crudUtils = crudUtils;
+    }
+
+    /**
      * @author keshav
      * @version $Id$
      */
@@ -410,9 +417,4 @@ public class SecurityService {
             return true;
         }
     }
-
-    public void setCrudUtils( CrudUtils crudUtils ) {
-        this.crudUtils = crudUtils;
-    }
-
 }
