@@ -18,10 +18,14 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +34,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -178,196 +183,14 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
-     * Returns the top results of a one way anova for the experiment with shortName.
-     * <p>
-     * If the expression experiment given by shortName is not found, returns null.
-     * <p>
-     * If there are no analyses for the given experiment, returns null.
-     * 
-     * @param shortName
-     * @param top
+     * @param expressionExperiment
      * @return
-     */
-    public Collection<DifferentialExpressionAnalysisResult> getTopResults( String shortName, int top,
-            boolean forceAnalysis ) {
-
-        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
-        if ( ee == null ) {
-            log.error( "Could not find expeiment with name: " + shortName + ".  Returning ..." );
-            return null;
-        }
-        expressionExperimentService.thawLite( ee );
-
-        return getTopResults( ee, top, forceAnalysis );
-    }
-
-    /**
-     * Returns the top results of a one way anova for the experiment.
-     * 
-     * @param top
-     * @param ee
-     * @return
+     * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public Collection<DifferentialExpressionAnalysisResult> getTopResults( ExpressionExperiment ee, int top,
-            boolean forceAnalysis ) {
-
-        ExpressionAnalysis analysis = getDifferentialExpressionAnalysis( ee, forceAnalysis, ONE_WAY_ANOVA );
-        if ( analysis == null ) return null;
-
-        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
-
-        log.info( "Getting one way anova results for experiment: " + ee.getShortName() );
-
-        if ( resultSets.size() != NUM_OWA_RESULT_SETS )
-            throw new RuntimeException( "Invalid number of result sets for analysis for experiment: "
-                    + ee.getShortName() );
-        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
-
-        Collection<DifferentialExpressionAnalysisResult> analysisResults = resultSet.getResults();
-
-        top = setTopLimit( ee.getShortName(), top, analysisResults );
-
-        List<DifferentialExpressionAnalysisResult> topResults = sortResults( top, analysisResults );
-
-        return topResults;
+    public Collection<ExpressionAnalysisResultSet> getResultSets( ExpressionExperiment expressionExperiment ) {
+        return differentialExpressionAnalysisService.getResultSets( expressionExperiment );
     }
-
-    /**
-     * Returns the top results of a two way anova for an experiment with shortName and the given factor. If the analysis
-     * has already been run, the analysis is re-run only if forceAnalysis is true.
-     * 
-     * @param shortName
-     * @param top
-     * @param factorName
-     * @param forceAnalysis
-     * @return
-     */
-    public Collection<DifferentialExpressionAnalysisResult> getTopResultsForFactor( String shortName, int top,
-            String factorName, boolean forceAnalysis ) {
-
-        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
-        if ( ee == null ) {
-            log.error( "Could not find expeiment with name: " + shortName + ".  Returning ..." );
-            return null;
-        }
-        expressionExperimentService.thawLite( ee );
-
-        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-
-        ExperimentalFactor factorToUse = null;
-        for ( ExperimentalFactor factor : factors ) {
-            if ( StringUtils.contains( factor.getName(), factorName ) ) {
-                factorToUse = factor;
-                break;
-            }
-        }
-
-        if ( factorToUse == null ) {
-            log.error( "No matching factor.  Returning ..." );
-            return null;
-        }
-
-        return getTopResultsForFactor( ee, factorToUse, top, forceAnalysis );
-    }
-
-    /**
-     * Returns the top results of a two way anova for an experiment with shortName and the given factor. If the analysis
-     * has already been run, the analysis is re-run only if forceAnalysis is true.
-     * 
-     * @param ee
-     * @param factor
-     * @param top
-     * @param forceAnalysis
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<DifferentialExpressionAnalysisResult> getTopResultsForFactor( ExpressionExperiment ee,
-            ExperimentalFactor factor, int top, boolean forceAnalysis ) {
-
-        ExpressionAnalysis analysis = getDifferentialExpressionAnalysis( ee, forceAnalysis, TWO_WAY_ANOVA );
-        if ( analysis == null ) return null;
-
-        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
-
-        log.info( "Getting two way anova results for experiment: " + ee.getShortName() );
-
-        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-            Collection<ExperimentalFactor> factorFromResultSet = resultSet.getExperimentalFactor();
-            for ( ExperimentalFactor f : factorFromResultSet ) {
-                if ( factor.equals( f ) ) {
-                    log.info( "Returning top results for factor with" + "\'" + factor.getName() + "\'"
-                            + " in the name (or description)." );
-                    Collection<DifferentialExpressionAnalysisResult> analysisResults = resultSet.getResults();
-                    top = setTopLimit( ee.getShortName(), top, analysisResults );
-                    List<DifferentialExpressionAnalysisResult> topResults = sortResults( top, analysisResults );
-                    return topResults;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Returns the top interaction results for a two way anova (with interactions).
-     * 
-     * @param ee
-     * @param factorA
-     * @param factorB
-     * @param top
-     * @param forceAnalysis
-     * @return
-     */
-    public Collection<DifferentialExpressionAnalysisResult> getTopInteractionResults( String shortName, int top,
-            boolean forceAnalysis ) {
-
-        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
-        if ( ee == null ) {
-            log.error( "Could not find expeiment with name: " + shortName + ".  Returning ..." );
-            return null;
-        }
-        expressionExperimentService.thawLite( ee );
-
-        return this.getTopInteractionResults( ee, top, forceAnalysis );
-    }
-
-    /**
-     * Returns the top interaction results for a two way anova (with interactions).
-     * 
-     * @param ee
-     * @param factors
-     * @param top
-     * @param forceAnalysis
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<DifferentialExpressionAnalysisResult> getTopInteractionResults( ExpressionExperiment ee, int top,
-            boolean forceAnalysis ) {
-        ExpressionAnalysis analysis = getDifferentialExpressionAnalysis( ee, forceAnalysis, TWO_WAY_ANOVA );
-        if ( analysis == null ) return null;
-
-        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
-
-        log.info( "Getting two way anova results for experiment: " + ee.getShortName() );
-
-        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-            Collection<ExperimentalFactor> factorsFromResult = resultSet.getExperimentalFactor();
-            // FIXME this is kind of cheating by only checking the size
-            if ( factorsFromResult.size() == NUM_TWA_FACTORS ) {
-                log.info( "Returning top interaction results for factors " + "\'" + factorsFromResult.iterator().next()
-                        + "\'" + " and \'" + factorsFromResult.iterator().next() + "\'"
-                        + " in the name (or description)." );
-                Collection<DifferentialExpressionAnalysisResult> analysisResults = resultSet.getResults();
-                top = setTopLimit( ee.getShortName(), top, analysisResults );
-                List<DifferentialExpressionAnalysisResult> topResults = sortResults( top, analysisResults );
-                return topResults;
-            }
-        }
-        log.error( "No interaction results found for " + ee.getShortName() + ".  Returning null ..." );
-        return null;
-    }
-
-    // TODO add getResultsForProbe
 
     /**
      * Returns true if differential expression data exists for the experiment, else false.
@@ -431,6 +254,100 @@ public class DifferentialExpressionAnalyzerService {
                     + expressionExperiment.getShortName() );
             differentialExpressionAnalysisService.delete( toDelete );
         }
+    }
+
+    /**
+     * @param experiments
+     */
+    public void writePValuesHistogram( ExpressionExperiment ee ) throws IOException {
+
+        String sep = "_";
+
+        Collection<ExpressionAnalysisResultSet> resultSets = this.getResultSets( ee );
+
+        if ( resultSets.size() == 0 ) {
+            log.info( "No result sets for experiment " + ee.getShortName()
+                    + ".  The differential expression analysis may not have been run on this experiment yet." );
+        } else {
+            log.info( "Result sets for " + ee.getShortName() + ": " + resultSets.size() );
+        }
+
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+
+            String factorNames = null;
+            Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
+            if ( factors.size() > 1 ) {
+                for ( ExperimentalFactor f : factors ) {
+                    factorNames += f.getName() + sep;
+                }
+                StringUtils.removeEnd( factorNames, sep );
+            } else {
+                factorNames = factors.iterator().next().getName();
+            }
+            Collection<DifferentialExpressionAnalysisResult> results = resultSet.getResults();
+
+            this.writePValuesHistogram( results, ee, factorNames );
+        }
+    }
+
+    /**
+     * @param results
+     * @param expressionExperiment
+     * @param factorNames
+     */
+    public void writePValuesHistogram( Collection<DifferentialExpressionAnalysisResult> results,
+            ExpressionExperiment expressionExperiment, String factorNames ) throws IOException {
+
+        File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
+
+        FileTools.createDir( dir.toString() );
+
+        String histFileName = null;
+        if ( factorNames != null ) {
+            histFileName = expressionExperiment.getShortName() + "_" + factorNames + "_"
+                    + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        } else {
+            histFileName = expressionExperiment.getShortName() + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        }
+
+        Histogram hist = generateHistogram( histFileName, 100, 0, 1, results );
+
+        String path = dir + File.separator + hist.getName();
+
+        File outputFile = new File( path );
+        if ( outputFile.exists() ) {
+            outputFile.delete();
+        }
+
+        FileWriter out = new FileWriter( outputFile );
+        out.write( "# Differential Expression distribution\n" );
+        out.write( "# date=" + ( new Date() ) + "\n" );
+        out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
+        out.write( "Bin\tCount\n" );
+        hist.writeToFile( out );
+        out.close();
+
+    }
+
+    /**
+     * Generates a histogram for the given results.
+     * 
+     * @param histFileName
+     * @param numBins
+     * @param min
+     * @param max
+     * @param results
+     * @return
+     */
+    private Histogram generateHistogram( String histFileName, int numBins, int min, int max,
+            Collection<DifferentialExpressionAnalysisResult> results ) {
+
+        Histogram hist = new Histogram( histFileName, numBins, min, max );
+        for ( DifferentialExpressionAnalysisResult r : results ) {
+            hist.fill( r.getPvalue() );
+        }
+
+        return hist;
     }
 
     /**

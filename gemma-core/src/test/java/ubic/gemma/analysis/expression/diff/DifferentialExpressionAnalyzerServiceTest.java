@@ -18,12 +18,15 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -33,6 +36,10 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContextTest {
 
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
+
+    private ExpressionExperimentService expressionExperimentService = null;
+
+    ExpressionExperiment ee = null;
 
     private String shortName = "GSE1997";
 
@@ -47,6 +54,11 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
 
         differentialExpressionAnalyzerService = ( DifferentialExpressionAnalyzerService ) this
                 .getBean( "differentialExpressionAnalyzerService" );
+
+        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+
+        ee = expressionExperimentService.findByShortName( shortName );
+        expressionExperimentService.thawLite( ee );
     }
 
     /*
@@ -59,59 +71,21 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
         super.onTearDownInTransaction();
     }
 
-    /**
-     * @throws Exception
-     */
-    public void testGetTopResultsForFactor() throws Exception {
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-
-        /* eg. use GSE1077 */
-        // Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalyzerService.getTopResults(
-        // shortName, 100 );
-        /* eg. use GSE1997 */
-        Collection<DifferentialExpressionAnalysisResult> analysisResults = differentialExpressionAnalyzerService
-                .getTopResultsForFactor( shortName, 100, "protocol", true );
-
-        if ( analysisResults == null ) {
-            log.warn( "Could not find analyses for expression experiment with short name " + shortName
-                    + ". Expression experiment probably does not exist. Skipping test ..." );
-            return;
-        }
-
-        for ( DifferentialExpressionAnalysisResult result : analysisResults ) {
-            if ( result instanceof ProbeAnalysisResult ) {
-
-                ProbeAnalysisResult presult = ( ProbeAnalysisResult ) result;
-                log.info( presult.getProbe().getName() + "; " + presult.getPvalue() );
-            } else {
-                assertFalse( "Invalid result type. Expected a " + ProbeAnalysisResult.class.getName() + ", received "
-                        + result.getClass().getClass().getName(), false );
-            }
-        }
-
-        assertFalse( analysisResults.isEmpty() );
-
-        watch.stop();
-
-        log.info( "time: " + watch.getTime() );
-
-    }
-
-    /**
-     * @throws Exception
-     */
+     /**
+         * @throws Exception
+         */
     public void testDelete() throws Exception {
 
-        Collection<DifferentialExpressionAnalysisResult> analysisResults = differentialExpressionAnalyzerService
-                .getTopResultsForFactor( shortName, 100, "protocol", true );
+        if ( ee == null ) return;
 
-        if ( analysisResults == null ) {
-            log.warn( "Could not find analyses for expression experiment with short name " + shortName
-                    + ". Expression experiment probably does not exist. Skipping test ..." );
-            return;
-        }
+        Collection<ExpressionAnalysisResultSet> resultSets = differentialExpressionAnalyzerService.getResultSets( ee );
+
+        log.info( "Result sets for " + shortName + resultSets.size() );
+
+        ExpressionAnalysisResultSet rs = resultSets.iterator().next();
+        Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
+
+        if ( results == null || results.isEmpty() ) return;
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -121,6 +95,25 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
         watch.stop();
 
         log.info( "deletion time: " + watch.getTime() );
+
+    }
+
+    /**
+     * 
+     */
+    public void testWritePValuesHistogram() {
+
+        if ( ee == null ) return;
+
+        Exception ex = null;
+        try {
+            differentialExpressionAnalyzerService.writePValuesHistogram( ee );
+        } catch ( IOException e ) {
+            ex = e;
+            e.printStackTrace();
+        } finally {
+            assertTrue( ex == null );
+        }
 
     }
 }
