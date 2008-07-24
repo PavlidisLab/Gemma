@@ -23,6 +23,8 @@ import java.util.HashSet;
 
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.SecurableDao;
@@ -50,6 +52,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     String compositeSequenceName2 = "Design Element Bar2";
 
     private ExpressionExperimentService expressionExperimentService;
+
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     private DifferentialExpressionAnalysisService diffAnalysisService;
 
@@ -175,6 +179,44 @@ public class SecurityServiceTest extends BaseSpringContextTest {
          * uncomment so you can see the acl permission has been changed in the database.
          */
         // this.setComplete();
+    }
+
+    /**
+     * Tests makeing the {@link ExpressionExperimentSet} private. The underlying bioassay sets (experiments) are
+     * untouched.
+     * 
+     * @throws Exception
+     */
+    public void testMakeExpressionExperimentSetPrivate() throws Exception {
+        /*
+         * This is more of an integration test and will be skipped as part of the test suite. To run this test, first
+         * create an ExpressionExperimentSet in the DatasetChooserPanel with 2 experiments and call it test, then run
+         * this.
+         */
+        String setName = "test";
+
+        expressionExperimentSetService = ( ExpressionExperimentSetService ) this
+                .getBean( "expressionExperimentSetService" );
+        ExpressionExperimentSet eeSet = ( ExpressionExperimentSet ) expressionExperimentSetService.findByName( setName );
+        if ( eeSet == null ) return;
+
+        SecurityService securityService = new SecurityService();
+
+        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+        securityService.setCrudUtils( ( CrudUtils ) this.getBean( "crudUtils" ) );
+        securityService.makePrivate( eeSet );
+        /*
+         * uncomment this block so you can see the acl permission has been changed in the database. The underlying acl
+         * permission of the ExpressionExperimentSet should be private (0), and the each ExpressionExperiment public
+         * (6).
+         */
+        // this.setComplete();
+        // assertTrue( securityService.isPrivate( eeSet ) );
+        // Collection<BioAssaySet> baSets = eeSet.getExperiments();
+        // for ( BioAssaySet bas : baSets ) {
+        // assertFalse( securityService.isPrivate( bas ) );
+        // }
     }
 
     /**
