@@ -55,6 +55,10 @@
 				
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}dEDVRank">dEDVRankEndpoint</prop>
 				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}geneByNCBIId">geneByNCBIIdEndpoint</prop>
+				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}nCBIIdByGeneID">nCBIIdByGeneIDEndpoint</prop>
+				
 				
           	</props>
          </property>
@@ -282,6 +286,22 @@
         </description>        
         <property name="expressionExperimentService" ref="expressionExperimentService"/>
         <property name="dedvRankService" ref="dedvRankService"/>
+        <property name="geneService" ref="geneService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+    
+     <bean id="geneByNCBIIdEndpoint" class="ubic.gemma.web.services.GeneByNCBIIdEndpoint">
+        <description>
+				returns all the expression experiment set ids in the database along with its name and containing experiment ids 
+        </description>                
+        <property name="geneService" ref="geneService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+    
+     <bean id="nCBIIdByGeneIDEndpoint" class="ubic.gemma.web.services.NCBIIdByGeneIDEndpoint">
+        <description>
+				returns all the expression experiment set ids in the database along with its name and containing experiment ids 
+        </description>        
         <property name="geneService" ref="geneService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>

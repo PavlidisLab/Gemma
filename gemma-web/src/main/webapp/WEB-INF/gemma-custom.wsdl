@@ -186,6 +186,19 @@
         </complexContent>
       </complexType>
       
+      <complexType name="ncbiResult">
+     		 <sequence>
+      	  	<element name="gene_id" type="xsd:string" />
+      	  	<element name="ncbi_id" type="xsd:string" />     		      		     			 
+     		</sequence>
+	     </complexType>
+	  <complexType name="ArrayOfncbiResult">
+        <complexContent>
+          <restriction base="soapenc:Array">
+            <attribute ref="soapenc:arrayType" wsdl:arrayType="schema:ncbiResult[]"/>
+          </restriction>
+        </complexContent>
+      </complexType>
 	     
 </schema>
 
@@ -328,7 +341,18 @@
   <wsdl:message name="dEDVRankResponse">
     <wsdl:part name="dEDVRank_results" type="schema:ArrayOfDEDVRankResult" />
   </wsdl:message>
- 
+  <wsdl:message name="geneByNCBIIdRequest">
+  <wsdl:part name="ncbi_ids" type="schema:ArrayOfIDs" />  
+    </wsdl:message>
+  <wsdl:message name="geneByNCBIIdResponse">
+    <wsdl:part name="gene_ncbi_results" type="schema:ArrayOfncbiResult" />
+  </wsdl:message>
+ <wsdl:message name="nCBIIdByGeneIDRequest">
+  <wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />   
+    </wsdl:message>
+  <wsdl:message name="nCBIIdByGeneIDResponse">
+    <wsdl:part name="gene_ncbi_results" type="schema:ArrayOfncbiResult" />
+  </wsdl:message>
   
   <wsdl:portType name="gemma">
     <wsdl:operation name="experimentIDbyTaxon">
@@ -455,6 +479,18 @@
       <wsdl:input message="schema:dEDVRankRequest" name="dEDVRankRequest">
     </wsdl:input>
       <wsdl:output message="schema:dEDVRankResponse" name="dEDVRankResponse">
+    </wsdl:output>
+    </wsdl:operation> 
+    <wsdl:operation name="geneByNCBIId">
+      <wsdl:input message="schema:geneByNCBIIdRequest" name="geneByNCBIIdRequest">
+    </wsdl:input>
+      <wsdl:output message="schema:geneByNCBIIdResponse" name="geneByNCBIIdResponse">
+    </wsdl:output>
+    </wsdl:operation> 
+    <wsdl:operation name="nCBIIdByGeneID">
+      <wsdl:input message="schema:nCBIIdByGeneIDRequest" name="nCBIIdByGeneIDRequest">
+    </wsdl:input>
+      <wsdl:output message="schema:nCBIIdByGeneIDResponse" name="nCBIIdByGeneIDResponse">
     </wsdl:output>
     </wsdl:operation> 
     
@@ -649,6 +685,24 @@
            <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="dEDVRankResponse">
+           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="geneByNCBIId">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="geneByNCBIIdRequest">
+           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:input>
+      <wsdl:output name="geneByNCBIIdResponse">
+           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="nCBIIdByGeneID">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="nCBIIdByGeneIDRequest">
+           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:input>
+      <wsdl:output name="nCBIIdByGeneIDResponse">
            <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
