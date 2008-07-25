@@ -187,6 +187,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public void testMakeExpressionExperimentSetPrivate() throws Exception {
         /*
          * This is more of an integration test and will be skipped as part of the test suite. To run this test, first
@@ -197,8 +198,10 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         expressionExperimentSetService = ( ExpressionExperimentSetService ) this
                 .getBean( "expressionExperimentSetService" );
-        ExpressionExperimentSet eeSet = ( ExpressionExperimentSet ) expressionExperimentSetService.findByName( setName );
-        if ( eeSet == null ) return;
+        Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( setName );
+        if ( eeSets == null || eeSets.isEmpty() ) return;
+
+        ExpressionExperimentSet eeSet = eeSets.iterator().next();
 
         SecurityService securityService = new SecurityService();
 
