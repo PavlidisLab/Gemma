@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.rosuda.REngine.REXPMismatchException;
@@ -152,7 +153,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
         /* write out histogram */
-        writePValuesHistogram( pvalues, expressionExperiment );
+        ArrayList<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
+        effects.add( experimentalFactor );
+        writePValuesHistogram( pvalues, expressionExperiment, effects );
 
         /* f-statistic */
         StringBuffer fStatisticBuf = new StringBuffer();
@@ -305,15 +308,20 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * (non-Javadoc)
      * 
      * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      int, int, int, double[])
+     *      java.util.ArrayList, int, int, int, double[])
      */
     @Override
-    protected Collection<Histogram> generateHistograms( String histFileName, int numBins, int min, int max,
-            double[] pvalues ) {
+    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
+            int numBins, int min, int max, double[] pvalues ) {
+
+        histFileName = StringUtils.removeEnd( histFileName, DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
+
+        String newName = histFileName + "_" + effects.iterator().next().getName()
+                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
         Collection<Histogram> hists = new HashSet<Histogram>();
 
-        Histogram hist = new Histogram( histFileName, numBins, min, max );
+        Histogram hist = new Histogram( newName, numBins, min, max );
         for ( int i = 0; i < pvalues.length; i++ ) {
             hist.fill( pvalues[i] );
         }

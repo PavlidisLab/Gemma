@@ -21,6 +21,7 @@ package ubic.gemma.analysis.expression.diff;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
@@ -33,6 +34,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -88,8 +90,10 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     /**
      * @param pvalues
      * @param expressionExperiment
+     * @param effects ordered (for 2 way anova)
      */
-    protected void writePValuesHistogram( double[] pvalues, ExpressionExperiment expressionExperiment ) {
+    protected void writePValuesHistogram( double[] pvalues, ExpressionExperiment expressionExperiment,
+            ArrayList<ExperimentalFactor> effects ) {
 
         File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
 
@@ -97,7 +101,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
         String histFileName = expressionExperiment.getShortName() + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
-        Collection<Histogram> hists = generateHistograms( histFileName, 100, 0, 1, pvalues );
+        Collection<Histogram> hists = generateHistograms( histFileName, effects, 100, 0, 1, pvalues );
 
         if ( hists == null || hists.isEmpty() ) {
             log.error( "Could not generate histogram.  Not writing to file" );
@@ -127,14 +131,15 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
     /**
      * @param histFileName
+     * @param effects ordered
      * @param numBins
      * @param min
      * @param max
      * @param pvalues
      * @return
      */
-    protected abstract Collection<Histogram> generateHistograms( String histFileName, int numBins, int min, int max,
-            double[] pvalues );
+    protected abstract Collection<Histogram> generateHistograms( String histFileName,
+            ArrayList<ExperimentalFactor> effects, int numBins, int min, int max, double[] pvalues );
 
     /**
      * Returns the preferred {@link QuantitationType}.

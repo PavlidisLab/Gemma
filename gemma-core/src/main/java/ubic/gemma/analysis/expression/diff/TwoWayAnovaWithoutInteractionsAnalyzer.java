@@ -18,8 +18,10 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -137,7 +139,10 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         }
 
         /* write out pvalues to a file */
-        writePValuesHistogram( filteredPvalues, expressionExperiment );
+        ArrayList<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
+        effects.add( experimentalFactorA );
+        effects.add( experimentalFactorB );
+        writePValuesHistogram( filteredPvalues, expressionExperiment, effects );
 
         /* F-statistics */
         StringBuffer fstatisticCommand = new StringBuffer();
@@ -169,17 +174,22 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
      * (non-Javadoc)
      * 
      * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      int, int, int, double[])
+     *      java.util.ArrayList, int, int, int, double[])
      */
     @Override
-    protected Collection<Histogram> generateHistograms( String histFileName, int numBins, int min, int max,
-            double[] pvalues ) {
+    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
+            int numBins, int min, int max, double[] pvalues ) {
+
         Collection<Histogram> hists = new HashSet<Histogram>();
 
         histFileName = StringUtils.removeEnd( histFileName, DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
 
-        String nameA = histFileName + "_mainA" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        String nameB = histFileName + "_mainB" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        Iterator<ExperimentalFactor> iter = effects.iterator();
+        String mainA = iter.next().getName();
+        String mainB = iter.next().getName();
+
+        String nameA = histFileName + "_" + mainA + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String nameB = histFileName + "_" + mainB + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
         Histogram histA = new Histogram( nameA, numBins, min, max );
         Histogram histB = new Histogram( nameB, numBins, min, max );

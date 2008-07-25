@@ -153,7 +153,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         double[] pvalues = rc.doubleArrayEval( pvalueCommand.toString() );
 
         /* write out histogram */
-        writePValuesHistogram( pvalues, expressionExperiment );
+        writePValuesHistogram( pvalues, expressionExperiment, null );
 
         /* handle the t-statistics */
         StringBuffer tstatisticCommand = new StringBuffer();
@@ -216,11 +216,10 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      int, int, int, double[])
+     *      java.util.ArrayList, int, int, int, double[])
      */
-    @Override
-    protected Collection<Histogram> generateHistograms( String histFileName, int numBins, int min, int max,
-            double[] pvalues ) {
+    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
+            int numBins, int min, int max, double[] pvalues ) {
 
         Collection<Histogram> hists = new HashSet<Histogram>();
 
