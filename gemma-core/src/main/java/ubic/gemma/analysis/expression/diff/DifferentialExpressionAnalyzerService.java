@@ -274,7 +274,7 @@ public class DifferentialExpressionAnalyzerService {
                 for ( ExperimentalFactor f : factors ) {
                     factorNames += f.getName() + sep;
                 }
-                StringUtils.removeEnd( factorNames, sep );
+                factorNames = StringUtils.removeEnd( factorNames, sep );
             } else {
                 factorNames = factors.iterator().next().getName();
             }
@@ -298,7 +298,7 @@ public class DifferentialExpressionAnalyzerService {
 
         String histFileName = null;
         if ( factorNames != null ) {
-            histFileName = expressionExperiment.getShortName() + "_" + factorNames + "_"
+            histFileName = expressionExperiment.getShortName() + "_" + factorNames
                     + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         } else {
             histFileName = expressionExperiment.getShortName() + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
