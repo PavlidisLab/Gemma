@@ -268,7 +268,7 @@ public class DifferentialExpressionAnalyzerService {
 
             differentialExpressionAnalysisResultService.thaw( resultSet );
 
-            String factorNames = null;
+            String factorNames = StringUtils.EMPTY;
             Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
             if ( factors.size() > 1 ) {
                 for ( ExperimentalFactor f : factors ) {
