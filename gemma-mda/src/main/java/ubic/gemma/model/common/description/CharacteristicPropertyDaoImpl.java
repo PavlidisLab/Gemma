@@ -21,10 +21,9 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.common.description;
+
 /**
  * @see ubic.gemma.model.common.description.CharacteristicProperty
  */
-public class CharacteristicPropertyDaoImpl
-    extends ubic.gemma.model.common.description.CharacteristicPropertyDaoBase
-{
+public class CharacteristicPropertyDaoImpl extends ubic.gemma.model.common.description.CharacteristicPropertyDaoBase {
 }

@@ -27,7 +27,5 @@ package ubic.gemma.model.analysis;
 /**
  * @see ubic.gemma.model.analysis.Analysis
  */
-public abstract class AnalysisImpl
-    extends ubic.gemma.model.analysis.Analysis
-{
+public abstract class AnalysisImpl extends ubic.gemma.model.analysis.Analysis {
 }

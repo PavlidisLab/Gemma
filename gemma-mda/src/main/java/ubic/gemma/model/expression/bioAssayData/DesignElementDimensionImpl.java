@@ -25,9 +25,7 @@ package ubic.gemma.model.expression.bioAssayData;
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimension
  */
-public class DesignElementDimensionImpl
-    extends ubic.gemma.model.expression.bioAssayData.DesignElementDimension
-{
+public class DesignElementDimensionImpl extends ubic.gemma.model.expression.bioAssayData.DesignElementDimension {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

@@ -21,10 +21,9 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.common;
+
 /**
  * @see ubic.gemma.model.common.Describable
  */
-public class DescribableDaoImpl
-    extends ubic.gemma.model.common.DescribableDaoBase
-{
+public class DescribableDaoImpl extends ubic.gemma.model.common.DescribableDaoBase {
 }

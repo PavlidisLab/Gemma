@@ -25,9 +25,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.Contact
  */
-public class ContactImpl
-    extends ubic.gemma.model.common.auditAndSecurity.Contact
-{
+public class ContactImpl extends ubic.gemma.model.common.auditAndSecurity.Contact {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

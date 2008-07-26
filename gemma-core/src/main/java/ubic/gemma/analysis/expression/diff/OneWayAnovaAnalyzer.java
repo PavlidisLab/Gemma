@@ -79,8 +79,6 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    private static final int NUM_RESULTS_FROM_R = 2;
-
     private List<String> rFactors = null;
 
     private Map<Integer, DesignElement> filteredMatrixDesignElementIndexMap = null;

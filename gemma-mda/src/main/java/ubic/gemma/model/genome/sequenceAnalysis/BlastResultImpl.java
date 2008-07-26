@@ -25,9 +25,7 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResult
  */
-public class BlastResultImpl
-    extends ubic.gemma.model.genome.sequenceAnalysis.BlastResult
-{
+public class BlastResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlastResult {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

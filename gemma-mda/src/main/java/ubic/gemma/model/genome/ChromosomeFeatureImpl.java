@@ -25,9 +25,7 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.ChromosomeFeature
  */
-public class ChromosomeFeatureImpl
-    extends ubic.gemma.model.genome.ChromosomeFeature
-{
+public class ChromosomeFeatureImpl extends ubic.gemma.model.genome.ChromosomeFeature {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

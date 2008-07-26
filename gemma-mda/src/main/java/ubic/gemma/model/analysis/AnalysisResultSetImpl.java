@@ -25,9 +25,7 @@ package ubic.gemma.model.analysis;
 /**
  * @see ubic.gemma.model.analysis.AnalysisResultSet
  */
-public abstract class AnalysisResultSetImpl
-    extends ubic.gemma.model.analysis.AnalysisResultSet
-{
+public abstract class AnalysisResultSetImpl extends ubic.gemma.model.analysis.AnalysisResultSet {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -36,5 +34,6 @@ public abstract class AnalysisResultSetImpl
     /**
      * @see ubic.gemma.model.analysis.AnalysisResultSet#getResults()
      */
+    @Override
     public abstract java.util.Collection getResults();
 }

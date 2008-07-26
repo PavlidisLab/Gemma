@@ -27,9 +27,7 @@ package ubic.gemma.model.common.description;
 /**
  * @see ubic.gemma.model.common.description.BibliographicReference
  */
-public class BibliographicReferenceImpl
-    extends ubic.gemma.model.common.description.BibliographicReference
-{
+public class BibliographicReferenceImpl extends ubic.gemma.model.common.description.BibliographicReference {
 
     /**
      * 

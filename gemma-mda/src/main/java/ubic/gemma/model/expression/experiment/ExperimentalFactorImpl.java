@@ -27,9 +27,7 @@ package ubic.gemma.model.expression.experiment;
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactor
  */
-public class ExperimentalFactorImpl
-    extends ubic.gemma.model.expression.experiment.ExperimentalFactor
-{
+public class ExperimentalFactorImpl extends ubic.gemma.model.expression.experiment.ExperimentalFactor {
 
     /**
      * 

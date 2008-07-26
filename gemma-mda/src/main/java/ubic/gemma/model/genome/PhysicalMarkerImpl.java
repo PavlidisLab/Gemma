@@ -25,9 +25,7 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.PhysicalMarker
  */
-public class PhysicalMarkerImpl
-    extends ubic.gemma.model.genome.PhysicalMarker
-{
+public class PhysicalMarkerImpl extends ubic.gemma.model.genome.PhysicalMarker {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

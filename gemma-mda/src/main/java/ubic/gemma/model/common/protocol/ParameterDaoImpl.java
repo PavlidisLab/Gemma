@@ -21,10 +21,9 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.common.protocol;
+
 /**
  * @see ubic.gemma.model.common.protocol.Parameter
  */
-public class ParameterDaoImpl
-    extends ubic.gemma.model.common.protocol.ParameterDaoBase
-{
+public class ParameterDaoImpl extends ubic.gemma.model.common.protocol.ParameterDaoBase {
 }

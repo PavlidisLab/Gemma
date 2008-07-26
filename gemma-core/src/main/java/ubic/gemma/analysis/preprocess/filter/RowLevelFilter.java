@@ -158,7 +158,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      */
     public void setMethod( Method method ) {
         this.method = method;
-    };
+    }
 
     /**
      * Set the filter to remove all rows that have only negative values. This is applied BEFORE applying fraction-based

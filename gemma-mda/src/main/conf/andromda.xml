@@ -67,6 +67,7 @@
 				</property>
 			</properties>
 		</namespace>
+		<!-- 
 		<namespace name="spring">
 			<properties>
 				<property name="hibernateDialect">org.hibernate.dialect.MySQLMyISAMDialect</property>
@@ -112,6 +113,7 @@
 				<property name="parameterRequiredCheck">false</property>
 			</properties>
 		</namespace>
+		-->
 		<namespace name="hibernate">
 			<properties>
 				<property name="hibernateDialect">org.hibernate.dialect.MySQLMyISAMDialect</property>

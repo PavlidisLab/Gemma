@@ -22,7 +22,8 @@ package ubic.gemma.model.expression.bioAssayData;
  * TODO - DOCUMENT ME
  * 
  * @author pavlidis
- * @version $Id$@see ubic.gemma.model.expression.bioAssayData.DesignElementDimension
+ * @version $Id$@see
+ *          ubic.gemma.model.expression.bioAssayData.DesignElementDimension
  */
 public class DesignElementDimensionDaoImpl extends
         ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDaoBase {

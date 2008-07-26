@@ -21,23 +21,21 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
+
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResult
  */
-public class BlastResultDaoImpl  extends ubic.gemma.model.genome.sequenceAnalysis.BlastResultDaoBase{
-    
-    
+public class BlastResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlastResultDaoBase {
+
     @Override
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate){
+    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate ) {
         if ( toFindOrCreate.getQuerySequence() == null )
             throw new IllegalArgumentException( "BlastResult must have a querrySequence associated with it." );
-        
-        
+
         BlastResult result = this.find( toFindOrCreate );
-        if ( result != null )
-            return result;
-       
-        
+        if ( result != null ) return result;
+
         logger.debug( "Creating new BlatResult: " + result.toString() );
         result = ( BlastResult ) create( toFindOrCreate );
         return result;

@@ -21,10 +21,9 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.genome.gene;
+
 /**
  * @see ubic.gemma.model.genome.gene.BibReferenceCandidateGene
  */
-public class BibReferenceCandidateGeneDaoImpl
-    extends ubic.gemma.model.genome.gene.BibReferenceCandidateGeneDaoBase
-{
+public class BibReferenceCandidateGeneDaoImpl extends ubic.gemma.model.genome.gene.BibReferenceCandidateGeneDaoBase {
 }

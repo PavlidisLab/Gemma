@@ -41,7 +41,7 @@ public class QuantileNormalizer extends RCommander implements Normalizer {
 
     public QuantileNormalizer() throws IOException {
         super();
-        rc.voidEval( "library(affy)" );
+        this.rc.voidEval( "library(affy)" );
     }
 
     /*
@@ -51,8 +51,8 @@ public class QuantileNormalizer extends RCommander implements Normalizer {
      */
     public DoubleMatrixNamed normalize( DoubleMatrixNamed dataMatrix ) {
         log.debug( "Normalizing..." );
-        String matrixvar = rc.assignMatrix( dataMatrix );
-        rc.voidEval( "result<-normalize.quantiles(" + matrixvar + ")" );
+        String matrixvar = this.rc.assignMatrix( dataMatrix );
+        this.rc.voidEval( "result<-normalize.quantiles(" + matrixvar + ")" );
         return rc.retrieveMatrix( "result" );
     }
 }

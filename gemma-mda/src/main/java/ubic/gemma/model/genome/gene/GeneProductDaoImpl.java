@@ -99,7 +99,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
                         if ( numFound == 0 ) {
                             log.error( "Multiple gene products match " + geneProduct + ", but none with " + gene );
-                            debug(results);
+                            debug( results );
                             log.error( "Returning arbitrary match " + results.iterator().next() );
                             return ( GeneProduct ) results.iterator().next();
                         }
@@ -107,14 +107,14 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                         if ( numFound > 1 ) {
                             log.error( "Multiple gene products match " + geneProduct + ", and matches " + numFound
                                     + " genes" );
-                            debug(results);
+                            debug( results );
                             log.error( "Returning arbitrary match " + results.iterator().next() );
                             return ( GeneProduct ) results.iterator().next();
                         }
                     }
 
-                    //throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    //        "More than one instance of '" + geneProduct + "' was found when executing query" );
+                    // throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    // "More than one instance of '" + geneProduct + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -140,7 +140,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         log.error( buf );
 
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -212,7 +212,9 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         return genes;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -231,12 +233,14 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         return geneProducts;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDao#geneProductValueObjectToEntity(ubic.gemma.model.genome.gene.GeneProductValueObject)
      */
     public GeneProduct geneProductValueObjectToEntity( GeneProductValueObject geneProductValueObject ) {
         final String queryString = "select distinct gp from GeneProductImpl gp where gp.id = :id";
-        
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setLong( "id", geneProductValueObject.getId() );
@@ -244,7 +248,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
             if ( ( results == null ) || ( results.size() == 0 ) ) return null;
 
-            return (GeneProduct) results.iterator().next();
+            return ( GeneProduct ) results.iterator().next();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );

@@ -25,7 +25,5 @@ package ubic.gemma.model.genome.gene;
 /**
  * @see ubic.gemma.model.genome.gene.CandidateGeneList
  */
-public class CandidateGeneListDaoImpl
-    extends ubic.gemma.model.genome.gene.CandidateGeneListDaoBase
-{
+public class CandidateGeneListDaoImpl extends ubic.gemma.model.genome.gene.CandidateGeneListDaoBase {
 }

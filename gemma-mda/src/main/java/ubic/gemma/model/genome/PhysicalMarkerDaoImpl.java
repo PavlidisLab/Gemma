@@ -25,7 +25,5 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.PhysicalMarker
  */
-public class PhysicalMarkerDaoImpl
-    extends ubic.gemma.model.genome.PhysicalMarkerDaoBase
-{
+public class PhysicalMarkerDaoImpl extends ubic.gemma.model.genome.PhysicalMarkerDaoBase {
 }

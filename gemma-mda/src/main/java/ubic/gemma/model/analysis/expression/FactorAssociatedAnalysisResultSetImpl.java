@@ -25,9 +25,8 @@ package ubic.gemma.model.analysis.expression;
 /**
  * @see ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet
  */
-public abstract class FactorAssociatedAnalysisResultSetImpl
-    extends ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet
-{
+public abstract class FactorAssociatedAnalysisResultSetImpl extends
+        ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

@@ -63,7 +63,7 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
         if ( !this.getIsNormalized().equals( that.getIsNormalized() ) ) {
             return false;
         }
-        
+
         if ( !this.getIsBackground().equals( that.getIsBackground() ) ) {
             return false;
         }

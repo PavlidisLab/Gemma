@@ -73,7 +73,6 @@
 			<prop key="/searcher.html">generalSearchController</prop>
 			<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
 			<prop key="/gene/*">geneController</prop>
-			<prop key="/geneLinkAnalysisManager.html">geneLinkAnalysisManagerController</prop>
 			<prop key="/securityManager.html">securityFormController</prop>
 			<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
 			<prop key="/whatsnew/*">whatsNewController</prop>
@@ -489,26 +488,6 @@
 							<value>doSearch</value>
 							<value>getCannedAnalyses</value>
 							<value>findExpressionExperiments</value>
-						</list>
-					</property>
-				</bean>
-			</entry>
-			<entry key="GeneLinkAnalysisManagerController">
-				<bean class="org.directwebremoting.spring.CreatorConfig">
-					<property name="creator">
-						<bean class="org.directwebremoting.spring.BeanCreator">
-							<property name="bean" ref="geneLinkAnalysisManagerController" />
-						</bean>
-					</property>
-					<property name="includes">
-						<list>
-							<value>create</value>
-							<value>update</value>
-							<value>getCannedAnalyses</value>
-							<value>filterExpressionExperiments</value>
-							<value>updateExperimentsInAnalysis</value>
-							<value>getExperimentsInAnalysis</value>
-							<value>getExperimentIdsInAnalysis</value>
 						</list>
 					</property>
 				</bean>

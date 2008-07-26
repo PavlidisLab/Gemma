@@ -21,10 +21,9 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.common.protocol;
+
 /**
  * @see ubic.gemma.model.common.protocol.SoftwareApplication
  */
-public class SoftwareApplicationDaoImpl
-    extends ubic.gemma.model.common.protocol.SoftwareApplicationDaoBase
-{
+public class SoftwareApplicationDaoImpl extends ubic.gemma.model.common.protocol.SoftwareApplicationDaoBase {
 }

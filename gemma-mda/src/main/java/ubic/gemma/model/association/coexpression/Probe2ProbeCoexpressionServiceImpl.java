@@ -215,8 +215,7 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetGenesTestedBy( BioAssaySet bioAssaySet, boolean filterNonSpecific )
-            throws Exception {
+    protected Collection handleGetGenesTestedBy( BioAssaySet bioAssaySet, boolean filterNonSpecific ) throws Exception {
         return this.getProbe2ProbeCoexpressionDao().getGenesTestedBy( bioAssaySet, filterNonSpecific );
     }
 

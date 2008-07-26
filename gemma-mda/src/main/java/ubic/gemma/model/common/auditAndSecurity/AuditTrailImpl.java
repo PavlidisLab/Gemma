@@ -201,15 +201,15 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
     }
 
     // todo this has to be added to the model.F
-//    /*
-//     * (non-Javadoc)
-//     * 
-//     * @see java.lang.Object#toString()
-//     */
-//    @Override
-//    public String toString() {
-//        return "AuditTrail: Id=" + getId()
-//                + ( this.getEvents() == null ? "" : ( ", " + this.getEvents().size() + " events" ) );
-//    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see java.lang.Object#toString()
+    // */
+    // @Override
+    // public String toString() {
+    // return "AuditTrail: Id=" + getId()
+    // + ( this.getEvents() == null ? "" : ( ", " + this.getEvents().size() + " events" ) );
+    // }
 
 }

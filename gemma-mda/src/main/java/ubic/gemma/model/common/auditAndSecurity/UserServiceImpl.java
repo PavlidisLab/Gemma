@@ -33,7 +33,7 @@ import ubic.gemma.util.UserConstants;
  * @version $Id$
  */
 public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.UserServiceBase {
- 
+
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#getUsers(ubic.gemma.model.common.auditAndSecurity.User)
      */
@@ -146,7 +146,9 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         this.getUserDao().update( user );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#handleLoadAllRoles()
      */
     @Override

@@ -25,9 +25,7 @@ package ubic.gemma.model.common.protocol;
 /**
  * @see ubic.gemma.model.common.protocol.Protocol
  */
-public class ProtocolImpl
-    extends ubic.gemma.model.common.protocol.Protocol
-{
+public class ProtocolImpl extends ubic.gemma.model.common.protocol.Protocol {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

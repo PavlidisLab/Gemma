@@ -74,7 +74,7 @@ public class ExpressionDataFileService {
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
 
-    private static Log log = LogFactory.getLog( ArrayDesignAnnotationService.class.getName() );;
+    private static Log log = LogFactory.getLog( ArrayDesignAnnotationService.class.getName() );
 
     private DesignElementDataVectorService designElementDataVectorService;
 

@@ -27,7 +27,5 @@ package ubic.gemma.model.common.description;
 /**
  * @see ubic.gemma.model.common.description.FileFormat
  */
-public class FileFormatDaoImpl
-    extends ubic.gemma.model.common.description.FileFormatDaoBase
-{
+public class FileFormatDaoImpl extends ubic.gemma.model.common.description.FileFormatDaoBase {
 }

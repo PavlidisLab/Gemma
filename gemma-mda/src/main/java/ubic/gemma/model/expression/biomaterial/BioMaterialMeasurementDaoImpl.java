@@ -21,10 +21,10 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.expression.biomaterial;
+
 /**
  * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement
  */
-public class BioMaterialMeasurementDaoImpl
-    extends ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDaoBase
-{
+public class BioMaterialMeasurementDaoImpl extends
+        ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDaoBase {
 }

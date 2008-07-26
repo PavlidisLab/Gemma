@@ -25,9 +25,7 @@ package ubic.gemma.model.genome.gene;
 /**
  * @see ubic.gemma.model.genome.gene.BibReferenceCandidateGene
  */
-public class BibReferenceCandidateGeneImpl
-    extends ubic.gemma.model.genome.gene.BibReferenceCandidateGene
-{
+public class BibReferenceCandidateGeneImpl extends ubic.gemma.model.genome.gene.BibReferenceCandidateGene {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

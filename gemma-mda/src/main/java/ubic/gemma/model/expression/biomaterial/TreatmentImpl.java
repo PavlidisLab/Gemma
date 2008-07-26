@@ -27,9 +27,7 @@ package ubic.gemma.model.expression.biomaterial;
 /**
  * @see ubic.gemma.model.expression.biomaterial.Treatment
  */
-public class TreatmentImpl
-    extends ubic.gemma.model.expression.biomaterial.Treatment
-{
+public class TreatmentImpl extends ubic.gemma.model.expression.biomaterial.Treatment {
 
     /**
      * 

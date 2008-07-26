@@ -30,7 +30,9 @@ import java.util.Collection;
  */
 public class FactorValueServiceImpl extends ubic.gemma.model.expression.experiment.FactorValueServiceBase {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.FactorValueServiceBase#handleUpdate(java.util.Collection)
      */
     @Override
@@ -38,7 +40,9 @@ public class FactorValueServiceImpl extends ubic.gemma.model.expression.experime
         this.getFactorValueDao().update( factorValues );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.FactorValueServiceBase#handleUpdate(ubic.gemma.model.expression.experiment.FactorValue)
      */
     @Override

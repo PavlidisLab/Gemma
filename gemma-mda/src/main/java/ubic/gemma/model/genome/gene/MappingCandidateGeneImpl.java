@@ -25,9 +25,7 @@ package ubic.gemma.model.genome.gene;
 /**
  * @see ubic.gemma.model.genome.gene.MappingCandidateGene
  */
-public class MappingCandidateGeneImpl
-    extends ubic.gemma.model.genome.gene.MappingCandidateGene
-{
+public class MappingCandidateGeneImpl extends ubic.gemma.model.genome.gene.MappingCandidateGene {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

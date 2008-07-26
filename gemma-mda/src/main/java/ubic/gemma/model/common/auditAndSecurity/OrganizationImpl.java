@@ -25,9 +25,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.Organization
  */
-public class OrganizationImpl
-    extends ubic.gemma.model.common.auditAndSecurity.Organization
-{
+public class OrganizationImpl extends ubic.gemma.model.common.auditAndSecurity.Organization {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

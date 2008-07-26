@@ -21,10 +21,9 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.genome.gene;
+
 /**
  * @see ubic.gemma.model.genome.gene.MappingCandidateGene
  */
-public class MappingCandidateGeneDaoImpl
-    extends ubic.gemma.model.genome.gene.MappingCandidateGeneDaoBase
-{
+public class MappingCandidateGeneDaoImpl extends ubic.gemma.model.genome.gene.MappingCandidateGeneDaoBase {
 }

@@ -21,10 +21,9 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.expression.experiment;
+
 /**
  * @see ubic.gemma.model.expression.experiment.BioAssaySet
  */
-public class BioAssaySetDaoImpl
-    extends ubic.gemma.model.expression.experiment.BioAssaySetDaoBase
-{
+public class BioAssaySetDaoImpl extends ubic.gemma.model.expression.experiment.BioAssaySetDaoBase {
 }

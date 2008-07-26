@@ -27,9 +27,7 @@ package ubic.gemma.model.common.protocol;
 /**
  * @see ubic.gemma.model.common.protocol.Parameter
  */
-public class ParameterImpl
-    extends ubic.gemma.model.common.protocol.Parameter
-{
+public class ParameterImpl extends ubic.gemma.model.common.protocol.Parameter {
 
     /**
      * 

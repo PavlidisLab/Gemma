@@ -38,8 +38,8 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionVirtualAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService; // import
+                                                                                            // ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionVirtualAnalysis;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.common.Securable;
@@ -108,13 +108,13 @@ public class GeneCoexpressionService {
                 assert taxon.equals( analysis.getTaxon() );
                 cavo.setTaxon( taxon );
                 cavo.setStringency( analysis.getStringency() );
-                if ( analysis instanceof GeneCoexpressionVirtualAnalysis ) {
-                    if ( !includeVirtual ) continue;
-                    cavo.setVirtual( true );
-                    cavo.setViewedAnalysisId( ( ( GeneCoexpressionVirtualAnalysis ) analysis ).getViewedAnalysis()
-                            .getId() );
-
-                }
+                // if ( analysis instanceof GeneCoexpressionVirtualAnalysis ) {
+                // if ( !includeVirtual ) continue;
+                // cavo.setVirtual( true );
+                // cavo.setViewedAnalysisId( ( ( GeneCoexpressionVirtualAnalysis ) analysis ).getViewedAnalysis()
+                // .getId() );
+                //
+                // }
 
                 if ( populateDatasets ) {
                     cavo.setDatasets( getIds( analysis.getExpressionExperimentSetAnalyzed() ) ); // this saves a trip

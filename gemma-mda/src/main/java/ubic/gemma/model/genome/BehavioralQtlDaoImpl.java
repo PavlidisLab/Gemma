@@ -25,7 +25,5 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.BehavioralQtl
  */
-public class BehavioralQtlDaoImpl
-    extends ubic.gemma.model.genome.BehavioralQtlDaoBase
-{
+public class BehavioralQtlDaoImpl extends ubic.gemma.model.genome.BehavioralQtlDaoBase {
 }

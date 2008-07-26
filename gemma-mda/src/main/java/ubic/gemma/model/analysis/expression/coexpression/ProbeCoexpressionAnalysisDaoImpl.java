@@ -55,6 +55,7 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
         return results;
     }
 
+    @Override
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
         final String queryString = "select distinct a from ProbeCoexpressionAnalysisImpl a where :e in elements (a.experimentsAnalyzed)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );

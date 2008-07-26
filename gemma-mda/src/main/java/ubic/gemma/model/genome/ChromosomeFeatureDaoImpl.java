@@ -25,7 +25,5 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.ChromosomeFeature
  */
-public class ChromosomeFeatureDaoImpl
-    extends ubic.gemma.model.genome.ChromosomeFeatureDaoBase
-{
+public class ChromosomeFeatureDaoImpl extends ubic.gemma.model.genome.ChromosomeFeatureDaoBase {
 }

@@ -25,7 +25,5 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.Organization
  */
-public class OrganizationDaoImpl
-    extends ubic.gemma.model.common.auditAndSecurity.OrganizationDaoBase
-{
+public class OrganizationDaoImpl extends ubic.gemma.model.common.auditAndSecurity.OrganizationDaoBase {
 }

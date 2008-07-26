@@ -41,8 +41,7 @@ import ubic.gemma.model.expression.experiment.FactorValueImpl;
 public class CharacteristicServiceImpl extends ubic.gemma.model.common.description.CharacteristicServiceBase {
 
     private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
-            BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class,
-            Gene2GOAssociationImpl.class };
+            BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class, Gene2GOAssociationImpl.class };
 
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)

@@ -100,6 +100,10 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     protected void handleThaw( final AuditEvent auditEvent ) throws Exception {
         this.getHibernateTemplate().execute( new HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
+                /*
+                 * FIXME this check really won't work. This thaw will not operate correctly if the event isn't already
+                 * associated with the session.
+                 */
                 if ( session.get( AuditEventImpl.class, auditEvent.getId() ) == null ) {
                     session.lock( auditEvent, LockMode.NONE );
                 }

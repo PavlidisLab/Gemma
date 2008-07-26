@@ -36,8 +36,8 @@ public class ProbeAlignedRegionServiceImpl extends ubic.gemma.model.genome.Probe
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected java.util.Collection<ProbeAlignedRegion> handleFindAssociations( ubic.gemma.model.genome.PhysicalLocation physicalLocation )
-            throws java.lang.Exception {
+    protected java.util.Collection<ProbeAlignedRegion> handleFindAssociations(
+            ubic.gemma.model.genome.PhysicalLocation physicalLocation ) throws java.lang.Exception {
         return this.getProbeAlignedRegionDao().findByPhysicalLocation( physicalLocation );
     }
 

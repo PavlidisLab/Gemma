@@ -25,9 +25,7 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.BehavioralQtl
  */
-public class BehavioralQtlImpl
-    extends ubic.gemma.model.genome.BehavioralQtl
-{
+public class BehavioralQtlImpl extends ubic.gemma.model.genome.BehavioralQtl {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

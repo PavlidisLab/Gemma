@@ -37,6 +37,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#thaw(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
      */
+    @Override
     protected void handleThaw( final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {
 
         this.getHibernateTemplate().execute( new HibernateCallback() {

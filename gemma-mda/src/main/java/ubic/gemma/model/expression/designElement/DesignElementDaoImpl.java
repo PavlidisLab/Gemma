@@ -21,10 +21,9 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.expression.designElement;
+
 /**
  * @see ubic.gemma.model.expression.designElement.DesignElement
  */
-public class DesignElementDaoImpl
-    extends ubic.gemma.model.expression.designElement.DesignElementDaoBase
-{
+public class DesignElementDaoImpl extends ubic.gemma.model.expression.designElement.DesignElementDaoBase {
 }

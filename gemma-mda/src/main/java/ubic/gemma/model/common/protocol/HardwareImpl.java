@@ -25,9 +25,7 @@ package ubic.gemma.model.common.protocol;
 /**
  * @see ubic.gemma.model.common.protocol.Hardware
  */
-public class HardwareImpl
-    extends ubic.gemma.model.common.protocol.Hardware
-{
+public class HardwareImpl extends ubic.gemma.model.common.protocol.Hardware {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

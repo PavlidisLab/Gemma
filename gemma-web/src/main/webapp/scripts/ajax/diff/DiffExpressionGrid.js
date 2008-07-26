@@ -75,7 +75,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		Ext.apply(this, {
 			rowExpander : new Gemma.DiffExpressionGridRowExpander({
-				tpl : "",
+				tpl : "<div height='300px'></div>",
 				grid : this
 			})
 		});

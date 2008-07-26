@@ -22,7 +22,6 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
-
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService
  */

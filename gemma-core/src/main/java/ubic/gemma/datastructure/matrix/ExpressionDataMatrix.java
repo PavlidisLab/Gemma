@@ -178,7 +178,8 @@ public interface ExpressionDataMatrix<T> {
 
     /**
      * @param index
-     * @return BioAssay
+     * @return bioassays that contribute data to the column. There can be multiple bioassays if more than one array was
+     *         used in the study.
      */
     public Collection<BioAssay> getBioAssaysForColumn( int index );
 

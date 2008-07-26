@@ -21,10 +21,9 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.expression.biomaterial;
+
 /**
  * @see ubic.gemma.model.expression.biomaterial.Treatment
  */
-public class TreatmentDaoImpl
-    extends ubic.gemma.model.expression.biomaterial.TreatmentDaoBase
-{
+public class TreatmentDaoImpl extends ubic.gemma.model.expression.biomaterial.TreatmentDaoBase {
 }

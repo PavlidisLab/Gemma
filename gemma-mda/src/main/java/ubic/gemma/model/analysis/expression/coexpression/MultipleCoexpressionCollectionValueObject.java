@@ -10,36 +10,40 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * @author luke The MultipleCoexpressionCollectionValueObject is used for storing the results of a multiple coexpression search.
+ * @author luke The MultipleCoexpressionCollectionValueObject is used for storing the results of a multiple coexpression
+ *         search.
  */
-public class MultipleCoexpressionCollectionValueObject  {
-    
+public class MultipleCoexpressionCollectionValueObject {
+
     private static Log log = LogFactory.getLog( MultipleCoexpressionCollectionValueObject.class.getName() );
-    
+
     private int minimumCommonQueryGenes;
-//    private Map<Gene, CoexpressionCollectionValueObject> queries;
+    // private Map<Gene, CoexpressionCollectionValueObject> queries;
     private Collection<Gene> queryGenes;
     private MultipleCoexpressionTypeValueObject geneCoexpressionData;
     private MultipleCoexpressionTypeValueObject predictedCoexpressionData;
     private MultipleCoexpressionTypeValueObject alignedCoexpressionData;
     private double elapsedWallSeconds;
-    
+
     public MultipleCoexpressionCollectionValueObject() {
         minimumCommonQueryGenes = 2;
-//        queries = Collections.synchronizedMap( new HashMap<Gene, CoexpressionCollectionValueObject>() );
+        // queries = Collections.synchronizedMap( new HashMap<Gene, CoexpressionCollectionValueObject>() );
         queryGenes = Collections.synchronizedCollection( new ArrayList<Gene>() );
         geneCoexpressionData = new MultipleCoexpressionTypeValueObject();
         predictedCoexpressionData = new MultipleCoexpressionTypeValueObject();
         alignedCoexpressionData = new MultipleCoexpressionTypeValueObject();
     }
-    
-    public void addCoexpressionCollection(CoexpressionCollectionValueObject coexpressionCollection) {
-        synchronized (this) {
-//            queries.put( coexpressionCollection.getQueryGene(), coexpressionCollection );
+
+    public void addCoexpressionCollection( CoexpressionCollectionValueObject coexpressionCollection ) {
+        synchronized ( this ) {
+            // queries.put( coexpressionCollection.getQueryGene(), coexpressionCollection );
             queryGenes.add( coexpressionCollection.getQueryGene() );
-            geneCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(), coexpressionCollection.getKnownGeneCoexpression() );
-            predictedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(), coexpressionCollection.getPredictedCoexpressionType() );
-            alignedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(), coexpressionCollection.getProbeAlignedCoexpressionType() );
+            geneCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
+                    coexpressionCollection.getKnownGeneCoexpression() );
+            predictedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
+                    coexpressionCollection.getPredictedCoexpressionType() );
+            alignedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
+                    coexpressionCollection.getProbeAlignedCoexpressionType() );
         }
     }
 
@@ -63,21 +67,21 @@ public class MultipleCoexpressionCollectionValueObject  {
     public MultipleCoexpressionTypeValueObject getProbeAlignedCoexpressionType() {
         return this.alignedCoexpressionData;
     }
-    
+
     /**
-     * @return those coexpressed genes that are common to multiple query genes 
+     * @return those coexpressed genes that are common to multiple query genes
      */
     public Collection<CommonCoexpressionValueObject> getCommonCoexpressedGenes() {
         return this.geneCoexpressionData.getCommonCoexpressedGenes( minimumCommonQueryGenes );
     }
-    
+
     /**
      * @return those coexpressed predicted genes that are common to multiple query genes
      */
     public Collection<CommonCoexpressionValueObject> getCommonCoexpressedPredictedGenes() {
         return this.predictedCoexpressionData.getCommonCoexpressedGenes( minimumCommonQueryGenes );
     }
-    
+
     /**
      * @return those coexpressed probe-aligned regions that are common to multiple query genes
      */
@@ -93,48 +97,51 @@ public class MultipleCoexpressionCollectionValueObject  {
     }
 
     /**
-     * @param minimumCommonQueryGenes the minimum number of query genes with which a result gene must exhibit coexpression to be displayed
+     * @param minimumCommonQueryGenes the minimum number of query genes with which a result gene must exhibit
+     *        coexpression to be displayed
      */
     public void setMinimumCommonQueries( int minimumCommonQueryGenes ) {
         this.minimumCommonQueryGenes = minimumCommonQueryGenes;
     }
 
-//    /**
-//     * @return the CoexpressionCollectionValueObjects for all query genes
-//     */
-//    public Collection<CoexpressionCollectionValueObject> getQueryResults() {
-//        return queries.values();
-//    }
-    
+    // /**
+    // * @return the CoexpressionCollectionValueObjects for all query genes
+    // */
+    // public Collection<CoexpressionCollectionValueObject> getQueryResults() {
+    // return queries.values();
+    // }
+
     /**
      * @return the query genes
      */
     public Collection<Gene> getQueryGenes() {
-//        return queries.keySet();
+        // return queries.keySet();
         return queryGenes;
     }
-    
+
     /**
      * @param gene the Gene of interest
      * @return a subset of the geneCommonCoexpressionValueObjects that exhibit coexpression with the specified Gene
      */
-    public CommonCoexpressionValueObject getQueriesForGene(Gene gene) {
+    public CommonCoexpressionValueObject getQueriesForGene( Gene gene ) {
         return this.geneCoexpressionData.getQueriesForGene( gene );
     }
-    
+
     /**
      * @param gene the Gene of interest
-     * @return a subset of the predicted gene CommonCoexpressionValueObjects that exhibit coexpression with the specified Gene
+     * @return a subset of the predicted gene CommonCoexpressionValueObjects that exhibit coexpression with the
+     *         specified Gene
      */
-    public CommonCoexpressionValueObject getQueriesForPredictedGene(Gene gene) {
+    public CommonCoexpressionValueObject getQueriesForPredictedGene( Gene gene ) {
         return this.predictedCoexpressionData.getQueriesForGene( gene );
     }
-    
+
     /**
      * @param gene the Gene of interest
-     * @return a subset of the probe-aligned region CommonCoexpressionValueObjects that exhibit coexpression with the specified Gene
+     * @return a subset of the probe-aligned region CommonCoexpressionValueObjects that exhibit coexpression with the
+     *         specified Gene
      */
-    public CommonCoexpressionValueObject getQueriesForProbeAlignedRegion(Gene gene) {
+    public CommonCoexpressionValueObject getQueriesForProbeAlignedRegion( Gene gene ) {
         return this.alignedCoexpressionData.getQueriesForGene( gene );
     }
 

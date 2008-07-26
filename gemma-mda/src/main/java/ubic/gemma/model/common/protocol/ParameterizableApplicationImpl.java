@@ -25,9 +25,7 @@ package ubic.gemma.model.common.protocol;
 /**
  * @see ubic.gemma.model.common.protocol.ParameterizableApplication
  */
-public class ParameterizableApplicationImpl
-    extends ubic.gemma.model.common.protocol.ParameterizableApplication
-{
+public class ParameterizableApplicationImpl extends ubic.gemma.model.common.protocol.ParameterizableApplication {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

@@ -133,7 +133,7 @@ public class CoexpressedGenesDetails {
         }
         Collections.sort( vks );
         Collections.reverse( vks );
-        
+
         for ( Vk vk : vks ) {
             if ( count > limit ) {
                 coexpressionData.remove( vk.getI() );

@@ -474,7 +474,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     /**
      * @return
      */
-    public DoubleMatrixNamed getNamedMatrix() {
+    public DoubleMatrixNamed<DesignElement, Integer> getNamedMatrix() {
         return matrix;
     }
 

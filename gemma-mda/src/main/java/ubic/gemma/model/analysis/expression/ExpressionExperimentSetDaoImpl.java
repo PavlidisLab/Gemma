@@ -40,6 +40,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
                         "eeset", expressionExperimentSet );
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     protected Collection<ExpressionExperimentSet> handleFindByName( String name ) throws Exception {
         return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where name=:query",

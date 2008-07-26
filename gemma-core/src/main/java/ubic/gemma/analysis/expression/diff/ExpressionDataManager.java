@@ -41,7 +41,6 @@ import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 /**
  * This class contains the methods needed for differential expression analyzer classes for extracting the expression
@@ -51,6 +50,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
  * @version $Id$
  * @deprecated
  */
+@Deprecated
 public class ExpressionDataManager {
 
     protected static final Log log = LogFactory.getLog( ExpressionDataManager.class );

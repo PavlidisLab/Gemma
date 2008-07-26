@@ -25,9 +25,7 @@ package ubic.gemma.model.common.protocol;
 /**
  * @see ubic.gemma.model.common.protocol.SoftwareApplication
  */
-public class SoftwareApplicationImpl
-    extends ubic.gemma.model.common.protocol.SoftwareApplication
-{
+public class SoftwareApplicationImpl extends ubic.gemma.model.common.protocol.SoftwareApplication {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

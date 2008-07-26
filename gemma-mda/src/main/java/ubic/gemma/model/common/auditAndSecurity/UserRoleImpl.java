@@ -27,11 +27,8 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserRole
  */
-public class UserRoleImpl
-    extends ubic.gemma.model.common.auditAndSecurity.UserRole
-    implements java.io.Serializable
-{
+public class UserRoleImpl extends ubic.gemma.model.common.auditAndSecurity.UserRole implements java.io.Serializable {
     /** The serial version UID of this class. Needed for serialization. */
     private static final long serialVersionUID = -1618654342446644213L;
-    
+
 }

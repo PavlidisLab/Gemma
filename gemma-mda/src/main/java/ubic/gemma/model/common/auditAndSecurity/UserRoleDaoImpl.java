@@ -27,7 +27,5 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserRole
  */
-public class UserRoleDaoImpl
-    extends ubic.gemma.model.common.auditAndSecurity.UserRoleDaoBase
-{
+public class UserRoleDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserRoleDaoBase {
 }

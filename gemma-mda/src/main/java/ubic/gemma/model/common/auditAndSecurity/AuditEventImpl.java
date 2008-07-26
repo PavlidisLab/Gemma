@@ -36,6 +36,7 @@ public class AuditEventImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent#toString()
      */
+    @Override
     public java.lang.String toString() {
         StringBuffer buf = new StringBuffer();
         buf.append( this.getDate() );

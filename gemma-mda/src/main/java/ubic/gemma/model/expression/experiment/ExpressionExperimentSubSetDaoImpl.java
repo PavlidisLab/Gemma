@@ -21,10 +21,10 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.expression.experiment;
+
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet
  */
-public class ExpressionExperimentSubSetDaoImpl
-    extends ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDaoBase
-{
+public class ExpressionExperimentSubSetDaoImpl extends
+        ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDaoBase {
 }

@@ -25,9 +25,7 @@ package ubic.gemma.model.common;
 /**
  * @see ubic.gemma.model.common.Auditable
  */
-public class AuditableImpl
-    extends ubic.gemma.model.common.Auditable
-{
+public class AuditableImpl extends ubic.gemma.model.common.Auditable {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

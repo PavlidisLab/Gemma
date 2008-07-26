@@ -28,9 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.TaxonUtility;
 
 /**
@@ -96,20 +94,18 @@ public class Gene2GeneCoexpressionDaoImpl extends
         // we assume the genes are from the same taxon.
         String g2gClassName = getClassName( ( Gene ) genes.iterator().next() );
 
-        final String queryStringFirstVector = "select g2g from "
-                + g2gClassName
+        final String queryStringFirstVector = "select g2g from " + g2gClassName
                 + " as g2g where  g2g.firstGene in (:genes) and g2g.numDataSets >= :stringency";
 
-        final String queryStringSecondVector = "select g2g from "
-                + g2gClassName
+        final String queryStringSecondVector = "select g2g from " + g2gClassName
                 + " as g2g where  g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency";
 
         Collection<Gene2GeneCoexpression> r = new HashSet<Gene2GeneCoexpression>();
 
         r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
-                new String[] { "genes", "stringency" }, new Object[] {  genes, stringency } ) );
+                new String[] { "genes", "stringency" }, new Object[] { genes, stringency } ) );
         r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
-                new String[] {   "genes", "stringency" }, new Object[] {   genes, stringency } ) );
+                new String[] { "genes", "stringency" }, new Object[] { genes, stringency } ) );
 
         Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
         for ( Gene g : ( Collection<Gene> ) genes ) {

@@ -21,10 +21,10 @@ Ext.extend(Gemma.DiffExpressionGridRowExpander, Ext.grid.RowExpander, {
 			 * Clear out old tables, otherwise they pile up. I haven't figured out a good way to cache this.
 			 */
 			var bodyEl = new Ext.Element(body);
-			Ext.DomHelper.overwrite(bodyEl, "");
+			Ext.DomHelper.overwrite(bodyEl, "<div height='300'></div>");
 
 			var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
-				width : 750, 
+				width : 750,
 				title : "Probe-level results for " + record.get("gene"),
 				renderTo : bodyEl
 			});

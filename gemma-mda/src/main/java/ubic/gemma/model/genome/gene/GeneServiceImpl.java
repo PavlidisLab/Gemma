@@ -325,6 +325,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().findByOfficialSymbol( symbol, taxon );
     }
 
+    @Override
     public void handleThawLite( Collection genes ) {
         this.getGeneDao().thawLite( genes );
     }

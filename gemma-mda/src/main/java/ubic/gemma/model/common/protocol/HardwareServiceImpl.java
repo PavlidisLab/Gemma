@@ -32,8 +32,8 @@ public class HardwareServiceImpl extends ubic.gemma.model.common.protocol.Hardwa
      * @see ubic.gemma.model.common.protocol.HardwareService#find(ubic.gemma.model.common.protocol.Hardware)
      */
     @Override
-    protected ubic.gemma.model.common.protocol.Hardware handleFind(
-            ubic.gemma.model.common.protocol.Hardware hardware ) throws java.lang.Exception {
+    protected ubic.gemma.model.common.protocol.Hardware handleFind( ubic.gemma.model.common.protocol.Hardware hardware )
+            throws java.lang.Exception {
         return this.getHardwareDao().find( hardware );
     }
 

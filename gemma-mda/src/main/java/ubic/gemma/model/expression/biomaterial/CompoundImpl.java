@@ -25,9 +25,7 @@ package ubic.gemma.model.expression.biomaterial;
 /**
  * @see ubic.gemma.model.expression.biomaterial.Compound
  */
-public class CompoundImpl
-    extends ubic.gemma.model.expression.biomaterial.Compound
-{
+public class CompoundImpl extends ubic.gemma.model.expression.biomaterial.Compound {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

@@ -1142,7 +1142,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 					}
 				}.createDelegate(this);
 				var updateErrorHandler = function(data) {
-					Ext.Msg.alert("Error", "Could not update. See the logs for details. " + data);
+					Ext.Msg.alert("Error", "Could not update. See the logs for details.<br/>" + data);
 						// FIXME: mark dirty.
 				}
 				ExpressionExperimentSetController.update(rec.data, {

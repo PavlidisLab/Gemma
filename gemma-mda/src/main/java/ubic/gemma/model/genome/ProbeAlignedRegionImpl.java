@@ -25,9 +25,7 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.ProbeAlignedRegion
  */
-public class ProbeAlignedRegionImpl
-    extends ubic.gemma.model.genome.ProbeAlignedRegion
-{
+public class ProbeAlignedRegionImpl extends ubic.gemma.model.genome.ProbeAlignedRegion {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

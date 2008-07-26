@@ -25,9 +25,7 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.ExpressionQtl
  */
-public class ExpressionQtlImpl
-    extends ubic.gemma.model.genome.ExpressionQtl
-{
+public class ExpressionQtlImpl extends ubic.gemma.model.genome.ExpressionQtl {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

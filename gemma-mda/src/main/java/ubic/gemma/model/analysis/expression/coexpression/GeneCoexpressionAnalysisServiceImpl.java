@@ -40,6 +40,7 @@ public class GeneCoexpressionAnalysisServiceImpl extends
     /*
      * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysisService#create(ubic.gemma.model.analysis.GeneCoexpressionAnalysis)
      */
+    @Override
     protected ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis handleCreate(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis )
             throws java.lang.Exception {

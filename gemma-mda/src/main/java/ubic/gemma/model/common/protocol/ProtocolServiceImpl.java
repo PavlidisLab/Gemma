@@ -32,8 +32,8 @@ public class ProtocolServiceImpl extends ubic.gemma.model.common.protocol.Protoc
      * @see ubic.gemma.model.common.protocol.ProtocolService#find(ubic.gemma.model.common.protocol.Protocol)
      */
     @Override
-    protected ubic.gemma.model.common.protocol.Protocol handleFind(
-            ubic.gemma.model.common.protocol.Protocol protocol ) throws java.lang.Exception {
+    protected ubic.gemma.model.common.protocol.Protocol handleFind( ubic.gemma.model.common.protocol.Protocol protocol )
+            throws java.lang.Exception {
         return this.getProtocolDao().find( protocol );
     }
 

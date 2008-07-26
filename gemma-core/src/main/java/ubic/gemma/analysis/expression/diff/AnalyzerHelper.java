@@ -80,7 +80,7 @@ public class AnalyzerHelper {
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
                 .getUsefulVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
-        ExpressionDataDoubleMatrix matrix = builder.getMaskedPreferredData(   );
+        ExpressionDataDoubleMatrix matrix = builder.getMaskedPreferredData();
 
         /* first, get all the biomaterials */
         Collection<BioMaterial> biomaterials = getBioMaterialsForBioAssays( matrix );
@@ -140,7 +140,7 @@ public class AnalyzerHelper {
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
                 .getUsefulVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
-        ExpressionDataDoubleMatrix matrix = builder.getMaskedPreferredData(   );
+        ExpressionDataDoubleMatrix matrix = builder.getMaskedPreferredData();
 
         /* first, get all the biomaterials */
         Collection<BioMaterial> biomaterials = getBioMaterialsForBioAssays( matrix );
@@ -214,7 +214,7 @@ public class AnalyzerHelper {
      * @return
      * @throws Exception
      */
-    public static List<BioMaterial> getBioMaterialsForBioAssays( ExpressionDataMatrix matrix ) {
+    public static List<BioMaterial> getBioMaterialsForBioAssays( ExpressionDataMatrix<?> matrix ) {
 
         List<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 

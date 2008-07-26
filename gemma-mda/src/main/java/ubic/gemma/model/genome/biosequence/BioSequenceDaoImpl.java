@@ -273,7 +273,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
                 if ( dbEntry != null ) {
                     session.update( dbEntry );
-                    session.update( dbEntry.getExternalDatabase() );                 
+                    session.update( dbEntry.getExternalDatabase() );
                 }
 
                 for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
@@ -373,7 +373,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                         session.lock( dbEntry.getExternalDatabase(), LockMode.NONE );
                         Hibernate.initialize( dbEntry.getExternalDatabase() );
                         session.evict( dbEntry );
-                        session.evict(dbEntry.getExternalDatabase());
+                        session.evict( dbEntry.getExternalDatabase() );
                     }
 
                     if ( ++count % 2000 == 0 ) {

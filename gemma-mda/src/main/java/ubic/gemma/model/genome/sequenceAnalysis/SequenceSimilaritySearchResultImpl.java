@@ -25,9 +25,8 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult
  */
-public class SequenceSimilaritySearchResultImpl
-    extends ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult
-{
+public class SequenceSimilaritySearchResultImpl extends
+        ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -37,8 +36,7 @@ public class SequenceSimilaritySearchResultImpl
      * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult#toString()
      */
     @Override
-    public java.lang.String toString()
-    {
+    public java.lang.String toString() {
         // @todo implement public java.lang.String toString()
         return null;
     }

@@ -45,7 +45,7 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     public enum Pattern {
         ST, AFFX, F, X, G
-    };
+    }
 
     /**
      * @param criteria int[] of constants indicating the criteria to use.

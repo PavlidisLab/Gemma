@@ -4,14 +4,13 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * @author luke
- *
  */
 public class QueryGeneCoexpressionDataPair {
 
     private Gene queryGene;
     private CoexpressionValueObject coexpressionData;
-    
-    public QueryGeneCoexpressionDataPair(Gene queryGene, CoexpressionValueObject coexpressionData) {
+
+    public QueryGeneCoexpressionDataPair( Gene queryGene, CoexpressionValueObject coexpressionData ) {
         this.queryGene = queryGene;
         this.coexpressionData = coexpressionData;
     }
@@ -22,7 +21,7 @@ public class QueryGeneCoexpressionDataPair {
     public Gene getQueryGene() {
         return queryGene;
     }
-    
+
     /**
      * @return the coexpressionData
      */

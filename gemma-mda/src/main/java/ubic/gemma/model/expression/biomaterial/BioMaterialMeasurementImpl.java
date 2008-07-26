@@ -25,9 +25,7 @@ package ubic.gemma.model.expression.biomaterial;
 /**
  * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement
  */
-public class BioMaterialMeasurementImpl
-    extends ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement
-{
+public class BioMaterialMeasurementImpl extends ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

@@ -33,8 +33,7 @@ public class BioAssayDataVectorServiceImpl extends
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService#saveBioAssayDataVector(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
      */
     protected void handleSaveBioAssayDataVector(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector )
-            throws java.lang.Exception {
+            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) throws java.lang.Exception {
         this.getBioAssayDataVectorDao().create( bioAssayDataVector );
     }
 

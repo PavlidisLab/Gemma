@@ -36,6 +36,7 @@ public class ExpressionExperimentSetServiceImpl extends
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
+    @Override
     protected ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleCreate(
             ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
             throws java.lang.Exception {
@@ -45,6 +46,7 @@ public class ExpressionExperimentSetServiceImpl extends
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
+    @Override
     protected void handleDelete( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
             throws java.lang.Exception {
         this.getExpressionExperimentSetDao().remove( expressionExperimentSet );
@@ -53,6 +55,7 @@ public class ExpressionExperimentSetServiceImpl extends
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
+    @Override
     protected void handleUpdate( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
             throws java.lang.Exception {
         if ( expressionExperimentSet.getExperiments().size() == 0 ) {
@@ -69,6 +72,7 @@ public class ExpressionExperimentSetServiceImpl extends
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadAll()
      */
+    @Override
     protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getExpressionExperimentSetDao().loadAll();
 
@@ -77,6 +81,7 @@ public class ExpressionExperimentSetServiceImpl extends
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @Override
     protected java.util.Collection handleLoadUserSets( ubic.gemma.model.common.auditAndSecurity.User user )
             throws java.lang.Exception {
         // @todo implement protected java.util.Collection
@@ -88,6 +93,7 @@ public class ExpressionExperimentSetServiceImpl extends
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#load(java.lang.Long)
      */
+    @Override
     protected ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleLoad( java.lang.Long id )
             throws java.lang.Exception {
         return ( ExpressionExperimentSet ) this.getExpressionExperimentSetDao().load( id );

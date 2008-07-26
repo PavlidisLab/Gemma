@@ -25,18 +25,16 @@ package ubic.gemma.model.association;
 /**
  * @see ubic.gemma.model.association.BioSequence2GeneProductService
  */
-public class BioSequence2GeneProductServiceImpl
-    extends ubic.gemma.model.association.BioSequence2GeneProductServiceBase
-{
+public class BioSequence2GeneProductServiceImpl extends ubic.gemma.model.association.BioSequence2GeneProductServiceBase {
 
     /**
      * @see ubic.gemma.model.association.BioSequence2GeneProductService#create(ubic.gemma.model.association.BioSequence2GeneProduct)
      */
     @Override
-    protected ubic.gemma.model.association.BioSequence2GeneProduct handleCreate(ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct)
-        throws java.lang.Exception
-    {
-        // @todo implement protected ubic.gemma.model.association.BioSequence2GeneProduct handleCreate(ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct)
+    protected ubic.gemma.model.association.BioSequence2GeneProduct handleCreate(
+            ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct ) throws java.lang.Exception {
+        // @todo implement protected ubic.gemma.model.association.BioSequence2GeneProduct
+        // handleCreate(ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct)
         return null;
     }
 

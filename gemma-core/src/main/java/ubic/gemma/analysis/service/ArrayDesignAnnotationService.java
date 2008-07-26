@@ -102,7 +102,7 @@ public class ArrayDesignAnnotationService {
 
     private static final String COMMENT_CHARACTER = "#";
 
-    private static Log log = LogFactory.getLog( ArrayDesignAnnotationService.class.getName() );;
+    private static Log log = LogFactory.getLog( ArrayDesignAnnotationService.class.getName() );
 
     /**
      * @param arrayDesign

@@ -32,8 +32,8 @@ public class SoftwareServiceImpl extends ubic.gemma.model.common.protocol.Softwa
      * @see ubic.gemma.model.common.protocol.SoftwareService#find(ubic.gemma.model.common.protocol.Software)
      */
     @Override
-    protected ubic.gemma.model.common.protocol.Software handleFind(
-            ubic.gemma.model.common.protocol.Software software ) throws java.lang.Exception {
+    protected ubic.gemma.model.common.protocol.Software handleFind( ubic.gemma.model.common.protocol.Software software )
+            throws java.lang.Exception {
         return this.getSoftwareDao().find( software );
     }
 

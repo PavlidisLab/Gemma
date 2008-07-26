@@ -95,6 +95,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
      * 
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
+    @Override
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
         final String queryString = "select distinct a from GeneCoexpressionAnalysisImpl a where :e in elements (a.expressionExperimentSetAnalyzed.experiments)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
@@ -105,6 +106,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
      * 
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigations(java.util.Collection)
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
         Map<Investigation, Collection<GeneCoexpressionAnalysis>> results = new HashMap<Investigation, Collection<GeneCoexpressionAnalysis>>();

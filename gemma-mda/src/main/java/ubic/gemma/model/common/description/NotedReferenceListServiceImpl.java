@@ -45,8 +45,7 @@ public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.descr
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected void handleAddReferenceToList(
-            ubic.gemma.model.common.description.NotedReferenceList notedReferenceList,
+    protected void handleAddReferenceToList( ubic.gemma.model.common.description.NotedReferenceList notedReferenceList,
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
 

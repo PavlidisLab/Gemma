@@ -25,9 +25,7 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.PredictedGene
  */
-public class PredictedGeneImpl
-    extends ubic.gemma.model.genome.PredictedGene
-{
+public class PredictedGeneImpl extends ubic.gemma.model.genome.PredictedGene {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

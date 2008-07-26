@@ -21,10 +21,9 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.common.auditAndSecurity;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroup
  */
-public class UserGroupDaoImpl
-    extends ubic.gemma.model.common.auditAndSecurity.UserGroupDaoBase
-{
+public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserGroupDaoBase {
 }
