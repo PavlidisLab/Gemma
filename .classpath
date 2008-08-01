@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-core/src/main/java"/>
-	<classpathentry excluding="hibernate.properties" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/src/main/resources"/>
 	<classpathentry kind="src" output="test-build" path="gemma-web/src/test/resources"/>
 	<classpathentry kind="src" output="test-build" path="gemma-web/src/it/java"/>
 	<classpathentry kind="src" output="test-build" path="gemma-util/src/test/resources"/>
@@ -15,6 +14,7 @@
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/src/main/java"/>
 	<classpathentry kind="src" output="test-build" path="gemma-mda/src/test/java"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/target/generated-sources/java"/>
+	<classpathentry excluding="hibernate.properties" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/src/main/resources"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-util/target/generated-sources/resources"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/target/generated-sources/resources"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-testing/src/main/java"/>
