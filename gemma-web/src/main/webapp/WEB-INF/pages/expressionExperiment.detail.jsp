@@ -28,6 +28,9 @@
 	<script type="text/javascript">
 	Ext.onReady(DesignMatrix.init, DesignMatrix);
 	Ext.onReady(function() {
+	
+		Ext.QuickTips.init();	
+
 	var eeId = dwr.util.getValue("eeId");
 	var eeClass = dwr.util.getValue("eeClass");
 	var admin = dwr.util.getValue("hasAdmin");

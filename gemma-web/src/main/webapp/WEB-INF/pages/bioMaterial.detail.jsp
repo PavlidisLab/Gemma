@@ -11,6 +11,8 @@
 	<script type='text/javascript'>
 		Ext.namespace('Gemma');
 	Ext.onReady(function() {
+		Ext.QuickTips.init();
+	
 	var bmId = dwr.util.getValue("bmId");
 	var bmClass = dwr.util.getValue("bmClass");
 	var admin = dwr.util.getValue("hasAdmin");
