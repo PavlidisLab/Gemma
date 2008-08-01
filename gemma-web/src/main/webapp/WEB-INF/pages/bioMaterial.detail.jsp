@@ -20,6 +20,10 @@
 					id : bmId,
 					classDelegatingFor : bmClass
 				}],
+				writeMethod : OntologyService.saveBioMaterialStatement,
+				removeMethod : OntologyService.removeBioMaterialStatement,
+				entId : bmId,
+				
 				editable : admin,
 				mgedTermKey : "experiment"
 			});

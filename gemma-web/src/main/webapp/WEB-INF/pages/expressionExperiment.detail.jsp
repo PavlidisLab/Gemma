@@ -4,7 +4,7 @@
 <head>
 	<title>${expressionExperiment.name}</title>
 
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js'  />
 	<jwr:script src='/scripts/app/eeDataFetch.js' />
 
 	<authz:authorize ifAnyGranted="admin">
@@ -38,10 +38,17 @@
 					id : eeId,
 					classDelegatingFor : eeClass
 				}],
+				
+				writeMethod : OntologyService.saveExpressionExperimentStatement,				
+				
+				removeMethod : OntologyService.removeExpressionExperimentStatement,
+				
 				editable : admin,
-				mgedTermKey : "experiment"
+				mgedTermKey : "experiment",
+				entId : eeId
 			});
-});
+	
+});			
 	 </script>
 
 </head>
