@@ -40,6 +40,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.quartz.impl.StdScheduler;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.ContextLoaderListener;
@@ -53,6 +54,7 @@ import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.LabelValue;
+import ubic.gemma.util.QuartzUtils;
 
 /**
  * StartupListener class used to initialize the spring context and make it available to the servlet context, so filters
@@ -86,6 +88,8 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
      * </pre>
      */
     private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
+    
+    private static final String QUARTZ = "quartzOn";
 
     private static final Log log = LogFactory.getLog( StartupListener.class );
 
@@ -127,6 +131,15 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         copyWorkerJars( servletContext );
 
         initializeOntologies( ctx );
+  
+
+        if (!ConfigUtils.getBoolean(QUARTZ, false)){
+            QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
+            log.info("Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
+        } 
+        else
+            log.info("Quartz scheduling enableded.  Set quartzOn=false in Gemma.properties to disable" );
+            
 
         sw.stop();
 
