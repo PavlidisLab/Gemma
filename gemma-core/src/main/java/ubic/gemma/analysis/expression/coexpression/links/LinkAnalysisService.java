@@ -48,6 +48,7 @@ import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
 import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
@@ -204,6 +205,11 @@ public class LinkAnalysisService {
          * Set up basics.
          */
         ProbeCoexpressionAnalysis analysis = linkAnalysisConfig.toAnalysis();
+        
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet.setName( ee.getShortName() );
+        analysis.setExpressionExperimentSetAnalyzed( eeSet );
+        
         analysis.setName( ee.getShortName() + " link analysis" );
         analysis.getProtocol().setDescription(
                 analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
