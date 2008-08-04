@@ -67,53 +67,6 @@
 				</property>
 			</properties>
 		</namespace>
-		<!-- 
-		<namespace name="spring">
-			<properties>
-				<property name="hibernateDialect">org.hibernate.dialect.MySQLMyISAMDialect</property>
-				<property name="hibernateShowSql">false</property>
-				<property name="hibernateUseQueryCache">true</property>
-				<property name="hibernateJdbcBatchSize">500</property>
-				<property name="hibernateJdbcFetchSize">500</property>
-				<property name="hibernateMaxFetchDepth">3</property>
-				<property name="hibernateDefaultBatchFetchSize">500</property>
-				<property name="hibernateJdbcBatchVersionedData">true</property>
-				<property name="hibernateJdbcUseStreamsForBinary">true</property>
-				<property name="hibernateQueryUseNamedParameters">true</property>
-				<property name="hibernateEnableCache">true</property>
-				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory</property>
-				<property name="hibernateCacheProvider">org.hibernate.cache.EhCacheProvider</property>
-				<property name="hibernateInheritanceStrategy">subclass</property>
-				<property name="enableTemplating">false</property>
-				<property name="enableDaoPropertiesCreateMethod">false</property>
-				<property name="springTypesPackage">ubic.gemma.spring</property>
-				<property name="springPresentationTypesPackage">ubic.gemma.spring.presentation</property>
-				<property name="mergeLocation">${maven.andromda.spring.merge.custom}</property>
-				<property name="mergeMappingsUri">file:${maven.andromda.merge.mappings}</property>
-				<property name="driver">${gemma.db.driver}</property>
-				<property name="username">${gemma.db.user}</property>
-				<property name="password">${gemma.db.password}</property>
-				<property name="connectionUrl">${gemma.db.url}</property>
-				<property name="serviceLocator">${maven.andromda.spring.service.locator.dir}</property>
-				<property name="applicationContext">applicationContext-hibernate.xml</property>
-				<property name="applicationContextLocalDataSource">dataSource.xml</property>
-				<property name="jdbcDataSourceClass">org.apache.commons.dbcp.BasicDataSource</property>
-				<property name="jdbcDataSourceDestroyMethod">close</property>
-				<property name="localTransactionManager">
-					org.springframework.orm.hibernate3.HibernateTransactionManager
-				</property>
-				<property name="sessionFactory">org.springframework.orm.hibernate3.LocalSessionFactoryBean</property>
-				<property name="value-objects">${maven.andromda.core.generated.dir}</property>
-				<property name="daos">${maven.andromda.core.generated.dir}</property>
-				<property name="dao-impls">${maven.andromda.core.manual.dir}</property>
-				<property name="services">${maven.andromda.core.generated.dir}</property>
-				<property name="service-impls">${maven.andromda.core.manual.dir}</property>
-				<property name="service-interfaces">${maven.andromda.core.generated.dir}</property>
-				<property name="spring-configuration">${maven.andromda.spring.configuration.dir}</property>
-				<property name="parameterRequiredCheck">false</property>
-			</properties>
-		</namespace>
-		-->
 		<namespace name="hibernate">
 			<properties>
 				<property name="hibernateDialect">org.hibernate.dialect.MySQLMyISAMDialect</property>
