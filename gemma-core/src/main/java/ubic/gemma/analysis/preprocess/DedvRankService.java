@@ -196,7 +196,7 @@ public class DedvRankService {
         matrix.setColumnNames( new ArrayList<ExpressionExperiment>( ees ) );
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.setByKeys( i, j, Double.NaN );
+                matrix.setByKeys(matrix.getRowName( i ), matrix.getColName( j ), Double.NaN  );
             }
         }
 
