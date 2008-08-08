@@ -1180,5 +1180,20 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
      */
     protected abstract java.util.Collection handleFindByFactorValues( java.util.Collection factorValues )
             throws java.lang.Exception;
+    
+    
+    public java.util.Collection<Long> loadAllIds(Long taxonId){
+        try{
+            return this.handleLoadAllIds(taxonId);
+        }catch(Throwable th){
+            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentServiceException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAllIds()' --> "
+                            + th, th );
+    
+        }
+    }
 
+    protected abstract java.util.Collection<Long> handleLoadAllIds(Long taxonId) throws java.lang.Exception;
+    
+    
 }

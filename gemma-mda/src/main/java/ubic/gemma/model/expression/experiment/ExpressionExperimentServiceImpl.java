@@ -566,5 +566,10 @@ public class ExpressionExperimentServiceImpl extends
     protected Collection handleFindByFactorValues( Collection factorValues ) throws Exception {
         return this.getExpressionExperimentDao().findByFactorValues( factorValues );
     }
+    
+    protected Collection<Long> handleLoadAllIds(Long taxonId) throws Exception {
+        return this.getExpressionExperimentDao().loadAllIds(taxonId);
+        
+    }
 
 }

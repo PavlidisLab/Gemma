@@ -1183,6 +1183,27 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return ees;
     }
 
+    public Collection<Long> loadAllIds(Long taxonId) {
+        Collection<Long> eeIds = null;
+        final String queryString = "from ExpressionExperimentImpl as ee select ee.id where ee.taxon = :taxonId";
+        try {
+            Session session = this.getSession( false );
+            org.hibernate.Query queryObject = session.createQuery( queryString );
+            queryObject.setReadOnly( true );
+            queryObject.setCacheable( true );
+            queryObject.setLong( "taxonId", taxonId );
+            StopWatch timer = new StopWatch();
+            timer.start();
+            
+            eeIds = queryObject.list();
+            if ( timer.getTime() > 1000 ) {
+                log.info( "EE ids loaded in " + timer.getTime() + "ms" );
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return eeIds;
+    }
     /*
      * (non-Javadoc)
      * 
@@ -1218,6 +1239,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return ees;
     }
 
+    
+    
     /*
      * (non-Javadoc)
      * 

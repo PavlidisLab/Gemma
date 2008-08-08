@@ -616,4 +616,11 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      */
     public java.util.Collection findByBioMaterials( java.util.Collection bioMaterials );
 
+    /**
+     * @param taxon Id
+     * @return a collection of expression experiment IDs (long)
+     * @throws java.lang.Exception
+     */
+    public java.util.Collection<Long> loadAllIds( Long taxon ) throws java.lang.Exception;
+
 }

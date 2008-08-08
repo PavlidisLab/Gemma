@@ -1508,6 +1508,14 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     protected abstract java.util.Collection handleFindByBioMaterials( java.util.Collection bioMaterials )
             throws java.lang.Exception;
 
+    
+    /**
+     * Returns just the ids of all the EEs in the system
+     */
+    
+    public abstract java.util.Collection<Long> loadAllIds(Long taxon) throws java.lang.Exception;
+    
+    
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
