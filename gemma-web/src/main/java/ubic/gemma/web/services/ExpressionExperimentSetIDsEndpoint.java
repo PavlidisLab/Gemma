@@ -67,6 +67,7 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
      */
     @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+        authenticate();
         StopWatch watch = new StopWatch();
         watch.start();
 
@@ -120,7 +121,11 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
             Element e3 = document.createElement( "datasets" );
             e3.appendChild( document.createTextNode( encode( eeIds.toArray() ) ) );
             responseElement.appendChild( e3 );
-
+            
+            Element e4 = document.createElement( "taxon" );
+            e4.appendChild( document.createTextNode( ees.getTaxon().getId().toString() ) );
+            responseElement.appendChild( e4 );
+            
         }
 
         watch.stop();
