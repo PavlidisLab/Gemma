@@ -397,12 +397,5 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      */
     public java.util.Collection findByFactorValues( java.util.Collection factorValues );
 
-    /**
-     * @param taxon Id (long)
-     * @return a collection of expresion experiment Ids backed by a hibernate query (doesn't delegate and filter by
-     *         taxon then strip out ids from load all)
-     * @throws java.lang.Exception
-     */
-    public abstract java.util.Collection<Long> loadAllIds( Long taxon ) throws java.lang.Exception;
 
 }

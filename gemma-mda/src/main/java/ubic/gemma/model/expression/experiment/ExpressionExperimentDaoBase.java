@@ -1509,12 +1509,6 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
             throws java.lang.Exception;
 
     
-    /**
-     * Returns just the ids of all the EEs in the system
-     */
-    
-    public abstract java.util.Collection<Long> loadAllIds(Long taxon) throws java.lang.Exception;
-    
     
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
