@@ -144,6 +144,7 @@
       
       <complexType name="eeNames">
      		 <sequence>
+     		<element name="ee_id" type="xsd:string" />
       	  	<element name="ee_short_name" type="xsd:string" /> 
     		<element name="ee_name" type="xsd:string" />       		     			 
      		</sequence>
@@ -156,11 +157,26 @@
         </complexContent>
       </complexType>
       
+       <complexType name="geneNames">
+     		 <sequence>
+      	  	<element name="gene_id" type="xsd:string" /> 
+    		<element name="gene_official_symbol" type="xsd:string" />       		     			 
+     		</sequence>
+	     </complexType>
+	  <complexType name="ArrayOfgeneNames">
+        <complexContent>
+          <restriction base="soapenc:Array">
+            <attribute ref="soapenc:arrayType" wsdl:arrayType="schema:geneNames[]"/>
+          </restriction>
+        </complexContent>
+      </complexType>
+      
       <complexType name="EESResult">
      		 <sequence>
       	  	<element name="expression_experiment_set_id" type="xsd:string" /> 
       	  	<element name="ees_name" type="xsd:string" />  
-    		<element name="datasets" type="xsd:string" />       		     			 
+    		<element name="datasets" type="xsd:string" />      
+    		  		     			 
      		</sequence>
 	     </complexType>
 	  <complexType name="ArrayOfEESResult">
@@ -199,13 +215,31 @@
           </restriction>
         </complexContent>
       </complexType>
+      
+       <complexType name="differentialExpressionResult">
+     		 <sequence>
+      	  	<element name="gene_id" type="xsd:string" />
+      	  	<element name="ee_id" type="xsd:string" /> 
+      	  	<element name="probe" type="xsd:string" />
+      	  	<element name="q_value" type="xsd:string" />		     			 
+     		</sequence>
+	     </complexType>
+	  <complexType name="ArrayOfdifferentialExpressionResult">
+        <complexContent>
+          <restriction base="soapenc:Array">
+            <attribute ref="soapenc:arrayType" wsdl:arrayType="schema:differentialExpressionResult[]"/>
+          </restriction>
+        </complexContent>
+      </complexType>
+      
+      
 	     
 </schema>
 
 
   </wsdl:types>
   <wsdl:message name="geneNameResponse">
-    <wsdl:part name="gene_name" type="xsd:string" />
+    <wsdl:part name="gene_name_results" type="schema:ArrayOfgeneNames" />
   </wsdl:message>
   <wsdl:message name="experimentIDbyTaxonRequest">
     <wsdl:part name="taxon_id" type="xsd:integer" />
@@ -263,14 +297,14 @@
     <wsdl:part name="eeNumSample_id" type="xsd:string" />
   </wsdl:message>
   <wsdl:message name="experimentNameRequest">
-    <wsdl:part name="ee_id" type="xsd:integer" />
+    <wsdl:part name="ee_ids" type="schema:ArrayOfIDs" />
   </wsdl:message>
   <wsdl:message name="geneIdRequest">
      <wsdl:part name="gene_official_symbol" type="xsd:string" />
      <wsdl:part name="taxon_id" type="xsd:integer" />
   </wsdl:message>
   <wsdl:message name="geneNameRequest">
-   <wsdl:part name="gene_id" type="xsd:integer" />
+   <wsdl:part name="gene_ids" type="xsd:integer" />
   </wsdl:message>
   <wsdl:message name="experimentNumSamplesRequest">
    <wsdl:part name="ee_id" type="xsd:integer" />
@@ -279,7 +313,7 @@
     <wsdl:part name="gene_id" type="xsd:integer" />
   </wsdl:message>
   <wsdl:message name="goTerm2GeneRequest">
-   <wsdl:part name="go_id" type="xsd:integer" />
+   <wsdl:part name="go_id" type="xsd:string" />
      <wsdl:part name="taxon_id" type="xsd:integer" /> 
   </wsdl:message>
   <wsdl:message name="geneIdResponse">
@@ -353,6 +387,17 @@
   <wsdl:message name="nCBIIdByGeneIDResponse">
     <wsdl:part name="gene_ncbi_results" type="schema:ArrayOfncbiResult" />
   </wsdl:message>
+  <wsdl:message name="differentialExpressionProbeResultRequest">
+  <wsdl:part name="expression_experiment_set_id" type="xsd:integer" /> 
+  <wsdl:part name="gene_ids" type="schema:ArrayOfIDs" /> 
+  <wsdl:part name="taxon_id" type="xsd:integer" />  
+  <wsdl:part name="threshold" type="xsd:integer" /> 
+    </wsdl:message>
+  <wsdl:message name="differentialExpressionProbeResultResponse">
+    <wsdl:part name="differentialExpression_results" type="schema:ArrayOfdifferentialExpressionResult" />
+  </wsdl:message>
+  
+  
   
   <wsdl:portType name="gemma">
     <wsdl:operation name="experimentIDbyTaxon">
@@ -493,6 +538,13 @@
       <wsdl:output message="schema:nCBIIdByGeneIDResponse" name="nCBIIdByGeneIDResponse">
     </wsdl:output>
     </wsdl:operation> 
+     <wsdl:operation name="differentialExpressionProbeResult">
+      <wsdl:input message="schema:differentialExpressionProbeResultRequest" name="differentialExpressionProbeResultRequest">
+    </wsdl:input>
+      <wsdl:output message="schema:differentialExpressionProbeResultResponse" name="differentialExpressionProbeResultResponse">
+    </wsdl:output>
+    </wsdl:operation> 
+    
     
   </wsdl:portType>
   <wsdl:binding name="gemmaBinding" type="schema:gemma">
@@ -604,8 +656,7 @@
       <wsdl:output name="physicalLocationResponse">
         <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
-    </wsdl:operation>
- 
+    </wsdl:operation> 
     <wsdl:operation name="goTerm2Gene">
       <soap:operation soapAction=""/>
       <wsdl:input name="goTerm2GeneRequest">
@@ -613,8 +664,7 @@
       </wsdl:input>
       <wsdl:output name="goTerm2GeneResponse">
        <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-      </wsdl:output>
-   
+      </wsdl:output>   
     </wsdl:operation>
     <wsdl:operation name="gene2Go">
       <soap:operation soapAction=""/>
@@ -706,6 +756,16 @@
            <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
+    <wsdl:operation name="differentialExpressionProbeResult">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="differentialExpressionProbeResultRequest">
+           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:input>
+      <wsdl:output name="differentialExpressionProbeResultResponse">
+           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:output>
+    </wsdl:operation>
+    
     
   </wsdl:binding>
   <wsdl:service name="gemmaService">
@@ -717,7 +777,7 @@
 
     <!-- for production, use http://bioinformatics.ubc.ca/Gemma/ws -->
 
-    <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/>
+    <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/> 
   
     </wsdl:port>
   </wsdl:service>
