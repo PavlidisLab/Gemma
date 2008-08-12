@@ -89,14 +89,17 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
         responseWrapper.appendChild( responseElement );
 
         for (ExpressionExperiment ee : eeCol){
-            
-            Element e1 = document.createElement( "ee_shortName" );
-            e1.appendChild( document.createTextNode( ee.getShortName() ) );
+            Element e1 = document.createElement( "ee_id" );
+            e1.appendChild( document.createTextNode( ee.getId().toString() ) );
             responseElement.appendChild( e1 );
-    
-            Element e2 = document.createElement( "ee_name" );
-            e2.appendChild( document.createTextNode( ee.getName() ) );
+            
+            Element e2 = document.createElement( "ee_shortName" );
+            e2.appendChild( document.createTextNode( ee.getShortName() ) );
             responseElement.appendChild( e2 );
+    
+            Element e3 = document.createElement( "ee_name" );
+            e3.appendChild( document.createTextNode( ee.getName() ) );
+            responseElement.appendChild( e3 );
         }
 
         watch.stop();

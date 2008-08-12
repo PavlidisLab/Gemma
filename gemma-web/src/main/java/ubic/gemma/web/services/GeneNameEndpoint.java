@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
@@ -47,7 +48,7 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
     /**
      * The local name of the expected Request/Response.
      */
-    public static final String GENE_LOCAL_NAME = "geneName";
+    public static final String LOCAL_NAME = "geneName";
 
     /**
      * Sets the "business service" to delegate to.
@@ -63,39 +64,49 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
+    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
         
-        setLocalName( GENE_LOCAL_NAME );
+        setLocalName( LOCAL_NAME );
         String geneId = "";
 
-        Collection<String> geneResults = getNodeValues( requestElement, "gene_id" );
+        Collection<String> geneInput = getArrayValues( requestElement, "gene_ids" );  
+        Collection<Long> geneIDs = new HashSet<Long>();
+        for (String id : geneInput)
+               geneIDs.add( Long.parseLong( id ) );
 
-        for ( String id : geneResults ) {
-            geneId = id;
-        }
-
-        log.info( "XML input read: gene id, "+geneId );
+        log.info( "XML input read: "+geneInput.size()+" gene ids" );
         
-        Gene geneName = geneService.load( Long.parseLong( geneId ) );
+        Collection<Gene> geneCol = geneService.loadMultiple( geneIDs );
 
-        if ( geneName == null ) {
+        if ( geneCol == null || geneCol.isEmpty()) {
             String msg = "No gene with id, " + geneId + " can be found.";
             return buildBadResponse( document, msg );
         }
 
-        // get Array Design ID and build results in the form of a collection
-        Collection<String> gName = new HashSet<String>();
-        gName.add( geneName.getOfficialSymbol());
 
-        Element wrapper = buildWrapper( document, gName, "gene_name" );
-        
+        Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
+        Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
+        responseWrapper.appendChild( responseElement );
+
+        for (Gene gene : geneCol){
+            
+            Element e1 = document.createElement( "gene_id" );
+            e1.appendChild( document.createTextNode( gene.getId().toString() ) );
+            responseElement.appendChild( e1 );
+    
+            Element e2 = document.createElement( "gene_official_symbol" );
+            e2.appendChild( document.createTextNode( gene.getOfficialSymbol() ) );
+            responseElement.appendChild( e2 );
+        }
+
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for gene name result built in " + time + "ms." );   
-        return wrapper;
+        log.info( "XML response for Gene name results built in " + time + "ms." );    
 
+        return responseWrapper;
     }
 
 }
