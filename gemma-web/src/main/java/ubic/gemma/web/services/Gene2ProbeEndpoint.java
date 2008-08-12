@@ -87,13 +87,13 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
 
         //FIXME this should take gene_id
         String geneSymbol = "";
-        Collection<String> geneResults = getNodeValues( requestElement, "gene_official_symbol" );
+        Collection<String> geneResults = getSingleNodeValue( requestElement, "gene_official_symbol" );
         for ( String id : geneResults ) {
             geneSymbol = id;
         }
 
         String taxonid = "";
-        Collection<String> taxonResults = getNodeValues( requestElement, "taxon_id" );
+        Collection<String> taxonResults = getSingleNodeValue( requestElement, "taxon_id" );
         for ( String id : taxonResults ) {
             taxonid = id;
         }

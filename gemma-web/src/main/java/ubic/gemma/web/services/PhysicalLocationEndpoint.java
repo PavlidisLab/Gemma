@@ -76,7 +76,7 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         watch.start();
         
         setLocalName( PLOC_LOCAL_NAME );
-        Collection<String> geneResults = getNodeValues( requestElement, "gene_id" );
+        Collection<String> geneResults = getSingleNodeValue( requestElement, "gene_id" );
         String geneId = "";
 
         for ( String id : geneResults ) {

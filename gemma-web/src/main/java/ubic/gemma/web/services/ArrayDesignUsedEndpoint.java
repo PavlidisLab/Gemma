@@ -68,7 +68,7 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
         
         setLocalName( ARRAY_LOCAL_NAME );
         String eeId = "";
-        Collection<String> eeResult = getNodeValues( requestElement, "ee_id" );
+        Collection<String> eeResult = getSingleNodeValue( requestElement, "ee_id" );
         // expect only one element since only one input value (ee id)
         for ( String id : eeResult )
             eeId = id;

@@ -73,7 +73,7 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
         setLocalName( ARRAY_LOCAL_NAME );
         String adName = "";
         // get GO id from request
-        Collection<String> adResult = getNodeValues( requestElement, "ad_name" );
+        Collection<String> adResult = getSingleNodeValue( requestElement, "ad_name" );
         for ( String ad : adResult ) {
             adName = ad;
         }

@@ -70,7 +70,7 @@ public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {
         setLocalName( EXPERIMENT_LOCAL_NAME );
         String eeName = "";
 
-        Collection<String> eeResults = getNodeValues( requestElement, "ee_short_name" );
+        Collection<String> eeResults = getSingleNodeValue( requestElement, "ee_short_name" );
 
         for ( String id : eeResults ) {
             eeName = id;

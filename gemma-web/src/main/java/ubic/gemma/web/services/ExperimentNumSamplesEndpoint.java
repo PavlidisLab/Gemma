@@ -70,7 +70,7 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
         setLocalName( EXPERIMENT_LOCAL_NAME );
         String eeId = "";
 
-        Collection<String> eeResult = getNodeValues( requestElement, "ee_id" );
+        Collection<String> eeResult = getSingleNodeValue( requestElement, "ee_id" );
         // expect only one element in the collection since only one input value
         for ( String id : eeResult )
             eeId = id;

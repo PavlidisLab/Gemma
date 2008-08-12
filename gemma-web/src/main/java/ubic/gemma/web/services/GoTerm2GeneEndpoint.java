@@ -79,13 +79,13 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
         String taxonId = "";
 
         // get GO id from request
-        Collection<String> goIdResult = getNodeValues( requestElement, "go_id" );
+        Collection<String> goIdResult = getSingleNodeValue( requestElement, "go_id" );
         for ( String id : goIdResult ) {
             goId = id;
         }
 
         // get taxon id from request
-        Collection<String> taxonIdResult = getNodeValues( requestElement, "taxon_id" );
+        Collection<String> taxonIdResult = getSingleNodeValue( requestElement, "taxon_id" );
         for ( String id : taxonIdResult ) {
             taxonId = id;
         }

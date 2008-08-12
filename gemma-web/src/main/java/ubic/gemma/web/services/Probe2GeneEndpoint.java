@@ -81,13 +81,13 @@ public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
         setLocalName( PROBE_LOCAL_NAME );
        
         String probeName = "";
-        Collection<String> probeResults = getNodeValues( requestElement, "probe_name" );
+        Collection<String> probeResults = getSingleNodeValue( requestElement, "probe_name" );
         for ( String name : probeResults ) {
             probeName = name;
         }
         
         String adid = "";
-        Collection<String> adResults = getNodeValues( requestElement, "array_design_identifier" );
+        Collection<String> adResults = getSingleNodeValue( requestElement, "array_design_identifier" );
         for ( String id : adResults ) {
             adid = id;
         }

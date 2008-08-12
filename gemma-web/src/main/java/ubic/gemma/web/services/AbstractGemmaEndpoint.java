@@ -94,41 +94,26 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * @param tagName
      * @return a collection contain one string element
      */
-    protected Collection<String> getNodeValues( Element requestElement, String tagName ) {
-//        StopWatch watch = new StopWatch();
-//        watch.start();
-
+    protected Collection<String> getSingleNodeValue( Element requestElement, String tagName ) {
         Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-//        log.info( "Starting " + localName + " endpoint" );
         authenticate();
-
         Collection<String> value = new HashSet<String>();
         String node = "";
-
         // get the Element with name = tagName
         NodeList children = requestElement.getElementsByTagName( tagName ).item( 0 ).getChildNodes();
         // iterate over the child nodes
         for ( int i = 0; i < children.getLength(); i++ ) {
 
             if ( children.item( i ).getNodeType() == Node.TEXT_NODE ) {
-                node = children.item( i ).getNodeValue();
-                // if (StringUtils.isNotEmpty(node)
-                // && StringUtils.isNumeric(node)) {
-                // break;
-                // }
+                node = children.item( i ).getNodeValue();                
                 value.add( node );
-
             }
             node = null;
         }
-
         if ( value == null || value.isEmpty()) {
             throw new IllegalArgumentException( "Could not find request text node" );
         }
-//        watch.stop();
-//        Long time = watch.getTime();
-//        log.info( "XML request for " + localName + " endpoint read in " + time + "ms." );
         return value;
     }
 
@@ -142,50 +127,36 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * @return
      */
     protected Collection<String> getArrayValues( Element requestElement, String tagName ) {
-//        StopWatch watch = new StopWatch();
-//        watch.start();
         Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-//        log.info( "Starting " + localName + " endpoint" );
         authenticate();
 
         Collection<String> value = new HashSet<String>();
-        String node = "";
-
-        // get the Element with name = tagName
-        // NodeList children =
-        // requestElement.getElementsByTagName(tagName).item(0).getChildNodes().item(1).getChildNodes();
-
+        String node = "";       
         NodeList children = requestElement.getElementsByTagName( tagName ).item( 0 ).getChildNodes();
 
         // generic clients
         // iterate over the child nodes
         for ( int i = 0; i < children.getLength(); i++ ) {
-
             // need to go one more level down into the great-grandchildren
-            Node child = children.item( i ).getChildNodes().item( 0 );
-            // Node child = children.item(i).getFirstChild();
-            
+            Node child = children.item( i ).getChildNodes().item( 0 );                    
             //new check to see if the request is a Matlab one
             //Matlab seems to package the xml such that values are found in every odd (ie. 1, 3, 5, 7, etc) 
             //great-grandchild.  If at i=0, there is no value, then it IS a Matlab request.
             if (i==0 && child ==null)
                 break;
             if (child.getNodeType() == Node.TEXT_NODE ) {
-                node = child.getNodeValue();
-                // if (StringUtils.isNotEmpty(node)
-                // && StringUtils.isNumeric(node)) {
-                // break;
-                // }
+                node = child.getNodeValue();              
                 value.add( node );
-
             }
             node = "";
         }
-
+        
         //MATLAB specific
         //but it appears that MATLAB encodes it so that every odd (ie. 1, 3, 5, 7, etc) great-grandchild holds the
         // array value
+        value = new HashSet<String>();
+        node = "";
         if ( value==null || value.isEmpty() ) {
             
             for ( int i = 1; i < children.getLength(); i=i+2 ) {
@@ -195,13 +166,8 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
                 // Node child = children.item(i).getFirstChild();
 
                 if ( child.getNodeType() == Node.TEXT_NODE ) {
-                    node = child.getNodeValue();
-                    // if (StringUtils.isNotEmpty(node)
-                    // && StringUtils.isNumeric(node)) {
-                    // break;
-                    // }
+                    node = child.getNodeValue();                   
                     value.add( node );
-
                 }
                 node = null;
             }
@@ -209,12 +175,10 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
               throw new IllegalArgumentException( "Could not find request text node" );
             }
         }
-//        watch.stop();
-//        Long time = watch.getTime();
-//        log.info( "XML request for " + localName + " endpoint read in " + time + "ms." );
         return value;
     }
 
+   
     /**
      * Function to handle the constructing of output in xml format for returning the response to the client. Use this
      * method for simple value returns such as single value or a single array of values. building Mapped values is not
@@ -227,9 +191,6 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * @return
      */
     protected Element buildWrapper( Document document, Collection<String> values, String elementName ) {
-//        log.info( "Building " + localName + " XML response" );
-//        StopWatch watch = new StopWatch();
-//        watch.start();
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, localName );
         Element responseElement = document.createElementNS( NAMESPACE_URI, localName + RESPONSE );
@@ -245,10 +206,6 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
                 responseElement.appendChild( e );
             }
         }
-//        watch.stop();
-//        Long time = watch.getTime();
-//        log.info( "Finished generating result. Sending response to client." );
-//        log.info( "XML response for " + localName + " endpoint built in " + time + "ms." );
         return responseWrapper;
     }
 
@@ -256,10 +213,6 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * Function to handle construction of output in xml for a bad response
      */
     protected Element buildBadResponse( Document document, String msg ) {
-//        log.info( "Building " + localName + " XML response" );
-//        StopWatch watch = new StopWatch();
-//        watch.start();
-
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, localName );
         Element responseElement = document.createElementNS( NAMESPACE_URI, localName + RESPONSE );
         responseWrapper.appendChild( responseElement );
@@ -267,11 +220,6 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         responseElement.appendChild( document.createTextNode( msg ) );
 
         log.error( localName+": "+ msg );
-
-//        watch.stop();
-//        Long time = watch.getTime();
-//
-//        log.info( "XML response for " + localName + " endpoint built in " + time + "ms." );
         return responseWrapper;
     }
 

@@ -122,7 +122,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, "Gene(s) cannot be found or incorrect input" );
 
         // get method - MAX, MIN, MEAN, MEDIAN, VARIANCE
-        Collection<String> methodIn = getNodeValues( requestElement, "method" );
+        Collection<String> methodIn = getSingleNodeValue( requestElement, "method" );
         // expect one value only
         String methodString = "";
         for ( String type : methodIn )

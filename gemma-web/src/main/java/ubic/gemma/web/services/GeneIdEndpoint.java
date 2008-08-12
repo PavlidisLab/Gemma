@@ -78,12 +78,12 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
         setLocalName( GENE_LOCAL_NAME );
         String geneName = "";
         String taxString = "";
-        Collection<String> geneResults = getNodeValues( requestElement, "gene_official_symbol" );
+        Collection<String> geneResults = getSingleNodeValue( requestElement, "gene_official_symbol" );
 
         for ( String name : geneResults ) {
             geneName = name;
         }
-        Collection<String> taxonResults = getNodeValues( requestElement, "taxon_id" );
+        Collection<String> taxonResults = getSingleNodeValue( requestElement, "taxon_id" );
 
         for ( String tax : taxonResults ) {
             taxString = tax;

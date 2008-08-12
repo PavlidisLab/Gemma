@@ -76,7 +76,7 @@ public class ExperimentIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
         watch.start();
         
         setLocalName( EXPERIMENT_LOCAL_NAME );
-        Collection<String> taxonResults = getNodeValues( requestElement, "taxon_id" );
+        Collection<String> taxonResults = getSingleNodeValue( requestElement, "taxon_id" );
         String taxonId = "";
 
         for ( String id : taxonResults ) {

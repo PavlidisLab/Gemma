@@ -82,7 +82,7 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
         setLocalName( LOCAL_NAME );
 
         String queryInput = "";
-        Collection<String> query = getNodeValues( requestElement, "query_gene_id" );
+        Collection<String> query = getSingleNodeValue( requestElement, "query_gene_id" );
         for ( String gene_id : query ) {
             queryInput = gene_id;
         }

@@ -106,25 +106,25 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
         for ( String id : geneInput )
             geneIDLong.add( Long.parseLong( id ) );
         
-        Collection<String> taxonInput = getNodeValues( requestElement, "taxon_id" );
+        Collection<String> taxonInput = getSingleNodeValue( requestElement, "taxon_id" );
         String taxonId = "";
         for ( String id : taxonInput ) {
             taxonId = id;
         }
 
-        Collection<String> analysisInput = getNodeValues( requestElement, "expression_experiment_set_id" );
+        Collection<String> analysisInput = getSingleNodeValue( requestElement, "expression_experiment_set_id" );
         String analysisId = "";
         for ( String id : analysisInput ) {
             analysisId = id;
         }
         
-        Collection<String> stringencyInput = getNodeValues( requestElement, "stringency" );
+        Collection<String> stringencyInput = getSingleNodeValue( requestElement, "stringency" );
         String string = "";
         for ( String id : stringencyInput ) {
             string = id;
         }
         
-        Collection<String> queryGenesOnlyInput = getNodeValues( requestElement, "queryGenesOnly");
+        Collection<String> queryGenesOnlyInput = getSingleNodeValue( requestElement, "queryGenesOnly");
         String query = "";
         for (String id : queryGenesOnlyInput)
             query = id;

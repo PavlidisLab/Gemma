@@ -90,7 +90,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
         setLocalName( EXPERIMENT_LOCAL_NAME );
         String eeid = "";
 
-        Collection<String> eeResults = getNodeValues( requestElement, "ee_id" );
+        Collection<String> eeResults = getSingleNodeValue( requestElement, "ee_id" );
 
         log.info( "XML input read: expression experiment id, "+eeid);
         
