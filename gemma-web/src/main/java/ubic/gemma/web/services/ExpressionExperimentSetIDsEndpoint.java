@@ -122,16 +122,17 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
             e3.appendChild( document.createTextNode( encode( eeIds.toArray() ) ) );
             responseElement.appendChild( e3 );
             
-            Element e4 = document.createElement( "taxon" );
-            e4.appendChild( document.createTextNode( ees.getTaxon().getId().toString() ) );
-            responseElement.appendChild( e4 );
+            //taxon not populate
+//            Element e4 = document.createElement( "taxon" );
+//            e4.appendChild( document.createTextNode( ees.getTaxon().getId().toString() ) );
+//            responseElement.appendChild( e4 );
             
         }
 
         watch.stop();
         Long time = watch.getTime();
         //log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for Experiment Annotation result built in " + time + "ms." );
+        log.info( "XML response for Experiment Set IDs results built in " + time + "ms." );
         return responseWrapper;
 
     }
