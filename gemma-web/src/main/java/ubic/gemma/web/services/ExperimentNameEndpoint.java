@@ -20,6 +20,7 @@
 package ubic.gemma.web.services;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -62,6 +63,7 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
+    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -69,17 +71,16 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
         setLocalName( EXPERIMENT_LOCAL_NAME );
         String eeId = "";
 
-        Collection<String> eeResult = getNodeValues( requestElement, "ee_id" );
-        // expect only one element in the collection
-        for ( String id : eeResult )
-            eeId = id;
+        Collection<String> eeInput = getArrayValues( requestElement, "ee_ids" );        
+        Collection<Long> eeLongs = new HashSet<Long>();
+        for (String ee : eeInput)
+            eeLongs.add( Long.parseLong( ee ) );
+        log.info( "XML input read: expression experiment id, " + eeInput );
 
-        log.info( "XML input read: expression experiment id, " + eeId );
+        Collection<ExpressionExperiment> eeCol = expressionExperimentService.loadMultiple( eeLongs  );
 
-        ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
-
-        if ( ee == null ) {
-            String msg = "No Expression Experiment with id, " + ee + " can be found.";
+        if ( eeCol == null || eeCol.isEmpty()) {
+            String msg = "No input Expression Experiments can be found.";
             return buildBadResponse( document, msg );
         }
 
@@ -87,13 +88,16 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
         Element responseElement = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
-        Element e1 = document.createElement( "ee_shortName" );
-        e1.appendChild( document.createTextNode( ee.getShortName() ) );
-        responseElement.appendChild( e1 );
-
-        Element e2 = document.createElement( "ee_name" );
-        e2.appendChild( document.createTextNode( ee.getName() ) );
-        responseElement.appendChild( e2 );
+        for (ExpressionExperiment ee : eeCol){
+            
+            Element e1 = document.createElement( "ee_shortName" );
+            e1.appendChild( document.createTextNode( ee.getShortName() ) );
+            responseElement.appendChild( e1 );
+    
+            Element e2 = document.createElement( "ee_name" );
+            e2.appendChild( document.createTextNode( ee.getName() ) );
+            responseElement.appendChild( e2 );
+        }
 
         watch.stop();
         Long time = watch.getTime();
