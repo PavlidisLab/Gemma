@@ -476,10 +476,11 @@ public class DesignElementDataVectorDaoImpl extends
                 timer.start();
                 Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
                 Collection<DesignElement> cs = new HashSet<DesignElement>();
-                for ( Object object : designElementDataVectors ) {
+                for ( DesignElementDataVector object : ( Collection<DesignElementDataVector> ) designElementDataVectors ) {
+                    DesignElementDataVector v = ( DesignElementDataVector ) session.get(
+                            ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorImpl.class, object.getId() );
                     Hibernate.initialize( object );
-                    session.update( object );
-                    DesignElementDataVector v = ( DesignElementDataVector ) object;
+
                     Hibernate.initialize( v.getExpressionExperiment() );
                     dims.add( v.getBioAssayDimension() );
                     cs.add( v.getDesignElement() );
