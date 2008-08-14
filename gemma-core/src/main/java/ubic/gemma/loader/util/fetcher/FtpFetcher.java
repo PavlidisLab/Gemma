@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.loader.util.fetcher;
 
 import java.io.File;
@@ -21,6 +39,12 @@ import ubic.basecode.util.NetUtils;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.util.NetDatasourceUtil;
 
+/**
+ * Download files by FTP.
+ * 
+ * @author paul
+ * @version $Id$
+ */
 public abstract class FtpFetcher extends AbstractFetcher {
 
     protected FTPClient ftpClient;
@@ -93,7 +117,8 @@ public abstract class FtpFetcher extends AbstractFetcher {
             Collection<LocalFile> fallback = getExistingFile( existingFile, seekFile );
             return fallback;
         } catch ( IOException e ) {
-            throw new RuntimeException( "Couldn't fetch " + seekFile, e );
+            throw new RuntimeException( "Couldn't fetch " + seekFile
+                    + ", make sure the file exists on the remote server.", e );
         }
     }
 
@@ -104,21 +129,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
      * @throws SocketException
      */
     protected long getExpectedSize( final String seekFile ) throws IOException, SocketException {
-        long expectedSize = 0;
-
-        try {
-            expectedSize = NetUtils.ftpFileSize( ftpClient, seekFile );
-        } catch ( FileNotFoundException e ) {
-            log.warn( e );
-            throw ( e );
-            // // when this happens we need to reconnect.
-            // log.error( e );
-            // log.warn( "Couldn't get remote file size for " + seekFile );
-            // InetAddress ad = ftpClient.getRemoteAddress();
-            // ftpClient.disconnect();
-            // ftpClient.connect( ad );
-        }
-        return expectedSize;
+        return NetUtils.ftpFileSize( ftpClient, seekFile );
     }
 
     /**
