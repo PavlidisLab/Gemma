@@ -22,6 +22,9 @@
 //
 package ubic.gemma.model.expression.experiment;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExpressionExperimentService</code>,
@@ -34,6 +37,10 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
         ubic.gemma.model.expression.experiment.ExpressionExperimentService {
 
     private ubic.gemma.model.expression.experiment.ExpressionExperimentDao expressionExperimentDao;
+
+    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+
+    private ExpressionExperimentSetDao expressionExperimentSetDao;
 
     /**
      * Sets the reference to <code>expressionExperiment</code>'s DAO.
@@ -1180,8 +1187,34 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
      */
     protected abstract java.util.Collection handleFindByFactorValues( java.util.Collection factorValues )
             throws java.lang.Exception;
-    
-    
-   
-    
+
+    /**
+     * @param differentialExpressionAnalysisDao the differentialExpressionAnalysisDao to set
+     */
+    public void setDifferentialExpressionAnalysisDao(
+            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
+        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
+    }
+
+    /**
+     * @return the differentialExpressionAnalysisDao
+     */
+    public DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
+        return differentialExpressionAnalysisDao;
+    }
+
+    /**
+     * @return the expressionExperimentSetDao
+     */
+    public ExpressionExperimentSetDao getExpressionExperimentSetDao() {
+        return expressionExperimentSetDao;
+    }
+
+    /**
+     * @param expressionExperimentSetDao the expressionExperimentSetDao to set
+     */
+    public void setExpressionExperimentSetDao( ExpressionExperimentSetDao expressionExperimentSetDao ) {
+        this.expressionExperimentSetDao = expressionExperimentSetDao;
+    }
+
 }

@@ -5,18 +5,14 @@
 	(i.e.: the slave database in the case of replication)
 	$Id$
 -->
-
 <beans>
-
 	<!-- ========================= GENERAL DEFINITIONS ========================= -->
-
 	<!-- Message source for this context, loaded from localized "messages_xx" files -->
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
 		<property name="basename">
 			<value>messages</value>
 		</property>
 	</bean>
-
 	<!-- applicationContext merge-point -->
 	<!-- Hibernate SessionFactory -->
 	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
@@ -126,14 +122,12 @@
 			</props>
 		</property>
 	</bean>
-
 	<!-- The Hibernate interceptor -->
 	<bean id="hibernateInterceptor" class="org.springframework.orm.hibernate3.HibernateInterceptor">
 		<property name="sessionFactory">
 			<ref bean="sessionFactory" />
 		</property>
 	</bean>
-
 	<!-- BlatResult Entity Proxy with inner BlatResult Entity implementation -->
 	<bean id="blatResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -152,7 +146,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BlastResult Entity Proxy with inner BlastResult Entity implementation -->
 	<bean id="blastResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -171,7 +164,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- SequenceSimilaritySearchResult Entity Proxy with inner SequenceSimilaritySearchResult Entity implementation -->
 	<bean id="sequenceSimilaritySearchResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -190,7 +182,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BlatAssociation Entity Proxy with inner BlatAssociation Entity implementation -->
 	<bean id="blatAssociationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -209,7 +200,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BlastAssociation Entity Proxy with inner BlastAssociation Entity implementation -->
 	<bean id="blastAssociationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -228,7 +218,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioSequence Entity Proxy with inner BioSequence Entity implementation -->
 	<bean id="bioSequenceDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -247,7 +236,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- GeneAlias Entity Proxy with inner GeneAlias Entity implementation -->
 	<bean id="geneAliasDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -266,7 +254,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CandidateGene Entity Proxy with inner CandidateGene Entity implementation -->
 	<bean id="candidateGeneDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -285,7 +272,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- GeneProduct Entity Proxy with inner GeneProduct Entity implementation -->
 	<bean id="geneProductDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -304,7 +290,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- MappingCandidateGene Entity Proxy with inner MappingCandidateGene Entity implementation -->
 	<bean id="mappingCandidateGeneDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -323,7 +308,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BibReferenceCandidateGene Entity Proxy with inner BibReferenceCandidateGene Entity implementation -->
 	<bean id="bibReferenceCandidateGeneDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -342,7 +326,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- GeneInvestigation Entity Proxy with inner GeneInvestigation Entity implementation -->
 	<bean id="geneInvestigationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -361,7 +344,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CandidateGeneList Entity Proxy with inner CandidateGeneList Entity implementation -->
 	<bean id="candidateGeneListDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -383,7 +365,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CytogeneticLocation Entity Proxy with inner CytogeneticLocation Entity implementation -->
 	<bean id="cytogeneticLocationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -402,7 +383,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ChromosomeLocation Entity Proxy with inner ChromosomeLocation Entity implementation -->
 	<bean id="chromosomeLocationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -421,7 +401,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- GeneticLocation Entity Proxy with inner GeneticLocation Entity implementation -->
 	<bean id="geneticLocationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -440,7 +419,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- PhysicalLocation Entity Proxy with inner PhysicalLocation Entity implementation -->
 	<bean id="physicalLocationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -459,7 +437,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ChromosomeFeature Entity Proxy with inner ChromosomeFeature Entity implementation -->
 	<bean id="chromosomeFeatureDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -478,7 +455,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Qtl Entity Proxy with inner Qtl Entity implementation -->
 	<bean id="qtlDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -497,7 +473,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- PhysicalMarker Entity Proxy with inner PhysicalMarker Entity implementation -->
 	<bean id="physicalMarkerDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -516,7 +491,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Chromosome Entity Proxy with inner Chromosome Entity implementation -->
 	<bean id="chromosomeDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -535,7 +509,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExpressionQtl Entity Proxy with inner ExpressionQtl Entity implementation -->
 	<bean id="expressionQtlDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -554,7 +527,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BehavioralQtl Entity Proxy with inner BehavioralQtl Entity implementation -->
 	<bean id="behavioralQtlDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -573,7 +545,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Taxon Entity Proxy with inner Taxon Entity implementation -->
 	<bean id="taxonDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -592,7 +563,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Gene Entity Proxy with inner Gene Entity implementation -->
 	<bean id="geneDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -611,7 +581,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- PredictedGene Entity Proxy with inner PredictedGene Entity implementation -->
 	<bean id="predictedGeneDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -630,7 +599,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ProbeAlignedRegion Entity Proxy with inner ProbeAlignedRegion Entity implementation -->
 	<bean id="probeAlignedRegionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -649,7 +617,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DatabaseEntry Entity Proxy with inner DatabaseEntry Entity implementation -->
 	<bean id="databaseEntryDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -668,7 +635,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExternalDatabase Entity Proxy with inner ExternalDatabase Entity implementation -->
 	<bean id="externalDatabaseDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -687,7 +653,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- LocalFile Entity Proxy with inner LocalFile Entity implementation -->
 	<bean id="localFileDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -706,7 +671,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- FileFormat Entity Proxy with inner FileFormat Entity implementation -->
 	<bean id="fileFormatDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -725,7 +689,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BibliographicReference Entity Proxy with inner BibliographicReference Entity implementation -->
 	<bean id="bibliographicReferenceDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -744,7 +707,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Characteristic Entity Proxy with inner Characteristic Entity implementation -->
 	<bean id="characteristicDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -763,7 +725,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- NotedReference Entity Proxy with inner NotedReference Entity implementation -->
 	<bean id="notedReferenceDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -782,7 +743,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- NotedReferenceList Entity Proxy with inner NotedReferenceList Entity implementation -->
 	<bean id="notedReferenceListDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -801,7 +761,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DataProperty Entity Proxy with inner DataProperty Entity implementation -->
 	<bean id="dataPropertyDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -820,7 +779,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CharacteristicProperty Entity Proxy with inner CharacteristicProperty Entity implementation -->
 	<bean id="characteristicPropertyDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -839,7 +797,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Property Entity Proxy with inner Property Entity implementation -->
 	<bean id="propertyDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -858,7 +815,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- VocabCharacteristic Entity Proxy with inner VocabCharacteristic Entity implementation -->
 	<bean id="vocabCharacteristicDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -877,7 +833,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- MedicalSubjectHeading Entity Proxy with inner MedicalSubjectHeading Entity implementation -->
 	<bean id="medicalSubjectHeadingDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -896,7 +851,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BibRefAnnotation Entity Proxy with inner BibRefAnnotation Entity implementation -->
 	<bean id="bibRefAnnotationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -915,7 +869,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- PublicationType Entity Proxy with inner PublicationType Entity implementation -->
 	<bean id="publicationTypeDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -934,7 +887,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Keyword Entity Proxy with inner Keyword Entity implementation -->
 	<bean id="keywordDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -953,7 +905,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Organization Entity Proxy with inner Organization Entity implementation -->
 	<bean id="organizationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -972,7 +923,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Person Entity Proxy with inner Person Entity implementation -->
 	<bean id="personDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -991,7 +941,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- UserGroup Entity Proxy with inner UserGroup Entity implementation -->
 	<bean id="userGroupDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1010,7 +959,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Contact Entity Proxy with inner Contact Entity implementation -->
 	<bean id="contactDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1029,7 +977,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- AuditEvent Entity Proxy with inner AuditEvent Entity implementation -->
 	<bean id="auditEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1048,7 +995,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- User Entity Proxy with inner User Entity implementation -->
 	<bean id="userDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1067,7 +1013,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- AuditTrail Entity Proxy with inner AuditTrail Entity implementation -->
 	<bean id="auditTrailDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1086,7 +1031,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- UserRole Entity Proxy with inner UserRole Entity implementation -->
 	<bean id="userRoleDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1105,7 +1049,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- JobInfo Entity Proxy with inner JobInfo Entity implementation -->
 	<bean id="jobInfoDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1124,7 +1067,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- AuditEventType Entity Proxy with inner AuditEventType Entity implementation -->
 	<bean id="auditEventTypeDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1143,7 +1085,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- MissingValueAnalysisEvent Entity Proxy with inner MissingValueAnalysisEvent Entity implementation -->
 	<bean id="missingValueAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1162,7 +1103,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignSequenceAnalysisEvent Entity Proxy with inner ArrayDesignSequenceAnalysisEvent Entity implementation -->
 	<bean id="arrayDesignSequenceAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1181,7 +1121,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignAnalysisEvent Entity Proxy with inner ArrayDesignAnalysisEvent Entity implementation -->
 	<bean id="arrayDesignAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1200,7 +1139,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- LinkAnalysisEvent Entity Proxy with inner LinkAnalysisEvent Entity implementation -->
 	<bean id="linkAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1219,7 +1157,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignGeneMappingEvent Entity Proxy with inner ArrayDesignGeneMappingEvent Entity implementation -->
 	<bean id="arrayDesignGeneMappingEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1238,7 +1175,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignSequenceUpdateEvent Entity Proxy with inner ArrayDesignSequenceUpdateEvent Entity implementation -->
 	<bean id="arrayDesignSequenceUpdateEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1257,7 +1193,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExpressionExperimentAnalysisEvent Entity Proxy with inner ExpressionExperimentAnalysisEvent Entity implementation -->
 	<bean id="expressionExperimentAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1276,7 +1211,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- RankComputationEvent Entity Proxy with inner RankComputationEvent Entity implementation -->
 	<bean id="rankComputationEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1295,7 +1229,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignAnnotationFileEvent Entity Proxy with inner ArrayDesignAnnotationFileEvent Entity implementation -->
 	<bean id="arrayDesignAnnotationFileEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1314,7 +1247,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioMaterialMappingUpdate Entity Proxy with inner BioMaterialMappingUpdate Entity implementation -->
 	<bean id="bioMaterialMappingUpdateDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1333,7 +1265,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignProbeRenamingEvent Entity Proxy with inner ArrayDesignProbeRenamingEvent Entity implementation -->
 	<bean id="arrayDesignProbeRenamingEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1352,7 +1283,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignMergeEvent Entity Proxy with inner ArrayDesignMergeEvent Entity implementation -->
 	<bean id="arrayDesignMergeEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1371,7 +1301,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignSubsumeCheckEvent Entity Proxy with inner ArrayDesignSubsumeCheckEvent Entity implementation -->
 	<bean id="arrayDesignSubsumeCheckEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1390,7 +1319,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExpressionExperimentPlatformSwitchEvent Entity Proxy with inner ExpressionExperimentPlatformSwitchEvent Entity implementation -->
 	<bean id="expressionExperimentPlatformSwitchEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1410,7 +1338,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- TooSmallDatasetLinkAnalysisEvent Entity Proxy with inner TooSmallDatasetLinkAnalysisEvent Entity implementation -->
 	<bean id="tooSmallDatasetLinkAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1429,7 +1356,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- FailedLinkAnalysisEvent Entity Proxy with inner FailedLinkAnalysisEvent Entity implementation -->
 	<bean id="failedLinkAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1448,7 +1374,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- FailedMissingValueAnalysisEvent Entity Proxy with inner FailedMissingValueAnalysisEvent Entity implementation -->
 	<bean id="failedMissingValueAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1467,7 +1392,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- SampleRemovalEvent Entity Proxy with inner SampleRemovalEvent Entity implementation -->
 	<bean id="sampleRemovalEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1486,7 +1410,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignRepeatAnalysisEvent Entity Proxy with inner ArrayDesignRepeatAnalysisEvent Entity implementation -->
 	<bean id="arrayDesignRepeatAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1505,7 +1428,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CommentedEvent Entity Proxy with inner CommentedEvent Entity implementation -->
 	<bean id="commentedEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1524,7 +1446,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- StatusFlagEvent Entity Proxy with inner StatusFlagEvent Entity implementation -->
 	<bean id="statusFlagEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1543,7 +1464,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- TroubleStatusFlagEvent Entity Proxy with inner TroubleStatusFlagEvent Entity implementation -->
 	<bean id="troubleStatusFlagEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1562,7 +1482,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- OKStatusFlagEvent Entity Proxy with inner OKStatusFlagEvent Entity implementation -->
 	<bean id="oKStatusFlagEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1581,7 +1500,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ValidatedFlagEvent Entity Proxy with inner ValidatedFlagEvent Entity implementation -->
 	<bean id="validatedFlagEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1600,7 +1518,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignSequenceRemoveEvent Entity Proxy with inner ArrayDesignSequenceRemoveEvent Entity implementation -->
 	<bean id="arrayDesignSequenceRemoveEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1619,7 +1536,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DifferentialExpressionAnalysisEvent Entity Proxy with inner DifferentialExpressionAnalysisEvent Entity implementation -->
 	<bean id="differentialExpressionAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1639,7 +1555,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExpressionExperimentVectorMergeEvent Entity Proxy with inner ExpressionExperimentVectorMergeEvent Entity implementation -->
 	<bean id="expressionExperimentVectorMergeEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1659,7 +1574,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CoexpressionTrouble Entity Proxy with inner CoexpressionTrouble Entity implementation -->
 	<bean id="coexpressionTroubleDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1678,7 +1592,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DifferentialExpressionTrouble Entity Proxy with inner DifferentialExpressionTrouble Entity implementation -->
 	<bean id="differentialExpressionTroubleDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1697,7 +1610,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ValidatedAnnotations Entity Proxy with inner ValidatedAnnotations Entity implementation -->
 	<bean id="validatedAnnotationsDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1716,7 +1628,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ValidatedExperimentalDesign Entity Proxy with inner ValidatedExperimentalDesign Entity implementation -->
 	<bean id="validatedExperimentalDesignDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1735,7 +1646,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- InvalidatedEvent Entity Proxy with inner InvalidatedEvent Entity implementation -->
 	<bean id="invalidatedEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1754,7 +1664,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ValidatedPreprocessing Entity Proxy with inner ValidatedPreprocessing Entity implementation -->
 	<bean id="validatedPreprocessingDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1773,7 +1682,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Measurement Entity Proxy with inner Measurement Entity implementation -->
 	<bean id="measurementDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1792,7 +1700,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Unit Entity Proxy with inner Unit Entity implementation -->
 	<bean id="unitDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1811,7 +1718,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Parameterizable Entity Proxy with inner Parameterizable Entity implementation -->
 	<bean id="parameterizableDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1830,7 +1736,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Parameter Entity Proxy with inner Parameter Entity implementation -->
 	<bean id="parameterDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1849,7 +1754,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ParameterizableApplication Entity Proxy with inner ParameterizableApplication Entity implementation -->
 	<bean id="parameterizableApplicationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1868,7 +1772,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ParameterValue Entity Proxy with inner ParameterValue Entity implementation -->
 	<bean id="parameterValueDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1887,7 +1790,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ProtocolApplication Entity Proxy with inner ProtocolApplication Entity implementation -->
 	<bean id="protocolApplicationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1906,7 +1808,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Protocol Entity Proxy with inner Protocol Entity implementation -->
 	<bean id="protocolDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1925,7 +1826,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Software Entity Proxy with inner Software Entity implementation -->
 	<bean id="softwareDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1944,7 +1844,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Hardware Entity Proxy with inner Hardware Entity implementation -->
 	<bean id="hardwareDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1963,7 +1862,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- SoftwareApplication Entity Proxy with inner SoftwareApplication Entity implementation -->
 	<bean id="softwareApplicationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1982,7 +1880,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- HardwareApplication Entity Proxy with inner HardwareApplication Entity implementation -->
 	<bean id="hardwareApplicationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2001,7 +1898,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- QuantitationType Entity Proxy with inner QuantitationType Entity implementation -->
 	<bean id="quantitationTypeDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2020,7 +1916,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Describable Entity Proxy with inner Describable Entity implementation -->
 	<bean id="describableDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2039,7 +1934,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Securable Entity Proxy with inner Securable Entity implementation -->
 	<bean id="securableDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2058,7 +1952,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Auditable Entity Proxy with inner Auditable Entity implementation -->
 	<bean id="auditableDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2077,7 +1970,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExpressionExperiment Entity Proxy with inner ExpressionExperiment Entity implementation -->
 	<bean id="expressionExperimentDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2096,7 +1988,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- FactorValue Entity Proxy with inner FactorValue Entity implementation -->
 	<bean id="factorValueDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2115,7 +2006,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExperimentalDesign Entity Proxy with inner ExperimentalDesign Entity implementation -->
 	<bean id="experimentalDesignDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2134,7 +2024,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExperimentalFactor Entity Proxy with inner ExperimentalFactor Entity implementation -->
 	<bean id="experimentalFactorDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2153,7 +2042,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioAssaySet Entity Proxy with inner BioAssaySet Entity implementation -->
 	<bean id="bioAssaySetDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2172,7 +2060,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExpressionExperimentSubSet Entity Proxy with inner ExpressionExperimentSubSet Entity implementation -->
 	<bean id="expressionExperimentSubSetDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2191,7 +2078,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CompositeSequence Entity Proxy with inner CompositeSequence Entity implementation -->
 	<bean id="compositeSequenceDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2210,7 +2096,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Reporter Entity Proxy with inner Reporter Entity implementation -->
 	<bean id="reporterDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2229,7 +2114,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DesignElement Entity Proxy with inner DesignElement Entity implementation -->
 	<bean id="designElementDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2248,7 +2132,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesign Entity Proxy with inner ArrayDesign Entity implementation -->
 	<bean id="arrayDesignDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2267,7 +2150,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- AlternateName Entity Proxy with inner AlternateName Entity implementation -->
 	<bean id="alternateNameDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2286,7 +2168,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioAssay Entity Proxy with inner BioAssay Entity implementation -->
 	<bean id="bioAssayDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2305,7 +2186,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DataVector Entity Proxy with inner DataVector Entity implementation -->
 	<bean id="dataVectorDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2324,7 +2204,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioAssayDataVector Entity Proxy with inner BioAssayDataVector Entity implementation -->
 	<bean id="bioAssayDataVectorDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2343,7 +2222,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DesignElementDataVector Entity Proxy with inner DesignElementDataVector Entity implementation -->
 	<bean id="designElementDataVectorDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2362,7 +2240,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioAssayDimension Entity Proxy with inner BioAssayDimension Entity implementation -->
 	<bean id="bioAssayDimensionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2381,7 +2258,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DesignElementDimension Entity Proxy with inner DesignElementDimension Entity implementation -->
 	<bean id="designElementDimensionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2400,7 +2276,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioMaterial Entity Proxy with inner BioMaterial Entity implementation -->
 	<bean id="bioMaterialDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2419,7 +2294,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Treatment Entity Proxy with inner Treatment Entity implementation -->
 	<bean id="treatmentDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2438,7 +2312,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Compound Entity Proxy with inner Compound Entity implementation -->
 	<bean id="compoundDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2457,7 +2330,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CompoundMeasurement Entity Proxy with inner CompoundMeasurement Entity implementation -->
 	<bean id="compoundMeasurementDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2476,7 +2348,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioMaterialMeasurement Entity Proxy with inner BioMaterialMeasurement Entity implementation -->
 	<bean id="bioMaterialMeasurementDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2495,7 +2366,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Relationship Entity Proxy with inner Relationship Entity implementation -->
 	<bean id="relationshipDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2514,7 +2384,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Gene2GOAssociation Entity Proxy with inner Gene2GOAssociation Entity implementation -->
 	<bean id="gene2GOAssociationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2533,7 +2402,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioSequence2GeneProduct Entity Proxy with inner BioSequence2GeneProduct Entity implementation -->
 	<bean id="bioSequence2GeneProductDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2552,7 +2420,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Gene2OntologyEntryAssociation Entity Proxy with inner Gene2OntologyEntryAssociation Entity implementation -->
 	<bean id="gene2OntologyEntryAssociationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2571,7 +2438,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Gene2GeneAssociation Entity Proxy with inner Gene2GeneAssociation Entity implementation -->
 	<bean id="gene2GeneAssociationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2590,7 +2456,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ReferenceAssociation Entity Proxy with inner ReferenceAssociation Entity implementation -->
 	<bean id="referenceAssociationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2609,7 +2474,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Gene2GeneCoexpression Entity Proxy with inner Gene2GeneCoexpression Entity implementation -->
 	<bean id="gene2GeneCoexpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2628,7 +2492,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Probe2ProbeCoexpression Entity Proxy with inner Probe2ProbeCoexpression Entity implementation -->
 	<bean id="probe2ProbeCoexpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2647,7 +2510,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- MouseProbeCoExpression Entity Proxy with inner MouseProbeCoExpression Entity implementation -->
 	<bean id="mouseProbeCoExpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2666,7 +2528,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- HumanProbeCoExpression Entity Proxy with inner HumanProbeCoExpression Entity implementation -->
 	<bean id="humanProbeCoExpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2685,7 +2546,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- RatProbeCoExpression Entity Proxy with inner RatProbeCoExpression Entity implementation -->
 	<bean id="ratProbeCoExpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2704,7 +2564,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- OtherProbeCoExpression Entity Proxy with inner OtherProbeCoExpression Entity implementation -->
 	<bean id="otherProbeCoExpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2723,7 +2582,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- MouseGeneCoExpression Entity Proxy with inner MouseGeneCoExpression Entity implementation -->
 	<bean id="mouseGeneCoExpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2742,7 +2600,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- HumanGeneCoExpression Entity Proxy with inner HumanGeneCoExpression Entity implementation -->
 	<bean id="humanGeneCoExpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2761,7 +2618,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- RatGeneCoExpression Entity Proxy with inner RatGeneCoExpression Entity implementation -->
 	<bean id="ratGeneCoExpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2780,7 +2636,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- OtherGeneCoExpression Entity Proxy with inner OtherGeneCoExpression Entity implementation -->
 	<bean id="otherGeneCoExpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2799,7 +2654,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- GeneHomology Entity Proxy with inner GeneHomology Entity implementation -->
 	<bean id="geneHomologyDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2818,7 +2672,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- LiteratureAssociation Entity Proxy with inner LiteratureAssociation Entity implementation -->
 	<bean id="literatureAssociationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2837,7 +2690,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ProteinProteinInteraction Entity Proxy with inner ProteinProteinInteraction Entity implementation -->
 	<bean id="proteinProteinInteractionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2856,7 +2708,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- GeneProduct2GeneProductAssociation Entity Proxy with inner GeneProduct2GeneProductAssociation Entity implementation -->
 	<bean id="geneProduct2GeneProductAssociationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2875,7 +2726,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Analysis Entity Proxy with inner Analysis Entity implementation -->
 	<bean id="analysisDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2894,7 +2744,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- AnalysisResult Entity Proxy with inner AnalysisResult Entity implementation -->
 	<bean id="analysisResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2913,7 +2762,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Investigation Entity Proxy with inner Investigation Entity implementation -->
 	<bean id="investigationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2932,7 +2780,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- AnalysisResultSet Entity Proxy with inner AnalysisResultSet Entity implementation -->
 	<bean id="analysisResultSetDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2951,7 +2798,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CoexpressionAnalysis Entity Proxy with inner CoexpressionAnalysis Entity implementation -->
 	<bean id="coexpressionAnalysisDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2970,7 +2816,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- GeneCoexpressionAnalysis Entity Proxy with inner GeneCoexpressionAnalysis Entity implementation -->
 	<bean id="geneCoexpressionAnalysisDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2989,7 +2834,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ProbeCoexpressionAnalysis Entity Proxy with inner ProbeCoexpressionAnalysis Entity implementation -->
 	<bean id="probeCoexpressionAnalysisDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3008,7 +2852,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DifferentialExpressionAnalysisResult Entity Proxy with inner DifferentialExpressionAnalysisResult Entity implementation -->
 	<bean id="differentialExpressionAnalysisResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3027,7 +2870,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DifferentialExpressionAnalysis Entity Proxy with inner DifferentialExpressionAnalysis Entity implementation -->
 	<bean id="differentialExpressionAnalysisDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3046,26 +2888,6 @@
 			</list>
 		</property>
 	</bean>
-
-	<!-- ExpressionAnalysis Entity Proxy with inner ExpressionAnalysis Entity implementation -->
-	<bean id="expressionAnalysisDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.analysis.expression.ExpressionAnalysisDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.ExpressionAnalysisDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-
 	<!-- ExpressionAnalysisResultSet Entity Proxy with inner ExpressionAnalysisResultSet Entity implementation -->
 	<bean id="expressionAnalysisResultSetDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3084,7 +2906,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- FactorAssociatedAnalysisResultSet Entity Proxy with inner FactorAssociatedAnalysisResultSet Entity implementation -->
 	<bean id="factorAssociatedAnalysisResultSetDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3103,7 +2924,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ProbeAnalysisResult Entity Proxy with inner ProbeAnalysisResult Entity implementation -->
 	<bean id="probeAnalysisResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3122,7 +2942,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExpressionExperimentSet Entity Proxy with inner ExpressionExperimentSet Entity implementation -->
 	<bean id="expressionExperimentSetDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3141,7 +2960,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ========================= Start of SERVICE DEFINITIONS ========================= -->
 	<!--
 		Wildcards don't work at the class level, so we have to specify
@@ -3606,7 +3424,6 @@
 			</value>
 		</property>
 	</bean>
-
 	<!-- BlatResultService Service Proxy with inner BlatResultService Service Implementation -->
 	<bean id="blatResultService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3628,7 +3445,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BlatAssociationService Service Proxy with inner BlatAssociationService Service Implementation -->
 	<bean id="blatAssociationService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3650,7 +3466,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BlastResultService Service Proxy with inner BlastResultService Service Implementation -->
 	<bean id="blastResultService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3672,7 +3487,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BlastAssociationService Service Proxy with inner BlastAssociationService Service Implementation -->
 	<bean id="blastAssociationService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3694,7 +3508,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioSequenceService Service Proxy with inner BioSequenceService Service Implementation -->
 	<bean id="bioSequenceService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3716,7 +3529,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CandidateGeneListService Service Proxy with inner CandidateGeneListService Service Implementation -->
 	<bean id="candidateGeneListService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3754,7 +3566,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- GeneService Service Proxy with inner GeneService Service Implementation -->
 	<bean id="geneService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3782,7 +3593,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- GeneProductService Service Proxy with inner GeneProductService Service Implementation -->
 	<bean id="geneProductService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3807,7 +3617,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- TaxonService Service Proxy with inner TaxonService Service Implementation -->
 	<bean id="taxonService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3828,7 +3637,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ChromosomeService Service Proxy with inner ChromosomeService Service Implementation -->
 	<bean id="chromosomeService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3849,7 +3657,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ProbeAlignedRegionService Service Proxy with inner ProbeAlignedRegionService Service Implementation -->
 	<bean id="probeAlignedRegionService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3870,7 +3677,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BibliographicReferenceService Service Proxy with inner BibliographicReferenceService Service Implementation -->
 	<bean id="bibliographicReferenceService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3902,7 +3708,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExternalDatabaseService Service Proxy with inner ExternalDatabaseService Service Implementation -->
 	<bean id="externalDatabaseService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3928,7 +3733,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- NotedReferenceListService Service Proxy with inner NotedReferenceListService Service Implementation -->
 	<bean id="notedReferenceListService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3957,7 +3761,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- FileFormatService Service Proxy with inner FileFormatService Service Implementation -->
 	<bean id="fileFormatService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3979,7 +3782,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- LocalFileService Service Proxy with inner LocalFileService Service Implementation -->
 	<bean id="localFileService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4002,7 +3804,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DatabaseEntryService Service Proxy with inner DatabaseEntryService Service Implementation -->
 	<bean id="databaseEntryService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4023,7 +3824,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CharacteristicService Service Proxy with inner CharacteristicService Service Implementation -->
 	<bean id="characteristicService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4043,7 +3843,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- PersonService Service Proxy with inner PersonService Service Implementation -->
 	<bean id="personService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4066,7 +3865,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- UserService Service Proxy with inner UserService Service Implementation -->
 	<bean id="userService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4092,7 +3890,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ContactService Service Proxy with inner ContactService Service Implementation -->
 	<bean id="contactService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4115,7 +3912,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- AuditTrailService Service Proxy with inner AuditTrailService Service Implementation -->
 	<bean id="auditTrailService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4144,7 +3940,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- UserGroupService Service Proxy with inner UserGroupService Service Implementation -->
 	<bean id="userGroupService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4170,7 +3965,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- AuditEventService Service Proxy with inner AuditEventService Service Implementation -->
 	<bean id="auditEventService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4190,7 +3984,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- MeasurementService Service Proxy with inner MeasurementService Service Implementation -->
 	<bean id="measurementService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4210,7 +4003,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- HardwareService Service Proxy with inner HardwareService Service Implementation -->
 	<bean id="hardwareService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4233,7 +4025,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ProtocolService Service Proxy with inner ProtocolService Service Implementation -->
 	<bean id="protocolService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4256,7 +4047,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- SoftwareService Service Proxy with inner SoftwareService Service Implementation -->
 	<bean id="softwareService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4279,7 +4069,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- QuantitationTypeService Service Proxy with inner QuantitationTypeService Service Implementation -->
 	<bean id="quantitationTypeService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4300,7 +4089,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- AuditableService Service Proxy with inner AuditableService Service Implementation -->
 	<bean id="auditableService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4320,7 +4108,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExpressionExperimentService Service Proxy with inner ExpressionExperimentService Service Implementation -->
 	<bean id="expressionExperimentService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4339,6 +4126,12 @@
 				</property>
 				<property name="probe2ProbeCoexpressionDao">
 					<ref bean="probe2ProbeCoexpressionDao" />
+				</property>
+				<property name="differentialExpressionAnalysisDao">
+					<ref bean="differentialExpressionAnalysisDao" />
+				</property>
+				<property name="expressionExperimentSetDao">
+					<ref bean="expressionExperimentSetDao" />
 				</property>
 				<property name="auditableDao">
 					<ref bean="auditableDao" />
@@ -4359,7 +4152,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExperimentalDesignService Service Proxy with inner ExperimentalDesignService Service Implementation -->
 	<bean id="experimentalDesignService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4385,7 +4177,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExperimentalFactorService Service Proxy with inner ExperimentalFactorService Service Implementation -->
 	<bean id="experimentalFactorService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4411,7 +4202,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- FactorValueService Service Proxy with inner FactorValueService Service Implementation -->
 	<bean id="factorValueService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4433,7 +4223,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExpressionExperimentSubSetService Service Proxy with inner ExpressionExperimentSubSetService Service Implementation -->
 	<bean id="expressionExperimentSubSetService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4456,7 +4245,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CompositeSequenceService Service Proxy with inner CompositeSequenceService Service Implementation -->
 	<bean id="compositeSequenceService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4477,7 +4265,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ReporterService Service Proxy with inner ReporterService Service Implementation -->
 	<bean id="reporterService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4498,7 +4285,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ArrayDesignService Service Proxy with inner ArrayDesignService Service Implementation -->
 	<bean id="arrayDesignService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4524,7 +4310,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioAssayService Service Proxy with inner BioAssayService Service Implementation -->
 	<bean id="bioAssayService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4554,7 +4339,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioAssayDataVectorService Service Proxy with inner BioAssayDataVectorService Service Implementation -->
 	<bean id="bioAssayDataVectorService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4576,7 +4360,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DesignElementDataVectorService Service Proxy with inner DesignElementDataVectorService Service Implementation -->
 	<bean id="designElementDataVectorService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4599,7 +4382,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioAssayDimensionService Service Proxy with inner BioAssayDimensionService Service Implementation -->
 	<bean id="bioAssayDimensionService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4622,7 +4404,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DesignElementDimensionService Service Proxy with inner DesignElementDimensionService Service Implementation -->
 	<bean id="designElementDimensionService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4644,7 +4425,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioMaterialService Service Proxy with inner BioMaterialService Service Implementation -->
 	<bean id="bioMaterialService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4670,7 +4450,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- TreatmentService Service Proxy with inner TreatmentService Service Implementation -->
 	<bean id="treatmentService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4696,7 +4475,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- CompoundService Service Proxy with inner CompoundService Service Implementation -->
 	<bean id="compoundService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4717,7 +4495,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Probe2ProbeCoexpressionService Service Proxy with inner Probe2ProbeCoexpressionService Service Implementation -->
 	<bean id="probe2ProbeCoexpressionService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4750,7 +4527,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Gene2GeneCoexpressionService Service Proxy with inner Gene2GeneCoexpressionService Service Implementation -->
 	<bean id="gene2GeneCoexpressionService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4783,7 +4559,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- Gene2GOAssociationService Service Proxy with inner Gene2GOAssociationService Service Implementation -->
 	<bean id="gene2GOAssociationService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4806,7 +4581,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- BioSequence2GeneProductService Service Proxy with inner BioSequence2GeneProductService Service Implementation -->
 	<bean id="bioSequence2GeneProductService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4826,7 +4600,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- AnalysisService Service Proxy with inner AnalysisService Service Implementation -->
 	<bean id="analysisService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4849,7 +4622,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- GeneCoexpressionAnalysisService Service Proxy with inner GeneCoexpressionAnalysisService Service Implementation -->
 	<bean id="geneCoexpressionAnalysisService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4875,7 +4647,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ProbeCoexpressionAnalysisService Service Proxy with inner ProbeCoexpressionAnalysisService Service Implementation -->
 	<bean id="probeCoexpressionAnalysisService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4901,7 +4672,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DifferentialExpressionAnalysisResultService Service Proxy with inner DifferentialExpressionAnalysisResultService Service Implementation -->
 	<bean id="differentialExpressionAnalysisResultService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4924,7 +4694,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- DifferentialExpressionAnalysisService Service Proxy with inner DifferentialExpressionAnalysisService Service Implementation -->
 	<bean id="differentialExpressionAnalysisService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4950,7 +4719,6 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ExpressionExperimentSetService Service Proxy with inner ExpressionExperimentSetService Service Implementation -->
 	<bean id="expressionExperimentSetService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4974,7 +4742,5 @@
 			</list>
 		</property>
 	</bean>
-
 	<!-- ========================= End of SERVICE DEFINITIONS ========================= -->
-
 </beans>

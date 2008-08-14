@@ -255,8 +255,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#remove(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public void remove( ExpressionExperiment expressionExperiment ) {
-        final ExpressionExperiment toDelete = expressionExperiment;
+    public void remove( final ExpressionExperiment expressionExperiment ) {
 
         // Note that links are deleted separately - see the ExpressionExperimentService.
 
@@ -264,7 +263,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             public Object doInHibernate( Session session ) throws HibernateException {
 
                 log.info( "Loading data for deletion..." );
-                session.lock( toDelete, LockMode.UPGRADE );
+                ExpressionExperiment toDelete = ( ExpressionExperiment ) session
+                        .get( "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl", expressionExperiment
+                                .getId() );
+
                 toDelete.getBioAssayDataVectors().size();
                 Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
                 Set<QuantitationType> qts = new HashSet<QuantitationType>();
@@ -1218,8 +1220,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return ees;
     }
 
-    
-    
     /*
      * (non-Javadoc)
      * 

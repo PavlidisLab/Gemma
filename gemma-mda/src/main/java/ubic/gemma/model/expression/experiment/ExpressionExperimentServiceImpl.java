@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -92,7 +94,28 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     protected void handleDelete( ExpressionExperiment ee ) throws Exception {
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.getDifferentialExpressionAnalysisDao()
+                .findByInvestigation( ee );
+        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
+            Long toDelete = de.getId();
+            this.getDifferentialExpressionAnalysisDao().remove( toDelete );
+        }
         this.getProbe2ProbeCoexpressionDao().deleteLinks( ee );
+
+        /*
+         * Delete any expression experiment sets that only have this ee in it. If there are ones that have multiple, we
+         * can't do it.
+         */
+        Collection<ExpressionExperimentSet> sets = this.getExpressionExperimentSetDao().find( ee );
+        for ( ExpressionExperimentSet eeset : sets ) {
+            if ( eeset.getExperiments().size() == 1 && eeset.getExperiments().iterator().next().equals( ee ) ) {
+                this.getExpressionExperimentSetDao().remove( eeset );
+            } else {
+                throw new IllegalArgumentException( "Sorry, you can't delete " + ee
+                        + "; it is part of an expressionExperimentSet: " + eeset );
+            }
+        }
+
         this.getExpressionExperimentDao().remove( ee );
     }
 
@@ -566,6 +589,5 @@ public class ExpressionExperimentServiceImpl extends
     protected Collection handleFindByFactorValues( Collection factorValues ) throws Exception {
         return this.getExpressionExperimentDao().findByFactorValues( factorValues );
     }
-    
 
 }

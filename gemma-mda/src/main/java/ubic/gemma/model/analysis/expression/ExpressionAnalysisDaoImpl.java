@@ -23,10 +23,8 @@
 package ubic.gemma.model.analysis.expression;
 
 /**
- * Note that due to limitations in Andromda we cannot make this class abstract.
- * 
  * @see ubic.gemma.model.expression.analysis.ExpressionAnalysis
  */
-public class ExpressionAnalysisDaoImpl extends ubic.gemma.model.analysis.expression.ExpressionAnalysisDaoBase {
+public abstract class ExpressionAnalysisDaoImpl extends ubic.gemma.model.analysis.expression.ExpressionAnalysisDaoBase {
 
 }

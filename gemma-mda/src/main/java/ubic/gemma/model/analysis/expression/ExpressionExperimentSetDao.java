@@ -22,6 +22,10 @@
 //
 package ubic.gemma.model.analysis.expression;
 
+import java.util.Collection;
+
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+
 /**
  * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSet
  */
@@ -29,7 +33,7 @@ public interface ExpressionExperimentSetDao extends ubic.gemma.model.common.Audi
     /**
      * Loads an instance of ubic.gemma.model.analysis.expression.ExpressionExperimentSet from the persistent store.
      */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+    public ExpressionExperimentSet load( java.lang.Long id );
 
     /**
      * <p>
@@ -43,14 +47,19 @@ public interface ExpressionExperimentSetDao extends ubic.gemma.model.common.Audi
      * @param id the identifier of the entity to load.
      * @return either the entity or the object transformed from the entity.
      */
-    public Object load( int transform, java.lang.Long id );
+    public ExpressionExperimentSet load( int transform, java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.analysis.expression.ExpressionExperimentSet}.
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<ExpressionExperimentSet> loadAll();
+
+    /**
+     * Locate expressionExperimentSets that contain the given bioAssaySet.
+     */
+    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
 
     /**
      * <p>
@@ -64,13 +73,13 @@ public interface ExpressionExperimentSetDao extends ubic.gemma.model.common.Audi
      * @param transform the flag indicating what transformation to use.
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<ExpressionExperimentSet> loadAll( final int transform );
 
     /**
      * Creates an instance of ubic.gemma.model.analysis.expression.ExpressionExperimentSet and adds it to the persistent
      * store.
      */
-    public ubic.gemma.model.common.Securable create(
+    public ExpressionExperimentSet create(
             ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
 
     /**
@@ -82,7 +91,7 @@ public interface ExpressionExperimentSetDao extends ubic.gemma.model.common.Audi
      * entity (into a value object for example). By default, transformation does not occur.
      * </p>
      */
-    public Object create( int transform,
+    public ExpressionExperimentSet create( int transform,
             ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
 
     /**
@@ -93,7 +102,7 @@ public interface ExpressionExperimentSetDao extends ubic.gemma.model.common.Audi
      *        create.
      * @return the created instances.
      */
-    public java.util.Collection create( java.util.Collection entities );
+    public java.util.Collection<ExpressionExperimentSet> create( java.util.Collection<ExpressionExperimentSet> entities );
 
     /**
      * <p>
@@ -104,7 +113,7 @@ public interface ExpressionExperimentSetDao extends ubic.gemma.model.common.Audi
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
+    public java.util.Collection create( int transform, java.util.Collection<ExpressionExperimentSet> entities );
 
     /**
      * Updates the <code>expressionExperimentSet</code> instance in the persistent store.
@@ -130,7 +139,7 @@ public interface ExpressionExperimentSetDao extends ubic.gemma.model.common.Audi
     /**
      * Removes all entities in the given <code>entities<code> collection.
      */
-    public void remove( java.util.Collection entities );
+    public void remove( java.util.Collection<ExpressionExperimentSet> entities );
 
     /**
      * <p>
@@ -138,12 +147,12 @@ public interface ExpressionExperimentSetDao extends ubic.gemma.model.common.Audi
      * expressionexperimentset should be disallowed.
      * </p>
      */
-    public java.util.Collection getAnalyses(
+    public java.util.Collection<ExpressionAnalysis> getAnalyses(
             ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * 
      */
-    public java.util.Collection findByName( java.lang.String name );
+    public java.util.Collection<ExpressionExperimentSet> findByName( java.lang.String name );
 
 }

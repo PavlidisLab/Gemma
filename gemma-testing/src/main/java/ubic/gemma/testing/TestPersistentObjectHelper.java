@@ -29,6 +29,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -277,7 +281,9 @@ public class TestPersistentObjectHelper {
         assert quantitationTypes.size() > 0;
         ee.setQuantitationTypes( quantitationTypes );
 
-        return ( ExpressionExperiment ) persisterHelper.persist( ee );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+
+        return ee;
     }
 
     /**
@@ -329,7 +335,40 @@ public class TestPersistentObjectHelper {
 
         ee.setDesignElementDataVectors( vectors );
 
-        return ( ExpressionExperiment ) persisterHelper.persist( ee );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+
+        /*
+         * Add analyses
+         */
+        ProbeCoexpressionAnalysis pca = ProbeCoexpressionAnalysis.Factory.newInstance();
+        pca.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet.setName( ee.getShortName() );
+        eeSet.setTaxon( this.testTaxon );
+
+        pca.setExpressionExperimentSetAnalyzed( eeSet );
+        pca.getExpressionExperimentSetAnalyzed().getExperiments().add( ee );
+
+        persisterHelper.persist( pca.getExpressionExperimentSetAnalyzed() );
+        persisterHelper.persist( pca );
+
+        /*
+         * Diff
+         */
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
+
+        ExpressionExperimentSet diffeeset = ExpressionExperimentSet.Factory.newInstance();
+        diffeeset.setTaxon( this.testTaxon );
+        diffeeset.getExperiments().add( ee );
+        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
+        expressionAnalysis.setName( "testDiff" );
+
+        persisterHelper.persist( expressionAnalysis.getExpressionExperimentSetAnalyzed() );
+        persisterHelper.persist( expressionAnalysis );
+
+        return ee;
     }
 
     /**

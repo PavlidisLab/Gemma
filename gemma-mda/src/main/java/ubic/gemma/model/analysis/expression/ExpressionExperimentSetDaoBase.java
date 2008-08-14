@@ -37,7 +37,7 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#load(int, java.lang.Long)
      */
     @Override
-    public Object load( final int transform, final java.lang.Long id ) {
+    public ExpressionExperimentSet load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSet.load - 'id' can not be null" );
         }
@@ -50,16 +50,15 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#load(java.lang.Long)
      */
     @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.analysis.expression.ExpressionExperimentSet ) this.load( TRANSFORM_NONE, id );
+    public ExpressionExperimentSet load( java.lang.Long id ) {
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAll()
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+    public java.util.Collection<ExpressionExperimentSet> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -67,8 +66,9 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAll(int)
      */
     @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection<ExpressionExperimentSet> loadAll( final int transform ) {
+        final java.util.Collection<ExpressionExperimentSet> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -77,17 +77,16 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
-    public ubic.gemma.model.common.Securable create(
+    public ExpressionExperimentSet create(
             ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
-        return ( ubic.gemma.model.analysis.expression.ExpressionExperimentSet ) this.create( TRANSFORM_NONE,
-                expressionExperimentSet );
+        return this.create( TRANSFORM_NONE, expressionExperimentSet );
     }
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
-    public Object create( final int transform,
+    public ExpressionExperimentSet create( final int transform,
             final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
         if ( expressionExperimentSet == null ) {
             throw new IllegalArgumentException(
@@ -100,23 +99,24 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<ExpressionExperimentSet> create(
+            final java.util.Collection<ExpressionExperimentSet> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<ExpressionExperimentSet> create( final int transform,
+            final java.util.Collection<ExpressionExperimentSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSet.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.analysis.expression.ExpressionExperimentSet ) entityIterator
-                            .next() );
+                for ( java.util.Iterator<ExpressionExperimentSet> entityIterator = entities.iterator(); entityIterator
+                        .hasNext(); ) {
+                    create( transform, entityIterator.next() );
                 }
                 return null;
             }
@@ -172,8 +172,7 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSet.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.analysis.expression.ExpressionExperimentSet entity = ( ubic.gemma.model.analysis.expression.ExpressionExperimentSet ) this
-                .load( id );
+        ubic.gemma.model.analysis.expression.ExpressionExperimentSet entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -235,15 +234,14 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
+                            + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.analysis.expression.ExpressionExperimentSet ) result );
         return result;
     }
@@ -296,15 +294,14 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
+                            + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.analysis.expression.ExpressionExperimentSet ) result );
         return result;
     }
@@ -357,15 +354,14 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
+                            + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.analysis.expression.ExpressionExperimentSet ) result );
         return result;
     }
@@ -416,15 +412,14 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.util.Map" + "' was found when executing query --> '" + queryString
+                            + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.analysis.expression.ExpressionExperimentSet ) result );
         return result;
     }
@@ -432,7 +427,7 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
-    public java.util.Collection getAnalyses(
+    public java.util.Collection<ExpressionAnalysis> getAnalyses(
             final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
         try {
             return this.handleGetAnalyses( expressionExperimentSet );
@@ -446,14 +441,14 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
     /**
      * Performs the core logic for {@link #getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
      */
-    protected abstract java.util.Collection handleGetAnalyses(
+    protected abstract java.util.Collection<ExpressionAnalysis> handleGetAnalyses(
             ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
             throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#findByName(java.lang.String)
      */
-    public java.util.Collection findByName( final java.lang.String name ) {
+    public java.util.Collection<ExpressionExperimentSet> findByName( final java.lang.String name ) {
         try {
             return this.handleFindByName( name );
         } catch ( Throwable th ) {
@@ -466,7 +461,8 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
     /**
      * Performs the core logic for {@link #findByName(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByName( java.lang.String name ) throws java.lang.Exception;
+    protected abstract java.util.Collection<ExpressionExperimentSet> handleFindByName( java.lang.String name )
+            throws java.lang.Exception;
 
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
@@ -481,9 +477,9 @@ public abstract class ExpressionExperimentSetDaoBase extends ubic.gemma.model.co
      * @return the transformed entity (i.e. new value object, etc)
      * @see #transformEntities(int,java.util.Collection)
      */
-    protected Object transformEntity( final int transform,
+    protected ExpressionExperimentSet transformEntity( final int transform,
             final ubic.gemma.model.analysis.expression.ExpressionExperimentSet entity ) {
-        Object target = null;
+        ExpressionExperimentSet target = null;
         if ( entity != null ) {
             switch ( transform ) {
                 case TRANSFORM_NONE: // fall-through

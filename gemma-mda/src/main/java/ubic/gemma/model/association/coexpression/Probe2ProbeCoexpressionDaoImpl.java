@@ -46,7 +46,6 @@ import org.springframework.orm.hibernate3.HibernateCallback;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.coexpression.Link;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -195,24 +194,31 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         int totalDone = 0;
         Analysis analysis = null;
         for ( String p2pClassName : p2pClassNames ) {
+            //
+            // /*
+            // * Get one link to locate the analysis object to delete. Problem: if there are no links, then the analysis
+            // * object will be left there.
+            // */
+            // final String queryString = "SELECT SOURCE_ANALYSIS_FK FROM " + getTableName( p2pClassName, false )
+            // + " where EXPRESSION_EXPERIMENT_FK = :eeid";
 
-            /*
-             * Get one vector to locate the analysis object to delete.
-             */
-            final String queryString = "SELECT SOURCE_ANALYSIS_FK FROM " + getTableName( p2pClassName, false )
-                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
-
-            SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
-            queryObject.setMaxResults( 1 );
-            queryObject.setParameter( "eeid", ee.getId() );
-            List results = queryObject.list();
-
-            if ( results.size() > 0 ) {
-                BigInteger analysisId = ( BigInteger ) results.iterator().next();
-                if ( analysisId != null )
-                    analysis = ( Analysis ) this.getHibernateTemplate().load( ProbeCoexpressionAnalysisImpl.class,
-                            analysisId.longValue() );
+            final String findLinkAnalysisObject = "select p from ProbeCoexpressionAnalysisImpl p inner join p.expressionExperimentSetAnalyzed eas inner join eas.experiments e where e = :ee";
+            List o = this.getHibernateTemplate().findByNamedParam( findLinkAnalysisObject, "ee", ee );
+            if ( o.size() > 0 ) {
+                analysis = ( Analysis ) o.iterator().next();
             }
+
+            // SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
+            // queryObject.setMaxResults( 1 );
+            // queryObject.setParameter( "eeid", ee.getId() );
+            // List results = queryObject.list();
+            //
+            // if ( results.size() > 0 ) {
+            // BigInteger analysisId = ( BigInteger ) results.iterator().next();
+            // if ( analysisId != null )
+            // analysis = ( Analysis ) this.getHibernateTemplate().load( ProbeCoexpressionAnalysisImpl.class,
+            // analysisId.longValue() );
+            // }
 
             final String nativeDeleteQuery = "DELETE FROM " + getTableName( p2pClassName, false )
                     + " where EXPRESSION_EXPERIMENT_FK = :eeid";

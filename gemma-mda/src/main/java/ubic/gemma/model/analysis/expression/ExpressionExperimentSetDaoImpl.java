@@ -24,6 +24,8 @@ package ubic.gemma.model.analysis.expression;
 
 import java.util.Collection;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+
 /**
  * @see ubic.gemma.model.analysis.ExpressionExperimentSet
  * @version $Id$
@@ -31,8 +33,15 @@ import java.util.Collection;
  */
 public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase {
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     */
     @Override
-    protected Collection handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet ) throws Exception {
+    @SuppressWarnings("unchecked")
+    protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
+            throws Exception {
         return this
                 .getHibernateTemplate()
                 .findByNamedParam(
@@ -40,10 +49,28 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
                         "eeset", expressionExperimentSet );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleFindByName(java.lang.String)
+     */
     @Override
     @SuppressWarnings("unchecked")
     protected Collection<ExpressionExperimentSet> handleFindByName( String name ) throws Exception {
         return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where name=:query",
                 "query", name );
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#find(ubic.gemma.model.expression.experiment.BioAssaySet)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select ees from ExpressionExperimentSetImpl ees inner join ees.experiments e where e = :ee", "ee",
+                bioAssaySet );
+    }
+
 }
