@@ -2331,7 +2331,11 @@ public class MageMLConverterHelper {
             result.setType( StandardQuantitationType.OTHER );
         }
 
-        result.setIsBackground( mageObj.getIsBackground().booleanValue() );
+        if ( mageObj.getIsBackground() != null ) {
+            result.setIsBackground( mageObj.getIsBackground() );
+        } else {
+            result.setIsBackground( false );
+        }
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
 
