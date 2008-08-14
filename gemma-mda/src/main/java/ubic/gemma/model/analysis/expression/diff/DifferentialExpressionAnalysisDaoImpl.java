@@ -142,7 +142,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a "
                 + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba"
                 + " inner join ba.samplesUsed sa inner join ba.arrayDesignUsed ad"
-                + " inner join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon.id = " + gene.getId();
+                + " inner join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon.id = " + gene.getTaxon().getId();
         return this.getHibernateTemplate().findByNamedParam( queryString, "probes", probes );
     }
 
