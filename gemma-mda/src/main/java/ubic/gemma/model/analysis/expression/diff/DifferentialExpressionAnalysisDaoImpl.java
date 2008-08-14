@@ -81,8 +81,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return results;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+    protected Collection<DifferentialExpressionAnalysis> handleFindByInvestigation( Investigation investigation )
+            throws Exception {
         final String queryString = "select distinct a from DifferentialExpressionAnalysisImpl a where :e in elements (a.expressionExperimentSetAnalyzed.experiments)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
@@ -132,9 +134,15 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             return new HashSet<ExpressionExperiment>();
         }
 
+        /*
+         * The constraint on taxon is required because of the potential for array designs that use sequences from the
+         * "wrong" taxon, like GPL560. This way we ensure that we only get expression experiments for the same taxon as
+         * the gene.
+         */
         final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a "
-                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
-                + " inner join ad.compositeSequences cs where cs in (:probes)";
+                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba"
+                + " inner join ba.samplesUsed sa inner join ba.arrayDesignUsed ad"
+                + " inner join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon = gene.taxon";
         return this.getHibernateTemplate().findByNamedParam( queryString, "probes", probes );
     }
 
