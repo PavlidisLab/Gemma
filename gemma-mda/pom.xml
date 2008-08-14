@@ -87,7 +87,7 @@
 				</configuration>
 				<executions>
 					<execution>
-						<phase>generate-test-resources</phase>
+						<phase>generate-resources</phase>
 						<goals>
 							<goal>run</goal>
 						</goals>
@@ -223,6 +223,11 @@
 						<artifactId>andromda-ocl-query-library</artifactId>
 						<version>3.3</version>
 						<scope>provided</scope>
+					</dependency>
+					<dependency>
+						<groupId>lbpool</groupId>
+						<artifactId>lbpool</artifactId>
+						<version>1.1.0</version>
 					</dependency>
 				</dependencies>
 			</plugin>
