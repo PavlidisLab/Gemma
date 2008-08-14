@@ -41,6 +41,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -356,8 +357,11 @@ public class TestPersistentObjectHelper {
         /*
          * Diff
          */
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
+        DifferentialExpressionAnalysis expressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
+        Protocol protocol = Protocol.Factory.newInstance();
+        protocol.setName( "Differential expression analysis settings" );
+        protocol.setDescription( "qvalue: " + true );
+        expressionAnalysis.setProtocol( protocol );
 
         ExpressionExperimentSet diffeeset = ExpressionExperimentSet.Factory.newInstance();
         diffeeset.setTaxon( this.testTaxon );
