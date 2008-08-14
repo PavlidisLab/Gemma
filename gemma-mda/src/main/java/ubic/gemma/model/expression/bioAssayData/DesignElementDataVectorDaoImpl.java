@@ -477,15 +477,13 @@ public class DesignElementDataVectorDaoImpl extends
                 Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
                 Collection<DesignElement> cs = new HashSet<DesignElement>();
                 for ( DesignElementDataVector object : ( Collection<DesignElementDataVector> ) designElementDataVectors ) {
-                    DesignElementDataVector v = ( DesignElementDataVector ) session.get(
-                            ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorImpl.class, object.getId() );
+                    session.lock( object, LockMode.NONE );
                     Hibernate.initialize( object );
-
-                    Hibernate.initialize( v.getExpressionExperiment() );
-                    dims.add( v.getBioAssayDimension() );
-                    cs.add( v.getDesignElement() );
-                    session.evict( v.getQuantitationType() );
-                    session.evict( v );
+                    Hibernate.initialize( object.getExpressionExperiment() );
+                    dims.add( object.getBioAssayDimension() );
+                    cs.add( object.getDesignElement() );
+                    session.evict( object.getQuantitationType() );
+                    session.evict( object );
                 }
 
                 // thaw the bioassaydimensions we saw
@@ -505,6 +503,7 @@ public class DesignElementDataVectorDaoImpl extends
                             Hibernate.initialize( bm.getFactorValues() );
                             session.evict( bm );
                         }
+                        session.evict( ba );
                         session.clear(); // this is necessary to avoid session errors (due to multiple bioassays per
                         // biomaterial?)
                     }
