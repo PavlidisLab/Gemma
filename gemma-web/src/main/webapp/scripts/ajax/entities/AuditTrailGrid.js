@@ -5,7 +5,7 @@ Ext.namespace('Gemma');
 Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	title : "Entity history",
-	collapsible : true, 
+	collapsible : true,
 	height : 200,
 	width : 720,
 	maxHeight : 200,
@@ -38,11 +38,12 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	createEvent : function(obj) {
-		console.log(obj);
-		AuditController.addAuditEvent(this.auditable, obj.type, obj.comment,
-				obj.details, {
-					callback : this.getStore().reload.createDelegate(this)
-				});
+		var cb = function() {
+			this.getStore().reload();
+		}.createDelegate(this);
+		AuditController.addAuditEvent(this.auditable, obj.type, obj.comment, obj.details, {
+			callback : cb
+		});
 	},
 
 	showAddEventDialog : function() {
@@ -106,8 +107,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 			params : [this.auditable]
 		});
 
-		this.getStore().on("load", this.getView().refresh.createDelegate(this),
-				this);
+		this.getStore().on("load", this.getView().refresh.createDelegate(this), this);
 
 		this.on('rowdblclick', function(grid, row, event) {
 			var record = this.getStore().getAt(row).data;
@@ -152,8 +152,7 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
 	title : "Add an audit event",
 
 	validate : function() {
-		return this.auditEventTypeCombo.isValid()
-				&& this.auditEventCommentField.isValid()
+		return this.auditEventTypeCombo.isValid() && this.auditEventCommentField.isValid()
 				&& this.auditEventDetailField.isValid();
 	},
 
@@ -161,10 +160,8 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
 
 		this.auditEventTypeStore = new Ext.data.SimpleStore({
 			fields : ['type', 'description'],
-			data : [['CommentedEvent', 'Comment'],
-					['TroubleStatusFlagEvent', 'Trouble flag'],
-					['OKStatusFlagEvent', 'OK flag (clear Trouble flag)'],
-					['ValidatedFlagEvent', 'Validated flag']]
+			data : [['CommentedEvent', 'Comment'], ['TroubleStatusFlagEvent', 'Trouble flag'],
+					['OKStatusFlagEvent', 'OK flag (clear Trouble flag)'], ['ValidatedFlagEvent', 'Validated flag']]
 		});
 
 		this.auditEventTypeCombo = new Ext.form.ComboBox({
@@ -193,8 +190,7 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
 		});
 
 		this.fs = new Ext.form.FieldSet({
-			items : [this.auditEventTypeCombo, this.auditEventCommentField,
-					this.auditEventDetailField]
+			items : [this.auditEventTypeCombo, this.auditEventCommentField, this.auditEventDetailField]
 		});
 
 		Ext.apply(this, {
@@ -210,8 +206,7 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
 							details : this.auditEventDetailField.getValue()
 						});
 					} else {
-						Ext.Msg.alert("Error",
-								"You must fill in the required fields");
+						Ext.Msg.alert("Error", "You must fill in the required fields");
 					}
 				}.createDelegate(this),
 				scope : this
