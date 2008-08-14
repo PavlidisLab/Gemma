@@ -1397,8 +1397,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         thawBioAssays( expressionExperiment );
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( expressionExperiment, LockMode.NONE );
-                Hibernate.initialize( expressionExperiment.getDesignElementDataVectors() );
+                ExpressionExperiment toThaw = ( ExpressionExperiment ) session
+                        .get( "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl", expressionExperiment
+                                .getId() );
+                Hibernate.initialize( toThaw.getDesignElementDataVectors() );
+                Hibernate.initialize( toThaw.getBioAssayDataVectors() );
                 return null;
             }
         }, false );
