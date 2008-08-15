@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 
 /**
  * Interface representing a mechanism for normalizing two-color arrays.
@@ -36,9 +36,9 @@ public interface TwoChannelNormalizer {
      * @param weights Allows different data points to have different weights in the normalization algorithm.
      * @return
      */
-    public DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
-            DoubleMatrixNamed<String, String> channelTwoSignal, DoubleMatrixNamed<String, String> channelOneBackground,
-            DoubleMatrixNamed<String, String> channelTwoBackground, DoubleMatrixNamed<String, String> weights );
+    public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
+            DoubleMatrix<String, String> channelTwoSignal, DoubleMatrix<String, String> channelOneBackground,
+            DoubleMatrix<String, String> channelTwoBackground, DoubleMatrix<String, String> weights );
 
     /**
      * Normalization without consideration of background or weights.
@@ -47,7 +47,7 @@ public interface TwoChannelNormalizer {
      * @param channelTwoSignal
      * @return
      */
-    public DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
-            DoubleMatrixNamed<String, String> channelTwoSignal );
+    public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
+            DoubleMatrix<String, String> channelTwoSignal );
 
 }

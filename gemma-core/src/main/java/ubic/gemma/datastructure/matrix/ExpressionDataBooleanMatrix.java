@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import ubic.basecode.dataStructure.matrix.ObjectMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -43,7 +43,7 @@ import cern.colt.matrix.ObjectMatrix1D;
 public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolean> {
 
     private static final long serialVersionUID = 1L;
-    private ObjectMatrix2DNamed<DesignElement, Integer, Boolean> matrix;
+    private ObjectMatrixImpl<DesignElement, Integer, Boolean> matrix;
 
     /**
      * @param vectors
@@ -80,9 +80,9 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * @param maxSize
      * @return
      */
-    private ObjectMatrix2DNamed<DesignElement, Integer, Boolean> createMatrix(
+    private ObjectMatrixImpl<DesignElement, Integer, Boolean> createMatrix(
             Collection<DesignElementDataVector> vectors, int maxSize ) {
-        ObjectMatrix2DNamed<DesignElement, Integer, Boolean> matrix = new ObjectMatrix2DNamed<DesignElement, Integer, Boolean>(
+        ObjectMatrixImpl<DesignElement, Integer, Boolean> matrix = new ObjectMatrixImpl<DesignElement, Integer, Boolean>(
                 vectors.size(), maxSize );
 
         // initialize the matrix to false

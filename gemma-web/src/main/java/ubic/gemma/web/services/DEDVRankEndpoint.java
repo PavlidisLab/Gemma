@@ -31,8 +31,8 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.basecode.dataStructure.matrix.AbstractNamedMatrix;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.AbstractMatrix;
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.gemma.analysis.preprocess.DedvRankService;
 import ubic.gemma.analysis.preprocess.DedvRankService.Method;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
@@ -134,7 +134,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
                 + " and method: " + methodString );
 
         // main call to DedvRankService to obtain rank results
-        DenseDoubleMatrix2DNamed rankMatrix = ( DenseDoubleMatrix2DNamed ) dedvRankService.getRankMatrix( geneInput,
+        DenseDoubleMatrix rankMatrix = ( DenseDoubleMatrix ) dedvRankService.getRankMatrix( geneInput,
                 eeInput, method );
 
         // start building the wrapper

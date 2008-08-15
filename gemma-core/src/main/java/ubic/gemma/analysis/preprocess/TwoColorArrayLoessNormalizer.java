@@ -20,7 +20,7 @@ package ubic.gemma.analysis.preprocess;
 
 import java.io.IOException;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 
 /**
  * @author pavlidis
@@ -39,11 +39,11 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements Tw
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed,
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
-            DoubleMatrixNamed<String, String> channelTwoSignal, DoubleMatrixNamed<String, String> channelOneBackground,
-            DoubleMatrixNamed<String, String> channelTwoBackground, DoubleMatrixNamed<String, String> weights ) {
+    public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
+            DoubleMatrix<String, String> channelTwoSignal, DoubleMatrix<String, String> channelOneBackground,
+            DoubleMatrix<String, String> channelTwoBackground, DoubleMatrix<String, String> weights ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal,
+        DoubleMatrix<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal,
                 channelOneBackground, channelTwoBackground, weights, "loess" );
         return resultObject;
     }
@@ -54,10 +54,10 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements Tw
      * @see ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
-            DoubleMatrixNamed<String, String> channelTwoSignal ) {
+    public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
+            DoubleMatrix<String, String> channelTwoSignal ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal, "loess" );
+        DoubleMatrix<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal, "loess" );
         return resultObject;
     }
 }

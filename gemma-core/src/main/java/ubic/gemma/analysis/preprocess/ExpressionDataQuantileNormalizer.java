@@ -20,7 +20,7 @@ package ubic.gemma.analysis.preprocess;
 
 import java.io.IOException;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.DesignElement;
 

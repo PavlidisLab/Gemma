@@ -29,8 +29,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.Link;
-import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.NamedMatrix;
+import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix;
+import ubic.basecode.dataStructure.matrix.Matrix2D;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -49,7 +49,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected static final int NUM_BINS = 2048;
     protected static final int HALF_BIN = NUM_BINS / 2;
     protected static final Log log = LogFactory.getLog( MatrixRowPairPearsonAnalysis.class );
-    protected CompressedSparseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
+    protected CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
     protected int minSamplesToKeepCorrelation = 0;
     protected double storageThresholdValue;
     protected ObjectArrayList keepers = null;
@@ -102,7 +102,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     /**
      * @return baseCode.dataStructure.NamedMatrix
      */
-    public NamedMatrix getMatrix() {
+    public Matrix2D getMatrix() {
         return results;
     }
 

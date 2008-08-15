@@ -29,7 +29,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix;
 import ubic.gemma.analysis.service.CompositeSequenceGeneMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -206,7 +206,7 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
 
         Collection<ExpressionExperiment> eeColl = expressionExperimentService.loadAll();
 
-        CompressedSparseDoubleMatrix2DNamed<Long, Long> mat = new CompressedSparseDoubleMatrix2DNamed<Long, Long>(
+        CompressedSparseDoubleMatrix<Long, Long> mat = new CompressedSparseDoubleMatrix<Long, Long>(
                 MAX_GENES, MAX_GENES );
 
         int numEEs = 0;

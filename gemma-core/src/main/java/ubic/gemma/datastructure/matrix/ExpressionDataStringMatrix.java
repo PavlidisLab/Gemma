@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.StringMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.StringMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -44,7 +44,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
     private static Log log = LogFactory.getLog( ExpressionDataStringMatrix.class.getName() );
 
-    private StringMatrix2DNamed matrix;
+    private StringMatrix matrix;
 
     public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
         throw new UnsupportedOperationException();
@@ -159,11 +159,11 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         this.matrix = createMatrix( vectors, maxSize );
     }
 
-    private StringMatrix2DNamed createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
+    private StringMatrix createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        StringMatrix2DNamed<Integer, Integer> matrix = new StringMatrix2DNamed<Integer, Integer>( numRows, maxSize );
+        StringMatrix<Integer, Integer> matrix = new StringMatrix<Integer, Integer>( numRows, maxSize );
 
         for ( int j = 0; j < matrix.columns(); j++ ) {
             matrix.addColumnName( j );

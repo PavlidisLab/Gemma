@@ -20,7 +20,7 @@ package ubic.gemma.analysis.util;
 
 import java.io.IOException;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
@@ -63,7 +63,7 @@ public class AffyBatch extends RCommander {
      *        name. (FIXME This won't work out of the box - the names do not match the CDF in general)
      * @return the name of the variable in R for the AffyBatch object.
      */
-    public String makeAffyBatch( DoubleMatrixNamed<String, String> celMatrix, ArrayDesign arrayDesign ) {
+    public String makeAffyBatch( DoubleMatrix<String, String> celMatrix, ArrayDesign arrayDesign ) {
 
         if ( celMatrix == null ) throw new IllegalArgumentException( "Null matrix" );
         String matrixName = rc.assignMatrix( celMatrix );

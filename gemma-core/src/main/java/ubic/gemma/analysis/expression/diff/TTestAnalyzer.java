@@ -27,7 +27,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -129,7 +129,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
 
-        DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
+        DoubleMatrix namedMatrix = dmatrix.getNamedMatrix();
 
         QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
 

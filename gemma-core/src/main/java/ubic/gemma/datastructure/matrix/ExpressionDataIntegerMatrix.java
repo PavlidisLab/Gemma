@@ -7,7 +7,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.IntegerMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.IntegerMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -28,7 +28,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     private static Log log = LogFactory.getLog( ExpressionDataIntegerMatrix.class.getName() );
 
-    private IntegerMatrix2DNamed<DesignElement, Integer> matrix;
+    private IntegerMatrix<DesignElement, Integer> matrix;
 
     public ExpressionDataIntegerMatrix( Collection<DesignElementDataVector> vectors ) {
         init();
@@ -189,12 +189,12 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
      * @param maxSize
      * @return DoubleMatrixNamed
      */
-    private IntegerMatrix2DNamed<DesignElement, Integer> createMatrix( Collection<DesignElementDataVector> vectors,
+    private IntegerMatrix<DesignElement, Integer> createMatrix( Collection<DesignElementDataVector> vectors,
             int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        IntegerMatrix2DNamed<DesignElement, Integer> matrix = new IntegerMatrix2DNamed<DesignElement, Integer>(
+        IntegerMatrix<DesignElement, Integer> matrix = new IntegerMatrix<DesignElement, Integer>(
                 numRows, maxSize );
 
         for ( int j = 0; j < matrix.columns(); j++ ) {

@@ -30,7 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.rosuda.REngine.REXPMismatchException;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
@@ -123,7 +123,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
 
-        DoubleMatrixNamed filteredNamedMatrix = this.filterMatrix( dmatrix, experimentalFactor );
+        DoubleMatrix filteredNamedMatrix = this.filterMatrix( dmatrix, experimentalFactor );
 
         QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
 
@@ -224,7 +224,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param experimentalFactor
      * @return
      */
-    private DoubleMatrixNamed filterMatrix( ExpressionDataDoubleMatrix matrix, ExperimentalFactor experimentalFactor ) {
+    private DoubleMatrix filterMatrix( ExpressionDataDoubleMatrix matrix, ExperimentalFactor experimentalFactor ) {
         // TODO make this a requirement in the abstract analyzer.
         List<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
 
@@ -239,14 +239,14 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param rFactors
      * @return
      */
-    private DoubleMatrixNamed filterDoubleMatrixNamedForValidRows( ExpressionDataDoubleMatrix matrix,
+    private DoubleMatrix filterDoubleMatrixNamedForValidRows( ExpressionDataDoubleMatrix matrix,
             List<String> rFactors ) {
 
         ArrayList<double[]> filteredRows = new ArrayList<double[]>();
 
         Collection<String> factorLevels = new HashSet<String>( rFactors );
 
-        DoubleMatrixNamed matrixNamed = matrix.getNamedMatrix();
+        DoubleMatrix matrixNamed = matrix.getNamedMatrix();
 
         filteredMatrixDesignElementIndexMap = new HashMap<Integer, DesignElement>();
 

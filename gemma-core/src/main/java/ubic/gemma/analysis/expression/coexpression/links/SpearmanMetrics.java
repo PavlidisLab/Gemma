@@ -20,7 +20,7 @@ package ubic.gemma.analysis.expression.coexpression.links;
 
 import java.util.Collection;
 
-import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -64,7 +64,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
      */
     protected SpearmanMetrics( int size ) {
         if ( size > 0 ) {
-            results = new CompressedSparseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement>(
+            results = new CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement>(
                     size, size );
         }
         keepers = new ObjectArrayList();

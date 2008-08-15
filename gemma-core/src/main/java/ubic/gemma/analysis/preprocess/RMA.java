@@ -20,7 +20,7 @@ package ubic.gemma.analysis.preprocess;
 
 import java.io.IOException;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.util.AffyBatch;
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -57,9 +57,9 @@ public class RMA extends RCommander implements ProbeSummarizer {
      * 
      * @param dataMatrix The CEL value matrix
      * @return RMA-processed matrix.
-     * @see ubic.gemma.model.analysis.preprocess.ProbeSummarizer#summarize(baseCode.dataStructure.matrix.DoubleMatrixNamed)
+     * @see ubic.gemma.model.analysis.preprocess.ProbeSummarizer#summarize(baseCode.dataStructure.matrix.DoubleMatrix)
      */
-    public DoubleMatrixNamed<String, String> summarize( DoubleMatrixNamed<String, String> dataMatrix ) {
+    public DoubleMatrix<String, String> summarize( DoubleMatrix<String, String> dataMatrix ) {
         log.debug( "Summarizing..." );
 
         if ( arrayDesign == null ) throw new IllegalStateException( "Must set arrayDesign first" );
@@ -72,7 +72,7 @@ public class RMA extends RCommander implements ProbeSummarizer {
 
         log.info( "Done with RMA" );
 
-        DoubleMatrixNamed<String, String> resultObject = rc.retrieveMatrix( varname );
+        DoubleMatrix<String, String> resultObject = rc.retrieveMatrix( varname );
 
         // clean up.
         rc.voidEval( "rm(" + varname + ")" );

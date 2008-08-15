@@ -44,7 +44,7 @@ import org.jfree.data.xy.MatrixSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -206,7 +206,7 @@ public class VisualizeDataSetApp {
      * @return
      * @throws IOException
      */
-    private DoubleMatrixNamed parseData( boolean headerExists ) throws IOException {
+    private DoubleMatrix parseData( boolean headerExists ) throws IOException {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/" + filePath );
         if ( is == null ) throw new RuntimeException( "could not load data" );
         DoubleMatrixReader reader = new DoubleMatrixReader();
@@ -220,7 +220,7 @@ public class VisualizeDataSetApp {
 
         VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
 
-        DoubleMatrixNamed matrix = null;
+        DoubleMatrix matrix = null;
         try {
             matrix = visualizeDataSet.parseData( true );
         } catch ( IOException e ) {

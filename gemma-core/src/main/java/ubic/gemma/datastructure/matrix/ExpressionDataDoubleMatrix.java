@@ -27,8 +27,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -41,7 +41,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
- * or column, returning data for a specific DesignElement or data for a specific BioAssay.
+ * or column, returning data for a specific DesignElement or data for a specific BioAssay. This class is not database
+ * aware so the vectors provided must already be 'thawed'.
  * 
  * @author pavlidis
  * @author keshav
@@ -52,7 +53,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     private static final long serialVersionUID = 1L;
     private static final int MAX_ROWS_TO_STRING = 100;
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
-    private DoubleMatrixNamed<DesignElement, Integer> matrix;
+    private DoubleMatrix<DesignElement, Integer> matrix;
 
     /**
      * To comply with bean specifications. Not to be instantiated.
@@ -62,6 +63,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
                 + "allows java constructs to inspect this class as a java bean." );
     }
 
+    /**
+     * @param dataVectors
+     * @param quantitationTypes
+     */
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
             Collection<QuantitationType> quantitationTypes ) {
         init();
@@ -75,6 +80,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         vectorsToMatrix( selectedVectors );
     }
 
+    /**
+     * @param dataVectors
+     * @param quantitationType
+     */
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
             QuantitationType quantitationType ) {
         init();
@@ -86,6 +95,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         vectorsToMatrix( selectedVectors );
     }
 
+    /**
+     * @param vectors
+     */
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
         init();
 
@@ -347,13 +359,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param maxSize
      * @return DoubleMatrixNamed
      */
-    private DoubleMatrixNamed<DesignElement, Integer> createMatrix( Collection<DesignElementDataVector> vectors,
-            int maxSize ) {
+    private DoubleMatrix<DesignElement, Integer> createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        DoubleMatrixNamed<DesignElement, Integer> matrix = new DenseDoubleMatrix2DNamed<DesignElement, Integer>(
-                numRows, maxSize );
+        DoubleMatrix<DesignElement, Integer> matrix = new DenseDoubleMatrix<DesignElement, Integer>( numRows, maxSize );
 
         for ( int j = 0; j < matrix.columns(); j++ ) {
             matrix.addColumnName( j );
@@ -453,7 +463,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
         this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
 
-        this.matrix = new DenseDoubleMatrix2DNamed<DesignElement, Integer>( rowsToUse.size(), sourceMatrix.columns() );
+        this.matrix = new DenseDoubleMatrix<DesignElement, Integer>( rowsToUse.size(), sourceMatrix.columns() );
 
         log.info( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
 
@@ -474,7 +484,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     /**
      * @return
      */
-    public DoubleMatrixNamed<DesignElement, Integer> getNamedMatrix() {
+    public DoubleMatrix<DesignElement, Integer> getNamedMatrix() {
         return matrix;
     }
 

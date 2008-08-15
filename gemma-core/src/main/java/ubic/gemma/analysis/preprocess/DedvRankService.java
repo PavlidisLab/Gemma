@@ -30,9 +30,9 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.AbstractNamedMatrix;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.AbstractMatrix;
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -122,7 +122,7 @@ public class DedvRankService {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public AbstractNamedMatrix getSampleRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> ees ) {
+    public AbstractMatrix getSampleRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> ees ) {
         throw new UnsupportedOperationException( "Sorry, this isn't implemented yet" );
         // TODO: finish implementation
         // Collection<AbstractNamedMatrix> rankMatrices = new HashSet<AbstractNamedMatrix>();
@@ -189,9 +189,9 @@ public class DedvRankService {
     }
 
     @SuppressWarnings("unchecked")
-    public AbstractNamedMatrix getRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> ees,
+    public AbstractMatrix getRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> ees,
             Method method ) {
-        DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed( genes.size(), ees.size() );
+        DenseDoubleMatrix matrix = new DenseDoubleMatrix( genes.size(), ees.size() );
         matrix.setRowNames( new ArrayList<Gene>( genes ) );
         matrix.setColumnNames( new ArrayList<ExpressionExperiment>( ees ) );
         for ( int i = 0; i < matrix.rows(); i++ ) {
@@ -300,9 +300,9 @@ public class DedvRankService {
      * @param intensities
      * @return
      */
-    protected DoubleMatrixNamed<ExpressionDataMatrixRowElement, Object> computeSampleRanks(
+    protected DoubleMatrix<ExpressionDataMatrixRowElement, Object> computeSampleRanks(
             ExpressionDataDoubleMatrix intensities ) {
-        DenseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, Object> rankMatrix = new DenseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, Object>(
+        DenseDoubleMatrix<ExpressionDataMatrixRowElement, Object> rankMatrix = new DenseDoubleMatrix<ExpressionDataMatrixRowElement, Object>(
                 intensities.rows(), intensities.columns() );
         rankMatrix.setRowNames( intensities.getRowElements() );
 

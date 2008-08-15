@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -39,7 +39,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
 
     private static Log log = LogFactory.getLog( RMATest.class.getName() );
     RMABackgroundAdjuster aa;
-    DoubleMatrixNamed celmatrix;
+    DoubleMatrix celmatrix;
     ArrayDesign arrayDesign;
     InputStream is;
 
@@ -88,7 +88,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
             return;
         }
         aa.setArrayDesign( arrayDesign );
-        DoubleMatrixNamed result = aa.adjust( celmatrix, null );
+        DoubleMatrix result = aa.adjust( celmatrix, null );
         assertTrue( result != null );
         assertEquals( 10000, result.rows() );
         assertEquals( 3, result.columns() );

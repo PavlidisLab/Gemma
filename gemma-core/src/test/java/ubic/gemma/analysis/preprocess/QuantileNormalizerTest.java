@@ -41,7 +41,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 
 /**
@@ -51,7 +51,7 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 public class QuantileNormalizerTest extends TestCase {
     private static Log log = LogFactory.getLog( QuantileNormalizerTest.class.getName() );
 
-    DoubleMatrixNamed tester;
+    DoubleMatrix tester;
     QuantileNormalizer qn;
 
     private boolean connected = false;
@@ -87,7 +87,7 @@ public class QuantileNormalizerTest extends TestCase {
             log.warn( "Could not connect to RServe, skipping test." );
             return;
         }
-        DoubleMatrixNamed result = qn.normalize( tester );
+        DoubleMatrix result = qn.normalize( tester );
         assertEquals( -0.525, result.get( 0, 9 ), 0.001 );
     }
 

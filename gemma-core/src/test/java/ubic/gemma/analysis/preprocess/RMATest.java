@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -39,7 +39,7 @@ public class RMATest extends TestCase {
 
     private static Log log = LogFactory.getLog( RMATest.class.getName() );
     RMA aa;
-    DoubleMatrixNamed<String, String> celmatrix;
+    DoubleMatrix<String, String> celmatrix;
     ArrayDesign arrayDesign;
 
     static boolean connected = false;
@@ -77,7 +77,7 @@ public class RMATest extends TestCase {
             return;
         }
         aa.setArrayDesign( arrayDesign );
-        DoubleMatrixNamed<String, String> result = aa.summarize( celmatrix );
+        DoubleMatrix<String, String> result = aa.summarize( celmatrix );
         assertTrue( result != null );
         assertEquals( 150, result.rows() );
         assertEquals( 3, result.columns() );

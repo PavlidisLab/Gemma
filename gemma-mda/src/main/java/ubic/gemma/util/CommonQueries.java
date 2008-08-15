@@ -111,10 +111,12 @@ public class CommonQueries {
     @SuppressWarnings("unchecked")
     public static Collection<CompositeSequence> getCompositeSequences( Gene gene, Session session ) {
 
-        // first get the composite sequences - FIXME could be done with GENE2CS native query
+        /*
+         * TODO should there be a constraint on taxon for the array design?
+         */
         final String csQueryString = "select distinct cs from GeneImpl as gene"
                 + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene = :gene";
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene = :gene ";
 
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setParameter( "gene", gene );

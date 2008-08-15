@@ -20,7 +20,7 @@ package ubic.gemma.analysis.preprocess;
 
 import java.io.IOException;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.util.MArrayRaw;
 import ubic.gemma.analysis.util.RCommander;
 
@@ -52,9 +52,9 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
      * @param method Name of the method (or its valid abbreviation), such as "median", "loess", "printtiploess".
      * @return
      */
-    protected DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
-            DoubleMatrixNamed<String, String> channelTwoSignal, DoubleMatrixNamed<String, String> channelOneBackground,
-            DoubleMatrixNamed<String, String> channelTwoBackground, DoubleMatrixNamed<String, String> weights,
+    protected DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
+            DoubleMatrix<String, String> channelTwoSignal, DoubleMatrix<String, String> channelOneBackground,
+            DoubleMatrix<String, String> channelTwoBackground, DoubleMatrix<String, String> weights,
             String method ) {
         MArrayRaw mRaw;
         try {
@@ -71,7 +71,7 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
         log.info( "Done normalizing" );
 
         // the normalized
-        DoubleMatrixNamed<String, String> resultObject = rc.retrieveMatrix( normalizedMatrixVarName );
+        DoubleMatrix<String, String> resultObject = rc.retrieveMatrix( normalizedMatrixVarName );
 
         // clean up.
         rc.remove( mRawVarName );
@@ -89,8 +89,8 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
      * @param method Name of the method (or its valid abbreviation), such as "median", "loess", "printtiploess".
      * @return
      */
-    protected DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
-            DoubleMatrixNamed<String, String> channelTwoSignal, String method ) {
+    protected DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
+            DoubleMatrix<String, String> channelTwoSignal, String method ) {
         MArrayRaw mRaw;
         try {
             mRaw = new MArrayRaw();
@@ -105,7 +105,7 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
         log.info( "Done normalizing" );
 
         // the normalized
-        DoubleMatrixNamed<String, String> resultObject = rc.retrieveMatrix( normalizedMatrixVarName );
+        DoubleMatrix<String, String> resultObject = rc.retrieveMatrix( normalizedMatrixVarName );
 
         // clean up.
         rc.remove( mRawVarName );

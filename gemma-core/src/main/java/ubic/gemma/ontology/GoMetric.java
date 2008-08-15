@@ -29,8 +29,8 @@ import java.util.Map;
 
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
@@ -313,12 +313,12 @@ public class GoMetric {
      * @param boolean weight
      * @return Sparse matrix of genes x GOterms
      */
-    public DoubleMatrixNamed<Long, String> createVectorMatrix( Map<Long, Collection<String>> gene2go, boolean weight ) {
+    public DoubleMatrix<Long, String> createVectorMatrix( Map<Long, Collection<String>> gene2go, boolean weight ) {
 
         Map<String, Double> GOTermFrequency = new HashMap<String, Double>();
         List<String> goTerms =  new ArrayList<String> (geneOntologyService.getAllGOTermIds());
         List<Long> geneSet = new ArrayList<Long> (gene2go.keySet());
-        DoubleMatrixNamed<Long, String> gene2term = new SparseDoubleMatrix2DNamed<Long, String>(geneSet.size(), goTerms.size());
+        DoubleMatrix<Long, String> gene2term = new SparseDoubleMatrix<Long, String>(geneSet.size(), goTerms.size());
 
         if ( weight ) {
             GOTermFrequency = createWeightMap( getTermOccurrence( gene2go ), gene2go.keySet().size() );
@@ -365,7 +365,7 @@ public class GoMetric {
      * @param metric
      * @return
      */
-    public Double computeMatrixSimilarity( Gene gene1, Gene gene2, DoubleMatrixNamed<Long, String> gene2TermMatrix,
+    public Double computeMatrixSimilarity( Gene gene1, Gene gene2, DoubleMatrix<Long, String> gene2TermMatrix,
             Metric metric ) {
 
         if ( !geneOntologyService.isReady() ) log.error( "Method called before geneOntologyService is ready!!!" );
@@ -409,7 +409,7 @@ public class GoMetric {
      * @param gene2
      * @return Similarity score using kappa statistics
      */
-    private Double computeKappaSimilarity( DoubleMatrixNamed<Long, String> gene2TermMatrix, double[] g1, double[] g2 ) {
+    private Double computeKappaSimilarity( DoubleMatrix<Long, String> gene2TermMatrix, double[] g1, double[] g2 ) {
 
         if ( g1.length != g2.length ) return null;
         Double[][] contingencyMatrix = new Double[][] { { 0.0, 0.0 }, { 0.0, 0.0 } };

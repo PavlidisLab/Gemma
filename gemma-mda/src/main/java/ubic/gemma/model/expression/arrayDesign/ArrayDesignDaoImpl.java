@@ -287,6 +287,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
+        /*
+         * FIXME, this could be misleading. GPL560 uses human sequences but is a "mouse array". Also this assumes that
+         * all the sequences are from the same taxon.
+         */
         final String queryString = "select t from ArrayDesignImpl as arrayD "
                 + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
                 + " inner join bioC.taxon t where arrayD.id = :id";

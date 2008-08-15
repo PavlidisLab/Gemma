@@ -20,7 +20,7 @@ package ubic.gemma.analysis.preprocess;
 
 import java.io.IOException;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.util.RCommander;
 
 /**
@@ -39,9 +39,9 @@ public class PairwiseLoessNormalizer extends RCommander implements Normalizer {
     /**
      * This uses the default settings.
      * 
-     * @see ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed)
+     * @see ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrix)
      */
-    public DoubleMatrixNamed normalize( DoubleMatrixNamed dataMatrix ) {
+    public DoubleMatrix normalize( DoubleMatrix dataMatrix ) {
         log.debug( "Normalizing..." );
         String matrixvar = rc.assignMatrix( dataMatrix );
         rc.voidEval( "result<-normalize.loess(" + matrixvar + ")" );
