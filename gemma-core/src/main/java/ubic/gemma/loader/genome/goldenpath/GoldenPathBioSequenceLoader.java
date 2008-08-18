@@ -227,17 +227,17 @@ public class GoldenPathBioSequenceLoader {
                 // just some timing information.
                 if ( count % 1000 == 0 ) {
                     cpt++;
-                    timer.split();
-                    double secsperthousand = timer.getSplitTime() / 1000.0;
+                    timer.stop();
+                    double secsperthousand = timer.getTime() / 1000.0;
                     secspt += secsperthousand;
                     double meanspt = secspt / cpt;
 
                     String progString = "Processed and loaded " + count + " sequences, last one was "
-                            + sequence.getName() + " (" + secsperthousand + "s elapsed, mean per kseq=" + meanspt
-                            + "s)";
+                            + sequence.getName() + " (" + secsperthousand + "s for last 1000, mean per 1000 ="
+                            + String.format( "%.1f", meanspt ) + "s)";
                     ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
                     log.info( progString );
-                    timer.unsplit();
+                    timer.start();
                 }
 
             }
