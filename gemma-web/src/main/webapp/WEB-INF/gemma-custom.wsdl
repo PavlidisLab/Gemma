@@ -304,7 +304,7 @@
      <wsdl:part name="taxon_id" type="xsd:integer" />
   </wsdl:message>
   <wsdl:message name="geneNameRequest">
-   <wsdl:part name="gene_ids" type="xsd:integer" />
+   <wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
   </wsdl:message>
   <wsdl:message name="experimentNumSamplesRequest">
    <wsdl:part name="ee_id" type="xsd:integer" />
@@ -777,7 +777,7 @@
 
     <!-- for production, use http://bioinformatics.ubc.ca/Gemma/ws -->
 
-    <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/> 
+    <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/>
   
     </wsdl:port>
   </wsdl:service>
