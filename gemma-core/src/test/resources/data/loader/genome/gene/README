@@ -1,0 +1,1 @@
+egrep "^9606" selected_gene_info | cut -f 3 | xargs -i grep -w {} gene_history  > selected_gene_history

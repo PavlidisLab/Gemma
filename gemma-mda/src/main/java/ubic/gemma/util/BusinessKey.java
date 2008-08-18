@@ -18,6 +18,9 @@
  */
 package ubic.gemma.util;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -208,7 +211,17 @@ public class BusinessKey {
         if ( gene.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", gene.getId() ) );
         } else if ( StringUtils.isNotBlank( gene.getNcbiId() ) ) {
-            queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
+            if ( StringUtils.isNotBlank( gene.getPreviousNcbiId() ) ) {
+                /*
+                 * Check to see if the new gene used to use an id that is in the system.
+                 */
+                Collection<String> ncbiIds = new HashSet<String>();
+                ncbiIds.add( gene.getNcbiId() );
+                ncbiIds.add( gene.getPreviousNcbiId() );
+                queryObject.add( Restrictions.in( "ncbiId", ncbiIds ) );
+            } else {
+                queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
+            }
         } else if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
             queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) );
 

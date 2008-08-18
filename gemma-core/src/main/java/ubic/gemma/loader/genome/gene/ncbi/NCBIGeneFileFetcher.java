@@ -52,58 +52,6 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
         initArchiveHandler( "gz" );
     }
 
-    // /**
-    // * @param file
-    // * @return
-    // */
-    // public Collection<LocalFile> fetch( URL file ) {
-    // if ( file == null ) {
-    // throw new IllegalArgumentException();
-    // }
-    //
-    // String[] chunks = StringUtils.splitByWholeSeparator( file.getPath(), "/" );
-    // assert chunks.length > 1;
-    // String identifier = FileTools.chompExtension( chunks[chunks.length - 1] );
-    //
-    // log.info( "Seeking Ncbi " + file.toString() + " file, using identifier " + identifier );
-    //
-    // try {
-    // File newDir = mkdir( identifier );
-    //
-    // String outputFileName = newDir + File.separator + identifier + ".gz";
-    //
-    // log.warn( "output file name is " + outputFileName );
-    //
-    // OutputStream out = new FileOutputStream( new File( outputFileName ) );
-    //
-    // LocalFile localFile = LocalFile.Factory.newInstance();
-    //
-    // localFile.setLocalURL( ( new File( outputFileName ).toURI().toURL() ) );
-    //
-    // Collection<LocalFile> result = new HashSet<LocalFile>();
-    //
-    // result.add( localFile );
-    //
-    // InputStream is = file.openStream();
-    // byte[] buf = new byte[1024];
-    // int len;
-    // while ( ( len = is.read( buf ) ) > 0 ) {
-    // out.write( buf, 0, len );
-    // }
-    // is.close();
-    //
-    // String finalOutputPath = FileTools.unGzipFile( outputFileName );
-    //
-    // localFile.setLocalURL( ( new File( finalOutputPath ).toURI().toURL() ) );
-    // localFile.setSize( new File( finalOutputPath ).length() );
-    //
-    // return result;
-    //
-    // } catch ( IOException e ) {
-    // throw new RuntimeException( e );
-    // }
-    // }
-
     /**
      * @param identifier
      * @param newDir

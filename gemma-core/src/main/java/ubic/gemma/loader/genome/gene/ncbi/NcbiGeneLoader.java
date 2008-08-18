@@ -78,7 +78,15 @@ public class NcbiGeneLoader {
      * @param gene2AccFile the gene2accession file
      * @param filterTaxa should we filter out taxa we're not supporting
      */
-    public void load( String geneInfoFile, String gene2AccFile, boolean filterTaxa ) {
+    public void load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, boolean filterTaxa ) {
+
+        /*
+         * In case this is reused.
+         */
+        generatorDone.set( false );
+        converterDone.set( false );
+        loaderDone.set( false );
+
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
         sdog.setProducerDoneFlag( generatorDone );
         NcbiGeneConverter converter = new NcbiGeneConverter();
@@ -93,7 +101,7 @@ public class NcbiGeneLoader {
         if ( StringUtils.isEmpty( geneInfoFile ) || StringUtils.isEmpty( geneInfoFile ) ) {
             sdog.generate( geneInfoQueue );
         } else {
-            sdog.generateLocal( geneInfoFile, gene2AccFile, geneInfoQueue, filterTaxa );
+            sdog.generateLocal( geneInfoFile, gene2AccFile, geneHistoryFile, geneInfoQueue, filterTaxa );
         }
 
         // Threaded consumer/producer - consumes GeneInfo objects and generates
@@ -114,7 +122,8 @@ public class NcbiGeneLoader {
     public void load( boolean filterTaxa ) {
         String geneInfoFile = "";
         String gene2AccFile = "";
-        load( geneInfoFile, gene2AccFile, filterTaxa );
+        String geneHistoryFile = "";
+        load( geneInfoFile, gene2AccFile, geneHistoryFile, filterTaxa );
     }
 
     /**

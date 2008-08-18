@@ -430,7 +430,20 @@ abstract public class GenomePersister extends CommonPersister {
         // updated gene products.
         geneService.thaw( existingGene );
 
-        assert existingGene.getNcbiId().equals( gene.getNcbiId() ) : "NCBI identifier for " + gene + " has changed";
+        if ( !existingGene.getNcbiId().equals( gene.getNcbiId() ) ) {
+            log.info( "NCBI ID Change for " + existingGene + ", new id =" + gene.getNcbiId() );
+            String previousId = gene.getPreviousNcbiId();
+            if ( previousId != null ) {
+                if ( !previousId.equals( existingGene.getNcbiId() ) ) {
+                    throw new IllegalStateException( "The NCBI ID for " + gene
+                            + " has changed and the previous NCBI id on record with NCBI (" + gene.getPreviousNcbiId()
+                            + ") doesn't match either." );
+                } else {
+                    existingGene.setPreviousNcbiId( existingGene.getNcbiId() );
+                    existingGene.setNcbiId( gene.getNcbiId() );
+                }
+            }
+        }
         assert existingGene.getAuditTrail() != null;
 
         // We assume the taxon hasn't changed.

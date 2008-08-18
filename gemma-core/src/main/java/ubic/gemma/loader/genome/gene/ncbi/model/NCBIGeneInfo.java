@@ -92,6 +92,7 @@ public class NCBIGeneInfo {
     private boolean symbolIsFromAuthority;
     private boolean nameIsFromAuthority;
     private NomenclatureStatus nomenclatureStatus;
+    private NcbiGeneHistory history;
 
     /**
      * See http://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/src/objects/entrezgene/entrezgene.asn unknown (0) ,
@@ -321,6 +322,20 @@ public class NCBIGeneInfo {
      */
     public void addToDbXRefs( String dbName, String identifier ) {
         this.dbXrefs.put( dbName, identifier );
+    }
+
+    /**
+     * @return the history
+     */
+    public NcbiGeneHistory getHistory() {
+        return history;
+    }
+
+    /**
+     * @param history the history to set
+     */
+    public void setHistory( NcbiGeneHistory history ) {
+        this.history = history;
     }
 
 }

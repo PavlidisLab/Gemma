@@ -90,6 +90,18 @@ public class NcbiGeneConverter implements Converter {
         gene.setName( info.getDefaultSymbol() );
         gene.setOfficialSymbol( info.getDefaultSymbol() );
         gene.setOfficialName( info.getDescription() );
+
+        if ( info.getHistory() != null ) {
+            if ( info.getHistory().getCurrentId() != null ) {
+                assert info.getGeneId().equals( info.getHistory().getCurrentId() );
+            }
+
+            String previousId = info.getHistory().getPreviousId();
+            if ( previousId != null ) {
+                gene.setPreviousNcbiId( previousId );
+            }
+        }
+
         gene.setDescription( "Imported from NCBI gene; Nomenclature status: " + info.getNomenclatureStatus() );
 
         Taxon t = Taxon.Factory.newInstance();

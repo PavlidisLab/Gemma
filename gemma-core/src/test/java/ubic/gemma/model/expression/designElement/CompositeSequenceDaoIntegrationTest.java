@@ -70,7 +70,9 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
             filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
             String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
             String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
-            loader.load( geneInfoFile, gene2AccFile, true );
+            String geneHistoryFile = filePath + File.separatorChar + "selected_geneHistory.gz";
+
+            loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, true );
 
             // needed to fill in the sequence information for blat scoring.
             InputStream sequenceFile = this.getClass().getResourceAsStream(

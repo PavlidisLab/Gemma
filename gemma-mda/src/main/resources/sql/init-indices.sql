@@ -5,6 +5,7 @@ alter table INVESTIGATION add INDEX shortname (SHORT_NAME);
 alter table DATABASE_ENTRY add index acc_ex (ACCESSION, EXTERNAL_DATABASE_FK);
 alter table CHROMOSOME_FEATURE add index symbol_tax (OFFICIAL_SYMBOL, TAXON_FK);
 alter table CHROMOSOME_FEATURE add index ncbiid (NCBI_ID);
+alter table CHROMOSOME_FEATURE add index previous_ncbiid (PREVIOUS_NCBI_ID);
 alter table CHROMOSOME_FEATURE add index name (NAME);
 alter table CHROMOSOME_FEATURE add index class (class);
 alter table CHROMOSOME_FEATURE add index type (TYPE);

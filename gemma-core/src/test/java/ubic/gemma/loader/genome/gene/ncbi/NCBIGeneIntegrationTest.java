@@ -20,7 +20,6 @@ package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,15 +38,20 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
 
+    /**
+     * @throws Exception
+     */
     public void testGeneDomainObjectLoad() throws Exception {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
 
         String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
         String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
+        String geneHistoryFile = "/gemma-core/src/test/resources/data/loader/genome/gene/geneHistory.sample.gz";
 
         String basePath = ConfigUtils.getString( "gemma.home" );
         final BlockingQueue<NcbiGeneData> queue = new ArrayBlockingQueue<NcbiGeneData>( 100 );
-        sdog.generateLocal( basePath + geneInfoTestFile, basePath + gene2AccTestFile, queue, false );
+        sdog.generateLocal( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + geneHistoryFile,
+                queue, false );
 
         // wait until the producer is done.
         while ( !sdog.isProducerDone() ) {
@@ -59,6 +63,9 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
         assertTrue( queue.size() == 99 );
     }
 
+    /**
+     * @throws Exception
+     */
     public void testGeneConverter() throws Exception {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
         NcbiGeneConverter converter = new NcbiGeneConverter();
@@ -72,12 +79,14 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
 
         String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
         String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
+        String geneHistoryFile = "/gemma-core/src/test/resources/data/loader/genome/gene/geneHistory.sample.gz";
 
         String basePath = ConfigUtils.getString( "gemma.home" );
         final BlockingQueue<NcbiGeneData> queue = new ArrayBlockingQueue<NcbiGeneData>( 100 );
         final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<Gene>( 100 );
 
-        sdog.generateLocal( basePath + geneInfoTestFile, basePath + gene2AccTestFile, queue, false );
+        sdog.generateLocal( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + geneHistoryFile,
+                queue, false );
 
         converter.convert( queue, geneQueue );
 
@@ -91,6 +100,32 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
         assertTrue( geneQueue.size() == 99 );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.test.AbstractTransactionalSpringContextTests#onSetUp()
+     */
+    @Override
+    protected void onSetUp() throws Exception {
+        super.onSetUp();
+        this.endTransaction();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.test.AbstractTransactionalSpringContextTests#onTearDown()
+     */
+    @Override
+    protected void onTearDown() throws Exception {
+        super.onTearDown();
+        GeneService geneService = ( GeneService ) getBean( "geneService" );
+        geneService.remove( geneService.loadAll() );
+    }
+
+    /**
+     * @throws Exception
+     */
     @SuppressWarnings("unchecked")
     public void testGeneLoader() throws Exception {
         GeneService geneService = ( GeneService ) getBean( "geneService" );
@@ -98,10 +133,11 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
 
         String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
         String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
+        String geneHistoryFile = "/gemma-core/src/test/resources/data/loader/genome/gene/geneHistory.sample.gz";
 
         // threaded load
         String basePath = ConfigUtils.getString( "gemma.home" );
-        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, false );
+        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + geneHistoryFile, false );
 
         // wait until the loader is done.
         while ( !loader.isLoaderDone() ) {
@@ -117,13 +153,13 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
         // (depends on information in gene_info and gene2accession file
         // gene_info
         Collection<Gene> geneCollection = geneService.findByOfficialName( "orf31" );
-        Iterator<Gene> geneIterator = geneCollection.iterator();
-        Gene g = geneIterator.next();
+        Gene g = geneCollection.iterator().next();
         Collection<GeneProduct> products = g.getProducts();
         Collection<String> expectedAccessions = new ArrayList<String>();
         Collection<String> hasAccessions = new ArrayList<String>();
         expectedAccessions.add( "AAF29803.1" );
         expectedAccessions.add( "NP_862654.1" );
+        geneService.thaw( g );
         for ( GeneProduct product : products ) {
             Collection<DatabaseEntry> accessions = product.getAccessions();
             for ( DatabaseEntry de : accessions ) {
@@ -133,10 +169,27 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
                 log.debug( accession + "." + accVersion );
             }
         }
+        assertEquals( 2, hasAccessions.size() );
         assertTrue( hasAccessions.containsAll( expectedAccessions ) );
         Taxon t = g.getTaxon();
         assertEquals( 139, t.getNcbiId().intValue() );
-        assertTrue( g.getNcbiId().equalsIgnoreCase( "1343074" ) );
+        assertEquals( "1343074", g.getNcbiId() );
 
+        /*
+         * Test history change. One gene has been updated.
+         */
+        geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.changeTest.gz";
+        gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.changeTest.gz";
+        String updatedHistory = "/gemma-core/src/test/resources/data/loader/genome/gene/geneHistory.changeTest.txt.gz";
+        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + updatedHistory, false );
+        // wait until the loader is done.
+        while ( !loader.isLoaderDone() ) {
+            Thread.sleep( 100 );
+        }
+        Collection<Gene> updatedTestGene = geneService.findByOfficialName( "orf31" );
+        assertEquals( 1, updatedTestGene.size() );
+        g = updatedTestGene.iterator().next();
+        assertEquals( "1343074", g.getPreviousNcbiId() );
+        assertEquals( "9343074", g.getNcbiId() );
     }
 }

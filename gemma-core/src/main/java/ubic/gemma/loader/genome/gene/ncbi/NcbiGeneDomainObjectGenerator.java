@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
+import ubic.gemma.loader.genome.gene.ncbi.model.NcbiGeneHistory;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
@@ -58,8 +59,9 @@ public class NcbiGeneDomainObjectGenerator {
         NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
         LocalFile geneInfoFile = fetcher.fetch( "gene_info" ).iterator().next();
         LocalFile gene2AccessionFile = fetcher.fetch( "gene2accession" ).iterator().next();
+        LocalFile geneHistoryFile = fetcher.fetch( "geneHistory" ).iterator().next();
 
-        return processLocalFiles( geneInfoFile, gene2AccessionFile, queue, true );
+        return processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, queue, true );
     }
 
     /**
@@ -71,21 +73,17 @@ public class NcbiGeneDomainObjectGenerator {
      */
     @SuppressWarnings("unchecked")
     public Collection<NCBIGene2Accession> generateLocal( String geneInfoFilePath, String gene2AccesionFilePath,
-            BlockingQueue queue, boolean filter ) {
+            String geneHistoryFilePath, BlockingQueue queue, boolean filter ) {
 
         assert gene2AccesionFilePath != null;
 
         try {
             URL geneInfoUrl = ( new File( geneInfoFilePath ) ).toURI().toURL();
             URL gene2AccesionUrl = ( new File( gene2AccesionFilePath ) ).toURI().toURL();
+            URL geneHistoryUrl = ( new File( geneHistoryFilePath ) ).toURI().toURL();
 
             assert geneInfoUrl != null;
             assert gene2AccesionUrl != null;
-
-            // log.info( "Fetching..." );
-            // NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
-            // LocalFile geneInfoFile = fetcher.fetch( geneInfoUrl ).iterator().next();
-            // LocalFile gene2AccessionFile = fetcher.fetch( gene2AccesionUrl ).iterator().next();
 
             LocalFile geneInfoFile = LocalFile.Factory.newInstance();
             geneInfoFile.setLocalURL( geneInfoUrl );
@@ -93,7 +91,10 @@ public class NcbiGeneDomainObjectGenerator {
             LocalFile gene2AccessionFile = LocalFile.Factory.newInstance();
             gene2AccessionFile.setLocalURL( gene2AccesionUrl );
 
-            return processLocalFiles( geneInfoFile, gene2AccessionFile, queue, filter );
+            LocalFile geneHistoryFile = LocalFile.Factory.newInstance();
+            geneHistoryFile.setLocalURL( geneHistoryUrl );
+
+            return processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, queue, filter );
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -109,22 +110,30 @@ public class NcbiGeneDomainObjectGenerator {
     }
 
     /**
+     * This is the main entry point
+     * 
      * @param geneInfoFile
      * @param gene2AccessionFile
+     * @param geneHistoryFile
      * @param geneDataQueue
      * @return
      */
     private Collection<NCBIGene2Accession> processLocalFiles( final LocalFile geneInfoFile,
-            LocalFile gene2AccessionFile, final BlockingQueue<NcbiGeneData> geneDataQueue, boolean filter ) {
-        log.debug( "Parsing geneinfo=" + geneInfoFile.asFile().getAbsolutePath() + " and gene2accession="
-                + gene2AccessionFile.asFile().getAbsolutePath() );
+            final LocalFile gene2AccessionFile, LocalFile geneHistoryFile,
+            final BlockingQueue<NcbiGeneData> geneDataQueue, boolean filter ) {
 
         final NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
         infoParser.setFilter( filter );
         final NcbiGene2AccessionParser accParser = new NcbiGene2AccessionParser();
         final File gene2accessionFileHandle = gene2AccessionFile.asFile();
 
+        final NcbiGeneHistoryParser historyParser = new NcbiGeneHistoryParser();
+
         try {
+            log.debug( "Parsing gene history" );
+            historyParser.parse( geneHistoryFile.asFile() );
+            //
+            log.debug( "Parsing GeneInfo =" + geneInfoFile.asFile().getAbsolutePath() );
             InputStream is = FileTools
                     .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() );
             infoParser.parse( is );
@@ -135,15 +144,20 @@ public class NcbiGeneDomainObjectGenerator {
         }
 
         Collection<NCBIGeneInfo> geneInfoList = infoParser.getResults();
+
         // put into HashMap
         final Map<String, NCBIGeneInfo> geneInfoMap = new HashMap<String, NCBIGeneInfo>();
         Map<Integer, Integer> taxCount = new HashMap<Integer, Integer>();
-        for ( NCBIGeneInfo o : geneInfoList ) {
-            if ( !taxCount.containsKey( o.getTaxId() ) ) {
-                taxCount.put( new Integer( o.getTaxId() ), new Integer( 0 ) );
+        for ( NCBIGeneInfo geneInfo : geneInfoList ) {
+
+            NcbiGeneHistory history = historyParser.get( geneInfo.getGeneId() );
+            geneInfo.setHistory( history );
+
+            if ( !taxCount.containsKey( geneInfo.getTaxId() ) ) {
+                taxCount.put( new Integer( geneInfo.getTaxId() ), new Integer( 0 ) );
             }
-            taxCount.put( new Integer( o.getTaxId() ), taxCount.get( o.getTaxId() ) + 1 );
-            geneInfoMap.put( o.getGeneId(), o );
+            taxCount.put( new Integer( geneInfo.getTaxId() ), taxCount.get( geneInfo.getTaxId() ) + 1 );
+            geneInfoMap.put( geneInfo.getGeneId(), geneInfo );
         }
 
         for ( Integer taxId : taxCount.keySet() ) {
@@ -157,6 +171,7 @@ public class NcbiGeneDomainObjectGenerator {
         Thread parseThread = new Thread( new Runnable() {
             public void run() {
                 try {
+                    log.debug( "Parsing gene2accession=" + gene2AccessionFile.asFile().getAbsolutePath() );
                     accParser.parse( gene2accessionFileHandle, geneDataQueue, geneInfoMap );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
