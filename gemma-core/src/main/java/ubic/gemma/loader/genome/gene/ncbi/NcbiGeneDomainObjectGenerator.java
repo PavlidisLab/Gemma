@@ -45,6 +45,10 @@ import ubic.gemma.model.common.description.LocalFile;
  */
 public class NcbiGeneDomainObjectGenerator {
 
+    private static final String GENEINFO_FILE = "gene_info";
+    private static final String GENE2ACCESSION_FILE = "gene2accession";
+    private static final String GENEHISTORY_FILE = "gene_history";
+
     static Log log = LogFactory.getLog( NcbiGeneDomainObjectGenerator.class.getName() );
     AtomicBoolean producerDone = new AtomicBoolean( false );
     AtomicBoolean infoProducerDone = new AtomicBoolean( false );;
@@ -57,9 +61,9 @@ public class NcbiGeneDomainObjectGenerator {
 
         log.info( "Fetching..." );
         NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
-        LocalFile geneInfoFile = fetcher.fetch( "gene_info" ).iterator().next();
-        LocalFile gene2AccessionFile = fetcher.fetch( "gene2accession" ).iterator().next();
-        LocalFile geneHistoryFile = fetcher.fetch( "geneHistory" ).iterator().next();
+        LocalFile geneInfoFile = fetcher.fetch( GENEINFO_FILE ).iterator().next();
+        LocalFile gene2AccessionFile = fetcher.fetch( GENE2ACCESSION_FILE ).iterator().next();
+        LocalFile geneHistoryFile = fetcher.fetch( GENEHISTORY_FILE ).iterator().next();
 
         return processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, queue, true );
     }
