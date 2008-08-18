@@ -237,6 +237,7 @@ public class GoldenPathBioSequenceLoader {
                             + String.format( "%.1f", meanspt ) + "s)";
                     ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
                     log.info( progString );
+                    timer.reset();
                     timer.start();
                 }
 
