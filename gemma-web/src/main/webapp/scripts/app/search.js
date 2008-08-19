@@ -6,6 +6,33 @@
  */
 Ext.namespace("Gemma.Search");
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+
+Ext.form.Checkbox.override({
+    setValue : function(v) {
+        var checked = this.checked;
+        this.checked = (v === true || v === 'true' || v == '1' || String(v).toLowerCase() == 'on');
+        
+        if(this.rendered){
+            this.el.dom.checked = this.checked;
+            this.el.dom.defaultChecked = this.checked;
+            this.wrap[this.checked? 'addClass' : 'removeClass'](this.checkedCls);
+        }
+        
+        if(checked != this.checked){
+            this.fireEvent("check", this, this.checked);
+            if(this.handler){
+                this.handler.call(this.scope || this, this, this.checked);
+            }
+        }
+    },
+
+    afterRender : function(){
+        Ext.form.Checkbox.superclass.afterRender.call(this);
+        this.wrap[this.checked? 'addClass' : 'removeClass'](this.checkedCls);
+    }
+});
+
+
 Gemma.Search.app = function() {
 	return {
 		init : function() {
