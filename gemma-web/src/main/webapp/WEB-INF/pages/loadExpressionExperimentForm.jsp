@@ -95,7 +95,7 @@
 	<th>
 		<Gemma:label key="expressionExperimentLoad.splitByPlatform" />
 		<a class="helpLink" href="?"
-			onclick="showHelpTip(event, 'For multi-platform studies, check this box if you want the sample run on each platform to be considered separate experiments. If checked implies 'suppress matching''); return false"><img
+			onclick="showHelpTip(event, 'For multi-platform studies, check this box if you want the sample run on each platform to be considered separate experiments. If checked implies suppress matching'); return false"><img
 				src="/Gemma/images/help.png" /> </a>
 	</th>
 	<td align="left">
