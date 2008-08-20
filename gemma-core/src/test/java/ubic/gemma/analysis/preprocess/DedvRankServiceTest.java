@@ -55,7 +55,7 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "gse432Short" ) );
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE432", false, true, false );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE432", false, true, false, false );
             ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) e.getData();

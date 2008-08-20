@@ -73,11 +73,11 @@ public class GeoDatasetService extends AbstractGeoService {
     @SuppressWarnings("unchecked")
     @Override
     public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean aggressiveQuantitationTypeRemoval ) {
+            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms ) {
         this.geoConverter.clear();
         geoDomainObjectGenerator.intialize();
         geoDomainObjectGenerator.setProcessPlatformsOnly( loadPlatformOnly );
-        geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching );
+        geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching && !splitIncompatiblePlatforms );
         geoDomainObjectGenerator.setAggressiveQtRemoval( aggressiveQuantitationTypeRemoval );
 
         Collection<DatabaseEntry> projectedAccessions = geoDomainObjectGenerator.getProjectedAccessions( geoAccession );
@@ -109,13 +109,14 @@ public class GeoDatasetService extends AbstractGeoService {
         GeoSeries series = ( GeoSeries ) obj;
         String seriesAccession = series.getGeoAccession();
 
-        confirmPlatformUniqueness( series, doSampleMatching );
+        confirmPlatformUniqueness( series, doSampleMatching && !splitIncompatiblePlatforms );
 
         matchToExistingPlatforms( series );
 
         checkSamplesAreNew( series );
 
         geoConverter.clear();
+        geoConverter.setSplitIncompatiblePlatforms( splitIncompatiblePlatforms );
 
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
 

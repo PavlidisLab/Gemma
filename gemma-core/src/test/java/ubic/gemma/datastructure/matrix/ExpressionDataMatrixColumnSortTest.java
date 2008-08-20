@@ -52,7 +52,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
     // */
     // public void testOrderByName() throws Exception {
     // assertTrue( true );
-    //    }
+    // }
 
     /**
      * Test method for
@@ -74,7 +74,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE611", false, true, false );
+                "GSE611", false, true, false, false );
         newee = results.iterator().next();
 
         expressionExperimentService.thaw( newee );

@@ -148,6 +148,8 @@ public class GeoConverter implements Converter {
 
     private ExternalDatabase genbank;
 
+    private boolean splitIncompatiblePlatforms = false;
+
     /**
      * The scientific name used for rat species. FIXME this should be updated elsewhere; avoid this hardcoding.
      */
@@ -1403,6 +1405,8 @@ public class GeoConverter implements Converter {
         // figure out if there are multiple species involved here.
 
         Map<String, Collection<GeoData>> organismDatasetMap = getOrganismDatasetMap( series );
+        Map<GeoPlatform, Collection<GeoData>> platformDatasetMap = getPlatformDatasetMap( series );
+        // get map of platform to dataset.
 
         if ( organismDatasetMap.size() > 1 ) {
             log.warn( "**** Multiple-species dataset! This data set will be split into one data set per species. ****" );
@@ -1411,11 +1415,69 @@ public class GeoConverter implements Converter {
                 convertSpeciesSpecific( series, converted, organismDatasetMap, i, organism );
                 i++;
             }
+        } else if ( platformDatasetMap.size() > 1 && this.splitIncompatiblePlatforms ) {
+            int i = 1;
+            for ( GeoPlatform platform : platformDatasetMap.keySet() ) {
+                convertByPlatform( series, converted, platformDatasetMap, i, platform );
+                i++;
+            }
         } else {
             converted.add( this.convertSeries( series, null ) );
         }
 
         return converted;
+    }
+
+    /**
+     * Used for the case where we want to split the GSE into two separate ExpressionExperiments based on platform. This
+     * is necessary when the two platforms are completely incompatible.
+     * 
+     * @param series
+     * @param converted
+     * @param platformDatasetMap
+     * @param i
+     * @param platform
+     */
+    private void convertByPlatform( GeoSeries series, Collection<ExpressionExperiment> converted,
+            Map<GeoPlatform, Collection<GeoData>> platformDatasetMap, int i, GeoPlatform platform ) {
+        GeoSeries platformSpecific = new GeoSeries();
+
+        Collection<GeoData> datasets = platformDatasetMap.get( platform );
+        assert datasets.size() > 0;
+
+        for ( GeoSample sample : series.getSamples() ) {
+            // ugly, we have to assume there is only one platform per sampl.
+            if ( sample.getPlatforms().iterator().next().equals( platform ) ) {
+                platformSpecific.addSample( sample );
+            }
+        }
+
+        // strip out samples that aren't from this platform.
+        for ( GeoData dataset : datasets ) {
+            if ( dataset instanceof GeoDataset ) {
+                ( ( GeoDataset ) dataset ).dissociateFromSeries( series );
+                platformSpecific.addDataSet( ( GeoDataset ) dataset );
+            }
+        }
+
+        /*
+         * Basically copy over most of the information
+         */
+        platformSpecific.setContact( series.getContact() );
+        platformSpecific.setContributers( series.getContributers() );
+        platformSpecific.setGeoAccession( series.getGeoAccession() + "." + i );
+        platformSpecific.setKeyWords( series.getKeyWords() );
+        platformSpecific.setOverallDesign( series.getOverallDesign() );
+        platformSpecific.setPubmedIds( series.getPubmedIds() );
+        platformSpecific.setReplicates( series.getReplicates() );
+        platformSpecific.setSampleCorrespondence( series.getSampleCorrespondence() );
+        platformSpecific.setSummaries( series.getSummaries() );
+        platformSpecific.setTitle( series.getTitle() + " - " + platform.getGeoAccession() );
+        platformSpecific.setWebLinks( series.getWebLinks() );
+        platformSpecific.setValues( series.getValues() );
+
+        converted.add( convertSeries( platformSpecific, null ) );
+
     }
 
     /**
@@ -1495,6 +1557,38 @@ public class GeoConverter implements Converter {
             }
         }
         return organisms;
+    }
+
+    /**
+     * @param series
+     * @return
+     */
+    private Map<GeoPlatform, Collection<GeoData>> getPlatformDatasetMap( GeoSeries series ) {
+        Map<GeoPlatform, Collection<GeoData>> platforms = new HashMap<GeoPlatform, Collection<GeoData>>();
+
+        if ( series.getDatasets() == null || series.getDatasets().size() == 0 ) {
+            for ( GeoSample sample : series.getSamples() ) {
+                assert sample.getPlatforms().size() > 0 : sample + " has no platform";
+                assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: "
+                        + sample.getPlatforms().toArray();
+                GeoPlatform platform = sample.getPlatforms().iterator().next();
+
+                if ( platforms.get( platform ) == null ) {
+                    platforms.put( platform, new HashSet<GeoData>() );
+                }
+                // This is a bit silly, but made coding this easier.
+                platforms.get( platform ).add( sample.getPlatforms().iterator().next() );
+            }
+        } else {
+            for ( GeoDataset dataset : series.getDatasets() ) {
+                GeoPlatform platform = dataset.getPlatform();
+                if ( platforms.get( platform ) == null ) {
+                    platforms.put( platform, new HashSet<GeoData>() );
+                }
+                platforms.get( platform ).add( dataset );
+            }
+        }
+        return platforms;
     }
 
     /**
@@ -2479,5 +2573,12 @@ public class GeoConverter implements Converter {
         }
 
         return buf.toString();
+    }
+
+    /**
+     * @param splitIncompatiblePlatforms the splitIncompatiblePlatforms to set
+     */
+    public void setSplitIncompatiblePlatforms( boolean splitIncompatiblePlatforms ) {
+        this.splitIncompatiblePlatforms = splitIncompatiblePlatforms;
     }
 }

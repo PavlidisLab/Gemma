@@ -65,7 +65,8 @@ import ubic.gemma.web.util.MessageUtil;
  * @version $Id$
  * @spring.bean id="expressionExperimentLoadController"
  * @spring.property name="commandName" value="expressionExperimentLoadCommand"
- * @spring.property name="commandClass" value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
+ * @spring.property name="commandClass"
+ *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
  * @spring.property name="validator" ref="genericBeanValidator"
  * @spring.property name="formView" value="loadExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
@@ -145,7 +146,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
         this.geoDatasetService = geoDatasetService;
     }
-
 
     /*
      * (non-Javadoc)
@@ -416,8 +416,9 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
             boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
             boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
 
+            boolean splitIncompatiblePlatforms = expressionExperimentLoadCommand.isSplitIncompatiblePlatforms();
             Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accession, false,
-                    doSampleMatching, aggressiveQtRemoval );
+                    doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms );
 
             return processGeoLoadResult( result );
         }
@@ -446,6 +447,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
         }
 
         /**
+         * For when we're only loading the platform.
+         * 
          * @param job
          * @param accesionNum
          * @param doSampleMatching
@@ -460,9 +463,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
 
             boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
             boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
-
             Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accession, true, doSampleMatching,
-                    aggressiveQtRemoval );
+                    aggressiveQtRemoval, false ); // last parameter is irrelevant.
 
             return processArrayDesignResult( arrayDesigns );
         }

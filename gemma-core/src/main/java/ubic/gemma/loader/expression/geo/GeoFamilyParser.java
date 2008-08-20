@@ -971,6 +971,7 @@ public class GeoFamilyParser implements Parser {
             log.error( "Unknown flag in dataset: " + line );
         }
     }
+
     /**
      * @param line
      */
@@ -1066,6 +1067,7 @@ public class GeoFamilyParser implements Parser {
             parseRegularLine( line );
         }
     }
+
     /**
      * If a line does not have the same number of fields as the column headings, it is skipped.
      * 
@@ -1097,6 +1099,7 @@ public class GeoFamilyParser implements Parser {
         }
         platformLines++;
     }
+
     /**
      * Parse a line in a 'platform' section of a GSE file. This deals with meta-data about the platform.
      * 

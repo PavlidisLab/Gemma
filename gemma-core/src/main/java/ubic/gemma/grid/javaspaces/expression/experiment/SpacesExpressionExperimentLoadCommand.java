@@ -46,6 +46,8 @@ public class SpacesExpressionExperimentLoadCommand extends SpacesCommand impleme
 
     private boolean isArrayExpress = false;
 
+    private boolean splitIncompatiblePlatforms = false;
+
     /**
      * Set to true to attempt to remove all unneeded quantitation types during parsing.
      */
@@ -115,6 +117,20 @@ public class SpacesExpressionExperimentLoadCommand extends SpacesCommand impleme
 
     public void setArrayDesignName( String arrayDesignName ) {
         this.arrayDesignName = arrayDesignName;
+    }
+
+    /**
+     * @return the splitIncompatiblePlatforms
+     */
+    public boolean isSplitIncompatiblePlatforms() {
+        return splitIncompatiblePlatforms;
+    }
+
+    /**
+     * @param splitIncompatiblePlatforms the splitIncompatiblePlatforms to set
+     */
+    public void setSplitIncompatiblePlatforms( boolean splitIncompatiblePlatforms ) {
+        this.splitIncompatiblePlatforms = splitIncompatiblePlatforms;
     }
 
 }

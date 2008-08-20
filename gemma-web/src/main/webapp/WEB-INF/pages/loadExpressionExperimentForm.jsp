@@ -46,7 +46,8 @@
 	<tr>
 		<th>
 			<Gemma:label key="expressionExperimentLoad.arrayExpress" />
-			<a class="helpLink" href="?" onclick="showHelpTip(event, 'Check if data is to come from ArrayExpress.'); return false"><img
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Check if data is to come from ArrayExpress.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</th>
 		<td align="left">
@@ -89,6 +90,22 @@
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
 		</td>
+	</tr>
+	</tr>
+	<th>
+		<Gemma:label key="expressionExperimentLoad.splitByPlatform" />
+		<a class="helpLink" href="?"
+			onclick="showHelpTip(event, 'For multi-platform studies, check this box if you want the sample run on each platform to be considered separate experiments. If checked implies 'suppress matching''); return false"><img
+				src="/Gemma/images/help.png" /> </a>
+	</th>
+	<td align="left">
+		<spring:bind path="command.splitByPlatform">
+			<input type="hidden" name="_<c:out value="${status.expression}"/>">
+			<input id="splitByPlatform" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+				<c:if test="${status.value}">checked</c:if> />
+			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+		</spring:bind>
+	</td>
 	</tr>
 
 

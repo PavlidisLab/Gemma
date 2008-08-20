@@ -427,6 +427,33 @@ public class GeoConverterTest extends TestCase {
     }
 
     /**
+     * Test splitting
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testSplitByPlatform() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE493Short/GSE493_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE493" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        this.gc.setSplitIncompatiblePlatforms( true );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 2, ees.size() );
+        for ( ExpressionExperiment ee : ees ) {
+            // 4 on one platform, 10 on the other. This is a bit sloppy but good enuf for now.
+            assertTrue( ee.getBioAssays().size() == 4 || ee.getBioAssays().size() == 10 );
+        }
+    }
+
+    /**
      * Case where the same sample can be in multiple series, we had problems with it.
      * 
      * @throws Exception
