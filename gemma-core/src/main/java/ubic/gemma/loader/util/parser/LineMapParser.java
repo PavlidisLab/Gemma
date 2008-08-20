@@ -45,6 +45,8 @@ public abstract class LineMapParser<K, T> extends BasicLineMapParser<K, T> {
         throw new UnsupportedOperationException( "The subclass must handle adding to the map" );
     }
 
+    private int linesParsed = 0;
+
     /*
      * (non-Javadoc)
      * 
@@ -61,7 +63,7 @@ public abstract class LineMapParser<K, T> extends BasicLineMapParser<K, T> {
             throw new IOException( "No bytes available to read from inputStream" );
         }
 
-        int linesParsed = 0;
+        linesParsed = 0;
         int nullLines = 0;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
@@ -93,6 +95,13 @@ public abstract class LineMapParser<K, T> extends BasicLineMapParser<K, T> {
             log.info( "Parsed " + linesParsed + " lines, " + this.getResults().size() + " items" );
         }
         if ( nullLines > 0 ) log.info( nullLines + " yielded no parse result (they may have been filtered)." );
+    }
+
+    /**
+     * @return the linesParsed
+     */
+    public int getLinesParsed() {
+        return linesParsed;
     }
 
 }

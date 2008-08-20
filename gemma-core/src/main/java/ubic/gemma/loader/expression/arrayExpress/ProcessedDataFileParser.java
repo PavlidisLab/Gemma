@@ -21,7 +21,6 @@ package ubic.gemma.loader.expression.arrayExpress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -30,20 +29,13 @@ import org.apache.commons.lang.StringUtils;
 import ubic.gemma.loader.util.parser.LineMapParser;
 
 /**
- * Parses the "Processed data" files from ArrayExpress. The file format is part of as MAGE-TAB, but is not clearly
- * defined in the current spec. {@link http://www.mged.org/Workgroups/MAGE/MAGE-TAB.pdf}
+ * Parses the "Processed data" files from ArrayExpress. The file format is part of as MAGE-TAB, I found a description a
+ * {@link http://tab2mage.sourceforge.net/docs/magetab_docs.html#datamatrix}, see also
+ * {@link http://www.mged.org/mage-tab/}. The first row names the hybridizations. The second row names the quantitation
+ * types. Subsequent rows contain the data.
  * <p>
- * The columns look like this
- * 
- * <pre>
- * CompositeSequence Identifier - always present?
- * CompositeSequence name - always present but values missing for first few rows when experimental factors are defined
- * Database DB:XXXXX where XXXXX is the name of a database. There can be multiple of these. We ignore them.
- * SampleName QuantitationType - these contain the data.
- * </pre>
- * 
- * <p>
- * For an exapmle of a column that contains data, the name might be "GSE1729GSM30320 Norm/DETECTION P-VALUE".
+ * Note that the current format easier to handle than an earlier version, check out version 1.3 of this parser to see
+ * how it used to (not) work.
  * 
  * @author pavlidis
  * @version $Id$
@@ -54,7 +46,7 @@ public class ProcessedDataFileParser extends LineMapParser<String, Map<String, L
     private Map<String, Map<String, List<String>>> results;
 
     // Map of quantitation types to which column they show up in.
-    private Map<String, List<Integer>> headerMap = null;
+    private Map<String, List<Integer>> headerMap = new HashMap<String, List<Integer>>();
 
     // Array of samples in the order they appear.
     private Object[] samples;
@@ -82,19 +74,29 @@ public class ProcessedDataFileParser extends LineMapParser<String, Map<String, L
     @Override
     public Map<String, List<String>> parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
-        if ( fields.length == 0 ) return null;
-        if ( fields[0].equals( "CompositeSequence identifier" ) ) {
-            parseHeader( fields );
+        if ( this.getLinesParsed() == 0 ) {
+            parseFirstLine( fields );
             return null;
+        } else if ( this.getLinesParsed() == 1 ) {
+            parseSecondLine( fields );
+            return null;
+        } else {
+            return parseDataLine( fields );
         }
 
-        if ( headerMap == null ) throw new IllegalStateException( "Header was not detected" );
+    }
 
-        if ( fields[1].equals( "" ) ) {
-            return null; // sample description.
-        }
+    /**
+     * @param fields
+     * @return
+     */
+    private Map<String, List<String>> parseDataLine( String[] fields ) {
+        String rawProbeNameString = fields[0];
 
-        String compositeSequenceName = fields[1];
+        String compositeSequenceName;
+
+        String[] subFields = rawProbeNameString.split( ":" );
+        compositeSequenceName = subFields[subFields.length - 1];
 
         if ( results.containsKey( compositeSequenceName ) ) {
             throw new IllegalStateException( "Duplicate compositeSequencename" );
@@ -118,48 +120,43 @@ public class ProcessedDataFileParser extends LineMapParser<String, Map<String, L
 
         results.put( compositeSequenceName, csData );
         return csData;
-
     }
 
     /**
      * @param header
      */
-    private void parseHeader( String[] header ) {
+    private void parseSecondLine( String[] header ) {
         headerMap = new HashMap<String, List<Integer>>();
-        Collection<String> samples = new LinkedHashSet<String>();
-
-        for ( int i = 0; i < header.length; i++ ) {
+        for ( int i = 1; i < header.length; i++ ) {
             String field = header[i];
-            if ( field.startsWith( "CompositeSequence" ) ) continue;
-            if ( field.startsWith( "Database" ) ) continue;
-
-            /*
-             * The header strings are of the format "sample name/quantitation type name".
-             */
-            String[] subFields = StringUtils.splitPreserveAllTokens( field, '/' );
-            if ( subFields.length > 2 )
-                throw new UnsupportedOperationException(
-                        "Can't parse sample header with more than two fields per sample" );
-
-            if ( subFields.length < 2 ) {
-                throw new UnsupportedOperationException(
-                        "Can't parse sample header with less than two fields per sample" );
+            String[] subFields = field.split( ":" );
+            String quantitationType;
+            if ( subFields.length > 1 ) {
+                quantitationType = subFields[1];
+            } else {
+                quantitationType = subFields[0];
             }
-
-            String sampleName = subFields[0];
-            String quantitationType = subFields[1];
-
-            if ( !samples.contains( sampleName ) ) samples.add( sampleName );
-
             if ( !headerMap.containsKey( quantitationType ) ) {
                 headerMap.put( quantitationType, new ArrayList<Integer>() );
             }
-
             headerMap.get( quantitationType ).add( i );
+        }
+    }
 
+    /**
+     * @param fields
+     */
+    private void parseFirstLine( String[] fields ) {
+        List<String> samples = new ArrayList<String>();
+        for ( int i = 1; i < fields.length; i++ ) {
+            String sampleName = fields[i];
+            if ( !samples.contains( sampleName ) ) {
+                samples.add( sampleName );
+            }
         }
 
         this.samples = samples.toArray();
+
     }
 
     /**

@@ -20,6 +20,7 @@ package ubic.gemma.loader.expression.arrayExpress;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -98,6 +99,7 @@ public class ProcessedDataMerger {
             bad.getBioAssays().add( nameMap.get( sampleName[i] ) );
         }
 
+        Collection<QuantitationType> usedQuantitationTypes = new HashSet<QuantitationType>();
         int count = 0;
         for ( String csName : processedData.keySet() ) {
             Map<String, List<String>> data = processedData.get( csName );
@@ -113,6 +115,8 @@ public class ProcessedDataMerger {
                     throw new IllegalStateException( "QuantitationType name in Processed data " + qtName
                             + " does not match anything in the MAGE-ML" );
                 }
+
+                usedQuantitationTypes.add( type );
 
                 List<String> rawData = data.get( qtName );
 
@@ -134,6 +138,13 @@ public class ProcessedDataMerger {
             }
 
         }
+
+        /*
+         * Remove quantitation types that aren't used for anything (they showed up in the MAGE-ML but weren't in the
+         * processed data).
+         */
+        mageMlResult.getQuantitationTypes().retainAll( usedQuantitationTypes );
+
         log.info( "Processed data for " + count + " composite sequences" );
     }
 
