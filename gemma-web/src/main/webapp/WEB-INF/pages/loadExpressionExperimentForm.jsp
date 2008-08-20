@@ -91,23 +91,38 @@
 			</spring:bind>
 		</td>
 	</tr>
+	<tr>
+		<th>
+			<Gemma:label key="expressionExperimentLoad.splitByPlatform" />
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'For multi-platform studies, check this box if you want the sample run on each platform to be considered separate experiments. If checked implies suppress matching'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+		</th>
+		<td align="left">
+			<spring:bind path="command.splitByPlatform">
+				<input type="hidden" name="_<c:out value="${status.expression}"/>">
+				<input id="splitByPlatform" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+					<c:if test="${status.value}">checked</c:if> />
+				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			</spring:bind>
+		</td>
 	</tr>
-	<th>
-		<Gemma:label key="expressionExperimentLoad.splitByPlatform" />
-		<a class="helpLink" href="?"
-			onclick="showHelpTip(event, 'For multi-platform studies, check this box if you want the sample run on each platform to be considered separate experiments. If checked implies suppress matching'); return false"><img
-				src="/Gemma/images/help.png" /> </a>
-	</th>
-	<td align="left">
-		<spring:bind path="command.splitByPlatform">
-			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input id="splitByPlatform" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
-				<c:if test="${status.value}">checked</c:if> />
-			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-		</spring:bind>
-	</td>
+<tr>
+		<th>
+			<Gemma:label key="expressionExperimentLoad.allowSuperSeries" />
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'If series is a superseries, allow it to load; leave this unchecked to prevent accidental superseries loading.'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+		</th>
+		<td align="left">
+			<spring:bind path="command.allowSuperSeriesLoad">
+				<input type="hidden" name="_<c:out value="${status.expression}"/>">
+				<input checked id="allowSuperSeriesLoad" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+					<c:if test="${status.value}">checked</c:if> />
+				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			</spring:bind>
+		</td>
 	</tr>
-
 
 	<tr>
 		<th>

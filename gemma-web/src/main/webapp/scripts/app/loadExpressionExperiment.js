@@ -4,7 +4,7 @@ Ext.onReady(function() {
 	uploadButton = new Ext.Button("upload-button", {
 		text : "Start loading",
 		width : 100
-		
+
 	});
 	uploadButton.on("click", submitForm);
 });
@@ -16,6 +16,7 @@ function submitForm() {
 	var suppressMatching = Ext.get("suppressMatching").dom.checked;
 	var loadPlatformOnly = Ext.get("loadPlatformOnly").dom.checked;
 	var splitByPlatform = Ext.get("splitByPlatform").dom.checked;
+	var allowSuperSeriesLoad = Ext.get("allowSuperSeries").dom.checked;
 	var arrayExpress = Ext.get("arrayExpress").dom.checked;
 	var arrayDesign = Ext.get("arrayDesign").dom.value;
 
@@ -27,6 +28,7 @@ function submitForm() {
 		loadPlatformOnly : loadPlatformOnly,
 		splitByPlatform : splitByPlatform,
 		arrayExpress : arrayExpress,
+		allowSuperSeriesLoad : allowSuperSeriesLoad,
 		arrayDesignName : arrayDesign
 	};
 
