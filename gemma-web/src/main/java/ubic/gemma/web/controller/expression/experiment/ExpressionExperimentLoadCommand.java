@@ -60,7 +60,7 @@ public class ExpressionExperimentLoadCommand implements Serializable {
 
     Collection<ArrayDesign> arrayDesigns;
 
-    private boolean splitByPlatform;
+    private boolean splitByPlatform = false;
 
     /**
      * @return the splitIncompatiblePlatforms

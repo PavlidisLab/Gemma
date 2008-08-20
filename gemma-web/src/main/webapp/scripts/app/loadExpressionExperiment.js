@@ -25,7 +25,7 @@ function submitForm() {
 		accession : accession,
 		suppressMatching : suppressMatching,
 		loadPlatformOnly : loadPlatformOnly,
-		splitIncompatiblePlatforms : splitByPlatform,
+		splitByPlatform : splitByPlatform,
 		arrayExpress : arrayExpress,
 		arrayDesignName : arrayDesign
 	};

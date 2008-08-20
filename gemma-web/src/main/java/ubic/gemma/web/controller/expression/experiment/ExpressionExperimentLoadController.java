@@ -415,7 +415,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
             String accession = getAccession( expressionExperimentLoadCommand );
             boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
             boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
-
             boolean splitIncompatiblePlatforms = expressionExperimentLoadCommand.isSplitByPlatform();
             Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accession, false,
                     doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms );
