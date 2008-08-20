@@ -20,9 +20,6 @@ package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
@@ -60,8 +57,8 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
     //
     // // producer is done.
     // log.debug( "Producer done with number of elements: " + queue.size() );
-    //        assertTrue( queue.size() == 99 );
-    //    }
+    // assertTrue( queue.size() == 99 );
+    // }
 
     // /**
     // * @throws Exception
@@ -97,8 +94,8 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
     //
     // // producer is done.
     // log.debug( "Converter done with number of elements: " + geneQueue.size() );
-    //        assertTrue( geneQueue.size() == 99 );
-    //    }
+    // assertTrue( geneQueue.size() == 99 );
+    // }
 
     /*
      * (non-Javadoc)
