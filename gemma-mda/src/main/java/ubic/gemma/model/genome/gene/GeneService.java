@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.genome.gene;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * 
  */
@@ -184,7 +186,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * Returns a collection of geneImpls for the specified taxon. Ie not probe aligned regions and predicted genes
      * </p>
      */
-    public java.util.Collection loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
