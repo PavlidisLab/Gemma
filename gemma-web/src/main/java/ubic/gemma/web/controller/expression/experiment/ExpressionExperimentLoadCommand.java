@@ -60,20 +60,20 @@ public class ExpressionExperimentLoadCommand implements Serializable {
 
     Collection<ArrayDesign> arrayDesigns;
 
-    private boolean splitIncompatiblePlatforms;
+    private boolean splitByPlatform;
 
     /**
      * @return the splitIncompatiblePlatforms
      */
-    public boolean isSplitIncompatiblePlatforms() {
-        return splitIncompatiblePlatforms;
+    public boolean isSplitByPlatform() {
+        return splitByPlatform;
     }
 
     /**
      * @param splitIncompatiblePlatforms the splitIncompatiblePlatforms to set
      */
-    public void setSplitIncompatiblePlatforms( boolean splitIncompatiblePlatforms ) {
-        this.splitIncompatiblePlatforms = splitIncompatiblePlatforms;
+    public void setSplitByPlatform( boolean splitIncompatiblePlatforms ) {
+        this.splitByPlatform = splitIncompatiblePlatforms;
     }
 
     /**

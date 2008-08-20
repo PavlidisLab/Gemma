@@ -15,6 +15,7 @@ function submitForm() {
 	var accession = Ext.get("accession").dom.value;
 	var suppressMatching = Ext.get("suppressMatching").dom.checked;
 	var loadPlatformOnly = Ext.get("loadPlatformOnly").dom.checked;
+	var splitByPlatform = Ext.get("splitByPlatform").dom.checked;
 	var arrayExpress = Ext.get("arrayExpress").dom.checked;
 	var arrayDesign = Ext.get("arrayDesign").dom.value;
 
@@ -24,6 +25,7 @@ function submitForm() {
 		accession : accession,
 		suppressMatching : suppressMatching,
 		loadPlatformOnly : loadPlatformOnly,
+		splitIncompatiblePlatforms : splitByPlatform,
 		arrayExpress : arrayExpress,
 		arrayDesignName : arrayDesign
 	};
