@@ -137,8 +137,11 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 GENENAME_LISTFILE_OPTION );
         addOption( geneListFile );
 
-        Option taxonName = OptionBuilder.hasArg()
-                .withDescription( "Taxon short name e.g. 'mouse' (use with --genefile" ).create( "taxon" );
+        Option taxonName = OptionBuilder
+                .hasArg()
+                .withDescription(
+                        "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all known genes for the taxon" )
+                .create( "taxon" );
         addOption( taxonName );
 
         Option overWrite = OptionBuilder.withArgName( "Overwrites existing files" ).withDescription(
@@ -188,7 +191,13 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 processAllADs();
             } else if ( batchFileName != null ) {
                 processBatchFile( this.batchFileName );
+            } else if ( this.taxonName != null ) {
+                processGenesForTaxon();
             } else {
+                if ( arrayDesignName == null ) {
+                    throw new IllegalArgumentException(
+                            "You must specific an array design, a taxon, gene file, or batch." );
+                }
                 ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
                 if ( type != null ) {
                     processAD( arrayDesign, this.fileName, type );
@@ -374,6 +383,20 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
+    private void processGenesForTaxon() {
+        GeneService geneService = ( GeneService ) getBean( "geneService" );
+        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+        Taxon taxon = taxonService.findByCommonName( taxonName );
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
+        }
+        Collection<Gene> genes = geneService.loadKnownGenes( taxon );
+        log.info( "Taxon has " + genes.size() + " 'known' genes" );
+        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
+                OutputType.SHORT );
+        log.info( "Processed " + numProcessed + " genes that were found" );
+    }
+
     private void processGeneList() throws IOException {
         log.info( "Loading genes to annotate from " + geneFileName );
         InputStream is = new FileInputStream( geneFileName );
@@ -507,6 +530,10 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             } else {
                 this.taxonName = this.getOptionValue( "taxon" );
             }
+        }
+
+        if ( this.hasOption( "taxon" ) ) {
+            this.taxonName = this.getOptionValue( "taxon" );
         }
 
         if ( this.hasOption( 'g' ) ) processGenesIncluded( this.getOptionValue( 'g' ) );

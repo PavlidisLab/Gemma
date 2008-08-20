@@ -271,15 +271,26 @@ public class ArrayDesignAnnotationService {
         return compositeSequencesProcessed;
     }
 
+    /**
+     * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
+     * available.
+     * 
+     * @param writer
+     * @param genes
+     * @param type
+     * @return
+     */
     public int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type ) {
         for ( Gene gene : genes ) {
             Collection<OntologyTerm> ontos = getGoTerms( gene, type );
             List<Collection<OntologyTerm>> termList = new ArrayList<Collection<OntologyTerm>>();
             termList.add( ontos );
+            String ncbiId = gene.getNcbiId();
+            ncbiId = ncbiId == null ? "" : ncbiId;
             String geneString = gene.getOfficialSymbol();
             String geneDescriptionString = gene.getOfficialName();
             try {
-                writeAnnotationLine( writer, geneString, geneString, geneDescriptionString, termList );
+                writeAnnotationLine( writer, geneString, ncbiId, geneDescriptionString, termList );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
