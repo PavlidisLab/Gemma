@@ -158,7 +158,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
-                false, false );
+                false, false, true );
         result = ads.iterator().next();
         arrayDesignService.thawLite( result );
         try {
@@ -199,7 +199,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
 
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
-                false, false );
+                false, false, true );
         result = ads.iterator().next();
         arrayDesignService.thawLite( result );
 
@@ -222,7 +222,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88", true, true,
-                false, false );
+                false, false, true );
         result = ads.iterator().next();
         arrayDesignService.thawLite( result );
 

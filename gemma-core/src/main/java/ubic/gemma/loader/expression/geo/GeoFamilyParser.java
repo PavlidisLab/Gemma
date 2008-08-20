@@ -1435,8 +1435,9 @@ public class GeoFamilyParser implements Parser {
             if ( results.getSeriesMap().containsKey( value ) ) {
                 results.getSeriesMap().get( value ).addSample( results.getSampleMap().get( currentSampleAccession ) );
             }
-            seriesSet( currentSeriesAccession, "seriesId", value ); // can be many?
+            seriesSet( currentSeriesAccession, "seriesId", value );
             results.getSampleMap().get( currentSampleAccession ).addSeriesAppearsIn( value );
+
         } else if ( startsWithIgnoreCase( line, "!Sample_supplementary_file" ) ) {
             sampleSupplementaryFileSet( currentSampleAccession, value );
         } else if ( startsWithIgnoreCase( line, "!Sample_last_update_date" ) ) {
@@ -1474,7 +1475,18 @@ public class GeoFamilyParser implements Parser {
         } else if ( startsWithIgnoreCase( line, "!Series_overall_design" ) ) {
             // FIXME add support for this description.
         } else if ( startsWithIgnoreCase( line, "!Series_summary" ) ) {
-            if ( value.toLowerCase().contains( "keyword" ) ) {
+
+            if ( value.toLowerCase().startsWith( "this superseries" ) ) {
+                log.info( " ** SuperSeries detected **" );
+                seriesSet( currentSeriesAccession, "isSuperSeries", true );
+            } else if ( value.toLowerCase().startsWith( "gse" )
+                    && results.getSeriesMap().get( currentSeriesAccession ).isSuperSeries() ) {
+                String[] fields = value.split( ":" );
+                if ( fields.length != 2 ) {
+                    throw new IllegalStateException( "Expected a colon in " + value );
+                }
+                results.getSeriesMap().get( currentSeriesAccession ).addSubSeries( fields[0] );
+            } else if ( value.toLowerCase().contains( "keyword" ) ) {
                 String keyword = extractValue( value );
                 seriesAddTo( currentSeriesAccession, "keyWords", keyword );
             } else {

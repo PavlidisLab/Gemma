@@ -36,79 +36,6 @@ import java.util.Collection;
  */
 public class GeoVariable {
 
-    @Override
-    public String toString() {
-        return this.getType().toString() + this.getDescription();
-    }
-
-    VariableType type;
-    String description = "";
-
-    /**
-     * The samples to which this variable applies.
-     */
-    Collection<GeoSample> samples;
-
-    /**
-     * Permitted descriptions of terms. These will correspond to OntologyEntries in Gemma. Also known as subset type.
-     */
-    public enum VariableType {
-        age, agent, cellLine, cellType, developmentStage, diseaseState, dose, gender, genotypeOrVariation, growthProtocol, individual, infection, isolate, metabolism, other, protocol, shock, species, specimen, stress, strain, temperature, time, tissue
-    };
-
-    /**
-     * @param d
-     */
-    public void addToDescription( String d ) {
-        this.description += d;
-    }
-
-    /**
-     * @return Returns the description.
-     */
-    public String getDescription() {
-        return this.description;
-    }
-
-    /**
-     * @param description The description to set.
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void addToVariableSampleList( GeoSample sample ) {
-        this.samples.add( sample );
-    }
-
-    /**
-     * @return Returns the variableSampleList.
-     */
-    public Collection<GeoSample> getSamples() {
-        return this.samples;
-    }
-
-    /**
-     * @param variableSampleList The variableSampleList to set.
-     */
-    public void setSamples( Collection<GeoSample> variableSampleList ) {
-        this.samples = variableSampleList;
-    }
-
-    /**
-     * @return Returns the name.
-     */
-    public VariableType getType() {
-        return this.type;
-    }
-
-    /**
-     * @param name The name to set.
-     */
-    public void setType( VariableType name ) {
-        this.type = name;
-    }
-
     /**
      * Convert a string e.g., "age" to the corresponding enumerated type.
      * 
@@ -168,6 +95,114 @@ public class GeoVariable {
             throw new IllegalArgumentException( "Unknown variable type " + string );
         }
 
+    }
+
+    VariableType type;
+
+    String description = "";
+
+    /**
+     * The samples to which this variable applies.
+     */
+    Collection<GeoSample> samples;
+
+    /**
+     * @param d
+     */
+    public void addToDescription( String d ) {
+        this.description += d;
+    }
+
+    public void addToVariableSampleList( GeoSample sample ) {
+        this.samples.add( sample );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        final GeoVariable other = ( GeoVariable ) obj;
+        if ( description == null ) {
+            if ( other.description != null ) return false;
+        } else if ( !description.equals( other.description ) ) return false;
+        if ( type == null ) {
+            if ( other.type != null ) return false;
+        } else if ( !type.equals( other.type ) ) return false;
+        return true;
+    };
+
+    /**
+     * @return Returns the description.
+     */
+    public String getDescription() {
+        return this.description;
+    }
+
+    /**
+     * @return Returns the variableSampleList.
+     */
+    public Collection<GeoSample> getSamples() {
+        return this.samples;
+    }
+
+    /**
+     * @return Returns the name.
+     */
+    public VariableType getType() {
+        return this.type;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( description == null ) ? 0 : description.hashCode() );
+        result = prime * result + ( ( type == null ) ? 0 : type.hashCode() );
+        return result;
+    }
+
+    /**
+     * @param description The description to set.
+     */
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    /**
+     * @param variableSampleList The variableSampleList to set.
+     */
+    public void setSamples( Collection<GeoSample> variableSampleList ) {
+        this.samples = variableSampleList;
+    }
+
+    /**
+     * @param name The name to set.
+     */
+    public void setType( VariableType name ) {
+        this.type = name;
+    }
+
+    @Override
+    public String toString() {
+        return this.getType().toString() + this.getDescription();
+    }
+
+    /**
+     * Permitted descriptions of terms. These will correspond to OntologyEntries in Gemma. Also known as subset type.
+     */
+    public enum VariableType {
+        age, agent, cellLine, cellType, developmentStage, diseaseState, dose, gender, genotypeOrVariation, growthProtocol, individual, infection, isolate, metabolism, other, protocol, shock, species, specimen, stress, strain, temperature, time, tissue
     }
 
 }

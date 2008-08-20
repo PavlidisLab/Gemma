@@ -60,7 +60,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
 
             try {
                 final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( ACCESSION,
-                        true, true, false, false );
+                        true, true, false, false, true );
 
                 ad = ads.iterator().next();
                 arrayDesignService.thawLite( ad );

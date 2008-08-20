@@ -73,6 +73,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     protected ExpressionExperimentService eeService;
     protected ArrayDesignService adService;
     private boolean splitIncompatiblePlatforms = false;
+    private boolean allowSuperSeriesLoad = true;
 
     /*
      * (non-Javadoc)
@@ -101,7 +102,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         addOption( noBioAssayMatching );
 
         Option splitByPlatform = OptionBuilder.withDescription(
-                "Force data from each platform into a separate experiment. This implies '-nomatch'" ).create( "splitByPlatform" );
+                "Force data from each platform into a separate experiment. This implies '-nomatch'" ).create(
+                "splitByPlatform" );
         addOption( splitByPlatform );
 
         Option forceOption = OptionBuilder.withDescription( "Reload data set if it already exists in system" )
@@ -209,7 +211,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                         processAEAccession( aeService, accession );
 
                     } else if ( platformOnly ) {
-                        Collection designs = geoService.fetchAndLoad( accession, true, true, false, false );
+                        Collection designs = geoService.fetchAndLoad( accession, true, true, false, false, true );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
                             successObjects.add( ( ( Describable ) object ).getName()
@@ -272,7 +274,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             }
 
             Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, doMatching,
-                    this.aggressive, this.splitIncompatiblePlatforms );
+                    this.aggressive, this.splitIncompatiblePlatforms, this.allowSuperSeriesLoad );
 
             for ( Object object : ees ) {
                 assert object instanceof ExpressionExperiment;

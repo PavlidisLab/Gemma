@@ -40,11 +40,29 @@ public class GeoPlatformService extends AbstractGeoService {
      * </ol>
      * 
      * @param geoDataSetAccession
+     * @deprecated Use {@link #fetchAndLoad(String,boolean,boolean,boolean,boolean,boolean)} instead
      */
     @SuppressWarnings("unchecked")
     @Override
     public Collection fetchAndLoad( String geoPlatformAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean ignored, boolean alsoIgnored ) {
+                return fetchAndLoad( geoPlatformAccession, loadPlatformOnly, doSampleMatching, ignored, alsoIgnored,
+                        true );
+            }
+
+    /**
+     * Given a GEO data set id:
+     * <ol>
+     * <li>Download and parse GPL file</li>
+     * <li>Convert the GPL into an ArrayDesign (sample information in the file is ignored</li>
+     * <li>Load the resulting ArrayDesign into Gemma</li>
+     * </ol>
+     * @param geoDataSetAccession
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection fetchAndLoad( String geoPlatformAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean ignored, boolean alsoIgnored, boolean allowSuperSeriesImport ) {
         if ( this.geoDomainObjectGenerator == null ) this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
         this.geoDomainObjectGenerator.setProcessPlatformsOnly( true );
 

@@ -102,7 +102,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
             AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession, true,
-                    true, false, false );
+                    true, false, false, true );
             ad = ads.iterator().next();
 
             ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );

@@ -131,7 +131,7 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE432", false, true, false, false );
+                    "GSE432", false, true, false, false, true );
             newee = results.iterator().next();
             newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
             expressionExperimentService.update( newee );
@@ -200,7 +200,7 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE432", false, true, false, false );
+                    "GSE432", false, true, false, false, true );
             newee = results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {

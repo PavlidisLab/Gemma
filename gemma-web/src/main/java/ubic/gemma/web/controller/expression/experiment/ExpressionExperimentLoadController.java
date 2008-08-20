@@ -416,8 +416,10 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
             boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
             boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
             boolean splitIncompatiblePlatforms = expressionExperimentLoadCommand.isSplitByPlatform();
+            boolean allowSuperSeriesLoad = expressionExperimentLoadCommand.isAllowSuperSeriesLoad();
+
             Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accession, false,
-                    doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms );
+                    doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
 
             return processGeoLoadResult( result );
         }
@@ -463,7 +465,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
             boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
             boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
             Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accession, true, doSampleMatching,
-                    aggressiveQtRemoval, false ); // last parameter is irrelevant.
+                    aggressiveQtRemoval, false, true ); // last parameters are irrelevant.
 
             return processArrayDesignResult( arrayDesigns );
         }

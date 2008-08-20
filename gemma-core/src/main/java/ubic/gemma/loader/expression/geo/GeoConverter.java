@@ -1640,7 +1640,7 @@ public class GeoConverter implements Converter {
         ExperimentalDesign design = ExperimentalDesign.Factory.newInstance();
         design.setDescription( "" );
         design.setName( "" );
-        Collection<GeoVariable> variables = series.getVariables().values();
+        Collection<GeoVariable> variables = series.getVariables().values(); // note that we don't use the index.
         for ( GeoVariable variable : variables ) {
             log.debug( "Adding variable " + variable );
             ExperimentalFactor ef = convertVariableToFactor( variable );

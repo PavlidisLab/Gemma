@@ -112,7 +112,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "platform" ) );
             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession,
-                    true, true, false, false );
+                    true, true, false, false, true );
             ad = ads.iterator().next();
 
             arrayDesignService.thawLite( ad );

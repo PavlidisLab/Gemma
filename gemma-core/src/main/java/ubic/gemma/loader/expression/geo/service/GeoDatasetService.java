@@ -34,6 +34,7 @@ import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
+import ubic.gemma.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -69,11 +70,32 @@ public class GeoDatasetService extends AbstractGeoService {
      * </ol>
      * 
      * @param geoDataSetAccession
+     * @deprecated Use {@link #fetchAndLoad(String,boolean,boolean,boolean,boolean,boolean)} instead
      */
     @SuppressWarnings("unchecked")
     @Override
     public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms ) {
+        return fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching, aggressiveQuantitationTypeRemoval,
+                splitIncompatiblePlatforms, true );
+    }
+
+    /**
+     * Given a GEO GSE or GDS (or GPL, but support might not be complete)
+     * <ol>
+     * <li>Check that it doesn't already exist in the system</li>
+     * <li>Download and parse GDS files and GSE file needed</li>
+     * <li>Convert the GDS and GSE into a ExpressionExperiment (or just the ArrayDesigns)
+     * <li>Load the resulting ExpressionExperiment and/or ArrayDesigns into Gemma</li>
+     * </ol>
+     * 
+     * @param geoDataSetAccession
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
+            boolean allowSuperSeriesImport ) {
         this.geoConverter.clear();
         geoDomainObjectGenerator.intialize();
         geoDomainObjectGenerator.setProcessPlatformsOnly( loadPlatformOnly );
@@ -109,11 +131,23 @@ public class GeoDatasetService extends AbstractGeoService {
         GeoSeries series = ( GeoSeries ) obj;
         String seriesAccession = series.getGeoAccession();
 
+        if ( series.isSuperSeries() ) {
+            if ( allowSuperSeriesImport ) {
+                log.info( " ==================== SuperSeries Detected! ==================" );
+                log.info( "Please make sure you want to import this as a superseries and not the individual subseries" );
+            } else {
+                throw new IllegalStateException(
+                        "SuperSeries detected, set 'allowSuperSeriesImport' to 'true' to allow this dataset to load" );
+            }
+        }
+
         confirmPlatformUniqueness( series, doSampleMatching && !splitIncompatiblePlatforms );
 
         matchToExistingPlatforms( series );
 
         checkSamplesAreNew( series );
+
+        getSubSeriesInformation( series );
 
         geoConverter.clear();
         geoConverter.setSplitIncompatiblePlatforms( splitIncompatiblePlatforms );
@@ -131,6 +165,74 @@ public class GeoDatasetService extends AbstractGeoService {
         log.debug( "Persisted " + seriesAccession );
         this.geoConverter.clear();
         return persistedResult;
+    }
+
+    /**
+     * Populate the series information based on the subseries.
+     * 
+     * @param superSeries
+     */
+    private void getSubSeriesInformation( GeoSeries superSeries ) {
+        for ( String subSeriesAccession : superSeries.getSubSeries() ) {
+            log.info( "Processing subseries " + subSeriesAccession );
+            geoDomainObjectGenerator.intialize();
+            Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( subSeriesAccession );
+            if ( parseResult.size() == 0 ) {
+                log.warn( "Got no results for " + subSeriesAccession );
+                continue;
+            }
+            log.debug( "Generated GEO domain objects for SubSeries " + subSeriesAccession );
+
+            Object obj = parseResult.iterator().next();
+            if ( !( obj instanceof GeoSeries ) ) {
+                throw new RuntimeException( "Got a " + obj.getClass().getName() + " instead of a "
+                        + GeoSeries.class.getName() + " (you may need to load platforms only)." );
+            }
+            GeoSeries subSeries = ( GeoSeries ) obj;
+
+            /*
+             * Copy basic information
+             */
+            superSeries.getKeyWords().addAll( subSeries.getKeyWords() );
+            superSeries.getContributers().addAll( subSeries.getContributers() );
+            superSeries.getPubmedIds().addAll( subSeries.getPubmedIds() );
+            String seriesSummary = superSeries.getSummaries();
+            seriesSummary = seriesSummary + "\nSummary from subseries " + subSeries.getGeoAccession() + ": "
+                    + subSeries.getSummaries();
+            superSeries.setSummaries( seriesSummary );
+
+            // The following code needs a test case: where the subseries have associated GDS but the superseries does
+            // not.
+            // /*
+            // * Get experimental design information, if available.
+            // */
+            // for ( GeoDataset ds : subSeries.getDatasets() ) {
+            // log.info( "Adding dataset to superseries: " + ds );
+            // superSeries.addDataSet( ds );
+            // }
+            // // Add variable information to the series
+            // // copy variable information to the samples
+            // for ( Integer k : subSeries.getVariables().keySet() ) {
+            // GeoVariable geoVariable = subSeries.getVariables().get( k );
+            // log.info( "Adding variable " + geoVariable + " with index " + k + " to superseries" );
+            // superSeries.getVariables().put( k, geoVariable );
+            // }
+            //
+            // for ( GeoSample subSeriesSample : subSeries.getSamples() ) {
+            // if ( subSeriesSample.getVariables().size() > 0 ) {
+            // // find the corresponding sample in the superseries.
+            // for ( GeoSample superSeriesSample : superSeries.getSamples() ) {
+            // if ( superSeriesSample.equals( subSeriesSample ) ) {
+            // for ( GeoVariable v : subSeriesSample.getVariables() ) {
+            // log.info( "Adding variable " + v + " to superseries sample " + superSeriesSample );
+            // superSeriesSample.addVariable( v );
+            // }
+            // break;
+            // }
+            // }
+            // }
+            // }
+        }
     }
 
     /**
@@ -224,7 +326,7 @@ public class GeoDatasetService extends AbstractGeoService {
 
         if ( series.getSamples().size() == 0 ) {
             throw new AlreadyExistsInSystemException( "All the samples in " + series
-                    + " are in the system already (in other ExpressionExperiments" );
+                    + " are in the system already (in other ExpressionExperiments)" );
         }
     }
 

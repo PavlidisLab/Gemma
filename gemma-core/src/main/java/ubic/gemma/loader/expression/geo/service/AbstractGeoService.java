@@ -46,9 +46,18 @@ public abstract class AbstractGeoService {
     /**
      * @param geoAccession
      * @return
+     * @deprecated Use {@link #fetchAndLoad(String,boolean,boolean,boolean,boolean,boolean)} instead
      */
     public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
             boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms );
+
+    /**
+     * @param geoAccession
+     * @param allowSuperSeriesImport TODO
+     * @return
+     */
+    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
+            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms, boolean allowSuperSeriesImport );
 
     /**
      * This is supplied to allow clients to check that the generator has been set correctly.

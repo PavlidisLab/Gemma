@@ -62,6 +62,7 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
         boolean doSampleMatching = jsEeLoadCommand.isSuppressMatching();
         boolean aggressiveQtRemoval = jsEeLoadCommand.isAggressiveQtRemoval();
         boolean splitIncompatiblePlatforms = jsEeLoadCommand.isSplitIncompatiblePlatforms();
+        boolean allowSuperSeriesLoad = jsEeLoadCommand.isAllowSuperSeriesLoad();
 
         SpacesResult result = new SpacesResult();
         if ( jsEeLoadCommand.isArrayExpress() ) {
@@ -70,11 +71,11 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
             result.setAnswer( dataset );
         } else if ( loadPlatformOnly ) {
             Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accession, true, doSampleMatching,
-                    aggressiveQtRemoval, splitIncompatiblePlatforms );
+                    aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
             result.setAnswer( arrayDesigns );
         } else {
             Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( accession, loadPlatformOnly,
-                    doSampleMatching, aggressiveQtRemoval, false );
+                    doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
             result.setAnswer( datasets );
         }
         counter++;

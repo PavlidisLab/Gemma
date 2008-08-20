@@ -48,6 +48,9 @@ public class GeoSeries extends GeoData {
     Collection<GeoSample> samples;
     String supplementaryFile = "";
     String lastUpdateDate = "";
+    boolean isSuperSeries = false;
+    boolean isSubSeries = false;
+    private Collection<String> subSeries;
 
     public GeoSeries() {
         keyWords = new HashSet<String>();
@@ -59,6 +62,7 @@ public class GeoSeries extends GeoData {
         samples = new HashSet<GeoSample>();
         dataSets = new HashSet<GeoDataset>();
         values = new GeoValues();
+        subSeries = new HashSet<String>();
     }
 
     /**
@@ -206,6 +210,20 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * @return the isSubSeries
+     */
+    public boolean isSubSeries() {
+        return isSubSeries;
+    }
+
+    /**
+     * @return the isSuperSeries
+     */
+    public boolean isSuperSeries() {
+        return isSuperSeries;
+    }
+
+    /**
      * @param contact The contact to set.
      */
     public void setContact( GeoContact contact ) {
@@ -268,10 +286,24 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * @param isSubSeries the isSubSeries to set
+     */
+    public void setIsSubSeries( boolean isSubSeries ) {
+        this.isSubSeries = isSubSeries;
+    }
+
+    /**
      * @param summaries The summaries to set.
      */
     public void setSummaries( String summary ) {
         this.summary = summary;
+    }
+
+    /**
+     * @param isSuperSeries the isSuperSeries to set
+     */
+    public void setIsSuperSeries( boolean isSuperSeries ) {
+        this.isSuperSeries = isSuperSeries;
     }
 
     /**
@@ -290,6 +322,20 @@ public class GeoSeries extends GeoData {
      */
     public void setWebLinks( Collection<String> webLinks ) {
         this.webLinks = webLinks;
+    }
+
+    /**
+     * @param value
+     */
+    public void addSubSeries( String value ) {
+        this.subSeries.add( value );
+    }
+
+    /**
+     * @return the subSeries
+     */
+    public Collection<String> getSubSeries() {
+        return subSeries;
     }
 
 }

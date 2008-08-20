@@ -74,7 +74,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE611", false, true, false, false );
+                "GSE611", false, true, false, false, true );
         newee = results.iterator().next();
 
         expressionExperimentService.thaw( newee );

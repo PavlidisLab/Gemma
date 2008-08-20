@@ -62,6 +62,8 @@ public class ExpressionExperimentLoadCommand implements Serializable {
 
     private boolean splitByPlatform = false;
 
+    private boolean allowSuperSeriesLoad = true;
+
     /**
      * @return the splitIncompatiblePlatforms
      */
@@ -199,6 +201,20 @@ public class ExpressionExperimentLoadCommand implements Serializable {
 
     public void setSuppressMatching( boolean suppressMatching ) {
         this.suppressMatching = suppressMatching;
+    }
+
+    /**
+     * @return the allowSuperSeriesLoad
+     */
+    public boolean isAllowSuperSeriesLoad() {
+        return allowSuperSeriesLoad;
+    }
+
+    /**
+     * @param allowSuperSeriesLoad the allowSuperSeriesLoad to set
+     */
+    public void setAllowSuperSeriesLoad( boolean allowSuperSeriesLoad ) {
+        this.allowSuperSeriesLoad = allowSuperSeriesLoad;
     }
 
 }

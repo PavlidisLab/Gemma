@@ -53,6 +53,8 @@ public class SpacesExpressionExperimentLoadCommand extends SpacesCommand impleme
      */
     private boolean aggressiveQtRemoval;
 
+    private boolean allowSuperSeriesLoad = true;
+
     public String getAccession() {
         return accession;
     }
@@ -131,6 +133,17 @@ public class SpacesExpressionExperimentLoadCommand extends SpacesCommand impleme
      */
     public void setSplitIncompatiblePlatforms( boolean splitIncompatiblePlatforms ) {
         this.splitIncompatiblePlatforms = splitIncompatiblePlatforms;
+    }
+
+    public boolean isAllowSuperSeriesLoad() {
+        return this.allowSuperSeriesLoad;
+    }
+
+    /**
+     * @param allowSuperSeriesLoad the allowSuperSeriesLoad to set
+     */
+    public void setAllowSuperSeriesLoad( boolean allowSuperSeriesLoad ) {
+        this.allowSuperSeriesLoad = allowSuperSeriesLoad;
     }
 
 }
