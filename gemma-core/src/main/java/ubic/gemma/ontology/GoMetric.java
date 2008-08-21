@@ -320,7 +320,7 @@ public class GoMetric {
      * @return number of overlapping terms
      */
     
-    public Double computeSimpleOverlapFromGeneGoMap( Gene g, Gene coexpG, Map<Long, Collection<String>> geneGoMap ) {
+    public Double computeSimpleOverlap( Gene g, Gene coexpG, Map<Long, Collection<String>> geneGoMap ) {
 
         Collection<String> masterGO = geneGoMap.get( g.getId() );
         Collection<String> coExpGO = geneGoMap.get( coexpG.getId() );
