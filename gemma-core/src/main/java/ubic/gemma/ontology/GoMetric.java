@@ -49,6 +49,11 @@ public class GoMetric {
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
     private boolean partOf = true;
+    
+    private String process = "http://purl.org/obo/owl/GO#GO_0008150";
+    private String function = "http://purl.org/obo/owl/GO#GO_0003674";
+    private String component = "http://purl.org/obo/owl/GO#GO_0005575";
+    
     public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
 
     private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() );
@@ -308,6 +313,40 @@ public class GoMetric {
         return avgScore;
     }
 
+    /**
+     * @param g
+     * @param coexpG
+     * @param geneGoMap
+     * @return number of overlapping terms
+     */
+    
+    public Double computeSimpleOverlapFromGeneGoMap( Gene g, Gene coexpG, Map<Long, Collection<String>> geneGoMap ) {
+
+        Collection<String> masterGO = geneGoMap.get( g.getId() );
+        Collection<String> coExpGO = geneGoMap.get( coexpG.getId() );
+        
+        double score = 0.0;
+        
+        if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return 0.0;
+
+        if ( ( masterGO == null ) || masterGO.isEmpty() ) return 0.0;
+
+        for ( String ontologyEntry : masterGO ) {
+            if ( ontologyEntry.equalsIgnoreCase( process ) || ontologyEntry.equalsIgnoreCase( function )
+                    || ontologyEntry.equalsIgnoreCase( component ) ) continue;
+            for ( String ontologyEntryC : coExpGO ) {
+
+                if ( ontologyEntry.equalsIgnoreCase( process ) || ontologyEntry.equalsIgnoreCase( function )
+                        || ontologyEntry.equalsIgnoreCase( component ) ) continue;
+
+                if ( ontologyEntry.equalsIgnoreCase( ontologyEntryC ) )
+                    score++;
+            }
+        }
+        
+        return score;    
+    }
+    
     /**
      * @param gene2go Map
      * @param boolean weight
