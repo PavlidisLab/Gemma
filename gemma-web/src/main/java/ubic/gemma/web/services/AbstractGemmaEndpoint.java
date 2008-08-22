@@ -151,7 +151,9 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             }
             node = "";
         }
-        
+        if ( value!=null && !value.isEmpty() )
+            return value;
+        else {
         //MATLAB specific
         //but it appears that MATLAB encodes it so that every odd (ie. 1, 3, 5, 7, etc) great-grandchild holds the
         // array value
@@ -175,7 +177,9 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
               throw new IllegalArgumentException( "Could not find request text node" );
             }
         }
+        
         return value;
+        }
     }
 
    
