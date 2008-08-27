@@ -30,7 +30,12 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
@@ -102,5 +107,24 @@ public class DifferentialExpressionAnalysisResultDaoImpl extends
 
         return factorsByResult;
 
+    }
+    
+    public void thawAnalysisResult( final DifferentialExpressionAnalysisResult result  ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( result, LockMode.NONE );
+                Hibernate.initialize( result );               
+
+                        if ( result instanceof ProbeAnalysisResult ) {
+                            ProbeAnalysisResult par = ( ProbeAnalysisResult ) result;
+                            CompositeSequence cs = par.getProbe();
+                            Hibernate.initialize( cs );
+                        }
+                return null;
+            }
+        } );
     }
 }

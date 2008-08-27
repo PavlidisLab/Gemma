@@ -43,4 +43,6 @@ public interface DifferentialExpressionAnalysisResultService {
      */
     public void thaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
 
+    public void thawAnalysisResult( final DifferentialExpressionAnalysisResult result  ) throws Exception;
+    
 }

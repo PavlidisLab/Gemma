@@ -59,4 +59,9 @@ public class DifferentialExpressionAnalysisResultServiceImpl extends
     protected void handleThaw( ExpressionAnalysisResultSet resultSet ) throws Exception {
         this.getExpressionAnalysisResultSetDao().thaw( resultSet );
     }
+    
+    public void thawAnalysisResult( DifferentialExpressionAnalysisResult result  ) throws Exception {
+        this.getDifferentialExpressionAnalysisResultDao().thawAnalysisResult( result );
+   }
+    
 }

@@ -149,5 +149,7 @@ public interface DifferentialExpressionAnalysisResultDao extends ubic.gemma.mode
      * 
      */
     public java.util.Map getExperimentalFactors( java.util.Collection differentialExpressionAnalysisResults );
+    
+    public void thawAnalysisResult( final DifferentialExpressionAnalysisResult result  ) throws Exception;
 
 }
