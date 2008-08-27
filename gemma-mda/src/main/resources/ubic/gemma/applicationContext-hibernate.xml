@@ -3406,8 +3406,9 @@
 				ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService.getExperimentalFactors=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService.thaw=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService.thawAnalysisResult=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.create=PROPAGATION_REQUIRED
-				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.thaw=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.thaw=PROPAGATION_REQUIRED,readOnly			
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findExperimentsWithAnalyses=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.find=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.delete=PROPAGATION_REQUIRED
