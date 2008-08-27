@@ -98,6 +98,23 @@
      		</sequence>
 	     </complexType>
 	     
+	            
+	      <complexType name="gene2GOdescriptionResult">
+     		 <sequence>
+     		 <element name="gene_id" type="xsd:string" />
+      	  		<element name="go_id" type="xsd:string" />
+      			<element name="go_description" type="xsd:string" />      			    			 
+     		</sequence>
+	     </complexType>
+	     
+	     <complexType name="ArrayOfgene2GOdescriptionResult">
+        <complexContent>
+          <restriction base="soapenc:Array">
+            <attribute ref="soapenc:arrayType" wsdl:arrayType="schema:gene2GOdescriptionResult[]"/>
+          </restriction>
+        </complexContent>
+     	</complexType>
+	     
 	  <complexType name="gene2overlapMap">
      		 <sequence>
       	  	<element name="gene" type="xsd:string" />
@@ -396,6 +413,12 @@
   <wsdl:message name="differentialExpressionProbeResultResponse">
     <wsdl:part name="differentialExpression_results" type="schema:ArrayOfdifferentialExpressionResult" />
   </wsdl:message>
+  <wsdl:message name="gene2GOdescriptionRequest">
+   <wsdl:part name="gene_id" type="schema:ArrayOfIDs" />   
+    </wsdl:message>
+  <wsdl:message name="gene2GOdescriptionResponse">
+    <wsdl:part name="gene2GOdescription_results" type="schema:ArrayOfgene2GOdescriptionResult" />
+  </wsdl:message>
   
   
   
@@ -544,8 +567,13 @@
       <wsdl:output message="schema:differentialExpressionProbeResultResponse" name="differentialExpressionProbeResultResponse">
     </wsdl:output>
     </wsdl:operation> 
-    
-    
+    <wsdl:operation name="gene2GOdescription">
+      <wsdl:input message="schema:gene2GOdescriptionRequest" name="gene2GOdescriptionRequest">
+    </wsdl:input>
+      <wsdl:output message="schema:gene2GOdescriptionResponse" name="gene2GOdescriptionResponse">
+    </wsdl:output>
+    </wsdl:operation> 
+   
   </wsdl:portType>
   <wsdl:binding name="gemmaBinding" type="schema:gemma">
     <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
@@ -765,8 +793,16 @@
            <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
-    
-    
+     <wsdl:operation name="gene2GOdescription">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="gene2GOdescriptionRequest">
+           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:input>
+      <wsdl:output name="gene2GOdescriptionResponse">
+           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:output>
+    </wsdl:operation>
+     
   </wsdl:binding>
   <wsdl:service name="gemmaService">
     <wsdl:port binding="schema:gemmaBinding" name="gemmaPort">

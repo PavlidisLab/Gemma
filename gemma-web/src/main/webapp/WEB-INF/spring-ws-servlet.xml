@@ -59,6 +59,10 @@
 				
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}nCBIIdByGeneID">nCBIIdByGeneIDEndpoint</prop>
 				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}differentialExpressionProbeResult">differentialExpressionProbeResultEndpoint</prop>
+				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}gene2GOdescription">gene2GOdescriptionEndpoint</prop>
+				
 				
           	</props>
          </property>
@@ -282,7 +286,7 @@
     
     <bean id="dEDVRankEndpoint" class="ubic.gemma.web.services.DEDVRankEndpoint">
         <description>
-				returns all the expression experiment set ids in the database along with its name and containing experiment ids 
+				returns list of genes mapped to a list of space delimited ranks
         </description>        
         <property name="expressionExperimentService" ref="expressionExperimentService"/>
         <property name="dedvRankService" ref="dedvRankService"/>
@@ -292,7 +296,7 @@
     
      <bean id="geneByNCBIIdEndpoint" class="ubic.gemma.web.services.GeneByNCBIIdEndpoint">
         <description>
-				returns all the expression experiment set ids in the database along with its name and containing experiment ids 
+				returns all the gene ids that map to NCBI ids in Gemma
         </description>                
         <property name="geneService" ref="geneService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
@@ -300,10 +304,31 @@
     
      <bean id="nCBIIdByGeneIDEndpoint" class="ubic.gemma.web.services.NCBIIdByGeneIDEndpoint">
         <description>
-				returns all the expression experiment set ids in the database along with its name and containing experiment ids 
+				returns all the NCBI ids that map to the gene ids in Gemma
         </description>        
         <property name="geneService" ref="geneService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
+    <bean id="differentialExpressionProbeResultEndpoint" class="ubic.gemma.web.services.DifferentialExpressionProbeResultEndpoint">
+        <description>
+				returns differential analysis results given a collection gene ids and an expression experiment set id and threshold
+        </description>        
+        <property name="geneService" ref="geneService"/>
+        <property name="expressionExperimentService" ref="expressionExperimentService"/>
+        <property name="taxonService" ref="taxonService"/>
+        <property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"/>
+        <property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"/>
+        <property name="expressionExperimentSetService" ref="expressionExperimentSetService"/>        
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+    <bean id="gene2GOdescriptionEndpoint" class="ubic.gemma.web.services.Gene2GOdescriptionEndpoint">
+        <description>
+				returns a list of go ids and go description for a given gene
+        </description>
+        <property name="geneService" ref="geneService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+        <property name="geneOntologyService" ref="geneOntologyService"/>
+    </bean>
+   
    
 </beans>
