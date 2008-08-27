@@ -94,6 +94,10 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * @param tagName
      * @return a collection contain one string element
      */
+    /*
+     *TODO return value should be single string object.  Note that many services will be affected should 
+     *we make this change.
+     */
     protected Collection<String> getSingleNodeValue( Element requestElement, String tagName ) {
         Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
