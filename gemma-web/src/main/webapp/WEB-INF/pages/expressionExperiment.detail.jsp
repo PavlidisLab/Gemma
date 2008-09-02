@@ -6,6 +6,8 @@
 
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js'  />
 	<jwr:script src='/scripts/app/eeDataFetch.js' />
+	<jwr:script src='/scripts/app/expressionExperiment.js' />
+	
 
 	<authz:authorize ifAnyGranted="admin">
 		<script type="text/javascript">

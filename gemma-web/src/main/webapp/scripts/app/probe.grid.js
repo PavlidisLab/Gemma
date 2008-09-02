@@ -70,8 +70,26 @@ Gemma.ProbeBrowser.app = function() {
 				height : 100,
 				width : 620
 			});
-		}
+		},
 
+		/**
+		 * Used for displaying on the details of a given probe (for probe details page)
+		 */
+
+		initOneDetail : function() {
+			// create the grid for details.
+			this.initDetails();
+			// Get this id
+			var csId = dwr.util.getValue("cs");
+
+			//Load the details to be displayed. 
+			this.detailsGrid.getStore().load({
+				params : [{
+					id : csId
+				}]
+			});
+
+		}
 	};
 }();
 

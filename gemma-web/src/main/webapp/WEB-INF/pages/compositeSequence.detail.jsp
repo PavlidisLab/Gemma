@@ -5,12 +5,10 @@
 	<title><fmt:message key="compositeSequence.title" />
 	</title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/probe.grid.js' />
 
 	<script type="text/javascript" type="text/javascript">
-	  	Ext.onReady(function() {
-			initDetails();
-			showDetails(null, dwr.util.getValue("cs"));
-	  	});
+		Ext.onReady(Gemma.ProbeBrowser.app.initOneDetail, Gemma.ProbeBrowser.app);
 	</script>
 </head>
 <body>
