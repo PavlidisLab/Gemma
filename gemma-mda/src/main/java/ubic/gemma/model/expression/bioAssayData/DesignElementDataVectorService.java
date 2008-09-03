@@ -22,6 +22,12 @@
 //
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.Collection;
+import java.util.Map;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
+
 /**
  * 
  */
@@ -158,6 +164,6 @@ public interface DesignElementDataVectorService {
      * contained are masked for missing values if appropriate.
      * </p>
      */
-    public java.util.Map getMaskedPreferredDataArrays( java.util.Collection ees, java.util.Collection genes );
+    public  Map<DoubleVectorValueObject, Collection<Gene>> getMaskedPreferredDataArrays( java.util.Collection<ExpressionExperiment> ees, java.util.Collection<Gene> genes );
 
 }

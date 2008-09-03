@@ -47,7 +47,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public java.util.Collection findByOfficialName( java.lang.String officialName );
+    public java.util.Collection<Gene> findByOfficialName( java.lang.String officialName );
 
     /**
      * 
@@ -58,7 +58,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public java.util.Collection findByOfficialSymbol( java.lang.String officialSymbol );
+    public java.util.Collection<Gene> findByOfficialSymbol( java.lang.String officialSymbol );
 
     /**
      * 
@@ -126,7 +126,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * load all genes specified by the given ids.
      * </p>
      */
-    public java.util.Collection loadMultiple( java.util.Collection ids );
+    public java.util.Collection<Gene> loadMultiple( java.util.Collection ids );
 
     /**
      * <p>

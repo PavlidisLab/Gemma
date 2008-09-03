@@ -206,7 +206,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Collection loadMultiple( java.util.Collection ids );
+    public java.util.Collection loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * <p>
