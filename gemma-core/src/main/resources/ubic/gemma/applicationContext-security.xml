@@ -184,6 +184,7 @@
 				<![CDATA[
                 PATTERN_TYPE_APACHE_ANT 
                 /signup.html=admin,user,ROLE_ANONYMOUS
+                /securityManager.html=admin
                 /passwordHint.html*=admin,user
                 /editProfile.html*=admin,user
                 /users.html*=admin
