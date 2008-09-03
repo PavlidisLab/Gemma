@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -40,6 +42,8 @@ import ubic.gemma.web.controller.BaseFormController;
  * For fetching and manipulating ExpressionExperimentSets
  * 
  * @spring.bean id="expressionExperimentSetController"
+ * @spring.property name="formView" value="geneLinkAnalysisManager"
+ * @spring.property name="successView" value="geneLinkAnalysisManager"
  * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
@@ -252,6 +256,21 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
     }
 
+    
+    /**
+     * This is needed or you will have to specify a commandClass in the
+     * DispatcherServlet's context
+     * 
+     * @param request
+     * @return Object
+     * @throws Exception
+     */
+    @Override
+    protected Object formBackingObject(HttpServletRequest request)
+            throws Exception {
+        return request;
+    }
+    
     /**
      * Fill in information about analyses done on the experiments.
      * 
