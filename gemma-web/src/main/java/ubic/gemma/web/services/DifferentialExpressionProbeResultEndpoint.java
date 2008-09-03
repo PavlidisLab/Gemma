@@ -33,11 +33,9 @@ import org.w3c.dom.Element;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.Securable;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -47,14 +45,10 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * Allows access to the differential expression analysis. Given 1) an expression experiment set id 2) a collection of
- * gene ids, 3) a taxon id, and a 4) threshold (enter 1 to include all results)
- * 
- * The Expression Experiment Set ID (1) can be found by using the ExpressionExperimentSetIDEndpoint, which will return
- * all the expression experiment set ids for all taxons and their corresponding description. The stringency is the
- * miniumum number of times we found a particular relationship.
- * 
- * Returns a list consisting of 4 fields: 1) the gene id, 2) the EE ID, 3) probe name, and 4) the q value
- * 
+ * gene ids, 3) a taxon id, and a 4) threshold (enter 1 to include all results) The Expression Experiment Set ID (1) can
+ * be found by using the ExpressionExperimentSetIDEndpoint, which will return all the expression experiment set ids for
+ * all taxons and their corresponding description. The stringency is the miniumum number of times we found a particular
+ * relationship. Returns a list consisting of 4 fields: 1) the gene id, 2) the EE ID, 3) probe name, and 4) the q value
  * 
  * @author gavin
  * @version$Id$
@@ -69,7 +63,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
     private GeneService geneService;
 
     private TaxonService taxonService;
-   
+
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService;
@@ -102,7 +96,6 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         this.taxonService = taxonService;
     }
 
-    
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
@@ -214,15 +207,15 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
 
         if ( parCol != null ) {
             for ( ProbeAnalysisResult par : parCol ) {
-                //gene id output
+                // gene id output
                 Element e1 = document.createElement( "gene_id" );
                 e1.appendChild( document.createTextNode( gene ) );
                 responseElement.appendChild( e1 );
-                //ee id output
+                // ee id output
                 Element e2 = document.createElement( "ee_id" );
                 e2.appendChild( document.createTextNode( ee ) );
                 responseElement.appendChild( e2 );
-                
+
                 differentialExpressionAnalysisResultService.thawAnalysisResult( par );
                 Element e3 = document.createElement( "probe" );
                 e3.appendChild( document.createTextNode( par.getProbe().getName() ) );
@@ -233,16 +226,16 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
                 responseElement.appendChild( e4 );
             }
         } else {
-            //gene id output
+            // gene id output
             Element e1 = document.createElement( "gene_id" );
             e1.appendChild( document.createTextNode( gene ) );
             responseElement.appendChild( e1 );
-            
-            //ee id output
+
+            // ee id output
             Element e2 = document.createElement( "ee_id" );
             e2.appendChild( document.createTextNode( ee ) );
             responseElement.appendChild( e2 );
-            
+
             Element e3 = document.createElement( "probe" );
             e3.appendChild( document.createTextNode( "NaN" ) );
             responseElement.appendChild( e3 );

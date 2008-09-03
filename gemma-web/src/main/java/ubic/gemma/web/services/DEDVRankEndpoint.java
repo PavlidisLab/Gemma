@@ -20,10 +20,6 @@ package ubic.gemma.web.services;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -31,24 +27,21 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.basecode.dataStructure.matrix.AbstractMatrix;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.gemma.analysis.preprocess.DedvRankService;
 import ubic.gemma.analysis.preprocess.DedvRankService.Method;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * Given a collection of gene IDs, a collection of experiment IDs, and the method, the service will return 
- * a list of genes mapped to a list of space delimited ranks.  Each rank in the space delimited result is 
- * ordered based on the a list of experiments returned in the field, "ee_ids".  The output can be pictured
- * as a matrix where the rows are the genes and the columns are the experiments.  
- * (Ranks are per-array based.)
- * Method can be one of the following: MIN, MAX, MEAN, MEDIAN, VARIANCE
+ * Given a collection of gene IDs, a collection of experiment IDs, and the method, the service will return a list of
+ * genes mapped to a list of space delimited ranks. Each rank in the space delimited result is ordered based on the a
+ * list of experiments returned in the field, "ee_ids". The output can be pictured as a matrix where the rows are the
+ * genes and the columns are the experiments. (Ranks are per-array based.) Method can be one of the following: MIN, MAX,
+ * MEAN, MEDIAN, VARIANCE
+ * 
  * @author gavin
  * @version$Id$
  */
@@ -134,8 +127,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
                 + " and method: " + methodString );
 
         // main call to DedvRankService to obtain rank results
-        DenseDoubleMatrix rankMatrix = ( DenseDoubleMatrix ) dedvRankService.getRankMatrix( geneInput,
-                eeInput, method );
+        DenseDoubleMatrix rankMatrix = ( DenseDoubleMatrix ) dedvRankService.getRankMatrix( geneInput, eeInput, method );
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint
@@ -156,7 +148,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         for ( Gene geneRow : rowNames ) {
             Element e1 = document.createElement( "gene_ids" );
             e1.appendChild( document.createTextNode( geneRow.getId().toString() ) );
-            responseElement.appendChild( e1 );           
+            responseElement.appendChild( e1 );
             double[] rowData = rankMatrix.getRowByName( geneRow );
             Element e2 = document.createElement( "ranks" );
             e2.appendChild( document.createTextNode( encode( rowData ) ) );
