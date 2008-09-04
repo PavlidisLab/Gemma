@@ -42,8 +42,8 @@ import ubic.gemma.web.controller.BaseFormController;
  * For fetching and manipulating ExpressionExperimentSets
  * 
  * @spring.bean id="expressionExperimentSetController"
- * @spring.property name="formView" value="geneLinkAnalysisManager"
- * @spring.property name="successView" value="geneLinkAnalysisManager"
+ * @spring.property name="formView" value="expressionExperimentSetManager"
+ * @spring.property name="successView" value="expressionExperimentSetManager"
  * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"

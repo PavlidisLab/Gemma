@@ -118,7 +118,7 @@
 						<a href='<c:url value="/securityManager.html"/>'> <fmt:message key="menu.securityManager" /> </a>
 					</li>
 					<li>
-						<a href='<c:url value="/geneLinkAnalysisManager.html" />'>Manage gene link analyses</a> ("Canned" analyses)
+						<a href='<c:url value="/expressionExperimentSetManager.html" />'>Manage gene link analyses</a> ("Canned" analyses)
 					</li>
 					<li>
 						<a href='<c:url value="/maintenanceMode.html" />'>Manage maintenance mode</a>
