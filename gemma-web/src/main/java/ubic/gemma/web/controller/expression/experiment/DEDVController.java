@@ -20,6 +20,8 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -36,13 +38,11 @@ import ubic.gemma.model.genome.gene.GeneService;
 /**
  * @author kelsey Exposes methods for accessing underlying Design Element Data Vectors. eg: ajax methods for
  *         visulization
- *         
  * @version $Id: DEDVController.java
  * @spring.bean id="dedvController"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name = "geneService" ref="geneService"
-
  */
 
 public class DEDVController {
@@ -63,33 +63,62 @@ public class DEDVController {
      * of genes. The EE info is in the value object.
      */
 
-    protected Map<DoubleVectorValueObject, Collection<Gene>> getDEDV( Collection<Long> eeIds, Collection<Long> geneIds )
+    public Map<Long, Collection<DoubleVectorValueObject>>  getDEDV( Collection<Long> eeIds, Collection<Long> geneIds )
             throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
 
         // Get and thaw the experiments.
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+        if (ees == null || ees.isEmpty())
+            return null;
+        
         for ( ExpressionExperiment ee : ees ) {
             expressionExperimentService.thawLite( ee );
         }
 
         // Get and thaw gene
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
-
+        
+        if (genes == null || genes.isEmpty())
+            return null;
+        
         // Get dedv's
-        Map<DoubleVectorValueObject, Collection<Gene>> dedvMap = designElementDataVectorService
-                .getMaskedPreferredDataArrays( ees, genes );
+        Map<DoubleVectorValueObject, Collection<Gene>> dedvMap = designElementDataVectorService.getMaskedPreferredDataArrays( ees, genes );
 
+        
         watch.stop();
         Long time = watch.getTime();
 
         log.info( "Retrieved " + dedvMap.keySet().size() + " DEDVs for eeIDs: " + eeIds + " and GeneIds: " + geneIds + " in : " + time + " ms." );
 
-        return dedvMap;
+        return mapInvert(dedvMap);
 
     }
 
+    // Private method used for inverting the DEDV map. Having DEDV's as the key is not always useful and DWR does not
+    // like non-string key values for the map. During the inverting process Gemma Gene Ids are used instead of the GEne
+    // object themselves.
+    private Map<Long, Collection<DoubleVectorValueObject>> mapInvert(Map<DoubleVectorValueObject, Collection<Gene>> mapToInvert)
+    {   
+        Map<Long, Collection<DoubleVectorValueObject>> convertedMap = new HashMap<Long, Collection<DoubleVectorValueObject>>();
+        
+        for(DoubleVectorValueObject dvvo : mapToInvert.keySet()){
+            
+            for(Gene g : mapToInvert.get( dvvo )){
+                if (convertedMap.containsKey( g.getId() ))
+                    convertedMap.get( g.getId() ).add( dvvo );            
+                else{//If the gene is not already in the map we need to create the collection to hold the dedv.
+                    Collection<DoubleVectorValueObject> dvvos = new HashSet<DoubleVectorValueObject>();
+                    dvvos.add( dvvo );
+                    convertedMap.put( g.getId(), dvvos );
+                }                
+            }
+            
+        }
+        
+        return convertedMap;
+    }
     // --------------------------------
     // Dependency injection setters
     public void setGeneService( GeneService geneService ) {

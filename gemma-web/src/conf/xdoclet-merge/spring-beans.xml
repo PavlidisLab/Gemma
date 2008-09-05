@@ -109,7 +109,7 @@
 		</map>
 	</property>
 	<!--  turn debug true on to get access to dwr debugging tools (very helpful) -->
-	<property name="debug" value="false" />
+	<property name="debug" value="true" />
 </bean>
 <!--  ============================================ -->
 <!--             DWR CONFIGURATION                 -->
@@ -668,8 +668,7 @@
 							<value>id</value>
 							<value>commonName</value>
 							<value>scientificName</value>
-							<value>ncbiId</value>
-							<value>externalDatabase</value>
+							<value>ncbiId</value>							
 						</list>
 					</property>
 				</bean>
@@ -1290,7 +1289,14 @@
 			</entry>			
 			<entry key="ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="bean" />
+					<property name="type" value="bean" />					
+						<property name="includes">
+						<list>
+							<value>id</value>
+							<value>data</value>
+							<value>expressionExperiment</value>
+						</list>
+					</property>
 				</bean>
 			</entry>					
 		</map>

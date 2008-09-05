@@ -6,8 +6,10 @@ version: $Id$
 <head>
 	<title><fmt:message key="diffExpressionSearch.title" /></title>
 
-	<jwr:script src='/scripts/ajax/diff/DiffExpressionSearchForm.js' />
-	<jwr:script src='/scripts/app/DiffExpressionSearch.js' />
+	<jwr:script src='/scripts/ajax/diff/DiffExpressionSearchForm.js' useRandomParam='false'/>
+	<jwr:script src='/scripts/app/DiffExpressionSearch.js' useRandomParam='false'/>
+	<script type='text/javascript' src='/Gemma/dwr/interface/DEDVController.js'></script>
+	
 
 	<content tag="heading">
 	<fmt:message key="diffExpressionSearch.title" />
