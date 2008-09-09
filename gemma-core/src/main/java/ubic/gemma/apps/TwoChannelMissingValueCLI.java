@@ -38,6 +38,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -76,6 +77,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     private TwoChannelMissingValues tcmv;
 
     private DesignElementDataVectorService dedvs;
+
+    private ProcessedExpressionDataVectorService pedvs;
 
     private ExpressionExperimentService eeService;
 
@@ -168,6 +171,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         dedvs = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         quantitationTypeService = ( QuantitationTypeService ) this.getBean( "quantitationTypeService" );
+        this.pedvs = ( ProcessedExpressionDataVectorService ) this.getBean( "processedExpressionDataService" );
     }
 
     /**
@@ -242,9 +246,9 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         tcmv.computeMissingValues( ee, s2n, this.extraMissingValueIndicators );
 
-        log.info( "Creating masked-preferred data" );
+        log.info( "Saving processed data vectors" );
 
-        tcmv.computeMaskedPreferredVectors( ee );
+        pedvs.createProcessedDataVectors( ee );
 
     }
 }

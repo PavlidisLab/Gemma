@@ -110,7 +110,7 @@ public class ProgressManager {
                 JobInfo createdJobI = jobInfoDao.create( jobI );
                 newJob = new ProgressJobImpl( createdJobI, description );
             } catch ( Exception e ) {
-                log.warn( "Unable to create jobinfo in database: " + e );
+                log.warn( "Unable to create jobinfo in database: " + e.getMessage() );
                 newJob = new ProgressJobImpl( jobI, description );
 
             }

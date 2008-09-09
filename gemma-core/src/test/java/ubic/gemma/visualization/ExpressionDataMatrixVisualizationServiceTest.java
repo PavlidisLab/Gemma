@@ -27,9 +27,11 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -75,6 +77,13 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setName( "VALUE" );
         qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setIsBackground( false );
+        qt.setIsMaskedPreferred( false );
+        qt.setIsPreferred( true );
+        qt.setIsBackgroundSubtracted( true );
+        qt.setIsNormalized( true );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setIsRatio( false );
 
         BioAssayDimension bioAssayDimension = BioAssayDimension.Factory.newInstance();
         bioAssayDimension.setName( "GSM15697, GSM15744" );
@@ -110,8 +119,8 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         bioAssayDimension.setBioAssays( assays );
 
         /* set up the design element data vectors */
-        Collection<DesignElementDataVector> vectors1 = new LinkedHashSet<DesignElementDataVector>();
-        DesignElementDataVector vector1 = DesignElementDataVector.Factory.newInstance();
+        Collection<RawExpressionDataVector> vectors1 = new LinkedHashSet<RawExpressionDataVector>();
+        RawExpressionDataVector vector1 = RawExpressionDataVector.Factory.newInstance();
         double[] ddata1 = { 74.9, 101.7 };
         byte[] bdata1 = bac.doubleArrayToBytes( ddata1 );
         vector1.setData( bdata1 );
@@ -119,8 +128,8 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         vector1.setBioAssayDimension( bioAssayDimension );
         vectors1.add( vector1 );
 
-        Collection<DesignElementDataVector> vectors2 = new LinkedHashSet<DesignElementDataVector>();
-        DesignElementDataVector vector2 = DesignElementDataVector.Factory.newInstance();
+        Collection<RawExpressionDataVector> vectors2 = new LinkedHashSet<RawExpressionDataVector>();
+        RawExpressionDataVector vector2 = RawExpressionDataVector.Factory.newInstance();
         double[] ddata2 = { 404.6, 318.7 };
         byte[] bdata2 = bac.doubleArrayToBytes( ddata2 );
         vector2.setData( bdata2 );
@@ -134,22 +143,22 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         DesignElement de1 = CompositeSequence.Factory.newInstance();
         de1.setName( "218120_s_at" );
         vector1.setDesignElement( de1 ); // set this de on the vector
-        // de1.setDesignElementDataVectors( vectors1 );
+        // de1.setRawExpressionDataVectors( vectors1 );
 
         DesignElement de2 = CompositeSequence.Factory.newInstance();
         de2.setName( "121_at" );
         vector2.setDesignElement( de2 ); // set this de on the vector
-        // de2.setDesignElementDataVectors( vectors2 );
+        // de2.setRawExpressionDataVectors( vectors2 );
 
         designElements.add( de1 );
         designElements.add( de2 );
 
-        Collection<DesignElementDataVector> eeVectors = new LinkedHashSet<DesignElementDataVector>();
+        Collection<RawExpressionDataVector> eeVectors = new LinkedHashSet<RawExpressionDataVector>();
         eeVectors.add( vector1 );
         eeVectors.add( vector2 );
 
         /* set the vectors on the expression experiment */
-        ee.setDesignElementDataVectors( eeVectors );
+        ee.setRawExpressionDataVectors( eeVectors );
 
         expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors );
     }

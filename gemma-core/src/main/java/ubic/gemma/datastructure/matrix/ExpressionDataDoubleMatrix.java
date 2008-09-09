@@ -20,8 +20,10 @@ package ubic.gemma.datastructure.matrix;
 
 import java.text.NumberFormat;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
@@ -35,6 +37,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -55,6 +58,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
     private DoubleMatrix<DesignElement, Integer> matrix;
 
+    private Map<DesignElement, Double> ranks = new HashMap<DesignElement, Double>();
+
     /**
      * To comply with bean specifications. Not to be instantiated.
      */
@@ -67,7 +72,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param dataVectors
      * @param quantitationTypes
      */
-    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
+    public ExpressionDataDoubleMatrix( Collection<? extends DesignElementDataVector> dataVectors,
             Collection<QuantitationType> quantitationTypes ) {
         init();
         for ( QuantitationType qt : quantitationTypes ) {
@@ -84,7 +89,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param dataVectors
      * @param quantitationType
      */
-    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
+    public ExpressionDataDoubleMatrix( Collection<? extends DesignElementDataVector> dataVectors,
             QuantitationType quantitationType ) {
         init();
         if ( !quantitationType.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
@@ -98,7 +103,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     /**
      * @param vectors
      */
-    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
+    public ExpressionDataDoubleMatrix( Collection<? extends DesignElementDataVector> vectors ) {
         init();
 
         for ( DesignElementDataVector dedv : vectors ) {
@@ -359,7 +364,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param maxSize
      * @return DoubleMatrixNamed
      */
-    private DoubleMatrix<DesignElement, Integer> createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
+    private DoubleMatrix<DesignElement, Integer> createMatrix( Collection<? extends DesignElementDataVector> vectors,
+            int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
@@ -438,9 +444,15 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @return DoubleMatrixNamed
      */
     @Override
-    protected void vectorsToMatrix( Collection<DesignElementDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             throw new IllegalArgumentException( "No vectors!" );
+        }
+
+        for ( DesignElementDataVector vector : vectors ) {
+            if ( vector instanceof ProcessedExpressionDataVector ) {
+                ranks.put( vector.getDesignElement(), ( ( ProcessedExpressionDataVector ) vector ).getRankByMean() );
+            }
         }
 
         int maxSize = setUpColumnElements();
@@ -486,6 +498,14 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      */
     public DoubleMatrix<DesignElement, Integer> getNamedMatrix() {
         return matrix;
+    }
+
+    /**
+     * @return The expression level ranks (based on mean signal intensity in the vectors); this will be empty if the
+     *         vectors used to construct the matrix were not ProcessedExpressionDataVectors.
+     */
+    public Map<DesignElement, Double> getRanks() {
+        return this.ranks;
     }
 
 }

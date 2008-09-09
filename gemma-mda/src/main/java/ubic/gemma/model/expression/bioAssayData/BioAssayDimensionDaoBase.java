@@ -310,54 +310,6 @@ public abstract class BioAssayDimensionDaoBase extends ubic.gemma.model.common.A
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#findDesignElementDataVectors(java.lang.Long)
-     */
-    public java.util.Collection findDesignElementDataVectors( java.lang.Long bioAssayDimensionId ) {
-        return this.findDesignElementDataVectors( TRANSFORM_NONE, bioAssayDimensionId );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#findDesignElementDataVectors(java.lang.String,
-     *      java.lang.Long)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findDesignElementDataVectors( final java.lang.String queryString,
-            final java.lang.Long bioAssayDimensionId ) {
-        return this.findDesignElementDataVectors( TRANSFORM_NONE, queryString, bioAssayDimensionId );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#findDesignElementDataVectors(int,
-     *      java.lang.Long)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findDesignElementDataVectors( final int transform,
-            final java.lang.Long bioAssayDimensionId ) {
-        return this
-                .findDesignElementDataVectors(
-                        transform,
-                        "from DesignElementDataVectorImpl d inner join d.bioAssayDimension as bad where bad.id = :bioAssayDimensionId",
-                        bioAssayDimensionId );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#findDesignElementDataVectors(int,
-     *      java.lang.String, java.lang.Long)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findDesignElementDataVectors( final int transform, final java.lang.String queryString,
-            final java.lang.Long bioAssayDimensionId ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( bioAssayDimensionId );
-        argNames.add( "bioAssayDimensionId" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#getRecipient(java.lang.Long)
      */
     @Override

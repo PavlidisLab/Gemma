@@ -219,7 +219,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
 
         int count = 0;
-        for ( DesignElementDataVector vect : entity.getDesignElementDataVectors() ) {
+        for ( DesignElementDataVector vect : entity.getRawExpressionDataVectors() ) {
             BioAssayDimension baDim = fillInDesignElementDataVectorAssociations( vect );
             bioAssays.addAll( baDim.getBioAssays() );
 
@@ -485,7 +485,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
 
-        if ( expressionExperiment.getDesignElementDataVectors().size() > 0 ) {
+        if ( expressionExperiment.getRawExpressionDataVectors().size() > 0 ) {
             alreadyFilled = fillInExpressionExperimentDataVectorAssociations( expressionExperiment );
             expressionExperiment.setBioAssays( alreadyFilled );
         } else {

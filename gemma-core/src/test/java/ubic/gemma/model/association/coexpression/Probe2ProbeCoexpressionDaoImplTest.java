@@ -22,10 +22,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
@@ -48,22 +49,27 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
         super.onSetUpInTransaction();
         this.endTransaction();
         ee = this.getTestPersistentCompleteExpressionExperiment( false );
-        ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
-        ees.thaw( ee );
+        ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         Collection<QuantitationType> qts = ees.getQuantitationTypes( ee );
 
-        // this is bogus, it should represent "pearson correlation" for example.
+        // this is bogus, it should represent "pearson correlation" for example, but doesn't matter for this test.
         QuantitationType qt = qts.iterator().next();
 
         ppcs = ( Probe2ProbeCoexpressionService ) this.getBean( "probe2ProbeCoexpressionService" );
 
-        Collection<DesignElementDataVector> dvs = ee.getDesignElementDataVectors();
+        ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) this
+                .getBean( "processedExpressionDataVectorCreateService" );
 
-        List<DesignElementDataVector> dvl = new ArrayList<DesignElementDataVector>( dvs );
+        Collection<ProcessedExpressionDataVector> dvs = processedExpressionDataVectorCreateService
+                .computeProcessedExpressionData( ee );
+
+        List<ProcessedExpressionDataVector> dvl = new ArrayList<ProcessedExpressionDataVector>( dvs );
 
         int j = dvs.size();
+
+        assert j > 0;
 
         ProbeCoexpressionAnalysis analysis = ProbeCoexpressionAnalysis.Factory.newInstance();
         analysis.setName( "foo" );
@@ -86,6 +92,7 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
             ppc.setExpressionBioAssaySet( ee );
             ppc.setSourceAnalysis( analysis );
             ppcs.create( ppc );
+            log.info( ":" );
         }
 
         this.flushAndClearSession();
@@ -102,7 +109,10 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
 
     public void testCountLinks() {
         Integer countLinks = ppcs.countLinks( ee );
-        assertEquals( 6, countLinks.intValue() );
+        /*
+         * This would be 6 but we divide the count by 2 as it is assumed we save each link twice.
+         */
+        assertEquals( 3, countLinks.intValue() );
     }
 
     /**
@@ -111,7 +121,8 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
      */
     public void testHandleDeleteLinksExpressionExperiment() {
         ppcs.deleteLinks( ee );
-        // no fail condition..
+        Integer countLinks = ppcs.countLinks( ee );
+        assertEquals( 0, countLinks.intValue() );
     }
 
 }

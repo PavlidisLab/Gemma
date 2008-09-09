@@ -1,37 +1,28 @@
-/* Copyright 2004, 2005 Acegi Technology Pty Limited
- *
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
-
 package ubic.gemma.security.afterInvocation;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-
-import org.acegisecurity.AccessDeniedException;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.ConfigAttribute;
-import org.acegisecurity.ConfigAttributeDefinition;
-import org.acegisecurity.acl.AclEntry;
-import org.acegisecurity.acl.AclManager;
-import org.acegisecurity.acl.basic.AbstractBasicAclEntry;
-import org.acegisecurity.acl.basic.SimpleAclEntry;
 import org.acegisecurity.afterinvocation.AfterInvocationProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 
+import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
@@ -44,187 +35,21 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  *          keshav Exp $
  * @see AfterInvocationProvider
  */
-public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvocationProvider, InitializingBean {
+public class AclAfterCollectionCompSeqByArrayDesignFilter extends ByAssociatedObjectFilter {
 
     protected static final Log logger = LogFactory.getLog( AclAfterCollectionCompSeqByArrayDesignFilter.class );
 
-    private AclManager aclManager;
-    private String processConfigAttribute = "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ";
-    private int[] requirePermission = { SimpleAclEntry.READ };
-
-    public void setAclManager( AclManager aclManager ) {
-        this.aclManager = aclManager;
-    }
-
-    public AclManager getAclManager() {
-        return aclManager;
-    }
-
-    public void setProcessConfigAttribute( String processConfigAttribute ) {
-        this.processConfigAttribute = processConfigAttribute;
-    }
-
     public String getProcessConfigAttribute() {
-        return processConfigAttribute;
-    }
-
-    public void setRequirePermission( int[] requirePermission ) {
-        this.requirePermission = requirePermission;
-    }
-
-    public int[] getRequirePermission() {
-        return requirePermission;
+        return "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ";
     }
 
     /**
-     * Invoked by the beanFactory after it has set all the bean properties supplied. This method allows this bean to be
-     * initialized only when these preconditions (setting the properties) have been met.
+     * @param targetDomainObject
+     * @return
      */
-    public void afterPropertiesSet() throws Exception {
-        assert processConfigAttribute != null : "A processConfigAttribute is mandatory";
-        assert aclManager != null : "An aclManager is mandatory";
-
-        if ( ( requirePermission == null ) || ( requirePermission.length == 0 ) ) {
-            throw new IllegalArgumentException( "One or more requirePermission entries is mandatory" );
-        }
+    protected Securable getDomainObject( Object targetDomainObject ) {
+        ArrayDesign domainObject = ( ( CompositeSequence ) targetDomainObject ).getArrayDesign();
+        return domainObject;
     }
 
-    /**
-     * Decides whether user has access to object based on owning object (for composition relationships).
-     * 
-     * @param authentication
-     * @param object
-     * @param config
-     * @param returnedObject
-     * @return Object
-     * @throws AccessDeniedException
-     */
-    @SuppressWarnings("unused")
-    public Object decide( Authentication authentication, Object object, ConfigAttributeDefinition config,
-            Object returnedObject ) throws AccessDeniedException {
-
-        Iterator iter = config.getConfigAttributes();
-
-        while ( iter.hasNext() ) {
-            ConfigAttribute attr = ( ConfigAttribute ) iter.next();
-
-            if ( this.supports( attr ) ) {
-                // Need to process the Collection for this invocation
-                if ( returnedObject == null ) {
-                    if ( logger.isDebugEnabled() ) {
-                        logger.debug( "Return object is null, skipping" );
-                    }
-
-                    return null;
-                }
-
-                Filterer filterer = null;
-
-                boolean wasSingleton = false;
-                if ( returnedObject instanceof Collection ) {
-                    Collection collection = ( Collection ) returnedObject;
-                    filterer = new CollectionFilterer( collection );
-                } else if ( returnedObject.getClass().isArray() ) {
-                    Object[] array = ( Object[] ) returnedObject;
-                    filterer = new ArrayFilterer( array );
-                } else {
-                    // shortcut, just put the object in a collection. (PP)
-                    wasSingleton = true;
-                    Collection<Object> coll = new HashSet<Object>();
-                    coll.add( returnedObject );
-                    filterer = new CollectionFilterer( coll );
-                }
-
-                // Locate unauthorised Collection elements
-                Iterator collectionIter = filterer.iterator();
-
-                while ( collectionIter.hasNext() ) {
-
-                    // keshav - this is used to get compositeSequences based on arrayDesign (owner).
-                    CompositeSequence targetDomainObject = ( CompositeSequence ) collectionIter.next();
-
-                    ArrayDesign domainObject = targetDomainObject.getArrayDesign();
-                    // end keshav
-
-                    boolean hasPermission = false;
-
-                    AclEntry[] acls = null;
-
-                    if ( domainObject == null ) {
-                        hasPermission = true;
-                    } else {
-                        // get acl for domainObject that has been granted to the user.
-                        acls = aclManager.getAcls( domainObject, authentication );
-                    }
-
-                    if ( ( acls != null ) && ( acls.length != 0 ) ) {
-                        for ( int i = 0; i < acls.length; i++ ) {
-                            // Locate processable AclEntrys
-                            if ( acls[i] instanceof AbstractBasicAclEntry ) {
-                                AbstractBasicAclEntry processableAcl = ( AbstractBasicAclEntry ) acls[i];
-
-                                // See if principal has any of the required permissions
-                                for ( int y = 0; y < requirePermission.length; y++ ) {
-                                    if ( processableAcl.isPermitted( requirePermission[y] ) ) {
-                                        hasPermission = true;
-
-                                        if ( logger.isDebugEnabled() ) {
-                                            // logger.debug( "Principal is authorised for element: " + domainObject
-                                            logger.debug( "Principal is authorised for element: " + targetDomainObject
-                                                    + " due to ACL: " + processableAcl.toString() );
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if ( !hasPermission ) {
-                        filterer.remove( domainObject );
-
-                        if ( logger.isDebugEnabled() ) {
-                            // logger.debug( "Principal is NOT authorised for element: " + domainObject );
-                            logger.debug( "Principal is NOT authorised for element: " + targetDomainObject );
-                        }
-                    }
-                }
-                if ( wasSingleton ) {
-                    if ( ( ( Collection ) filterer.getFilteredObject() ).size() == 1 ) {
-                        return ( ( Collection ) filterer.getFilteredObject() ).iterator().next();
-                    } else {
-                        return null;
-                    }
-
-                }
-                return filterer.getFilteredObject();
-            }
-        }
-
-        return returnedObject;
-    }
-
-    /**
-     * Called by the AbstractSecurityInterceptor at startup time to determine of AfterInvocationManager can process the
-     * ConfigAttribute.
-     * 
-     * @param attribute
-     * @return boolean
-     */
-    public boolean supports( ConfigAttribute attribute ) {
-        if ( ( attribute.getAttribute() != null ) && attribute.getAttribute().equals( getProcessConfigAttribute() ) ) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * This implementation supports any type of class, because it does not query the presented secure object.
-     * 
-     * @param clazz the secure object
-     * @return always <code>true</code>
-     */
-    @SuppressWarnings("unused")
-    public boolean supports( Class clazz ) {
-        return true;
-    }
 }

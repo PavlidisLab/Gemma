@@ -43,14 +43,12 @@ public abstract class DataVectorValueObject {
     protected BioAssayDimension bioAssayDimension;
     protected QuantitationType quantitationType;
     protected ExpressionExperiment expressionExperiment;
-    protected Double rank;
 
     public DataVectorValueObject( DesignElementDataVector dedv ) {
         this.bioAssayDimension = dedv.getBioAssayDimension();
         this.quantitationType = dedv.getQuantitationType();
         this.designElement = dedv.getDesignElement();
         this.expressionExperiment = dedv.getExpressionExperiment();
-        this.rank = dedv.getRank();
         this.id = dedv.getId();
     }
 
@@ -112,14 +110,6 @@ public abstract class DataVectorValueObject {
 
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
-    }
-
-    public Double getRank() {
-        return rank;
-    }
-
-    public void setRank( Double rank ) {
-        this.rank = rank;
     }
 
 }

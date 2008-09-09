@@ -22,7 +22,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.analysis.service.AnalysisHelperService;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -38,7 +38,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCLI {
 
     private FilterConfig filterConfig = new FilterConfig();
-    private AnalysisHelperService analysisHelperService = null;
+    private ExpressionDataMatrixService analysisHelperService = null;
 
     /**
      * @param arrayDesign
@@ -104,7 +104,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     protected void processOptions() {
         super.processOptions();
         getFilterConfigOptions();
-        analysisHelperService = ( AnalysisHelperService ) this.getBean( "analysisHelperService" );
+        analysisHelperService = ( ExpressionDataMatrixService ) this.getBean( "analysisHelperService" );
     }
 
     private void getFilterConfigOptions() {

@@ -69,7 +69,15 @@ public class FilterConfig {
 
     private boolean knownGenesOnly = false;
 
+    /**
+     * If true, MINIMUM_SAMPLE is ignored.
+     */
     private boolean ignoreMinimumSampleThreshold = false;
+
+    /**
+     * If true, the MINIMUM_ROWS_TO_BOTHER is ignored.
+     */
+    private boolean ignoreMinimumRowsThreshold = false;
 
     public boolean isKnownGenesOnly() {
         return knownGenesOnly;
@@ -132,6 +140,20 @@ public class FilterConfig {
 
     public void setIgnoreMinimumSampleThreshold( boolean ignoreMinimumSampleThreshold ) {
         this.ignoreMinimumSampleThreshold = ignoreMinimumSampleThreshold;
+    }
+
+    /**
+     * @return the ignoreMinimumRowThreshold
+     */
+    public boolean isIgnoreMinimumRowsThreshold() {
+        return ignoreMinimumRowsThreshold;
+    }
+
+    /**
+     * @param ignoreMinimumRowThreshold the ignoreMinimumRowThreshold to set
+     */
+    public void setIgnoreMinimumRowsThreshold( boolean ignoreMinimumRowsThreshold ) {
+        this.ignoreMinimumRowsThreshold = ignoreMinimumRowsThreshold;
     }
 
 }

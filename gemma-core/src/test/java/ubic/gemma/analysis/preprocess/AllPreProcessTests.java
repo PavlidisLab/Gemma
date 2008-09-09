@@ -37,7 +37,7 @@ public class AllPreProcessTests {
         suite.addTestSuite( TwoColorArrayLoessNormalizerTest.class );
         suite.addTestSuite( RMABackgroundAdjusterTest.class );
         suite.addTestSuite( TwoChannelMissingValuesTest.class );
-        suite.addTestSuite( DedvRankServiceTest.class );
+        suite.addTestSuite( ProcessedExpressionDataCreateServiceTest.class );
         // $JUnit-END$
         return suite;
     }

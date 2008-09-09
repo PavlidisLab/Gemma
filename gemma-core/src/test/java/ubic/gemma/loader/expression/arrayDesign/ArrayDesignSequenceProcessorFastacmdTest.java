@@ -69,9 +69,9 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
             } else {
                 if ( res.size() == 242 ) {
                     log
-                            .warn( "Got 242 for some reason instead of 242, here is some debugging information (test will pass)" );
+                            .warn( "Got 242 for some reason instead of 243, here is some debugging information (test will pass)" );
                     for ( BioSequence bs : res ) {
-                        log.info( bs );
+                        log.warn( bs );
                     }
                     return;
                 }

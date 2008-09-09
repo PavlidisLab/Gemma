@@ -17,85 +17,87 @@
  *
  */
 
-
 package ubic.gemma.util;
 
 import java.io.Serializable;
 
 /**
- * This class contains the options for indexing.  
+ * This class contains the options for indexing.
  * 
  * @author klc
- *
  */
-
-
 public class IndexGemmaCommand implements Serializable {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1710257727263881366L;
-	
-	
-	private boolean indexArray;
-	private boolean indexEE;
-	private boolean indexProbe;
-	private boolean indexBibliographic;
-	private boolean indexGene;
-	private boolean indexBioSequence;
-	
-	
-	/**
-	 * @param all  Sets all the flags to index to whatever is passed in (false/true)
-	 */
-	public void setAll(boolean all){
-		setIndexArray(all);
-		setIndexBibliographic(all);
-		setIndexBioSequence(all);
-		setIndexEE(all);
-		setIndexGene(all);
-		setIndexProbe(all);		
-	}
-	
-	public boolean isIndexArray() {
-		return indexArray;
-	}
-	public void setIndexArray(boolean indexArray) {
-		this.indexArray = indexArray;
-	}
-	public boolean isIndexBibliographic() {
-		return indexBibliographic;
-	}
-	public void setIndexBibliographic(boolean indexBibliographic) {
-		this.indexBibliographic = indexBibliographic;
-	}
-	public boolean isIndexEE() {
-		return indexEE;
-	}
-	public void setIndexEE(boolean indexEE) {
-		this.indexEE = indexEE;
-	}
-	public boolean isIndexGene() {
-		return indexGene;
-	}
-	public void setIndexGene(boolean indexGene) {
-		this.indexGene = indexGene;
-	}
-	public boolean isIndexProbe() {
-		return indexProbe;
-	}
-	public void setIndexProbe(boolean indexProbe) {
-		this.indexProbe = indexProbe;
-	}
-	public boolean isIndexBioSequence() {
-		return indexBioSequence;
-	}
-	public void setIndexBioSequence(boolean indexBioSequence) {
-		this.indexBioSequence = indexBioSequence;
-	}
-	
-	
-	
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1710257727263881366L;
+
+    private boolean indexArray;
+    private boolean indexEE;
+    private boolean indexProbe;
+    private boolean indexBibliographic;
+    private boolean indexGene;
+    private boolean indexBioSequence;
+
+    /**
+     * @param all Sets all the flags to index to whatever is passed in (false/true)
+     */
+    public void setAll( boolean all ) {
+        setIndexArray( all );
+        setIndexBibliographic( all );
+        setIndexBioSequence( all );
+        setIndexEE( all );
+        setIndexGene( all );
+        setIndexProbe( all );
+    }
+
+    public boolean isIndexArray() {
+        return indexArray;
+    }
+
+    public void setIndexArray( boolean indexArray ) {
+        this.indexArray = indexArray;
+    }
+
+    public boolean isIndexBibliographic() {
+        return indexBibliographic;
+    }
+
+    public void setIndexBibliographic( boolean indexBibliographic ) {
+        this.indexBibliographic = indexBibliographic;
+    }
+
+    public boolean isIndexEE() {
+        return indexEE;
+    }
+
+    public void setIndexEE( boolean indexEE ) {
+        this.indexEE = indexEE;
+    }
+
+    public boolean isIndexGene() {
+        return indexGene;
+    }
+
+    public void setIndexGene( boolean indexGene ) {
+        this.indexGene = indexGene;
+    }
+
+    public boolean isIndexProbe() {
+        return indexProbe;
+    }
+
+    public void setIndexProbe( boolean indexProbe ) {
+        this.indexProbe = indexProbe;
+    }
+
+    public boolean isIndexBioSequence() {
+        return indexBioSequence;
+    }
+
+    public void setIndexBioSequence( boolean indexBioSequence ) {
+        this.indexBioSequence = indexBioSequence;
+    }
 
 }

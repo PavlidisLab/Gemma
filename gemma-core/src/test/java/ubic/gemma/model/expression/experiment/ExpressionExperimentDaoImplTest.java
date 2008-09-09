@@ -33,6 +33,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -96,13 +97,13 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     }
 
     @SuppressWarnings("unchecked")
-    public final void testGetDesignElementDataVectors() throws Exception {
+    public final void testgetRawExpressionDataVectors() throws Exception {
         ExpressionExperiment eel = this.getTestPersistentCompleteExpressionExperiment( true );
         Collection<DesignElement> designElements = new HashSet<DesignElement>();
-        QuantitationType quantitationType = eel.getDesignElementDataVectors().iterator().next().getQuantitationType();
-        Collection<DesignElementDataVector> allv = eel.getDesignElementDataVectors();
+        QuantitationType quantitationType = eel.getRawExpressionDataVectors().iterator().next().getQuantitationType();
+        Collection<RawExpressionDataVector> allv = eel.getRawExpressionDataVectors();
 
-        for ( Iterator<DesignElementDataVector> it = allv.iterator(); it.hasNext(); ) {
+        for ( Iterator<RawExpressionDataVector> it = allv.iterator(); it.hasNext(); ) {
             DesignElement designElement = it.next().getDesignElement();
             assertNotNull( designElement );
             if ( designElements.contains( designElement ) ) {
@@ -121,7 +122,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
     @SuppressWarnings("unchecked")
     public final void testGetDesignElementDataVectorsByQt() throws Exception {
-        QuantitationType quantitationType = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
+        QuantitationType quantitationType = ee.getRawExpressionDataVectors().iterator().next().getQuantitationType();
         Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
         quantitationTypes.add( quantitationType );
         Collection<DesignElementDataVector> vectors = expressionExperimentDao
@@ -132,7 +133,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
     @SuppressWarnings("unchecked")
     public final void testGetSamplingOfVectors() throws Exception {
-        QuantitationType quantitationType = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
+        QuantitationType quantitationType = ee.getRawExpressionDataVectors().iterator().next().getQuantitationType();
         Collection<DesignElementDataVector> vectors = expressionExperimentDao
                 .getSamplingOfVectors( quantitationType, 2 );
 
@@ -148,7 +149,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
     @SuppressWarnings("unchecked")
     public final void testGetQuantitationTypesForArrayDesign() throws Exception {
-        ArrayDesign ad = ee.getDesignElementDataVectors().iterator().next().getDesignElement().getArrayDesign();
+        ArrayDesign ad = ee.getRawExpressionDataVectors().iterator().next().getDesignElement().getArrayDesign();
         Collection<QuantitationType> types = expressionExperimentDao.getQuantitationTypes( ee, ad );
         assertEquals( 2, types.size() );
     }

@@ -158,14 +158,12 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
                         throw new RuntimeException( "Quantitation type ID " + qtId
                                 + " was invalid: doesn't exist in system" );
                     }
-                } else if ( filtered ) {
+                } else {
                     ee = expressionExperimentService.load( eeId );
                     if ( ee == null ) {
                         throw new RuntimeException( "Expression experiment id " + eeId
                                 + " was invalid: doesn't exist in system" );
                     }
-                } else {
-                    throw new RuntimeException( "Did not select a QT or the filtered matrix option" );
                 }
             }
             File f = null;
@@ -183,8 +181,9 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
                         log.debug( "Using quantitation type to create matrix." );
                         f = expressionDataFileService.writeOrLocateDataFile( qType, false );
                     } else {
-                        log.debug( "Using filtered data file to create matrix." );
-                        f = expressionDataFileService.writeOrLocateFilteredDataFile( ee, false );
+
+                        f = expressionDataFileService.writeOrLocateDataFile( ee, false, filtered );
+
                     }
                 }
 
@@ -195,7 +194,8 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
                 if ( qType != null ) {
                     f = expressionDataFileService.writeOrLocateJSONDataFile( qType, false );
                 } else {
-                    f = expressionDataFileService.writeOrLocateFilteredJSONDataFile( ee, false );
+                    f = expressionDataFileService.writeOrLocateJSONDataFile( ee, false, filtered );
+
                 }
             }
 

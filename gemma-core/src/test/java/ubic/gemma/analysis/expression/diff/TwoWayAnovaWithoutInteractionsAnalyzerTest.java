@@ -91,7 +91,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         configureMockAnalysisServiceHelper( 1 );
 
-        analyzer.setAnalysisHelperService( analysisHelperService );
+        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
 
     }
 

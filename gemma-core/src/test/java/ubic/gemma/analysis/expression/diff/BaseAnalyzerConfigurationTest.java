@@ -28,7 +28,8 @@ import org.easymock.classextension.EasyMock;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.RClient;
 import ubic.basecode.util.RConnectionFactory;
-import ubic.gemma.analysis.service.AnalysisHelperService;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -40,7 +41,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -105,14 +107,16 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     private BioAssay bioAssay3a = null;
     private BioAssay bioAssay3b = null;
 
-    private Collection<DesignElementDataVector> vectors = null;
+    private Collection<ProcessedExpressionDataVector> vectors = null;
 
     private ByteArrayConverter bac = new ByteArrayConverter();
 
     private RClient rc = null;
     protected boolean connected = false;
 
-    protected AnalysisHelperService analysisHelperService = null;
+    protected ExpressionDataMatrixService expressionDataMatrixService = null;
+
+    protected ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
 
     /*
      * (non-Javadoc)
@@ -366,11 +370,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      * @param numAssays
      */
     private void configureVectors( int numAssays ) {
-        this.vectors = new HashSet<DesignElementDataVector>();
+        this.vectors = new HashSet<ProcessedExpressionDataVector>();
 
         Collection<CompositeSequence> compositeSequences = new HashSet<CompositeSequence>();
         for ( int i = 0; i < NUM_DESIGN_ELEMENTS; i++ ) {
-            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+            ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
             vector.setBioAssayDimension( bioAssayDimension );
             vector.setQuantitationType( quantitationType );
 
@@ -392,7 +396,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             compositeSequences.add( cs );
         }
 
-        expressionExperiment.setDesignElementDataVectors( vectors );
+        expressionExperiment.getProcessedExpressionDataVectors().addAll( vectors );
 
         arrayDesign.setCompositeSequences( compositeSequences );
     }
@@ -466,18 +470,19 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     }
 
     /**
-     * Mocks the method getVectors in the {@link AnalysisHelperService}.
+     * Mocks the method getVectors in the {@link ExpressionDataMatrixService}.
      * 
      * @param numMethodCalls The number of times the mocked method will be called.
      * @throws Exception
      */
     protected void configureMockAnalysisServiceHelper( int numMethodCalls ) throws Exception {
-        this.analysisHelperService = EasyMock.createMock( AnalysisHelperService.class );
-        Collection<DesignElementDataVector> vectorsToReturn = expressionExperiment.getDesignElementDataVectors();
+        this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixService.class );
 
-        EasyMock.expect( analysisHelperService.getUsefulVectors( expressionExperiment ) ).andReturn( vectorsToReturn )
-                .times( numMethodCalls );
-        EasyMock.replay( analysisHelperService );
+        EasyMock.expect( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
+                .andReturn( new ExpressionDataDoubleMatrix( this.vectors ) ).times( numMethodCalls );
+        EasyMock.expect( expressionDataMatrixService.getProcessedExpressionDataVectors( expressionExperiment ) )
+                .andReturn( this.vectors ).times( numMethodCalls );
+        EasyMock.replay( expressionDataMatrixService );
     }
 
     /**

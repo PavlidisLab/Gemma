@@ -43,6 +43,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -124,7 +125,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         ee = service.convert( metaData, matrix );
 
         assertNotNull( ee );
-        assertEquals( 200, ee.getDesignElementDataVectors().size() );
+        assertEquals( 200, ee.getRawExpressionDataVectors().size() );
         assertEquals( 59, ee.getBioAssays().size() );
         designElementDataVectorService = ( DesignElementDataVectorService ) this
                 .getBean( "designElementDataVectorService" );
@@ -153,7 +154,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
 
-        Collection<DesignElementDataVector> designElementDataVectors = newee.getDesignElementDataVectors();
+        Collection<RawExpressionDataVector> designElementDataVectors = newee.getRawExpressionDataVectors();
         designElementDataVectorService.thaw( designElementDataVectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( designElementDataVectors );
@@ -181,7 +182,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         quantitationType.setIsBackgroundSubtracted( true );
         quantitationType.setIsNormalized( true );
 
-        Collection<DesignElementDataVector> designElementDataVectors = ee.getDesignElementDataVectors();
+        Collection<RawExpressionDataVector> designElementDataVectors = ee.getRawExpressionDataVectors();
         Collection<DesignElement> designElements = new HashSet<DesignElement>();
         for ( DesignElementDataVector designElementDataVector : designElementDataVectors ) {
             DesignElement de = designElementDataVector.getDesignElement();
@@ -268,7 +269,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         bioAssayDimension.setBioAssays( assays );
 
         Collection<DesignElementDataVector> vectors1 = new LinkedHashSet<DesignElementDataVector>();
-        DesignElementDataVector vector1 = DesignElementDataVector.Factory.newInstance();
+        RawExpressionDataVector vector1 = RawExpressionDataVector.Factory.newInstance();
         double[] ddata1 = { 74.9, 101.7 };
         byte[] bdata1 = bac.doubleArrayToBytes( ddata1 );
         vector1.setData( bdata1 );
@@ -277,7 +278,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         vectors1.add( vector1 );
 
         Collection<DesignElementDataVector> vectors2 = new LinkedHashSet<DesignElementDataVector>();
-        DesignElementDataVector vector2 = DesignElementDataVector.Factory.newInstance();
+        RawExpressionDataVector vector2 = RawExpressionDataVector.Factory.newInstance();
         double[] ddata2 = { 404.6, 318.7 };
         byte[] bdata2 = bac.doubleArrayToBytes( ddata2 );
         vector2.setData( bdata2 );
@@ -314,11 +315,11 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         designElements.add( de1 );
         designElements.add( de2 );
 
-        Collection<DesignElementDataVector> eeVectors = new LinkedHashSet<DesignElementDataVector>();
+        Collection<RawExpressionDataVector> eeVectors = new LinkedHashSet<RawExpressionDataVector>();
         eeVectors.add( vector1 );
         eeVectors.add( vector2 );
 
-        ee.setDesignElementDataVectors( eeVectors );
+        ee.setRawExpressionDataVectors( eeVectors );
 
         ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( eeVectors );
 

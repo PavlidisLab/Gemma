@@ -23,14 +23,12 @@ import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.Constants;
-import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -44,6 +42,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -81,7 +80,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
- * @spring.property name="analysisHelperService" ref="analysisHelperService"
  * @author pavlidis
  * @version $Id$
  */
@@ -94,8 +92,6 @@ public class TwoChannelMissingValues {
     private DesignElementDataVectorService designElementDataVectorService;
 
     private QuantitationTypeService quantitationTypeService;
-
-    private AnalysisHelperService analysisHelperService;
 
     /**
      * @param expExp The expression experiment to analyze. The quantitation types to use are selected automatically. If
@@ -196,7 +192,7 @@ public class TwoChannelMissingValues {
 
             DesignElement designElement = element.getDesignElement();
 
-            DesignElementDataVector vect = DesignElementDataVector.Factory.newInstance();
+            DesignElementDataVector vect = RawExpressionDataVector.Factory.newInstance();
             vect.setQuantitationType( present );
             vect.setExpressionExperiment( source );
             vect.setDesignElement( designElement );
@@ -289,23 +285,6 @@ public class TwoChannelMissingValues {
         return this.quantitationTypeService.create( present );
     }
 
-    private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {
-        QuantitationType present = QuantitationType.Factory.newInstance();
-        present.setName( preferredQt.getName() + " - Masked " );
-        present.setDescription( "Data masked with missing values (Computed by " + Constants.APP_NAME + ")" );
-        present.setGeneralType( preferredQt.getGeneralType() );
-        present.setIsBackground( preferredQt.getIsBackground() );
-        present.setRepresentation( preferredQt.getRepresentation() );
-        present.setScale( preferredQt.getScale() );
-        present.setIsPreferred( false ); // I think this is the right thing to do.
-        present.setIsMaskedPreferred( true );
-        present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
-        present.setIsNormalized( preferredQt.getIsNormalized() );
-        present.setIsRatio( preferredQt.getIsRatio() );
-        present.setType( preferredQt.getType() );
-        return this.quantitationTypeService.create( present );
-    }
-
     /**
      * Check to make sure all the pieces are correctly in place to do the computation.
      * 
@@ -367,64 +346,4 @@ public class TwoChannelMissingValues {
         this.quantitationTypeService = quantitationTypeService;
     }
 
-    /**
-     * Computes and persists the masked preferred data vectors. If the experiment does not have a missing value
-     * quantitation type, this just ends up storing a copy of the preferred data.
-     * 
-     * @param ee
-     */
-    @SuppressWarnings("unchecked")
-    public void computeMaskedPreferredVectors( ExpressionExperiment ee ) {
-        expressionExperimentService.thawLite( ee );
-        int count = 0;
-
-        Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
-
-        ExpressionDataDoubleMatrix maskedPreferredDataMatrix = analysisHelperService.getMaskedPreferredDataMatrix( ee );
-
-        Collection<QuantitationType> preferredQuantitationTypes = expressionExperimentService
-                .getPreferredQuantitationType( ee );
-        if ( preferredQuantitationTypes.size() == 0 ) {
-            throw new IllegalArgumentException( "No preferred quantitation type found for " + ee );
-        }
-        QuantitationType preferred = preferredQuantitationTypes.iterator().next();
-
-        QuantitationType maskedPreferred = this.getPreferredMaskedDataQuantitationType( preferred );
-
-        ee.getQuantitationTypes().add( maskedPreferred );
-        ByteArrayConverter converter = new ByteArrayConverter();
-
-        for ( ExpressionDataMatrixRowElement element : maskedPreferredDataMatrix.getRowElements() ) {
-
-            DesignElement designElement = element.getDesignElement();
-
-            BioAssayDimension bioAssayDimension = maskedPreferredDataMatrix.getBioAssayDimension( designElement );
-            DesignElementDataVector vect = DesignElementDataVector.Factory.newInstance();
-            vect.setQuantitationType( maskedPreferred );
-            vect.setExpressionExperiment( ee );
-            vect.setDesignElement( designElement );
-            vect.setBioAssayDimension( bioAssayDimension );
-
-            double[] prefRow = ArrayUtils.toPrimitive( maskedPreferredDataMatrix.getRow( designElement ) );
-
-            vect.setData( converter.doubleArrayToBytes( prefRow ) );
-            results.add( vect );
-
-            if ( ++count % 4000 == 0 ) {
-                log.info( count + " vectors examined for missing values, " + results.size()
-                        + " vectors generated so far." );
-            }
-
-        }
-
-        log.info( "Finished: " + count + " vectors examined for missing values and masked" );
-
-        log.info( "Persisting " + results.size() + " vectors ... " );
-        results = designElementDataVectorService.create( results );
-        expressionExperimentService.update( ee ); // this is needed to get the QT filled in properly.
-    }
-
-    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
-        this.analysisHelperService = analysisHelperService;
-    }
 }

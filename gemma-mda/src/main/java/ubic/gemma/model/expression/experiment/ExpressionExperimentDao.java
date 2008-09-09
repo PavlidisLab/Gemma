@@ -22,6 +22,10 @@
 //
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
@@ -468,7 +472,7 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * 
      */
-    public long getPreferredDesignElementDataVectorCount(
+    public long getProcessedExpressionVectorCount(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
@@ -479,7 +483,7 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * 
      */
-    public java.util.Collection load( java.util.Collection ids );
+    public java.util.Collection<ExpressionExperiment> load( java.util.Collection ids );
 
     /**
      * 
@@ -515,12 +519,6 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * </p>
      */
     public java.util.Collection findByBibliographicReference( java.lang.Long bibRefID );
-
-    /**
-     * 
-     */
-    public java.util.Map getDesignElementDataVectors( java.util.Map cs2gene,
-            ubic.gemma.model.common.quantitationtype.QuantitationType qt );
 
     /**
      * <p>
@@ -616,5 +614,6 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      */
     public java.util.Collection findByBioMaterials( java.util.Collection bioMaterials );
 
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
 
 }

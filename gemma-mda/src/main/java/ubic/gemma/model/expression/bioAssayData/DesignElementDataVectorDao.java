@@ -332,22 +332,6 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
-     * 
-     */
-    public java.util.Collection queryByGeneSymbolAndSpecies( java.lang.String geneSymbol, java.lang.String species,
-            java.util.Collection expressionExperiments );
-
-    /**
-     * 
-     */
-    public java.util.Collection getGenes( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv );
-
-    /**
-     * 
-     */
-    public java.util.Collection getGenesById( long id );
-
-    /**
      * <p>
      * Thaws associations of the given DesignElementDataVector
      * </p>
@@ -363,14 +347,6 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      * 
      */
     public java.lang.Integer countAll();
-
-    /**
-     * <p>
-     * Returns a map of designElementDataVectors as keys and collections of genes as values for the given
-     * designElementDataVectors.
-     * </p>
-     */
-    public java.util.Map getGenes( java.util.Collection dataVectors );
 
     /**
      * <p>
@@ -397,21 +373,5 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      * </p>
      */
     public java.util.Map getPreferredVectors( java.util.Collection ees, java.util.Collection genes );
-
-    /**
-     * <p>
-     * Returns a map of dedv to a collection of genes
-     * </p>
-     */
-    public java.util.Map getDedv2GenesMap( java.util.Collection dedvs,
-            ubic.gemma.model.common.quantitationtype.QuantitationType qt );
-
-    /**
-     * <p>
-     * Return a map of DoubleVectorValueObjects to Genes for the given expression experiments and genes. The double[]
-     * contained are masked for missing values if appropriate.
-     * </p>
-     */
-    public java.util.Map getMaskedPreferredDataArrays( java.util.Collection ees, java.util.Collection genes );
 
 }

@@ -59,7 +59,7 @@ import ubic.gemma.util.ConfigUtils;
  * 
  * @spring.bean id="expressionDataFileService"
  * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
- * @spring.property name="analysisHelperService" ref="analysisHelperService"
+ * @spring.property name="expressionDataMatrixService" ref="expressionDataMatrixService"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author paul
@@ -76,20 +76,26 @@ public class ExpressionDataFileService {
 
     private static Log log = LogFactory.getLog( ArrayDesignAnnotationService.class.getName() );
 
+    ArrayDesignService arrayDesignService;
+
     private DesignElementDataVectorService designElementDataVectorService;
 
-    private AnalysisHelperService analysisHelperService;
-
-    ArrayDesignService arrayDesignService;
+    private ExpressionDataMatrixService expressionDataMatrixService;
 
     private ExpressionExperimentService expressionExperimentService;
 
     /**
      * @param ee
+     * @param filtered if the data matrix is filtered
      * @return
      */
-    public File getOutputFile( ExpressionExperiment ee ) {
-        String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_expmat" + DATA_FILE_SUFFIX;
+    public File getOutputFile( ExpressionExperiment ee, boolean filtered ) {
+        String filteredAdd = "";
+        if ( !filtered ) {
+            filteredAdd = ".unfilt";
+        }
+        String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_expmat" + filteredAdd
+                + DATA_FILE_SUFFIX;
         return getOutputFile( filename );
     }
 
@@ -119,16 +125,49 @@ public class ExpressionDataFileService {
         return f;
     }
 
-    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
-        this.analysisHelperService = analysisHelperService;
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 
     public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
         this.designElementDataVectorService = designElementDataVectorService;
     }
 
+    public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
+        this.expressionDataMatrixService = expressionDataMatrixService;
+    }
+
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
+     * expression applied (currently supports default settings only).
+     * 
+     * @param ee
+     * @param forceWrite
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) {
+
+        try {
+            File f = getOutputFile( ee, filtered );
+            if ( !forceWrite && f.canRead() ) {
+                log.info( f + " exists, not regenerating" );
+                return f;
+            }
+            log.info( "Creating new expression data file: " + f );
+            ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered, f );
+
+            Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
+            Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
+            writeMatrix( f, geneAnnotations, matrix );
+            return f;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -198,53 +237,24 @@ public class ExpressionDataFileService {
     }
 
     /**
-     * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
-     * expression applied (currently supports default settings only).
-     * 
      * @param ee
      * @param forceWrite
+     * @param filtered if the data should be filtered.
+     * @see ExpressionDataMatrixService.getFilteredMatrix
      * @return
      */
     @SuppressWarnings("unchecked")
-    public File writeOrLocateFilteredDataFile( ExpressionExperiment ee, boolean forceWrite ) {
+    public File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) {
 
         try {
-            File f = getOutputFile( ee );
-            if ( !forceWrite && f.canRead() ) {
-                log.info( f + " exists, not regenerating" );
-                return f;
-            }
-
-            log.info( "Creating new expression data file: " + f );
-            FilterConfig filterConfig = new FilterConfig();
-            filterConfig.setIgnoreMinimumSampleThreshold( true );
-            expressionExperimentService.thawLite( ee );
-            ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
-
-            Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-            Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
-            writeMatrix( f, geneAnnotations, matrix );
-            return f;
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public File writeOrLocateFilteredJSONDataFile( ExpressionExperiment ee, boolean forceWrite ) {
-
-        try {
-            File f = getOutputFile( ee );
+            File f = getOutputFile( ee, filtered );
             if ( !forceWrite && f.canRead() ) {
                 log.info( f + " exists, not regenerating" );
                 return f;
             }
 
             log.info( "Creating new JSON expression data file: " + f );
-            FilterConfig filterConfig = new FilterConfig();
-            filterConfig.setIgnoreMinimumSampleThreshold( true );
-            expressionExperimentService.thawLite( ee );
-            ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
+            ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered, f );
 
             Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
             Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
@@ -259,7 +269,6 @@ public class ExpressionDataFileService {
     /**
      * @param type
      * @param forceWrite
-     * @return
      */
     @SuppressWarnings("unchecked")
     public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite ) {
@@ -297,6 +306,27 @@ public class ExpressionDataFileService {
             ads.add( v.getDesignElement().getArrayDesign() );
         }
         return ads;
+    }
+
+    /**
+     * @param ee
+     * @param filtered
+     * @param f
+     * @return
+     */
+    private ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered, File f ) {
+
+        FilterConfig filterConfig = new FilterConfig();
+        filterConfig.setIgnoreMinimumSampleThreshold( true );
+        filterConfig.setIgnoreMinimumRowsThreshold( true );
+        expressionExperimentService.thawLite( ee );
+        ExpressionDataDoubleMatrix matrix;
+        if ( filtered ) {
+            matrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig );
+        } else {
+            matrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        }
+        return matrix;
     }
 
     /**
@@ -418,10 +448,6 @@ public class ExpressionDataFileService {
         ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
 
         writeMatrix( file, geneAnnotations, expressionDataMatrix );
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
 }

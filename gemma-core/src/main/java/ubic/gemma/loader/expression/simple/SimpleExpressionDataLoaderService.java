@@ -46,6 +46,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -128,14 +129,14 @@ public class SimpleExpressionDataLoaderService {
         Collection<ArrayDesign> arrayDesigns = convertArrayDesigns( metaData, matrix );
 
         // Divide up multiple array designs into multiple BioAssayDimensions.
-        Collection<DesignElementDataVector> allVectors = new HashSet<DesignElementDataVector>();
+        Collection<RawExpressionDataVector> allVectors = new HashSet<RawExpressionDataVector>();
         Collection<BioAssay> allBioAssays = new HashSet<BioAssay>();
         Collection<Object> usedDesignElements = new HashSet<Object>();
         for ( ArrayDesign design : arrayDesigns ) {
             log.info( "Processing " + design );
             DoubleMatrix subMatrix = getSubMatrixForArrayDesign( matrix, usedDesignElements, design );
             BioAssayDimension bad = convertBioAssayDimension( experiment, design, taxon, subMatrix );
-            Collection<DesignElementDataVector> vectors = convertDesignElementDataVectors( experiment, bad, design,
+            Collection<RawExpressionDataVector> vectors = convertDesignElementDataVectors( experiment, bad, design,
                     quantitationType, subMatrix );
             allVectors.addAll( vectors );
             allBioAssays.addAll( bad.getBioAssays() );
@@ -147,7 +148,7 @@ public class SimpleExpressionDataLoaderService {
                     + " rows, " + usedDesignElements.size() + " found" );
         }
 
-        experiment.setDesignElementDataVectors( allVectors );
+        experiment.setRawExpressionDataVectors( allVectors );
         experiment.setBioAssays( allBioAssays );
 
         return experiment;
@@ -373,12 +374,12 @@ public class SimpleExpressionDataLoaderService {
      * @param matrix
      * @return Collection<DesignElementDataVector>
      */
-    private Collection<DesignElementDataVector> convertDesignElementDataVectors(
+    private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign arrayDesign,
             QuantitationType quantitationType, DoubleMatrix matrix ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
 
-        Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
+        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
 
         Map<String, CompositeSequence> csMap = new HashMap<String, CompositeSequence>();
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
@@ -388,7 +389,7 @@ public class SimpleExpressionDataLoaderService {
         for ( int i = 0; i < matrix.rows(); i++ ) {
             byte[] bdata = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );
 
-            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+            RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
             vector.setData( bdata );
 
             CompositeSequence cs = csMap.get( matrix.getRowName( i ) );

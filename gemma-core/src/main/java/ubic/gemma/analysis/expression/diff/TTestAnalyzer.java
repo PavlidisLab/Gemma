@@ -35,7 +35,6 @@ import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -116,22 +115,20 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         connectToR();
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
-                .getUsefulVectors( expressionExperiment );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( expressionExperiment );
 
-        ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
-
-        List<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
+        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService.getBioMaterialsForBioAssays( dmatrix );
 
         Collection<FactorValue> factorValues = new ArrayList<FactorValue>();
         factorValues.add( factorValueA );
         factorValues.add( factorValueB );
 
-        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
+        List<String> rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
 
         DoubleMatrix namedMatrix = dmatrix.getNamedMatrix();
 
-        QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
+        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
         String facts = rc.assignStringList( rFactors );
 

@@ -23,7 +23,8 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 /**
- * 
+ * @author Paul
+ * @version $Id$
  */
 public interface BioAssayDimensionService {
 
@@ -31,14 +32,6 @@ public interface BioAssayDimensionService {
      * 
      */
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension findOrCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
-
-    /**
-     * <p>
-     * Return all DesignElementDataVectors that reference the BioAssayDimension
-     * </p>
-     */
-    public java.util.Collection getDesignElementDataVectors(
             ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
     /**

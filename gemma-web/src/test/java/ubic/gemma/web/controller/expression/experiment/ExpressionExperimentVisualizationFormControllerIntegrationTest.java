@@ -45,7 +45,7 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         ee = this.getTestPersistentCompleteExpressionExperiment( true );
-        for ( DesignElementDataVector d : ee.getDesignElementDataVectors() ) {
+        for ( DesignElementDataVector d : ee.getRawExpressionDataVectors() ) {
             if ( d.getQuantitationType().getIsPreferred() ) {
                 qt = d.getQuantitationType();
             }

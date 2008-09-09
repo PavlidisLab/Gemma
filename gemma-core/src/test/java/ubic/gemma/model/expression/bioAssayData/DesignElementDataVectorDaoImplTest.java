@@ -24,7 +24,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
 
-import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
@@ -68,46 +67,12 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        dedv = DesignElementDataVector.Factory.newInstance();
+        dedv = RawExpressionDataVector.Factory.newInstance();
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
         taxonService = ( TaxonService ) this.getBean( "taxonService" );
-    }
-
-    /**
-     * @deprecated the method under test is deprecated.
-     */
-    public void testQueryByGeneSymbolAndSpecies() {
-        designElementDataVectorDao = ( DesignElementDataVectorDao ) this.getBean( "designElementDataVectorDao" );
-        Collection<ExpressionExperiment> expressionExperiments = new HashSet<ExpressionExperiment>();
-        for ( long i = 0; i < 3; i++ ) {
-            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-            ee.setId( i );
-            ee.setName( "test_ee_" + i + " from DesignElementDataVectorDaoTest" );
-            expressionExperiments.add( ee );
-        }
-
-        Collection objects = designElementDataVectorDao.queryByGeneSymbolAndSpecies( "GRIN1", "mouse",
-                expressionExperiments );
-        assertNotNull( objects );
-    }
-
-    public void testGetGenes() {
-        designElementDataVectorDao = ( DesignElementDataVectorDao ) this.getBean( "designElementDataVectorDao" );
-        DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
-        dedv.setId( 1L );
-        Collection objects = designElementDataVectorDao.getGenes( dedv );
-        assertNotNull( objects );
-    }
-
-    public void testGetGenesById() {
-        designElementDataVectorDao = ( DesignElementDataVectorDao ) this.getBean( "designElementDataVectorDao" );
-        DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
-        dedv.setId( 1L );
-        Collection objects = designElementDataVectorDao.getGenesById( 1 );
-        assertNotNull( objects );
     }
 
     protected void onTearDownAfterTransaction() throws Exception {
@@ -117,44 +82,6 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
             // expressionExperimentService.delete( newee );
         }
 
-    }
-
-    @SuppressWarnings("unchecked")
-    public void testGetMaskedPreferredData() {
-        endTransaction();
-
-        // Dataset uses spotted arrays, 11 samples.
-
-        String path = ConfigUtils.getString( "gemma.home" );
-        assert path != null;
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE432", false, true, false, false, true );
-            newee = results.iterator().next();
-            newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
-            expressionExperimentService.update( newee );
-            TwoChannelMissingValues tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
-            tcmv.computeMissingValues( newee, 1.5, null );
-            // No masked preferred computation.
-        } catch ( AlreadyExistsInSystemException e ) {
-            newee = ( ExpressionExperiment ) e.getData();
-        }
-
-        this.expressionExperimentService.thawLite( newee );
-
-        DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
-                .getBean( "designElementDataVectorService" );
-
-        Collection<Gene> genes = getGeneAssociatedWithEe();
-
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        ees.add( newee );
-
-        Map<DoubleVectorValueObject, Collection<Gene>> v = dedvs.getMaskedPreferredDataArrays( ees, genes );
-
-        assertEquals( 40, v.size() );
     }
 
     /**
@@ -200,7 +127,7 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE432", false, true, false, false, true );
+                    "GSE432", false, true, false, false );
             newee = results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {

@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -120,7 +121,7 @@ public class ProcessedDataMerger {
 
                 List<String> rawData = data.get( qtName );
 
-                DesignElementDataVector dv = DesignElementDataVector.Factory.newInstance();
+                RawExpressionDataVector dv = RawExpressionDataVector.Factory.newInstance();
                 dv.setExpressionExperiment( mageMlResult );
                 dv.setQuantitationType( type );
                 dv.setDesignElement( cs );
@@ -129,7 +130,7 @@ public class ProcessedDataMerger {
                 byte[] dat = convertData( rawData, type );
                 dv.setData( dat );
 
-                mageMlResult.getDesignElementDataVectors().add( dv );
+                mageMlResult.getRawExpressionDataVectors().add( dv );
 
             }
 

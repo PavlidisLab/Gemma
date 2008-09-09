@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -336,7 +337,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
     private DesignElementDataVector initializeNewVector( ExpressionExperiment expExp, BioAssayDimension newBioAd,
             QuantitationType type, DesignElement de ) {
-        DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+        DesignElementDataVector vector = RawExpressionDataVector.Factory.newInstance();
         vector.setBioAssayDimension( newBioAd );
         vector.setDesignElement( de );
         vector.setQuantitationType( type );

@@ -52,11 +52,8 @@ public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
-
         expressionDataFileService = ( ExpressionDataFileService ) this.getBean( "expressionDataFileService" );
-
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-
         super.onSetUpInTransaction();
     }
 
@@ -78,7 +75,37 @@ public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
         writer.flush();
         writer.close();
 
-        File f1 = expressionDataFileService.getOutputFile( ee );
+        File f1 = expressionDataFileService.getOutputFile( ee, true );
+        assertNotNull( f1 );
+
+        Reader reader = new InputStreamReader( new GZIPInputStream( new FileInputStream( f1 ) ) );
+        int i = reader.read();
+        assertEquals( 70, i );
+        reader.close();
+
+        f1.delete();
+    }
+
+    /**
+     * 
+     */
+    public void testGetUnfilteredOutputFile() throws Exception {
+
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
+        if ( ee == null ) {
+            log.error( "Could not find experiment " + shortName + ".  Skipping test ..." );
+            return;
+        }
+        expressionExperimentService.thawLite( ee );
+
+        String filename = ExpressionDataFileService.DATA_DIR + ee.getId() + "_" + shortName
+                + "_expmat.unfilt.data.txt.gz";
+        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( filename ) ) );
+        writer.write( "File written from " + this.getClass().getName() + " on " + new Date() );
+        writer.flush();
+        writer.close();
+
+        File f1 = expressionDataFileService.getOutputFile( ee, false );
         assertNotNull( f1 );
 
         Reader reader = new InputStreamReader( new GZIPInputStream( new FileInputStream( f1 ) ) );

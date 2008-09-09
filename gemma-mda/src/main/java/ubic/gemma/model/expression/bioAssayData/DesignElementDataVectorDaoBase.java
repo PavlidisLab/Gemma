@@ -465,65 +465,6 @@ public abstract class DesignElementDataVectorDaoBase extends ubic.gemma.model.ex
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#queryByGeneSymbolAndSpecies(java.lang.String,
-     *      java.lang.String, java.util.Collection)
-     */
-    public java.util.Collection queryByGeneSymbolAndSpecies( final java.lang.String geneSymbol,
-            final java.lang.String species, final java.util.Collection expressionExperiments ) {
-        try {
-            return this.handleQueryByGeneSymbolAndSpecies( geneSymbol, species, expressionExperiments );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao.queryByGeneSymbolAndSpecies(java.lang.String geneSymbol, java.lang.String species, java.util.Collection expressionExperiments)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #queryByGeneSymbolAndSpecies(java.lang.String, java.lang.String, java.util.Collection)}
-     */
-    protected abstract java.util.Collection handleQueryByGeneSymbolAndSpecies( java.lang.String geneSymbol,
-            java.lang.String species, java.util.Collection expressionExperiments ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#getGenes(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
-     */
-    public java.util.Collection getGenes( final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv ) {
-        try {
-            return this.handleGetGenes( dedv );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao.getGenes(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getGenes(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
-     */
-    protected abstract java.util.Collection handleGetGenes(
-            ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#getGenesById(long)
-     */
-    public java.util.Collection getGenesById( final long id ) {
-        try {
-            return this.handleGetGenesById( id );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao.getGenesById(long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getGenesById(long)}
-     */
-    protected abstract java.util.Collection handleGetGenesById( long id ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
      */
     public void thaw( final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector ) {
@@ -578,24 +519,6 @@ public abstract class DesignElementDataVectorDaoBase extends ubic.gemma.model.ex
      * Performs the core logic for {@link #countAll()}
      */
     protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#getGenes(java.util.Collection)
-     */
-    public java.util.Map getGenes( final java.util.Collection dataVectors ) {
-        try {
-            return this.handleGetGenes( dataVectors );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao.getGenes(java.util.Collection dataVectors)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getGenes(java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetGenes( java.util.Collection dataVectors ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#removeDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
@@ -658,48 +581,6 @@ public abstract class DesignElementDataVectorDaoBase extends ubic.gemma.model.ex
      */
     protected abstract java.util.Map handleGetPreferredVectors( java.util.Collection ees, java.util.Collection genes )
             throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#getDedv2GenesMap(java.util.Collection,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    public java.util.Map getDedv2GenesMap( final java.util.Collection dedvs,
-            final ubic.gemma.model.common.quantitationtype.QuantitationType qt ) {
-        try {
-            return this.handleGetDedv2GenesMap( dedvs, qt );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao.getDedv2GenesMap(java.util.Collection dedvs, ubic.gemma.model.common.quantitationtype.QuantitationType qt)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #getDedv2GenesMap(java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract java.util.Map handleGetDedv2GenesMap( java.util.Collection dedvs,
-            ubic.gemma.model.common.quantitationtype.QuantitationType qt ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#getMaskedPreferredDataArrays(java.util.Collection,
-     *      java.util.Collection)
-     */
-    public java.util.Map getMaskedPreferredDataArrays( final java.util.Collection ees, final java.util.Collection genes ) {
-        try {
-            return this.handleGetMaskedPreferredDataArrays( ees, genes );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao.getMaskedPreferredDataArrays(java.util.Collection ees, java.util.Collection genes)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getMaskedPreferredDataArrays(java.util.Collection, java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetMaskedPreferredDataArrays( java.util.Collection ees,
-            java.util.Collection genes ) throws java.lang.Exception;
 
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the

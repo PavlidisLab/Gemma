@@ -70,7 +70,7 @@ public class ExpressionExperimentVisualizationControllerTest extends BaseSpringW
             return;
         }
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( ee.getDesignElementDataVectors() );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( ee.getRawExpressionDataVectors() );
         ExpressionDataMatrix matrix = builder.getPreferredData();
 
         int i = 1;

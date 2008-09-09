@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.gemma.analysis.service.AnalysisHelperService;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -36,8 +36,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 
 /**
- *Allows access to all the Design Element Data Vectors (DEDV's)  for a given Expression Experiment. Returns the DEDV's and the genes that might be 
- *responsible for that DEDV
+ * Allows access to all the Design Element Data Vectors (DEDV's) for a given Expression Experiment. Returns the DEDV's
+ * and the genes that might be responsible for that DEDV
  * 
  * @author klc, gavin
  * @version$Id$
@@ -48,14 +48,14 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
     private static Log log = LogFactory.getLog( ExperimentDEDVEndpoint.class );
 
     private ExpressionExperimentService expressionExperimentService;
-    private AnalysisHelperService analysisHelperService;
+    private ExpressionDataMatrixService analysisHelperService;
     private CompositeSequenceService compositeSequenceService;
-   
 
     /**
      * The local name of the expected request/response.
      */
     private static final String EXPERIMENT_LOCAL_NAME = "experimentDEDV";
+
     /**
      * Sets the "business service" to delegate to.
      */
@@ -63,13 +63,9 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
         this.expressionExperimentService = ees;
     }
 
-    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
+    public void setAnalysisHelperService( ExpressionDataMatrixService analysisHelperService ) {
         this.analysisHelperService = analysisHelperService;
     }
-
-    // public void setGeneService(GeneService geneService){
-    // this.geneService = geneService;
-    // }
 
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
@@ -86,14 +82,12 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( EXPERIMENT_LOCAL_NAME );
         String eeid = "";
 
         Collection<String> eeResults = getSingleNodeValue( requestElement, "ee_id" );
 
-        log.info( "XML input read: expression experiment id, "+eeid);
-        
         for ( String id : eeResults ) {
             eeid = id;
         }
@@ -102,15 +96,15 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeid ) );
         expressionExperimentService.thawLite( ee );
 
-        ExpressionDataDoubleMatrix dmatrix = analysisHelperService.getMaskedPreferredDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = analysisHelperService.getProcessedExpressionDataMatrix( ee );
 
         // start building the wrapper
         // build xml manually rather than use buildWrapper inherited from AbstractGemmeEndpoint
         String elementName1 = "dedv";
         String elementName2 = "geneIdist";
 
-//        log.info( "Building " + EXPERIMENT_LOCAL_NAME + " XML response" );
- 
+        // log.info( "Building " + EXPERIMENT_LOCAL_NAME + " XML response" );
+
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
@@ -144,9 +138,9 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-//        log.info( "Finished generating result. Sending response to client." );
+        // log.info( "Finished generating result. Sending response to client." );
         log.info( "XML response for design element data vector result built in " + time + "ms." );
-        writeReport( responseWrapper, document, "DEDVforEE-"+eeid );
+        writeReport( responseWrapper, document, "DEDVforEE-" + eeid );
         return responseWrapper;
     }
 

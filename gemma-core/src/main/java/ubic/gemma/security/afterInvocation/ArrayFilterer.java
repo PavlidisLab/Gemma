@@ -29,9 +29,6 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * A filter used to filter arrays.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @author Ben Alex

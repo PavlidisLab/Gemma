@@ -110,9 +110,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
-        Option expOption = OptionBuilder.hasArg().withArgName( "Expression experiment name" ).withDescription(
-                "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
-                        + "and if this option is omitted, the tool will be applied to all expression experiments." )
+        Option expOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Expression experiment name" )
+                .withDescription(
+                        "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
+                                + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
                 .withLongOpt( "experiment" ).create( 'e' );
 
         addOption( expOption );
@@ -137,7 +140,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
                         "excludeEEFile" ).create( 'x' );
         addOption( excludeEeOption );
 
-        Option eeSearchOption = OptionBuilder.hasArg().withArgName( "expressionQuerry" ).withDescription(
+        Option eeSearchOption = OptionBuilder.hasArg().withArgName( "expressionQuery" ).withDescription(
                 "Use a query string for defining which expression experiments to use" ).withLongOpt( "expressionQuery" )
                 .create( 'q' );
         addOption( eeSearchOption );

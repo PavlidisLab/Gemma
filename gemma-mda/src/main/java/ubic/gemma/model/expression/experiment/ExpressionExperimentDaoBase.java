@@ -1043,10 +1043,10 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
-    public long getPreferredDesignElementDataVectorCount(
+    public long getProcessedExpressionVectorCount(
             final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
         try {
-            return this.handleGetPreferredDesignElementDataVectorCount( expressionExperiment );
+            return this.handleGetProcessedExpressionVectorCount( expressionExperiment );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentDao.getPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
@@ -1056,9 +1056,9 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
 
     /**
      * Performs the core logic for
-     * {@link #getPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
+     * {@link #getProcessedExpressionVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */
-    protected abstract long handleGetPreferredDesignElementDataVectorCount(
+    protected abstract long handleGetProcessedExpressionVectorCount(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment )
             throws java.lang.Exception;
 
@@ -1197,28 +1197,6 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      */
     protected abstract java.util.Collection handleFindByBibliographicReference( java.lang.Long bibRefID )
             throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getDesignElementDataVectors(java.util.Map,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    public java.util.Map getDesignElementDataVectors( final java.util.Map cs2gene,
-            final ubic.gemma.model.common.quantitationtype.QuantitationType qt ) {
-        try {
-            return this.handleGetDesignElementDataVectors( cs2gene, qt );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentDao.getDesignElementDataVectors(java.util.Map cs2gene, ubic.gemma.model.common.quantitationtype.QuantitationType qt)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #getDesignElementDataVectors(java.util.Map, ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract java.util.Map handleGetDesignElementDataVectors( java.util.Map cs2gene,
-            ubic.gemma.model.common.quantitationtype.QuantitationType qt ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getLastArrayDesignUpdate(ubic.gemma.model.expression.experiment.ExpressionExperiment,

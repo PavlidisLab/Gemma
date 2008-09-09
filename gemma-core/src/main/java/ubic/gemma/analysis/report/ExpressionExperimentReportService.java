@@ -54,7 +54,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -162,7 +162,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Long, AuditEvent> linkAnalysisEvents = getEvents( ees, LinkAnalysisEvent.Factory.newInstance() );
         Map<Long, AuditEvent> missingValueAnalysisEvents = getEvents( ees, MissingValueAnalysisEvent.Factory
                 .newInstance() );
-        Map<Long, AuditEvent> rankComputationEvents = getEvents( ees, RankComputationEvent.Factory.newInstance() );
+        Map<Long, AuditEvent> rankComputationEvents = getEvents( ees, ProcessedVectorComputationEvent.Factory
+                .newInstance() );
         Map<Long, AuditEvent> troubleEvents = getEvents( ees, TroubleStatusFlagEvent.Factory.newInstance() );
         Map<Long, AuditEvent> validationEvents = getEvents( ees, ValidatedFlagEvent.Factory.newInstance() );
         Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.Factory.newInstance() );
@@ -194,8 +195,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             if ( rankComputationEvents.containsKey( id ) ) {
                 AuditEvent event = rankComputationEvents.get( id );
                 if ( event != null ) {
-                    eeVo.setDateRankComputation( event.getDate() );
-                    eeVo.setRankComputationEventType( event.getEventType() );
+                    eeVo.setDateProcessedDataVectorComputation( event.getDate() );
+                    eeVo.setProcessedDataVectorComputationEventType( event.getEventType() );
                 }
             }
 
@@ -252,7 +253,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             ExpressionExperimentValueObject cacheVo = retrieveValueObject( eeVo.getId() );
             if ( cacheVo != null ) {
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
-                eeVo.setPreferredDesignElementDataVectorCount( cacheVo.getPreferredDesignElementDataVectorCount() );
+                eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
                 eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
                 eeVo.setDateCached( cacheVo.getDateCached() );
                 eeVo.setDateCreated( cacheVo.getDateCreated() );
@@ -437,8 +438,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
 
         eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
-        eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService
-                .getPreferredDesignElementDataVectorCount( tempEe ) );
+        eeVo.setProcessedExpressionVectorCount( expressionExperimentService
+                .getProcessedExpressionVectorCount( tempEe ) );
 
         long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
         log.info( numLinks + " links." );

@@ -40,6 +40,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -86,18 +87,18 @@ public class ExpressionDataManager {
      * @return a Collection of BioAssays of the experiment in the order they appear for DesignElementDataVectors
      */
     protected Collection<BioAssay> getDataVectorBioAssays() {
-        Collection<DesignElementDataVector> dataVectors = getDesignElementDataVectors();
+        Collection<DesignElementDataVector> dataVectors = getRawExpressionDataVectors();
         return dataVectors.iterator().next().getBioAssayDimension().getBioAssays();
     }
 
     /**
      * @return a Collection of DesignElementDataVectors of the experiment, which contain expression levels
      */
-    protected Collection<DesignElementDataVector> getDesignElementDataVectors() {
+    protected Collection<DesignElementDataVector> getRawExpressionDataVectors() {
         Collection<DesignElementDataVector> expressionDataVectors = new Vector<DesignElementDataVector>();
-        Collection<DesignElementDataVector> designElementDataVectors = experiment.getDesignElementDataVectors();
+        Collection<RawExpressionDataVector> designElementDataVectors = experiment.getRawExpressionDataVectors();
 
-        for ( DesignElementDataVector dataVector : designElementDataVectors ) {
+        for ( RawExpressionDataVector dataVector : designElementDataVectors ) {
             if ( dataVector.getQuantitationType().getName().trim().equals( "VALUE" )
                     && dataVector.getQuantitationType().getRepresentation().toString().trim().equals( "DOUBLE" ) )
                 expressionDataVectors.add( dataVector );

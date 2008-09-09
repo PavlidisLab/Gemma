@@ -291,7 +291,13 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
             }
             return readOnlyee;
         }
-        return testHelper.getTestExpressionExperimentWithAllDependencies();
+        ExpressionExperiment ee = testHelper.getTestExpressionExperimentWithAllDependencies();
+
+        return ee;
+    }
+
+    protected void addTestAnalyses( ExpressionExperiment ee ) {
+        testHelper.addTestAnalyses( ee );
     }
 
     /**
@@ -448,7 +454,7 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
         persisterHelper = ( PersisterHelper ) getBean( "persisterHelper" ); // beans not injected yet, have to do
         // explicitly?
         testHelper.setPersisterHelper( persisterHelper );
-        testHelper.setExternalDatabaseService( externalDatabaseService );
+        testHelper.setExternalDatabaseService( externalDatabaseService ); 
     }
 
     /**

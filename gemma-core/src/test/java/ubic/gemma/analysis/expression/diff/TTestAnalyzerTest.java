@@ -132,7 +132,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         configureMockAnalysisServiceHelper( 1 );
 
-        analyzer.setAnalysisHelperService( analysisHelperService );
+        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
 
     }
 

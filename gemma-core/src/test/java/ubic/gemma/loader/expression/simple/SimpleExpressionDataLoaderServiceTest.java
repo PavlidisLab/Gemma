@@ -79,7 +79,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         eeService.thaw( ee );
 
         assertNotNull( ee );
-        assertEquals( 30, ee.getDesignElementDataVectors().size() );
+        assertEquals( 30, ee.getRawExpressionDataVectors().size() );
         assertEquals( 12, ee.getBioAssays().size() );
     }
 
@@ -118,7 +118,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         eeService.thaw( ee );
 
         assertNotNull( ee );
-        assertEquals( 200, ee.getDesignElementDataVectors().size() );
+        assertEquals( 200, ee.getRawExpressionDataVectors().size() );
         assertEquals( 59, ee.getBioAssays().size() );
         // setComplete();
     }
@@ -159,13 +159,13 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
                 .getBean( "designElementDataVectorService" );
 
-        for ( DesignElementDataVector vector : ee.getDesignElementDataVectors() ) {
+        for ( DesignElementDataVector vector : ee.getRawExpressionDataVectors() ) {
             dedvs.thaw( vector );
             assertTrue( ( ( CompositeSequence ) vector.getDesignElement() ).getBiologicalCharacteristic().getName()
                     .startsWith( "IMAGE:" ) );
         }
 
-        assertEquals( 173, ee.getDesignElementDataVectors().size() );
+        assertEquals( 173, ee.getRawExpressionDataVectors().size() );
         assertEquals( 25, ee.getBioAssays().size() );
     }
 

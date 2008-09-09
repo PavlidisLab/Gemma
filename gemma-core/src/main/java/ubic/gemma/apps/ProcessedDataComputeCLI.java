@@ -1,0 +1,145 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2007 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.apps;
+
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+
+/**
+ * Prepare the "processed" expression data vectors. This also computes the ranks (replaces the old DEDVRank stuff0.
+ * 
+ * @author xwan, paul
+ * @version $Id$
+ * @see ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService
+ */
+public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
+
+    private static Log log = LogFactory.getLog( ProcessedDataComputeCLI.class.getName() );
+
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        ProcessedDataComputeCLI computing = new ProcessedDataComputeCLI();
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Exception ex = computing.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+            watch.stop();
+            log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+
+    @Override
+    public String getShortDesc() {
+        return "Updates the 'processed expression data', including computing the 'ranks' for each expression vector.";
+    }
+
+    /**
+     * 
+     */
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+
+        super.buildOptions();
+
+        addDateOption();
+    }
+
+    /**
+     * 
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Exception doWork( String[] args ) {
+        Exception err = processCommandLine( "processed expression data updater ", args );
+        if ( err != null ) {
+            return err;
+        }
+
+        for ( BioAssaySet ee : expressionExperiments ) {
+            processExperiment( ( ExpressionExperiment ) ee );
+        }
+        summarizeProcessing();
+        return null;
+    }
+
+    /**
+     * 
+     */
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) this
+                .getBean( "processedExpressionDataVectorCreateService" );
+        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
+        // AuditEventType eventType = RankComputationEvent.Factory.newInstance(); // FIXME temporary until code merge
+        auditTrailService.addUpdateEvent( ee, eventType, note );
+    }
+
+    /**
+     * @param errorObjects
+     * @param persistedObjects
+     * @param ee
+     */
+    private void processExperiment( ExpressionExperiment ee ) {
+        if ( isTroubled( ee ) ) {
+            log.info( "Skipping troubled experiment " + ee.getShortName() );
+            return;
+        }
+        try {
+            eeService.thawLite( ee );
+            boolean needToRun = needToRun( ee, ProcessedVectorComputationEvent.class );
+
+            if ( !needToRun ) return;
+            this.processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+            successObjects.add( ee.toString() );
+            audit( ee, "Processed data computation" );
+        } catch ( Exception e ) {
+            errorObjects.add( ee + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
+        }
+    }
+}

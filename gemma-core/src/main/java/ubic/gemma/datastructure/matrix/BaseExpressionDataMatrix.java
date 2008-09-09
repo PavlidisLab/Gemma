@@ -38,6 +38,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -196,7 +197,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
             Collection<QuantitationType> quantitationTypes ) {
         Collection<DesignElementDataVector> selected = new HashSet<DesignElementDataVector>();
-        Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+        Collection<RawExpressionDataVector> vectors = expressionExperiment.getRawExpressionDataVectors();
         this.quantitationTypes.addAll( quantitationTypes );
         for ( QuantitationType type : quantitationTypes ) {
             selected.addAll( this.selectVectors( type, vectors ) );
@@ -211,7 +212,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      */
     protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType ) {
-        Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+        Collection<RawExpressionDataVector> vectors = expressionExperiment.getRawExpressionDataVectors();
         return selectVectors( quantitationType, vectors );
     }
 
@@ -221,7 +222,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * @return Collection<DesignElementDataVector>
      */
     protected Collection<DesignElementDataVector> selectVectors( QuantitationType quantitationType,
-            Collection<DesignElementDataVector> vectors ) {
+            Collection<? extends DesignElementDataVector> vectors ) {
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
         this.quantitationTypes.add( quantitationType );
         List<DesignElementDataVector> sorted = sortVectorsByDesignElement( vectors );
@@ -232,6 +233,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
+                this.getQuantitationTypes().add(vectorQuantitationType);
                 this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                 addToRowMaps( i, designElement );
                 i++;
@@ -244,7 +246,8 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * @param vectors
      * @return
      */
-    private List<DesignElementDataVector> sortVectorsByDesignElement( Collection<DesignElementDataVector> vectors ) {
+    private List<DesignElementDataVector> sortVectorsByDesignElement(
+            Collection<? extends DesignElementDataVector> vectors ) {
         List<DesignElementDataVector> vectorSort = new ArrayList<DesignElementDataVector>( vectors );
         Collections.sort( vectorSort, new Comparator<DesignElementDataVector>() {
             public int compare( DesignElementDataVector o1, DesignElementDataVector o2 ) {
@@ -257,7 +260,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
             List<QuantitationType> quantitationTypes ) {
 
-        Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+        Collection<RawExpressionDataVector> vectors = expressionExperiment.getRawExpressionDataVectors();
         this.quantitationTypes.addAll( quantitationTypes );
         Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( vectors, quantitationTypes );
 
@@ -270,7 +273,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * @param quantitationTypes
      * @return
      */
-    protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElementDataVector> vectors,
+    protected Collection<DesignElementDataVector> selectVectors( Collection<? extends DesignElementDataVector> vectors,
             List<QuantitationType> quantitationTypes ) {
         this.quantitationTypes.addAll( quantitationTypes );
         List<DesignElementDataVector> sorted = sortVectorsByDesignElement( vectors );
@@ -284,6 +287,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                     if ( this.expressionExperiment == null )
                         this.expressionExperiment = vector.getExpressionExperiment();
                     vectorsOfInterest.add( vector );
+                    this.getQuantitationTypes().add(vectorQuantitationType);
                     DesignElement designElement = vector.getDesignElement();
                     this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                     addToRowMaps( rowIndex, designElement );
@@ -312,7 +316,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * @param quantitationType
      * @return
      */
-    protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElementDataVector> vectors,
+    protected Collection<DesignElementDataVector> selectVectors( Collection<? extends DesignElementDataVector> vectors,
             QuantitationType quantitationType ) {
         this.quantitationTypes.add( quantitationType );
 
@@ -324,6 +328,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
                 vectorsOfInterest.add( vector );
+                this.getQuantitationTypes().add(vectorQuantitationType);
                 DesignElement designElement = vector.getDesignElement();
                 bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                 addToRowMaps( i, designElement );
@@ -334,7 +339,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return vectorsOfInterest;
     }
 
-    protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElementDataVector> vectors,
+    protected Collection<DesignElementDataVector> selectVectors( Collection<? extends DesignElementDataVector> vectors,
             Collection<QuantitationType> quantitationTypes ) {
         this.quantitationTypes.addAll( quantitationTypes );
 
@@ -349,6 +354,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                 DesignElement designElement = vector.getDesignElement();
                 bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                 addToRowMaps( i, designElement );
+                this.getQuantitationTypes().add( vectorQuantitationType );
                 i++;
             }
 
@@ -361,7 +367,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * 
      * @param vectors
      */
-    protected void selectVectors( Collection<DesignElementDataVector> vectors ) {
+    protected void selectVectors( Collection<? extends DesignElementDataVector> vectors ) {
         QuantitationType quantitationType = null;
         int i = 0;
         List<DesignElementDataVector> sorted = sortVectorsByDesignElement( vectors );
@@ -372,10 +378,13 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
             if ( quantitationType == null ) {
                 quantitationType = vectorQuantitationType;
+
+                this.getQuantitationTypes().add( vectorQuantitationType );
             } else {
                 if ( quantitationType != vectorQuantitationType ) {
                     throw new IllegalArgumentException( "Cannot pass vectors from more than one quantitation type" );
                 }
+
             }
 
             addToRowMaps( i, designElement );
@@ -580,7 +589,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     }
 
-    protected abstract void vectorsToMatrix( Collection<DesignElementDataVector> vectors );
+    protected abstract void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors );
 
     /*
      * (non-Javadoc)

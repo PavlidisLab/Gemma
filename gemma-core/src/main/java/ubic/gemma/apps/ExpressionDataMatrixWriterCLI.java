@@ -27,7 +27,7 @@ import java.util.Map;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.analysis.service.AnalysisHelperService;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -81,13 +81,13 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     protected Exception doWork( String[] args ) {
         processCommandLine( "expressionDataMatrixWriterCLI", args );
 
-        AnalysisHelperService ahs = ( AnalysisHelperService ) this.getBean( "analysisHelperService" );
+        ExpressionDataMatrixService ahs = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
 
         CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
 
         for ( BioAssaySet ee : expressionExperiments ) {
 
-            ExpressionDataDoubleMatrix dataMatrix = ahs.getMaskedPreferredDataMatrix( ( ExpressionExperiment ) ee );
+            ExpressionDataDoubleMatrix dataMatrix = ahs.getProcessedExpressionDataMatrix( ( ExpressionExperiment ) ee );
 
             Map<Long, Collection<Gene>> genesByProbeId = new HashMap<Long, Collection<Gene>>();
 

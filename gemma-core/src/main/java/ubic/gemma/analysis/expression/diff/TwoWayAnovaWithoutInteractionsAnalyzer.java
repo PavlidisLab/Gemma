@@ -32,7 +32,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -88,20 +87,18 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
                             + " or experimental factor " + experimentalFactorB.getName() + "." );
         }
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
-                .getUsefulVectors( expressionExperiment );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( expressionExperiment );
 
-        ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
+        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
-        QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
-
-        List<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
+        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService.getBioMaterialsForBioAssays( dmatrix );
 
         DoubleMatrix namedMatrix = dmatrix.getNamedMatrix();
 
-        List<String> rFactorsA = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorA,
+        List<String> rFactorsA = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorA,
                 samplesUsed );
-        List<String> rFactorsB = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorB,
+        List<String> rFactorsB = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorB,
                 samplesUsed );
 
         String factsA = rc.assignStringList( rFactorsA );

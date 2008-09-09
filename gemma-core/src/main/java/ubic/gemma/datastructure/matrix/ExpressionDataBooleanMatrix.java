@@ -81,7 +81,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * @return
      */
     private ObjectMatrixImpl<DesignElement, Integer, Boolean> createMatrix(
-            Collection<DesignElementDataVector> vectors, int maxSize ) {
+            Collection<? extends DesignElementDataVector> vectors, int maxSize ) {
         ObjectMatrixImpl<DesignElement, Integer, Boolean> matrix = new ObjectMatrixImpl<DesignElement, Integer, Boolean>(
                 vectors.size(), maxSize );
 
@@ -288,7 +288,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     }
 
     @Override
-    protected void vectorsToMatrix( Collection<DesignElementDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             throw new IllegalArgumentException();
         }

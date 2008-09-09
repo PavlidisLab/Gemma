@@ -72,6 +72,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -682,7 +683,7 @@ public class GeoConverter implements Converter {
                 List<Object> dataVector = dataVectors.get( designElementName );
                 if ( dataVector == null || dataVector.size() == 0 ) continue;
 
-                DesignElementDataVector vector = convertDesignElementDataVector( geoPlatform, expExp,
+                RawExpressionDataVector vector = convertDesignElementDataVector( geoPlatform, expExp,
                         bioAssayDimension, designElementName, dataVector, qt );
 
                 if ( vector == null ) {
@@ -697,7 +698,7 @@ public class GeoConverter implements Converter {
                             + dataVector.size() + " elements in vector" );
                 }
 
-                expExp.getDesignElementDataVectors().add( vector );
+                expExp.getRawExpressionDataVectors().add( vector );
 
                 if ( ++count % LOGGING_VECTOR_COUNT_UPDATE == 0 && log.isDebugEnabled() ) {
                     log.debug( count + " Data vectors added" );
@@ -718,7 +719,7 @@ public class GeoConverter implements Converter {
                 log.info( "Skipped " + skipped + " vectors" );
             }
         }
-        log.info( "Total of " + expExp.getDesignElementDataVectors().size() + " vectors on platform " + geoPlatform
+        log.info( "Total of " + expExp.getRawExpressionDataVectors().size() + " vectors on platform " + geoPlatform
                 + ", " + expExp.getQuantitationTypes().size() + " quantitation types." );
     }
 
@@ -752,7 +753,7 @@ public class GeoConverter implements Converter {
      * @param dataVector to convert.
      * @return vector, or null if the dataVector was null or empty.
      */
-    private DesignElementDataVector convertDesignElementDataVector( GeoPlatform geoPlatform,
+    private RawExpressionDataVector convertDesignElementDataVector( GeoPlatform geoPlatform,
             ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String designElementName,
             List<Object> dataVector, QuantitationType qt ) {
 
@@ -794,7 +795,7 @@ public class GeoConverter implements Converter {
         }
 
         if ( log.isDebugEnabled() ) log.debug( "Associating " + compositeSequence + " with dedv" );
-        DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+        RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
         vector.setDesignElement( compositeSequence );
         vector.setExpressionExperiment( expExp );
 
@@ -1640,7 +1641,7 @@ public class GeoConverter implements Converter {
         ExperimentalDesign design = ExperimentalDesign.Factory.newInstance();
         design.setDescription( "" );
         design.setName( "" );
-        Collection<GeoVariable> variables = series.getVariables().values(); // note that we don't use the index.
+        Collection<GeoVariable> variables = series.getVariables().values();
         for ( GeoVariable variable : variables ) {
             log.debug( "Adding variable " + variable );
             ExperimentalFactor ef = convertVariableToFactor( variable );

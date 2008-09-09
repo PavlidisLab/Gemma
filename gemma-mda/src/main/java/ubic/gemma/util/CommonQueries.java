@@ -74,6 +74,23 @@ public class CommonQueries {
     }
 
     /**
+     * @param ees collection of expression experiments.
+     * @return map of array designs to the experiments they were used in.
+     */
+    @SuppressWarnings("unchecked")
+    public static Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, Session session ) {
+
+        final String eeAdQuery = "select b.arrayDesignUsed from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b where ee = :ee";
+
+        org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
+        queryObject.setCacheable( true );
+        queryObject.setParameter( "ee", ee );
+        return queryObject.list();
+
+    }
+
+    /**
      * @param genes
      * @return
      */

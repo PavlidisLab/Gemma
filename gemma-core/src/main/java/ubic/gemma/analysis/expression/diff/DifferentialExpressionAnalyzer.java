@@ -42,25 +42,25 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @spring.property name="oneWayAnovaAnalyzer" ref="oneWayAnovaAnalyzer"
  * @spring.property name="twoWayAnovaWithInteractionsAnalyzer" ref="twoWayAnovaWithInteractionsAnalyzer"
  * @spring.property name="twoWayAnovaWithoutInteractionsAnalyzer" ref="twoWayAnovaWithoutInteractionsAnalyzer"
- * @spring.property name="analyzerHelper" ref="analyzerHelper"
+ * @spring.property name="differentialExpressionAnalysisHelperService" ref="differentialExpressionAnalysisHelperService"
  * @author keshav
  * @version $Id$
  */
 public class DifferentialExpressionAnalyzer {
-    private Log log = LogFactory.getLog( this.getClass() );
+    DifferentialExpressionAnalysis expressionAnalysis = null;
 
+    private Log log = LogFactory.getLog( this.getClass() );
     private int EXPERIMENTAL_FACTOR_ONE = 1;
     private int EXPERIMENTAL_FACTOR_TWO = 2;
     private int FACTOR_VALUE_ONE = 1;
-    private int FACTOR_VALUE_TWO = 2;
 
+    private int FACTOR_VALUE_TWO = 2;
     private TTestAnalyzer studenttTestAnalyzer = null;
     private OneWayAnovaAnalyzer oneWayAnovaAnalyzer = null;
     private TwoWayAnovaWithInteractionsAnalyzer twoWayAnovaWithInteractionsAnalyzer = null;
     private TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer = null;
-    private AnalyzerHelper analyzerHelper = null;
 
-    DifferentialExpressionAnalysis expressionAnalysis = null;
+    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = null;
 
     /**
      * Initiates the differential expression analysis (this is the entry point).
@@ -84,6 +84,29 @@ public class DifferentialExpressionAnalyzer {
         if ( expressionAnalysis == null ) return null;
 
         return expressionAnalysis;
+    }
+
+    public void setDifferentialExpressionAnalysisHelperService(
+            DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService ) {
+        this.differentialExpressionAnalysisHelperService = differentialExpressionAnalysisHelperService;
+    }
+
+    public void setOneWayAnovaAnalyzer( OneWayAnovaAnalyzer oneWayAnovaAnalyzer ) {
+        this.oneWayAnovaAnalyzer = oneWayAnovaAnalyzer;
+    }
+
+    public void setStudenttTestAnalyzer( TTestAnalyzer studenttTestAnalyzer ) {
+        this.studenttTestAnalyzer = studenttTestAnalyzer;
+    }
+
+    public void setTwoWayAnovaWithInteractionsAnalyzer(
+            TwoWayAnovaWithInteractionsAnalyzer twoWayAnovaWithInteractionsAnalyzer ) {
+        this.twoWayAnovaWithInteractionsAnalyzer = twoWayAnovaWithInteractionsAnalyzer;
+    }
+
+    public void setTwoWayAnovaWithoutInteractionsAnalyzer(
+            TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer ) {
+        this.twoWayAnovaWithoutInteractionsAnalyzer = twoWayAnovaWithoutInteractionsAnalyzer;
     }
 
     /**
@@ -150,7 +173,7 @@ public class DifferentialExpressionAnalyzer {
                 }
             }
             /* Check for block design and execute two way anova (with or without interactions). */
-            if ( !analyzerHelper.blockComplete( expressionExperiment ) ) {
+            if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment ) ) {
                 log.info( "Running two way anova without interactions." );
                 return twoWayAnovaWithoutInteractionsAnalyzer;
             } else {
@@ -174,25 +197,4 @@ public class DifferentialExpressionAnalyzer {
         return false;
     }
 
-    public void setOneWayAnovaAnalyzer( OneWayAnovaAnalyzer oneWayAnovaAnalyzer ) {
-        this.oneWayAnovaAnalyzer = oneWayAnovaAnalyzer;
-    }
-
-    public void setTwoWayAnovaWithInteractionsAnalyzer(
-            TwoWayAnovaWithInteractionsAnalyzer twoWayAnovaWithInteractionsAnalyzer ) {
-        this.twoWayAnovaWithInteractionsAnalyzer = twoWayAnovaWithInteractionsAnalyzer;
-    }
-
-    public void setTwoWayAnovaWithoutInteractionsAnalyzer(
-            TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer ) {
-        this.twoWayAnovaWithoutInteractionsAnalyzer = twoWayAnovaWithoutInteractionsAnalyzer;
-    }
-
-    public void setStudenttTestAnalyzer( TTestAnalyzer studenttTestAnalyzer ) {
-        this.studenttTestAnalyzer = studenttTestAnalyzer;
-    }
-
-    public void setAnalyzerHelper( AnalyzerHelper analyzerHelper ) {
-        this.analyzerHelper = analyzerHelper;
-    }
 }

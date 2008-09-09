@@ -208,41 +208,4 @@ public interface BioAssayDimensionDao extends ubic.gemma.model.common.AuditableD
     public Object find( int transform, String queryString,
             ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
-    /**
-     * <p>
-     * Find all the DesignElementDataVectors that are referred to by the BioAssayDimension
-     * </p>
-     */
-    public java.util.Collection findDesignElementDataVectors( java.lang.Long bioAssayDimensionId );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findDesignElementDataVectors(java.lang.Long)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findDesignElementDataVectors(java.lang.Long)}.
-     * </p>
-     */
-    public java.util.Collection findDesignElementDataVectors( String queryString, java.lang.Long bioAssayDimensionId );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findDesignElementDataVectors(java.lang.Long)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection findDesignElementDataVectors( int transform, java.lang.Long bioAssayDimensionId );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findDesignElementDataVectors(boolean, java.lang.Long)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findDesignElementDataVectors(int, java.lang.Long bioAssayDimensionId)}.
-     * </p>
-     */
-    public java.util.Collection findDesignElementDataVectors( int transform, String queryString,
-            java.lang.Long bioAssayDimensionId );
-
 }

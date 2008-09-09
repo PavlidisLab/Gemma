@@ -39,7 +39,6 @@ import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -118,14 +117,12 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
                             + factorValues.size() + "." );
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
-                .getUsefulVectors( expressionExperiment );
-
-        ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( expressionExperiment );
 
         DoubleMatrix filteredNamedMatrix = this.filterMatrix( dmatrix, experimentalFactor );
 
-        QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
+        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
         String facts = rc.assignStringList( rFactors );
 
@@ -226,9 +223,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private DoubleMatrix filterMatrix( ExpressionDataDoubleMatrix matrix, ExperimentalFactor experimentalFactor ) {
         // TODO make this a requirement in the abstract analyzer.
-        List<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
+        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService.getBioMaterialsForBioAssays( matrix );
 
-        rFactors = AnalyzerHelper.getRFactorsFromFactorValuesForOneWayAnova( experimentalFactor.getFactorValues(),
+        rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova( experimentalFactor.getFactorValues(),
                 samplesUsed );
 
         return filterDoubleMatrixNamedForValidRows( matrix, rFactors );
@@ -239,8 +236,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param rFactors
      * @return
      */
-    private DoubleMatrix filterDoubleMatrixNamedForValidRows( ExpressionDataDoubleMatrix matrix,
-            List<String> rFactors ) {
+    private DoubleMatrix filterDoubleMatrixNamedForValidRows( ExpressionDataDoubleMatrix matrix, List<String> rFactors ) {
 
         ArrayList<double[]> filteredRows = new ArrayList<double[]>();
 

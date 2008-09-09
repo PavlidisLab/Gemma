@@ -622,10 +622,10 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
-    public long getPreferredDesignElementDataVectorCount(
+    public long getProcessedExpressionVectorCount(
             final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
         try {
-            return this.handleGetPreferredDesignElementDataVectorCount( expressionExperiment );
+            return this.handleGetProcessedExpressionVectorCount( expressionExperiment );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.experiment.ExpressionExperimentServiceException(
                     "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentService.getPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
@@ -637,7 +637,7 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
      * Performs the core logic for
      * {@link #getPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */
-    protected abstract long handleGetPreferredDesignElementDataVectorCount(
+    protected abstract long handleGetProcessedExpressionVectorCount(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment )
             throws java.lang.Exception;
 
@@ -666,7 +666,7 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMultiple(java.util.Collection)
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+    public java.util.Collection<ExpressionExperiment> loadMultiple( final java.util.Collection ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -679,7 +679,8 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection<ExpressionExperiment> handleLoadMultiple( java.util.Collection ids )
+            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getDesignElementDataVectors(java.util.Collection)
@@ -719,11 +720,11 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
     protected abstract java.util.Map handleGetLastLinkAnalysis( java.util.Collection ids ) throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getLastRankComputation(java.util.Collection)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getLastProcessedDataUpdate(java.util.Collection)
      */
-    public java.util.Map getLastRankComputation( final java.util.Collection ids ) {
+    public java.util.Map getLastProcessedDataUpdate( final java.util.Collection ids ) {
         try {
-            return this.handleGetLastRankComputation( ids );
+            return this.handleGetLastProcessedDataUpdate( ids );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.experiment.ExpressionExperimentServiceException(
                     "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentService.getLastRankComputation(java.util.Collection ids)' --> "
@@ -732,9 +733,9 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
     }
 
     /**
-     * Performs the core logic for {@link #getLastRankComputation(java.util.Collection)}
+     * Performs the core logic for {@link #getLastProcessedDataUpdate(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetLastRankComputation( java.util.Collection ids )
+    protected abstract java.util.Map handleGetLastProcessedDataUpdate( java.util.Collection ids )
             throws java.lang.Exception;
 
     /**
@@ -815,28 +816,6 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
      */
     protected abstract java.util.Collection handleFindByBibliographicReference(
             ubic.gemma.model.common.description.BibliographicReference bibRef ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getDesignElementDataVectors(java.util.Map,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    public java.util.Map getDesignElementDataVectors( final java.util.Map cs2gene,
-            final ubic.gemma.model.common.quantitationtype.QuantitationType qt ) {
-        try {
-            return this.handleGetDesignElementDataVectors( cs2gene, qt );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentService.getDesignElementDataVectors(java.util.Map cs2gene, ubic.gemma.model.common.quantitationtype.QuantitationType qt)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #getDesignElementDataVectors(java.util.Map, ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract java.util.Map handleGetDesignElementDataVectors( java.util.Map cs2gene,
-            ubic.gemma.model.common.quantitationtype.QuantitationType qt ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getPreferredQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment)
@@ -1107,27 +1086,27 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
     protected abstract java.util.Map handleGetSampleRemovalEvents( java.util.Collection expressionExperiments )
             throws java.lang.Exception;
 
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getMaskedPreferredQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType getMaskedPreferredQuantitationType(
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleGetMaskedPreferredQuantitationType( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentService.getMaskedPreferredQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #getMaskedPreferredQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
-     */
-    protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleGetMaskedPreferredQuantitationType(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment )
-            throws java.lang.Exception;
+//    /**
+//     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getMaskedPreferredQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+//     */
+//    public ubic.gemma.model.common.quantitationtype.QuantitationType getMaskedPreferredQuantitationType(
+//            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
+//        try {
+//            return this.handleGetMaskedPreferredQuantitationType( expressionExperiment );
+//        } catch ( Throwable th ) {
+//            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentServiceException(
+//                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentService.getMaskedPreferredQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
+//                            + th, th );
+//        }
+//    }
+//
+//    /**
+//     * Performs the core logic for
+//     * {@link #getMaskedPreferredQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
+//     */
+//    protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleGetMaskedPreferredQuantitationType(
+//            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment )
+//            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getSubSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)
@@ -1189,18 +1168,17 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
             throws java.lang.Exception;
 
     /**
-     * @param differentialExpressionAnalysisDao the differentialExpressionAnalysisDao to set
-     */
-    public void setDifferentialExpressionAnalysisDao(
-            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
-        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
-    }
-
-    /**
      * @return the differentialExpressionAnalysisDao
      */
     public DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
         return differentialExpressionAnalysisDao;
+    }
+
+    /**
+     * @param differentialExpressionAnalysisDao the differentialExpressionAnalysisDao to set
+     */
+    public void setDifferentialExpressionAnalysisDao( DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
+        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
     }
 
     /**

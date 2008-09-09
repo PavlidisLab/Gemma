@@ -215,7 +215,7 @@ public class GeoConverterTest extends TestCase {
         series.setSampleCorrespondence( correspondence );
         Set result = ( Set ) this.gc.convert( series );
         ExpressionExperiment e = ( ExpressionExperiment ) result.iterator().next();
-        assertEquals( "got " + e.getDesignElementDataVectors().size(), 66, e.getDesignElementDataVectors().size() );
+        assertEquals( "got " + e.getRawExpressionDataVectors().size(), 66, e.getRawExpressionDataVectors().size() );
     }
 
     public void testConvertWithLotsOfPlatforms() throws Exception {
@@ -265,7 +265,7 @@ public class GeoConverterTest extends TestCase {
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         ExpressionExperiment ee = ees.iterator().next();
         boolean ok = false;
-        for ( DesignElementDataVector dedv : ee.getDesignElementDataVectors() ) {
+        for ( DesignElementDataVector dedv : ee.getRawExpressionDataVectors() ) {
             QuantitationType qt = dedv.getQuantitationType();
 
             if ( qt.getIsPreferred() ) {
@@ -381,7 +381,7 @@ public class GeoConverterTest extends TestCase {
         assertEquals( 1, ees.size() );
         ExpressionExperiment ee = ees.iterator().next();
         boolean ok = false;
-        for ( DesignElementDataVector dedv : ee.getDesignElementDataVectors() ) {
+        for ( DesignElementDataVector dedv : ee.getRawExpressionDataVectors() ) {
             QuantitationType qt = dedv.getQuantitationType();
             if ( qt.getIsPreferred() ) {
                 ok = true;
@@ -415,7 +415,7 @@ public class GeoConverterTest extends TestCase {
 
         ExpressionExperiment ee = ees.iterator().next();
         boolean ok = false;
-        for ( DesignElementDataVector dedv : ee.getDesignElementDataVectors() ) {
+        for ( DesignElementDataVector dedv : ee.getRawExpressionDataVectors() ) {
             QuantitationType qt = dedv.getQuantitationType();
             if ( qt.getIsPreferred() ) {
                 ok = true;

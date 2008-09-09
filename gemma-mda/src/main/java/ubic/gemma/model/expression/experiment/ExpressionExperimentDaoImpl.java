@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.sql.Blob;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,8 +41,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.type.BlobType;
-import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -59,6 +55,8 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -181,15 +179,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return ( Long ) list.iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#getQuantitationTypeCountById(ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
+    // FIXME
     @Override
     public long handleGetDesignElementDataVectorCountById( long Id ) {
         final String queryString = "select count(dedv) from ExpressionExperimentImpl ee "
-                + "inner join ee.designElementDataVectors dedv where ee.id = :ee";
+                + "inner join ee.rawExpressionDataVectors dedv where ee.id = :ee";
 
         List list = getHibernateTemplate().findByNamedParam( queryString, "ee", Id );
         if ( list.size() == 0 ) {
@@ -207,11 +201,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @SuppressWarnings("unchecked")
     @Override
+    // FIXME
     public Map<QuantitationType, Long> handleGetQuantitationTypeCountById( Long Id ) {
 
         final String queryString = "select quantType,count(*) as count "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
-                + "inner join ee.designElementDataVectors as vectors "
+                + "inner join ee.rawExpressionDataVectors as vectors "
                 + "inner join  vectors.quantitationType as quantType " + "where ee.id = :id GROUP BY quantType.name";
 
         List list = getHibernateTemplate().findByNamedParam( queryString, "id", Id );
@@ -267,27 +262,47 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         .get( "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl", expressionExperiment
                                 .getId() );
 
-                toDelete.getBioAssayDataVectors().size();
+                Hibernate.initialize( toDelete.getBioAssayDataVectors() );
+
                 Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
                 Set<QuantitationType> qts = new HashSet<QuantitationType>();
-                Collection<DesignElementDataVector> designElementDataVectors = toDelete.getDesignElementDataVectors();
-                toDelete.setDesignElementDataVectors( null );
+                Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
+                Hibernate.initialize( designElementDataVectors );
+                toDelete.setRawExpressionDataVectors( null );
+
+                Collection<ProcessedExpressionDataVector> processedVectors = toDelete
+                        .getProcessedExpressionDataVectors();
+                Hibernate.initialize( processedVectors );
+                toDelete.setProcessedExpressionDataVectors( null );
+
                 session.update( toDelete );
 
                 int count = 0;
                 log.info( "Removing Design Element Data Vectors ..." );
-                for ( DesignElementDataVector dv : designElementDataVectors ) {
+                for ( RawExpressionDataVector dv : designElementDataVectors ) {
                     dims.add( dv.getBioAssayDimension() );
                     qts.add( dv.getQuantitationType() );
                     session.delete( dv );
                     if ( ++count % 1000 == 0 ) {
                         session.flush();
-                        // session.clear();
                     }
                     if ( count % 20000 == 0 ) {
                         log.info( count + " design Element data vectors deleted" );
                     }
                 }
+
+                for ( ProcessedExpressionDataVector dv : processedVectors ) {
+                    dims.add( dv.getBioAssayDimension() );
+                    qts.add( dv.getQuantitationType() );
+                    session.delete( dv );
+                    if ( ++count % 1000 == 0 ) {
+                        session.flush();
+                    }
+                    if ( count % 20000 == 0 ) {
+                        log.info( count + " processed design Element data vectors deleted" );
+                    }
+                }
+
                 session.flush();
 
                 log.info( "Removing BioAssay Dimensions." );
@@ -537,8 +552,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected Collection handleFindByExpressedGene( Gene gene, Double rank ) throws Exception {
 
         final String queryString = "select distinct ee.ID as eeID FROM "
-                + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, DESIGN_ELEMENT_DATA_VECTOR dedv, INVESTIGATION ee "
-                + "WHERE g2s.CS = cs.ID AND cs.ID = dedv.DESIGN_ELEMENT_FK AND dedv.EXPRESSION_EXPERIMENT_FK = ee.ID AND g2s.gene = :geneID AND dedv.RANK >= :rank";
+                + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, PROCESSED_EXPRESSION_DATA_VECTOR dedv, INVESTIGATION ee "
+                + "WHERE g2s.CS = cs.ID AND cs.ID = dedv.DESIGN_ELEMENT_FK AND dedv.EXPRESSION_EXPERIMENT_FK = ee.ID AND g2s.gene = :geneID AND dedv.RANK_BY_MEAN >= :rank";
 
         Collection<Long> eeIds = null;
 
@@ -716,10 +731,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         // default: no threshold.
         final Double thresh = rankThreshold == null ? 0 : rankThreshold;
 
-        final String queryString = "SELECT DISTINCT g2c.GENE as id from DESIGN_ELEMENT_DATA_VECTOR d"
+        final String queryString = "SELECT DISTINCT g2c.GENE as id from PROCESSED_EXPRESSION_DATA_VECTOR d"
                 + " inner join COMPOSITE_SEQUENCE cs ON cs.ID=d.DESIGN_ELEMENT_FK"
                 + " inner join GENE2CS g2c ON g2c.CS=cs.ID INNER JOIN QUANTITATION_TYPE q ON q.ID=d.QUANTIATION_TYPE_FK"
-                + " WHERE d.EXPRESSION_EXPERIMENT_FK = ?AND (d.RANK > ? OR d.RANK IS NULL) AND q.IS_PREFERRED = 1";
+                + " WHERE d.EXPRESSION_EXPERIMENT_FK = ?AND (d.RANK_BY_MEAN > ? OR d.RANK_BY_MEAN IS NULL) AND q.IS_PREFERRED = 1";
         final Collection<Long> geneIds = new HashSet<Long>();
         getHibernateTemplate().execute( new HibernateCallback() {
 
@@ -763,9 +778,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         // FIXME this could just be HQL.
 
         final Collection<CompositeSequence> result = new HashSet<CompositeSequence>();
-        final String queryString = "SELECT DISTINCT d.DESIGN_ELEMENT_FK as id from DESIGN_ELEMENT_DATA_VECTOR d"
+        final String queryString = "SELECT DISTINCT d.DESIGN_ELEMENT_FK as id from PROCESSED_EXPRESSION_DATA_VECTOR d"
                 + "  INNER JOIN QUANTITATION_TYPE q ON q.ID=d.QUANTITATION_TYPE_FK"
-                + " WHERE d.EXPRESSION_EXPERIMENT_FK = ? AND (d.RANK > ? OR d.RANK IS NULL) AND q.IS_PREFERRED = 1";
+                + " WHERE d.EXPRESSION_EXPERIMENT_FK = ? AND (d.RANK_BY_MEAN > ? OR d.RANK_BY_MEAN IS NULL) AND q.IS_PREFERRED = 1";
         getHibernateTemplate().execute( new HibernateCallback() {
             public Object doInHibernate( Session session ) {
                 org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
@@ -869,7 +884,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Collection handleGetDesignElementDataVectors( Collection quantitationTypes ) throws Exception {
         // NOTE this essentially does a partial thaw.
-        final String queryString = "select dev from DesignElementDataVectorImpl dev"
+        final String queryString = "select dev from RawExpressionDataVectorImpl dev"
                 + " inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
 
@@ -891,73 +906,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         assert quantitationType.getId() != null;
 
-        final String queryString = "select dev from DesignElementDataVectorImpl as dev inner join dev.designElement as de "
+        final String queryString = "select dev from RawExpressionDataVectorImpl as dev inner join dev.designElement as de "
                 + " where de in (:de) and dev.quantitationType = :qt";
         return getHibernateTemplate().findByNamedParam( queryString, new String[] { "de", "qt" },
                 new Object[] { designElements, quantitationType } );
-    }
-
-    /*
-     * (non-Javadoc) @param cs2gene Map of CS Ids to Genes
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectors(java.util.Map,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Map handleGetDesignElementDataVectors(
-    /* Map<Long, Collection<Gene>> */final Map cs2gene, final QuantitationType qt ) {
-
-        // FIXME move this method to the DesignElementDataVectorDao/Service.
-
-        final Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
-
-        // Native query - faster? Fetches all data for that QT and throws away
-        // unneeded portion
-        final String queryString = "SELECT ID as dedvId, DATA as dedvData, DESIGN_ELEMENT_FK as csId, RANK as dedvRank FROM DESIGN_ELEMENT_DATA_VECTOR WHERE "
-                + " QUANTITATION_TYPE_FK = " + qt.getId();
-        getHibernateTemplate().execute( new HibernateCallback() {
-            public Object doInHibernate( Session session ) {
-                org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-
-                queryObject.addScalar( "dedvId", new LongType() );
-                queryObject.addScalar( "dedvData", new BlobType() );
-                queryObject.addScalar( "csId", new LongType() );
-                queryObject.addScalar( "dedvRank", new DoubleType() );
-
-                ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-                Collection<Long> desiredCsIds = cs2gene.keySet();
-                while ( scroll.next() ) {
-                    Long dedvId = scroll.getLong( 0 );
-                    Blob dedvData = scroll.getBlob( 1 );
-                    byte data[];
-                    try {
-                        data = dedvData.getBytes( 1, ( int ) dedvData.length() );
-                    } catch ( SQLException e ) {
-                        log.error( e.getMessage() );
-                        continue;
-                    }
-                    Long fetchedCsId = scroll.getLong( 2 );
-                    Double rank = scroll.getDouble( 3 );
-
-                    if ( desiredCsIds.contains( fetchedCsId ) ) {
-                        DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
-                        vector.setId( dedvId );
-                        vector.setData( data );
-                        // vector.setDesignElement( cs );
-                        vector.setQuantitationType( qt );
-                        vector.setRank( rank );
-                        // vector.setExpressionExperiment( expressionExperiment );
-                        // vector.setBioAssayDimension( bioAssayDimension );
-                        dedv2genes.put( vector, ( Collection<Gene> ) cs2gene.get( fetchedCsId ) );
-                    }
-
-                }
-                session.close();
-                return null;
-            }
-        } );
-        return dedv2genes;
     }
 
     protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
@@ -1116,10 +1068,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected long handleGetPreferredDesignElementDataVectorCount( ExpressionExperiment expressionExperiment )
+    protected long handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
             throws Exception {
         final String queryString = "select count(distinct dedv) from ExpressionExperimentImpl as ee "
-                + "inner join ee.designElementDataVectors as dedv "
+                + "inner join ee.processedExpressionDataVectors as dedv "
                 + "inner join dedv.quantitationType as qType where qType.isPreferred = true and ee = :ee ";
 
         List result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
@@ -1135,7 +1087,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Collection handleGetSamplingOfVectors( QuantitationType quantitationType, Integer limit )
             throws Exception {
-        final String queryString = "select dev from DesignElementDataVectorImpl dev "
+        final String queryString = "select dev from RawExpressionDataVectorImpl dev "
                 + "inner join dev.quantitationType as qt where qt.id = :qtid";
         int oldmax = getHibernateTemplate().getMaxResults();
         getHibernateTemplate().setMaxResults( limit );
@@ -1398,8 +1350,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( expressionExperiment, LockMode.NONE );
-                Hibernate.initialize( expressionExperiment.getDesignElementDataVectors() );
-                Hibernate.initialize( expressionExperiment.getBioAssayDataVectors() );
+                Hibernate.initialize( expressionExperiment.getRawExpressionDataVectors() );
+                Hibernate.initialize( expressionExperiment.getProcessedExpressionDataVectors() );
                 return null;
             }
         }, false );
@@ -1519,6 +1471,17 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected Collection<ExpressionExperimentSubSet> handleGetSubSets( ExpressionExperiment expressionExperiment )
             throws Exception {
         String queryString = "select from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee where ee = :ee";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getProcessedDataVectors(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
+        final String queryString = "from ProcessedExpressionDataVector where expressionExperiment = :ee";
         return this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
     }
 

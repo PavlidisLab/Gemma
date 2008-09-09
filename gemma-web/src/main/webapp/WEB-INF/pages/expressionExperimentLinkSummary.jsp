@@ -38,7 +38,7 @@
 			comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 		<display:column property="coexpressionLinkCount" sortable="true" titleKey="expressionExperiment.coexpressionLinkCount"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" defaultorder="descending" />
-		<display:column property="preferredDesignElementDataVectorCount" sortable="true" defaultorder="descending"
+		<display:column property="processedExpressionVectorCount" sortable="true" defaultorder="descending"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator"
 			titleKey="expressionExperiment.preferredDesignElementDataVectorCount" />
 		<display:column property="technologyType" sortable="true" defaultorder="descending" title="Tech" />
@@ -56,10 +56,7 @@
 
 		<display:column property="dateDifferentialAnalysisNoTime" sortable="true" defaultorder="descending"
 			titleKey="menu.differential" comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
-
-		<display:column property="dateMissingValueAnalysisNoTime" sortable="true" defaultorder="descending" title="MV Analysis"
-			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
-		<display:column property="dateRankComputationNoTime" sortable="true" defaultorder="descending" title="Rank Computed"
+		<display:column property="dateProcessedDataVectorUpdateNoTime" sortable="true" defaultorder="descending" title="Processed vectors"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 		<display:column property="dateLastArrayDesignUpdatedNoTime" sortable="true" defaultorder="descending" title="Probe Map"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />

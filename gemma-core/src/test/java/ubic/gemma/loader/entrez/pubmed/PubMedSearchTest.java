@@ -48,14 +48,10 @@ public class PubMedSearchTest extends TestCase {
             searchTerms.add( "habenula" );
             searchTerms.add( "glucose" );
             Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
-            assertTrue( "Expected at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 ); // at
-            // least,
-            // this
-            // was
-            // the
-            // result
-            // on
-            // 4/2008
+            assertTrue( "Expected at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
+            /*
+             * at least, this was the result on 4/2008.
+             */
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
             return;
@@ -78,14 +74,10 @@ public class PubMedSearchTest extends TestCase {
             searchTerms.add( "habenula" );
             searchTerms.add( "glucose" );
             Collection<String> actualResult = pms.searchAndRetrieveIdsByHTTP( searchTerms );
-            assertTrue( "Expect at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 ); // at
-            // least,
-            // this
-            // was
-            // the
-            // result
-            // on
-            // 4/2008.
+            assertTrue( "Expect at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
+            /*
+             * at least, this was the result on 4/2008.
+             */
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
             return;
@@ -133,7 +125,10 @@ public class PubMedSearchTest extends TestCase {
             searchTerms.add( "hippocampus" );
             searchTerms.add( "habenula" );
             Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
-            assertTrue( actualResult.size() >= 10 ); // at least, this was the result on 4/2008. }
+            /*
+             * at least, this was the result on 4/2008.
+             */
+            assertTrue( "Expected at least 10, got " + actualResult.size(), actualResult.size() >= 10 );
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
         } catch ( java.io.IOException e ) {

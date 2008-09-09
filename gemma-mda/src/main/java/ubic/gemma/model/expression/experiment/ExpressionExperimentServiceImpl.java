@@ -30,13 +30,14 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent; 
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -104,7 +105,7 @@ public class ExpressionExperimentServiceImpl extends
 
         /*
          * Delete any expression experiment sets that only have this ee in it. If there are ones that have multiple, we
-         * can't do it.
+         * can't do it. FIXME remove this experiment from other sets, and update them.
          */
         Collection<ExpressionExperimentSet> sets = this.getExpressionExperimentSetDao().find( ee );
         for ( ExpressionExperimentSet eeset : sets ) {
@@ -289,17 +290,6 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getDesignElementDataVectors( designElements, quantitationType );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetDesignElementDataVectors(Map,
-     *      QuantitationType)
-     */
-    @Override
-    protected Map handleGetDesignElementDataVectors( Map cs2gene, QuantitationType qt ) throws Exception {
-        return this.getExpressionExperimentDao().getDesignElementDataVectors( cs2gene, qt );
-    }
-
     @Override
     protected Map handleGetLastArrayDesignUpdate( Collection expressionExperiments, Class type ) throws Exception {
         return this.getExpressionExperimentDao().getLastArrayDesignUpdate( expressionExperiments, type );
@@ -342,8 +332,8 @@ public class ExpressionExperimentServiceImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastRankComputation( Collection ids ) throws Exception {
-        return getLastEvent( ids, RankComputationEvent.Factory.newInstance() );
+    protected Map handleGetLastProcessedDataUpdate( Collection ids ) throws Exception {
+        return getLastEvent( ids, ProcessedVectorComputationEvent.Factory.newInstance() );
     }
 
     /*
@@ -423,9 +413,9 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPreferredDesignElementDataVectorCount(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected long handleGetPreferredDesignElementDataVectorCount( ExpressionExperiment expressionExperiment )
+    protected long handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
             throws Exception {
-        return this.getExpressionExperimentDao().getPreferredDesignElementDataVectorCount( expressionExperiment );
+        return this.getExpressionExperimentDao().getProcessedExpressionVectorCount( expressionExperiment );
     }
 
     /*
@@ -445,11 +435,11 @@ public class ExpressionExperimentServiceImpl extends
         }
         return preferredQuantitationTypes;
     }
-
-    @Override
-    protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
-        return this.getExpressionExperimentDao().getMaskedPreferredQuantitationType( ee );
-    }
+//
+//    @Override
+//    protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
+//        return this.getExpressionExperimentDao().getMaskedPreferredQuantitationType( ee );
+//    }
 
     /*
      * (non-Javadoc)
@@ -520,7 +510,7 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+    protected Collection<ExpressionExperiment> handleLoadMultiple( Collection ids ) throws Exception {
         return this.getExpressionExperimentDao().load( ids );
     }
 
@@ -588,6 +578,15 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected Collection handleFindByFactorValues( Collection factorValues ) throws Exception {
         return this.getExpressionExperimentDao().findByFactorValues( factorValues );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getProcessedDataVectors(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
+        return this.getExpressionExperimentDao().getProcessedDataVectors( ee );
     }
 
 }

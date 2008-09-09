@@ -90,9 +90,10 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
 
         configureMockAnalysisServiceHelper( 2 );
 
-        AnalyzerHelper analyzerHelper = ( AnalyzerHelper ) this.getBean( "analyzerHelper" );
-        analyzerHelper.setAnalysisHelperService( analysisHelperService );
-        analysis.setAnalyzerHelper( analyzerHelper );
+        DifferentialExpressionAnalysisHelperService analyzerHelper = ( DifferentialExpressionAnalysisHelperService ) this
+                .getBean( "differentialExpressionAnalysisHelperService" );
+        analyzerHelper.setExpressionDataMatrixService( expressionDataMatrixService );
+        analysis.setDifferentialExpressionAnalysisHelperService( analyzerHelper );
 
     }
 

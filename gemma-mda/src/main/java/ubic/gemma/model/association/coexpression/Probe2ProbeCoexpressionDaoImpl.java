@@ -148,7 +148,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             /*
              * We divide by 2 because all links are stored twice
              */
-
             BigInteger count = ( BigInteger ) results.iterator().next();
             if ( count.intValue() > 0 ) return ( count.intValue() ) / 2;
 
@@ -188,37 +187,18 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         /*
          * Note that the expression experiment is not directly associated with P2P objects. The EE column in the P2P
-         * tables is a denormalization and is indexed, but not accessible via Hibernate. Thus it is much more efficient
-         * to access P2P with native queries.
+         * tables is a denormalization and is indexed, but not accessible via Hibernate. Thus it can be much more
+         * efficient to access P2P with native queries.
          */
         int totalDone = 0;
         Analysis analysis = null;
         for ( String p2pClassName : p2pClassNames ) {
-            //
-            // /*
-            // * Get one link to locate the analysis object to delete. Problem: if there are no links, then the analysis
-            // * object will be left there.
-            // */
-            // final String queryString = "SELECT SOURCE_ANALYSIS_FK FROM " + getTableName( p2pClassName, false )
-            // + " where EXPRESSION_EXPERIMENT_FK = :eeid";
 
             final String findLinkAnalysisObject = "select p from ProbeCoexpressionAnalysisImpl p inner join p.expressionExperimentSetAnalyzed eas inner join eas.experiments e where e = :ee";
             List o = this.getHibernateTemplate().findByNamedParam( findLinkAnalysisObject, "ee", ee );
             if ( o.size() > 0 ) {
                 analysis = ( Analysis ) o.iterator().next();
             }
-
-            // SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
-            // queryObject.setMaxResults( 1 );
-            // queryObject.setParameter( "eeid", ee.getId() );
-            // List results = queryObject.list();
-            //
-            // if ( results.size() > 0 ) {
-            // BigInteger analysisId = ( BigInteger ) results.iterator().next();
-            // if ( analysisId != null )
-            // analysis = ( Analysis ) this.getHibernateTemplate().load( ProbeCoexpressionAnalysisImpl.class,
-            // analysisId.longValue() );
-            // }
 
             final String nativeDeleteQuery = "DELETE FROM " + getTableName( p2pClassName, false )
                     + " where EXPRESSION_EXPERIMENT_FK = :eeid";

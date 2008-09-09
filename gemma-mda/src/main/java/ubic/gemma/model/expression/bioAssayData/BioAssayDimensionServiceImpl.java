@@ -37,14 +37,6 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
     }
 
     @Override
-    protected Collection handleGetDesignElementDataVectors( BioAssayDimension bioAssayDimension ) throws Exception {
-        if ( bioAssayDimension.getId() == null ) {
-            throw new IllegalArgumentException( "BioAssayDimension must be persistent" );
-        }
-        return this.getBioAssayDimensionDao().findDesignElementDataVectors( bioAssayDimension.getId() );
-    }
-
-    @Override
     protected void handleRemove( BioAssayDimension bioAssayDimension ) throws Exception {
         this.getBioAssayDimensionDao().remove( bioAssayDimension );
     }

@@ -34,6 +34,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import cern.colt.list.ByteArrayList;
@@ -105,13 +106,13 @@ class RawDataMatrix {
      */
     public void addRow( DesignElement de, QuantitationType qt, ExpressionExperiment expressionExperiment ) {
         if ( rows.containsKey( de.getName() ) ) return;
-        DesignElementDataVector tobeAdded = DesignElementDataVector.Factory.newInstance();
+        RawExpressionDataVector tobeAdded = RawExpressionDataVector.Factory.newInstance();
         tobeAdded.setExpressionExperiment( expressionExperiment );
         assert this.bioAssayDimension != null;
         tobeAdded.setBioAssayDimension( this.bioAssayDimension );
         tobeAdded.setDesignElement( de );
         tobeAdded.setQuantitationType( qt );
-        expressionExperiment.getDesignElementDataVectors().add( tobeAdded );
+        expressionExperiment.getRawExpressionDataVectors().add( tobeAdded );
         addRow( tobeAdded );
     }
 
@@ -124,7 +125,7 @@ class RawDataMatrix {
      */
     public void addRow( DesignElement de, QuantitationType qt, ExpressionExperiment expressionExperiment,
             List<Object> data ) {
-        DesignElementDataVector tobeAdded = DesignElementDataVector.Factory.newInstance();
+        DesignElementDataVector tobeAdded = RawExpressionDataVector.Factory.newInstance();
         tobeAdded.setDesignElement( de );
         tobeAdded.setQuantitationType( qt );
         tobeAdded.setExpressionExperiment( expressionExperiment );

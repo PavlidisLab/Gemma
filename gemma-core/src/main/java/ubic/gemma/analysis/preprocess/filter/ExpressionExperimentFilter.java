@@ -25,14 +25,13 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -114,11 +113,9 @@ public class ExpressionExperimentFilter {
      * @param dataVectors
      * @return
      */
-    public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<DesignElementDataVector> dataVectors ) {
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
-        ExpressionDataDoubleMatrix eeDoubleMatrix = builder.getPreferredData();
-
-        eeDoubleMatrix = filter( builder, eeDoubleMatrix );
+    public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors ) {
+        ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
+        eeDoubleMatrix = filter( eeDoubleMatrix );
         return eeDoubleMatrix;
     }
 
@@ -157,13 +154,12 @@ public class ExpressionExperimentFilter {
      * details of what filters are applied and the ordering.
      * 
      * @param dataMatrix
-     * @param eeDoubleMatrix
+     * @param eeDoubleMatrix, already masked for missing values.
      * @param ee
      * @return A data matrix in which filters have been applied and missing values (in the PRESENTABSENT quantitation
      *         type, if present) are masked
      */
-    private ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix,
-            ExpressionDataMatrixBuilder builder ) {
+    private ExpressionDataDoubleMatrix doFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
 
         ExpressionDataDoubleMatrix filteredMatrix = eeDoubleMatrix;
 
@@ -178,11 +174,6 @@ public class ExpressionExperimentFilter {
 
         if ( config.isMinPresentFractionIsSet() ) {
             log.info( "Filtering for missing data" );
-
-            if ( twoColor ) {
-                /* Apply two color missing value filter */
-                builder.maskMissingValues( filteredMatrix );
-            }
 
             if ( !config.isIgnoreMinimumSampleThreshold() ) {
                 filteredMatrix = minPresentFilter( filteredMatrix );
@@ -201,7 +192,7 @@ public class ExpressionExperimentFilter {
 
         if ( config.isLowExpressionCutIsSet() ) {
             log.info( "Filtering for low or too high expression" );
-            Map<DesignElement, Double> ranks = builder.getRanks();
+            Map<DesignElement, Double> ranks = eeDoubleMatrix.getRanks();
             filteredMatrix = lowExpressionFilter( filteredMatrix, ranks );
         }
 
@@ -220,15 +211,12 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * @param ee
-     * @param builder
-     * @param eeDoubleMatrix
+     * @param eeDoubleMatrix, already masked for missing values.
      * @param ranks
      * @param arrayDesignsUsed
      * @return
      */
-    private ExpressionDataDoubleMatrix filter( ExpressionDataMatrixBuilder builder,
-            ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+    private ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
         if ( eeDoubleMatrix == null || eeDoubleMatrix.rows() == 0 )
             throw new IllegalArgumentException( "No data found!" );
 
@@ -236,7 +224,8 @@ public class ExpressionExperimentFilter {
             if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
                 throw new InsufficientSamplesException( "Not enough samples " + ee.getShortName()
                         + ", must have at least " + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
-            } else if ( eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            } else if ( !config.isIgnoreMinimumRowsThreshold()
+                    && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
                 throw new InsufficientProbesException( "To few rows in " + ee.getShortName() + " ("
                         + eeDoubleMatrix.rows()
                         + ") prior to filtering, data sets are not analyzed unless they have at least "
@@ -244,7 +233,7 @@ public class ExpressionExperimentFilter {
             }
         }
 
-        eeDoubleMatrix = this.filter( eeDoubleMatrix, builder );
+        eeDoubleMatrix = this.doFilter( eeDoubleMatrix );
 
         if ( eeDoubleMatrix == null )
             throw new IllegalStateException( "Failed to get filtered data matrix, it was null " + ee.getShortName() );
@@ -252,7 +241,8 @@ public class ExpressionExperimentFilter {
         if ( eeDoubleMatrix.rows() == 0 ) {
             log.info( "No rows left after filtering" );
             throw new InsufficientProbesException( "No rows left after filtering" );
-        } else if ( eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+        } else if ( !config.isIgnoreMinimumRowsThreshold()
+                && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
             throw new InsufficientProbesException( "To few rows in " + ee.getShortName() + " (" + eeDoubleMatrix.rows()
                     + ") after filtering, data sets are not analyzed unless they have at least "
                     + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );

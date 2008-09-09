@@ -93,43 +93,6 @@ public abstract class DesignElementDataVectorServiceBase implements
             throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#getGenes(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
-     */
-    public java.util.Collection getGenes( final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv ) {
-        try {
-            return this.handleGetGenes( dedv );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getGenes(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getGenes(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
-     */
-    protected abstract java.util.Collection handleGetGenes(
-            ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#getGenesById(long)
-     */
-    public java.util.Collection getGenesById( final long id ) {
-        try {
-            return this.handleGetGenesById( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getGenesById(long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getGenesById(long)}
-     */
-    protected abstract java.util.Collection handleGetGenesById( long id ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
      */
     public void thaw( final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector ) {
@@ -184,24 +147,6 @@ public abstract class DesignElementDataVectorServiceBase implements
      * Performs the core logic for {@link #countAll()}
      */
     protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#getGenes(java.util.Collection)
-     */
-    public java.util.Map getGenes( final java.util.Collection dataVectors ) {
-        try {
-            return this.handleGetGenes( dataVectors );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getGenes(java.util.Collection dataVectors)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getGenes(java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetGenes( java.util.Collection dataVectors ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#removeDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
@@ -417,48 +362,6 @@ public abstract class DesignElementDataVectorServiceBase implements
      */
     protected abstract ubic.gemma.model.expression.bioAssayData.DesignElementDataVector handleLoad( java.lang.Long id )
             throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#getDedv2GenesMap(java.util.Collection,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    public java.util.Map getDedv2GenesMap( final java.util.Collection dedvs,
-            final ubic.gemma.model.common.quantitationtype.QuantitationType qt ) {
-        try {
-            return this.handleGetDedv2GenesMap( dedvs, qt );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getDedv2GenesMap(java.util.Collection dedvs, ubic.gemma.model.common.quantitationtype.QuantitationType qt)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #getDedv2GenesMap(java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract java.util.Map handleGetDedv2GenesMap( java.util.Collection dedvs,
-            ubic.gemma.model.common.quantitationtype.QuantitationType qt ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#getMaskedPreferredDataArrays(java.util.Collection,
-     *      java.util.Collection)
-     */
-    public java.util.Map getMaskedPreferredDataArrays( final java.util.Collection ees, final java.util.Collection genes ) {
-        try {
-            return this.handleGetMaskedPreferredDataArrays( ees, genes );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getMaskedPreferredDataArrays(java.util.Collection ees, java.util.Collection genes)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getMaskedPreferredDataArrays(java.util.Collection, java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetMaskedPreferredDataArrays( java.util.Collection ees,
-            java.util.Collection genes ) throws java.lang.Exception;
 
     /**
      * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.

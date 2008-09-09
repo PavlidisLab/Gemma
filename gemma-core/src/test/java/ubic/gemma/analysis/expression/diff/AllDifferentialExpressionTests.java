@@ -32,7 +32,7 @@ public class AllDifferentialExpressionTests {
     public static Test suite() {
         TestSuite suite = new TestSuite( "Test for ubic.gemma.analysis.diff" );
         // $JUnit-BEGIN$
-        suite.addTestSuite( AnalyzerHelperTest.class );
+        suite.addTestSuite( DifferentialExpressionAnalysisHelperServiceTest.class );
         suite.addTestSuite( OneWayAnovaAnalyzerTest.class );
         suite.addTestSuite( TTestAnalyzerTest.class );
         suite.addTestSuite( TwoWayAnovaWithoutInteractionsAnalyzerTest.class );

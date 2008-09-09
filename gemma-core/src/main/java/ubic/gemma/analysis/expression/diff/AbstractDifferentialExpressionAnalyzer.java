@@ -171,7 +171,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 
-        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedPreferredData();
+        ExpressionDataDoubleMatrix dmatrix = builder.getProcessedData();
 
         return dmatrix;
     }

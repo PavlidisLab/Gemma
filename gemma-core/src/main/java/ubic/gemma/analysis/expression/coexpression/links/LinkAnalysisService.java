@@ -44,7 +44,7 @@ import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.analysis.service.AnalysisHelperService;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
@@ -59,10 +59,11 @@ import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.BioAssaySet; 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -84,7 +85,7 @@ import cern.colt.list.ObjectArrayList;
  * @spring.property name="ppService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="csService" ref="compositeSequenceService"
  * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
- * @spring.property name="analysisHelperService" ref="analysisHelperService"
+ * @spring.property name="expressionDataMatrixService" ref="expressionDataMatrixService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
  * @author Paul
  * @version $Id$
@@ -101,7 +102,7 @@ public class LinkAnalysisService {
     CompositeSequenceService csService;
     private Probe2ProbeCoexpressionService ppService = null;
     private PersisterHelper persisterHelper;
-    private AnalysisHelperService analysisHelperService = null;
+    private ExpressionDataMatrixService expressionDataMatrixService = null;
 
     /**
      * Run a link analysis on an experiment, and persist the results if the configuration says to.
@@ -120,11 +121,12 @@ public class LinkAnalysisService {
 
         log.info( "Fetching expression data ... " + ee );
         eeService.thawLite( ee );
-        Collection<DesignElementDataVector> dataVectors = analysisHelperService.getPreferredAndMissingValueVectors( ee );
+        Collection<ProcessedExpressionDataVector> dataVectors = expressionDataMatrixService
+                .getProcessedExpressionDataVectors( ee );
 
         checkVectors( ee, dataVectors );
 
-        ExpressionDataDoubleMatrix datamatrix = analysisHelperService.getFilteredMatrix( ee, filterConfig, dataVectors );
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig, dataVectors );
 
         if ( datamatrix.rows() == 0 ) {
             log.info( "No rows left after filtering" );
@@ -149,7 +151,7 @@ public class LinkAnalysisService {
         log.info( "Starting link analysis... " + ee );
         setUpForAnalysis( ee, la, dataVectors, datamatrix );
         addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
-        Map<CompositeSequence, DesignElementDataVector> p2v = getProbe2VectorMap( dataVectors );
+        Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
         la.analyze();
 
         // output
@@ -167,8 +169,8 @@ public class LinkAnalysisService {
 
     }
 
-    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
-        this.analysisHelperService = analysisHelperService;
+    public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
+        this.expressionDataMatrixService = expressionDataMatrixService;
     }
 
     public void setCsService( CompositeSequenceService csService ) {
@@ -205,11 +207,11 @@ public class LinkAnalysisService {
          * Set up basics.
          */
         ProbeCoexpressionAnalysis analysis = linkAnalysisConfig.toAnalysis();
-        
+
         ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
         eeSet.setName( ee.getShortName() );
         analysis.setExpressionExperimentSetAnalyzed( eeSet );
-        
+
         analysis.setName( ee.getShortName() + " link analysis" );
         analysis.getProtocol().setDescription(
                 analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
@@ -234,7 +236,7 @@ public class LinkAnalysisService {
      * @param ee
      * @param dataVectors
      */
-    private void checkVectors( ExpressionExperiment ee, Collection<DesignElementDataVector> dataVectors ) {
+    private void checkVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors ) {
         if ( dataVectors == null || dataVectors.size() == 0 )
             throw new IllegalArgumentException( "No data vectors in " + ee );
     }
@@ -256,7 +258,7 @@ public class LinkAnalysisService {
      * @return map of probes to vectors.
      */
     @SuppressWarnings("unchecked")
-    private void getProbe2GeneMap( LinkAnalysis la, Collection<DesignElementDataVector> dataVectors,
+    private void getProbe2GeneMap( LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors,
             ExpressionDataDoubleMatrix eeDoubleMatrix ) {
         log.info( "Getting probe-to-gene map for retained probes." );
 
@@ -296,10 +298,10 @@ public class LinkAnalysisService {
      * @param dataVectors
      * @return map of probes to vectors.
      */
-    private Map<CompositeSequence, DesignElementDataVector> getProbe2VectorMap(
-            Collection<DesignElementDataVector> dataVectors ) {
-        Map<CompositeSequence, DesignElementDataVector> p2v = new HashMap<CompositeSequence, DesignElementDataVector>();
-        for ( DesignElementDataVector v : dataVectors ) {
+    private Map<CompositeSequence, ProcessedExpressionDataVector> getProbe2VectorMap(
+            Collection<ProcessedExpressionDataVector> dataVectors ) {
+        Map<CompositeSequence, ProcessedExpressionDataVector> p2v = new HashMap<CompositeSequence, ProcessedExpressionDataVector>();
+        for ( ProcessedExpressionDataVector v : dataVectors ) {
             CompositeSequence cs = ( CompositeSequence ) v.getDesignElement();
             p2v.put( cs, v );
         }
@@ -337,7 +339,7 @@ public class LinkAnalysisService {
      * @return
      */
     private void persist( int numColumns, List<Probe2ProbeCoexpression> p2plinks, int i, double w,
-            DesignElementDataVector v1, DesignElementDataVector v2, QuantitationType metric,
+            ProcessedExpressionDataVector v1, ProcessedExpressionDataVector v2, QuantitationType metric,
             ProbeCoexpressionAnalysis analysisObj, Creator c ) {
 
         Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, c, metric, analysisObj );
@@ -372,7 +374,7 @@ public class LinkAnalysisService {
      * @param p2v
      * @param la
      */
-    private void saveLinks( Map<CompositeSequence, DesignElementDataVector> p2v, LinkAnalysis la ) {
+    private void saveLinks( Map<CompositeSequence, ProcessedExpressionDataVector> p2v, LinkAnalysis la ) {
 
         if ( useDB ) {
             deleteOldLinks( la );
@@ -457,7 +459,7 @@ public class LinkAnalysisService {
      * @param links
      * @boolean flip
      */
-    private void saveLinks( Map<CompositeSequence, DesignElementDataVector> p2v, LinkAnalysis la,
+    private void saveLinks( Map<CompositeSequence, ProcessedExpressionDataVector> p2v, LinkAnalysis la,
             ObjectArrayList links, boolean flip ) {
         int numColumns = la.getDataMatrix().columns();
 
@@ -487,8 +489,8 @@ public class LinkAnalysisService {
             DesignElement p1 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.getx() ) );
             DesignElement p2 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.gety() ) );
 
-            DesignElementDataVector v1 = p2v.get( p1 );
-            DesignElementDataVector v2 = p2v.get( p2 );
+            ProcessedExpressionDataVector v1 = p2v.get( p1 );
+            ProcessedExpressionDataVector v2 = p2v.get( p2 );
 
             if ( flip ) {
                 persist( numColumns, p2plinkBatch, i, w, v2, v1, metric, la.getAnalysisObj(), c );
@@ -518,7 +520,7 @@ public class LinkAnalysisService {
      * @param eeDoubleMatrix
      */
     private void setUpForAnalysis( ExpressionExperiment ee, LinkAnalysis la,
-            Collection<DesignElementDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+            Collection<ProcessedExpressionDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
 
         la.setDataMatrix( eeDoubleMatrix );
         la.setTaxon( eeService.getTaxon( ee.getId() ) );

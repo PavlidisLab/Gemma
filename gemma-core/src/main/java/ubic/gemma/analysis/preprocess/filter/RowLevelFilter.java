@@ -215,7 +215,12 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         switch ( method ) {
             case RANK: {
                 assert ranks != null;
-                criteria.set( i, ranks.get( designElement ) );
+                if ( ranks.containsKey( designElement ) ) {
+                    criteria.set( i, ranks.get( designElement ) );
+                } else {
+                    throw new IllegalStateException( "No rank was provided for " + designElement
+                            + "; only ProcessedDataVectors have ranks, are you sure you are using the right data?" );
+                }
                 break;
             }
             case MIN: {

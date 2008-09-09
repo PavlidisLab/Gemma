@@ -19,16 +19,17 @@
 package ubic.gemma.ontology;
 
 /**
- * 
  * @author pavlidis
  * @version $Id$
  */
 public interface OntologyCardinalityRestriction extends OntologyRestriction {
 
-    public enum CardinalityType {MIN_CARDINALITY, MAX_CARDINALITY, CARDINALITY};
-    
+    public enum CardinalityType {
+        MIN_CARDINALITY, MAX_CARDINALITY, CARDINALITY
+    }
+
     public CardinalityType getCardinalityType();
-    
+
     public int getCardinality();
-    
+
 }

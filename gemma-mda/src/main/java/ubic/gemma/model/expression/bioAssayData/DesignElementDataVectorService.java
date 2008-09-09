@@ -22,14 +22,9 @@
 //
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.util.Collection;
-import java.util.Map;
-
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
-
 /**
- * 
+ * @author Paul
+ * @version $Id$
  */
 public interface DesignElementDataVectorService {
 
@@ -43,16 +38,6 @@ public interface DesignElementDataVectorService {
      * 
      */
     public void remove( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector );
-
-    /**
-     * 
-     */
-    public java.util.Collection getGenes( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv );
-
-    /**
-     * 
-     */
-    public java.util.Collection getGenesById( long id );
 
     /**
      * <p>
@@ -70,14 +55,6 @@ public interface DesignElementDataVectorService {
      * 
      */
     public java.lang.Integer countAll();
-
-    /**
-     * <p>
-     * Returns a map of designElementDataVectors as keys and collections of genes as values for the given
-     * designElementDataVectors.
-     * </p>
-     */
-    public java.util.Map getGenes( java.util.Collection dataVectors );
 
     /**
      * <p>
@@ -149,21 +126,5 @@ public interface DesignElementDataVectorService {
      * 
      */
     public ubic.gemma.model.expression.bioAssayData.DesignElementDataVector load( java.lang.Long id );
-
-    /**
-     * <p>
-     * Given a collection of design element data vectors returns a map of dedv to a collection of genes.
-     * </p>
-     */
-    public java.util.Map getDedv2GenesMap( java.util.Collection dedvs,
-            ubic.gemma.model.common.quantitationtype.QuantitationType qt );
-
-    /**
-     * <p>
-     * Return a map of DoubleVectorValueObjects to Genes for the given expression experiments and genes. The double[]
-     * contained are masked for missing values if appropriate.
-     * </p>
-     */
-    public  Map<DoubleVectorValueObject, Collection<Gene>> getMaskedPreferredDataArrays( java.util.Collection<ExpressionExperiment> ees, java.util.Collection<Gene> genes );
 
 }

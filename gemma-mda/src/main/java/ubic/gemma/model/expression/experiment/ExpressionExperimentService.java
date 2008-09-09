@@ -22,6 +22,11 @@
 //
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+
 /**
  * 
  */
@@ -33,7 +38,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     public java.util.Collection loadAll();
 
     /**
-     * 
+     *  
      */
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findOrCreate(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
@@ -91,7 +96,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * ExpressionExperiment.
      * </p>
      */
-    public java.util.Collection getArrayDesignsUsed(
+    public java.util.Collection<ArrayDesign> getArrayDesignsUsed(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
@@ -190,10 +195,10 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
 
     /**
      * <p>
-     * Counts the number of design element data vectors that are of the preferred quantitation type.
+     * Counts the number of ProcessedExpressionDataVectors.
      * </p>
      */
-    public long getPreferredDesignElementDataVectorCount(
+    public long getProcessedExpressionVectorCount(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
@@ -206,7 +211,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Collection loadMultiple( java.util.Collection<Long> ids );
+    public java.util.Collection loadMultiple( java.util.Collection ids );
 
     /**
      * <p>
@@ -229,7 +234,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * map of id -> AuditEvent. If the events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map getLastRankComputation( java.util.Collection ids );
+    public java.util.Map getLastProcessedDataUpdate( java.util.Collection ids );
 
     /**
      * <p>
@@ -261,23 +266,6 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      */
     public java.util.Collection findByBibliographicReference(
             ubic.gemma.model.common.description.BibliographicReference bibRef );
-
-    /**
-     * <p>
-     * Returns a map of DEDV to genes
-     * </p>
-     * <p>
-     * The genes could be id's or gene objects depending on what is given as input in the cs2gene Map. if the genes in
-     * this map are just gene id's then the map returned will be DEDV2geneids if the cs2gene map contains gene objects
-     * then the returned map will contain gene objects.
-     * </p>
-     * <p>
-     * The composite sequences given in the cs2gene map will determine which DEDV are returned. Although all the DEDV
-     * are returned from the DB they are filtered out in the dao.
-     * </p>
-     */
-    public java.util.Map getDesignElementDataVectors( java.util.Map cs2gene,
-            ubic.gemma.model.common.quantitationtype.QuantitationType qt );
 
     /**
      * <p>
@@ -371,13 +359,14 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      */
     public java.util.Map getSampleRemovalEvents( java.util.Collection expressionExperiments );
 
-    /**
-     * <p>
-     * Returns the missing-value-masked preferred quantitation type for the experiment, if it exists, or null otherwise.
-     * </p>
-     */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType getMaskedPreferredQuantitationType(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    // /**
+    // * <p>
+    // * Returns the missing-value-masked preferred quantitation type for the experiment, if it exists, or null
+    // otherwise.
+    // * </p>
+    // */
+    // public ubic.gemma.model.common.quantitationtype.QuantitationType getMaskedPreferredQuantitationType(
+    // ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
      * <p>
@@ -397,5 +386,5 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      */
     public java.util.Collection findByFactorValues( java.util.Collection factorValues );
 
-
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
 }

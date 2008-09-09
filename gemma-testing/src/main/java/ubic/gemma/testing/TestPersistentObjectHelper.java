@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
@@ -150,16 +151,16 @@ public class TestPersistentObjectHelper {
      * @param ad
      * @return
      */
-    private Collection<DesignElementDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
+    private Collection<RawExpressionDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
             Collection<QuantitationType> quantitationTypes, Collection<BioAssay> bioAssays, ArrayDesign ad ) {
 
         BioAssayDimension baDim = BioAssayDimension.Factory.newInstance( RandomStringUtils.randomAlphanumeric( 20 ),
                 null, bioAssays, null );
 
-        Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
+        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
         for ( QuantitationType quantType : quantitationTypes ) {
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-                DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+                RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
                 byte[] bdata = getDoubleData();
                 vector.setData( bdata );
                 vector.setDesignElement( cs );
@@ -315,7 +316,7 @@ public class TestPersistentObjectHelper {
         ee.setBioAssays( bioAssays );
 
         log.debug( "expression experiment => design element data vectors" );
-        Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
+        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
 
         Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
         for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
@@ -333,10 +334,17 @@ public class TestPersistentObjectHelper {
 
         ee.setQuantitationTypes( quantitationTypes );
 
-        ee.setDesignElementDataVectors( vectors );
+        ee.setRawExpressionDataVectors( vectors );
 
         ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
+        return ee;
+    }
+
+    /**
+     * @param ee
+     */
+    public void addTestAnalyses( ExpressionExperiment ee ) {
         /*
          * Add analyses
          */
@@ -370,8 +378,6 @@ public class TestPersistentObjectHelper {
 
         persisterHelper.persist( expressionAnalysis.getExpressionExperimentSetAnalyzed() );
         persisterHelper.persist( expressionAnalysis );
-
-        return ee;
     }
 
     /**

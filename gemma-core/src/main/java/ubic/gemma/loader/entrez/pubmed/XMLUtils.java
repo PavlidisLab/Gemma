@@ -71,7 +71,7 @@ public class XMLUtils {
      * @throws IOException
      * @throws TransformerException
      */
-    public static String extractOneChild( Node parent, String elementName ) throws IOException, TransformerException {
+    public static String extractOneChild( Node parent, String elementName ) throws IOException {
         NodeList jNodes = parent.getChildNodes();
         for ( int q = 0; q < jNodes.getLength(); q++ ) {
             Node jitem = jNodes.item( q );

@@ -87,26 +87,6 @@ public class DesignElementDataVectorServiceImpl extends
         return this.getDesignElementDataVectorDao().find( quantitationType );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGenes(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
-     */
-    @Override
-    protected Collection handleGetGenes( DesignElementDataVector dedv ) throws Exception {
-        return this.getDesignElementDataVectorDao().getGenes( dedv );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGenesById(long)
-     */
-    @Override
-    protected Collection handleGetGenesById( long id ) throws Exception {
-        return this.getDesignElementDataVectorDao().getGenesById( id );
-    }
-
     @Override
     protected void handleThaw( DesignElementDataVector designElementDataVector ) throws Exception {
         this.getDesignElementDataVectorDao().thaw( designElementDataVector );
@@ -115,16 +95,6 @@ public class DesignElementDataVectorServiceImpl extends
     @Override
     protected void handleThaw( Collection designElementDataVectors ) throws Exception {
         this.getDesignElementDataVectorDao().thaw( designElementDataVectors );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetGenes(java.util.Collection)
-     */
-    @Override
-    protected Map handleGetGenes( Collection dataVectors ) throws Exception {
-        return this.getDesignElementDataVectorDao().getGenes( dataVectors );
     }
 
     /*
@@ -171,18 +141,6 @@ public class DesignElementDataVectorServiceImpl extends
     @Override
     protected Collection handleFind( ArrayDesign arrayDesign, QuantitationType quantitationType ) throws Exception {
         return this.getDesignElementDataVectorDao().find( arrayDesign, quantitationType );
-    }
-
-    @Override
-    protected Map handleGetDedv2GenesMap( Collection dedvs, QuantitationType qt ) throws Exception {
-        return this.getDesignElementDataVectorDao().getDedv2GenesMap( dedvs, qt );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Map<DoubleVectorValueObject, Collection<Gene>> handleGetMaskedPreferredDataArrays( Collection ees,
-            Collection genes ) throws Exception {
-        return this.getDesignElementDataVectorDao().getMaskedPreferredDataArrays( ees, genes );
     }
 
 }

@@ -28,8 +28,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.gemma.analysis.preprocess.DedvRankService;
-import ubic.gemma.analysis.preprocess.DedvRankService.Method;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -49,21 +49,19 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
 
     private static Log log = LogFactory.getLog( DEDVRankEndpoint.class );
 
-    // private DesignElementDataVectorService designElementDataVectorService;
-    private GeneService geneService;
-    private ExpressionExperimentService expressionExperimentService;
-    private DedvRankService dedvRankService;
-
     /**
      * The local name of the expected request/response.
      */
     private static final String LOCAL_NAME = "dEDVRank";
 
-    /**
-     * Sets the "business service" to delegate to.
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
+    private GeneService geneService;
+
+    private ExpressionExperimentService expressionExperimentService;
+
+    private ExpressionDataMatrixService expressionDataMatrixService;
+
+    public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
+        this.expressionDataMatrixService = expressionDataMatrixService;
     }
 
     // public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
@@ -74,8 +72,11 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         this.expressionExperimentService = expressionExperimentService;
     }
 
-    public void setDedvRankService( DedvRankService dedvRankService ) {
-        this.dedvRankService = dedvRankService;
+    /**
+     * Sets the "business service" to delegate to.
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 
     /**
@@ -99,9 +100,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
 
         // Need to get and thaw the experiments.
         Collection<ExpressionExperiment> eeInput = expressionExperimentService.loadMultiple( eeIDLong );
-        // for ( ExpressionExperiment ee : eeInput ) {
-        // expressionExperimentService.thawLite( ee );
-        // }
+
         if ( eeInput.isEmpty() || eeInput == null )
             return buildBadResponse( document, "Expression experiment(s) cannot be found or incorrect input" );
 
@@ -114,20 +113,20 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         if ( geneInput.isEmpty() || geneInput == null )
             return buildBadResponse( document, "Gene(s) cannot be found or incorrect input" );
 
-        // get method - MAX, MIN, MEAN, MEDIAN, VARIANCE
+        // get method - max or mean.
         Collection<String> methodIn = getSingleNodeValue( requestElement, "method" );
         // expect one value only
         String methodString = "";
         for ( String type : methodIn )
             methodString = type;
-        Method method = getMethod( methodString );
+        RankMethod method = getMethod( methodString );
         if ( method == null ) return buildBadResponse( document, "Incorrect method input" );
 
         log.info( "XML input read: " + eeInput.size() + " experiment ids & " + geneInput.size() + " gene ids"
                 + " and method: " + methodString );
 
-        // main call to DedvRankService to obtain rank results
-        DenseDoubleMatrix rankMatrix = ( DenseDoubleMatrix ) dedvRankService.getRankMatrix( geneInput, eeInput, method );
+        // main call to expressionDataMatrixService to obtain rank results
+        DenseDoubleMatrix rankMatrix = expressionDataMatrixService.getRankMatrix( geneInput, eeInput, method );
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint
@@ -160,23 +159,6 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
             responseElement.appendChild( e3 );
         }
 
-        // for ( ExpressionExperiment ee : colNames ){
-        // Element e2 = document.createElement( "ee_"+ee.getId().toString() );
-        // e2.appendChild( document.createTextNode( Double.toString( rowData[eeIndex] )) );
-        // responseElement.appendChild( e2 );
-        // eeIndex++;
-        //                
-        // if (eeTrack==false){
-        // //keep track of the ee id's that were used; print the ee ids in a separate node
-        // Element e3 = document.createElement( "ee_ids" );
-        // e3.appendChild( document.createTextNode( ee.getId().toString() ));
-        // responseElement.appendChild( e3 );
-        //                    
-        // }
-        // }
-        // eeTrack=true;
-        // }
-
         watch.stop();
         Long time = watch.getTime();
 
@@ -184,39 +166,6 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
 
         return responseWrapper;
 
-    }
-
-    /**
-     * Return the corresponding DedvRankService constant for MAX, MIN, MEAN, MEDIAN, VARIANCE
-     * 
-     * @param methodString
-     * @return
-     */
-    private Method getMethod( String methodString ) {
-        if ( methodString.equalsIgnoreCase( "median" ) )
-            return Method.MEDIAN;
-        else if ( methodString.equalsIgnoreCase( "max" ) )
-            return Method.MAX;
-        else if ( methodString.equalsIgnoreCase( "mean" ) )
-            return Method.MEAN;
-        else if ( methodString.equalsIgnoreCase( "min" ) )
-            return Method.MIN;
-        else if ( methodString.equalsIgnoreCase( "variance" ) )
-            return Method.VARIANCE;
-        else
-            return null;
-    }
-
-    /**
-     * helper method to convert Gene to ID's (string format). Order will not be maintained, since the original
-     * collection was a HashSet object anyways
-     */
-    private Collection<String> gene2ID( Collection<Gene> geneCol ) {
-        Collection<String> geneIds = new HashSet<String>();
-        for ( Gene gene : geneCol ) {
-            geneIds.add( gene.getId().toString() );
-        }
-        return geneIds;
     }
 
     /**
@@ -235,6 +184,20 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         }
 
         return result.toString();
+    }
+
+    /**
+     * Return the corresponding DedvRankService constant for max and mean options
+     * 
+     * @param methodString
+     * @return
+     */
+    private RankMethod getMethod( String methodString ) {
+        if ( methodString.equalsIgnoreCase( "max" ) )
+            return RankMethod.max;
+        else if ( methodString.equalsIgnoreCase( "mean" ) ) return RankMethod.mean;
+
+        return null;
     }
 
 }

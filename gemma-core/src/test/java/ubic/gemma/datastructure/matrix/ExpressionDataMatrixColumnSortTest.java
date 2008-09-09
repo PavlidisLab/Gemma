@@ -27,6 +27,7 @@ import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -80,7 +81,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
         expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
 
-        Collection<DesignElementDataVector> designElementDataVectors = newee.getDesignElementDataVectors();
+        Collection<RawExpressionDataVector> designElementDataVectors = newee.getRawExpressionDataVectors();
         designElementDataVectorService.thaw( designElementDataVectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( designElementDataVectors );

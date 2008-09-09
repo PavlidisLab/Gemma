@@ -21,7 +21,6 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -422,10 +421,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
 
-        QuantitationType prefQt = ( QuantitationType ) expressionExperimentService.getPreferredQuantitationType(
-                expressionExperiment ).iterator().next();
+        Collection<QuantitationType> prefQts = expressionExperimentService
+                .getPreferredQuantitationType( expressionExperiment );
 
-        mav.addObject( "prefQt", prefQt.getId() );
+        if ( prefQts.size() > 0 ) {
+            QuantitationType prefQt = prefQts.iterator().next();
+            mav.addObject( "prefQt", prefQt.getId() );
+        } else {
+            log.warn( expressionExperiment + " has no preferred quantitation type" );
+        }
 
         getEventsOfInterest( expressionExperiment, mav );
 
@@ -621,14 +625,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
         expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
 
-        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
-            public int compare( Object o1, Object o2 ) {
-                String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
-                String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
-                int comparison = s1.compareToIgnoreCase( s2 );
-                return comparison;
-            }
-        } );
+        // Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
+        // public int compare( Object o1, Object o2 ) {
+        // String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
+        // String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
+        // int comparison = s1.compareToIgnoreCase( s2 );
+        // return comparison;
+        // }
+        // } );
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
         ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
         mav.addObject( "expressionExperiments", expressionExperiments );

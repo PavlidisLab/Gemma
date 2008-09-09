@@ -31,6 +31,8 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     boolean masked = false;
     double[] data = null;
+    Double rankByMean;
+    Double rankByMax;
 
     public DoubleVectorValueObject( DesignElementDataVector dedv ) {
         super( dedv );
@@ -43,6 +45,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             this.masked = true;
         }
         this.data = byteArrayConverter.byteArrayToDoubles( dedv.getData() );
+        if ( dedv instanceof ProcessedExpressionDataVector ) {
+            this.rankByMax = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMax();
+            this.rankByMean = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMean();
+        }
     }
 
     public double[] getData() {
@@ -57,4 +63,30 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         this.masked = masked;
     }
 
+    /** 
+     */
+    public DesignElementDataVector toDesignElementDataVector() {
+        return toDesignElementDataVector( null );
+    }
+
+    public DesignElementDataVector toDesignElementDataVector( QuantitationType updatedQuantitationType ) {
+        DesignElementDataVector result;
+        if ( this.masked ) {
+            result = ProcessedExpressionDataVector.Factory.newInstance();
+            ( ( ProcessedExpressionDataVector ) result ).setRankByMax( rankByMax );
+            ( ( ProcessedExpressionDataVector ) result ).setRankByMean( rankByMean );
+        } else {
+            result = RawExpressionDataVector.Factory.newInstance();
+        }
+        result.setExpressionExperiment( this.expressionExperiment );
+        result.setBioAssayDimension( this.bioAssayDimension );
+        if ( updatedQuantitationType == null ) {
+            result.setQuantitationType( this.quantitationType );
+        } else {
+            result.setQuantitationType( updatedQuantitationType );
+        }
+        result.setDesignElement( designElement );
+        result.setData( byteArrayConverter.doubleArrayToBytes( this.data ) );
+        return result;
+    }
 }

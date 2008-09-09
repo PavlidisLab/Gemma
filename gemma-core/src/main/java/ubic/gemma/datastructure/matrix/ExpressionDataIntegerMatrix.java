@@ -152,7 +152,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
     }
 
     @Override
-    protected void vectorsToMatrix( Collection<DesignElementDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
@@ -189,7 +189,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
      * @param maxSize
      * @return DoubleMatrixNamed
      */
-    private IntegerMatrix<DesignElement, Integer> createMatrix( Collection<DesignElementDataVector> vectors,
+    private IntegerMatrix<DesignElement, Integer> createMatrix( Collection<? extends DesignElementDataVector> vectors,
             int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();

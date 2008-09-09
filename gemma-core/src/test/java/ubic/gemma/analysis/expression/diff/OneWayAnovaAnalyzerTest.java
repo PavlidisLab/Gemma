@@ -97,7 +97,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
     protected void configureMocks() throws Exception {
 
         configureMockAnalysisServiceHelper( 1 );
-        analyzer.setAnalysisHelperService( analysisHelperService );
+        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
 
     }
 

@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -70,7 +71,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ee = results.iterator().next();
         eeService.thawLite( ee );
         assertEquals( 80, ee.getBioAssays().size() );
-        assertEquals( 400, ee.getDesignElementDataVectors().size() );
+        assertEquals( 400, ee.getRawExpressionDataVectors().size() );
         ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
         ads.add( ad );
         int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId() );
@@ -154,7 +155,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ExperimentalFactor factor = newee.getExperimentalDesign().getExperimentalFactors().iterator().next();
         assertEquals( 2, factor.getFactorValues().size() ); // otherwise get 4.
 
-        Collection vectors = newee.getDesignElementDataVectors();
+        Collection vectors = newee.getRawExpressionDataVectors();
         designElementDataVectorService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
@@ -259,7 +260,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         DesignElement soughtDesignElement = null;
         BioAssay soughtBioAssay = null;
-        Collection<DesignElementDataVector> vectors = ee.getDesignElementDataVectors();
+        Collection<RawExpressionDataVector> vectors = ee.getRawExpressionDataVectors();
         for ( DesignElementDataVector vector : vectors ) {
             DesignElement de = vector.getDesignElement();
             if ( de.getName().equals( probeToTest ) ) {

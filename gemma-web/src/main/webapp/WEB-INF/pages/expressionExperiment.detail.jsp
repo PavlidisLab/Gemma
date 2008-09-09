@@ -4,10 +4,10 @@
 <head>
 	<title>${expressionExperiment.name}</title>
 
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js'  />
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/eeDataFetch.js' />
 	<jwr:script src='/scripts/app/expressionExperiment.js' />
-	
+
 
 	<authz:authorize ifAnyGranted="admin">
 		<script type="text/javascript">
@@ -106,24 +106,6 @@ ${expressionExperiment.name} - ${expressionExperiment.shortName} &nbsp;
 			</div>
 		</td>
 	</tr>
-	<%--<tr>
-	
-		<td class="label">
-			<fmt:message key="expressionExperiment.source" />
-		</td>
-		<td>
-			<%
-			    if ( expressionExperiment.getSource() != null ) {
-			%>
-			<jsp:getProperty name="expressionExperiment" property="source" />
-			<%
-			    } else {
-			        out.print( "Source unavailable" );
-			    }
-			%>
-		</td>
-	</tr>
-	--%>
 	<authz:authorize ifAnyGranted="admin">
 		<tr>
 			<td class="label">
@@ -143,7 +125,6 @@ ${expressionExperiment.name} - ${expressionExperiment.shortName} &nbsp;
 			</td>
 		</tr>
 	</authz:authorize>
-
 	<tr>
 		<td class="label">
 			<fmt:message key="investigators.title" />
@@ -253,10 +234,10 @@ ${expressionExperiment.name} - ${expressionExperiment.shortName} &nbsp;
 			Data File
 		</td>
 		<td>
-			<a href="#" onClick="fetchData(true, ${expressionExperiment.id }, 'text', null, null)">Click to start download</a>
-
+			<a href="#" onClick="fetchData(true, ${expressionExperiment.id }, 'text', null, null)">Filtered</a> &nbsp;&nbsp;
+			<a href="#" onClick="fetchData(false, ${expressionExperiment.id }, 'text', null, null)">Unfiltered</a>
 			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'Tab-delimited data file for this experiment, if available.'); return false"><img
+				onclick="showHelpTip(event, 'Tab-delimited data file for this experiment. The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 	</tr>

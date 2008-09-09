@@ -20,12 +20,12 @@ package ubic.gemma.analysis.expression.diff;
 
 import ubic.basecode.util.RClient;
 import ubic.basecode.util.RConnectionFactory;
-import ubic.gemma.analysis.service.AnalysisHelperService;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 
 /**
  * An abstract analyzer to be extended by analyzers which will make use of R.
  * 
- * @spring.property name="analysisHelperService" ref="analysisHelperService"
+ * @spring.property name="expressionDataMatrixService" ref="expressionDataMatrixService"
  * @author keshav
  * @version $Id$
  */
@@ -33,7 +33,7 @@ public abstract class AbstractAnalyzer {
 
     protected RClient rc = null;
 
-    protected AnalysisHelperService analysisHelperService = null;
+    protected ExpressionDataMatrixService expressionDataMatrixService = null;
 
     /**
      * 
@@ -44,10 +44,10 @@ public abstract class AbstractAnalyzer {
     }
 
     /**
-     * @param analysisHelperService
+     * @param expressionDataMatrixService
      */
-    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
-        this.analysisHelperService = analysisHelperService;
+    public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
+        this.expressionDataMatrixService = expressionDataMatrixService;
     }
 
 }

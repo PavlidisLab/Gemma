@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
@@ -136,7 +137,7 @@ public class MatrixConversionTest extends TestCase {
             // bio.a gets cs 0-99, bio.b gets 100-199.
             long j = 0;
             for ( ; j < NUM_CS - 100; j++ ) {
-                DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+                DesignElementDataVector vector = RawExpressionDataVector.Factory.newInstance();
                 double[] data = new double[baDimA.getBioAssays().size()];
                 for ( int k = 0; k < data.length; k++ ) {
                     data[k] = k;
@@ -153,7 +154,7 @@ public class MatrixConversionTest extends TestCase {
             }
 
             for ( ; j < NUM_CS; j++ ) {
-                DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+                DesignElementDataVector vector = RawExpressionDataVector.Factory.newInstance();
                 double[] data = new double[baDimB.getBioAssays().size()];
                 for ( int k = 0; k < data.length; k++ ) {
                     data[k] = k;

@@ -322,7 +322,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         ExpressionDataDoubleMatrix expressionDataMatrix = null;
 
         if ( eevc.isMaskMissing() ) {
-            expressionDataMatrix = matrixBuilder.getMaskedPreferredData();
+            expressionDataMatrix = matrixBuilder.getProcessedData();
         } else {
             expressionDataMatrix = matrixBuilder.getPreferredData();
         }

@@ -24,7 +24,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.springframework.orm.hibernate3.HibernateCallback;
 
@@ -37,6 +36,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.ReporterService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 
 /**
  * This class handles persisting array designs. This is a bit of a special case, because Arraydesigns are very large
@@ -187,7 +187,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                     designElementCache.put( element.getName() + adName, element );
                     BioSequence seq = element.getBiologicalCharacteristic();
                     if ( seq != null ) {
-                        session.lock( seq, LockMode.READ );
+                        seq = ( BioSequence ) session.get( BioSequenceImpl.class, seq.getId() );
                         if ( StringUtils.isNotBlank( seq.getName() ) ) {
                             designElementSequenceCache.put( seq.getName(), element );
                         }

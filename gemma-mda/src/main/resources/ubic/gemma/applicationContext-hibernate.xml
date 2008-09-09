@@ -74,7 +74,8 @@
 				<value>classpath:ubic/gemma/model/expression/arrayDesign/AlternateName.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDataVector.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/bioAssayData/DesignElementDataVector.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDimension.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssayData/DesignElementDimension.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml</value>
@@ -105,7 +106,7 @@
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.show_sql">false</prop>
-				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLMyISAMDialect</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</prop>
 				<prop key="hibernate.max_fetch_depth">3</prop>
 				<prop key="hibernate.jdbc.fetch_size">500</prop>
 				<prop key="hibernate.default_batch_fetch_size">500</prop>
@@ -117,8 +118,8 @@
 				<prop key="hibernate.cache.use_query_cache">true</prop>
 				<prop key="hibernate.generate_statistics">true</prop>
 				<prop key="hibernate.cache.use_structured_entries">true</prop>
-				<prop key="hibernate.format_sql">true</prop>
-				<prop key="hibernate.use_sql_comments">true</prop>
+				<!-- <prop key="hibernate.format_sql">true</prop>
+				<prop key="hibernate.use_sql_comments">true</prop>-->
 			</props>
 		</property>
 	</bean>
@@ -1067,621 +1068,8 @@
 			</list>
 		</property>
 	</bean>
-	<!-- AuditEventType Entity Proxy with inner AuditEventType Entity implementation -->
-	<bean id="auditEventTypeDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- MissingValueAnalysisEvent Entity Proxy with inner MissingValueAnalysisEvent Entity implementation -->
-	<bean id="missingValueAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ArrayDesignSequenceAnalysisEvent Entity Proxy with inner ArrayDesignSequenceAnalysisEvent Entity implementation -->
-	<bean id="arrayDesignSequenceAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ArrayDesignAnalysisEvent Entity Proxy with inner ArrayDesignAnalysisEvent Entity implementation -->
-	<bean id="arrayDesignAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- LinkAnalysisEvent Entity Proxy with inner LinkAnalysisEvent Entity implementation -->
-	<bean id="linkAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ArrayDesignGeneMappingEvent Entity Proxy with inner ArrayDesignGeneMappingEvent Entity implementation -->
-	<bean id="arrayDesignGeneMappingEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ArrayDesignSequenceUpdateEvent Entity Proxy with inner ArrayDesignSequenceUpdateEvent Entity implementation -->
-	<bean id="arrayDesignSequenceUpdateEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ExpressionExperimentAnalysisEvent Entity Proxy with inner ExpressionExperimentAnalysisEvent Entity implementation -->
-	<bean id="expressionExperimentAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- RankComputationEvent Entity Proxy with inner RankComputationEvent Entity implementation -->
-	<bean id="rankComputationEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ArrayDesignAnnotationFileEvent Entity Proxy with inner ArrayDesignAnnotationFileEvent Entity implementation -->
-	<bean id="arrayDesignAnnotationFileEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- BioMaterialMappingUpdate Entity Proxy with inner BioMaterialMappingUpdate Entity implementation -->
-	<bean id="bioMaterialMappingUpdateDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdateDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdateDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ArrayDesignProbeRenamingEvent Entity Proxy with inner ArrayDesignProbeRenamingEvent Entity implementation -->
-	<bean id="arrayDesignProbeRenamingEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ArrayDesignMergeEvent Entity Proxy with inner ArrayDesignMergeEvent Entity implementation -->
-	<bean id="arrayDesignMergeEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ArrayDesignSubsumeCheckEvent Entity Proxy with inner ArrayDesignSubsumeCheckEvent Entity implementation -->
-	<bean id="arrayDesignSubsumeCheckEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ExpressionExperimentPlatformSwitchEvent Entity Proxy with inner ExpressionExperimentPlatformSwitchEvent Entity implementation -->
-	<bean id="expressionExperimentPlatformSwitchEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean
-				class="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- TooSmallDatasetLinkAnalysisEvent Entity Proxy with inner TooSmallDatasetLinkAnalysisEvent Entity implementation -->
-	<bean id="tooSmallDatasetLinkAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- FailedLinkAnalysisEvent Entity Proxy with inner FailedLinkAnalysisEvent Entity implementation -->
-	<bean id="failedLinkAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- FailedMissingValueAnalysisEvent Entity Proxy with inner FailedMissingValueAnalysisEvent Entity implementation -->
-	<bean id="failedMissingValueAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- SampleRemovalEvent Entity Proxy with inner SampleRemovalEvent Entity implementation -->
-	<bean id="sampleRemovalEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ArrayDesignRepeatAnalysisEvent Entity Proxy with inner ArrayDesignRepeatAnalysisEvent Entity implementation -->
-	<bean id="arrayDesignRepeatAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- CommentedEvent Entity Proxy with inner CommentedEvent Entity implementation -->
-	<bean id="commentedEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- StatusFlagEvent Entity Proxy with inner StatusFlagEvent Entity implementation -->
-	<bean id="statusFlagEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- TroubleStatusFlagEvent Entity Proxy with inner TroubleStatusFlagEvent Entity implementation -->
-	<bean id="troubleStatusFlagEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- OKStatusFlagEvent Entity Proxy with inner OKStatusFlagEvent Entity implementation -->
-	<bean id="oKStatusFlagEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ValidatedFlagEvent Entity Proxy with inner ValidatedFlagEvent Entity implementation -->
-	<bean id="validatedFlagEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ArrayDesignSequenceRemoveEvent Entity Proxy with inner ArrayDesignSequenceRemoveEvent Entity implementation -->
-	<bean id="arrayDesignSequenceRemoveEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- DifferentialExpressionAnalysisEvent Entity Proxy with inner DifferentialExpressionAnalysisEvent Entity implementation -->
-	<bean id="differentialExpressionAnalysisEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean
-				class="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ExpressionExperimentVectorMergeEvent Entity Proxy with inner ExpressionExperimentVectorMergeEvent Entity implementation -->
-	<bean id="expressionExperimentVectorMergeEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean
-				class="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- CoexpressionTrouble Entity Proxy with inner CoexpressionTrouble Entity implementation -->
-	<bean id="coexpressionTroubleDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTroubleDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTroubleDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- DifferentialExpressionTrouble Entity Proxy with inner DifferentialExpressionTrouble Entity implementation -->
-	<bean id="differentialExpressionTroubleDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTroubleDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTroubleDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ValidatedAnnotations Entity Proxy with inner ValidatedAnnotations Entity implementation -->
-	<bean id="validatedAnnotationsDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotationsDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotationsDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ValidatedExperimentalDesign Entity Proxy with inner ValidatedExperimentalDesign Entity implementation -->
-	<bean id="validatedExperimentalDesignDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedExperimentalDesignDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedExperimentalDesignDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- InvalidatedEvent Entity Proxy with inner InvalidatedEvent Entity implementation -->
-	<bean id="invalidatedEventDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.InvalidatedEventDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.InvalidatedEventDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ValidatedPreprocessing Entity Proxy with inner ValidatedPreprocessing Entity implementation -->
-	<bean id="validatedPreprocessingDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedPreprocessingDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedPreprocessingDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
+
+	
 	<!-- Measurement Entity Proxy with inner Measurement Entity implementation -->
 	<bean id="measurementDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2240,6 +1628,26 @@
 			</list>
 		</property>
 	</bean>
+
+	<!-- ProcessedExpressionDataVectorDao Entity Proxy with inner ProcessedExpressionDataVectorDao Entity implementation -->
+	<bean id="processedExpressionDataVectorDao" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="target">
+			<bean class="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDaoImpl">
+				<property name="sessionFactory">
+					<ref local="sessionFactory" />
+				</property>
+			</bean>
+		</property>
+		<property name="proxyInterfaces">
+			<value>ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao</value>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>hibernateInterceptor</value>
+			</list>
+		</property>
+	</bean>
+
 	<!-- BioAssayDimension Entity Proxy with inner BioAssayDimension Entity implementation -->
 	<bean id="bioAssayDimensionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3194,12 +2602,12 @@
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByTaxon=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.thawLite=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getDesignElementDataVectorCountById=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getPreferredDesignElementDataVectorCount=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getProcessedExpressionVectorCount=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getBioMaterialCount=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadMultiple=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getDesignElementDataVectors=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getLastLinkAnalysis=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getLastRankComputation=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getLastProcessedDataUpdate=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getLastMissingValueAnalysis=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByGene=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByExpressedGene=PROPAGATION_REQUIRED,readOnly
@@ -3215,7 +2623,6 @@
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getAnnotationCounts=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getPopulatedFactorCounts=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getSampleRemovalEvents=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getMaskedPreferredQuantitationType=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getSubSets=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByBioMaterials=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByFactorValues=PROPAGATION_REQUIRED,readOnly
@@ -3332,8 +2739,6 @@
 				ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService.remove=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove=PROPAGATION_REQUIRED
-				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getGenes=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getGenesById=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.countAll=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.removeDataForCompositeSequence=PROPAGATION_REQUIRED
@@ -3343,10 +2748,9 @@
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.find=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.load=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getDedv2GenesMap=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getMaskedPreferredDataArrays=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataArrays=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.createProcessedDataVectors=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate=PROPAGATION_REQUIRED
-				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.getDesignElementDataVectors=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.remove=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.load=PROPAGATION_REQUIRED,readOnly
@@ -4383,6 +3787,30 @@
 			</list>
 		</property>
 	</bean>
+
+	<!-- ProcessedExpressionDataVectorService Proxy with inner ProcessedExpressionDataVectorService Service Implementation -->
+	<bean id="processedExpressionDataVectorService" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="target">
+			<bean class="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorServiceImpl">
+				<property name="processedExpressionDataVectorDao">
+					<ref bean="processedExpressionDataVectorDao" />
+				</property>
+			</bean>
+		</property>
+		<property name="proxyInterfaces">
+			<value>ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService</value>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>serviceTransactionInterceptor</value>
+				<value>hibernateInterceptor</value>
+				<value>serviceSecurityInterceptor</value>
+				<value>addOrRemoveFromACLInterceptor</value>
+				<value>monitorInterceptor</value>
+			</list>
+		</property>
+	</bean>
+
 	<!-- BioAssayDimensionService Service Proxy with inner BioAssayDimensionService Service Implementation -->
 	<bean id="bioAssayDimensionService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">

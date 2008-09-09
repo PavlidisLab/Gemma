@@ -1616,32 +1616,6 @@ public class SearchService implements InitializingBean {
      * @param hits
      * @return
      */
-    private Collection<SearchResult> getSearchResults( CompassHit[] hits ) {
-        Collection<SearchResult> results = new HashSet<SearchResult>();
-        int i = 0;
-        for ( CompassHit compassHit : hits ) {
-            SearchResult r = new SearchResult( compassHit.getData() );
-            /*
-             * Always give compass hits a lower score so they can be differentiated from exact database hits.
-             */
-            r.setScore( new Double( compassHit.getScore() * COMPASS_HIT_SCORE_PENALTY_FACTOR ) );
-
-            CompassHighlightedText highlightedText = compassHit.highlightedText();
-            if ( highlightedText != null && highlightedText.getHighlightedText() != null ) {
-                r.setHighlightedText( "... " + highlightedText.getHighlightedText() + " ..." );
-            } else {
-                log.debug( "No highlighted text for " + r );
-            }
-            results.add( r );
-            i++;
-        }
-        return results;
-    }
-
-    /**
-     * @param hits
-     * @return
-     */
     private Collection<SearchResult> getSearchResults( CompassHits hits ) {
         Collection<SearchResult> results = new HashSet<SearchResult>();
         for ( int i = 0, len = hits.getLength(); i < len; i++ ) {

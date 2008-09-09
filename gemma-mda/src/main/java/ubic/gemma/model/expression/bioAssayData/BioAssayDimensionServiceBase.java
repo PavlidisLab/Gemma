@@ -71,27 +71,6 @@ public abstract class BioAssayDimensionServiceBase implements
             ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#getDesignElementDataVectors(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
-     */
-    public java.util.Collection getDesignElementDataVectors(
-            final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
-        try {
-            return this.handleGetDesignElementDataVectors( bioAssayDimension );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.getDesignElementDataVectors(ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #getDesignElementDataVectors(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
-     */
-    protected abstract java.util.Collection handleGetDesignElementDataVectors(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension create(

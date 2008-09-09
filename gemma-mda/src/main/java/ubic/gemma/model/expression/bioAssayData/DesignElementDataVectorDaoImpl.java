@@ -18,14 +18,11 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -39,14 +36,12 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -68,7 +63,7 @@ public class DesignElementDataVectorDaoImpl extends
 
     @Override
     public Collection find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
-        final String queryString = "select dev from DesignElementDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
+        final String queryString = "select dev from RawExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.designElement in (:desEls) "
                 + "and dev.quantitationType = :quantitationType ";
         try {
@@ -148,202 +143,6 @@ public class DesignElementDataVectorDaoImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleGetDedv2GenesMap(java.util.Collection,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    @Override
-    @Deprecated
-    protected Map handleGetDedv2GenesMap( Collection dedvs, QuantitationType qt ) throws Exception {
-        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
-        Map<Long, DesignElementDataVector> dedvMap = new HashMap<Long, DesignElementDataVector>();
-
-        StringBuffer dedvIdList = new StringBuffer();
-
-        for ( Object object : dedvs ) {
-            if ( object instanceof DesignElementDataVector ) {
-                DesignElementDataVector dedv = ( DesignElementDataVector ) object;
-                dedvIdList.append( dedv.getId() );
-                dedvIdList.append( ',' );
-                dedvMap.put( dedv.getId(), dedv );
-            }
-        }
-
-        dedvIdList.deleteCharAt( dedvIdList.length() - 1 );
-
-        // Native query - faster? Fetches all data for that QT and throws away unneeded portion
-        String queryString = "SELECT DESIGN_ELEMENT_DATA_VECTOR.ID as dedvId, DESIGN_ELEMENT_FK as csId, GENE as geneId, CHROMOSOME_FEATURE.ID as featureID, "
-                + " CHROMOSOME_FEATURE.OFFICIAL_NAME as officialName, CHROMOSOME_FEATURE.OFFICIAL_SYMBOL as officialSymbol FROM DESIGN_ELEMENT_DATA_VECTOR, GENE2CS, CHROMOSOME_FEATURE WHERE "
-                + " QUANTITATION_TYPE_FK = "
-                + qt.getId()
-                + " AND GENE2CS.CS=DESIGN_ELEMENT_FK AND GENE2CS.GENE=CHROMOSOME_FEATURE.ID AND DESIGN_ELEMENT_DATA_VECTOR.ID in ("
-                + dedvIdList + ")";
-
-        Session session = getSessionFactory().openSession();
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-
-        queryObject.addScalar( "dedvId", new LongType() );
-        queryObject.addScalar( "geneId", new LongType() );
-        queryObject.addScalar( "featureID", new LongType() );
-        queryObject.addScalar( "officialName", new StringType() );
-        queryObject.addScalar( "officialSymbol", new StringType() );
-
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
-        while ( scroll.next() ) {
-
-            // get the data returned from the query
-            Long dedvId = scroll.getLong( 0 );
-            Long geneId = scroll.getLong( 1 );
-            // Long featureId = scroll.getLong( 2 );
-            String officialName = scroll.getString( 3 );
-            String officialSymbol = scroll.getString( 4 );
-
-            // Create the objects we want to put in the hashmap
-            Gene gene = Gene.Factory.newInstance();
-            gene.setOfficialName( officialName );
-            gene.setOfficialSymbol( officialSymbol );
-            gene.setId( geneId );
-
-            DesignElementDataVector dedv = dedvMap.get( dedvId );
-
-            // Test to see if we can just add or if we have to make a collection
-            // TODO: this might be problematic due to the == operator and the hash function for DEDV
-            if ( dedv2genes.containsKey( dedv ) ) {
-                dedv2genes.get( dedv ).add( gene );
-            } else {
-                Collection<Gene> genes = new HashSet<Gene>();
-                genes.add( gene );
-                dedv2genes.put( dedv, genes );
-            }
-
-        }
-        session.clear();
-        return dedv2genes;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleGetGenes(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Map handleGetGenes( Collection dataVectors ) throws Exception {
-        HibernateTemplate templ = this.getHibernateTemplate();
-        // implementation details in callback class
-        GetGeneCallbackHandler callback = new GetGeneCallbackHandler( dataVectors );
-        Map<DesignElementDataVector, Collection<Gene>> geneMap = ( Map ) templ.execute( callback, true );
-        return geneMap;
-    }
-
-    /**
-     * Gets all the genes that are related to the DesignElementDataVector.
-     * 
-     * @param designElementDataVector
-     * @return Collection
-     * @deprecated Never used?
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleGetGenes( DesignElementDataVector dedv ) throws Exception {
-        return this.handleGetGenesById( dedv.getId() );
-    }
-
-    /**
-     * Gets all the genes that are related to the DesignElementDataVector identified by the given ID.
-     * 
-     * @param id
-     * @return Collection
-     * @deprecated Never used?
-     */
-    @Override
-    protected Collection handleGetGenesById( long id ) throws Exception {
-
-        final String queryString = "select distinct geneProduct.gene from BioSequence2GeneProductImpl as bs2gp inner join bs2gp.geneProduct as geneProduct, CompositeSequenceImpl cs, "
-                + " DesignElementDataVectorImpl dedv inner join dedv.designElement de"
-                + " where de.id=cs.id and cs.biologicalCharacteristic=bs2gp.bioSequence and dedv.id = :id ";
-
-        return getHibernateTemplate().findByNamedParam( queryString, "id", id );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Map<DoubleVectorValueObject, Collection<Gene>> handleGetMaskedPreferredDataArrays( Collection ees,
-            Collection genes ) throws Exception {
-
-        // ees must be thawed first as currently implemented.
-
-        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
-        if ( cs2gene.keySet().size() == 0 ) {
-            log.warn( "No composite sequences found for genes" );
-            return new HashMap<DoubleVectorValueObject, Collection<Gene>>();
-        }
-
-        Map<ExpressionExperiment, QuantitationType> hasMaskedPreferredData = new HashMap<ExpressionExperiment, QuantitationType>();
-        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) ees ) {
-            for ( QuantitationType qt : ee.getQuantitationTypes() ) {
-                if ( qt.getIsMaskedPreferred() ) {
-                    hasMaskedPreferredData.put( ee, qt );
-                    break;
-                }
-            }
-        }
-
-        Map<DesignElementDataVector, Collection<Gene>> maskedPreferredData = getMaskedPreferredVectorsForProbes(
-                hasMaskedPreferredData.keySet(), cs2gene );
-        Map<DoubleVectorValueObject, Collection<Gene>> finalResult = unpack( maskedPreferredData );
-
-        Set<ExpressionExperiment> twoChannel = new HashSet<ExpressionExperiment>();
-        Set<ExpressionExperiment> oneChannel = new HashSet<ExpressionExperiment>();
-        Map<ArrayDesign, Collection<ExpressionExperiment>> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( ees,
-                this.getSession( false ) );
-        for ( ArrayDesign ad : arrayDesignsUsed.keySet() ) {
-            if ( !ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
-                for ( ExpressionExperiment ee : arrayDesignsUsed.get( ad ) ) {
-                    if ( !hasMaskedPreferredData.containsKey( ee ) ) twoChannel.add( ee );
-                }
-            } else {
-                for ( ExpressionExperiment ee : arrayDesignsUsed.get( ad ) ) {
-                    if ( !hasMaskedPreferredData.containsKey( ee ) ) oneChannel.add( ee );
-                }
-            }
-        }
-
-        /*
-         * We got all the data we need.
-         */
-        if ( twoChannel.size() == 0 && oneChannel.size() == 0 ) {
-            return finalResult;
-        }
-
-        /*
-         * If we get here, the 'masked' data is not available and must be computed.
-         */
-        if ( twoChannel.size() > 0 ) {
-            // Otherwise, get the preferred data for the genes, and the missing value data for the genes.
-            Map<DesignElementDataVector, Collection<Gene>> preferredData = getPreferredVectorsForProbes( twoChannel,
-                    cs2gene );
-
-            Map<DesignElementDataVector, Collection<Gene>> missingValueData = getMissingValueVectorsForProbes(
-                    twoChannel, cs2gene );
-
-            // Make the masked data, which requires unpacking the vectors. the id of the data vector is used.
-            finalResult.putAll( maskAndUnpack( preferredData, missingValueData ) );
-        }
-
-        if ( oneChannel.size() > 0 ) {
-            // Otherwise, get the preferred data for the genes (the masked data would be the same thing anyway)
-            Map<DesignElementDataVector, Collection<Gene>> preferredData = getPreferredVectorsForProbes( oneChannel,
-                    cs2gene );
-            finalResult.putAll( unpack( preferredData ) );
-        }
-
-        return finalResult;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleGetVectors(java.util.Collection,
      *      java.util.Collection)
      */
@@ -376,44 +175,6 @@ public class DesignElementDataVectorDaoImpl extends
         return dedv2genes;
     }
 
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleQueryByGeneSymbolAndSpecies(java.lang.String,
-     *      java.lang.String)
-     * @deprecated This is not used anywhere.
-     */
-    @Override
-    @Deprecated
-    protected Collection handleQueryByGeneSymbolAndSpecies( String geneOfficialSymbol, String species,
-            Collection expressionExperiments ) throws Exception {
-
-        final String queryString = "from DesignElementDataVectorImpl as d " // get DesignElementDataVectorImpl
-                + "inner join d.designElement as de " // where de.name='probe_5'";
-                + "inner join de.biologicalCharacteristic as bs " // where bs.name='test_bs'";
-                + "inner join bs.bioSequence2GeneProduct as b2g "// where b2g.score=1.5";
-                + "inner join b2g.geneProduct as gp inner join gp.gene as g "
-                + "inner join g.taxon as t where g.officialSymbol = :geneOfficialSymbol and t.commonName = :species "
-                + "and d.expressionExperiment in (:expressionExperiments)";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "geneOfficialSymbol", geneOfficialSymbol );
-            queryObject.setParameter( "species", species );
-            queryObject.setParameterList( "expressionExperiments", expressionExperiments );
-            java.util.List results = queryObject.list();
-
-            if ( results != null ) {
-                log.debug( "size: " + results.size() );
-                for ( Object obj : results ) {
-                    log.debug( obj );
-                }
-            }
-
-            return results;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -426,7 +187,7 @@ public class DesignElementDataVectorDaoImpl extends
 
         for ( String type : probeCoexpTypes ) {
 
-            final String dedvRemovalQuery = "delete dedv from DesignElementDataVectorImpl dedv where dedv.designElement = ?";
+            final String dedvRemovalQuery = "delete dedv from RawExpressionDataVectorImpl dedv where dedv.designElement = ?";
 
             final String ppcRemoveFirstQuery = "delete d from " + type
                     + "ProbeCoExpressionImpl as p inner join p.firstVector d where d.designElement = ?";
@@ -447,7 +208,7 @@ public class DesignElementDataVectorDaoImpl extends
      */
     @Override
     protected void handleRemoveDataForQuantitationType( final QuantitationType quantitationType ) throws Exception {
-        final String dedvRemovalQuery = "delete from DesignElementDataVectorImpl as dedv where dedv.quantitationType = ?";
+        final String dedvRemovalQuery = "delete from RawExpressionDataVectorImpl as dedv where dedv.quantitationType = ?";
         int deleted = getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
         log.info( "Deleted " + deleted + " data vector elements" );
     }
@@ -554,64 +315,22 @@ public class DesignElementDataVectorDaoImpl extends
 
     }
 
-    private Map<DesignElementDataVector, Collection<Gene>> getMaskedPreferredVectorsForProbes( Collection ees,
-            Map<CompositeSequence, Collection<Gene>> cs2gene ) {
-
-        final String queryString;
-        if ( ees == null || ees.size() == 0 ) {
-            queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv "
-                    + " inner join fetch dedv.bioAssayDimension bd "
-                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
-                    + " where dedv.designElement in ( :cs ) and dedv.quantitationType.isMaskedPreferred = true";
-        } else {
-            queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv"
-                    + " inner join fetch dedv.bioAssayDimension bd "
-                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
-                    + " where dedv.designElement in (:cs ) and dedv.quantitationType.isMaskedPreferred = true"
-                    + " and dedv.expressionExperiment in ( :ees )";
-        }
-        return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
-    }
-
     /**
      * @param ees
      * @param cs2gene
      * @return
      */
-    private Map<DesignElementDataVector, Collection<Gene>> getMissingValueVectorsForProbes( Collection ees,
-            Map<CompositeSequence, Collection<Gene>> cs2gene ) {
-        final String queryString;
-        if ( ees == null || ees.size() == 0 ) {
-            queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv "
-                    + " inner join fetch dedv.bioAssayDimension bd "
-                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
-                    + " where dedv.designElement in ( :cs ) and dedv.quantitationType.type = 'PRESENTABSENT'";
-        } else {
-            queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv"
-                    + " inner join fetch dedv.bioAssayDimension bd "
-                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
-                    + " where dedv.designElement in (:cs ) and dedv.quantitationType.type = 'PRESENTABSENT'"
-                    + " and dedv.expressionExperiment in ( :ees )";
-        }
-        return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
-    }
-
-    /**
-     * @param ees
-     * @param cs2gene
-     * @return
-     */
-    private Map<DesignElementDataVector, Collection<Gene>> getPreferredVectorsForProbes( Collection ees,
+    protected Map<DesignElementDataVector, Collection<Gene>> getPreferredVectorsForProbes( Collection ees,
             Map<CompositeSequence, Collection<Gene>> cs2gene ) {
 
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
-            queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv "
+            queryString = "select distinct dedv, dedv.designElement from RawExpressionDataVectorImpl dedv "
                     + " inner join fetch dedv.bioAssayDimension bd "
                     + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
                     + " where dedv.designElement in ( :cs ) and dedv.quantitationType.isPreferred = true";
         } else {
-            queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv"
+            queryString = "select distinct dedv, dedv.designElement from RawExpressionDataVectorImpl dedv"
                     + " inner join fetch dedv.bioAssayDimension bd "
                     + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
                     + " where dedv.designElement in (:cs ) and dedv.quantitationType.isPreferred = true"
@@ -621,12 +340,35 @@ public class DesignElementDataVectorDaoImpl extends
     }
 
     /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    protected Collection<DesignElementDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
+                + " where q.type.isPreferred = true  and dedv.expressionExperiment = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    protected Collection<DesignElementDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
+                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
+                + " and dedv.expressionExperiment  = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    }
+
+    /**
      * @param ees
      * @param cs2gene
      * @param queryString
      * @return
      */
-    private Map<DesignElementDataVector, Collection<Gene>> getVectorsForProbesInExperiments( Collection ees,
+    protected Map<DesignElementDataVector, Collection<Gene>> getVectorsForProbesInExperiments( Collection ees,
             Map<CompositeSequence, Collection<Gene>> cs2gene, final String queryString ) {
         Session session = super.getSession( false );
         org.hibernate.Query queryObject = session.createQuery( queryString );
@@ -659,46 +401,6 @@ public class DesignElementDataVectorDaoImpl extends
         return dedv2genes;
     }
 
-    private Map<DoubleVectorValueObject, Collection<Gene>> maskAndUnpack(
-            Map<DesignElementDataVector, Collection<Gene>> preferredData,
-            Map<DesignElementDataVector, Collection<Gene>> missingValueData ) {
-        Map<DoubleVectorValueObject, Collection<Gene>> unpackedData = unpack( preferredData );
-
-        if ( missingValueData.size() == 0 ) {
-            return unpackedData;
-        }
-
-        Map<BooleanVectorValueObject, Collection<Gene>> unpackedMissingValueData = unpackBooleans( missingValueData );
-
-        Map<DesignElement, BooleanVectorValueObject> missingValueMap = new HashMap<DesignElement, BooleanVectorValueObject>();
-        for ( BooleanVectorValueObject bv : unpackedMissingValueData.keySet() ) {
-            missingValueMap.put( bv.getDesignElement(), bv );
-        }
-
-        for ( DoubleVectorValueObject rv : unpackedData.keySet() ) {
-            double[] data = rv.getData();
-            DesignElement de = rv.getDesignElement();
-            BooleanVectorValueObject mv = missingValueMap.get( de );
-            if ( mv == null ) {
-                continue;
-            }
-
-            boolean[] mvdata = mv.getData();
-
-            if ( mvdata.length != data.length ) {
-                throw new IllegalStateException( "Missing value data didn't match data length" );
-            }
-            for ( int i = 0; i < data.length; i++ ) {
-                if ( !mvdata[i] ) {
-                    data[i] = Double.NaN;
-                }
-            }
-            rv.setMasked( true );
-        }
-
-        return unpackedData;
-    }
-
     /**
      * Thaw a single vector.
      * 
@@ -720,103 +422,10 @@ public class DesignElementDataVectorDaoImpl extends
 
         // thaw the bioassays.
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
-            session.lock( ba, LockMode.NONE );
+            ba = ( BioAssay ) session.get( BioAssayImpl.class, ba.getId() );
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getSamplesUsed() );
             Hibernate.initialize( ba.getDerivedDataFiles() );
-        }
-    }
-
-    private Map<DoubleVectorValueObject, Collection<Gene>> unpack( Map<DesignElementDataVector, Collection<Gene>> data ) {
-        Map<DoubleVectorValueObject, Collection<Gene>> result = new HashMap<DoubleVectorValueObject, Collection<Gene>>();
-        for ( DesignElementDataVector v : data.keySet() ) {
-            result.put( new DoubleVectorValueObject( v ), data.get( v ) );
-        }
-        return result;
-    }
-
-    private Map<BooleanVectorValueObject, Collection<Gene>> unpackBooleans(
-            Map<DesignElementDataVector, Collection<Gene>> data ) {
-        Map<BooleanVectorValueObject, Collection<Gene>> result = new HashMap<BooleanVectorValueObject, Collection<Gene>>();
-        for ( DesignElementDataVector v : data.keySet() ) {
-            result.put( new BooleanVectorValueObject( v ), data.get( v ) );
-        }
-        return result;
-    }
-
-    /**
-     * Private helper class that allows a designElementDataVector collection to be used as an argument to a
-     * HibernateCallback
-     * 
-     * @author jsantos
-     */
-    private class GetGeneCallbackHandler implements org.springframework.orm.hibernate3.HibernateCallback {
-        private Collection<DesignElementDataVector> dataVectors;
-
-        public GetGeneCallbackHandler( Collection<DesignElementDataVector> dataVectors ) {
-            this.dataVectors = dataVectors;
-        }
-
-        /**
-         * Callback method for HibernateTemplate
-         */
-        public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-            /*
-             * Algorithm: for each batch designElementDataVectors, do a query to get the associated genes. The results
-             * will then be pushed into a map, associating the designElementDataVector with a collection of Genes.
-             * Return the map.
-             */
-            int MAX_COUNTER = 500;
-            Map<DesignElementDataVector, Collection<Gene>> geneMap = new HashMap<DesignElementDataVector, Collection<Gene>>();
-
-            ArrayList<DesignElementDataVector> batch = new ArrayList<DesignElementDataVector>();
-            // note similar query in handleGetGenesById()
-            final String queryString = "select distinct dedv, geneProduct.gene from BlatAssociationImpl as bs2gp inner join bs2gp.geneProduct geneProduct, CompositeSequenceImpl cs, "
-                    + " DesignElementDataVectorImpl dedv inner join dedv.designElement de"
-                    + " where de.id=cs.id and cs.biologicalCharacteristic=bs2gp.bioSequence and dedv in (:ids) ";
-
-            Iterator<DesignElementDataVector> iter = dataVectors.iterator();
-            int counter = 0;
-            // get up to the next N entries
-            while ( iter.hasNext() ) {
-
-                counter = 0;
-                batch.clear();
-                while ( ( counter < MAX_COUNTER ) && iter.hasNext() ) {
-                    batch.add( iter.next() );
-                    counter++;
-                }
-
-                org.hibernate.Query queryObject = session.createQuery( queryString );
-                queryObject.setParameterList( "ids", batch );
-                // get results and push into hashmap.
-
-                ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-                while ( results.next() ) {
-                    DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
-                    Gene g = ( Gene ) results.get( 1 );
-                    // if the key exists, push into collection
-                    // if the key does not exist, create and put hashset into the map
-                    if ( geneMap.containsKey( dedv ) ) {
-                        if ( !geneMap.get( dedv ).add( g ) ) {
-                            if ( log.isDebugEnabled() ) log.debug( "Failed to add " + g.getName() + "; Duplicate" );
-                        }
-                    } else {
-                        Collection<Gene> genes = new HashSet<Gene>();
-                        genes.add( g );
-                        geneMap.put( dedv, genes );
-                    }
-                }
-                results.close();
-            }
-            return geneMap;
-        }
-
-        /**
-         * @param dataVectors the dataVectors to set
-         */
-        public void setDataVectors( Collection<DesignElementDataVector> dataVectors ) {
-            this.dataVectors = dataVectors;
         }
     }
 
