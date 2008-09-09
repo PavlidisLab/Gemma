@@ -289,7 +289,7 @@
 				returns list of genes mapped to a list of space delimited ranks
         </description>        
         <property name="expressionExperimentService" ref="expressionExperimentService"/>
-        <property name="dedvRankService" ref="dedvRankService"/>
+        <property name="expressionDataMatrixService" ref="expressionDataMatrixService"/>
         <property name="geneService" ref="geneService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
