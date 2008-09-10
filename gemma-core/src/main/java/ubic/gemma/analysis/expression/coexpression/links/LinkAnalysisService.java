@@ -42,6 +42,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
+import ubic.gemma.analysis.preprocess.ExpressionDataSVD;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
@@ -126,7 +127,8 @@ public class LinkAnalysisService {
 
         checkVectors( ee, dataVectors );
 
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig, dataVectors );
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
+                dataVectors );
 
         if ( datamatrix.rows() == 0 ) {
             log.info( "No rows left after filtering" );
@@ -136,6 +138,8 @@ public class LinkAnalysisService {
                     + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
                     + " rows" );
         }
+
+        datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
 
         /*
          * Might as well while we have the data handy
@@ -169,16 +173,16 @@ public class LinkAnalysisService {
 
     }
 
-    public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
-        this.expressionDataMatrixService = expressionDataMatrixService;
-    }
-
     public void setCsService( CompositeSequenceService csService ) {
         this.csService = csService;
     }
 
     public void setEeService( ExpressionExperimentService eeService ) {
         this.eeService = eeService;
+    }
+
+    public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
+        this.expressionDataMatrixService = expressionDataMatrixService;
     }
 
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
@@ -324,6 +328,25 @@ public class LinkAnalysisService {
         ppCoexpression.setMetric( metric );
         ppCoexpression.setSourceAnalysis( analysisObj );
         return ppCoexpression;
+    }
+
+    /**
+     * Normalize the data, as configured (possibly no normalizatino)
+     */
+    private ExpressionDataDoubleMatrix normalize( ExpressionDataDoubleMatrix datamatrix, LinkAnalysisConfig config ) {
+        ExpressionDataSVD svd;
+        switch ( config.getNormalizationMethod() ) {
+            case NONE:
+                return datamatrix;
+            case SVD:
+                svd = new ExpressionDataSVD( datamatrix, true );
+                return svd.removeHighestComponents( 1 );
+            case SPELL:
+                svd = new ExpressionDataSVD( datamatrix, true );
+                return svd.uMatrixAsExpressionData();
+            default:
+                return null;
+        }
     }
 
     /**

@@ -25,6 +25,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
+import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.NormalizationMethod;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.preprocess.filter.InsufficientSamplesException;
@@ -104,9 +105,14 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         buildFilterConfigOptions();
 
-        Option absoluteValue = OptionBuilder.withDescription( "If using absolute value in expression file" )
-                .withLongOpt( "abs" ).create( 'a' );
+        Option absoluteValue = OptionBuilder
+                .withDescription( "Use the absolute value of the correlation (rarely used)" ).withLongOpt( "abs" )
+                .create( 'a' );
         addOption( absoluteValue );
+
+        Option noNegCorr = OptionBuilder.withDescription( "Omit negative correlated probes in link selection" ).create(
+                "no-neg-corr" );
+        addOption( noNegCorr );
 
         Option useDB = OptionBuilder.withDescription( "Don't save the results in the database (i.e., testing)" )
                 .withLongOpt( "nodb" ).create( 'd' );
@@ -122,6 +128,13 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         Option imagesOption = OptionBuilder.withDescription( "Suppress the generation of correlation matrix images" )
                 .create( "noimages" );
         addOption( imagesOption );
+
+        Option normalizationOption = OptionBuilder
+                .withArgName( "method" )
+                .withDescription(
+                        "Normalization method to apply to the data matrix first: SVD, SPELL or omit this option for none (default=none)" )
+                .create( "normalize-method" );
+        addOption( normalizationOption );
 
         addForceOption();
         addAutoOption();
@@ -210,6 +223,14 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
         if ( hasOption( "noimages" ) ) {
             linkAnalysisConfig.setMakeSampleCorrMatImages( false );
+        }
+        if ( hasOption( "no-neg-corr" ) ) {
+            this.linkAnalysisConfig.setOmitNegLinks( true );
+        }
+
+        if ( hasOption( "normalize-method" ) ) {
+            String optionValue = getOptionValue( "normalize-method" );
+            this.linkAnalysisConfig.setNormalizationMethod( NormalizationMethod.valueOf( optionValue ) );
         }
 
         this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this

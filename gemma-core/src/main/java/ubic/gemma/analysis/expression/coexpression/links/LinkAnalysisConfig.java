@@ -29,6 +29,10 @@ import ubic.gemma.model.common.protocol.Protocol;
  */
 public class LinkAnalysisConfig {
 
+    public enum NormalizationMethod {
+        NONE, SPELL, SVD
+    }
+
     private double upperTailCut = 0.01;
     private double lowerTailCut = 0.01;
 
@@ -40,6 +44,13 @@ public class LinkAnalysisConfig {
     private boolean knownGenesOnly = false;
     private boolean useDb = true;
     private boolean makeSampleCorrMatImages = true;
+
+    private NormalizationMethod normalizationMethod = NormalizationMethod.NONE;
+
+    /*
+     * Remove negative correlated values at the end.
+     */
+    private boolean omitNegLinks = false;
 
     private double correlationCacheThreshold = 0.8;
     private boolean textOut;
@@ -171,5 +182,33 @@ public class LinkAnalysisConfig {
 
     public void setMakeSampleCorrMatImages( boolean makeSampleCorrMatImages ) {
         this.makeSampleCorrMatImages = makeSampleCorrMatImages;
+    }
+
+    /**
+     * @return the omitNegLinks
+     */
+    public boolean isOmitNegLinks() {
+        return omitNegLinks;
+    }
+
+    /**
+     * @param omitNegLinks the omitNegLinks to set
+     */
+    public void setOmitNegLinks( boolean omitNegLinks ) {
+        this.omitNegLinks = omitNegLinks;
+    }
+
+    /**
+     * @return the normalizationMethod
+     */
+    public NormalizationMethod getNormalizationMethod() {
+        return normalizationMethod;
+    }
+
+    /**
+     * @param normalizationMethod the normalizationMethod to set
+     */
+    public void setNormalizationMethod( NormalizationMethod normalizationMethod ) {
+        this.normalizationMethod = normalizationMethod;
     }
 }

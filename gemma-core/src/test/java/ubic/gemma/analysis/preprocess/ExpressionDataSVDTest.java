@@ -54,6 +54,26 @@ public class ExpressionDataSVDTest extends TestCase {
         assertNotNull( s );
     }
 
+    public void testUMatrixAsExpressionDataUnnormalized() throws Exception {
+        try {
+            svd.uMatrixAsExpressionData();
+            fail( "Should have gotten an exception" );
+        } catch ( IllegalStateException e ) {
+            //
+        }
+    }
+
+    public void testUMatrixAsExpressionData() throws Exception {
+        svd = new ExpressionDataSVD( testData, true );
+        ExpressionDataDoubleMatrix matrixAsExpressionData = svd.uMatrixAsExpressionData();
+        assertNotNull( matrixAsExpressionData );
+    }
+
+    public void testWinnow() throws Exception {
+        ExpressionDataDoubleMatrix winnow = svd.winnow( 0.5 );
+        assertEquals( 100, winnow.rows() );
+    }
+
     /**
      * Test method for {@link ubic.gemma.analysis.preprocess.ExpressionDataSVD#getU()}.
      */
