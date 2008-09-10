@@ -44,7 +44,6 @@ public class ExpressionDataSVD {
         this.expressionData = expressionData;
         DoubleMatrix<DesignElement, Integer> matrix = expressionData.getMatrix();
         this.svd = new SingularValueDecomposition<DesignElement, Integer>( matrix );
-
     }
 
     /**
@@ -59,6 +58,30 @@ public class ExpressionDataSVD {
      */
     public DoubleMatrix<DesignElement, Integer> getU() {
         return svd.getU();
+    }
+
+    /**
+     * Implements the method described in the SPELL paper.
+     * 
+     * @return
+     */
+    public ExpressionDataDoubleMatrix uMatrixAsExpressionData() {
+        /*
+         * FIXME various details to attend to here: take absolute value of U, make sure data are centered first, etc.
+         */
+        return new ExpressionDataDoubleMatrix( this.expressionData, svd.getU() );
+    }
+
+    /**
+     * Implements method described in Skillicorn et al., "Strategies for winnowing microarray data".
+     * 
+     * @param thresholdQuantile Enter 0.5 for median, 0.0 for no filtering, 1.0 will remove all probes.
+     * @return a filtered matrix
+     */
+    public ExpressionDataDoubleMatrix winnow( double thresholdQuantile ) {
+        // / remove genes which are near the origin in SVD space.
+        return null;
+
     }
 
     /**
@@ -89,7 +112,6 @@ public class ExpressionDataSVD {
         reconstructed.setColumnNames( this.expressionData.getMatrix().getColNames() );
 
         return new ExpressionDataDoubleMatrix( this.expressionData, reconstructed );
-
     }
 
 }
