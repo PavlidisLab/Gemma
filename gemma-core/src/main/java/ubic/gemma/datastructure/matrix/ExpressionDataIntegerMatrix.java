@@ -112,7 +112,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
-    public Integer[][] getMatrix() {
+    public Integer[][] getRawMatrix() {
         Integer[][] res = new Integer[rows()][];
         for ( int i = 0; i < rows(); i++ ) {
             res[i] = this.matrix.getRow( i );

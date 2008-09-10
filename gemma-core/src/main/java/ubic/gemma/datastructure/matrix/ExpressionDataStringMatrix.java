@@ -118,7 +118,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
-    public String[][] getMatrix() {
+    public String[][] getRawMatrix() {
         String[][] res = new String[rows()][];
         for ( int i = 0; i < rows(); i++ ) {
             res[i] = this.matrix.getRow( i );

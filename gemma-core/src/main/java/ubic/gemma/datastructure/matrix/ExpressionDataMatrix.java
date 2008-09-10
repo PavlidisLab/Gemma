@@ -157,7 +157,7 @@ public interface ExpressionDataMatrix<T> {
      * 
      * @return T[][]
      */
-    public T[][] getMatrix();
+    public T[][] getRawMatrix();
 
     /**
      * @return list of elements representing the row 'labels'.

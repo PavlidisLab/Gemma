@@ -94,7 +94,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService.getBioMaterialsForBioAssays( dmatrix );
 
-        DoubleMatrix namedMatrix = dmatrix.getNamedMatrix();
+        DoubleMatrix namedMatrix = dmatrix.getMatrix();
 
         List<String> rFactorsA = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorA,
                 samplesUsed );

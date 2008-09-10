@@ -221,7 +221,7 @@ public class ExpressionDataMatrixVisualizationService {
 
         ExpressionDataMatrix normalizedExpressionDataMatrix = expressionDataMatrix;
 
-        Object[][] matrix = normalizedExpressionDataMatrix.getMatrix();
+        Object[][] matrix = normalizedExpressionDataMatrix.getRawMatrix();
 
         for ( int i = 0; i < matrix.length; i++ ) {
             Object[] vector = matrix[i];

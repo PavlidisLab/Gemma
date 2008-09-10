@@ -94,7 +94,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
         try {
 
-            Double[][] m = ( Double[][] ) expressionDataMatrix.getMatrix();
+            Double[][] m = ( Double[][] ) expressionDataMatrix.getRawMatrix();
 
             StringBuilder buf = new StringBuilder();
 

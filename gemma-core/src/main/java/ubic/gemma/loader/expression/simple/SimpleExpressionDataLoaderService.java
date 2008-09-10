@@ -45,7 +45,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -89,6 +88,7 @@ public class SimpleExpressionDataLoaderService {
     /**
      * @param metaData
      * @param matrix
+     * @param taxon TODO
      * @return ExpressionExperiment
      */
     public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData,
@@ -229,7 +229,11 @@ public class SimpleExpressionDataLoaderService {
      */
     private Taxon convertTaxon( Taxon taxon ) {
         if ( taxon == null ) throw new IllegalArgumentException( "Taxon cannot be null" );
-        return taxonService.findOrCreate( taxon );
+        if ( taxonService == null ) {
+            return taxon; // for tests
+        } else {
+            return taxonService.findOrCreate( taxon );
+        }
     }
 
     /**
@@ -245,11 +249,16 @@ public class SimpleExpressionDataLoaderService {
         ArrayDesign newDesign = null;
 
         for ( ArrayDesign design : arrayDesigns ) {
-            if ( design != null ) arrayDesignService.thawLite( design );
-            ArrayDesign existing = arrayDesignService.find( design );
+            ArrayDesign existing = null;
+            if ( arrayDesignService != null ) {
+                arrayDesignService.thawLite( design );
+                existing = arrayDesignService.find( design );
+            }
             if ( existing != null ) {
                 log.info( "Array Design exists" );
-                arrayDesignService.thawLite( existing );
+                if ( arrayDesignService != null ) {
+                    arrayDesignService.thawLite( existing );
+                }
                 existingDesigns.add( existing );
             } else {
                 if ( newDesign != null ) {

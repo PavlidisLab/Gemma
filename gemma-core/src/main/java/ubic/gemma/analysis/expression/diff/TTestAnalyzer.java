@@ -126,7 +126,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         List<String> rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
 
-        DoubleMatrix namedMatrix = dmatrix.getNamedMatrix();
+        DoubleMatrix namedMatrix = dmatrix.getMatrix();
 
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 

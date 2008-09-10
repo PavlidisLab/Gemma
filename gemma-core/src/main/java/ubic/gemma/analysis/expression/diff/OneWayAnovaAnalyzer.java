@@ -242,7 +242,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         Collection<String> factorLevels = new HashSet<String>( rFactors );
 
-        DoubleMatrix matrixNamed = matrix.getNamedMatrix();
+        DoubleMatrix matrixNamed = matrix.getMatrix();
 
         filteredMatrixDesignElementIndexMap = new HashMap<Integer, DesignElement>();
 

@@ -64,8 +64,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * To comply with bean specifications. Not to be instantiated.
      */
     public ExpressionDataDoubleMatrix() {
-        throw new RuntimeException( "This default, no-arg constructor cannot be instantiated.  This constructor "
-                + "allows java constructs to inspect this class as a java bean." );
+        // throw new RuntimeException( "This default, no-arg constructor cannot be instantiated. This constructor "
+        // + "allows java constructs to inspect this class as a java bean." );
     }
 
     /**
@@ -190,7 +190,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
-    public Double[][] getMatrix() {
+    public Double[][] getRawMatrix() {
 
         Double[][] dMatrix = new Double[matrix.rows()][matrix.columns()];
         for ( int i = 0; i < matrix.rows(); i++ ) {
@@ -228,7 +228,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
     @SuppressWarnings("unchecked")
-    public Double[][] getRows( List designElements ) {
+    public Double[][] getRows( List<DesignElement> designElements ) {
         if ( designElements == null ) {
             return null;
         }
@@ -403,11 +403,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
                         + " bytes) for " + designElement + " got " + bioAssays.size()
                         + " bioassays in the bioassaydimension" );
 
-            Iterator it = bioAssays.iterator();
+            Iterator<BioAssay> it = bioAssays.iterator();
 
             for ( int j = 0; j < bioAssays.size(); j++ ) {
 
-                BioAssay bioAssay = ( BioAssay ) it.next();
+                BioAssay bioAssay = it.next();
                 Integer column = this.columnAssayMap.get( bioAssay );
 
                 assert column != null;
@@ -490,13 +490,32 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             }
             i++;
         }
+    }
+
+    /**
+     * Create a data matrix like sourceMatrix but use the values from dataMatrix.
+     * 
+     * @param sourceMatrix
+     * @param dataMatrix
+     */
+    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
+            DoubleMatrix<DesignElement, Integer> dataMatrix ) {
+        init();
+        this.expressionExperiment = sourceMatrix.expressionExperiment;
+        this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
+        this.columnAssayMap = sourceMatrix.columnAssayMap;
+        this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
+        this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
+        this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
+
+        this.matrix = dataMatrix;
 
     }
 
     /**
      * @return
      */
-    public DoubleMatrix<DesignElement, Integer> getNamedMatrix() {
+    public DoubleMatrix<DesignElement, Integer> getMatrix() {
         return matrix;
     }
 

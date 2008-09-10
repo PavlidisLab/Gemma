@@ -240,7 +240,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
-    public Boolean[][] getMatrix() {
+    public Boolean[][] getRawMatrix() {
         // TODO Implement me
         throw new UnsupportedOperationException();
     }

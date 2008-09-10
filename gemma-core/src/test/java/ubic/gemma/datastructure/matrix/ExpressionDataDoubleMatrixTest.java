@@ -202,7 +202,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
             log.debug( row[i] );
         }
 
-        Double[][] dMatrix = expressionDataDoubleMatrix.getMatrix();
+        Double[][] dMatrix = expressionDataDoubleMatrix.getRawMatrix();
         assertEquals( dMatrix.length, 200 );
         assertEquals( dMatrix[0].length, 59 );
 
