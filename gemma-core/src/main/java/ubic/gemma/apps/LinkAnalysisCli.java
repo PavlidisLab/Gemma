@@ -111,7 +111,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addOption( absoluteValue );
 
         Option noNegCorr = OptionBuilder.withDescription( "Omit negative correlated probes in link selection" ).create(
-                "no-neg-corr" );
+                "nonegcorr" );
         addOption( noNegCorr );
 
         Option useDB = OptionBuilder.withDescription( "Don't save the results in the database (i.e., testing)" )
@@ -133,7 +133,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .withArgName( "method" )
                 .withDescription(
                         "Normalization method to apply to the data matrix first: SVD, SPELL or omit this option for none (default=none)" )
-                .create( "normalize-method" );
+                .create( "normalizemethod" );
         addOption( normalizationOption );
 
         addForceOption();
@@ -224,11 +224,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( "noimages" ) ) {
             linkAnalysisConfig.setMakeSampleCorrMatImages( false );
         }
-        if ( hasOption( "no-neg-corr" ) ) {
+        if ( hasOption( "nonegcorr" ) ) {
             this.linkAnalysisConfig.setOmitNegLinks( true );
         }
 
-        if ( hasOption( "normalize-method" ) ) {
+        if ( hasOption( "normalizemethod" ) ) {
             String optionValue = getOptionValue( "normalize-method" );
             this.linkAnalysisConfig.setNormalizationMethod( NormalizationMethod.valueOf( optionValue ) );
         }

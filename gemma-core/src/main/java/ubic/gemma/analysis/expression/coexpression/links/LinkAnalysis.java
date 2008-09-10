@@ -176,6 +176,7 @@ public class LinkAnalysis {
             metricMatrix = MatrixRowPairAnalysisFactory.spearmann( dataMatrix, config.getCorrelationCacheThreshold() );
         }
 
+        metricMatrix.setOmitNegativeCorrelationLinks( config.isOmitNegLinks() );
         metricMatrix.setDuplicateMap( probeToGeneMap ); // populates numUniqueGenes
         metricMatrix.setUseAbsoluteValue( config.isAbsoluteValue() );
         metricMatrix.setMinNumpresent( minSamplesToKeepCorrelation );

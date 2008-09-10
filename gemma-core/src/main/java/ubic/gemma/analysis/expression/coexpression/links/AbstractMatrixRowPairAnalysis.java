@@ -76,6 +76,8 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected int[] fastHistogram = new int[NUM_BINS];
     private int numUniqueGenes = 0;
 
+    private boolean omitNegativeCorrelationLinks = false;
+
     /**
      * Read back the histogram as a DoubleArrayList of counts.
      * 
@@ -332,6 +334,10 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
         if ( Double.isNaN( correl ) ) return false;
 
+        if ( omitNegativeCorrelationLinks && correl < 0.0 ) {
+            return false;
+        }
+
         double acorrel = Math.abs( correl );
 
         if ( acorrel < storageThresholdValue ) {
@@ -471,5 +477,12 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             }
         }
         log.info( "Mapping Stats: " + ArrayUtils.toString( stats ) );
+    }
+
+    /**
+     * @param omitNegativeCorrelationLinks the omitNegativeCorrelationLinks to set
+     */
+    public void setOmitNegativeCorrelationLinks( boolean omitNegativeCorrelationLinks ) {
+        this.omitNegativeCorrelationLinks = omitNegativeCorrelationLinks;
     }
 }

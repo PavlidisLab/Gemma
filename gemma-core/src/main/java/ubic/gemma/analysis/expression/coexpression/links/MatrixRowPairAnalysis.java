@@ -56,6 +56,8 @@ public interface MatrixRowPairAnalysis {
 
     public void setPValueThreshold( double k );
 
+    public void setOmitNegativeCorrelationLinks( boolean omitNegativeCorrelationLinks );
+
     public void setDuplicateMap( Map<CompositeSequence, Collection<Collection<Gene>>> m1 );
 
     public void setLowerTailThreshold( double k );
