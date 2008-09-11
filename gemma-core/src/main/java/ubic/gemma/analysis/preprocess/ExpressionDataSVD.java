@@ -23,14 +23,17 @@ import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 
+import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
+import cern.jet.stat.Descriptive;
 import edu.emory.mathcs.backport.java.util.Collections;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.SingularValueDecomposition;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -52,7 +55,9 @@ public class ExpressionDataSVD {
     private double norm1;
 
     /**
-     * @param expressionData
+     * FIXME: will not work if there are missing values.
+     * 
+     * @param expressionData Note that this may be modified!
      * @param normalizeMatrix If true, the data matrix will be rescaled and centred to mean zero, variance one, on a
      *        per-column (sample) basis.
      */
@@ -60,6 +65,18 @@ public class ExpressionDataSVD {
         this.expressionData = expressionData;
         this.normalized = normalizeMatrix;
         DoubleMatrix<DesignElement, Integer> matrix = expressionData.getMatrix();
+
+        if ( normalizeMatrix ) {
+            for ( int i = 0; i < matrix.columns(); i++ ) {
+                double[] column = matrix.getColumn( i );
+                DoubleArrayList li = new DoubleArrayList( column );
+                DescriptiveWithMissing.standardize( li );
+                for ( int j = 0; j < matrix.rows(); j++ ) {
+                    matrix.set( j, i, li.getQuick( j ) );
+                }
+            }
+        }
+
         this.svd = new SingularValueDecomposition<DesignElement, Integer>( matrix );
     }
 
