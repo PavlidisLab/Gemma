@@ -4,6 +4,7 @@
 
 	<jwr:script src='/scripts/ajax/coexpression/CoexpressionSearchForm.js' useRandomParam="false"/>
 	<jwr:script src='/scripts/app/CoexpressionSearch.js'  useRandomParam="false"/>
+	<jwr:script src='/scripts/ajax/coexpression/CoexpressionGrid.js'  useRandomParam="false"/>
 
 	<content tag="heading">
 	<fmt:message key="searchCoexpression.heading" />

@@ -81,6 +81,8 @@
 			<prop key="/ontology.html">ontologyController</prop>
 			<prop key="/diff/diffExpressionSearch.html">differentialExpressionSearchController</prop>
 			<prop key="/expressionExperimentSetManager.html">expressionExperimentSetController</prop>
+			<prop key="/dedv/downloadDEDV.html">dedvController</prop>
+			
 		</props>
 	</property>
 </bean>

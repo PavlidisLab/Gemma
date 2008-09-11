@@ -24,17 +24,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.view.TextView;
 
 /**
  * @author kelsey Exposes methods for accessing underlying Design Element Data Vectors. eg: ajax methods for
@@ -46,7 +51,7 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name = "geneService" ref="geneService"
  */
 
-public class DEDVController {
+public class DEDVController extends BaseFormController {
 
     private static Log log = LogFactory.getLog( DEDVController.class );
 
@@ -118,6 +123,80 @@ public class DEDVController {
         }
 
         return convertedMap;
+    }
+
+    /*
+     * Handle case of text export of the results.
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse)
+     */
+    @SuppressWarnings( { "unchecked", "unused" })
+    @Override
+    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
+            throws Exception {
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+        Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) );
+
+        ModelAndView mav = new ModelAndView( new TextView() );
+
+        if ( geneIds == null || geneIds.isEmpty() || eeIds == null || eeIds.isEmpty() ) {
+            mav.addObject( "text", "Input empty for finding DEDVs: " + geneIds + " and " + eeIds );
+            return mav;
+
+        }
+
+        Map<Long, Collection<DoubleVectorValueObject>> result = getDEDV( eeIds, geneIds );
+
+        if ( result == null || result.isEmpty() ) {
+            mav.addObject( "text", " No DEDV results for genes: " + geneIds + " and datasets: " + eeIds );
+            return mav;
+        }
+
+        mav.addObject( "text", format4File( result ) );
+        watch.stop();
+        Long time = watch.getTime();
+
+        log.info( "Retrieved and Formated" + result.keySet().size() + " DEDVs for eeIDs: " + eeIds + " and GeneIds: "
+                + geneIds + " in : " + time + " ms." );
+
+        return mav;
+
+    }
+
+    /**
+     * Converts the given map into a tab delimited String
+     * 
+     * @param toConvert
+     * @return
+     */
+    private String format4File( Map<Long, Collection<DoubleVectorValueObject>> toConvert ) {
+        StringBuffer converted = new StringBuffer();
+        converted.append( "EE \t GENE \t PROBE \t DEDV \n" );
+        for ( Long geneId : toConvert.keySet() ) {
+            String geneName = geneService.load( geneId ).getOfficialSymbol();
+
+            for ( DoubleVectorValueObject dedv : toConvert.get( geneId ) ) {
+                ExpressionExperiment ee = dedv.getExpressionExperiment();
+                expressionExperimentService.thawLite( ee );
+
+                converted.append( ee.getShortName() + " \t " );
+                converted.append( geneName + " \t " );
+                converted.append( dedv.getDesignElement().getId() + "\t" );
+
+                for ( double data : dedv.getData() ) {
+                    converted.append( data + "|" );
+                }
+                converted.deleteCharAt( converted.length() - 1 ); // remove the pipe.
+                converted.append( "\n" );
+            }
+        }
+        converted.append( "\r\n" );
+        return converted.toString();
     }
 
     // --------------------------------

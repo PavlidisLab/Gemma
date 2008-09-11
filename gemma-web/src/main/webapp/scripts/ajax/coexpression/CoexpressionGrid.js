@@ -91,6 +91,12 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				renderer : this.bitImageStyler.createDelegate(this),
 				tooltip : "Dataset relevence map",
 				sortable : false
+			}, {
+				id : 'download',
+				header : "Download",
+				renderer : this.downloadDedv.createDelegate(this),
+				tooltip : "Link for downloading raw data",
+				sortable : false
 			}]
 
 		});
@@ -104,8 +110,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	record : Ext.data.Record.create([{
 		name : "queryGene",
-		type : "string",
-		convert : function(g) {
+		sortType : function(g) {
 			return g.officialSymbol;
 		}
 	}, {
@@ -229,6 +234,27 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		// eeMap is created in CoexpressionSearch.js
 		s = s + '" usemap="#eeMap" /></span>';
 		return s;
+	},
+	
+	downloadDedv : function(value, metadata, record, row, col, ds) {
+
+		var queryGene = record.data.queryGene;
+		var foundGene = record.data.foundGene;
+		
+		var activeExperimentsString = "";
+		var activeExperimentsSize = record.data.supportingExperiments.size();
+		
+		for (var i = 0; i < activeExperimentsSize; i++) {
+			if (i === 0) {
+				activeExperimentsString = record.data.supportingExperiments[i];
+			} else {
+				activeExperimentsString = String.format("{0}, {1}", activeExperimentsString,
+						record.data.supportingExperiments[i]);
+			}
+		}
+		
+		return String.format("<a href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > download </a>",
+				activeExperimentsString, queryGene.id, foundGene.id);
 	},
 
 	loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {

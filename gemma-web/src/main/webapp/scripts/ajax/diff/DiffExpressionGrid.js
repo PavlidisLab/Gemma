@@ -116,15 +116,13 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				width : 75,
 				tooltip : "How many datasets met the q-value threshold you selected / # testing gene",
 				renderer : this.metThresholdStyler
-			},
-			{
+			}, {
 				id : 'dedvData',
-				header : 'visulize', 
-				width : 75, 
-				tooltip:  "click button to visulize the data",
-				renderer : this.visulize
-			}
-			]
+				header : 'download',
+				width : 75,
+				tooltip : "click button to download the data",
+				renderer : this.downloadDedv.createDelegate(this)
+			}]
 		});
 
 		Ext.apply(this, {
@@ -155,24 +153,28 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		return String.format("{0}/{1}/{2}", d.activeExperiments.size(), d.numSearchedExperiments,
 				d.numExperimentsInScope);
 	},
-	
-	anchor_test : function(){
+
+	anchor_test : function() {
 		window.alert("This is an anchor test.")
 	},
-	
-	visulize : function(value, metadata, record, row, col, ds) {
+
+	downloadDedv : function(value, metadata, record, row, col, ds) {
 		var d = record.data;
 		var activeExperimentsString = "";
-		for(i=0; i< d.activeExperiments.size(); i++){
-			if ( i  == 0) 
-				activeExperimentsString =  d.activeExperiments[i].id;
-			else
-				activeExperimentsString = activeExperimentsString + ", " + d.activeExperiments[i].id;
+		var activeExperimentsSize = record.data.activeExperiments.size();
+		for (var i = 0; i < activeExperimentsSize; i++) {
+			if (i === 0) {
+				activeExperimentsString = record.data.activeExperiments[i].id;
+			} else {
+				activeExperimentsString = String.format("{0}, {1}", activeExperimentsString,
+						record.data.activeExperiments[i].id);
+			}
 		}
-		
-		var geneId = d.probeResults[0].gene.id;
 
-		return "<a href='javascript: DEDVController.getDEDV([" +activeExperimentsString +"],["+ geneId+"])'> Visulize </a>";
+		var geneId = record.data.probeResults[0].gene.id;
+
+		return String.format("<a href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > download </a>",
+				activeExperimentsString, geneId);
 	}
-	
+
 });

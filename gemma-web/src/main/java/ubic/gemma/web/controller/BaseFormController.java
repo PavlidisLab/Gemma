@@ -331,7 +331,7 @@ public abstract class BaseFormController extends SimpleFormController {
         if ( idString != null ) {
             for ( String s : idString.split( "," ) ) {
                 try {
-                    ids.add( Long.parseLong( s ) );
+                    ids.add( Long.parseLong( s.trim() ) );
                 } catch ( NumberFormatException e ) {
                     log.warn( "invalid id " + s );
                 }
