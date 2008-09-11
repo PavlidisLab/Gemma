@@ -239,15 +239,14 @@ public abstract class DesignElementDataVectorDaoBase extends ubic.gemma.model.ex
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVector"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVector"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform,
                 ( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector ) result );
         return result;
@@ -301,15 +300,14 @@ public abstract class DesignElementDataVectorDaoBase extends ubic.gemma.model.ex
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVector"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVector"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform,
                 ( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector ) result );
         return result;

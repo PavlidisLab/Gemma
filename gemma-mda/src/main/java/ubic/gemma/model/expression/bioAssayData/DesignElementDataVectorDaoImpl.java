@@ -235,6 +235,7 @@ public class DesignElementDataVectorDaoImpl extends
                 int count = 0;
                 StopWatch timer = new StopWatch();
                 timer.start();
+                Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
                 Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
                 Collection<DesignElement> cs = new HashSet<DesignElement>();
                 for ( DesignElementDataVector object : ( Collection<DesignElementDataVector> ) designElementDataVectors ) {
@@ -243,15 +244,22 @@ public class DesignElementDataVectorDaoImpl extends
                     Hibernate.initialize( object.getExpressionExperiment() );
                     dims.add( object.getBioAssayDimension() );
                     cs.add( object.getDesignElement() );
+                    ees.add( object.getExpressionExperiment() );
                     session.evict( object.getQuantitationType() );
                     session.evict( object );
+                }
+
+                // lightly thaw the EEs we saw
+                for ( ExpressionExperiment ee : ees ) {
+                    Hibernate.initialize( ee );
+                    session.evict( ee );
                 }
 
                 // thaw the bioassaydimensions we saw
                 for ( BioAssayDimension bad : dims ) {
                     Hibernate.initialize( bad );
                     for ( BioAssay ba : bad.getBioAssays() ) {
-                        session.lock( ba, LockMode.NONE );
+                        ba = ( BioAssay ) session.get( BioAssayImpl.class, ba.getId() );
                         Hibernate.initialize( ba );
                         Hibernate.initialize( ba.getArrayDesignUsed() );
                         Hibernate.initialize( ba.getDerivedDataFiles() );
@@ -265,8 +273,6 @@ public class DesignElementDataVectorDaoImpl extends
                             session.evict( bm );
                         }
                         session.evict( ba );
-                        session.clear(); // this is necessary to avoid session errors (due to multiple bioassays per
-                        // biomaterial?)
                     }
                 }
 
@@ -291,9 +297,11 @@ public class DesignElementDataVectorDaoImpl extends
                 }
 
                 timer.stop();
-                if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 2000 )
+                if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 2000 ) {
                     log.info( "Done, thawed " + designElementDataVectors.size() + " vectors in " + timer.getTime()
                             + "ms" );
+                }
+
                 session.setFlushMode( oldFlushMode );
                 session.setCacheMode( oldCacheMode );
                 return null;
@@ -398,6 +406,7 @@ public class DesignElementDataVectorDaoImpl extends
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+        this.thaw( dedv2genes.keySet() );
         return dedv2genes;
     }
 

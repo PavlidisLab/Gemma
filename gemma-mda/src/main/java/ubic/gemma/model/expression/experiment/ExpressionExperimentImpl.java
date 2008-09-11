@@ -42,4 +42,40 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
         return super.toString() + " (" + this.getShortName() + ")";
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperiment#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals( Object object ) {
+        if ( !this.getClass().equals( object.getClass() ) ) {
+            return false;
+        }
+        ExpressionExperiment that = ( ExpressionExperiment ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else if ( this.getShortName() != null && that.getShortName() != null ) {
+            return this.getShortName().equals( that.getShortName() );
+        }
+        return false;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperiment#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        int result = 1;
+        if ( this.getId() != null ) {
+            return this.getId().hashCode();
+        } else if ( this.getShortName() != null ) {
+            return this.getShortName().hashCode();
+        }
+        return result;
+
+    }
+
 }

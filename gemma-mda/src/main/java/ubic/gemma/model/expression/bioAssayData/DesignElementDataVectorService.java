@@ -74,11 +74,15 @@ public interface DesignElementDataVectorService {
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
-     * <p>
      * Given a collection of genes, a collection of expression experiments will return a collection of "preferred"
      * design element data vectors for the given genes in the given experiments. Note that these vectors should be
      * 'masked' for missing values before typical uses.
-     * </p>
+     * <p>
+     * The vectors will be thawed.
+     * 
+     * @param ees
+     * @param genes
+     * @return
      */
     public java.util.Map getPreferredVectors( java.util.Collection ees, java.util.Collection genes );
 

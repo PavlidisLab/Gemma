@@ -22,6 +22,8 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.HashSet;
 
+import net.sf.ehcache.Cache;
+
 import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
@@ -83,7 +85,6 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
         if ( newee != null && newee.getId() != null ) {
             // expressionExperimentService.delete( newee );
         }
-
     }
 
     /**
@@ -94,15 +95,42 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
     public void testGetProcessedDataMatrices() {
         endTransaction();
 
-        // Dataset uses spotted arrays, 11 samples.
+        Collection<ExpressionExperiment> ees = getDataset();
 
+        Collection<Gene> genes = getGeneAssociatedWithEe();
+        processedDataVectorDao.createProcessedDataVectors( ees.iterator().next() );
+        Collection<DoubleVectorValueObject> v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
+        assertEquals( 40, v.size() );
+    }
+
+    public void testGetProcessedDataCache() {
+        endTransaction();
+        Collection<ExpressionExperiment> ees = getDataset();
+        Collection<Gene> genes = getGeneAssociatedWithEe();
+        Collection<DoubleVectorValueObject> v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
+        assertEquals( 40, v.size() );
+        Cache cache = processedDataVectorDao.getCache();
+        cache.clearStatistics();
+        processedDataVectorDao.getProcessedDataArrays( ees, genes );
+        v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
+        assertEquals( 40, v.size() );
+        int hits = cache.getHitCount();
+        assertEquals( 86, hits );
+    }
+
+    /**
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<ExpressionExperiment> getDataset() {
+        // Dataset uses spotted arrays, 11 samples.
         String path = ConfigUtils.getString( "gemma.home" );
         assert path != null;
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE432", false, true, false, false );
+                    "GSE432", false, true, false, false, false );
             newee = results.iterator().next();
             newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
             expressionExperimentService.update( newee );
@@ -114,16 +142,10 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
         }
 
         this.expressionExperimentService.thawLite( newee );
-
-        Collection<Gene> genes = getGeneAssociatedWithEe();
-
+        processedDataVectorDao.createProcessedDataVectors( newee );
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( newee );
-        processedDataVectorDao.createProcessedDataVectors( ees.iterator().next() );
-
-        Collection<DoubleVectorValueObject> v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
-
-        assertEquals( 40, v.size() );
+        return ees;
     }
 
     /**
