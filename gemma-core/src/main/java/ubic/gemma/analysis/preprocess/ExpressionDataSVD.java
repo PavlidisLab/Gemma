@@ -29,7 +29,6 @@ import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
-import cern.jet.stat.Descriptive;
 import edu.emory.mathcs.backport.java.util.Collections;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -43,6 +42,8 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  * convention of Alter et al. 2000 (PNAS). Thus the U matrix columns are the <em>eigensamples</em> (eigenarrays) and
  * the V matrix columns are the <em>eigengenes</em>. See also http://genome-www.stanford.edu/SVD/.
  * <p>
+ * Because SVD can't be done on a matrix with missing values, values are imputed.
+ * <p>
  * FIXME this also includes SVD-based normalization algorithms which might best be refactored out.
  * 
  * @author paul
@@ -53,10 +54,9 @@ public class ExpressionDataSVD {
     private ExpressionDataDoubleMatrix expressionData;
     private boolean normalized = false;
     private double norm1;
+    DenseDoubleMatrix2D missingValueInfo;
 
     /**
-     * FIXME: will not work if there are missing values.
-     * 
      * @param expressionData Note that this may be modified!
      * @param normalizeMatrix If true, the data matrix will be rescaled and centred to mean zero, variance one, on a
      *        per-column (sample) basis.
@@ -65,6 +65,8 @@ public class ExpressionDataSVD {
         this.expressionData = expressionData;
         this.normalized = normalizeMatrix;
         DoubleMatrix<DesignElement, Integer> matrix = expressionData.getMatrix();
+        missingValueInfo = new DenseDoubleMatrix2D( matrix.rows(), matrix.columns() );
+        imputeMissing( matrix );
 
         if ( normalizeMatrix ) {
             for ( int i = 0; i < matrix.columns(); i++ ) {
@@ -78,6 +80,34 @@ public class ExpressionDataSVD {
         }
 
         this.svd = new SingularValueDecomposition<DesignElement, Integer>( matrix );
+    }
+
+    /**
+     * FIXME: improve the imputation method. Generally (but not always), missing values correspond to "low expression".
+     * Therefore imputed values of zero are defensible. However, because at this point the matrix has probably already
+     * been filtered, the row mean is better. Using kmeans or SVD imputation is overkill for now, but SVD would probably
+     * be the way to go (probably quicker!)
+     * 
+     * @param matrix
+     */
+    private void imputeMissing( DoubleMatrix<DesignElement, Integer> matrix ) {
+        /*
+         * keep track of the missing values so they can be re-masked later.
+         */
+
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            DoubleArrayList v = new DoubleArrayList( matrix.getRow( i ) );
+            double m = DescriptiveWithMissing.mean( v );
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                double d = matrix.get( i, j );
+                if ( Double.isNaN( d ) ) {
+                    missingValueInfo.set( i, j, Double.NaN );
+                    matrix.set( i, j, m );
+                } else {
+                    missingValueInfo.set( i, j, 1.0 );
+                }
+            }
+        }
     }
 
     /**
@@ -107,7 +137,8 @@ public class ExpressionDataSVD {
      * Implements the method described in the SPELL paper. Note that this alters the U matrix of this.
      * <p>
      * We make two assumptions about the method that are not described in the paper: 1) The data are rescaled and
-     * centered; 2) the absolute value of the U matrix is used.
+     * centered; 2) the absolute value of the U matrix is used. Note that unlike the original data, the transformed data
+     * will have no missing values.
      * 
      * @return
      */
@@ -168,6 +199,7 @@ public class ExpressionDataSVD {
         // order rows by distance from the origin. This is proportional to the 1-norm.
         Algebra a = new Algebra();
         List<O> os = new ArrayList<O>();
+        // FIXME should be the U matrix, not the data iteself.
         for ( int i = 0; i < this.expressionData.rows(); i++ ) {
             Double[] row = this.expressionData.getRow( i );
             DoubleMatrix1D rom = new DenseDoubleMatrix1D( ArrayUtils.toPrimitive( row ) );
@@ -187,7 +219,7 @@ public class ExpressionDataSVD {
             keepers.add( d );
         }
 
-        // / remove genes which are near the origin in SVD space.
+        // / remove genes which are near the origin in SVD space. FIXME: make sure the missing values are still masked.
         return new ExpressionDataDoubleMatrix( this.expressionData, keepers );
 
     }
@@ -199,7 +231,7 @@ public class ExpressionDataSVD {
      * variable is known.
      * 
      * @param numComponentsToRemove The number of components to remove, starting from the largest eigenvalue.
-     * @return the reconstructed matrix
+     * @return the reconstructed matrix; values that were missing before are re-masked.
      */
     public ExpressionDataDoubleMatrix removeHighestComponents( int numComponentsToRemove ) {
         DoubleMatrix<Integer, Integer> copy = svd.getS().copy();
@@ -222,7 +254,15 @@ public class ExpressionDataSVD {
         reconstructed.setRowNames( this.expressionData.getMatrix().getRowNames() );
         reconstructed.setColumnNames( this.expressionData.getMatrix().getColNames() );
 
+        // remask the missing values.
+        for ( int i = 0; i < reconstructed.rows(); i++ ) {
+            for ( int j = 0; j < reconstructed.columns(); j++ ) {
+                if ( Double.isNaN( this.missingValueInfo.get( i, j ) ) ) {
+                    reconstructed.set( i, j, Double.NaN );
+                }
+            }
+        }
+
         return new ExpressionDataDoubleMatrix( this.expressionData, reconstructed );
     }
-
 }

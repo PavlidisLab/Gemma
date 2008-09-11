@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.util.List;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.RegressionTesting;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -52,6 +54,10 @@ public class ExpressionDataSVDTest extends TestCase {
     public void testGetS() {
         DoubleMatrix<Integer, Integer> s = svd.getS();
         assertNotNull( s );
+        List<Integer> colNames = s.getColNames();
+        for ( Integer integer : colNames ) {
+            assertNotNull( integer );
+        }
     }
 
     public void testUMatrixAsExpressionDataUnnormalized() throws Exception {
