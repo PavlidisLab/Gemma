@@ -20,8 +20,6 @@ package ubic.gemma.web.services;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -104,8 +102,8 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
 
         log.info( "XML input read: " + eeIdResult.size() + " experiment ids & " + geneIdResult.size() + " gene ids" );
 
-        Map<DoubleVectorValueObject, Collection<Gene>> dedvMap = processedExpressionDataVectorService
-                .getProcessedDataArrays( eeObjs, geneResult );
+        Collection<DoubleVectorValueObject> vectors = processedExpressionDataVectorService.getProcessedDataArrays(
+                eeObjs, geneResult );
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint
@@ -119,25 +117,23 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
         Element responseElement = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
-        if ( dedvMap == null || dedvMap.isEmpty() )
+        if ( vectors == null || vectors.isEmpty() )
             return buildBadResponse( document, "No " + elementName1 + " result" );
         // responseElement.appendChild( document.createTextNode( "No " + elementName1 + " result" ) );
-
-        Set<DoubleVectorValueObject> keys = dedvMap.keySet();
 
         // -build single-row Collections to use for ExpressionDataMatrixBuilder
         // -need to do this so that we can use the .getPrefferedData()
         // also necessary to do each data vector at a time because we
         // already have a mapping to the genes
         // of the design elements
-        for ( DoubleVectorValueObject dedv : keys ) {
+        for ( DoubleVectorValueObject dedv : vectors ) {
 
             double[] convertedDEDV = dedv.getData();
 
             // data vector string for output
             String elementString1 = encode( convertedDEDV );
 
-            Collection<String> geneidCol = gene2ID( dedvMap.get( dedv ) ); //
+            Collection<String> geneidCol = gene2ID( dedv.getGenes() ); //
 
             // gene ids, space delimited for output
             String elementString2 = encode( geneidCol.toArray() );

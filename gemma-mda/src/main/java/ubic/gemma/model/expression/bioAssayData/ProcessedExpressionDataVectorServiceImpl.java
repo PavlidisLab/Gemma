@@ -46,13 +46,13 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
         return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( expressionExperiment );
     }
 
-    public Map<DoubleVectorValueObject, Collection<Gene>> getProcessedDataArrays(
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes );
     }
 
-    public Map<DoubleVectorValueObject, Collection<Gene>> getProcessedDataArrays(
-            ExpressionExperiment expressionExperiment, Collection<Gene> genes ) {
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
+            Collection<Gene> genes ) {
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiment, genes );
     }
 

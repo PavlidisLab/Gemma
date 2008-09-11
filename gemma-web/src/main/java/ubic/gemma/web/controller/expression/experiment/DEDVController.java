@@ -88,14 +88,14 @@ public class DEDVController extends BaseFormController {
         if ( genes == null || genes.isEmpty() ) return null;
 
         // Get dedv's
-        Map<DoubleVectorValueObject, Collection<Gene>> dedvMap = processedExpressionDataVectorService
-                .getProcessedDataArrays( ees, genes );
+        Collection<DoubleVectorValueObject> dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees,
+                genes );
 
         watch.stop();
         Long time = watch.getTime();
 
-        log.info( "Retrieved " + dedvMap.keySet().size() + " DEDVs for eeIDs: " + eeIds + " and GeneIds: " + geneIds
-                + " in : " + time + " ms." );
+        log.info( "Retrieved " + dedvMap.size() + " DEDVs for eeIDs: " + eeIds + " and GeneIds: " + geneIds + " in : "
+                + time + " ms." );
 
         return mapInvert( dedvMap );
 
@@ -104,13 +104,12 @@ public class DEDVController extends BaseFormController {
     // Private method used for inverting the DEDV map. Having DEDV's as the key is not always useful and DWR does not
     // like non-string key values for the map. During the inverting process Gemma Gene Ids are used instead of the GEne
     // object themselves.
-    private Map<Long, Collection<DoubleVectorValueObject>> mapInvert(
-            Map<DoubleVectorValueObject, Collection<Gene>> mapToInvert ) {
+    private Map<Long, Collection<DoubleVectorValueObject>> mapInvert( Collection<DoubleVectorValueObject> dedvMap ) {
         Map<Long, Collection<DoubleVectorValueObject>> convertedMap = new HashMap<Long, Collection<DoubleVectorValueObject>>();
 
-        for ( DoubleVectorValueObject dvvo : mapToInvert.keySet() ) {
+        for ( DoubleVectorValueObject dvvo : dedvMap ) {
 
-            for ( Gene g : mapToInvert.get( dvvo ) ) {
+            for ( Gene g : dvvo.getGenes() ) {
                 if ( convertedMap.containsKey( g.getId() ) )
                     convertedMap.get( g.getId() ).add( dvvo );
                 else {// If the gene is not already in the map we need to create the collection to hold the dedv.

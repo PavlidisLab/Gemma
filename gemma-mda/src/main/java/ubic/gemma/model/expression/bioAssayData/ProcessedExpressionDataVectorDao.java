@@ -39,13 +39,13 @@ public interface ProcessedExpressionDataVectorDao {
     public Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments );
 
-    public Map<DoubleVectorValueObject, Collection<Gene>> getProcessedDataArrays(
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
-    public Map<DoubleVectorValueObject, Collection<Gene>> getProcessedDataArrays(
-            ExpressionExperiment expressionExperiment, Collection<Gene> genes );
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
+            Collection<Gene> genes );
 
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method );

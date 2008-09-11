@@ -35,14 +35,14 @@ public interface ProcessedExpressionDataVectorService {
     public Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments );
 
-    public Map<DoubleVectorValueObject, Collection<Gene>> getProcessedDataArrays(
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
-    public Map<DoubleVectorValueObject, Collection<Gene>> getProcessedDataArrays(
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             ExpressionExperiment expressionExperiment, Collection<Gene> genes );
 
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,

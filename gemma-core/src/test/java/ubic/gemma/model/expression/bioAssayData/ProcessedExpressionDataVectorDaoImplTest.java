@@ -21,7 +21,6 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
 
@@ -122,7 +121,7 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
         ees.add( newee );
         processedDataVectorDao.createProcessedDataVectors( ees.iterator().next() );
 
-        Map<DoubleVectorValueObject, Collection<Gene>> v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
+        Collection<DoubleVectorValueObject> v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
 
         assertEquals( 40, v.size() );
     }

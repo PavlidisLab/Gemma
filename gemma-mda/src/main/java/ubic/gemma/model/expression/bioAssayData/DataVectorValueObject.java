@@ -18,10 +18,13 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.Collection;
+
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @author paul
@@ -43,6 +46,7 @@ public abstract class DataVectorValueObject {
     protected BioAssayDimension bioAssayDimension;
     protected QuantitationType quantitationType;
     protected ExpressionExperiment expressionExperiment;
+    Collection<Gene> genes;
 
     public DataVectorValueObject( DesignElementDataVector dedv ) {
         this.bioAssayDimension = dedv.getBioAssayDimension();
@@ -50,6 +54,11 @@ public abstract class DataVectorValueObject {
         this.designElement = dedv.getDesignElement();
         this.expressionExperiment = dedv.getExpressionExperiment();
         this.id = dedv.getId();
+    }
+
+    public DataVectorValueObject( DesignElementDataVector dedv, Collection<Gene> genes ) {
+        this( dedv );
+        this.genes = genes;
     }
 
     public BioAssayDimension getBioAssayDimension() {
@@ -110,6 +119,20 @@ public abstract class DataVectorValueObject {
 
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
+    }
+
+    /**
+     * @return the genes
+     */
+    public Collection<Gene> getGenes() {
+        return genes;
+    }
+
+    /**
+     * @param genes the genes to set
+     */
+    public void setGenes( Collection<Gene> genes ) {
+        this.genes = genes;
     }
 
 }

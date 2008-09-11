@@ -126,7 +126,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrices(java.util.Collection,
      *      java.util.Collection)
      */
-    public Map<DoubleVectorValueObject, Collection<Gene>> getProcessedDataArrays(
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
         return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes );
     }
@@ -137,8 +137,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrix(ubic.gemma.model.expression.experiment.ExpressionExperiment,
      *      java.util.Collection)
      */
-    public Map<DoubleVectorValueObject, Collection<Gene>> getProcessedDataArrays(
-            ExpressionExperiment expressionExperiment, Collection<Gene> genes ) {
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
+            Collection<Gene> genes ) {
         Collection<ExpressionExperiment> expressionExperiments = new HashSet<ExpressionExperiment>();
         expressionExperiments.add( expressionExperiment );
         return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes );
@@ -150,12 +150,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
             queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv "
-                    + " inner join fetch dedv.bioAssayDimension bd " + " inner join dedv.designElement de  "
+                    + " inner join fetch dedv.bioAssayDimension bd inner join dedv.designElement de  "
                     + " where dedv.designElement in ( :cs )  ";
         } else {
             queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv"
                     + " inner join fetch dedv.bioAssayDimension bd " + " inner join dedv.designElement de "
-                    + " where dedv.designElement in (:cs ) " + " and dedv.expressionExperiment in ( :ees )";
+                    + " where dedv.designElement in (:cs )  and dedv.expressionExperiment in ( :ees )";
         }
         return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
     }
@@ -175,7 +175,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Map<DoubleVectorValueObject, Collection<Gene>> handleGetProcessedExpressionDataArrays(
+    private Collection<DoubleVectorValueObject> handleGetProcessedExpressionDataArrays(
             Collection<ExpressionExperiment> ees, Collection<Gene> genes ) {
 
         // ees must be thawed first as currently implemented.
@@ -183,7 +183,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
         if ( cs2gene.keySet().size() == 0 ) {
             log.warn( "No composite sequences found for genes" );
-            return new HashMap<DoubleVectorValueObject, Collection<Gene>>();
+            return new HashSet<DoubleVectorValueObject>();
         }
 
         Map<DesignElementDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors( ees, cs2gene );
@@ -246,10 +246,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return result;
     }
 
-    private Map<DoubleVectorValueObject, Collection<Gene>> unpack( Map<DesignElementDataVector, Collection<Gene>> data ) {
-        Map<DoubleVectorValueObject, Collection<Gene>> result = new HashMap<DoubleVectorValueObject, Collection<Gene>>();
+    private Collection<DoubleVectorValueObject> unpack( Map<DesignElementDataVector, Collection<Gene>> data ) {
+        Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
         for ( DesignElementDataVector v : data.keySet() ) {
-            result.put( new DoubleVectorValueObject( v ), data.get( v ) );
+            result.add( new DoubleVectorValueObject( v, data.get( v ) ) );
         }
         return result;
     }

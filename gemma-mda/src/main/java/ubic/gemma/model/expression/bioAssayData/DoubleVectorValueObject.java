@@ -18,8 +18,11 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.Collection;
+
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * Simple wrapper for a double[] that is derived from a DesignElementDataVector.
@@ -35,7 +38,11 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     Double rankByMax;
 
     public DoubleVectorValueObject( DesignElementDataVector dedv ) {
-        super( dedv );
+        this( dedv, null );
+    }
+
+    public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Gene> genes ) {
+        super( dedv, genes );
         QuantitationType qt = dedv.getQuantitationType();
         if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
             throw new IllegalArgumentException( "Can only store double vectors, got " + qt + " "
