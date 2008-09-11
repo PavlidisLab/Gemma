@@ -130,6 +130,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addOption( imagesOption );
 
         Option normalizationOption = OptionBuilder
+                .hasArg()
                 .withArgName( "method" )
                 .withDescription(
                         "Normalization method to apply to the data matrix first: SVD, SPELL or omit this option for none (default=none)" )
@@ -229,8 +230,14 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
 
         if ( hasOption( "normalizemethod" ) ) {
-            String optionValue = getOptionValue( "normalize-method" );
-            this.linkAnalysisConfig.setNormalizationMethod( NormalizationMethod.valueOf( optionValue ) );
+            String optionValue = getOptionValue( "normalizemethod" );
+
+            NormalizationMethod value = NormalizationMethod.valueOf( optionValue.toUpperCase() );
+            if ( value == null ) {
+                log.error( "No such normalization method: " + value );
+                this.bail( ErrorCode.INVALID_OPTION );
+            }
+            this.linkAnalysisConfig.setNormalizationMethod( value );
         }
 
         this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this

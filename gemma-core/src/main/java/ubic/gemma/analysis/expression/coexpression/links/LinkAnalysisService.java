@@ -339,9 +339,11 @@ public class LinkAnalysisService {
             case NONE:
                 return datamatrix;
             case SVD:
+                log.info( "SVD normalizing" );
                 svd = new ExpressionDataSVD( datamatrix, true );
                 return svd.removeHighestComponents( 1 );
             case SPELL:
+                log.info( "Computing U matrix via SVD" );
                 svd = new ExpressionDataSVD( datamatrix, true );
                 return svd.uMatrixAsExpressionData();
             default:
