@@ -95,12 +95,14 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
         // get gene from GO term
         Taxon taxon = taxonService.load( Long.parseLong( taxonId ) );
         if ( taxon == null ) {
-            String msg = "No gene with id, " + taxonId + " can be found.";
+            String msg = "No taxon with id, " + taxonId + " can be found.";
             return buildBadResponse( document, msg );
         }
 
         Collection<Gene> genes = geneOntologyService.getGenes( goId, taxon );
-
+        if (genes == null || genes.isEmpty()){
+            return buildBadResponse( document, "No genes associated with goId = " + goId + " and taxon = " + taxon.getCommonName() );
+        }
         // build results in the form of a collection
         Collection<String> geneIds = new HashSet<String>();
         for ( Gene gene : genes ) {
