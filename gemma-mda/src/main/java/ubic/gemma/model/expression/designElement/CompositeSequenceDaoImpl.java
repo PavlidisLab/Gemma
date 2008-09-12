@@ -413,7 +413,10 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                 timer.unsplit();
             }
         }
-        batchGetGenesWithSpecificity( batch, results );
+        // finish up any leftovers
+        if ( batch.size() > 0 ) {
+            batchGetGenesWithSpecificity( batch, results );
+        }
         total += batch.size();
         timer.stop();
         if ( timer.getTime() > 10000 ) {
@@ -631,6 +634,11 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     private void batchGetGenesWithSpecificity( Collection<CompositeSequence> batch,
             Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> results ) {
+
+        if ( batch.size() == 0 ) {
+            return;
+        }
+
         final String queryString = "select cs,bas from CompositeSequenceImpl cs, BlatAssociationImpl bas inner join cs.biologicalCharacteristic bs "
                 + "inner join fetch bas.geneProduct gp inner join fetch gp.gene gene "
                 + "where bas.bioSequence=bs and cs in (:cs)";

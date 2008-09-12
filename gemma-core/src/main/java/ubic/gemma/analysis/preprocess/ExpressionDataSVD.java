@@ -21,8 +21,6 @@ package ubic.gemma.analysis.preprocess;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
-
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
@@ -65,6 +63,10 @@ public class ExpressionDataSVD {
         this.expressionData = expressionData;
         this.normalized = normalizeMatrix;
         DoubleMatrix<DesignElement, Integer> matrix = expressionData.getMatrix();
+
+        assert matrix.getRowNames().size() > 0;
+        assert matrix.getColNames().size() > 0;
+
         missingValueInfo = new DenseDoubleMatrix2D( matrix.rows(), matrix.columns() );
         imputeMissing( matrix );
 
@@ -86,7 +88,7 @@ public class ExpressionDataSVD {
      * FIXME: improve the imputation method. Generally (but not always), missing values correspond to "low expression".
      * Therefore imputed values of zero are defensible. However, because at this point the matrix has probably already
      * been filtered, the row mean is better. Using kmeans or SVD imputation is overkill for now, but SVD would probably
-     * be the way to go (probably quicker!)
+     * be the way to go (possibly quicker!)
      * 
      * @param matrix
      */
@@ -199,10 +201,9 @@ public class ExpressionDataSVD {
         // order rows by distance from the origin. This is proportional to the 1-norm.
         Algebra a = new Algebra();
         List<O> os = new ArrayList<O>();
-        // FIXME should be the U matrix, not the data iteself.
         for ( int i = 0; i < this.expressionData.rows(); i++ ) {
-            Double[] row = this.expressionData.getRow( i );
-            DoubleMatrix1D rom = new DenseDoubleMatrix1D( ArrayUtils.toPrimitive( row ) );
+            double[] row = this.getU().getRow( i );
+            DoubleMatrix1D rom = new DenseDoubleMatrix1D( row );
             norm1 = a.norm1( rom );
             os.add( new O( i, norm1 ) );
         }

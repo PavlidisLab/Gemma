@@ -476,6 +476,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
 
         this.matrix = new DenseDoubleMatrix<DesignElement, Integer>( rowsToUse.size(), sourceMatrix.columns() );
+        this.matrix.setColumnNames( sourceMatrix.getMatrix().getColNames() );
 
         log.info( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
 
@@ -484,6 +485,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             super.addToRowMaps( i, element );
             Double[] rowVals = sourceMatrix.getRow( element );
             assert rowVals != null : "Source matrix does not have row for " + element;
+
+            this.matrix.addRowName( element );
+
             for ( int j = 0; j < rowVals.length; j++ ) {
                 Double val = rowVals[j];
                 set( i, j, val );

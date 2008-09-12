@@ -100,7 +100,7 @@ public abstract class DataVectorValueObject {
         if ( getClass() != obj.getClass() ) return false;
         final DoubleVectorValueObject other = ( DoubleVectorValueObject ) obj;
         if ( id == null ) {
-            if ( other.id != null ) return false;
+            return false;
         } else if ( !id.equals( other.id ) ) return false;
         return true;
     }

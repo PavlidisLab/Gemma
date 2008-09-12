@@ -115,8 +115,7 @@ public class ExpressionExperimentFilter {
      */
     public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors ) {
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
-        eeDoubleMatrix = filter( eeDoubleMatrix );
-        return eeDoubleMatrix;
+       return filter( eeDoubleMatrix );
     }
 
     /**

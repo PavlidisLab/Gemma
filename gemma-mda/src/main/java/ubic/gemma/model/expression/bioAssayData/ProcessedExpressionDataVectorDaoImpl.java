@@ -54,6 +54,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         ProcessedExpressionDataVectorDao {
 
     private static final String PROCESSED_DATA_VECTOR_CACHE_NAME = "ProcessedDataVectorCache";
+    private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS = 10000;
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorDaoImpl.class.getName() );
     private Cache cache;
 

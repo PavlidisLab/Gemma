@@ -18,13 +18,24 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.io.InputStream;
+import java.util.Collection;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.RegressionTesting;
+import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.TestExpressionDataDoubleMatrix;
+import ubic.gemma.loader.expression.geo.DatasetCombiner;
+import ubic.gemma.loader.expression.geo.GeoConverter;
+import ubic.gemma.loader.expression.geo.GeoFamilyParser;
+import ubic.gemma.loader.expression.geo.GeoParseResult;
+import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
+import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import junit.framework.TestCase;
 
 /**
@@ -73,6 +84,36 @@ public class ExpressionDataSVDTest extends TestCase {
         svd = new ExpressionDataSVD( testData, true );
         ExpressionDataDoubleMatrix matrixAsExpressionData = svd.uMatrixAsExpressionData();
         assertNotNull( matrixAsExpressionData );
+    }
+
+    /**
+     * Test on full-sized data set.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testMatrixReconstructB() throws Exception {
+        GeoConverter gc = new GeoConverter();
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE1623" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) gc.convert( series );
+        assertNotNull( result );
+        assertEquals( 1, result.size() );
+        ExpressionExperiment ee = result.iterator().next();
+
+        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee.getRawExpressionDataVectors(), ee
+                .getQuantitationTypes().iterator().next() );
+
+        svd = new ExpressionDataSVD( matrix, false );
+
+        ExpressionDataDoubleMatrix svdNormalize = svd.removeHighestComponents( 1 );
+        assertNotNull( svdNormalize );
     }
 
     public void testWinnow() throws Exception {

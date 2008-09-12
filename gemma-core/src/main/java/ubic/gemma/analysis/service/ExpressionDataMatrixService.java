@@ -74,7 +74,7 @@ public class ExpressionDataMatrixService {
         ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
         return eeDoubleMatrix;
     }
-    
+
     /**
      * Provide a filtered expression data matrix.
      * 
@@ -110,8 +110,7 @@ public class ExpressionDataMatrixService {
      */
     public Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
-                .getProcessedDataVectors( ee );
-        this.processedExpressionDataVectorService.thaw( dataVectors );
+                .getProcessedDataVectors( ee ); // these are already thawed.
         return dataVectors;
     }
 
