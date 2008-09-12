@@ -81,8 +81,7 @@
 			<prop key="/ontology.html">ontologyController</prop>
 			<prop key="/diff/diffExpressionSearch.html">differentialExpressionSearchController</prop>
 			<prop key="/expressionExperimentSetManager.html">expressionExperimentSetController</prop>
-			<prop key="/dedv/downloadDEDV.html">dedvController</prop>
-			
+			<prop key="/dedv/downloadDEDV.html">dedvController</prop> 
 		</props>
 	</property>
 </bean>
@@ -545,7 +544,6 @@
 					</property>
 				</bean>
 			</entry>
-			
 			<entry key="DEDVController">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">
@@ -560,17 +558,28 @@
 					</property>
 				</bean>
 			</entry>
+			<entry key="HibernateMonitorController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="hibernateMonitorController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getHibernateStatus</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
 		</map>
 	</property>
-	
 	<!--
 		**************************************************************************** 
-	 	exporting/importing object definitions: 
-		 Specifications determine what will be marshelled to and from the client
-		 ***************************************************************************
+		exporting/importing object definitions: 
+		Specifications determine what will be marshelled to and from the client
+		***************************************************************************
 	-->
-	
-	
 	<property name="converters">
 		<map>
 			<entry key="ubic.gemma.web.remote.EntityDelegator">
@@ -670,7 +679,7 @@
 							<value>id</value>
 							<value>commonName</value>
 							<value>scientificName</value>
-							<value>ncbiId</value>							
+							<value>ncbiId</value>
 						</list>
 					</property>
 				</bean>
@@ -1288,11 +1297,11 @@
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="classConverter" />
 				</bean>
-			</entry>			
+			</entry>
 			<entry key="ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="bean" />					
-						<property name="includes">
+					<property name="type" value="bean" />
+					<property name="includes">
 						<list>
 							<value>id</value>
 							<value>data</value>
@@ -1300,7 +1309,7 @@
 						</list>
 					</property>
 				</bean>
-			</entry>					
+			</entry>
 		</map>
 	</property>
 </bean>

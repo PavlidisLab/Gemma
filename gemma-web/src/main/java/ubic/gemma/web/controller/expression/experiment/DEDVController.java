@@ -42,15 +42,15 @@ import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.view.TextView;
 
 /**
- * @author kelsey Exposes methods for accessing underlying Design Element Data Vectors. eg: ajax methods for
- *         visualization
- * @version $Id: DEDVController.java
+ * Exposes methods for accessing underlying Design Element Data Vectors. eg: ajax methods for visualization
+ * 
  * @spring.bean id="dedvController"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "processedExpressionDataVectorService" ref="processedExpressionDataVectorService"
  * @spring.property name = "geneService" ref="geneService"
+ * @author kelsey
+ * @version $Id$
  */
-
 public class DEDVController extends BaseFormController {
 
     private static Log log = LogFactory.getLog( DEDVController.class );

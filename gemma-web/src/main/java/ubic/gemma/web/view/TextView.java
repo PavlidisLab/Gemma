@@ -26,7 +26,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.view.AbstractView;
 
 /**
- * Simply prints text to the client. The model must have a parameter matching TEXT_PARAM which holds the text to be written.
+ * Simply prints text to the client. The model must have a parameter matching TEXT_PARAM which holds the text to be
+ * written.
  * 
  * @author pavlidis
  * @version $Id$
@@ -46,7 +47,6 @@ public class TextView extends AbstractView {
         response.setContentLength( textToRender.getBytes().length );
         response.getOutputStream().print( textToRender );
         response.getOutputStream().flush();
-
     }
 
 }

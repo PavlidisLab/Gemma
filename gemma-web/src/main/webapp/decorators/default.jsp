@@ -7,8 +7,7 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" />
-		</title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
 
 		<jwr:style src="/bundles/gemma-all.css" />
 
@@ -33,6 +32,7 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/GeneController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/GeoBrowserService.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/HibernateMonitorController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
 		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
@@ -79,7 +79,7 @@
 							help</a>
 					</div>
 					<%
-					}
+					    }
 					%>
 
 					<h2>

@@ -41,14 +41,22 @@ public class HibernateMonitor {
     SessionFactory sessionFactory;
 
     private boolean showQueryCacheStats = true;
-    private boolean showEntityStats = false;
-    private boolean showCollectionStats = false;
-    private boolean showSecondLevelCacheDetails = false;
 
     /**
      * Log some statistics.
      */
-    public void getStats() {
+    public String getStats() {
+        return getStats( false, false, false );
+    }
+
+    /**
+     * Log some statistics.
+     * 
+     * @param showEntityStats TODO
+     * @param showCollectionStats TODO
+     * @param showSecondLevelCacheDetails TODO
+     */
+    public String getStats( boolean showEntityStats, boolean showCollectionStats, boolean showSecondLevelCacheDetails ) {
 
         Statistics stats = sessionFactory.getStatistics();
 
@@ -142,7 +150,9 @@ public class HibernateMonitor {
         }
 
         buf.append( "----------------------------------------------------------\n" );
-        log.info( buf );
+        // log.info( buf );
+
+        return buf.toString();
 
     }
 
