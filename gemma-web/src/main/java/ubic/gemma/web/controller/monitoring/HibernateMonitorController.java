@@ -18,7 +18,8 @@
  */
 package ubic.gemma.web.controller.monitoring;
 
-import ubic.gemma.persistence.HibernateMonitor;
+import ubic.gemma.monitor.CacheMonitor;
+import ubic.gemma.monitor.HibernateMonitor;
 
 /**
  * @spring.bean id="hibernateMonitorController"
@@ -37,6 +38,10 @@ public class HibernateMonitorController {
      */
     public String getHibernateStatus() {
         return this.hibernateMonitor.getStats( true, true, true );
+    }
+
+    public String getCacheStatus() {
+        return CacheMonitor.getStats();
     }
 
     /**

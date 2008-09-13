@@ -27,9 +27,7 @@ import java.util.Map;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,8 +51,6 @@ import ubic.gemma.util.CommonQueries;
 public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl implements
         ProcessedExpressionDataVectorDao {
 
-    private static final String PROCESSED_DATA_VECTOR_CACHE_NAME = "ProcessedDataVectorCache";
-    private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS = 10000;
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorDaoImpl.class.getName() );
     private Cache cache;
 
@@ -332,24 +328,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     protected void initDao() throws Exception {
         super.initDao();
         try {
-            /*
-             * Create a cache for the probe data.s
-             */
-            CacheManager manager = CacheManager.getInstance();
-
-            if ( manager.cacheExists( PROCESSED_DATA_VECTOR_CACHE_NAME ) ) {
-                return;
-            }
-
-            /*
-             * FIXME configure this somewhere else.
-             */
-            this.cache = new Cache( PROCESSED_DATA_VECTOR_CACHE_NAME, 10000, MemoryStoreEvictionPolicy.LFU, false, "",
-                    false, 100, 1000, false, 500, null );
-
-            manager.addCache( this.cache );
-            this.cache = manager.getCache( PROCESSED_DATA_VECTOR_CACHE_NAME );
-
+            this.cache = ProcessedDataVectorCache.initializeCache();
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
         }
@@ -372,6 +351,22 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         /*
          * Break up by gene and EE to cache collections of vectors for EE-gene combos.
          */
+        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = makeCacheMap( newResults );
+
+        for ( ExpressionExperiment e : mapForCache.keySet() ) {
+            for ( Gene g : mapForCache.get( e ).keySet() ) {
+                VectorKey k = new VectorKey( e, g );
+                cache.put( new Element( k, mapForCache.get( e ).get( g ) ) );
+            }
+        }
+    }
+
+    /**
+     * @param newResults
+     * @return
+     */
+    private Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> makeCacheMap(
+            Collection<DoubleVectorValueObject> newResults ) {
         Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = new HashMap<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>>();
         for ( DoubleVectorValueObject v : newResults ) {
             ExpressionExperiment e = v.getExpressionExperiment();
@@ -386,13 +381,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 innerMap.get( g ).add( v );
             }
         }
-
-        for ( ExpressionExperiment e : mapForCache.keySet() ) {
-            for ( Gene g : mapForCache.get( e ).keySet() ) {
-                VectorKey k = new VectorKey( e, g );
-                cache.put( new Element( k, mapForCache.get( e ).get( g ) ) );
-            }
-        }
+        return mapForCache;
     }
 
     private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {

@@ -81,7 +81,7 @@
 			<prop key="/ontology.html">ontologyController</prop>
 			<prop key="/diff/diffExpressionSearch.html">differentialExpressionSearchController</prop>
 			<prop key="/expressionExperimentSetManager.html">expressionExperimentSetController</prop>
-			<prop key="/dedv/downloadDEDV.html">dedvController</prop> 
+			<prop key="/dedv/downloadDEDV.html">dedvController</prop>
 		</props>
 	</property>
 </bean>
@@ -568,6 +568,7 @@
 					<property name="includes">
 						<list>
 							<value>getHibernateStatus</value>
+							<value>getCacheStatus</value>
 						</list>
 					</property>
 				</bean>

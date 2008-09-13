@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -69,25 +70,19 @@ public class DEDVController extends BaseFormController {
      * of genes. The EE info is in the value object.
      */
 
-    public Map<Long, Collection<DoubleVectorValueObject>> getDEDV( Collection<Long> eeIds, Collection<Long> geneIds )
-            throws Exception {
+    @SuppressWarnings("unchecked")
+    public Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> getDEDV( Collection<Long> eeIds,
+            Collection<Long> geneIds ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        // Get and thaw the experiments.
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
         if ( ees == null || ees.isEmpty() ) return null;
 
-        for ( ExpressionExperiment ee : ees ) {
-            expressionExperimentService.thawLite( ee );
-        }
-
-        // Get and thaw gene
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
 
         if ( genes == null || genes.isEmpty() ) return null;
 
-        // Get dedv's
         Collection<DoubleVectorValueObject> dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
 
@@ -97,31 +92,31 @@ public class DEDVController extends BaseFormController {
         log.info( "Retrieved " + dedvMap.size() + " DEDVs for eeIDs: " + eeIds + " and GeneIds: " + geneIds + " in : "
                 + time + " ms." );
 
-        return mapInvert( dedvMap );
+        return makeVectorMap( dedvMap );
 
     }
 
-    // Private method used for inverting the DEDV map. Having DEDV's as the key is not always useful and DWR does not
-    // like non-string key values for the map. During the inverting process Gemma Gene Ids are used instead of the GEne
-    // object themselves.
-    private Map<Long, Collection<DoubleVectorValueObject>> mapInvert( Collection<DoubleVectorValueObject> dedvMap ) {
-        Map<Long, Collection<DoubleVectorValueObject>> convertedMap = new HashMap<Long, Collection<DoubleVectorValueObject>>();
-
-        for ( DoubleVectorValueObject dvvo : dedvMap ) {
-
-            for ( Gene g : dvvo.getGenes() ) {
-                if ( convertedMap.containsKey( g.getId() ) )
-                    convertedMap.get( g.getId() ).add( dvvo );
-                else {// If the gene is not already in the map we need to create the collection to hold the dedv.
-                    Collection<DoubleVectorValueObject> dvvos = new HashSet<DoubleVectorValueObject>();
-                    dvvos.add( dvvo );
-                    convertedMap.put( g.getId(), dvvos );
-                }
+    /**
+     * @param newResults
+     * @return
+     */
+    private Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> makeVectorMap(
+            Collection<DoubleVectorValueObject> newResults ) {
+        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result = new HashMap<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>>();
+        for ( DoubleVectorValueObject v : newResults ) {
+            ExpressionExperiment e = v.getExpressionExperiment();
+            if ( !result.containsKey( e ) ) {
+                result.put( e, new HashMap<Gene, Collection<DoubleVectorValueObject>>() );
             }
-
+            Map<Gene, Collection<DoubleVectorValueObject>> innerMap = result.get( e );
+            for ( Gene g : v.getGenes() ) {
+                if ( !innerMap.containsKey( g ) ) {
+                    innerMap.put( g, new HashSet<DoubleVectorValueObject>() );
+                }
+                innerMap.get( g ).add( v );
+            }
         }
-
-        return convertedMap;
+        return result;
     }
 
     /*
@@ -149,7 +144,7 @@ public class DEDVController extends BaseFormController {
 
         }
 
-        Map<Long, Collection<DoubleVectorValueObject>> result = getDEDV( eeIds, geneIds );
+        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result = getDEDV( eeIds, geneIds );
 
         if ( result == null || result.isEmpty() ) {
             mav.addObject( "text", " No DEDV results for genes: " + geneIds + " and datasets: " + eeIds );
@@ -170,28 +165,39 @@ public class DEDVController extends BaseFormController {
     /**
      * Converts the given map into a tab delimited String
      * 
-     * @param toConvert
+     * @param result
      * @return
      */
-    private String format4File( Map<Long, Collection<DoubleVectorValueObject>> toConvert ) {
+    private String format4File( Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result ) {
         StringBuffer converted = new StringBuffer();
-        converted.append( "EE \t GENE \t PROBE \t DEDV \n" );
-        for ( Long geneId : toConvert.keySet() ) {
-            String geneName = geneService.load( geneId ).getOfficialSymbol();
+        converted.append( "Experiment\tGene\tProbe\tData\n" );
+        Map<Long, String> genes = new HashMap<Long, String>();
+        for ( ExpressionExperiment ee : result.keySet() ) {
 
-            for ( DoubleVectorValueObject dedv : toConvert.get( geneId ) ) {
-                ExpressionExperiment ee = dedv.getExpressionExperiment();
-                expressionExperimentService.thawLite( ee );
-
-                converted.append( ee.getShortName() + " \t " );
-                converted.append( geneName + " \t " );
-                converted.append( dedv.getDesignElement().getId() + "\t" );
-
-                for ( double data : dedv.getData() ) {
-                    converted.append( data + "|" );
+            for ( Gene g : result.get( ee ).keySet() ) {
+                Long geneId = g.getId();
+                String geneName;
+                if ( genes.containsKey( geneId ) ) {
+                    geneName = genes.get( geneId );
+                } else {
+                    geneName = geneService.load( geneId ).getOfficialSymbol();
+                    genes.put( geneId, geneName );
                 }
-                converted.deleteCharAt( converted.length() - 1 ); // remove the pipe.
-                converted.append( "\n" );
+
+                for ( DoubleVectorValueObject dedv : result.get( ee ).get( g ) ) {
+                    ee = dedv.getExpressionExperiment();
+
+                    converted.append( ee.getShortName() + " \t " );
+                    converted.append( ee.getName() + " \t " );
+                    converted.append( geneName + " \t " + g.getOfficialName() + "\t" );
+                    converted.append( dedv.getDesignElement().getName() + "\t" );
+
+                    for ( double data : dedv.getData() ) {
+                        converted.append( String.format( "%.3f", data ) + "|" );
+                    }
+                    converted.deleteCharAt( converted.length() - 1 ); // remove the pipe.
+                    converted.append( "\n" );
+                }
             }
         }
         converted.append( "\r\n" );

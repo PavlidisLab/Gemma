@@ -16,7 +16,9 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.persistence;
+package ubic.gemma.monitor;
+
+import java.util.Arrays;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,7 +63,6 @@ public class HibernateMonitor {
         Statistics stats = sessionFactory.getStatistics();
 
         StringBuilder buf = new StringBuilder();
-
         long flushes = stats.getFlushCount();
         long trans = stats.getTransactionCount();
         long prep = stats.getPrepareStatementCount();
@@ -93,6 +94,7 @@ public class HibernateMonitor {
 
         if ( showSecondLevelCacheDetails ) {
             String[] regions = stats.getSecondLevelCacheRegionNames();
+            Arrays.sort( regions );
             for ( String region : regions ) {
                 SecondLevelCacheStatistics secondLevelCacheStatistics = stats.getSecondLevelCacheStatistics( region );
                 long hitCount = secondLevelCacheStatistics.getHitCount();
@@ -112,6 +114,7 @@ public class HibernateMonitor {
         if ( showCollectionStats ) {
             buf.append( "\n------------------- Collection stats -----------------------\n" );
             String[] collectionRoleNames = stats.getCollectionRoleNames();
+            Arrays.sort( collectionRoleNames );
             for ( String string : collectionRoleNames ) {
                 CollectionStatistics collectionStatistics = stats.getCollectionStatistics( string );
                 long fetchCount = collectionStatistics.getFetchCount();
@@ -127,6 +130,7 @@ public class HibernateMonitor {
         if ( showEntityStats ) {
             buf.append( "\n------------------- Entity stats -----------------------\n" );
             String[] entityNames = stats.getEntityNames();
+            Arrays.sort( entityNames );
             for ( String string : entityNames ) {
                 EntityStatistics entityStats = stats.getEntityStatistics( string );
                 long changes = entityStats.getInsertCount() + entityStats.getUpdateCount()
