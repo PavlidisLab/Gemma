@@ -277,6 +277,7 @@ public class DesignElementDataVectorDaoImpl extends
                 }
 
                 // thaw the designelements we saw.
+                int lastTime = 0;
                 for ( DesignElement de : cs ) {
                     BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
                     if ( seq == null ) continue;
@@ -288,11 +289,9 @@ public class DesignElementDataVectorDaoImpl extends
                     Hibernate.initialize( arrayDesign );
 
                     if ( ++count % 10000 == 0 ) {
-                        timer.split();
-                        if ( timer.getSplitTime() > 1000 ) {
-                            log.info( "Thawed " + count + " vector-associated probes " + timer.getSplitTime() + " ms" );
+                        if ( timer.getTime() - lastTime > 1000 ) {
+                            log.info( "Thawed " + count + " vector-associated probes " + timer.getTime() + " ms" );
                         }
-                        timer.unsplit();
                     }
                 }
 
