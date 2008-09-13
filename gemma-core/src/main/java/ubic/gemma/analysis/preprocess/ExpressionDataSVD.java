@@ -21,6 +21,9 @@ package ubic.gemma.analysis.preprocess;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
@@ -48,6 +51,9 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  * @version $Id$
  */
 public class ExpressionDataSVD {
+
+    private static Log log = LogFactory.getLog( ExpressionDataSVD.class.getName() );
+
     SingularValueDecomposition<DesignElement, Integer> svd;
     private ExpressionDataDoubleMatrix expressionData;
     private boolean normalized = false;
@@ -252,6 +258,7 @@ public class ExpressionDataSVD {
         Algebra a = new Algebra();
         DoubleMatrix<DesignElement, Integer> reconstructed = new DenseDoubleMatrix<DesignElement, Integer>( a.mult(
                 a.mult( u, s ), a.transpose( v ) ).toArray() );
+
         reconstructed.setRowNames( this.expressionData.getMatrix().getRowNames() );
         reconstructed.setColumnNames( this.expressionData.getMatrix().getColNames() );
 

@@ -500,7 +500,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * Create a data matrix like sourceMatrix but use the values from dataMatrix.
      * 
      * @param sourceMatrix
-     * @param dataMatrix
+     * @param dataMatrix - The rows can be different than the original matrix, but the columns must be the same.
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
             DoubleMatrix<DesignElement, Integer> dataMatrix ) {
@@ -511,8 +511,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
         this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
         this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
-
         this.matrix = dataMatrix;
+
+        for ( int i = 0; i < dataMatrix.rows(); i++ ) {
+            this.addToRowMaps( i, dataMatrix.getRowName( i ) );
+        }
 
     }
 

@@ -161,7 +161,6 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
         assertEquals( 40, matrix.rows() ); // there would be 100 but there are lots of missing values.
         assertEquals( 11, matrix.columns() );
-
     }
 
     /**
