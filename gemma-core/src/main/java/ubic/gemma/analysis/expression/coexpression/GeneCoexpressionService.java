@@ -38,8 +38,7 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService; // import
-                                                                                            // ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionVirtualAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.common.Securable;
@@ -369,14 +368,19 @@ public class GeneCoexpressionService {
         /*
          * If possible: instead of using the probeLinkCoexpressionAnalyzer, Use a canned analysis with a filter.
          */
-        /*
-         * FIXME this is borken, as instead of the analysis ID we need the ExpressionExperimentSetId.
-         */
-        Collection<CannedAnalysisValueObject> availableAnalyses = getCannedAnalyses( true, false );
-        for ( CannedAnalysisValueObject cannedAnalysisValueObject : availableAnalyses ) {
-            if ( cannedAnalysisValueObject.getDatasets().containsAll( eeIds ) ) {
+
+        Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.loadAll();
+
+        for ( ExpressionExperimentSet eeSet : eeSets ) {
+
+            Collection<Long> eeSetIds = new ArrayList<Long>();
+            for ( BioAssaySet baSet : eeSet.getExperiments() ) {
+                eeSetIds.add( baSet.getId() );
+            }
+
+            if ( eeSetIds.containsAll( eeIds ) ) {
                 log.info( "Using canned analysis to conduct customized analysis" );
-                return getFilteredCannedAnalysisResults( cannedAnalysisValueObject.getId(), eeIds, genes, stringency,
+                return getFilteredCannedAnalysisResults( eeSet.getId(), eeIds, genes, stringency,
                         maxResults, queryGenesOnly );
             }
         }
