@@ -1144,7 +1144,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleLoad( Collection ids ) throws Exception {
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         if ( ids == null || ids.size() == 0 ) {
             return new ArrayList<ExpressionExperiment>();
         }
@@ -1159,14 +1160,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
             queryObject.setParameterList( "ids", idList );
-            StopWatch timer = new StopWatch();
-            timer.start();
+
             ees = queryObject.list();
-            if ( timer.getTime() > 1000 ) {
-                log.info( "EEs loaded in " + timer.getTime() + "ms" );
-            }
+
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
+        }
+        if ( timer.getTime() > 1000 ) {
+            log.info( "EEs loaded in " + timer.getTime() + "ms" );
         }
         return ees;
     }

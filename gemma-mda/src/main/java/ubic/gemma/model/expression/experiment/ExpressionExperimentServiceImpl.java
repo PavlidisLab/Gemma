@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
+
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -30,7 +32,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent; 
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -435,11 +437,12 @@ public class ExpressionExperimentServiceImpl extends
         }
         return preferredQuantitationTypes;
     }
-//
-//    @Override
-//    protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
-//        return this.getExpressionExperimentDao().getMaskedPreferredQuantitationType( ee );
-//    }
+
+    //
+    // @Override
+    // protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
+    // return this.getExpressionExperimentDao().getMaskedPreferredQuantitationType( ee );
+    // }
 
     /*
      * (non-Javadoc)
@@ -511,7 +514,8 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     protected Collection<ExpressionExperiment> handleLoadMultiple( Collection ids ) throws Exception {
-        return this.getExpressionExperimentDao().load( ids );
+        Collection<ExpressionExperiment> ees = this.getExpressionExperimentDao().load( ids );
+        return ees;
     }
 
     /*

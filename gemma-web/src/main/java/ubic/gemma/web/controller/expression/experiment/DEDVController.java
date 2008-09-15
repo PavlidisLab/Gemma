@@ -75,12 +75,13 @@ public class DEDVController extends BaseFormController {
             Collection<Long> geneIds ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
         if ( ees == null || ees.isEmpty() ) return null;
 
-        Collection<Gene> genes = geneService.loadMultiple( geneIds );
+        // Performance note: the above is fast except for the need to security-filter the EEs. This takes 90% of the
+        // time.
 
+        Collection<Gene> genes = geneService.loadMultiple( geneIds );
         if ( genes == null || genes.isEmpty() ) return null;
 
         Collection<DoubleVectorValueObject> dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees,
@@ -89,8 +90,8 @@ public class DEDVController extends BaseFormController {
         watch.stop();
         Long time = watch.getTime();
 
-        log.info( "Retrieved " + dedvMap.size() + " DEDVs for eeIDs: " + eeIds + " and GeneIds: " + geneIds + " in : "
-                + time + " ms." );
+        log.info( "Retrieved " + dedvMap.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
+                + " genes in " + time + " ms." );
 
         return makeVectorMap( dedvMap );
 

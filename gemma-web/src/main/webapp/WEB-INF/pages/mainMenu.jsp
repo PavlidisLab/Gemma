@@ -110,7 +110,9 @@
 			<div class="roundedcornr_content_777249">
 				<strong> More administrative functions </strong>
 				<ul class="compactList" style="padding-left: 3px;">
-
+<li>
+						<a href='<c:url value="/static/hibernateStats.html"/>'> System monitoring </a>
+					</li>
 					<li>
 						<a href='<c:url value="/indexer.html"/>'> <fmt:message key="menu.compassIndexer" /> </a>
 					</li>
