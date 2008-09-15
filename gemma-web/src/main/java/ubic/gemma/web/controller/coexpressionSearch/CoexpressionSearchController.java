@@ -96,14 +96,6 @@ public class CoexpressionSearchController extends BaseFormController {
         return searchService.searchExpressionExperiments( query, taxonId );
     }
 
-    /**
-     * Get the set of available canned analyses (for all taxa)
-     * 
-     * @return
-     */
-    public Collection<CannedAnalysisValueObject> getCannedAnalyses() {
-        return geneCoexpressionService.getCannedAnalyses( true, true );
-    }
 
     public CoexpressionMetaValueObject getEmptyResult() {
         return new CoexpressionMetaValueObject();

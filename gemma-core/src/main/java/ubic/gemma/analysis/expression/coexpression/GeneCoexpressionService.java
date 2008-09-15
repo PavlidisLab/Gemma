@@ -37,8 +37,6 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.common.Securable;
@@ -48,8 +46,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
@@ -63,10 +59,8 @@ import ubic.gemma.util.GemmaLinkUtils;
  * @author paul
  * @version $Id$
  * @spring.bean id="geneCoexpressionService"
- * @spring.property name="taxonService" ref="taxonService"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="gene2GeneCoexpressionService" ref="gene2GeneCoexpressionService"
- * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
  * @spring.property name = "geneOntologyService" ref="geneOntologyService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer"
@@ -83,61 +77,12 @@ public class GeneCoexpressionService {
 
     private ExpressionExperimentSetService expressionExperimentSetService;
     private Gene2GeneCoexpressionService gene2GeneCoexpressionService;
-    private TaxonService taxonService;
-    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
     private GeneOntologyService geneOntologyService;
     private ExpressionExperimentService expressionExperimentService;
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
     private GeneService geneService;
 
-    /**
-     * @return collection of the available canned analyses, for all taxa.
-     * @deprecated
-     */
-    public Collection<CannedAnalysisValueObject> getCannedAnalyses( boolean populateDatasets, boolean includeVirtual ) {
-        Collection<CannedAnalysisValueObject> analyses = new ArrayList<CannedAnalysisValueObject>();
-        for ( Object o : taxonService.loadAll() ) {
-            Taxon taxon = ( Taxon ) o;
-            for ( Object p : geneCoexpressionAnalysisService.findByTaxon( taxon ) ) {
-                GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) p;
-                CannedAnalysisValueObject cavo = new CannedAnalysisValueObject();
-                cavo.setId( analysis.getId() );
-                cavo.setName( analysis.getName() );
-                cavo.setDescription( analysis.getDescription() );
-                assert taxon.equals( analysis.getTaxon() );
-                cavo.setTaxon( taxon );
-                cavo.setStringency( analysis.getStringency() );
-                // if ( analysis instanceof GeneCoexpressionVirtualAnalysis ) {
-                // if ( !includeVirtual ) continue;
-                // cavo.setVirtual( true );
-                // cavo.setViewedAnalysisId( ( ( GeneCoexpressionVirtualAnalysis ) analysis ).getViewedAnalysis()
-                // .getId() );
-                //
-                // }
-
-                if ( populateDatasets ) {
-                    cavo.setDatasets( getIds( analysis.getExpressionExperimentSetAnalyzed() ) ); // this saves a trip
-                    // back...
-                }
-
-                /*
-                 * FIXME this number isn't right if there are 'troubled' data sets we filter out.
-                 */
-                cavo.setNumDatasets( geneCoexpressionAnalysisService.getNumDatasetsAnalyzed( analysis ) );
-
-                analyses.add( cavo );
-            }
-        }
-        return analyses;
-    }
-
-    /**
-     * @deprecated
-     * @return
-     */
-    public Collection<CannedAnalysisValueObject> getCannedAnalyses() {
-        return this.getCannedAnalyses( false, true );
-    }
+   
 
     /**
      * @param eeSetId
@@ -439,20 +384,12 @@ public class GeneCoexpressionService {
         this.gene2GeneCoexpressionService = gene2GeneCoexpressionService;
     }
 
-    public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
-        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
-    }
-
     public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
         this.geneOntologyService = geneOntologyService;
     }
 
     public void setProbeLinkCoexpressionAnalyzer( ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer ) {
         this.probeLinkCoexpressionAnalyzer = probeLinkCoexpressionAnalyzer;
-    }
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
     public void setGeneService( GeneService geneService ) {

@@ -487,8 +487,7 @@
 					</property>
 					<property name="includes">
 						<list>
-							<value>doSearch</value>
-							<value>getCannedAnalyses</value>
+							<value>doSearch</value>						
 							<value>findExpressionExperiments</value>
 						</list>
 					</property>
