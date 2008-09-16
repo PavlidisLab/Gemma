@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.util.GemmaLinkUtils;
+import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.web.controller.diff.DifferentialExpressionValueObject;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 
@@ -43,7 +43,7 @@ public class DiffExResultDecorator extends TableDecorator {
 
     public String getShortName() {
         DifferentialExpressionValueObject o = ( DifferentialExpressionValueObject ) getCurrentRowObject();
-        return GemmaLinkUtils.getExpressionExperimentLink( o.getExpressionExperiment().getId(), o
+        return AnchorTagUtil.getExpressionExperimentLink( o.getExpressionExperiment().getId(), o
                 .getExpressionExperiment().getShortName() );
     }
 
@@ -54,7 +54,7 @@ public class DiffExResultDecorator extends TableDecorator {
 
     public String getProbe() {
         DifferentialExpressionValueObject o = ( DifferentialExpressionValueObject ) getCurrentRowObject();
-        return GemmaLinkUtils.getProbeLink( o.getProbeId(), o.getProbe() );
+        return AnchorTagUtil.getProbeLink( o.getProbeId(), o.getProbe() );
     }
 
     public String getExperimentalFactors() {

@@ -43,6 +43,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -61,8 +62,9 @@ public class DesignElementDataVectorDaoImpl extends
 
     private static Log log = LogFactory.getLog( DesignElementDataVectorDaoImpl.class.getName() );
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Collection find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
+    public Collection<DesignElementDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.designElement in (:desEls) "
                 + "and dev.quantitationType = :quantitationType ";
@@ -142,9 +144,9 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleGetVectors(java.util.Collection,
-     *      java.util.Collection)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleGetVectors(java.util.Collection,
+     * java.util.Collection)
      */
     @Override
     protected Map handleGetPreferredVectors( Collection ees, Collection genes ) throws Exception {
@@ -177,8 +179,9 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataForCompositeSequence(
+     * ubic.gemma.model.expression.designElement.CompositeSequence)
      */
     @Override
     protected void handleRemoveDataForCompositeSequence( final CompositeSequence compositeSequence ) throws Exception {
@@ -202,9 +205,10 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataFromQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataFromQuantitationType(
+     * ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     * ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
     protected void handleRemoveDataForQuantitationType( final QuantitationType quantitationType ) throws Exception {
@@ -215,7 +219,6 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleThaw(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -225,7 +228,6 @@ public class DesignElementDataVectorDaoImpl extends
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.setFetchSize( 400 );
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            @SuppressWarnings("unchecked")
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
 
                 FlushMode oldFlushMode = session.getFlushMode();
@@ -266,7 +268,7 @@ public class DesignElementDataVectorDaoImpl extends
                         Hibernate.initialize( ba.getSamplesUsed() );
 
                         for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                            session.lock( bm, LockMode.NONE );
+                            bm = ( BioMaterial ) session.get( BioMaterialImpl.class, bm.getId() );
                             Hibernate.initialize( bm );
                             Hibernate.initialize( bm.getBioAssaysUsedIn() );
                             Hibernate.initialize( bm.getFactorValues() );
@@ -375,8 +377,9 @@ public class DesignElementDataVectorDaoImpl extends
      * @param queryString
      * @return
      */
-    protected Map<DesignElementDataVector, Collection<Gene>> getVectorsForProbesInExperiments( Collection ees,
-            Map<CompositeSequence, Collection<Gene>> cs2gene, final String queryString ) {
+    protected Map<DesignElementDataVector, Collection<Gene>> getVectorsForProbesInExperiments(
+            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene,
+            final String queryString ) {
         Session session = super.getSession( false );
         org.hibernate.Query queryObject = session.createQuery( queryString );
         Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();

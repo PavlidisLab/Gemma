@@ -48,7 +48,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.util.GemmaLinkUtils;
+import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
@@ -446,7 +446,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         eevo.setId( ee.getId() );
         eevo.setShortName( ee.getShortName() );
         eevo.setName( ee.getName() );
-        eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+        eevo.setExternalUri( AnchorTagUtil.getExpressionExperimentUrl( eevo.getId() ) );
         return eevo;
     }
 

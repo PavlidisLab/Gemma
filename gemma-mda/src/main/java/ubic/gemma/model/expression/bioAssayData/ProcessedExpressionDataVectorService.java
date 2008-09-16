@@ -32,22 +32,55 @@ import ubic.gemma.model.genome.Gene;
  */
 public interface ProcessedExpressionDataVectorService {
 
+    /**
+     * @param expressionExperiments
+     * @return
+     */
     public Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments );
 
+    /**
+     * @param expressionExperiments
+     * @param genes
+     * @return
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
+    /**
+     * @param expressionExperiment
+     * @return
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @param expressionExperiment
+     * @return
+     */
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            ExpressionExperiment expressionExperiment, Collection<Gene> genes );
+    /**
+     * @param expressionExperiment
+     * @param genes
+     * @return
+     */
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
+            Collection<Gene> genes );
 
+    /**
+     * @param expressionExperiment
+     * @param genes
+     * @param method
+     * @return
+     */
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method );
 
+    /**
+     * @param expressionExperiment
+     * @param method
+     * @return
+     */
     public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
 
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
@@ -59,13 +92,17 @@ public interface ProcessedExpressionDataVectorService {
      * 
      * @param expressionExperiment
      */
-    public Collection<ProcessedExpressionDataVector> createProcessedDataVectors( ExpressionExperiment expressionExperiment );
+    public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
+            ExpressionExperiment expressionExperiment );
 
+    /**
+     * @param vectors
+     */
     public void thaw( Collection<ProcessedExpressionDataVector> vectors );
 
     /**
      * Updates a collection of ProcessedExpressionDataVectors
      */
-    public void update( java.util.Collection dedvs );
+    public void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
 
 }

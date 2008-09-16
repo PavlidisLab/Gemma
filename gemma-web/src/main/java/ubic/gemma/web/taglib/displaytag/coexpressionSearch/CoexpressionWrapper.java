@@ -30,7 +30,7 @@ import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.util.GemmaLinkUtils;
+import ubic.gemma.util.AnchorTagUtil;
 
 /**
  * Displaytag decorator for Link analysis results display.
@@ -165,7 +165,7 @@ public class CoexpressionWrapper extends TableDecorator {
                 ExpressionExperimentValueObject eevo = object.getExpressionExperimentValueObject( eeId );
                 buf.append( String.format(
                         "<area shape=\"rect\" coords=\"%d,%d,%d,%d\" href=\"%s\" alt=\"%s\" title=\"%s\" />", x, y, x
-                                + barWidth, height - 1, GemmaLinkUtils.getExpressionExperimentUrl( eeId ), eevo
+                                + barWidth, height - 1, AnchorTagUtil.getExpressionExperimentUrl( eeId ), eevo
                                 .getName(), eevo.getName() ) );
             }
             x += barWidth;

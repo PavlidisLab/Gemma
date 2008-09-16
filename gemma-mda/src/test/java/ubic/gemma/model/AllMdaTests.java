@@ -33,6 +33,7 @@ import ubic.gemma.model.genome.gene.CandidateGeneListImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneListServiceImplTest;
 import ubic.gemma.model.genome.gene.GeneServiceImplTest;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImplTest;
+import ubic.gemma.model.util.BeanPropertyCompleterTest;
 
 /**
  * Tests for gemma.model-mda
@@ -63,6 +64,8 @@ public class AllMdaTests extends TestSuite {
 
         suite.addTestSuite( BlatResultImplTest.class );
         suite.addTestSuite( GeneImplTest.class );
+
+        suite.addTestSuite( BeanPropertyCompleterTest.class );
         return suite;
     }
 

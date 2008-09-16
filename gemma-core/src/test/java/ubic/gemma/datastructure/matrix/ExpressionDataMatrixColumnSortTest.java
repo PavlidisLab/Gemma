@@ -25,7 +25,6 @@ import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -61,6 +60,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     public void testOrderByExperimentalDesign() throws Exception {
+        endTransaction();
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         designElementDataVectorService = ( DesignElementDataVectorService ) this

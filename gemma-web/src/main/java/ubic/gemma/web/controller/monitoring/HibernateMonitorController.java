@@ -18,8 +18,8 @@
  */
 package ubic.gemma.web.controller.monitoring;
 
-import ubic.gemma.monitor.CacheMonitor;
-import ubic.gemma.monitor.HibernateMonitor;
+import ubic.gemma.util.monitor.CacheMonitor;
+import ubic.gemma.util.monitor.HibernateMonitor;
 
 /**
  * @spring.bean id="hibernateMonitorController"

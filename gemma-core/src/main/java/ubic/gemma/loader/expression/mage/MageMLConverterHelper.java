@@ -186,6 +186,8 @@ import ubic.gemma.util.ReflectionUtil;
 @SuppressWarnings("unchecked")
 public class MageMLConverterHelper {
 
+    private static final String ARRAY_EXPRESS_LOCAL_DATAFILE_BASEPATH = "arrayExpress.local.datafile.basepath";
+
     /**
      * Used to indicate that a MAGE list should be converted to a Gemma list (or collection)
      */
@@ -3103,10 +3105,17 @@ public class MageMLConverterHelper {
     private void initLocalExternalDataPaths() {
         localExternalDataPaths = new HashSet<String>();
 
-        String path = ConfigUtils.getString( "arrayExpress.local.datafile.basepath" );
+        String path = ConfigUtils.getString( ARRAY_EXPRESS_LOCAL_DATAFILE_BASEPATH );
+
+        if ( path == null ) {
+            log.error( "No MAGE external data path is defined; please define " + ARRAY_EXPRESS_LOCAL_DATAFILE_BASEPATH );
+            return;
+        }
+
         File p = new File( path );
         if ( !p.canRead() ) {
             log.error( "Cannot read from " + path );
+            return;
         }
         localExternalDataPaths.add( path );
 

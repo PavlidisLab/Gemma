@@ -68,7 +68,7 @@ public class ExpressionDataMatrixBuilder {
      */
     public static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
             Collection<DesignElementDataVector> vectors ) {
-        ExpressionDataMatrix expressionDataMatrix = null;
+        ExpressionDataMatrix<?> expressionDataMatrix = null;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
             expressionDataMatrix = new ExpressionDataDoubleMatrix( vectors );
         } else if ( representation.equals( PrimitiveType.STRING ) ) {
@@ -617,6 +617,7 @@ public class ExpressionDataMatrixBuilder {
                     && dimensions.contains( vector.getBioAssayDimension() )
                     && qtypes.contains( vector.getQuantitationType() ) ) result.add( vector );
         }
+
         return result;
     }
 

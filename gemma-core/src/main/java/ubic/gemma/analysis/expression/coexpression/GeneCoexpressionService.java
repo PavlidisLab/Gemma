@@ -50,7 +50,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.CountingMap;
-import ubic.gemma.util.GemmaLinkUtils;
+import ubic.gemma.util.AnchorTagUtil;
 
 /**
  * Provides access to Gene2Gene and Probe2Probe links. The use of this service provides 'high-level' access to
@@ -232,7 +232,7 @@ public class GeneCoexpressionService {
              * field to the value object...
              */
             for ( ExpressionExperimentValueObject eevo : eevos ) {
-                eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+                eevo.setExternalUri( AnchorTagUtil.getExpressionExperimentUrl( eevo.getId() ) );
             }
 
             getGoOverlap( ecvos, queryGene );
@@ -332,7 +332,7 @@ public class GeneCoexpressionService {
 
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             // FIXME don't reuse this field.
-            eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+            eevo.setExternalUri( AnchorTagUtil.getExpressionExperimentUrl( eevo.getId() ) );
         }
 
         CoexpressionMetaValueObject result = initValueObject( genes, eevos, false );

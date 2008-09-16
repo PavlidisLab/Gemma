@@ -52,6 +52,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
+@SuppressWarnings("serial")
 abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatrix<T>, Serializable {
 
     private Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
@@ -90,7 +91,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayForColumn(int)
      */
     public Collection<BioAssay> getBioAssaysForColumn( int index ) {
@@ -99,7 +99,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioMaterialForColumn(int)
      */
     public BioMaterial getBioMaterialForColumn( int index ) {
@@ -108,8 +107,9 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#columns(ubic.gemma.model.expression.designElement.DesignElement)
+     * @see
+     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#columns(ubic.gemma.model.expression.designElement.DesignElement
+     * )
      */
     public int columns( DesignElement el ) {
         int j = 0;
@@ -130,7 +130,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowElements()
      */
     public List<ExpressionDataMatrixRowElement> getRowElements() {
@@ -145,7 +144,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowElement(int)
      */
     public ExpressionDataMatrixRowElement getRowElement( int index ) {
@@ -154,7 +152,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getDesignElementForRow(int)
      */
     public DesignElement getDesignElementForRow( int index ) {
@@ -163,8 +160,8 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumnIndex(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     * @seeubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumnIndex(ubic.gemma.model.expression.biomaterial.
+     * BioMaterial)
      */
     public int getColumnIndex( BioMaterial bioMaterial ) {
         return columnBioMaterialMap.get( bioMaterial );
@@ -180,8 +177,8 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowIndex(ubic.gemma.model.expression.designElement.DesignElement)
+     * @seeubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowIndex(ubic.gemma.model.expression.designElement.
+     * DesignElement)
      */
     public int getRowIndex( DesignElement designElement ) {
         Integer index = rowElementMap.get( designElement );
@@ -233,7 +230,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
-                this.getQuantitationTypes().add(vectorQuantitationType);
+                this.getQuantitationTypes().add( vectorQuantitationType );
                 this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                 addToRowMaps( i, designElement );
                 i++;
@@ -287,7 +284,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                     if ( this.expressionExperiment == null )
                         this.expressionExperiment = vector.getExpressionExperiment();
                     vectorsOfInterest.add( vector );
-                    this.getQuantitationTypes().add(vectorQuantitationType);
+                    this.getQuantitationTypes().add( vectorQuantitationType );
                     DesignElement designElement = vector.getDesignElement();
                     this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                     addToRowMaps( rowIndex, designElement );
@@ -328,7 +325,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
                 vectorsOfInterest.add( vector );
-                this.getQuantitationTypes().add(vectorQuantitationType);
+                this.getQuantitationTypes().add( vectorQuantitationType );
                 DesignElement designElement = vector.getDesignElement();
                 bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                 addToRowMaps( i, designElement );
@@ -414,7 +411,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      *  **********        -- ditto
      *            ****    -- these samples were not run on any of the other platforms .
      * </pre>
-     * 
      * <p>
      * A simpler case:
      * </p>
@@ -425,7 +421,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * ***********
      * *******
      * </pre>
-     * 
      * <p>
      * A more typical and easy case (one microarray design used):
      * </p>
@@ -434,7 +429,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * ----------------
      * ****************
      * </pre>
-     * 
      * <p>
      * If every sample was run on two different array designs:
      * </p>
@@ -444,7 +438,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * ****************
      * ****************
      * </pre>
-     * 
      * <p>
      * Every sample was run on a different array design:
      * 
@@ -454,7 +447,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      *       *********
      *                ********
      * </pre>
-     * 
      * <p>
      * Because there can be limited or no overlap between the bioassay dimensions,we cannot assume the dimensions of the
      * matrix will be defined by the longest bioassaydimension.
@@ -534,7 +526,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
             if ( !alreadySeenGroup( bioMaterialGroups, bioMaterials ) ) {
                 bioMaterialGroups.add( bioMaterials );
-            } else {
             }
 
             for ( BioMaterial material : bioMaterials ) {
@@ -580,7 +571,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayDimension()
      */
     public BioAssayDimension getBioAssayDimension( DesignElement designElement ) {
@@ -593,7 +583,6 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getQuantitationTypes()
      */
     public Collection<QuantitationType> getQuantitationTypes() {

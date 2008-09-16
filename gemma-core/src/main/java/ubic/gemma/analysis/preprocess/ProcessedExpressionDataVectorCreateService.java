@@ -200,8 +200,6 @@ public class ProcessedExpressionDataVectorCreateService {
             intensities = new ExpressionDataDoubleMatrix( processedVectors );
         }
 
-        if ( intensities == null ) return null;
-
         Collection<ProcessedExpressionDataVector> updatedVectors = computeRanks( processedVectors, intensities );
         if ( updatedVectors == null ) {
             log.info( "Could not get preferred data vectors, not updating ranks data" );

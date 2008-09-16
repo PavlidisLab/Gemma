@@ -20,7 +20,6 @@ package ubic.gemma.util;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import ubic.gemma.util.progress.ProgressDataTest;
 
 /**
  * Test for gemma-util
@@ -33,10 +32,8 @@ public class AllUtilTests {
     public static Test suite() {
         TestSuite suite = new TestSuite( "Test for ubic.gemma.util" );
         // $JUnit-BEGIN$
-        suite.addTestSuite( BeanPropertyCompleterTest.class );
         suite.addTestSuite( CommonsConfigurationPropertyPlaceholderConfigurerTest.class );
         suite.addTestSuite( ConfigUtilsTest.class );
-        suite.addTestSuite( ProgressDataTest.class );
         suite.addTestSuite( DateUtilTest.class );
         suite.addTestSuite( CountingMapTest.class );
         // $JUnit-END$

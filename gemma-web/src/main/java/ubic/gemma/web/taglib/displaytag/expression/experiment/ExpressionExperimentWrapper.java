@@ -35,7 +35,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.util.GemmaLinkUtils;
+import ubic.gemma.util.AnchorTagUtil;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -358,7 +358,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getNameLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
-            return GemmaLinkUtils.getExpressionExperimentLink( object.getId(), StringUtils.abbreviate(
+            return AnchorTagUtil.getExpressionExperimentLink( object.getId(), StringUtils.abbreviate(
                     object.getName(), 75 ), object.getName() );
         }
         return "No design";

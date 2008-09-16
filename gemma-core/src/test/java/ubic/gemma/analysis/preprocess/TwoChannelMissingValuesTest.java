@@ -67,6 +67,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public void testMissingValueGSE56() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE56Short/GSE56_family.soft.gz" ) );
@@ -94,6 +95,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertEquals( 10, calls.size() );
     }
 
+    @SuppressWarnings("unchecked")
     public void testMissingValueGSE523() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE523_family.soft.gz" ) );

@@ -153,11 +153,6 @@
 			<version>1.2.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>gemma</groupId>
-			<artifactId>gemma-testing</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
 			<groupId>com.ibm.icu</groupId>
 			<artifactId>icu4j</artifactId>
 			<version>3.4</version>
