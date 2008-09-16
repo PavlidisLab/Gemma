@@ -43,7 +43,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -261,20 +260,32 @@ public class DesignElementDataVectorDaoImpl extends
                 for ( BioAssayDimension bad : dims ) {
                     Hibernate.initialize( bad );
                     for ( BioAssay ba : bad.getBioAssays() ) {
-                        ba = ( BioAssay ) session.get( BioAssayImpl.class, ba.getId() );
+                        session.lock( ba, LockMode.NONE );
                         Hibernate.initialize( ba );
                         Hibernate.initialize( ba.getArrayDesignUsed() );
                         Hibernate.initialize( ba.getDerivedDataFiles() );
                         Hibernate.initialize( ba.getSamplesUsed() );
 
+                        Collection<BioAssay> bioAssaysUsedIn = null;
                         for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                            bm = ( BioMaterial ) session.get( BioMaterialImpl.class, bm.getId() );
+                            session.lock( bm, LockMode.NONE );
                             Hibernate.initialize( bm );
-                            Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                            bioAssaysUsedIn = bm.getBioAssaysUsedIn();
+                            Hibernate.initialize( bioAssaysUsedIn );
                             Hibernate.initialize( bm.getFactorValues() );
                             session.evict( bm );
                         }
-                        session.evict( ba );
+
+                        /*
+                         * We have to do it this way, or we risk having the bioassay in the session already.
+                         */
+                        if ( bioAssaysUsedIn != null ) {
+                            for ( BioAssay baui : bioAssaysUsedIn ) {
+                                session.evict( baui );
+                            }
+                        }
+                        // don't do this.
+                        // session.evict( ba );
                     }
                 }
 
@@ -329,8 +340,8 @@ public class DesignElementDataVectorDaoImpl extends
      * @param cs2gene
      * @return
      */
-    protected Map<DesignElementDataVector, Collection<Gene>> getPreferredVectorsForProbes( Collection ees,
-            Map<CompositeSequence, Collection<Gene>> cs2gene ) {
+    protected Map<DesignElementDataVector, Collection<Gene>> getPreferredVectorsForProbes(
+            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene ) {
 
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {

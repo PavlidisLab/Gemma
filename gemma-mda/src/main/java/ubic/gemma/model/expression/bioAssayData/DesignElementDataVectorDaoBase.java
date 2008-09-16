@@ -67,8 +67,8 @@ public abstract class DesignElementDataVectorDaoBase extends ubic.gemma.model.ex
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll(int)
      */
     @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<DesignElementDataVector> loadAll( final int transform ) {
+        final java.util.Collection<DesignElementDataVector> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -108,15 +108,16 @@ public abstract class DesignElementDataVectorDaoBase extends ubic.gemma.model.ex
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<DesignElementDataVector> create( final int transform,
+            final java.util.Collection<DesignElementDataVector> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "DesignElementDataVector.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform,
-                            ( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector ) entityIterator.next() );
+                for ( java.util.Iterator<DesignElementDataVector> entityIterator = entities.iterator(); entityIterator
+                        .hasNext(); ) {
+                    create( transform, entityIterator.next() );
                 }
                 return null;
             }
@@ -609,7 +610,9 @@ public abstract class DesignElementDataVectorDaoBase extends ubic.gemma.model.ex
     /**
      * Transforms a collection of entities using the
      * {@link #transformEntity(int,ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)} method. This
-     * method does not instantiate a new collection. <p/> This method is to be used internally only.
+     * method does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
      * 
      * @param transform one of the constants declared in
      *        <code>ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao</code>

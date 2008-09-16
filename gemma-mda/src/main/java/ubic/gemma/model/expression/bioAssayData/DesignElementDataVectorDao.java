@@ -22,6 +22,10 @@
 //
 package ubic.gemma.model.expression.bioAssayData;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
+
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */
@@ -35,9 +39,9 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      * <p>
      * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
      * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
      * </p>
      * 
      * @param id the identifier of the entity to load.
@@ -50,13 +54,13 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<DesignElementDataVector> loadAll();
 
     /**
      * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
      * operation which can optionally transform the entity (into a value object for example). By default, transformation
      * does not occur.
      * </p>
@@ -64,7 +68,7 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      * @param transform the flag indicating what transformation to use.
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<DesignElementDataVector> loadAll( final int transform );
 
     /**
      * Creates an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector and adds it to the
@@ -77,9 +81,9 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)} with an
      * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined
-     * here then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entity (into a value object for example). By default, transformation does not occur.
+     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
+     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity
+     * (into a value object for example). By default, transformation does not occur.
      * </p>
      */
     public Object create( int transform,
@@ -93,18 +97,19 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      *        create.
      * @return the created instances.
      */
-    public java.util.Collection create( java.util.Collection entities );
+    public java.util.Collection<DesignElementDataVector> create( java.util.Collection<DesignElementDataVector> entities );
 
     /**
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)} with an
      * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined
-     * here then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
+     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
+     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities
+     * (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
+    public java.util.Collection<DesignElementDataVector> create( int transform,
+            java.util.Collection<DesignElementDataVector> entities );
 
     /**
      * Updates the <code>designElementDataVector</code> instance in the persistent store.
@@ -114,7 +119,7 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
     /**
      * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public void update( java.util.Collection entities );
+    public void update( java.util.Collection<DesignElementDataVector> entities );
 
     /**
      * Removes the instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector from the persistent
@@ -131,7 +136,7 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
     /**
      * Removes all entities in the given <code>entities<code> collection.
      */
-    public void remove( java.util.Collection entities );
+    public void remove( java.util.Collection<DesignElementDataVector> entities );
 
     /**
      * 
@@ -142,8 +147,8 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
     /**
      * <p>
      * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows
-     * you to override the query string defined in
+     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in
      * {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}.
      * </p>
      */
@@ -153,8 +158,8 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
     /**
      * <p>
      * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
-     * with an additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code>
-     * then finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
+     * with an additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
+     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
      * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
      * optionally transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
@@ -167,8 +172,8 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      * Does the same thing as
      * {@link #findOrCreate(boolean, ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)} with an
      * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findOrCreate(int, ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)}.
+     * override the query string defined in {@link #findOrCreate(int,
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)}.
      * </p>
      */
     public Object findOrCreate( int transform, String queryString,
@@ -194,10 +199,10 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
     /**
      * <p>
      * Does the same thing as {@link #find(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
     public Object find( int transform,
@@ -206,9 +211,9 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
     /**
      * <p>
      * Does the same thing as {@link #find(boolean, ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows
-     * you to override the query string defined in
-     * {@link #find(int, ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)}.
+     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #find(int,
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)}.
      * </p>
      */
     public Object find( int transform, String queryString,
@@ -217,41 +222,44 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
     /**
      * 
      */
-    public java.util.Collection find( java.util.Collection quantitationTypes );
+    public java.util.Collection<DesignElementDataVector> find( java.util.Collection<QuantitationType> quantitationTypes );
 
     /**
      * <p>
      * Does the same thing as {@link #find(java.util.Collection)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #find(java.util.Collection)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #find(java.util.Collection)}.
      * </p>
      */
-    public java.util.Collection find( String queryString, java.util.Collection quantitationTypes );
+    public java.util.Collection<DesignElementDataVector> find( String queryString,
+            java.util.Collection<QuantitationType> quantitationTypes );
 
     /**
      * <p>
      * Does the same thing as {@link #find(java.util.Collection)} with an additional flag called <code>transform</code>.
-     * If this flag is set to <code>TRANSFORM_NONE</code> then finder results will <strong>NOT</strong> be
-     * transformed during retrieval. If this flag is any of the other constants defined here then finder results
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
-     * objects for example). By default, transformation does not occur.
+     * If this flag is set to <code>TRANSFORM_NONE</code> then finder results will <strong>NOT</strong> be transformed
+     * during retrieval. If this flag is any of the other constants defined here then finder results <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entities (into value objects for
+     * example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection find( int transform, java.util.Collection quantitationTypes );
+    public java.util.Collection<DesignElementDataVector> find( int transform, java.util.Collection quantitationTypes );
 
     /**
      * <p>
      * Does the same thing as {@link #find(boolean, java.util.Collection)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #find(int, java.util.Collection quantitationTypes)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #find(int, java.util.Collection quantitationTypes)}.
      * </p>
      */
-    public java.util.Collection find( int transform, String queryString, java.util.Collection quantitationTypes );
+    public java.util.Collection<DesignElementDataVector> find( int transform, String queryString,
+            java.util.Collection quantitationTypes );
 
     /**
      * 
      */
-    public java.util.Collection find( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    public java.util.Collection<DesignElementDataVector> find(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * <p>
@@ -260,48 +268,36 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      * override the query string defined in {@link #find(ubic.gemma.model.common.quantitationtype.QuantitationType)}.
      * </p>
      */
-    public java.util.Collection find( String queryString,
+    public java.util.Collection<DesignElementDataVector> find( String queryString,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * <p>
      * Does the same thing as {@link #find(ubic.gemma.model.common.quantitationtype.QuantitationType)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection find( int transform,
+    public java.util.Collection<DesignElementDataVector> find( int transform,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * <p>
      * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.quantitationtype.QuantitationType)} with an
      * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #find(int, ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)}.
+     * override the query string defined in {@link #find(int, ubic.gemma.model.common.quantitationtype.QuantitationType
+     * quantitationType)}.
      * </p>
      */
-    public java.util.Collection find( int transform, String queryString,
+    public java.util.Collection<DesignElementDataVector> find( int transform, String queryString,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * 
      */
-    public java.util.Collection find( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * <p>
-     * Does the same thing as
-     * {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows
-     * you to override the query string defined in
-     * {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)}.
-     * </p>
-     */
-    public java.util.Collection find( String queryString,
+    public java.util.Collection<DesignElementDataVector> find(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
@@ -309,25 +305,40 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      * <p>
      * Does the same thing as
      * {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     * with an additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code>
-     * then finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
+     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in
+     * {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     * .
+     * </p>
+     */
+    public java.util.Collection<DesignElementDataVector> find( String queryString,
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+
+    /**
+     * <p>
+     * Does the same thing as
+     * {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     * with an additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
+     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
      * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
      * optionally transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection find( int transform, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
+    public java.util.Collection<DesignElementDataVector> find( int transform,
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * <p>
      * Does the same thing as
      * {@link #find(boolean, ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows
-     * you to override the query string defined in
-     * {@link #find(int, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)}.
+     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #find(int, ubic.gemma.model.expression.arrayDesign.ArrayDesign
+     * arrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)}.
      * </p>
      */
-    public java.util.Collection find( int transform, String queryString,
+    public java.util.Collection<DesignElementDataVector> find( int transform, String queryString,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
@@ -341,7 +352,7 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
     /**
      * 
      */
-    public void thaw( java.util.Collection designElementDataVectors );
+    public void thaw( java.util.Collection<DesignElementDataVector> designElementDataVectors );
 
     /**
      * 
@@ -372,6 +383,7 @@ public interface DesignElementDataVectorDao extends ubic.gemma.model.expression.
      * 'masked' for missing values before typical uses.
      * </p>
      */
-    public java.util.Map getPreferredVectors( java.util.Collection ees, java.util.Collection genes );
+    public java.util.Map getPreferredVectors( java.util.Collection<ExpressionExperiment> ees,
+            java.util.Collection<Gene> genes );
 
 }
