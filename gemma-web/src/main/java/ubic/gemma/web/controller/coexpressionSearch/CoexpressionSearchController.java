@@ -24,11 +24,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject;
 import ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject;
 import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
 import ubic.gemma.model.genome.Gene;
@@ -51,8 +48,6 @@ public class CoexpressionSearchController extends BaseFormController {
 
     private static final int DEFAULT_STRINGENCY = 2;
 
-    private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
-
     private GeneService geneService = null;
     private SearchService searchService = null;
 
@@ -64,24 +59,22 @@ public class CoexpressionSearchController extends BaseFormController {
      * @param searchOptions
      * @return
      */
-    @SuppressWarnings("unchecked")
     public CoexpressionMetaValueObject doSearch( CoexpressionSearchCommand searchOptions ) {
         Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
         this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...s
         log.info( "Coexpression search: " + searchOptions );
         if ( genes == null || genes.isEmpty() ) {
             return getEmptyResult();
-        } else {
-            Long eeSetId = searchOptions.getEeSetId();
-            if ( eeSetId != null && ( eeSetId >= 0 && !searchOptions.isDirty() ) ) {
-                return geneCoexpressionService.getCannedAnalysisResults( eeSetId, genes, searchOptions.getStringency(),
-                        MAX_RESULTS, searchOptions.getQueryGenesOnly() );
-            } else {
-                assert ( searchOptions.getEeIds() != null && searchOptions.getEeIds().size() > 0 );
-                return geneCoexpressionService.getCustomAnalysisResults( searchOptions.getEeIds(), genes, searchOptions
-                        .getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly() );
-            }
         }
+        Long eeSetId = searchOptions.getEeSetId();
+        if ( eeSetId != null && ( eeSetId >= 0 && !searchOptions.isDirty() ) ) {
+            return geneCoexpressionService.getCannedAnalysisResults( eeSetId, genes, searchOptions.getStringency(),
+                    MAX_RESULTS, searchOptions.getQueryGenesOnly() );
+        }
+        assert ( searchOptions.getEeIds() != null && searchOptions.getEeIds().size() > 0 );
+        return geneCoexpressionService.getCustomAnalysisResults( searchOptions.getEeIds(), genes, searchOptions
+                .getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly() );
+
     }
 
     /**
@@ -95,7 +88,6 @@ public class CoexpressionSearchController extends BaseFormController {
         log.info( "Search: " + query + " taxon=" + taxonId );
         return searchService.searchExpressionExperiments( query, taxonId );
     }
-
 
     public CoexpressionMetaValueObject getEmptyResult() {
         return new CoexpressionMetaValueObject();
@@ -115,11 +107,9 @@ public class CoexpressionSearchController extends BaseFormController {
 
     /*
      * Handle case of text export of the results.
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse)
+     * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
+     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    @SuppressWarnings( { "unchecked", "unused" })
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
@@ -163,8 +153,8 @@ public class CoexpressionSearchController extends BaseFormController {
             mav.addObject( "text", output.length() > 0 ? output : "no results" );
             return mav;
 
-        } else {
-            return new ModelAndView( this.getFormView() );
         }
+        return new ModelAndView( this.getFormView() );
+
     }
 }

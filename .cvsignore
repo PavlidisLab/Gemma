@@ -19,3 +19,4 @@ TempFatjarBuildDir_erase_me
 release.properties
 .deployment
 .Rhistory
+bin-groovy
