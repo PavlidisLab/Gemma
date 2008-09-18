@@ -64,7 +64,7 @@ public class VisualizationValueObject {
         setGenes( dvvo.getGenes() );
         
         Collection<DoublePoint> points = new ArrayList<DoublePoint>();
-        double[] data = dvvo.getNormalizedDEDV();
+        double[] data = dvvo.standardize();
         int i = 0;
         for(Double d : data){
             points.add( new DoublePoint(i,d) );

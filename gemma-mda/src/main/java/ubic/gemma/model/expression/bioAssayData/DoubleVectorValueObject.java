@@ -34,15 +34,22 @@ import cern.colt.list.DoubleArrayList;
  */
 public class DoubleVectorValueObject extends DataVectorValueObject {
 
-    boolean masked = false;
-    double[] data = null;
-    Double rankByMean;
-    Double rankByMax;
+    private boolean masked = false;
+    private double[] data = null;
+    private Double rankByMean;
+    private Double rankByMax;
 
+    /**
+     * @param dedv
+     */
     public DoubleVectorValueObject( DesignElementDataVector dedv ) {
         this( dedv, null );
     }
 
+    /**
+     * @param dedv
+     * @param genes
+     */
     public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Gene> genes ) {
         super( dedv, genes );
         QuantitationType qt = dedv.getQuantitationType();
@@ -72,12 +79,35 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         this.masked = masked;
     }
 
+    /**
+     * @return data adjusted to mean 0, variance 1.
+     */
+
+    public double[] standardize() {
+
+        /*
+         * DoubleArrayList constructor does not make a copy, so we have to make one.
+         */
+        double[] copy = new double[this.data.length];
+        for ( int i = 0; i < data.length; i++ ) {
+            copy[i] = data[i];
+        }
+
+        DescriptiveWithMissing.standardize( new DoubleArrayList( copy ) );
+        return copy;
+
+    }
+
     /** 
      */
     public DesignElementDataVector toDesignElementDataVector() {
         return toDesignElementDataVector( null );
     }
 
+    /**
+     * @param updatedQuantitationType
+     * @return
+     */
     public DesignElementDataVector toDesignElementDataVector( QuantitationType updatedQuantitationType ) {
         DesignElementDataVector result;
         if ( this.masked ) {
@@ -98,35 +128,5 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         result.setData( byteArrayConverter.doubleArrayToBytes( this.data ) );
         return result;
     }
-    
-    /**
-     * 
-     * @param mean
-     * @param standardDeviation
-     * @return a normalized data vector with respect to the given mean and standard deviation
-     */
 
-    public double[] getNormalizedDEDV( long mean, long standardDeviation ) {
-        
-       DoubleArrayList normalizedDEDV  = new DoubleArrayList(this.data);
-       DescriptiveWithMissing.standardize( normalizedDEDV, mean, standardDeviation );
-      
-       return normalizedDEDV.elements();       
-    }
-    
-
-    /**
-     * 
-     * @return an array of doubles represeting the normalized data vector with respect to itself
-     */
-
-    public double[] getNormalizedDEDV() {
-        
-       DoubleArrayList normalizedDEDV  = new DoubleArrayList(this.data);
-       DescriptiveWithMissing.standardize( normalizedDEDV );
-      
-       return normalizedDEDV.elements();       
-    }
-
-    
 }
