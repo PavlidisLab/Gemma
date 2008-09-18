@@ -20,9 +20,11 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
 
+import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.genome.Gene;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * Simple wrapper for a double[] that is derived from a DesignElementDataVector.
@@ -96,4 +98,35 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         result.setData( byteArrayConverter.doubleArrayToBytes( this.data ) );
         return result;
     }
+    
+    /**
+     * 
+     * @param mean
+     * @param standardDeviation
+     * @return a normalized data vector with respect to the given mean and standard deviation
+     */
+
+    public double[] getNormalizedDEDV( long mean, long standardDeviation ) {
+        
+       DoubleArrayList normalizedDEDV  = new DoubleArrayList(this.data);
+       DescriptiveWithMissing.standardize( normalizedDEDV, mean, standardDeviation );
+      
+       return normalizedDEDV.elements();       
+    }
+    
+
+    /**
+     * 
+     * @return an array of doubles represeting the normalized data vector with respect to itself
+     */
+
+    public double[] getNormalizedDEDV() {
+        
+       DoubleArrayList normalizedDEDV  = new DoubleArrayList(this.data);
+       DescriptiveWithMissing.standardize( normalizedDEDV );
+      
+       return normalizedDEDV.elements();       
+    }
+
+    
 }

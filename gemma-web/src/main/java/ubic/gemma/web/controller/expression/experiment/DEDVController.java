@@ -19,11 +19,11 @@
 
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.basecode.dataStructure.Point;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -40,6 +41,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 import ubic.gemma.web.view.TextView;
 
 /**
@@ -97,6 +99,51 @@ public class DEDVController extends BaseFormController {
 
     }
 
+    Collection<VisualizationValueObject> getDEDVForVisulization( Collection<Long> eeIds, Collection<Long> geneIds ) {
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+        if ( ees == null || ees.isEmpty() ) return null;
+
+        // Performance note: the above is fast except for the need to security-filter the EEs. This takes 90% of the
+        // time.
+
+        Collection<Gene> genes = geneService.loadMultiple( geneIds );
+        if ( genes == null || genes.isEmpty() ) return null;
+
+        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
+                genes );
+
+        watch.stop();
+        Long time = watch.getTime();
+
+        log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
+                + " genes in " + time + " ms." );
+
+        return makeVisCollection( dedvs );
+
+    }
+
+    /**
+     * Takes the DEDVs and put them in point objects. Get the value objects for the experiment and normalize the values.
+     * 
+     * @param dedvs
+     * @return
+     */
+    private Collection<VisualizationValueObject> makeVisCollection( Collection<DoubleVectorValueObject> dedvs ) {
+
+                
+        Collection<VisualizationValueObject> vvos = new ArrayList<VisualizationValueObject>();
+
+        for ( DoubleVectorValueObject dvvo : dedvs ) {
+            VisualizationValueObject vvo = new VisualizationValueObject(dvvo);
+        }
+        
+        return vvos;
+
+    }
+
     /**
      * @param newResults
      * @return
@@ -139,7 +186,7 @@ public class DEDVController extends BaseFormController {
 
         ModelAndView mav = new ModelAndView( new TextView() );
 
-        if ( geneIds == null || geneIds.isEmpty() || eeIds == null || eeIds.isEmpty() ) {
+        if ( geneIds == null || geneIds.isEmpty() || eeIds == null || eeIds.isEmpty() ) {           
             mav.addObject( "text", "Input empty for finding DEDVs: " + geneIds + " and " + eeIds );
             return mav;
 
