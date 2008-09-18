@@ -258,7 +258,7 @@
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.AggressiveOptimizer</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop> 				
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
-				<prop key="compass.engine.mergeFactor">500</prop>
+				<prop key="compass.engine.mergeFactor">100</prop>
 				<prop key="compass.engine.maxBufferedDocs">100</prop>
 				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
 			</props>
@@ -316,7 +316,7 @@
 				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.AggressiveOptimizer</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop> 				
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
-				<prop key="compass.engine.mergeFactor">500</prop>
+				<prop key="compass.engine.mergeFactor">100</prop>
 				<prop key="compass.engine.maxBufferedDocs">100</prop>
 				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
 			</props>
