@@ -4,7 +4,7 @@
 	<groupId>gemma</groupId>
 	<name>Gemma MDA</name>
 	<description>
-	<![CDATA[Model-driven architecture generated code and implementations.]]>
+		<![CDATA[Model-driven architecture generated code and implementations.]]>
 	</description>
 	<artifactId>gemma-mda</artifactId>
 	<version>1.2.1-SNAPSHOT</version>
@@ -58,7 +58,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.andromda.maven.plugins</groupId>
 				<artifactId>andromda-multi-source-plugin</artifactId>
@@ -223,24 +223,6 @@
 						</configuration>
 					</execution>
 				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>xdoclet</groupId>
-						<artifactId>xjavadoc</artifactId>
-						<version>1.1</version>
-					</dependency>
-					<dependency>
-						<groupId>xdoclet</groupId>
-						<artifactId>xdoclet-spring-module</artifactId>
-						<version>1.2.3</version>
-						<scope>compile</scope>
-					</dependency>
-					<dependency>
-						<groupId>ant</groupId>
-						<artifactId>ant</artifactId>
-						<version>1.6.5</version>
-					</dependency>
-				</dependencies>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -255,7 +237,8 @@
 						</taskdef>
 						<mkdir dir="target/schema" />
 						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
-							output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
+							output="${project.build.directory}/schema/gemma-ddl.sql"
+							properties="${basedir}/src/main/resources/hibernate.properties">
 							<fileset dir="target/generated-sources/resources" includes="**/*.hbm.xml" />
 						</schemaexport>
 					</tasks>
@@ -352,7 +335,7 @@
 									<url>${bootstrap.db.url}</url>
 									<autocommit>false</autocommit>
 									<sqlCommand>
-									<![CDATA[drop database if exists gemdtest]]>
+										<![CDATA[drop database if exists gemdtest]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
@@ -365,7 +348,7 @@
 								<configuration>
 									<url>${bootstrap.db.url}</url>
 									<sqlCommand>
-									<![CDATA[create database gemdtest]]>
+										<![CDATA[create database gemdtest]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
@@ -458,7 +441,7 @@
 									<url>${bootstrap.db.url}</url>
 									<autocommit>false</autocommit>
 									<sqlCommand>
-									<![CDATA[drop database if exists gemd]]>
+										<![CDATA[drop database if exists gemd]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
@@ -471,7 +454,7 @@
 								<configuration>
 									<url>${bootstrap.db.url}</url>
 									<sqlCommand>
-									<![CDATA[create database gemd]]>
+										<![CDATA[create database gemd]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
