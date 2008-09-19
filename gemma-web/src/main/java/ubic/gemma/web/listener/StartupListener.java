@@ -32,9 +32,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.acegisecurity.providers.AuthenticationProvider;
-import org.acegisecurity.providers.ProviderManager;
-import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -43,6 +40,9 @@ import org.apache.commons.logging.LogFactory;
 import org.quartz.impl.StdScheduler;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.providers.AuthenticationProvider;
+import org.springframework.security.providers.ProviderManager;
+import org.springframework.security.providers.rememberme.RememberMeAuthenticationProvider;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -88,7 +88,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
      * </pre>
      */
     private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
-    
+
     private static final String QUARTZ = "quartzOn";
 
     private static final Log log = LogFactory.getLog( StartupListener.class );
@@ -115,7 +115,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         loadTheme( servletContext, config );
 
         loadVersionInformation( config );
-        
+
         loadTrackerInformation( config );
 
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( servletContext );
@@ -131,15 +131,12 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         copyWorkerJars( servletContext );
 
         initializeOntologies( ctx );
-  
 
-        if (!ConfigUtils.getBoolean(QUARTZ, false)){
+        if ( !ConfigUtils.getBoolean( QUARTZ, false ) ) {
             QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
-            log.info("Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
-        } 
-        else
-            log.info("Quartz scheduling enableded.  Set quartzOn=false in Gemma.properties to disable" );
-            
+            log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
+        } else
+            log.info( "Quartz scheduling enableded.  Set quartzOn=false in Gemma.properties to disable" );
 
         sw.stop();
 

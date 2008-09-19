@@ -18,7 +18,7 @@
  */
 package ubic.gemma.security.afterInvocation;
 
-import org.acegisecurity.afterinvocation.AfterInvocationProvider;
+import org.springframework.security.afterinvocation.AfterInvocationProvider;
 
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.expression.bioAssayData.DataVectorValueObject;

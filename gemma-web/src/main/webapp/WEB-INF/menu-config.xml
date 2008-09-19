@@ -39,7 +39,7 @@
 			<Item name="Credits" description="Credits and more" title="resourcesMenu.credits"
 				location="http://bioinformatics.ubc.ca/Gemma/resources/thanks.html" />
 		</Menu>
-		<Menu name="UserMenu" title="menu.user" description="User Menu" page="/editProfile.html" roles="admin,user" />
+		<Menu name="UserMenu" title="menu.user" description="User Menu" page="/userProfile.html" roles="admin,user" />
 		<Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="admin">
 			<Item name="LoadData" title="Load data" page="/loadExpressionExperiment.html" />
 			<Item name="BrowseGeo" title="Browse GEO" page="/geoBrowser/showBatch.html" />

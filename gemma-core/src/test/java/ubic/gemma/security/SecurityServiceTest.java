@@ -21,7 +21,7 @@ package ubic.gemma.security;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.acegisecurity.acl.basic.BasicAclExtendedDao;
+import org.springframework.security.acl.basic.BasicAclExtendedDao;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -68,7 +68,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
          * Note: You will not see the acl_permission and acl_object_identity in the database unless you add the method
          * invocaction to setComplete() at the end of this onSetUpInTransaction.
          */
-        log.info( "Turn up the logging levels to DEBUG on the acegi and gemma security packages" );
+        log.info( "Turn up the logging levels to DEBUG on the spring and gemma security packages" );
 
         super.onSetUpInTransaction(); // admin
 

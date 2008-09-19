@@ -10,7 +10,7 @@
 	<span class="left">Centre for High-Throughput Biology&nbsp;|&nbsp;Copyright &copy; 2007-2008 &nbsp;</span>
 
 	<c:if test="${pageContext.request.remoteUser != null}">
-		<span class="right"> | <fmt:message key="user.status" /> <authz:authentication operation="username" /> | <a
+		<span class="right"> | <fmt:message key="user.status" /> <authz:authentication property="principal.username" /> | <a
 			href="<c:url value="/logout.html"/>"> <fmt:message key="user.logout" /> </a> </span>
 
 	</c:if>

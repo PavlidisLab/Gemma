@@ -18,7 +18,7 @@
  */
 package ubic.gemma.security.afterInvocation;
 
-import org.acegisecurity.afterinvocation.AfterInvocationProvider;
+import org.springframework.security.afterinvocation.AfterInvocationProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

@@ -21,9 +21,9 @@ package ubic.gemma.security;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.acegisecurity.AccessDeniedException;
-import org.acegisecurity.acl.basic.BasicAclExtendedDao;
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.AccessDeniedException;
+import org.springframework.security.acl.basic.BasicAclExtendedDao;
+import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.model.common.SecurableDao;

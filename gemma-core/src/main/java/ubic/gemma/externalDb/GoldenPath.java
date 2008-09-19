@@ -147,15 +147,18 @@ public class GoldenPath {
         jt.setDataSource( dataSource );
 
         try {
-            Class.forName( dataSource.getDriverClassName() ).newInstance();
+            // FIXME This was removed when upgrading to Spring 2.5.5. If this is not needed, remove it.
+            // Class.forName( dataSource.getDriverClassName() ).newInstance();
             conn = DriverManager.getConnection( url, user, password );
-        } catch ( InstantiationException e ) {
+        } catch ( SQLException e ) {
             throw new RuntimeException( e );
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( ClassNotFoundException e ) {
-            throw new RuntimeException( e );
-        }
+        }// catch ( InstantiationException e ) {
+        // throw new RuntimeException( e );
+        // } catch ( IllegalAccessException e ) {
+        // throw new RuntimeException( e );
+        // } catch ( ClassNotFoundException e ) {
+        // throw new RuntimeException( e );
+        // }
 
         qr = new QueryRunner();
     }

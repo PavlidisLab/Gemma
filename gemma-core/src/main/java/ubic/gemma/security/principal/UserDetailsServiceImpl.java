@@ -21,23 +21,24 @@ package ubic.gemma.security.principal;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.providers.ProviderManager;
-import org.acegisecurity.userdetails.UserDetails;
-import org.acegisecurity.userdetails.UserDetailsService;
-import org.acegisecurity.userdetails.UsernameNotFoundException;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.Authentication;
+import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.providers.ProviderManager;
+import org.springframework.security.userdetails.UserDetails;
+import org.springframework.security.userdetails.UserDetailsService;
+import org.springframework.security.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
+import ubic.gemma.util.SecurityUtil;
 
 /**
- * Implementation for Acegi
+ * Implementation for Spring Security.
  * 
  * @author pavlidis
  * @version $Id$
@@ -59,7 +60,7 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
     /*
      * (non-Javadoc)
      * 
-     * @see org.acegisecurity.userdetails.UserDetailsService#loadUserByUsername(java.lang.String)
+     * @see org.springframework.security.userdetails.UserDetailsService#loadUserByUsername(java.lang.String)
      */
     public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
         User u = getUserForUserName( username );
@@ -86,7 +87,18 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
         String[] strings = StringUtils.split( username, "=" );
         if ( strings.length > 1 ) username = strings[1];
 
-        User u = userService.findByUserName( username );
+        /*
+         * When "signing up", or adding a new user to the system without being logged in (ie. anonymous), the
+         * AuditInterceptor calls this method (indirectly via UserDetailsServiceImpl.getCurrentUser(). Since this does a
+         * sql select, there must be a user in the system that can be selected since anonymous doesn't exist in the
+         * database)
+         */
+        User u = null;
+        if ( StringUtils.equals( username, SecurityUtil.ANONYMOUS ) ) {
+            username = SecurityUtil.GUEST_USERNAME;
+        }
+
+        u = userService.findByUserName( username );
 
         if ( u == null ) {
             throw new UsernameNotFoundException( username + " not found" );

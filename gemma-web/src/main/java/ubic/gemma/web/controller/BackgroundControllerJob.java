@@ -22,12 +22,12 @@ import java.util.concurrent.Callable;
 
 import javax.servlet.http.HttpSession;
 
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.directwebremoting.WebContext;
 import org.directwebremoting.WebContextFactory;
+import org.springframework.security.context.SecurityContext;
+import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.validation.BindException;
 
 import ubic.gemma.web.util.MessageUtil;
@@ -58,11 +58,11 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
     public void setErrors( BindException errors ) {
         this.errors = errors;
     }
-    
-    public void setDoForward(boolean doForward) {
+
+    public void setDoForward( boolean doForward ) {
         this.doForward = doForward;
     }
-    
+
     public boolean getDoForward() {
         return this.doForward;
     }

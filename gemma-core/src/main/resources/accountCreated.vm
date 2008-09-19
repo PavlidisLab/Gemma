@@ -1,6 +1,6 @@
 ${message}
 
-Username: ${userName}
-Password: ${userPassword}
+Username: ${username}
+Password: ${password}
 
-Login at: ${applicationURL}
+Change Password: ${editProfileURL}

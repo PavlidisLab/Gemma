@@ -18,7 +18,7 @@
  */
 package ubic.gemma.security.authentication;
 
-import org.acegisecurity.BadCredentialsException;
+import org.springframework.security.BadCredentialsException;
 
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;

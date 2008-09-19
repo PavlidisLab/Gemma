@@ -18,12 +18,13 @@
  */
 package ubic.gemma.security.principal;
 
-import org.acegisecurity.AuthenticationManager;
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.providers.anonymous.AnonymousAuthenticationToken;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.AuthenticationManager;
+import org.springframework.security.GrantedAuthority;
+import org.springframework.security.GrantedAuthorityImpl;
+import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.providers.anonymous.AnonymousAuthenticationToken;
 
 /**
  * Common methods for authenticating users.
@@ -40,12 +41,8 @@ public class AuthenticationUtils {
      */
     public static void anonymousAuthenticate( String username, AuthenticationManager manager ) {
         log.debug( "No authentication object in context, providing anonymous authentication" );
-        org.acegisecurity.Authentication authRequest = new AnonymousAuthenticationToken( "anonymous", username,
-                new GrantedAuthority[] { new GrantedAuthority() {
-                    public String getAuthority() {
-                        return "ROLE_ANONYMOUS";
-                    }
-                } } );
+        org.springframework.security.Authentication authRequest = new AnonymousAuthenticationToken( "anonymous",
+                username, new GrantedAuthority[] { new GrantedAuthorityImpl( "ROLE_ANONYMOUS" ) } );
         authRequest = manager.authenticate( authRequest );
         assert authRequest.isAuthenticated();
         SecurityContextHolder.getContext().setAuthentication( authRequest );

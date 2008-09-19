@@ -27,10 +27,10 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionBindingEvent;
 
-import org.acegisecurity.context.HttpSessionContextIntegrationFilter;
-import org.acegisecurity.context.SecurityContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.context.HttpSessionContextIntegrationFilter;
+import org.springframework.security.context.SecurityContext;
 
 /**
  * UserCounterListener class used to count the current number of active users for the applications. Does this by
@@ -48,7 +48,7 @@ import org.apache.commons.logging.LogFactory;
 public class UserCounterListener implements ServletContextListener, HttpSessionAttributeListener {
     public static final String COUNT_KEY = "userCounter";
     public static final String USERS_KEY = "userNames";
-    public static final String EVENT_KEY = HttpSessionContextIntegrationFilter.ACEGI_SECURITY_CONTEXT_KEY;
+    public static final String EVENT_KEY = HttpSessionContextIntegrationFilter.SPRING_SECURITY_CONTEXT_KEY;
     private final transient Log log = LogFactory.getLog( UserCounterListener.class );
     private transient ServletContext servletContext;
     private int counter;

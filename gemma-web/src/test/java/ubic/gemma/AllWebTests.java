@@ -21,8 +21,6 @@ package ubic.gemma;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.web.controller.TaskRunningTest;
-import ubic.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
-import ubic.gemma.web.controller.common.auditAndSecurity.UserFormControllerTest;
 import ubic.gemma.web.controller.common.description.BibRefControllerTest;
 import ubic.gemma.web.controller.common.description.bibref.PubMedQueryControllerTest;
 import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerTest;
@@ -49,9 +47,6 @@ import ubic.gemma.web.validation.ValidationTest;
 public class AllWebTests extends TestSuite {
     public static Test suite() {
         TestSuite suite = new TestSuite( "Tests for gemma-web" );
-
-        suite.addTestSuite( SignupControllerTest.class );
-        suite.addTestSuite( UserFormControllerTest.class );
 
         suite.addTestSuite( BibRefControllerTest.class );
 

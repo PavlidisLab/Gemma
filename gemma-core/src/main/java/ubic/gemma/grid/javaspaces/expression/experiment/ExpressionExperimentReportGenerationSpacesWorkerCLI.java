@@ -20,7 +20,7 @@ package ubic.gemma.grid.javaspaces.expression.experiment;
 
 import net.jini.space.JavaSpace;
 
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

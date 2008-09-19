@@ -28,9 +28,9 @@ import java.util.Queue;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressJob;
@@ -106,9 +106,10 @@ public class UploadListener implements OutputStreamListener {
         if ( newPercent > oldPercent + 5 || newPercent == 100 ) {
             pJob.updateProgress( newPercent );
             // FIXME the oldPercent is always zero.
-            log.debug( newPercent + "% read (" + totalBytesRead + "/" + totalToRead + " bytes) old percent=" + oldPercent );
+            log.debug( newPercent + "% read (" + totalBytesRead + "/" + totalToRead + " bytes) old percent="
+                    + oldPercent );
         }
-       
+
         if ( delay > 0 ) {
             try {
                 Thread.sleep( delay );

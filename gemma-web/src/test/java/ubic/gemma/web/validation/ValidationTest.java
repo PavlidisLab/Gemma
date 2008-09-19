@@ -18,10 +18,10 @@
  */
 package ubic.gemma.web.validation;
 
-import org.acegisecurity.providers.encoding.ShaPasswordEncoder;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.validator.Validator;
 import org.apache.commons.validator.ValidatorException;
+import org.springframework.security.providers.encoding.ShaPasswordEncoder;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springmodules.validation.commons.DefaultValidatorFactory;

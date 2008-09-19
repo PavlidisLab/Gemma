@@ -18,8 +18,8 @@
  */
 package ubic.gemma.security.interceptor;
 
-import org.acegisecurity.acl.basic.BasicAclExtendedDao;
-import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
+import org.springframework.security.acl.basic.BasicAclExtendedDao;
+import org.springframework.security.acl.basic.NamedEntityObjectIdentity;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.protocol.Hardware;

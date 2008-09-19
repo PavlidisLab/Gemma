@@ -22,15 +22,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.acegisecurity.AccessDeniedException;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.ConfigAttribute;
-import org.acegisecurity.ConfigAttributeDefinition;
-import org.acegisecurity.acl.AclEntry;
-import org.acegisecurity.acl.AclManager;
-import org.acegisecurity.acl.basic.AbstractBasicAclEntry;
-import org.acegisecurity.acl.basic.SimpleAclEntry;
-import org.acegisecurity.afterinvocation.AfterInvocationProvider;
+import org.springframework.security.AccessDeniedException;
+import org.springframework.security.Authentication;
+import org.springframework.security.ConfigAttribute;
+import org.springframework.security.ConfigAttributeDefinition;
+import org.springframework.security.acl.AclEntry;
+import org.springframework.security.acl.AclManager;
+import org.springframework.security.acl.basic.AbstractBasicAclEntry;
+import org.springframework.security.acl.basic.SimpleAclEntry;
+import org.springframework.security.afterinvocation.AfterInvocationProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.Securable;
@@ -82,8 +82,9 @@ public abstract class ByAssociatedObjectFilter implements AfterInvocationProvide
     @SuppressWarnings("unused")
     public final Object decide( Authentication authentication, Object object, ConfigAttributeDefinition config,
             Object returnedObject ) throws AccessDeniedException {
-
-        Iterator iter = config.getConfigAttributes();
+        
+        Collection configAttribs = config.getConfigAttributes();
+        Iterator iter = configAttribs.iterator();
 
         while ( iter.hasNext() ) {
             ConfigAttribute attr = ( ConfigAttribute ) iter.next();

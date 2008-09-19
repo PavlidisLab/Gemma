@@ -10,7 +10,7 @@
 <%@ taglib uri="http://www.opensymphony.com/oscache" prefix="cache" %>
 <%@ taglib uri="http://www.opensymphony.com/sitemesh/decorator" prefix="decorator"%>
 <%@ taglib uri="http://www.opensymphony.com/sitemesh/page" prefix="page"%>
-<%@ taglib uri="http://acegisecurity.org/authz" prefix="authz"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="authz"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <%@ taglib uri="/WEB-INF/Gemma.tld" prefix="Gemma"%>
 <%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa"%>

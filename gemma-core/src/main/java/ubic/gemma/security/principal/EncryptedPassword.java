@@ -18,7 +18,7 @@
  */
 package ubic.gemma.security.principal;
 
-import org.acegisecurity.providers.encoding.ShaPasswordEncoder;
+import org.springframework.security.providers.encoding.ShaPasswordEncoder;
 
 /**
  * Use to generate encrypted passwords given password and salt, for use in initializing test databases.

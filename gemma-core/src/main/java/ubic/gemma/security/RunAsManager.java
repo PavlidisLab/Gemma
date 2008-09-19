@@ -18,10 +18,11 @@
  */
 package ubic.gemma.security;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.ConfigAttributeDefinition;
-import org.acegisecurity.SecurityConfig;
-import org.acegisecurity.runas.RunAsManagerImpl;
+import org.springframework.security.Authentication;
+import org.springframework.security.ConfigAttribute;
+import org.springframework.security.ConfigAttributeDefinition;
+import org.springframework.security.SecurityConfig;
+import org.springframework.security.runas.RunAsManagerImpl;
 
 /**
  * @author keshav
@@ -40,8 +41,10 @@ public class RunAsManager {
     public Authentication buildRunAs( Object object, Authentication authentication, String recipient ) {
         RunAsManagerImpl runAsManager = new RunAsManagerImpl();
         runAsManager.setKey( recipient );
-        ConfigAttributeDefinition attributeDefinition = new ConfigAttributeDefinition();
-        attributeDefinition.addConfigAttribute( new SecurityConfig( "RUN_AS_" + recipient ) );
+        ConfigAttribute attrib = new SecurityConfig( "RUN_AS_" + recipient );
+
+        ConfigAttributeDefinition attributeDefinition = new ConfigAttributeDefinition( attrib );
+
         return runAsManager.buildRunAs( authentication, object, attributeDefinition );
     }
 

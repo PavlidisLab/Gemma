@@ -24,8 +24,8 @@ import java.util.concurrent.FutureTask;
 import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
 
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.context.SecurityContext;
+import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;

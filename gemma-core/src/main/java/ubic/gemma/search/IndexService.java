@@ -22,16 +22,16 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.acegisecurity.context.SecurityContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.spi.InternalCompass;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.compass.spring.web.mvc.CompassIndexResults;
+import org.springframework.security.context.SecurityContext;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
 import ubic.gemma.grid.javaspaces.AbstractSpacesProgressService;
+
 import ubic.gemma.grid.javaspaces.index.IndexGemmaResult;
 import ubic.gemma.grid.javaspaces.index.IndexGemmaTask;
 import ubic.gemma.grid.javaspaces.index.SpacesIndexGemmaCommand;
@@ -237,7 +237,7 @@ public class IndexService extends AbstractSpacesProgressService {
 	 * (non-Javadoc)
 	 * 
 	 * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#getSpaceRunner(java.lang.String,
-	 *      org.acegisecurity.context.SecurityContext,
+	 *      org.springframework.security.context.SecurityContext,
 	 *      javax.servlet.http.HttpServletRequest, java.lang.Object,
 	 *      ubic.gemma.web.util.MessageUtil)
 	 */

@@ -23,7 +23,7 @@ CREATE TABLE acl_permission (
 ) TYPE=InnoDB;
 
 --- (id, object identity (of form class:getId()), parent object, acl class)
-INSERT INTO acl_object_identity VALUES (1, 'globalDummyParent:1', null, 'org.acegisecurity.acl.basic.SimpleAclEntry');
+INSERT INTO acl_object_identity VALUES (1, 'globalDummyParent:1', null, 'org.springframework.security.acl.basic.SimpleAclEntry');
 
 --- (id, acl object identity, recepient (principal username), mask)
 INSERT INTO acl_permission VALUES (null, 1, 'administrator', 1);

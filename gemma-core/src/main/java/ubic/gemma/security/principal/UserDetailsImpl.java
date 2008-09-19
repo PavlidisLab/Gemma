@@ -20,8 +20,9 @@ package ubic.gemma.security.principal;
 
 import java.util.Collection;
 
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.userdetails.UserDetails;
+import org.springframework.security.GrantedAuthority;
+import org.springframework.security.GrantedAuthorityImpl;
+import org.springframework.security.userdetails.UserDetails;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
@@ -102,7 +103,7 @@ public class UserDetailsImpl implements UserDetails {
     /*
      * (non-Javadoc)
      * 
-     * @see org.acegisecurity.userdetails.UserDetails#getAuthorities()
+     * @see org.springframework.security.userdetails.UserDetails#getAuthorities()
      */
     @SuppressWarnings("serial")
     public GrantedAuthority[] getAuthorities() {
@@ -110,11 +111,7 @@ public class UserDetailsImpl implements UserDetails {
         int i = 0;
         for ( UserRole role : getRoles() ) {
             final String name = role.getName();
-            result[i] = new GrantedAuthority() {
-                public String getAuthority() {
-                    return name;
-                }
-            };
+            result[i] = new GrantedAuthorityImpl( name );
             i++;
         }
         return result;
@@ -130,7 +127,7 @@ public class UserDetailsImpl implements UserDetails {
     /*
      * (non-Javadoc)
      * 
-     * @see org.acegisecurity.userdetails.UserDetails#getUsername()
+     * @see org.springframework.security.userdetails.UserDetails#getUsername()
      */
     public String getUsername() {
         return userName;
@@ -139,7 +136,7 @@ public class UserDetailsImpl implements UserDetails {
     /*
      * (non-Javadoc)
      * 
-     * @see org.acegisecurity.userdetails.UserDetails#isAccountNonExpired()
+     * @see org.springframework.security.userdetails.UserDetails#isAccountNonExpired()
      */
     public boolean isAccountNonExpired() {
         return enabled;
@@ -148,7 +145,7 @@ public class UserDetailsImpl implements UserDetails {
     /*
      * (non-Javadoc)
      * 
-     * @see org.acegisecurity.userdetails.UserDetails#isAccountNonLocked()
+     * @see org.springframework.security.userdetails.UserDetails#isAccountNonLocked()
      */
     public boolean isAccountNonLocked() {
         return enabled;
@@ -157,7 +154,7 @@ public class UserDetailsImpl implements UserDetails {
     /*
      * (non-Javadoc)
      * 
-     * @see org.acegisecurity.userdetails.UserDetails#isCredentialsNonExpired()
+     * @see org.springframework.security.userdetails.UserDetails#isCredentialsNonExpired()
      */
     public boolean isCredentialsNonExpired() {
         return enabled;
@@ -166,7 +163,7 @@ public class UserDetailsImpl implements UserDetails {
     /*
      * (non-Javadoc)
      * 
-     * @see org.acegisecurity.userdetails.UserDetails#isEnabled()
+     * @see org.springframework.security.userdetails.UserDetails#isEnabled()
      */
     public boolean isEnabled() {
         return enabled;
@@ -184,7 +181,7 @@ public class UserDetailsImpl implements UserDetails {
     /*
      * (non-Javadoc)
      * 
-     * @see org.acegisecurity.userdetails.UserDetails#getPassword()
+     * @see org.springframework.security.userdetails.UserDetails#getPassword()
      */
     public String getPassword() {
         return password;

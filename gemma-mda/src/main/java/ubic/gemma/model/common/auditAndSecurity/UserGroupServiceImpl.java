@@ -25,7 +25,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

@@ -24,9 +24,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.acegisecurity.context.SecurityContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.context.SecurityContext;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.util.progress.ProgressJob;

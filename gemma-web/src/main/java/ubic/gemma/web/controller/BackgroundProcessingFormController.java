@@ -20,8 +20,8 @@ package ubic.gemma.web.controller;
 
 import java.util.concurrent.FutureTask;
 
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.context.SecurityContext;
+import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -37,7 +37,6 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="taskRunningService" ref="taskRunningService"
  */
 public abstract class BackgroundProcessingFormController extends BaseFormController {
-
 
     protected TaskRunningService taskRunningService;
 

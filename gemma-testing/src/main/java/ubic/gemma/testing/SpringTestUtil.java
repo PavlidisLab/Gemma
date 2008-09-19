@@ -18,14 +18,14 @@
  */
 package ubic.gemma.testing;
 
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.GrantedAuthorityImpl;
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.providers.AbstractAuthenticationToken;
-import org.acegisecurity.providers.ProviderManager;
-import org.acegisecurity.providers.TestingAuthenticationProvider;
-import org.acegisecurity.providers.TestingAuthenticationToken;
+import org.springframework.security.GrantedAuthority;
+import org.springframework.security.GrantedAuthorityImpl;
+import org.springframework.security.context.SecurityContext;
+import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.providers.AbstractAuthenticationToken;
+import org.springframework.security.providers.ProviderManager;
+import org.springframework.security.providers.TestingAuthenticationProvider;
+import org.springframework.security.providers.TestingAuthenticationToken;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**

@@ -20,8 +20,8 @@ package ubic.gemma.security.acl.basic.jdbc;
 
 import javax.sql.DataSource;
 
-import org.acegisecurity.acl.basic.AbstractBasicAclEntry;
-import org.acegisecurity.acl.basic.BasicAclEntry;
+import org.springframework.security.acl.basic.AbstractBasicAclEntry;
+import org.springframework.security.acl.basic.BasicAclEntry;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**

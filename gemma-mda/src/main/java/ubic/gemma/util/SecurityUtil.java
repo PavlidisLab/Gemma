@@ -18,12 +18,12 @@
  */
 package ubic.gemma.util;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
-import org.acegisecurity.userdetails.UserDetails;
-import org.acegisecurity.userdetails.UserDetailsService;
+import org.springframework.security.Authentication;
+import org.springframework.security.GrantedAuthority;
+import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.providers.UsernamePasswordAuthenticationToken;
+import org.springframework.security.userdetails.UserDetails;
+import org.springframework.security.userdetails.UserDetailsService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -36,6 +36,9 @@ import ubic.gemma.model.common.auditAndSecurity.UserImpl;
  */
 public class SecurityUtil {
     private static Log log = LogFactory.getLog( SecurityUtil.class );
+
+    public static final String ANONYMOUS = "anonymous";
+    public static final String GUEST_USERNAME = "test";
 
     /**
      * @param userDetails
