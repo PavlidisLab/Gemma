@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -50,7 +52,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends ubic.gemma.model.asso
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#load(java.lang.Long)
      */
     @Override
-    public ubic.gemma.model.association.Relationship load( java.lang.Long id ) {
+    public Gene2GeneCoexpression load( java.lang.Long id ) {
         return ( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression ) this.load( TRANSFORM_NONE, id );
     }
 
@@ -59,7 +61,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends ubic.gemma.model.asso
      */
     @Override
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+    public java.util.Collection<Gene2GeneCoexpression> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -67,7 +69,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends ubic.gemma.model.asso
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#loadAll(int)
      */
     @Override
-    public java.util.Collection loadAll( final int transform ) {
+    public java.util.Collection<Gene2GeneCoexpression> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionImpl.class );
         this.transformEntities( transform, results );
@@ -122,8 +124,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends ubic.gemma.model.asso
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene2GeneCoexpression.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.association.coexpression.Gene2GeneCoexpression entity = ( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression ) this
-                .load( id );
+        ubic.gemma.model.association.coexpression.Gene2GeneCoexpression entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -144,8 +145,8 @@ public abstract class Gene2GeneCoexpressionDaoBase extends ubic.gemma.model.asso
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(ubic.gemma.model.genome.Gene,
      *      int, int)
      */
-    public java.util.Collection findCoexpressionRelationships( final ubic.gemma.model.genome.Gene gene,
-            final int stringency, final int maxResults ) {
+    public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships(
+            final ubic.gemma.model.genome.Gene gene, final int stringency, final int maxResults ) {
         try {
             return this.handleFindCoexpressionRelationships( gene, stringency, maxResults );
         } catch ( Throwable th ) {
@@ -158,14 +159,14 @@ public abstract class Gene2GeneCoexpressionDaoBase extends ubic.gemma.model.asso
     /**
      * Performs the core logic for {@link #findCoexpressionRelationships(ubic.gemma.model.genome.Gene, int, int)}
      */
-    protected abstract java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene gene,
-            int stringency, int maxResults ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships(
+            ubic.gemma.model.genome.Gene gene, int stringency, int maxResults ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(java.util.Collection,
      *      int, int)
      */
-    public java.util.Map findCoexpressionRelationships( final java.util.Collection genes, final int stringency,
+    public java.util.Map findCoexpressionRelationships( final java.util.Collection<Gene> genes, final int stringency,
             final int maxResults ) {
         try {
             return this.handleFindCoexpressionRelationships( genes, stringency, maxResults );
@@ -179,14 +180,15 @@ public abstract class Gene2GeneCoexpressionDaoBase extends ubic.gemma.model.asso
     /**
      * Performs the core logic for {@link #findCoexpressionRelationships(java.util.Collection, int, int)}
      */
-    protected abstract java.util.Map handleFindCoexpressionRelationships( java.util.Collection genes, int stringency,
-            int maxResults ) throws java.lang.Exception;
+    protected abstract java.util.Map handleFindCoexpressionRelationships( java.util.Collection<Gene> genes,
+            int stringency, int maxResults ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findInterCoexpressionRelationships(java.util.Collection,
      *      int)
      */
-    public java.util.Map findInterCoexpressionRelationships( final java.util.Collection genes, final int stringency ) {
+    public java.util.Map findInterCoexpressionRelationships( final java.util.Collection<Gene> genes,
+            final int stringency ) {
         try {
             return this.handleFindInterCoexpressionRelationships( genes, stringency );
         } catch ( Throwable th ) {
@@ -199,7 +201,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends ubic.gemma.model.asso
     /**
      * Performs the core logic for {@link #findInterCoexpressionRelationships(java.util.Collection, int)}
      */
-    protected abstract java.util.Map handleFindInterCoexpressionRelationships( java.util.Collection genes,
+    protected abstract java.util.Map handleFindInterCoexpressionRelationships( java.util.Collection<Gene> genes,
             int stringency ) throws java.lang.Exception;
 
     /**
@@ -215,9 +217,9 @@ public abstract class Gene2GeneCoexpressionDaoBase extends ubic.gemma.model.asso
      * @return the transformed entity (i.e. new value object, etc)
      * @see #transformEntities(int,java.util.Collection)
      */
-    protected Object transformEntity( final int transform,
+    protected Gene2GeneCoexpression transformEntity( final int transform,
             final ubic.gemma.model.association.coexpression.Gene2GeneCoexpression entity ) {
-        Object target = null;
+        Gene2GeneCoexpression target = null;
         if ( entity != null ) {
             switch ( transform ) {
                 case TRANSFORM_NONE: // fall-through

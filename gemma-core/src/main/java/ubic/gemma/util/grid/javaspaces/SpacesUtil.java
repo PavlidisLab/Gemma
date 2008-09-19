@@ -46,7 +46,7 @@ import com.j_spaces.core.client.SpaceFinder;
 import com.j_spaces.core.exception.StatisticsNotAvailable;
 
 /**
- * A utility class to test gigaspaces features such as if the space is running, whether to add the gigaspaces beans to
+ * A utility class to test javaspaces features such as if the space is running, whether to add the gigaspaces beans to
  * the spring context, whether workers are available, etc. This class is {@link ApplicationContextAware} and therefore
  * knows about the context that creates it.
  * 
@@ -63,8 +63,6 @@ public class SpacesUtil implements ApplicationContextAware {
     private static final String GIGASPACES_TEMPLATE = "gigaspacesTemplate";
 
     private static Log log = LogFactory.getLog( SpacesUtil.class );
-
-    private static final String GIGASPACES_SPRING_CONTEXT = "ubic/gemma/gigaspaces.xml";
 
     private ApplicationContext applicationContext = null;
 
@@ -94,15 +92,6 @@ public class SpacesUtil implements ApplicationContextAware {
     }
 
     /**
-     * Add the gigaspaces contexts to the other spring contexts.
-     * 
-     * @param paths
-     */
-    public static void addGigaspacesContextToPaths( List<String> paths ) {
-        paths.add( "classpath*:" + GIGASPACES_SPRING_CONTEXT );
-    }
-
-    /**
      * First checks if the space is running at url. If space is running, adds the gigaspaces beans to the context if
      * they do not exist. If the space is not running, returns the original context.
      * 
@@ -120,12 +109,9 @@ public class SpacesUtil implements ApplicationContextAware {
         }
 
         if ( !contextContainsGigaspaces() ) {
-
             return SpringContextUtil.addResourceToContext( applicationContext, new ClassPathResource(
-                    GIGASPACES_SPRING_CONTEXT ) );
-        }
-
-        else {
+                    SpringContextUtil.GRID_SPRING_BEAN_CONFIG ) );
+        } else {
             log.info( "Application context unchanged. Gigaspaces beans already exist." );
         }
 
@@ -206,8 +192,7 @@ public class SpacesUtil implements ApplicationContextAware {
      * environment configuration.
      */
     public static void logRuntimeConfigurationReport() {
-        IJSpaceContainerAdmin admin = ( IJSpaceContainerAdmin ) SpacesUtil
-                .getContainerSpaceAdmin( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        IJSpaceContainerAdmin admin = getContainerSpaceAdmin( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         if ( admin != null ) {
             try {
@@ -350,8 +335,7 @@ public class SpacesUtil implements ApplicationContextAware {
      */
     public void cancel( Object taskId ) {
 
-        ApplicationContext updatedContext = addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
-                .getSpaceUrl() );
+        ApplicationContext updatedContext = addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         if ( !updatedContext.containsBean( GIGASPACES_TEMPLATE ) ) {
             log.warn( "Cannot cancel space task because the space is not running. This might be benign." );

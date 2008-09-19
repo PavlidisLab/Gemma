@@ -51,7 +51,7 @@ public abstract class OtherGeneCoExpressionDaoBase extends
      * @see ubic.gemma.model.association.coexpression.OtherGeneCoExpressionDao#load(java.lang.Long)
      */
     @Override
-    public ubic.gemma.model.association.Relationship load( java.lang.Long id ) {
+    public Gene2GeneCoexpression load( java.lang.Long id ) {
         return ( ubic.gemma.model.association.coexpression.OtherGeneCoExpression ) this.load( TRANSFORM_NONE, id );
     }
 

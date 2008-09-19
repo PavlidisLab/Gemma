@@ -32,7 +32,7 @@ import ubic.gemma.scheduler.SchedulerFactoryBeanTest;
 import ubic.gemma.security.AllSecurityTests;
 import ubic.gemma.util.BusinessKeyTest;
 import ubic.gemma.util.TaxonUtilityTest;
-import ubic.gemma.util.gemmaspaces.SpacesUtilTest;
+import ubic.gemma.util.grid.SpacesUtilTest;
 import ubic.gemma.util.progress.ProgressAppenderTest;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationServiceTest;
 

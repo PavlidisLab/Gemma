@@ -149,6 +149,12 @@
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
+			<artifactId>gemma-testing</artifactId>
+			<version>1.2.1-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>gemma</groupId>
 			<artifactId>gemma-mda</artifactId>
 			<version>1.2.1-SNAPSHOT</version>
 		</dependency>
@@ -218,11 +224,6 @@
 			<groupId>dom4j</groupId>
 			<artifactId>dom4j</artifactId>
 			<version>1.6.1</version>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache</artifactId>
-			<version>1.2.3</version>
 		</dependency>
 		<dependency>
 			<groupId>jaxen</groupId>

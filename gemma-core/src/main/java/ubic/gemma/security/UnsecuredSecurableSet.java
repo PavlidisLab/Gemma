@@ -22,6 +22,7 @@ import java.util.HashSet;
 
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequenceImpl;
 import ubic.gemma.model.genome.GeneImpl;
 import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
@@ -55,6 +56,7 @@ public class UnsecuredSecurableSet extends HashSet {
         this.add( GeneImpl.class );
         this.add( GeneProductImpl.class );
         this.add( QuantitationTypeImpl.class );
+        this.add( DataVector.class );
 
         if ( additionalClasses != null ) {
             for ( Class clazz : additionalClasses ) {

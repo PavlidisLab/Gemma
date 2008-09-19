@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 University of British Columbia
+ * Copyright (c) 2007-2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,15 +44,6 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
     ArrayDesignService adService;
     protected AbstractGeoService geoService;
     ExpressionDataDoubleMatrix matrix;
-
-    // /**
-    // * Test method for
-    // * {@link
-    // ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort#orderByName(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)}.
-    // */
-    // public void testOrderByName() throws Exception {
-    // assertTrue( true );
-    // }
 
     /**
      * Test method for

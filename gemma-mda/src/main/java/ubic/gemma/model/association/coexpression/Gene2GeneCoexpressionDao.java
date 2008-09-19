@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpression
  */
@@ -29,7 +31,7 @@ public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.G
     /**
      * Loads an instance of ubic.gemma.model.association.coexpression.Gene2GeneCoexpression from the persistent store.
      */
-    public ubic.gemma.model.association.Relationship load( java.lang.Long id );
+    public Gene2GeneCoexpression load( java.lang.Long id );
 
     /**
      * <p>
@@ -50,7 +52,7 @@ public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.G
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<Gene2GeneCoexpression> loadAll();
 
     /**
      * <p>
@@ -64,7 +66,7 @@ public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.G
      * @param transform the flag indicating what transformation to use.
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<Gene2GeneCoexpression> loadAll( final int transform );
 
     /**
      * Updates the <code>gene2GeneCoexpression</code> instance in the persistent store.
@@ -74,7 +76,7 @@ public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.G
     /**
      * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public void update( java.util.Collection entities );
+    public void update( java.util.Collection<Gene2GeneCoexpression> entities );
 
     /**
      * Removes the instance of ubic.gemma.model.association.coexpression.Gene2GeneCoexpression from the persistent
@@ -91,28 +93,28 @@ public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.G
     /**
      * Removes all entities in the given <code>entities<code> collection.
      */
-    public void remove( java.util.Collection entities );
+    public void remove( java.util.Collection<Gene2GeneCoexpression> entities );
 
     /**
      * <p>
      * Returns a collection of gene2geneCoexpression objects
      * </p>
      */
-    public java.util.Collection findCoexpressionRelationships( ubic.gemma.model.genome.Gene gene, int stringency,
-            int maxResults );
+    public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships(
+            ubic.gemma.model.genome.Gene gene, int stringency, int maxResults );
 
     /**
      * <p>
      * Returns a map of genes to coexpression results.
      * </p>
      */
-    public java.util.Map findCoexpressionRelationships( java.util.Collection genes, int stringency, int maxResults );
+    public java.util.Map findCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency, int maxResults );
 
     /**
      * <p>
      * Return coexpression relationships among the given genes.
      * </p>
      */
-    public java.util.Map findInterCoexpressionRelationships( java.util.Collection genes, int stringency );
+    public java.util.Map findInterCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency );
 
 }

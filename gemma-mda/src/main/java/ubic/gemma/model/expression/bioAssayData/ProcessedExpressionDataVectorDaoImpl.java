@@ -118,6 +118,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         expressionExperiment.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>( results ) );
 
         this.getHibernateTemplate().update( expressionExperiment );
+        
+        /*
+         * FIXME invalidate the vector cache for this experiment.
+         */
+        
         return expressionExperiment.getProcessedExpressionDataVectors();
 
     }
@@ -552,6 +557,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return result;
     }
 
+    /*
+     * To supply data vectors with unique keys for caching purposes where the important elements for retrieval are the
+     * EE and the Gene.
+     */
     private class VectorKey {
         Long eeId;
         Long geneId;
@@ -595,12 +604,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          */
         @Override
         public int hashCode() {
-            // FIXME: this must be unique.
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ( ( eeId == null ) ? 0 : eeId.hashCode() );
-            result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
-            return result;
+            return ( int ) ( eeId << Integer.SIZE | geneId );
+
         }
     }
 

@@ -28,6 +28,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.Element;
+
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.TaxonUtility;
 
@@ -35,9 +39,28 @@ import ubic.gemma.util.TaxonUtility;
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpression
  * @version $Id$
  * @author klc
+ * @author paul
  */
 public class Gene2GeneCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase {
+
+    Cache cache;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.dao.support.DaoSupport#initDao()
+     */
+    @Override
+    protected void initDao() throws Exception {
+        super.initDao();
+        try {
+            this.cache = Gene2GeneCoexpressionCache.initializeCache();
+        } catch ( CacheException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
 
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null,
@@ -45,7 +68,14 @@ public class Gene2GeneCoexpressionDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected java.util.Collection handleFindCoexpressionRelationships( Gene gene, int stringency, int maxResults ) {
+    protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
+            int stringency, int maxResults ) {
+
+        Element element = cache.get( gene.getId() );
+        if ( element != null ) {
+            return ( Collection<Gene2GeneCoexpression> ) element.getValue();
+        }
+
         String g2gClassName;
 
         g2gClassName = getClassName( gene );
@@ -65,6 +95,8 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
         List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( results );
         Collections.sort( lr, new SupportComparator() );
+
+        cache.put( new Element( gene.getId(), lr ) );
 
         int count = 0;
         for ( Iterator<Gene2GeneCoexpression> it = lr.iterator(); it.hasNext(); ) {
@@ -86,13 +118,25 @@ public class Gene2GeneCoexpressionDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected java.util.Map /* <Gene, Collection<Gene2GeneCoexpression>> */handleFindCoexpressionRelationships(
-            Collection genes, int stringency, int maxResults ) {
+    protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
+            Collection<Gene> genes, int stringency, int maxResults ) {
 
-        if ( genes.size() == 0 ) return new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        Collection<Gene> genesNeeded = new HashSet<Gene>();
+        Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        for ( Gene g : genes ) {
+            result.put( g, new HashSet<Gene2GeneCoexpression>() );
+            Element e = cache.get( g.getId() );
+            if ( e != null ) {
+                result.put( g, ( Collection<Gene2GeneCoexpression> ) e.getValue() );
+            } else {
+                genesNeeded.add( g );
+            }
+        }
 
-        // we assume the genes are from the same taxon.
-        String g2gClassName = getClassName( ( Gene ) genes.iterator().next() );
+        if ( genes.size() == 0 ) return result;
+
+        // WARNING we assume the genes are from the same taxon.
+        String g2gClassName = getClassName( genes.iterator().next() );
 
         final String queryStringFirstVector = "select g2g from " + g2gClassName
                 + " as g2g where  g2g.firstGene in (:genes) and g2g.numDataSets >= :stringency";
@@ -107,12 +151,8 @@ public class Gene2GeneCoexpressionDaoImpl extends
         r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
                 new String[] { "genes", "stringency" }, new Object[] { genes, stringency } ) );
 
-        Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
-        for ( Gene g : ( Collection<Gene> ) genes ) {
-            result.put( g, new HashSet<Gene2GeneCoexpression>() );
-        }
-
         List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
+
         Collections.sort( lr, new SupportComparator() );
 
         int count = 0;
@@ -127,6 +167,11 @@ public class Gene2GeneCoexpressionDaoImpl extends
             }
             count++;
         }
+
+        for ( Gene g : genesNeeded ) {
+            cache.put( new Element( g.getId(), result.get( g ) ) );
+        }
+
         return result;
     }
 
@@ -138,13 +183,13 @@ public class Gene2GeneCoexpressionDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected java.util.Map /* <Gene, Collection<Gene2GeneCoexpression> */handleFindInterCoexpressionRelationships(
-            Collection genes, int stringency ) {
+    protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationships(
+            Collection<Gene> genes, int stringency ) {
 
         if ( genes.size() == 0 ) return new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
 
         // we assume the genes are from the same taxon.
-        String g2gClassName = getClassName( ( Gene ) genes.iterator().next() );
+        String g2gClassName = getClassName( genes.iterator().next() );
 
         final String queryString = "select g2g from "
                 + g2gClassName
@@ -157,7 +202,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
         Collections.sort( lr, new SupportComparator() );
 
         Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
-        for ( Gene g : ( Collection<Gene> ) genes ) {
+        for ( Gene g : genes ) {
             result.put( g, new HashSet<Gene2GeneCoexpression>() );
         }
         int count = 0;

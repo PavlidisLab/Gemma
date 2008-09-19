@@ -15,7 +15,8 @@
 	<modules>
 		<module>gemma-util</module>
 		<module>gemma-mda</module>
-		<module>gemma-core</module> 
+		<module>gemma-testing</module>
+		<module>gemma-core</module>
 		<module>gemma-web</module>
 	</modules>
 	<packaging>pom</packaging>
@@ -110,6 +111,11 @@
 			<artifactId>hibernate</artifactId>
 			<version>3.2.6.ga</version>
 			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.ehcache</groupId>
+			<artifactId>ehcache</artifactId>
+			<version>1.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>

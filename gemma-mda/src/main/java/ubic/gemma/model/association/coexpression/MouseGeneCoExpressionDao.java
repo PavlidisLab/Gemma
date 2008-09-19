@@ -29,7 +29,7 @@ public interface MouseGeneCoExpressionDao extends ubic.gemma.model.association.c
     /**
      * Loads an instance of ubic.gemma.model.association.coexpression.MouseGeneCoExpression from the persistent store.
      */
-    public ubic.gemma.model.association.Relationship load( java.lang.Long id );
+    public Gene2GeneCoexpression load( java.lang.Long id );
 
     /**
      * <p>

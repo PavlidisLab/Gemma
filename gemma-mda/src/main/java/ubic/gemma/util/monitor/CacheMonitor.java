@@ -23,6 +23,7 @@ import java.util.Arrays;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Statistics;
+import net.sf.ehcache.config.CacheConfiguration;
 
 /**
  * Get statistics about object caches.
@@ -53,30 +54,30 @@ public class CacheMonitor {
             Cache cache = cm.getCache( cacheName );
             Statistics statistics = cache.getStatistics();
 
-            int objectCount = statistics.getObjectCount();
+            long objectCount = statistics.getObjectCount();
 
             if ( objectCount == 0 ) {
                 continue;
             }
 
             buf.append( "<tr><td>" + cacheName + "</td>" );
-            int hits = statistics.getCacheHits();
-            int misses = statistics.getCacheMisses();
-            int inMemoryHits = statistics.getInMemoryHits();
-            int onDiskHits = statistics.getOnDiskHits();
+            long hits = statistics.getCacheHits();
+            long misses = statistics.getCacheMisses();
+            long inMemoryHits = statistics.getInMemoryHits();
+            long onDiskHits = statistics.getOnDiskHits();
 
             buf.append( "<td>" + hits + "</td>" );
             buf.append( "<td>" + misses + "</td>" );
             buf.append( "<td>" + objectCount + "</td>" );
             buf.append( "<td>" + inMemoryHits + "</td>" );
             buf.append( "<td>" + onDiskHits + "</td>" );
+            CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
+            buf.append( "<td>" + ( cacheConfiguration.isEternal() ? "&bull;" : "" ) + "</td>" );
+            buf.append( "<td>" + ( cacheConfiguration.isOverflowToDisk() ? "&bull;" : "" ) + "</td>" );
+            buf.append( "<td>" + cacheConfiguration.getMaxElementsInMemory() + "</td>" );
 
-            buf.append( "<td>" + ( cache.isEternal() ? "&bull;" : "" ) + "</td>" );
-            buf.append( "<td>" + ( cache.isOverflowToDisk() ? "&bull;" : "" ) + "</td>" );
-            buf.append( "<td>" + cache.getMaxElementsInMemory() + "</td>" );
-
-            buf.append( "<td>" + cache.getTimeToIdleSeconds() + "</td>" );
-            buf.append( "<td>" + cache.getTimeToLiveSeconds() + "</td>" );
+            buf.append( "<td>" + cacheConfiguration.getTimeToIdleSeconds() + "</td>" );
+            buf.append( "<td>" + cacheConfiguration.getTimeToLiveSeconds() + "</td>" );
             buf.append( "</tr>" );
         }
         buf.append( "</table>" );

@@ -51,7 +51,7 @@ public abstract class HumanGeneCoExpressionDaoBase extends
      * @see ubic.gemma.model.association.coexpression.HumanGeneCoExpressionDao#load(java.lang.Long)
      */
     @Override
-    public ubic.gemma.model.association.Relationship load( java.lang.Long id ) {
+    public Gene2GeneCoexpression load( java.lang.Long id ) {
         return ( ubic.gemma.model.association.coexpression.HumanGeneCoExpression ) this.load( TRANSFORM_NONE, id );
     }
 
@@ -116,6 +116,9 @@ public abstract class HumanGeneCoExpressionDaoBase extends
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    /*
+                     * FIXME invalidate the cache
+                     */
                     create( transform,
                             ( ubic.gemma.model.association.coexpression.HumanGeneCoExpression ) entityIterator.next() );
                 }

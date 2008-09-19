@@ -107,7 +107,21 @@ public class GeoBrowserService {
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
          */
-        return EutilFetch.fetch( "gds", accession, 25 );
+        String details = EutilFetch.fetch( "gds", accession, 25 );
+
+        return formatDetails( details );
+
+    }
+
+    /**
+     * @param details
+     * @return
+     */
+    private String formatDetails( String details ) {
+        /*
+         * TODO: parse this into something easier to read /htmlize.
+         */
+        return details;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {

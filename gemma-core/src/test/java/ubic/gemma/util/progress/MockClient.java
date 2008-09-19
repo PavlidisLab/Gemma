@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.testing;
+package ubic.gemma.util.progress;
 
 import java.util.Observable;
 import java.util.Observer;

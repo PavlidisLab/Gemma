@@ -29,7 +29,7 @@ public interface RatGeneCoExpressionDao extends ubic.gemma.model.association.coe
     /**
      * Loads an instance of ubic.gemma.model.association.coexpression.RatGeneCoExpression from the persistent store.
      */
-    public ubic.gemma.model.association.Relationship load( java.lang.Long id );
+    public Gene2GeneCoexpression load( java.lang.Long id );
 
     /**
      * <p>

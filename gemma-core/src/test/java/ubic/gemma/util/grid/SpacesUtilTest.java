@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.util.gemmaspaces;
+package ubic.gemma.util.grid;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -95,8 +95,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     public void testAreWorkersRegistered() {
 
         SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
-        ApplicationContext updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
-                .getSpaceUrl() );
+        gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         /*
          * NOTE: These assertions do not test anything ... I've added them for the sake of the unit test. This test
@@ -117,11 +116,10 @@ public class SpacesUtilTest extends BaseSpringContextTest {
      */
     public void testNumWorkersRegistered() {
         SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
-        ApplicationContext updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
-                .getSpaceUrl() );
+        gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         int count = gigaspacesUtil.numWorkersRegistered( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
-        log.info( count );
+        assertTrue( count >= 0 );
 
     }
 

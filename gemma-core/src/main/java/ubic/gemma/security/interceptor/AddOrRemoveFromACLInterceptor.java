@@ -110,8 +110,8 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     private static Log log = LogFactory.getLog( AddOrRemoveFromACLInterceptor.class.getName() );
 
     /**
-     * For some types of objects, we don't put permissions on them directly, but on the containing object. Example:
-     * reporter - we secure the arrayDesign, but not the reporter.
+     * For some types of Securables, we don't put permissions on them directly, but on the containing object. Example:
+     * reporter - we secure the arrayDesign, but not the reporter, even though Reporter is Securable.
      */
     private static final Collection<Class> unsecuredClasses = new HashSet<Class>();
 
@@ -121,11 +121,11 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * are not interccepted anyway.
      */
     static {// FIXME can we use the UnsecuredSecurableSet instead?
-        unsecuredClasses.add( DataVector.class );
+        unsecuredClasses.add( DataVector.class ); // includes all designelement datavectors
         unsecuredClasses.add( DatabaseEntry.class );
         unsecuredClasses.add( BioSequence.class );
-        unsecuredClasses.add( Relationship.class );
-        unsecuredClasses.add( DesignElement.class );
+        unsecuredClasses.add( Relationship.class ); // probe2probe, gene2gene
+        unsecuredClasses.add( DesignElement.class ); // composite sequence, reporter
         unsecuredClasses.add( Taxon.class );
         unsecuredClasses.add( Gene.class );
         unsecuredClasses.add( GeneProduct.class );
@@ -146,7 +146,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * 
      * @param object The domain object.
      */
-    public void addPermission( Object object ) {
+    public void addPermission( Securable object ) {
 
         simpleAclEntry = getAclEntry( object );
 
@@ -240,7 +240,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @throws IllegalArgumentException
      * @throws DataAccessException
      */
-    public void deletePermission( Object object ) throws DataAccessException, IllegalArgumentException {
+    public void deletePermission( Securable object ) throws DataAccessException, IllegalArgumentException {
         if ( object == null ) return;
         try {
             basicAclExtendedDao.delete( makeObjectIdentity( object ) );
@@ -303,20 +303,29 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
             PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyNames[j] );
 
-            Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
+            /*
+             * This can yield a lazy-load error if the property is not initialized...
+             */
+            Object associatedObject = null;
+            try {
+                associatedObject = ReflectionUtil.getProperty( object, descriptor );
+            } catch ( RuntimeException e ) {
+                log.error( e, e );
+                log.fatal( "While processing: " + object + " --> " + descriptor );
+                throw ( e );
+            }
 
             if ( associatedObject == null ) continue;
 
             Class<?> propertyType = descriptor.getPropertyType();
 
             if ( Securable.class.isAssignableFrom( propertyType ) ) {
-
                 if ( log.isDebugEnabled() ) log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs );
                 processObject( m, associatedObject );
             } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
 
                 /*
-                 * This block commented out because of lazy-load problems.
+                 * This block was previously commented out because of lazy-load problems.
                  */
                 Collection associatedObjects = ( Collection ) associatedObject;
                 if ( Hibernate.isInitialized( associatedObjects ) ) {
@@ -357,10 +366,10 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         // log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
         // }
         if ( CrudUtils.methodIsCreate( m ) ) {
-            addPermission( object );
+            addPermission( ( Securable ) object );
             processAssociations( m, object );
         } else if ( CrudUtils.methodIsDelete( m ) ) {
-            deletePermission( object );
+            deletePermission( ( Securable ) object );
             processAssociations( m, object );
         } else {
             // nothing to do.
@@ -384,7 +393,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    public static AbstractBasicAclEntry getAclEntry( Object object ) {
+    public static AbstractBasicAclEntry getAclEntry( Securable object ) {
         SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
         simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
         simpleAclEntry.setMask( getAuthority() );
@@ -425,8 +434,8 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     /**
      * @param object
      */
-    private static boolean checkValidPrimaryKey( Object object ) {
-        Class clazz = object.getClass();
+    private static boolean checkValidPrimaryKey( Securable object ) {
+        Class<? extends Securable> clazz = object.getClass();
         try {
             String methodName = "getId";
             Method m = clazz.getMethod( methodName, new Class[] {} );
@@ -453,7 +462,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @param object
      * @return object identity.
      */
-    private static AclObjectIdentity makeObjectIdentity( Object object ) {
+    private static AclObjectIdentity makeObjectIdentity( Securable object ) {
         assert checkValidPrimaryKey( object ) : "No valid primary key for object " + object;
         try {
             return new NamedEntityObjectIdentity( object );

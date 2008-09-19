@@ -6,6 +6,7 @@
 	<classpathentry kind="src" output="test-build" path="gemma-util/src/test/resources"/>
 	<classpathentry excluding="**/*.class|**/*.xml|**/empty.file|**/gemma*.jar|scripts/*|styles/**" including="**/*.jar|**/version.properties" kind="src" output="build/Gemma" path="gemma-web/target/Gemma"/>
 	<classpathentry kind="src" output="build/Gemma/" path="generated-sources/Gemma"/>
+	<classpathentry excluding="log4j.properties" including="ubic/gemma/localTestDataSource.xml" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-testing/src/main/resources"/>
 	<classpathentry excluding="mail.properties" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-core/src/main/resources"/>
 	<classpathentry kind="src" output="test-build" path="gemma-core/src/test/java"/>
 	<classpathentry kind="src" output="test-build" path="gemma-core/src/test/resources"/>
@@ -15,6 +16,8 @@
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/target/generated-sources/java"/>
 	<classpathentry excluding="hibernate.properties" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/src/main/resources"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/target/generated-sources/resources"/>
+	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-testing/src/main/java"/>
+	<classpathentry kind="src" output="test-build" path="gemma-testing/src/test/java"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-util/src/main/java"/>
 	<classpathentry kind="src" output="test-build" path="gemma-util/src/test/java"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-web/src/main/java"/>
@@ -60,7 +63,11 @@
 	<classpathentry kind="var" path="M2_REPO/colt/colt/1.2.0/colt-1.2.0.jar" sourcepath="/JAR_SOURCE/colt-1.2.0/src"/>
 	<classpathentry kind="var" path="M2_REPO/commons-digester/commons-digester/1.7/commons-digester-1.7.jar" sourcepath="/JAR_SOURCE/commons-digester-1.7-src/src/java"/>
 	<classpathentry kind="var" path="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar" sourcepath="/JAR_SOURCE/dom4j-1.6.1/src/java"/>
-	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache/1.2.3/ehcache-1.2.3.jar" sourcepath="/JAR_SOURCE/ehcache-1.2.3/src"/>
+	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache/1.5.0/ehcache-1.5.0.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://ehcache.sourceforge.net/javadoc/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/javax/transaction/jta/1.0.1B/jta-1.0.1B.jar"/>
 	<classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.13/log4j-1.2.13.jar" sourcepath="/JAR_SOURCE/logging-log4j-1.2.13/src/java">
 		<attributes>
@@ -235,5 +242,6 @@
 	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/jena/2.5.6/jena-2.5.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/arq/2.3/arq-2.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/iri/0.5/iri-0.5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/backport-util-concurrent/backport-util-concurrent/3.1/backport-util-concurrent-3.1.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
