@@ -7,8 +7,7 @@ version: $Id$
 --%>
 
 <%@ include file="/common/taglibs.jsp"%>
-<%@ page
-	import="org.springframework.security.context.SecurityContextHolder"%>
+<%@ page import="org.springframework.security.context.SecurityContextHolder"%>
 <%@ page import="org.springframework.security.context.SecurityContext"%>
 
 <html>
@@ -16,6 +15,13 @@ version: $Id$
 		<title>Login</title>
 	</head>
 	<body style="overflow: hidden">
+
+		<p style='padding: 10px'>
+			Users do not need to log on or register for many uses of Gemma. An account is only needed if you want to take advantage of
+			data upload or 'favorite search' and similar functionality.
+			<strong>Need an account? <a href="<c:url  value='/register.html' />">Register</a>
+			</strong>
+		</p>
 
 		<script>
 		
@@ -26,15 +32,14 @@ version: $Id$
 	{
 		Ext.QuickTips.init();
 		
-		var login = new Ext.FormPanel(
+		var login = new Ext.Panel({frame :false, title :'Login', width : 350, items:[new Ext.FormPanel(
 		{
 			labelWidth :90,
 			url :'<%=request.getContextPath()%>/j_security_check',
 			method :'POST',
 			id :'_loginForm',
 			standardSubmit :true,
-			frame :true,
-			title :'Login',
+			frame : true,
 			bodyStyle :'padding:5px 5px 0',
 			iconCls :'user-suit',
 			width :350,
@@ -84,20 +89,7 @@ version: $Id$
 			],
 			
 			buttons :
-					[
-						{
-							text :'Register',
-							type :'register',
-							minWidth: 75,
-							handler :function()
-							{	
-								var sb = Ext.getCmp('my-status');
-								sb.showBusy();
-								document.getElementsByTagName("form")[1].action = "<%=request.getContextPath()%>/register.html";
-								document.getElementsByTagName("form")[1].submit();
-							}
-						},
-						{
+					[ {
 							text :'Login',
 							formBind:true,
 							type :'submit',
@@ -110,12 +102,12 @@ version: $Id$
 								document.getElementsByTagName("form")[1].submit();
 			        		}					
 						}
-					],
+					]})], // end of items for outer panel.
 					
 		   bbar: new Ext.StatusBar(
 			{
 				id: 'my-status',
-			    text: 'Ready',
+			    text: '',
 			    iconCls: 'default-icon',
 			    busyText: 'Validating...'
 		<%
@@ -136,8 +128,13 @@ version: $Id$
 
 </script>
 		<div id="login-mask" style=""></div>
-		<div id="login">
+		<div align="center" id="login">
 			<div id="_login" class="login-indicator"></div>
+
+
 		</div>
+
+
+
 	</body>
 </html>
