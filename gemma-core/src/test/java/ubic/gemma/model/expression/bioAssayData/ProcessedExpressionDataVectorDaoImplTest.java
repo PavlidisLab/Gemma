@@ -109,13 +109,13 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
         Collection<Gene> genes = getGeneAssociatedWithEe();
         Collection<DoubleVectorValueObject> v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
         assertEquals( 40, v.size() );
-        Cache cache = processedDataVectorDao.getCache();
+        Cache cache = ProcessedDataVectorCache.getCache( ees.iterator().next() );
         cache.clearStatistics();
         processedDataVectorDao.getProcessedDataArrays( ees, genes );
         v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
         assertEquals( 40, v.size() );
-        int hits = cache.getHitCount();
-        assertEquals( 86, hits );
+        long hits = cache.getStatistics().getCacheHits();
+        assertEquals( 84, hits );
     }
 
     /**
