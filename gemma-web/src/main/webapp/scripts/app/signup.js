@@ -14,18 +14,13 @@ Ext.onReady(function() {
 
 	var bd = Ext.getBody();
 
-	/**
-	 * 
-	 */
 	var signup = new Ext.FormPanel({
-		renderTo : 'signup',
 		labelWidth : 75, // label settings here cascade unless overridden
 		url : 'signup.html',
 		frame : true,
-		title : 'Signup',
 		monitorValid : true, // use with formBind in Button for client side validation
 		bodyStyle : 'padding:5px 5px 0',
-		width : 350,
+		width : 390,
 		keys : [{
 			key : Ext.EventObject.ENTER,
 			fn : function() {
@@ -60,19 +55,21 @@ Ext.onReady(function() {
 		defaultType : 'textfield',
 
 		items : [{
-					fieldLabel : 'Username',
-					name : 'username',
-					allowBlank : false,
-					vtype : 'alphanum'
-				}, {
-					fieldLabel : 'Email',
-					name : 'email',
-					allowBlank : false,
-					vtype : 'email'
-				}],
+			fieldLabel : 'Username',
+			name : 'username',
+			allowBlank : false,
+			vtype : 'alphanum'
+		}, {
+			fieldLabel : 'Email',
+			name : 'email',
+			allowBlank : false,
+			vtype : 'email',
+			validationDelay : 1500,
+			invalidText : "A valid email address is required"
+		}],
 
 		buttons : [{
-			text : 'Signup',
+			text : 'Submit',
 			formBind : true, // use with monitorValid in Ext.FormPanel for client side validation
 			handler : function() {
 
@@ -101,11 +98,22 @@ Ext.onReady(function() {
 				sb.showBusy();
 
 			}
-		}],
+		}]
+	})
+
+	/**
+	 * 
+	 */
+	var panel = new Ext.Panel({
+		width : 390,
+		title : 'Create a new account',
+		frame : false,
+		renderTo : 'signup',
+		items : [signup],
 
 		bbar : new Ext.StatusBar({
 			id : 'my-status',
-			text : 'Ready',
+			text : '',
 			iconCls : 'default-icon',
 			busyText : 'Validating...'
 		})

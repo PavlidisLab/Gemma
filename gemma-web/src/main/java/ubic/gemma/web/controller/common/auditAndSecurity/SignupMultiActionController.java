@@ -55,7 +55,7 @@ public class SignupMultiActionController extends UserAuthenticatingMultiActionCo
      * @param response
      * @throws Exception
      */
-    public void onSubmit( HttpServletRequest request, HttpServletResponse response ) {
+    public void onSubmit( HttpServletRequest request, HttpServletResponse response ) throws Exception {
 
         Locale locale = request.getLocale();
 
@@ -82,8 +82,12 @@ public class SignupMultiActionController extends UserAuthenticatingMultiActionCo
             super.sendConfirmationEmail( request, user, locale, generatedPassword );
             jsonText = "{success:true}";
         } catch ( Exception e ) {
-            e.printStackTrace();
+            /*
+             * Most common cause: user exists already.
+             */
+            log.error( e.getLocalizedMessage() );
             jsonText = "{ success: false, errors: { reason: '" + e.getLocalizedMessage() + ".' }}";
+            // throw e;
         } finally {
             try {
                 jsonUtil.writeToResponse( jsonText );

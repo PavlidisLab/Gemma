@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
  * A utility class to do 'JSON-like' things, such as writing out JSON objects to the response {@link Writer}.
  * 
  * @author keshav
+ * @version $Id$
  */
 public class JSONUtil {
 

@@ -5,5 +5,9 @@
 	<jwr:script src='/scripts/app/signup.js' />
 </head>
 
-<div id='signup' style='width: 500px; margin-bottom: 1em;'></div>
+<p>
+	Signup to use use features of Gemma like data upload or 'favorite searches'. You will be sent an email with an
+	acknowledgement link.
+</p>
+<div align='center' id='signup' style='width: 700px; margin-bottom: 1em;'></div>
 <div id='errorMessage' style='width: 500px; margin-bottom: 1em;'></div>
