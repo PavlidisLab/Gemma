@@ -184,8 +184,7 @@ public abstract class UserAuthenticatingMultiActionController extends BaseMultiA
             model.put( "message", getText( "signup.email.message", locale ) );
             model.put( "editProfileURL", RequestUtil.getAppURL( request ) + "/userProfile.html" );
             sendEmail( user, this.templateName, model );
-            this.saveMessage( request, "email.sent", user.getEmail(), "Confirmation email was sent to "
-                    + user.getEmail() );
+            this.saveMessage( request, "email.sent", user.getEmail(), "Confirmation email was sent to " );
         } catch ( Exception e ) {
             log.error( "Couldn't send email to " + user, e );
         }

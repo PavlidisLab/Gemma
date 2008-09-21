@@ -129,7 +129,7 @@ public abstract class BaseMultiActionController extends MultiActionController {
         if ( StringUtils.isBlank( user.getEmail() ) ) {
             log.warn( "Could not send email to " + user + ", no email address" );
         }
-        mailMessage.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
+        mailMessage.setTo( user.getUserName() + "<" + user.getEmail() + ">" );
         mailEngine.sendMessage( mailMessage, templateName, model );
     }
 
