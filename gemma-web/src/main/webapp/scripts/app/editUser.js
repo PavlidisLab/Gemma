@@ -143,7 +143,6 @@ Ext.onReady(function() {
 		failure : {},
 		success : function(form, action) {
 			var object = Ext.util.JSON.decode(action.response.responseText);
-			form.getComponent('username').setValue(object.user.username);
 		}
 	})
 });
