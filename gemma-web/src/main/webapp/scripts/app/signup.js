@@ -23,7 +23,9 @@ Ext.onReady(function() {
 		width : 390,
 		keys : [{
 			key : Ext.EventObject.ENTER,
-			fn : function() {
+			formBind : true,
+			handler : function() {
+
 				signup.getForm().submit({
 					url : this.url,
 					method : 'POST',
@@ -32,21 +34,18 @@ Ext.onReady(function() {
 						window.location = target;
 					},
 					failure : function(form, action) {
-						var errMsg;
-						if (action.failureType == 'server') {
-							obj = Ext.util.JSON.decode(action.response.responseText);
-							errMsg = "<font color='red'>Signup Failed</font>"
-							Element.update('errorMessage', errMsg);
-						} else {
-							errMsg = "<font color='red'>Warning!, Authentication server is unreachable</font>"
-							Element.update('errorMessage', errMsg);
-						}
+						var errMsg = '';
+						errMsg = "<font color='red'>" + action.result.message + "</font>";
+						Element.update('errorMessage', errMsg);
+
 						signup.getForm().reset();
+						Ext.getCmp('my-status').clearStatus();
 					}
 				});
 
 				var sb = Ext.getCmp('my-status');
 				sb.showBusy();
+
 			}
 		}],
 		defaults : {
@@ -81,16 +80,12 @@ Ext.onReady(function() {
 						window.location = target;
 					},
 					failure : function(form, action) {
-						var errMsg;
-						if (action.failureType == 'server') {
-							obj = Ext.util.JSON.decode(action.response.responseText);
-							errMsg = "<font color='red'>Signup Failed</font>"
-							Element.update('errorMessage', errMsg);
-						} else {
-							errMsg = "<font color='red'>Warning!, Authentication server is unreachable</font>"
-							Element.update('errorMessage', errMsg);
-						}
+						var errMsg = '';
+						errMsg = "<font color='red'>" + action.result.message + "</font>";
+						Element.update('errorMessage', errMsg);
+
 						signup.getForm().reset();
+						Ext.getCmp('my-status').clearStatus();
 					}
 				});
 
@@ -99,7 +94,7 @@ Ext.onReady(function() {
 
 			}
 		}]
-	})
+	});
 
 	/**
 	 * 
@@ -118,5 +113,5 @@ Ext.onReady(function() {
 			busyText : 'Validating...'
 		})
 
-	})
+	});
 });

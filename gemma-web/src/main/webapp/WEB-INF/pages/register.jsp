@@ -2,7 +2,7 @@
 
 <head>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/signup.js' />
+	<jwr:script src='/scripts/app/signup.js' useRandomParam='false'/>
 </head>
 
 <p>
@@ -10,4 +10,4 @@
 	acknowledgement link.
 </p>
 <div align='center' id='signup' style='width: 700px; margin-bottom: 1em;'></div>
-<div id='errorMessage' style='width: 500px; margin-bottom: 1em;'></div>
+<div align='center' id='errorMessage' style='width: 700px; margin-bottom: 1em;'></div>
