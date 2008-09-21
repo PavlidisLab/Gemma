@@ -53,7 +53,8 @@ public class ProcessedDataVectorCache {
      */
     public static void clearCache( ExpressionExperiment e ) {
         CacheManager manager = CacheManager.getInstance();
-        manager.getCache( getCacheName( e ) ).removeAll();
+        Cache cache = manager.getCache( getCacheName( e ) );
+        if ( cache != null ) cache.removeAll();
     }
 
     /**
