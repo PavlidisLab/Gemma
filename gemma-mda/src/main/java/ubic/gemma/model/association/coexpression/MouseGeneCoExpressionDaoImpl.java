@@ -22,9 +22,32 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Collection;
+
+import ubic.gemma.model.association.Relationship;
+
 /**
- * @see ubic.gemma.model.association.coexpression.MouseGeneCoExpression
+ * @see ubic.gemma.model.association.coexpression.MouseGeneCoExpression 
+ * @version $Id$
+ * @author paul
  */
 public class MouseGeneCoExpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.MouseGeneCoExpressionDaoBase {
+
+    @Override
+    public Collection create( Collection entities ) {
+        Collection result = super.create( entities );
+        for ( MouseGeneCoExpression object : ( Collection<MouseGeneCoExpression> ) entities ) {
+            removeFromCache( object );
+        }
+        return result;
+
+    }
+
+    @Override
+    public Relationship create( MouseGeneCoExpression mouseGeneCoExpression ) {
+        MouseGeneCoExpression result = ( MouseGeneCoExpression ) super.create( mouseGeneCoExpression );
+        removeFromCache( result );
+        return result;
+    }
 }

@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.TaxonUtility;
 
 /**
+ * Manages 'links' between genes.
+ * 
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpression
  * @version $Id$
  * @author klc
@@ -44,70 +46,21 @@ import ubic.gemma.util.TaxonUtility;
 public class Gene2GeneCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase {
 
-    Cache cache;
+    private Cache cache;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.dao.support.DaoSupport#initDao()
+    /**
+     * @return The gene2gene cache. The cache is keyed by the query gene used to find the links from the database.
      */
-    @Override
-    protected void initDao() throws Exception {
-        super.initDao();
-        try {
-            this.cache = Gene2GeneCoexpressionCache.initializeCache();
-        } catch ( CacheException e ) {
-            throw new RuntimeException( e );
-        }
-
+    private Cache getCache() {
+        return cache;
     }
 
     /**
-     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null,
-     *      java.util.Collection)
+     * @param object
      */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
-            int stringency, int maxResults ) {
-
-        Element element = cache.get( gene.getId() );
-        if ( element != null ) {
-            return ( Collection<Gene2GeneCoexpression> ) element.getValue();
-        }
-
-        String g2gClassName;
-
-        g2gClassName = getClassName( gene );
-
-        final String queryStringFirstVector = "select distinct g2g from " + g2gClassName
-                + " as g2g where g2g.firstGene = :gene and g2g.numDataSets >= :stringency";
-
-        final String queryStringSecondVector = "select distinct g2g from " + g2gClassName
-                + " as g2g where g2g.secondGene = :gene and g2g.numDataSets >= :stringency";
-
-        Collection<Gene2GeneCoexpression> results = new HashSet<Gene2GeneCoexpression>();
-
-        results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
-                new String[] { "gene", "stringency" }, new Object[] { gene, stringency } ) );
-        results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
-                new String[] { "gene", "stringency" }, new Object[] { gene, stringency } ) );
-
-        List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( results );
-        Collections.sort( lr, new SupportComparator() );
-
-        cache.put( new Element( gene.getId(), lr ) );
-
-        int count = 0;
-        for ( Iterator<Gene2GeneCoexpression> it = lr.iterator(); it.hasNext(); ) {
-            it.next();
-            if ( maxResults > 0 && count > maxResults ) {
-                it.remove();
-            }
-            count++;
-        }
-
-        return results;
+    protected void removeFromCache( Gene2GeneCoexpression object ) {
+        this.getCache().remove( object.getFirstGene().getId() );
+        this.getCache().remove( object.getSecondGene().getId() );
     }
 
     /*
@@ -175,6 +128,54 @@ public class Gene2GeneCoexpressionDaoImpl extends
         return result;
     }
 
+    /**
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null,
+     *      java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
+            int stringency, int maxResults ) {
+
+        Element element = cache.get( gene.getId() );
+        if ( element != null ) {
+            return ( Collection<Gene2GeneCoexpression> ) element.getValue();
+        }
+
+        String g2gClassName;
+
+        g2gClassName = getClassName( gene );
+
+        final String queryStringFirstVector = "select distinct g2g from " + g2gClassName
+                + " as g2g where g2g.firstGene = :gene and g2g.numDataSets >= :stringency";
+
+        final String queryStringSecondVector = "select distinct g2g from " + g2gClassName
+                + " as g2g where g2g.secondGene = :gene and g2g.numDataSets >= :stringency";
+
+        Collection<Gene2GeneCoexpression> results = new HashSet<Gene2GeneCoexpression>();
+
+        results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
+                new String[] { "gene", "stringency" }, new Object[] { gene, stringency } ) );
+        results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
+                new String[] { "gene", "stringency" }, new Object[] { gene, stringency } ) );
+
+        List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( results );
+        Collections.sort( lr, new SupportComparator() );
+
+        cache.put( new Element( gene.getId(), lr ) );
+
+        int count = 0;
+        for ( Iterator<Gene2GeneCoexpression> it = lr.iterator(); it.hasNext(); ) {
+            it.next();
+            if ( maxResults > 0 && count > maxResults ) {
+                it.remove();
+            }
+            count++;
+        }
+
+        return results;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -217,9 +218,18 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
     }
 
-    private class SupportComparator implements Comparator<Gene2GeneCoexpression> {
-        public int compare( Gene2GeneCoexpression o1, Gene2GeneCoexpression o2 ) {
-            return -o1.getNumDataSets().compareTo( o2.getNumDataSets() );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.dao.support.DaoSupport#initDao()
+     */
+    @Override
+    protected void initDao() throws Exception {
+        super.initDao();
+        try {
+            this.cache = Gene2GeneCoexpressionCache.initializeCache();
+        } catch ( CacheException e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -239,6 +249,12 @@ public class Gene2GeneCoexpressionDaoImpl extends
             // must be other
             g2gClassName = "OtherGeneCoExpressionImpl";
         return g2gClassName;
+    }
+
+    private class SupportComparator implements Comparator<Gene2GeneCoexpression> {
+        public int compare( Gene2GeneCoexpression o1, Gene2GeneCoexpression o2 ) {
+            return -o1.getNumDataSets().compareTo( o2.getNumDataSets() );
+        }
     }
 
 }

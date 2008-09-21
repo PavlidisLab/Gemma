@@ -22,8 +22,6 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.Map;
 
-import net.sf.ehcache.Cache;
-
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -82,5 +80,4 @@ public interface ProcessedExpressionDataVectorDao {
      */
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment );
 
-    abstract Cache getCache();
 }

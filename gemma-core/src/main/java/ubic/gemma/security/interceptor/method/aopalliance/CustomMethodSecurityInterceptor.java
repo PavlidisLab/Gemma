@@ -13,8 +13,6 @@ import org.springframework.security.userdetails.UserDetailsService;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.util.SecurityUtil;
@@ -39,9 +37,8 @@ import ubic.gemma.util.SecurityUtil;
  */
 public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor implements MethodInterceptor {
 
-    private Log log = LogFactory.getLog( this.getClass() );
-
-    private static final String ADMINISTRATOR = "administrator";
+    private static final String ADMINISTRATOR = "administrator"; // this isn't such a good idea to hardcode like
+                                                                    // this.
 
     private static final String DEFAULT_QUARTZ_SCHEDULER = "DefaultQuartzScheduler";
 
@@ -77,6 +74,9 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
 
         if ( authentication == null ) {
 
+            /*
+             * See if this is an action being taken by the Quartz Scheduler, grant it access. Is this safe?
+             */
             if ( StringUtils.contains( Thread.currentThread().getName(), DEFAULT_QUARTZ_SCHEDULER ) ) {
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername( ADMINISTRATOR );

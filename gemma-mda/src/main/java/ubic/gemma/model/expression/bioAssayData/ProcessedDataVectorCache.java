@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.ConfigUtils;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -37,15 +42,47 @@ public class ProcessedDataVectorCache {
     private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL = true;
     private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
 
-    private ProcessedDataVectorCache() {
+    private static final Map<ExpressionExperiment, Cache> caches = new HashMap<ExpressionExperiment, Cache>();
+
+    private static String getCacheName( ExpressionExperiment e ) {
+        return PROCESSED_DATA_VECTOR_CACHE_NAME + "_" + e.getShortName() + "_" + e.getId();
     }
 
     /**
      * Remove all elements from the cache.
      */
-    public static void clearCache() {
+    public static void clearCache( ExpressionExperiment e ) {
         CacheManager manager = CacheManager.getInstance();
-        manager.getCache( PROCESSED_DATA_VECTOR_CACHE_NAME ).removeAll();
+        manager.getCache( getCacheName( e ) ).removeAll();
+    }
+
+    /**
+     * 
+     */
+    public static void clearAllCaches() {
+        for ( ExpressionExperiment e : caches.keySet() ) {
+            clearCache( e );
+        }
+    }
+
+    /**
+     * @return
+     */
+    public static Collection<Cache> getAllCaches() {
+        return caches.values();
+    }
+
+    /**
+     * Get the vector cache for a particular experiment
+     * 
+     * @param e
+     * @return
+     */
+    public static Cache getCache( ExpressionExperiment e ) {
+        if ( !caches.containsKey( e ) ) {
+            initializeCache( e );
+        }
+        return caches.get( e );
     }
 
     /**
@@ -53,7 +90,11 @@ public class ProcessedDataVectorCache {
      * 
      * @return
      */
-    public static Cache initializeCache() {
+    private static void initializeCache( ExpressionExperiment e ) {
+
+        if ( caches.containsKey( e ) ) {
+            return;
+        }
 
         int maxElements = ConfigUtils.getInt( "gemma.cache.vectors.maxelements",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
@@ -68,20 +109,20 @@ public class ProcessedDataVectorCache {
         boolean eternal = ConfigUtils.getBoolean( "gemma.cache.vectors.eternal",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL );
 
+        String cacheName = getCacheName( e );
+
         /*
          * Create a cache for the probe data.s
          */
         CacheManager manager = CacheManager.getInstance();
 
-        if ( manager.cacheExists( PROCESSED_DATA_VECTOR_CACHE_NAME ) ) {
-            return manager.getCache( PROCESSED_DATA_VECTOR_CACHE_NAME );
+        if ( !manager.cacheExists( cacheName ) ) {
+
+            manager.addCache( new Cache( cacheName, maxElements, overFlowToDisk, eternal, timeToLive, timeToIdle ) );
         }
 
-        Cache cache = new Cache( PROCESSED_DATA_VECTOR_CACHE_NAME, maxElements, overFlowToDisk, eternal, timeToLive,
-                timeToIdle );
+        caches.put( e, manager.getCache( cacheName ) );
 
-        manager.addCache( cache );
-        return manager.getCache( PROCESSED_DATA_VECTOR_CACHE_NAME );
     }
 
 }

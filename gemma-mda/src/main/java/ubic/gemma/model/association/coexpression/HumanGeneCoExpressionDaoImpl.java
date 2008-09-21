@@ -22,9 +22,34 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Collection;
+
+import ubic.gemma.model.association.Relationship;
+
 /**
- * @see ubic.gemma.model.association.coexpression.HumanGeneCoExpression
+ * @see ubic.gemma.model.association.coexpression.HumanGeneCoExpression 
+ * @version $Id$
+ * @author paul
  */
 public class HumanGeneCoExpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.HumanGeneCoExpressionDaoBase {
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection create( Collection entities ) {
+        Collection result = super.create( entities );
+        for ( HumanGeneCoExpression object : ( Collection<HumanGeneCoExpression> ) entities ) {
+            removeFromCache( object );
+        }
+        return result;
+
+    }
+
+    @Override
+    public Relationship create( HumanGeneCoExpression entity ) {
+        HumanGeneCoExpression result = ( HumanGeneCoExpression ) super.create( entity );
+        removeFromCache( result );
+        return result;
+    }
+
 }

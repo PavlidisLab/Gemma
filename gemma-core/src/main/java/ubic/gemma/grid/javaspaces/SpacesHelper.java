@@ -37,9 +37,10 @@ public class SpacesHelper {
      * @return
      */
     public static String getTaskIdFromTask( ApplicationContext updatedContext, String taskName ) {
-        if ( !updatedContext.containsBean( "gigaspacesTemplate" ) )
-            throw new RuntimeException(
+        if ( !updatedContext.containsBean( "gigaspacesTemplate" ) ) {
+            throw new IllegalArgumentException(
                     "Incorrect usage.  ApplicationContext must contain \"spaces\" beans.  Update the context to contain these beans before invoking." );
+        }
 
         String[] customDelegatingWorkerBeanNames = updatedContext.getBeanNamesForType( CustomDelegatingWorker.class );
 

@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Element;
 
 import org.apache.commons.logging.Log;
@@ -52,7 +51,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         ProcessedExpressionDataVectorDao {
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorDaoImpl.class.getName() );
-    private Cache cache;
 
     /*
      * (non-Javadoc)
@@ -118,11 +116,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         expressionExperiment.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>( results ) );
 
         this.getHibernateTemplate().update( expressionExperiment );
-        
-        /*
-         * FIXME invalidate the vector cache for this experiment.
-         */
-        
+
+        ProcessedDataVectorCache.clearCache( expressionExperiment );
+
         return expressionExperiment.getProcessedExpressionDataVectors();
 
     }
@@ -324,31 +320,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.dao.support.DaoSupport#initDao()
-     */
-    @Override
-    protected void initDao() throws Exception {
-        super.initDao();
-        try {
-            this.cache = ProcessedDataVectorCache.initializeCache();
-        } catch ( CacheException e ) {
-            throw new RuntimeException( e );
-        }
-
-    }
-
-    /**
-     * for testing purposes.
-     * 
-     * @return
-     */
-    public Cache getCache() {
-        return this.cache;
-    }
-
     /**
      * @param newResults
      */
@@ -359,9 +330,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = makeCacheMap( newResults );
 
         for ( ExpressionExperiment e : mapForCache.keySet() ) {
+            Cache cache = ProcessedDataVectorCache.getCache( e );
             for ( Gene g : mapForCache.get( e ).keySet() ) {
-                VectorKey k = new VectorKey( e, g );
-                cache.put( new Element( k, mapForCache.get( e ).get( g ) ) );
+                cache.put( new Element( g, mapForCache.get( e ).get( g ) ) );
             }
         }
     }
@@ -433,7 +404,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param genes
      * @return
      */
-    @SuppressWarnings("unchecked")
+
     private Collection<DoubleVectorValueObject> handleGetProcessedExpressionDataArrays(
             Collection<ExpressionExperiment> ees, Collection<Gene> genes ) {
 
@@ -446,22 +417,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          */
         Collection<ExpressionExperiment> needToSearch = new HashSet<ExpressionExperiment>();
         Collection<Gene> genesToSearch = new HashSet<Gene>();
-        for ( ExpressionExperiment ee : ees ) {
-            for ( Gene g : genes ) {
-                VectorKey k = new VectorKey( ee, g );
-                Element element = cache.get( k );
-                if ( element != null ) {
-                    Collection<DoubleVectorValueObject> obs = ( Collection<DoubleVectorValueObject> ) element
-                            .getObjectValue();
-                    results.addAll( obs );
-                } else {
-                    genesToSearch.add( g );
-                }
-            }
-            if ( genesToSearch.size() > 0 ) {
-                needToSearch.add( ee );
-            }
-        }
+        checkCache( ees, genes, results, needToSearch, genesToSearch );
 
         if ( needToSearch.size() != 0 ) {
             Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genesToSearch, this
@@ -480,6 +436,35 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         return results;
 
+    }
+
+    /**
+     * @param ees
+     * @param genes
+     * @param results
+     * @param needToSearch
+     * @param genesToSearch
+     */
+    @SuppressWarnings("unchecked")
+    private void checkCache( Collection<ExpressionExperiment> ees, Collection<Gene> genes,
+            Collection<DoubleVectorValueObject> results, Collection<ExpressionExperiment> needToSearch,
+            Collection<Gene> genesToSearch ) {
+        for ( ExpressionExperiment ee : ees ) {
+            Cache cache = ProcessedDataVectorCache.getCache( ee );
+            for ( Gene g : genes ) {
+                Element element = cache.get( g );
+                if ( element != null ) {
+                    Collection<DoubleVectorValueObject> obs = ( Collection<DoubleVectorValueObject> ) element
+                            .getObjectValue();
+                    results.addAll( obs );
+                } else {
+                    genesToSearch.add( g );
+                }
+            }
+            if ( genesToSearch.size() > 0 ) {
+                needToSearch.add( ee );
+            }
+        }
     }
 
     /**
@@ -555,58 +540,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             result.add( new BooleanVectorValueObject( v ) );
         }
         return result;
-    }
-
-    /*
-     * To supply data vectors with unique keys for caching purposes where the important elements for retrieval are the
-     * EE and the Gene.
-     */
-    private class VectorKey {
-        Long eeId;
-        Long geneId;
-
-        public VectorKey( ExpressionExperiment ee, Gene g ) {
-            super();
-            this.eeId = ee.getId();
-            this.geneId = g.getId();
-        }
-
-        public VectorKey( Long eeId, Long geneId ) {
-            super();
-            this.eeId = eeId;
-            this.geneId = geneId;
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
-        @Override
-        public boolean equals( Object obj ) {
-            if ( this == obj ) return true;
-            if ( obj == null ) return false;
-            if ( getClass() != obj.getClass() ) return false;
-            final VectorKey other = ( VectorKey ) obj;
-            if ( eeId == null ) {
-                if ( other.eeId != null ) return false;
-            } else if ( !eeId.equals( other.eeId ) ) return false;
-            if ( geneId == null ) {
-                if ( other.geneId != null ) return false;
-            } else if ( !geneId.equals( other.geneId ) ) return false;
-            return true;
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see java.lang.Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            return ( int ) ( eeId << Integer.SIZE | geneId );
-
-        }
     }
 
 }
