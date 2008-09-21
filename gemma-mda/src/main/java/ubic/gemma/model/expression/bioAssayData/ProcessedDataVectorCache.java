@@ -29,6 +29,11 @@ import net.sf.ehcache.CacheManager;
 
 /**
  * Configures the cache for data vectors.
+ * <p>
+ * Implementation note: This uses ehCache. I have decided to make one cache per expression experiment. The reason for
+ * this is that having complex keys for cached Elements based on expression experiment AND gene makes it difficult to
+ * invalidate the cache when an expression experiment's data changes. The drawback is that there are potentially
+ * hundreds of caches; I don't know if there are any performance considerations there.
  * 
  * @author paul
  * @version $Id$
@@ -42,6 +47,10 @@ public class ProcessedDataVectorCache {
     private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL = true;
     private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
 
+    /**
+     * We retain references to the caches separately from the CacheManager. This _could_ create leaks of caches if the
+     * cache manager needs to recreate a cache for some reason. Something to keep in mind.
+     */
     private static final Map<ExpressionExperiment, Cache> caches = new HashMap<ExpressionExperiment, Cache>();
 
     private static String getCacheName( ExpressionExperiment e ) {
@@ -49,7 +58,9 @@ public class ProcessedDataVectorCache {
     }
 
     /**
-     * Remove all elements from the cache.
+     * Remove all elements from the cache for the given expression experiment, if the cache exists.
+     * 
+     * @param e the expression experiment - specific cache to be cleared.
      */
     public static void clearCache( ExpressionExperiment e ) {
         CacheManager manager = CacheManager.getInstance();
