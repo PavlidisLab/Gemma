@@ -14,18 +14,6 @@ Ext.onReady(function() {
 
 	var bd = Ext.getBody();
 
-	// var initUser = function() {
-	//
-	// var queryStart = document.URL.indexOf("?");
-	// var index = queryStart + 1;
-	// var query = document.URL.substr(index);
-	//
-	// return Ext.urlDecode(query);
-	//
-	// }
-	//
-	// var user = initUser();
-
 	/**
 	 * 
 	 */
@@ -38,6 +26,7 @@ Ext.onReady(function() {
 		monitorValid : true, // use with formBind in Button for client side validation
 		bodyStyle : 'padding:5px 5px 0',
 		width : 350,
+
 		keys : [{
 			key : Ext.EventObject.ENTER,
 			fn : function() {
@@ -49,16 +38,12 @@ Ext.onReady(function() {
 						window.location = target;
 					},
 					failure : function(form, action) {
-						var errMsg;
-						if (action.failureType == 'server') {
-							obj = Ext.util.JSON.decode(action.response.responseText);
-							errMsg = "<font color='red'>Submission Failed</font>"
-							Element.update('errorMessage', errMsg);
-						} else {
-							errMsg = "<font color='red'>Warning!, Authentication server is unreachable</font>"
-							Element.update('errorMessage', errMsg);
-						}
+						var errMsg = '';
+						errMsg = "<font color='red'>" + action.result.message + "</font>";
+						Element.update('errorMessage', errMsg);
+
 						editUser.getForm().reset();
+						Ext.getCmp('my-status').clearStatus();
 					}
 				});
 
@@ -72,27 +57,15 @@ Ext.onReady(function() {
 		defaultType : 'textfield',
 
 		items : [{
-			// fieldLabel : 'Username',
-			// name : 'username',
-			// allowBlank : false,
-			// value : user.user,
-			// vtype : 'alphanum'
-			// },
-
+			fieldLabel : 'Username',
+			name : 'username',
+			allowBlank : false,
+			vtype : 'alphanum'
+		}, {
 			fieldLabel : 'Email',
 			name : 'email',
 			allowBlank : false,
 			vtype : 'email'
-		}, {
-			fieldLabel : 'Firstname',
-			name : 'firstname',
-			allowBlank : true,
-			vtype : 'alpha'
-		}, {
-			fieldLabel : 'Lastname',
-			name : 'lastname',
-			allowBlank : true,
-			vtype : 'alpha'
 		}, {
 			fieldLabel : 'Password',
 			id : 'password',
@@ -140,16 +113,12 @@ Ext.onReady(function() {
 						window.location = target;
 					},
 					failure : function(form, action) {
-						var errMsg;
-						if (action.failureType == 'server') {
-							obj = Ext.util.JSON.decode(action.response.responseText);
-							errMsg = "<font color='red'>Submission Failed</font>"
-							Element.update('errorMessage', errMsg);
-						} else {
-							errMsg = "<font color='red'>Warning!, Authentication server is unreachable</font>"
-							Element.update('errorMessage', errMsg);
-						}
+						var errMsg = '';
+						errMsg = "<font color='red'>" + action.result.message + "</font>";
+						Element.update('errorMessage', errMsg);
+
 						editUser.getForm().reset();
+						Ext.getCmp('my-status').clearStatus();
 					}
 				});
 
@@ -166,5 +135,15 @@ Ext.onReady(function() {
 			busyText : 'Validating...'
 		})
 
+	})
+
+	editUser.form.load({
+		url : 'loadUser.html',
+		waitMsg : 'Loading',
+		failure : {},
+		success : function(form, action) {
+			var object = Ext.util.JSON.decode(action.response.responseText);
+			form.getComponent('username').setValue(object.user.username);
+		}
 	})
 });

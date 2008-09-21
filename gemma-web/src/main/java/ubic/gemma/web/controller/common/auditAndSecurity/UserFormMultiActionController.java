@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.security.Authentication;
 import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -42,6 +43,32 @@ import ubic.gemma.web.util.JSONUtil;
  * @spring.property name="methodNameResolver" ref="editUserActions"
  */
 public class UserFormMultiActionController extends UserAuthenticatingMultiActionController {
+
+    public void loadUser( HttpServletRequest request, HttpServletResponse response ) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAuthenticated = authentication.isAuthenticated();
+
+        if ( !isAuthenticated ) {
+            log.error( "User not authenticated.  Cannot populate user data." );
+            return;
+        }
+
+        String username = authentication.getPrincipal().toString();
+        User user = userService.findByUserName( username );
+        JSONUtil jsonUtil = new JSONUtil( request, response );
+
+        String jsonText = "{\"user\": {\"data\": [ {\"class\":\"ubic.gemma.model.common.auditAndSecurity.User\",\"id\":"
+                + user.getId() + ",\"username\":\"" + user.getUserName() + "\" } ] } }";
+        // String jsonText = "{user: {username:"+user.getUserName()+"}}";
+        try {
+            jsonUtil.writeToResponse( jsonText );
+        } catch ( IOException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
 
     /**
      * AJAX entry point.
@@ -86,8 +113,9 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
             userService.update( user );
             jsonText = "{success:true}";
         } catch ( Exception e ) {
-            e.printStackTrace();
-            jsonText = "{ success: false, errors: { reason: '" + e.getLocalizedMessage() + ".' }}";
+            log.error( e.getLocalizedMessage() );
+            jsonText = jsonUtil.getJSONErrorMessage( e );
+            log.info( jsonText );
         } finally {
             try {
                 jsonUtil.writeToResponse( jsonText );

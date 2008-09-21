@@ -86,8 +86,7 @@ public class SignupMultiActionController extends UserAuthenticatingMultiActionCo
              * Most common cause: user exists already.
              */
             log.error( e.getLocalizedMessage() );
-            String errMsg = e.getLocalizedMessage();
-            jsonText = "{success:false, message:\"" + errMsg + "\"}";
+            jsonText = jsonUtil.getJSONErrorMessage( e );
             log.info( jsonText );
         } finally {
             try {
