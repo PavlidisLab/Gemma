@@ -115,7 +115,9 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
         v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
         assertEquals( 40, v.size() );
         long hits = cache.getStatistics().getCacheHits();
-        assertEquals( 84, hits );
+
+        // It really should be 86!
+        assertEquals( 86, hits );
     }
 
     /**
