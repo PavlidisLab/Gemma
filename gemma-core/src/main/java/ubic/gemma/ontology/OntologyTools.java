@@ -140,7 +140,8 @@ public class OntologyTools {
     public static String varToString( String var, QuerySolution soln ) {
         try {
             Resource r = soln.getResource( var );
-            return r.toString();
+            if (r== null) return null;
+            else return r.toString();
         } catch ( ClassCastException c ) {
             Literal l = soln.getLiteral( var );
             return l.getString();
