@@ -6,8 +6,6 @@ import java.util.Properties;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 
 /**
@@ -23,14 +21,13 @@ import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
  */
 public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyPlaceholderConfigurer {
 
-    private Log log = LogFactory.getLog( CommonsConfigurationPropertyPlaceholderConfigurer.class.getName() );
     Configuration configuration;
 
     /**
      * @param conf the conf to set
      */
     public void setConfiguration( PropertiesConfiguration configuration ) {
-        log.debug( "Got configuration from " + configuration.getFileName() );
+        logger.debug( "Got configuration from " + configuration.getFileName() );
         this.configuration = configuration;
     }
 
@@ -44,10 +41,10 @@ public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyP
             for ( Iterator it = configuration.getKeys(); it.hasNext(); ) {
                 String key = ( String ) it.next();
                 result.setProperty( key, configuration.getString( key ) );
-                log.debug( key + "=" + configuration.getString( key ) );
+                logger.debug( key + "=" + configuration.getString( key ) );
             }
         } else {
-            log.warn( "Configuration was null" );
+            logger.warn( "Configuration was null" );
         }
 
         return result;

@@ -50,6 +50,7 @@
 			<prop key="/expressionExperiment/*">expressionExperimentController</prop>
 			<prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
 			<prop key="/loadExpressionExperiment.html">expressionExperimentLoadController</prop>
+			<prop key="/expressionExperiment/upload.html">expressionDataFileUploadController</prop>
 			<prop key="/expressionExperiment/expressionExperimentVisualization.html">
 				expressionExperimentVisualizationFormController
 			</prop>
@@ -208,6 +209,7 @@
 							<value>updateReport</value>
 							<value>getReportHtml</value>
 							<value>addAlternateName</value>
+							<value>getArrayDesigns</value>
 							<value>remove</value>
 						</list>
 					</property>

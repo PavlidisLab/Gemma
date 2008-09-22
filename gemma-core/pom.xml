@@ -60,7 +60,7 @@
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>-enableassertions -Xmx1g -Djava.awt.headless=true</argLine>
+					<argLine>-ea -Xmx256m -Djava.awt.headless=true</argLine>
 					<excludes>
 						<exclude>**/*Abstract*</exclude>
 						<exclude>**/*IntegrationTest.java</exclude>

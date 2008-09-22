@@ -118,8 +118,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
             ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
             vo.setName( set.getName() );
             vo.setId( set.getId() );
-            vo.setTaxonId( set.getTaxon().getId() );
-            vo.setTaxonName( set.getTaxon().getCommonName() ); // If I don't do this, won't be populated in the
+            Taxon taxon = set.getTaxon();
+            vo.setTaxonId( taxon.getId() );
+            vo.setTaxonName( taxon.getCommonName() ); // If I don't do this, won't be populated in the
             // downstream object. This is
             // basically a thaw.
 

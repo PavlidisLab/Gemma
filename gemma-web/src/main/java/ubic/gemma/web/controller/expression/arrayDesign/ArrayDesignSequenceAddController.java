@@ -120,7 +120,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
         }
 
         ProgressManager.updateCurrentThreadsProgressJob( "Copying file" );
-        File file = FileUploadUtil.copyUploadedFile( request, fileUpload, "sequenceFile.file" );
+        File file = FileUploadUtil.copyUploadedFile( request, "sequenceFile.file" );
 
         if ( !file.canRead() ) {
             errors.rejectValue( "file", "errors.required", "File was not uploaded successfully?" );

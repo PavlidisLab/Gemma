@@ -29,8 +29,7 @@ import java.io.OutputStream;
 /**
  * OutputStream that puts information on how many bytes have been read into a OutputStreamListener.
  * 
- * @author Original : plosson on 05-janv.-2006 10:46:33 - Last modified by Author: plosson $ on $Date: 2006/01/05
- *         10:09:38
+ * @author Original : plosson on 05-janv.-2006 10:46:33
  * @author pavlidis
  * @version $Id$
  */
@@ -39,7 +38,7 @@ public class MonitoredOutputStream extends OutputStream {
     private OutputStreamListener listener;
 
     private int totalBytes = 0;
-    
+
     /**
      * @param target
      * @param listener

@@ -26,7 +26,6 @@ package ubic.gemma.web.util.upload;
 import java.util.Queue;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,8 +36,10 @@ import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 
 /**
- * @author Original : plosson on 05-janv.-2006 10:46:33 - Last modified by Author: plosson $ on $Date: 2006/01/05
- *         10:09:38
+ * This is created when a multipart request is received (via the CommonsMultipartMonitoredResolver). It starts of a
+ * 'progress job',
+ * 
+ * @author Original : plosson
  * @author pavlidis
  * @version $Id$
  */
@@ -51,7 +52,8 @@ public class UploadListener implements OutputStreamListener {
     private long totalBytesRead = 0;
     private ProgressJob pJob;
     private String taskId;
-    private HttpSession session;
+
+    private HttpServletRequest request;
 
     /**
      * @param request
@@ -63,8 +65,8 @@ public class UploadListener implements OutputStreamListener {
     }
 
     public UploadListener( HttpServletRequest request ) {
+        this.request = request;
         this.totalToRead = request.getContentLength();
-        this.session = request.getSession();
     }
 
     /*
@@ -74,17 +76,22 @@ public class UploadListener implements OutputStreamListener {
      */
     public void start() {
         /*
-         * FIXME this is a temporary fallback until we can get reverse ajax working.
+         * This is equivalent to the 'run' method in the BackgroundProcessing controller, except the progress id has to
+         * be provided by the client.
          */
-        this.taskId = ( String ) this.session.getAttribute( "tmpTaskId" );
+        this.taskId = this.request.getParameter( "taskId" );
 
-        if ( taskId == null ) throw new IllegalStateException( "Task Id could not be located" );
+        if ( taskId == null ) {
+            log.fatal( "No task id" );
+            return;
+        }
 
         this.pJob = ProgressManager.createProgressJob( taskId, SecurityContextHolder.getContext().getAuthentication()
                 .getName(), "File Upload" );
 
         pJob.setForwardWhenDone( false );
         pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );
+
         log.debug( "Upload monitor started" );
     }
 
@@ -94,17 +101,22 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#bytesRead(int)
      */
     public void bytesRead( int bytesRead ) {
-        Queue<ProgressData> progressData = pJob.getProgressData();
 
-        if ( progressData == null || progressData.size() == 0 ) {
-            return; // probably it is finshed.
+        int oldPercent = 0;
+        if ( pJob != null ) {
+            Queue<ProgressData> progressData = pJob.getProgressData();
+            if ( progressData == null || progressData.size() == 0 ) {
+                return; // probably it is finshed.
+            }
+            oldPercent = progressData.peek().getPercent();
         }
-        int oldPercent = progressData.peek().getPercent();
 
         this.totalBytesRead = totalBytesRead + bytesRead;
         int newPercent = ( new Double( ( ( double ) totalBytesRead / totalToRead ) * 100.00 ) ).intValue();
         if ( newPercent > oldPercent + 5 || newPercent == 100 ) {
-            pJob.updateProgress( newPercent );
+            if ( pJob != null ) {
+                pJob.updateProgress( newPercent );
+            }
             // FIXME the oldPercent is always zero.
             log.debug( newPercent + "% read (" + totalBytesRead + "/" + totalToRead + " bytes) old percent="
                     + oldPercent );
@@ -134,11 +146,11 @@ public class UploadListener implements OutputStreamListener {
      * 
      * @see ubic.gemma.util.upload.OutputStreamListener#done()
      */
-
     public void done() {
-        pJob.updateProgress( new ProgressData( 100, "Finished Uploading. Processing File...", true ) );
-        ProgressManager.destroyProgressJob( pJob );
-
+        if ( pJob != null ) {
+            pJob.updateProgress( new ProgressData( 100, "Finished Uploading. Processing File...", true ) );
+            ProgressManager.destroyProgressJob( pJob );
+        }
     }
 
     public String getTaskId() {

@@ -360,13 +360,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
-     * @return the ontologyService
-     */
-    public AuditTrailService getAuditTrailService() {
-        return auditTrailService;
-    }
-
-    /**
      * Exposed for AJAX calls.
      * 
      * @param ed
@@ -598,43 +591,25 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         String sId = request.getParameter( "id" );
         boolean showMergees = Boolean.parseBoolean( request.getParameter( "showMerg" ) );
         boolean showOrphans = Boolean.parseBoolean( request.getParameter( "showOrph" ) );
-
-        Collection<ArrayDesignValueObject> valueObjects = new ArrayList<ArrayDesignValueObject>();
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
-        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
+
         if ( sId == null ) {
             this.saveMessage( request, "Displaying all Arrays" );
-            valueObjects.addAll( arrayDesignService.loadAllValueObjects() );
-            arrayDesignReportService.fillInValueObjects( valueObjects );
-        } else {// if ids are specified, then display only those arrayDesigns
-            Collection ids = new ArrayList<Long>();
+        }
 
+        Collection ids = new ArrayList<Long>();
+        if ( sId != null ) {
             String[] idList = StringUtils.split( sId, ',' );
             for ( int i = 0; i < idList.length; i++ ) {
                 ids.add( new Long( idList[i] ) );
             }
-            valueObjects.addAll( arrayDesignService.loadValueObjects( ids ) );
-            arrayDesignReportService.fillInValueObjects( valueObjects );
-            log.debug( "List of AD ids to load value objets for: " + idList );
-            log.debug( "Loading AD value objects took: " + overallWatch.getTime() / 1000 );
         }
 
+        Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMergees, showOrphans );
+
+        arrayDesignReportService.fillInValueObjects( valueObjects );
         arrayDesignReportService.fillEventInformation( valueObjects );
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
-
-        Collection<ArrayDesignValueObject> toHide = new HashSet<ArrayDesignValueObject>();
-        for ( ArrayDesignValueObject a : valueObjects ) {
-            if ( !showMergees && a.getIsMergee() ) {
-                toHide.add( a );
-            }
-            if ( !showOrphans && ( a.getExpressionExperimentCount() == null || a.getExpressionExperimentCount() == 0 ) ) {
-                toHide.add( a );
-            }
-        }
-        valueObjects.removeAll( toHide );
-
-        // Sort the ArrayDesigns
-        Collections.sort( ( List<ArrayDesignValueObject> ) valueObjects, new ArrayDesignValueObjectComparator() );
 
         Long numArrayDesigns = new Long( valueObjects.size() );
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
@@ -647,6 +622,40 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         log.info( "ArrayDesign.showall took: " + overallWatch.getTime() + "ms" );
 
         return mav;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param arrayDesignIds
+     * @param showMergees
+     * @param showOrphans
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ArrayDesignValueObject> getArrayDesigns( Collection<Long> arrayDesignIds, boolean showMergees,
+            boolean showOrphans ) {
+        List<ArrayDesignValueObject> valueObjects = new ArrayList<ArrayDesignValueObject>();
+        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
+        if ( arrayDesignIds.isEmpty() ) {
+            valueObjects.addAll( arrayDesignService.loadAllValueObjects() );
+        } else {// if ids are specified, then display only those arrayDesigns
+            valueObjects.addAll( arrayDesignService.loadValueObjects( arrayDesignIds ) );
+        }
+
+        Collection<ArrayDesignValueObject> toHide = new HashSet<ArrayDesignValueObject>();
+        for ( ArrayDesignValueObject a : valueObjects ) {
+            if ( !showMergees && a.getIsMergee() ) {
+                toHide.add( a );
+            }
+            if ( !showOrphans && ( a.getExpressionExperimentCount() == null || a.getExpressionExperimentCount() == 0 ) ) {
+                toHide.add( a );
+            }
+        }
+        valueObjects.removeAll( toHide );
+        Collections.sort( valueObjects, new ArrayDesignValueObjectComparator() );
+
+        return valueObjects;
     }
 
     /**

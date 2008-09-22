@@ -2,7 +2,7 @@
 -- are those defined by default in org.acegisecurity.acl.basic.jdbc.JdbcExtendedDaoImpl
 -- Don't change them!
 
-DROP TABLE IF EXISTS acl_object_identity;
+DROP TABLE IF EXISTS acl_object_identity_dep;
 CREATE TABLE acl_object_identity (
   id int(11) NOT NULL auto_increment,
   object_identity varchar(255) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE acl_object_identity (
   UNIQUE KEY object_identity (object_identity)
 ) TYPE=InnoDB;
 
-DROP TABLE IF EXISTS acl_permission;
+DROP TABLE IF EXISTS acl_permission_dep;
 CREATE TABLE acl_permission (
   id int(11) NOT NULL auto_increment,
   acl_object_identity int(11) NOT NULL,

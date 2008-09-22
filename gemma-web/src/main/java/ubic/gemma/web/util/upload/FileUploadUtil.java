@@ -30,11 +30,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 
 /**
  * Utility methods for uploading files.
@@ -49,26 +49,33 @@ public class FileUploadUtil {
 
     /**
      * @param request
-     * @param fileUpload
      * @param key
      * @return
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public static File copyUploadedFile( HttpServletRequest request, FileUpload fileUpload, String key )
-            throws IOException, FileNotFoundException {
+    public static File copyUploadedFile( HttpServletRequest request, String key ) throws IOException,
+            FileNotFoundException {
         MultipartHttpServletRequest multipartRequest = ( MultipartHttpServletRequest ) request;
-        CommonsMultipartFile file = ( CommonsMultipartFile ) multipartRequest.getFile( key );
+        MultipartFile file = multipartRequest.getFile( key );
 
         if ( file == null ) {
             throw new IllegalArgumentException( "File with key " + key + " was not in the request" );
         }
+        return copyUploadedFile( file, request );
+    }
 
-        String copiedFilePath = getLocalUploadLocation( request, fileUpload, file );
+    /**
+     * @param multipartFile
+     */
+    public static File copyUploadedFile( MultipartFile multipartFile, HttpServletRequest request ) throws IOException,
+            FileNotFoundException {
+
+        String copiedFilePath = getLocalUploadLocation( request, multipartFile );
 
         File copiedFile = new File( copiedFilePath );
 
-        copyFile( file, copiedFile );
+        copyFile( multipartFile, copiedFile );
 
         if ( !copiedFile.canRead() || copiedFile.length() == 0 ) {
             throw new IllegalArgumentException( "Uploaded file is not readable or of size zero" );
@@ -76,15 +83,16 @@ public class FileUploadUtil {
 
         if ( request != null ) {
             String link = getContextUploadPath(); // FIXME - this will not yield a valid url.
-            request.setAttribute( "link", link + file.getOriginalFilename() );
+            request.setAttribute( "link", link + multipartFile.getOriginalFilename() );
 
             // place the data into the request for retrieval on next page
-            request.setAttribute( "fileName", file.getOriginalFilename() );
-            request.setAttribute( "contentType", file.getContentType() );
-            request.setAttribute( "size", file.getSize() + " bytes" );
-            request.setAttribute( "location", fileUpload.getLocalPath() );
+            request.setAttribute( "fileName", multipartFile.getOriginalFilename() );
+            request.setAttribute( "contentType", multipartFile.getContentType() );
+            request.setAttribute( "size", multipartFile.getSize() + " bytes" );
+            request.setAttribute( "location", copiedFilePath );
         }
         return copiedFile;
+
     }
 
     /**
@@ -93,8 +101,7 @@ public class FileUploadUtil {
      * @param file
      * @return
      */
-    private static String getLocalUploadLocation( HttpServletRequest request, FileUpload fileUpload,
-            CommonsMultipartFile file ) {
+    private static String getLocalUploadLocation( HttpServletRequest request, MultipartFile file ) {
         // the directory to upload to - put it in a user-specific directory for now.
         String uploadDir = getUploadPath();
 
@@ -106,7 +113,6 @@ public class FileUploadUtil {
                 + ( request == null || request.getSession() == null ? RandomStringUtils.randomAlphanumeric( 20 )
                         : request.getSession().getId() ) + "__" + file.getOriginalFilename();
 
-        fileUpload.setLocalPath( copiedFile );
         return copiedFile;
     }
 
@@ -127,8 +133,7 @@ public class FileUploadUtil {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private static void copyFile( CommonsMultipartFile file, File copiedFile ) throws FileNotFoundException,
-            IOException {
+    private static void copyFile( MultipartFile file, File copiedFile ) throws FileNotFoundException, IOException {
         log.info( "Copying file " + file + " (" + file.getSize() + " bytes)" );
         // write the file to the file specified
         InputStream stream = file.getInputStream();

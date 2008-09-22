@@ -81,6 +81,7 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="taxonService" ref="taxonService"
+ * @deprecated use ExpressionDataFileUploadController
  */
 public class SimpleExpressionExperimentLoadController extends AbstractSpacesFormController {
 
@@ -310,7 +311,7 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
             return showForm( request, response, errors );
         }
 
-        File file = FileUploadUtil.copyUploadedFile( request, fileUpload, "dataFile.file" );
+        File file = FileUploadUtil.copyUploadedFile( request, "dataFile.file" );
 
         if ( !file.canRead() ) {
             errors.rejectValue( "dataFile", "errors.required", "Data file was not uploaded successfully?" );
@@ -343,7 +344,7 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
         }
 
         if ( StringUtils.isBlank( fileUpload.getLocalPath() ) ) {
-            FileUploadUtil.copyUploadedFile( null, fileUpload, "dataFile.file" );
+            FileUploadUtil.copyUploadedFile( null, "dataFile.file" );
         }
 
         return this.run( ed );

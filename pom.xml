@@ -179,7 +179,7 @@
 					<groupId>org.springframework</groupId>
 					<artifactId>spring-core</artifactId>
 				</exclusion>
-					<exclusion>
+				<exclusion>
 					<groupId>org.springframework</groupId>
 					<artifactId>spring-aop</artifactId>
 				</exclusion>
@@ -210,7 +210,7 @@
 				<exclusion>
 					<groupId>ehcache</groupId>
 					<artifactId>ehcache</artifactId>
-				</exclusion>			
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -261,6 +261,13 @@
 			<artifactId>aspectjrt</artifactId>
 			<version>1.6.1</version>
 			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+			<version>1.6.0</version>
+			<type>jar</type>
+			<scope>run</scope>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -398,7 +405,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>-Xmx1024m -enableassertions</argLine>
+					<argLine>-Xmx256m -ea</argLine>
 				</configuration>
 			</plugin>
 			<plugin>

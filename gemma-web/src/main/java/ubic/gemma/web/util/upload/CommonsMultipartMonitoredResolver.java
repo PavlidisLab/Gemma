@@ -41,6 +41,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
@@ -82,15 +83,15 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
     }
 
     /*
-     * This is called when a multipart HTTP request is received.
+     * This is called when a multipart HTTP request is received. When intercepted, the request is attached to a monitor
+     * that can be used to check progress of the upload.
      * 
+     * @see UploadListener for the attached listener.
      * @see org.springframework.web.multipart.MultipartResolver#resolveMultipart(javax.servlet.http.HttpServletRequest)
      */
     @SuppressWarnings("unchecked")
     public MultipartHttpServletRequest resolveMultipart( HttpServletRequest request ) throws MultipartException {
-
         String enc = determineEncoding( request );
-
         ServletFileUpload upload = this.newFileUpload( request );
         DiskFileItemFactory newFactory = ( DiskFileItemFactory ) upload.getFileItemFactory();
         upload.setSizeMax( sizeMax );
@@ -129,14 +130,13 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
                     }
                 } else {
                     // multipart file field
-                    CommonsMultipartFile file = new CommonsMultipartFile( fileItem );
+                    MultipartFile file = new CommonsMultipartFile( fileItem );
                     multipartFiles.put( file.getName(), file );
-                    // / multipartParams.put( "size", new String[] { ( new Long( file.getSize() ) ).toString() } );
-                    // multipartParams.put( "file", new String[] { file.getOriginalFilename() } );
+//                    multipartParams.put( "size", new String[] { ( new Long( file.getSize() ) ).toString() } );
+//                    multipartParams.put( "file", new String[] { file.getOriginalFilename() } );
                     if ( logger.isDebugEnabled() ) {
                         logger.debug( "Found multipart file [" + file.getName() + "] of size " + file.getSize()
-                                + " bytes with original filename [" + file.getOriginalFilename() + "], stored "
-                                + file.getStorageDescription() );
+                                + " bytes with original filename [" + file.getOriginalFilename() + "]" );
                     }
                 }
             }

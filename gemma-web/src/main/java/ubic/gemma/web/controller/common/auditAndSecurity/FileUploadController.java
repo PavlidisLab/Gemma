@@ -22,74 +22,33 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.validation.BindException;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.servlet.mvc.AbstractUrlViewController;
 
-import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.util.upload.FileUploadUtil;
 
 /**
- * Controller class to upload Files. This demonstrates the technique, but isn't all that useful as is.
+ * Controller class to upload Files.
  * 
- * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
+ * @author paul
  * @author keshav
+ * @author Traces of Matt Raible
  * @version $Id$
  * @spring.bean id="fileUploadController"
- * @spring.property name="commandName" value="fileUpload"
- * @spring.property name="commandClass" value="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload"
- * @spring.property name="validator" ref="fileUploadValidator"
- * @spring.property name="formView" value="uploadForm"
- * @spring.property name="successView" value="uploadDisplay"
  */
-public class FileUploadController extends BaseFormController {
+public class FileUploadController extends AbstractUrlViewController {
 
     private static Log log = LogFactory.getLog( FileUploadController.class.getName() );
-
-    /**
-     * 
-     */
-    @Override
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-
-        if ( errors.hasErrors() ) {
-            log.warn( "Errors..." );
-        }
-        // When this is reached, the file has already been uploaded.
-        FileUpload fileUpload = ( FileUpload ) command;
-
-        // validate a file was entered
-        if ( fileUpload.getFile().length == 0 ) {
-            Object[] args = new Object[] { getText( "uploadForm.file", request.getLocale() ) };
-            errors.rejectValue( "file", "errors.required", args, "File" );
-            response.getWriter().write( "{success : false, error : 'File is required'}" );
-            return null;
-        }
-        File copiedFile = null;
-        try {
-            copiedFile = FileUploadUtil.copyUploadedFile( request, fileUpload, "file" );
-            log.info( "Uploaded file!" );
-        } catch ( Exception e ) {
-            response.getWriter().write( "{success : false, error: '" + e.getMessage() + "' }" );
-            return null;
-        }
-
-        if ( copiedFile == null ) {
-            response.getWriter().write( "{success : false, error : 'unknown problem getting file' }" );
-            return null;
-        }
-
-        response.getWriter().write( "{success : true, localFile : '" + copiedFile.getAbsolutePath() + "'}" );
-        response.getWriter().flush();
-        return null;
-    }
 
     /**
      * Ajax. DWR can handle this.
@@ -103,16 +62,70 @@ public class FileUploadController extends BaseFormController {
         return copiedFile.getAbsolutePath();
     }
 
-    /**
+    /*
+     * (non-Javadoc)
      * 
+     * @see org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse)
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
-        if ( request.getParameter( "cancel" ) != null ) {
-            return new ModelAndView( new RedirectView( "mainMenu.html" ) );
+    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response ) {
+
+        if ( !( request instanceof MultipartHttpServletRequest ) ) {
+            return super.handleRequestInternal( request, response );
         }
 
-        return super.processFormSubmission( request, response, command, errors );
+        MultipartHttpServletRequest mrequest = ( MultipartHttpServletRequest ) request;
+
+        Map<String, MultipartFile> fileMap = mrequest.getFileMap();
+        try {
+            if ( fileMap.size() > 1 ) {
+                response.getWriter().write(
+                        "{success : false, error: 'Sorry, can't upload more than one file at a time yet' }" );
+                return null;
+            }
+
+            for ( String key : fileMap.keySet() ) {
+                MultipartFile multipartFile = fileMap.get( key );
+                File copiedFile = null;
+                try {
+                    copiedFile = FileUploadUtil.copyUploadedFile( multipartFile, request );
+                    log.info( "Uploaded file! " + copiedFile );
+                } catch ( Exception e ) {
+                    response.getWriter().write(
+                            "{success : false, error: '" + e.getMessage() + "', localFile : '"
+                                    + StringEscapeUtils.escapeJava( copiedFile.getAbsolutePath() ) + "'}" );
+                    return null;
+                }
+
+                if ( copiedFile == null ) {
+                    response.getWriter().write(
+                            "{success : false, error : 'unknown problem getting file' ,localFile : '"
+                                    + StringEscapeUtils.escapeJava( copiedFile.getAbsolutePath() ) + "'}" );
+                    return null;
+                }
+
+                response.getWriter().write(
+                        "{success : true,  localFile : '" + StringEscapeUtils.escapeJava( copiedFile.getAbsolutePath() )
+                                + "', originalFile : '" + multipartFile.getOriginalFilename() + "', size : "
+                                + multipartFile.getSize() + "}" );
+                response.getWriter().flush();
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.HttpServletRequest)
+     */
+    @Override
+    protected String getViewNameForRequest( HttpServletRequest request ) {
+        return "uploadForm";
     }
 }

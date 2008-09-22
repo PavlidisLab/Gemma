@@ -92,13 +92,14 @@
 				<property name="specificCollectionInterfaces">false</property>
 				<property name="associationEndCollectionIndexName">orderedCollectionIndex</property>
 				<property name="configuration">${maven.andromda.hibernate.configuration.dir}</property>
-				<property name="hibernateEnableCache">true</property>
-				<property name="cache">${maven.andromda.hibernate.configuration.dir}</property>
-				<property name="hibernateEnableAssociationsCache">true</property>
-				<property name="ehCacheTimeToIdleSeconds">200</property>
-				<property name="ehCacheTimeToLiveSeconds">200</property>
-				<property name="ehCacheMaxElementsInMemory">2000</property>
-				<property name="ehCacheOverflowToDisk">false</property>
+				<!-- 
+					<property name="hibernateEnableCache">true</property>
+					<property name="cache">${maven.andromda.hibernate.configuration.dir}</property>
+					<property name="hibernateEnableAssociationsCache">true</property>
+					<property name="ehCacheTimeToIdleSeconds">200</property>
+					<property name="ehCacheTimeToLiveSeconds">200</property>
+					<property name="ehCacheMaxElementsInMemory">2000</property>
+					<property name="ehCacheOverflowToDisk">false</property> -->
 				<property name="hibernateTransactionFactoryClass">
 					org.hibernate.transaction.JTATransactionFactory
 				</property>

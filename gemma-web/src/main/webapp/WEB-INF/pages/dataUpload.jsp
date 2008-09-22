@@ -1,9 +1,10 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
 
-	<title>File upload demo</title>
+	<title>Expression data upload</title>
 
-	<jwr:script src='/scripts/ajax/fileUpload.js' useRandomParam="false" />
+	<jwr:script src='/scripts/ajax/util/FileUploadForm.js' useRandomParam="false" />
+	<jwr:script src='/scripts/app/UserExpressionDataUpload.js' useRandomParam="false" />
 
 	<style>
 .upload-icon {
@@ -24,22 +25,8 @@
 
 <body>
 
-	<script>
-	
-	Ext.namespace('Gemma');
-	Ext.form.Field.prototype.msgTarget = 'side';
-	Ext.BLANK_IMAGE_URL = "/Gemma/images/s.gif";
-
-	 
-	Ext.onReady( function()
-	 {
-	 	var form = new Gemma.FileUploadForm({renderTo : 'fi-form'});
-	 });	
-		
-		</script>
-
 	<div id="messages"></div>
-	<div id="fi-form"></div>
+	<div id="form"></div>
 	<div id="progress-area" style="margin: 20px; padding: 5px;"></div>
 
 </body>
