@@ -58,14 +58,19 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
         User user = userService.findByUserName( username );
         JSONUtil jsonUtil = new JSONUtil( request, response );
 
-        String jsonText = "{\"user\": {\"data\": [ {\"class\":\"ubic.gemma.model.common.auditAndSecurity.User\",\"id\":"
-                + user.getId() + ",\"username\":\"" + user.getUserName() + "\" } ] } }";
-        // String jsonText = "{user: {username:"+user.getUserName()+"}}";
+        String jsonText = null;
         try {
-            jsonUtil.writeToResponse( jsonText );
-        } catch ( IOException e ) {
-            // TODO Auto-generated catch block
+            jsonText = "{\"user\": {\"data\": [ {\"class\":\"ubic.gemma.model.common.auditAndSecurity.User\",\"id\":"
+                    + user.getId() + ",\"username\":\"" + user.getUserName() + "\" } ] } }";
+        } catch ( Exception e ) {
             e.printStackTrace();
+            jsonText = "{\"user\": {\"data\": [], \"message\": \"Exception occurred during the retrieval of the user.\",\"success\":false,\"totalRows\":0} }";
+        } finally {
+            try {
+                jsonUtil.writeToResponse( jsonText );
+            } catch ( IOException e ) {
+                e.printStackTrace();
+            }
         }
 
     }

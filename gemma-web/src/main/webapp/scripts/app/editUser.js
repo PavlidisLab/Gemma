@@ -140,9 +140,14 @@ Ext.onReady(function() {
 	editUser.form.load({
 		url : 'loadUser.html',
 		waitMsg : 'Loading',
-		failure : {},
+		failure : function(form, action) {
+			var object = Ext.util.JSON.decode(action.response.responseText);
+			failureMessage = object.user.message;
+		},
 		success : function(form, action) {
 			var object = Ext.util.JSON.decode(action.response.responseText);
+			console.log(object.user.username);
+			form.getComponent('username').setValue("foo");
 		}
 	})
 });
