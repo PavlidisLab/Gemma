@@ -557,6 +557,7 @@
 					<property name="includes">
 						<list>
 							<value>getDEDV</value>
+							<value>getDEDVForVisulization</value>
 						</list>
 					</property>
 				</bean>
@@ -1314,6 +1315,18 @@
 					</property>
 				</bean>
 			</entry>
+			<entry key="ubic.gemma.web.controller.visualization.VisualizationValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>cordinates</value>
+							<value>genes</value>
+							<value>ee</value>
+						</list>
+					</property>
+				</bean>
+			</entry>								
 		</map>
 	</property>
 </bean>
