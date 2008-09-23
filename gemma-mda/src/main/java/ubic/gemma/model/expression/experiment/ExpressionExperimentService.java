@@ -35,7 +35,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<ExpressionExperiment> loadAll();
 
     /**
      *  
@@ -60,7 +60,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Collection findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator );
+    public java.util.Collection<ExpressionExperiment> findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 
     /**
      * 
@@ -157,19 +157,19 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Collection loadAllValueObjects();
+    public java.util.Collection<ExpressionExperimentValueObject> loadAllValueObjects();
 
     /**
      * 
      */
-    public java.util.Collection loadValueObjects( java.util.Collection ids );
+    public java.util.Collection<ExpressionExperimentValueObject> loadValueObjects( java.util.Collection ids );
 
     /**
      * <p>
      * gets all EE that match the given Taxon
      * </p>
      */
-    public java.util.Collection findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -211,7 +211,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Collection loadMultiple( java.util.Collection ids );
+    public java.util.Collection loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * <p>
