@@ -255,4 +255,8 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         }
     }
 
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
 }
