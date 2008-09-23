@@ -82,8 +82,6 @@ public class GeneCoexpressionService {
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
     private GeneService geneService;
 
-   
-
     /**
      * @param eeSetId
      * @param eeIds Experiments to limit the results to (can be null)
@@ -325,8 +323,8 @@ public class GeneCoexpressionService {
 
             if ( eeSetIds.containsAll( eeIds ) ) {
                 log.info( "Using canned analysis to conduct customized analysis" );
-                return getFilteredCannedAnalysisResults( eeSet.getId(), eeIds, genes, stringency,
-                        maxResults, queryGenesOnly );
+                return getFilteredCannedAnalysisResults( eeSet.getId(), eeIds, genes, stringency, maxResults,
+                        queryGenesOnly );
             }
         }
 
@@ -579,6 +577,10 @@ public class GeneCoexpressionService {
         for ( Gene g : genes ) {
             eeIds.addAll( expressionExperimentService.findByGene( g ) );
         }
+
+        // FIXME: Can't add expressionExperiment generic to return value of expressionExperiment.loadMulitple because of
+        // the dependency of BioAssaySet being returned in methods like this.
+
         return eeIds.isEmpty() ? new HashSet<ExpressionExperiment>() : expressionExperimentService.loadMultiple( eeIds );
     }
 
