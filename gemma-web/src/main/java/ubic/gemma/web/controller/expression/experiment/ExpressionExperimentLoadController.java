@@ -52,7 +52,7 @@ import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.gemmaspaces.AbstractSpacesFormController;
+import ubic.gemma.web.controller.grid.AbstractSpacesFormController;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.util.MessageUtil;
 
@@ -325,7 +325,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
          * @param messenger
          */
         public LoadJob( String taskId, SecurityContext parentSecurityContext, Object commandObj, MessageUtil messenger ) {
-            super( taskId, parentSecurityContext, commandObj, messenger );
+            super( taskId, commandObj, messenger );
             if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
                 geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             }

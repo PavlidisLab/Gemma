@@ -51,6 +51,7 @@
 			<prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
 			<prop key="/loadExpressionExperiment.html">expressionExperimentLoadController</prop>
 			<prop key="/expressionExperiment/upload.html">expressionDataFileUploadController</prop>
+			<prop key="/loadSimpleExpressionExperiment.html">expressionDataFileUploadController</prop>
 			<prop key="/expressionExperiment/expressionExperimentVisualization.html">
 				expressionExperimentVisualizationFormController
 			</prop>
@@ -66,7 +67,7 @@
 			<prop key="/addTestData.html">testDataAddingController</prop>
 			<prop key="/genome/goldenPathSequenceLoad.html">goldenPathSequenceLoadController</prop>
 			<prop key="/genome/bioSequence/*">bioSequenceController</prop>
-			<prop key="/loadSimpleExpressionExperiment.html">simpleExpressionExperimentLoadController</prop>
+
 			<prop key="/processDelete.html">processDeleteController</prop>
 			<prop key="/checkJobProgress.html">taskCompletionController</prop>
 			<prop key="/mock.html">mockController</prop>
@@ -396,16 +397,17 @@
 					</property>
 				</bean>
 			</entry>
-			<entry key="SimpleExpressionExperimentLoadController">
+			<entry key="ExpressionDataFileUploadController">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">
 						<bean class="org.directwebremoting.spring.BeanCreator">
-							<property name="bean" ref="simpleExpressionExperimentLoadController" />
+							<property name="bean" ref="expressionDataFileUploadController" />
 						</bean>
 					</property>
 					<property name="includes">
 						<list>
 							<value>load</value>
+							<value>validate</value>
 						</list>
 					</property>
 				</bean>
@@ -489,7 +491,7 @@
 					</property>
 					<property name="includes">
 						<list>
-							<value>doSearch</value>						
+							<value>doSearch</value>
 							<value>findExpressionExperiments</value>
 						</list>
 					</property>
@@ -1339,7 +1341,7 @@
 <bean id="registerController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
 	name="/register.html" />
 <bean id="userProfileController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-	name="/userProfile.html" />		
+	name="/userProfile.html" />
 <!-- ==================================================== -->
 <!-- Exception handler. -->
 <!-- ==================================================== -->
@@ -1514,16 +1516,14 @@
 		</props>
 	</property>
 </bean>
-<bean id="signupActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="signupActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/signup.html">onSubmit</prop>
 		</props>
 	</property>
 </bean>
-<bean id="editUserActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="editUserActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/loadUser.html">loadUser</prop>

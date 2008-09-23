@@ -20,6 +20,7 @@ package ubic.gemma.web.controller;
 
 import java.util.concurrent.Callable;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.logging.Log;
@@ -78,17 +79,22 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
         this.taskId = taskId;
     }
 
+    public BackgroundControllerJob( String taskId, Object commandObj ) {
+        this.securityContext = SecurityContextHolder.getContext();
+        this.taskId = taskId;
+        this.command = commandObj;
+    }
+
     /**
      * @param securityContext
      * @param command
      * @param jobDescription
      */
-    public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
-            MessageUtil messenger ) {
+    public BackgroundControllerJob( String taskId, Object commandObj, MessageUtil messenger ) {
         this( messenger );
+        this.securityContext = SecurityContextHolder.getContext();
         this.taskId = taskId;
         this.command = commandObj;
-
     }
 
     /**
@@ -97,13 +103,21 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
      * @param msgUtil
      */
     public BackgroundControllerJob( MessageUtil msgUtil ) {
+        this();
+        this.messageUtil = msgUtil;
+    }
+
+    /**
+     * 
+     */
+    public BackgroundControllerJob() {
         super();
         this.securityContext = SecurityContextHolder.getContext();
         WebContext ctx = WebContextFactory.get();
         if ( ctx != null ) {
             this.session = ctx.getSession( false );
         }
-        this.messageUtil = msgUtil;
+
     }
 
     /**
@@ -119,12 +133,6 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
         this.messageUtil = msgUtil;
     }
 
-    public BackgroundControllerJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
-            MessageUtil messenger, BindException errors ) {
-        this( taskId, parentSecurityContext, commandObj, messenger );
-        this.errors = errors;
-    }
-
     /**
      * @param session
      * @param msg
@@ -132,8 +140,11 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
      */
     public void saveMessage( String msg ) {
         log.info( msg );
-        if ( session != null ) {
+
+        if ( session != null && this.messageUtil != null ) {
             this.messageUtil.saveMessage( session, msg );
+        } else {
+            log.warn( "Could not save message to the session" );
         }
     }
 

@@ -71,7 +71,7 @@ public class MockLongJobController extends BackgroundProcessingFormController {
  
 
         public WasteOfTime( String taskId, SecurityContext securityContext, Object command, MessageUtil messenger ) {
-            super( taskId, securityContext, command, messenger );
+            super( taskId, command, messenger );
             this.die = command;
         }
 

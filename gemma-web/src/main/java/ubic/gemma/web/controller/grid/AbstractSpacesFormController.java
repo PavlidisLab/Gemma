@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.gemmaspaces;
+package ubic.gemma.web.controller.grid;
 
 import java.util.concurrent.FutureTask;
 

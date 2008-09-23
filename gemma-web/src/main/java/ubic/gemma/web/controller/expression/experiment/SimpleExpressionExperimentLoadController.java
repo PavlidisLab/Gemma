@@ -58,7 +58,7 @@ import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
-import ubic.gemma.web.controller.gemmaspaces.AbstractSpacesFormController;
+import ubic.gemma.web.controller.grid.AbstractSpacesFormController;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
@@ -205,7 +205,7 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
 
         public SimpleEELoadJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
                 MessageUtil messenger, SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
-            super( taskId, parentSecurityContext, commandObj, messenger );
+            super( taskId, commandObj, messenger );
             this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
         }
 

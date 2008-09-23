@@ -36,6 +36,20 @@ public class SimpleExpressionExperimentLoadCommand extends SimpleExpressionExper
     FileUpload dataFile;
     private String arrayDesignName;
     private String taxonName;
+    boolean validateOnly;
+
+    /**
+     * Whether the command object should be validated or actually processed.
+     * 
+     * @return
+     */
+    protected boolean isValidateOnly() {
+        return validateOnly;
+    }
+
+    protected void setValidateOnly( boolean validateOnly ) {
+        this.validateOnly = validateOnly;
+    }
 
     public SimpleExpressionExperimentLoadCommand() {
         this.dataFile = new FileUpload();
