@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import ubic.basecode.dataStructure.DoublePoint;
-import ubic.basecode.dataStructure.Point;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
