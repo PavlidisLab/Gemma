@@ -20,7 +20,6 @@ package ubic.gemma.web.controller;
 
 import java.util.concurrent.Callable;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.logging.Log;
@@ -152,6 +151,12 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
      * This should be called in the first line of the implementation of the call method.
      */
     protected void init() {
+        if ( this.securityContext == null ) {
+            throw new IllegalStateException( "Security context was not provided" );
+        }
+        if ( this.securityContext.getAuthentication() == null ) {
+            throw new IllegalStateException( "No authentication was provided" );
+        }
         SecurityContextHolder.setContext( securityContext );
     }
 }
