@@ -557,10 +557,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 }
                 Hibernate.initialize( gene.getAliases() );
                 Hibernate.initialize( gene.getAccessions() );
-                session.lock( gene.getTaxon(), LockMode.NONE );
-                Hibernate.initialize( gene.getTaxon() );
-                if ( gene.getTaxon().getExternalDatabase() != null ) {
-                    Hibernate.initialize( gene.getTaxon().getExternalDatabase() );
+                Taxon t = (Taxon) session.get( TaxonImpl.class , gene.getTaxon().getId());
+                Hibernate.initialize( t );
+                if ( t.getExternalDatabase() != null ) {
+                    Hibernate.initialize( t.getExternalDatabase() );
                 }
                 return null;
             }
@@ -575,11 +575,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Gene gene : ( Collection<Gene> ) genes ) {
                     session.lock( gene, LockMode.NONE );
-                    Hibernate.initialize( gene );
-                    session.lock( gene.getTaxon(), LockMode.NONE );
-                    Hibernate.initialize( gene.getTaxon() );
-                    if ( gene.getTaxon().getExternalDatabase() != null ) {
-                        Hibernate.initialize( gene.getTaxon().getExternalDatabase() );
+                    Hibernate.initialize( gene );                    
+                    Taxon t = (Taxon) session.get( TaxonImpl.class , gene.getTaxon().getId());
+                    Hibernate.initialize( t );
+
+                    if ( t.getExternalDatabase() != null ) {
+                        Hibernate.initialize( t.getExternalDatabase() );
                     }
                 }
                 return null;
