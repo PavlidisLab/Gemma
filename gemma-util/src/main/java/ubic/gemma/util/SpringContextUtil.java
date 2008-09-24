@@ -18,8 +18,6 @@
  */
 package ubic.gemma.util;
 
-import java.io.File;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -161,7 +159,7 @@ public class SpringContextUtil {
     private static void addCommonConfig( boolean isWebapp, List<String> paths ) {
         /*
          * Note that the order here matters, somewhat - in some environments, configuring beans in schedule fails if
-         * search is not listed first.
+         * search is not listed first (?).
          */
         paths.add( "classpath*:ubic/gemma/applicationContext-security.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-hibernate.xml" );
@@ -169,15 +167,19 @@ public class SpringContextUtil {
         paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-schedule.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-persisterBeans.xml" );
-        File f = new File( getGemmaHomeProperty() );
-        try {
-            if ( isWebapp ) {
-                paths.add( "classpath*:ubic/gemma/applicationContext-validation.xml" );
-                paths.add( f.toURI().toURL() + "gemma-web/target/Gemma/WEB-INF/" + "action-servlet.xml" );
-            }
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( "Could not form valid URL for " + f.getAbsolutePath(), e );
-        }
+
+        /*
+         * When using a web context, we get the config locations from the web.xml files --- not using this class.
+         */
+        // File f = new File( getGemmaHomeProperty() );
+        // try {
+        // if ( isWebapp ) {
+        // paths.add( f.toURI().toURL() + "gemma-web/target/Gemma/WEB-INF/" + "action-servlet.xml" );
+        // paths.add( "classpath*:ubic/gemma/applicationContext-validation.xml" );
+        // }
+        // } catch ( MalformedURLException e ) {
+        // throw new RuntimeException( "Could not form valid URL for " + f.getAbsolutePath(), e );
+        // }
     }
 
     /**
