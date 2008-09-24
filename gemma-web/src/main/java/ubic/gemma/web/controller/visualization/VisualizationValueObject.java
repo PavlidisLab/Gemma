@@ -41,8 +41,9 @@ public class VisualizationValueObject {
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.ee == null ) {
                 this.ee = vector.getExpressionExperiment();
-            } else if ( this.ee != vector.getExpressionExperiment() ) {
-                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor" );
+            } 
+            else if (!( this.ee.equals( vector.getExpressionExperiment() ))) {
+                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "+ this.ee.getId() + "  ee2: " + vector.getExpressionExperiment().getId());
             }
 
             GeneExpressionProfile profile = new GeneExpressionProfile( vector );

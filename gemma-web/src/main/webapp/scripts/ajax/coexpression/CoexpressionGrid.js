@@ -203,7 +203,11 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * 
 	 */
 	foundGeneStyler : function(value, metadata, record, row, col, ds) {
+		
 		var g = record.data.foundGene;
+		var eeIds = record.data.supportingExperiments;
+		var queryG = record.data.queryGene;
+		
 		if (g.officialName === null) {
 			g.officialName = "";
 		}
@@ -287,7 +291,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	foundGeneTemplate : new Ext.Template(
 			"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
-			" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}")
+			" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a>  <a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}")
 
 });
 Gemma.CoexpressionGrid.bitImageBarWidth = 1;
@@ -310,13 +314,19 @@ Gemma.CoexpressionGrid.visualize = function(experimentIds, geneIds) {
 
 	var loadVisData = function(data) {
 
-		var index;
-		for (index in data) {
+		for (var k = 0; k<data.size(); k++){
 			 
-			
-			var flotrData = [];
-			var coordinateProfile = data[index].profiles
 
+			var flotrData = [];
+			var coordinateProfile = data[k].profiles;
+			var ee = data[k].ee;
+			
+			if (!coordinateProfile){
+				console.log(coordinateProfile);
+				return;
+			}
+				
+			
 			for (var i = 0; i < coordinateProfile.size(); i++) {
 				var coordinateObject = coordinateProfile[i].points;
 				var coordinateSimple = [];
@@ -329,7 +339,7 @@ Gemma.CoexpressionGrid.visualize = function(experimentIds, geneIds) {
 
 			// Create a DIV for data.
 			var dh = Ext.DomHelper;
-			var newDivName = "visualization4EE" + data[index].ee.shortName;
+			var newDivName = "visualization4EE" + ee.shortName;
 			var newDiv = dh.append('coexpression-visualization', {
 				tag : 'div',
 				id : newDivName,

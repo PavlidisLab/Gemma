@@ -105,7 +105,7 @@ public class DEDVController extends BaseFormController {
      * @return
      */
 
-    public Collection<VisualizationValueObject> getDEDVForVisualization( Collection<Long> eeIds,
+    public VisualizationValueObject[] getDEDVForVisualization( Collection<Long> eeIds,
             Collection<Long> geneIds ) {
 
         StopWatch watch = new StopWatch();
@@ -139,10 +139,11 @@ public class DEDVController extends BaseFormController {
      * @param dedvs
      * @return
      */
-    private Collection<VisualizationValueObject> makeVisCollection( Collection<DoubleVectorValueObject> dedvs ) {
+    private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs ) {
 
         Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
 
+        //Organize by expression experiment
         for ( DoubleVectorValueObject dvvo : dedvs ) {
             ExpressionExperiment ee = dvvo.getExpressionExperiment();
             if ( !vvoMap.containsKey( ee ) ) {
@@ -151,11 +152,14 @@ public class DEDVController extends BaseFormController {
             vvoMap.get( ee ).add( dvvo );
         }
 
-        Collection<VisualizationValueObject> result = new HashSet<VisualizationValueObject>();
+        VisualizationValueObject[] result = new VisualizationValueObject[vvoMap.keySet().size()];
 
-        for ( ExpressionExperiment ee : vvoMap.keySet() ) {
+        //Create collection of visualizationValueObject for flotr on js side
+        int i = 0;
+        for ( ExpressionExperiment ee : vvoMap.keySet() ) {            
             VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ) );
-            result.add( vvo );
+            result[i] = vvo;
+            i++;
         }
 
         return result;
