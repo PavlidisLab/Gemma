@@ -557,7 +557,7 @@
 					<property name="includes">
 						<list>
 							<value>getDEDV</value>
-							<value>getDEDVForVisulization</value>
+							<value>getDEDVForVisualization</value>
 						</list>
 					</property>
 				</bean>
@@ -1320,13 +1320,28 @@
 					<property name="type" value="bean" />
 					<property name="includes">
 						<list>
-							<value>cordinates</value>
-							<value>genes</value>
+							<value>profiles</value>
 							<value>ee</value>
 						</list>
 					</property>
 				</bean>
-			</entry>								
+			</entry>	
+			<entry key="ubic.basecode.dataStructure.DoublePoint">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>x</value>
+							<value>y</value>
+						</list>
+					</property>
+				</bean>
+			</entry>	
+				<entry key="ubic.gemma.web.controller.visualization.GeneExpressionProfile">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>						
 		</map>
 	</property>
 </bean>

@@ -1,5 +1,5 @@
 /*
- * The Gemma-Production project
+ * The Gemma project
  * 
  * Copyright (c) 2008 University of British Columbia
  * 
@@ -17,87 +17,75 @@
  *
  */
 
-/**
- * 
- */
-
 package ubic.gemma.web.controller.visualization;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
-import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 
 public class VisualizationValueObject {
 
-    private Collection<DoublePoint> cordinates;
-    private Collection<Gene> genes;
-    private ExpressionExperiment ee;
+    private Collection<GeneExpressionProfile> profiles;
+    private ExpressionExperiment ee = null;
 
-    
-    public VisualizationValueObject(){
+    public VisualizationValueObject() {
         super();
+        this.profiles = new HashSet<GeneExpressionProfile>();
     }
-    
-    public VisualizationValueObject( Collection<DoublePoint> xy, Collection<Gene> g, ExpressionExperiment ee ) {
+
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors ) {
         this();
+        
+        for ( DoubleVectorValueObject vector : vectors ) {
+            if ( this.ee == null ) {
+                this.ee = vector.getExpressionExperiment();
+            } else if ( this.ee != vector.getExpressionExperiment() ) {
+                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor" );
+            }
 
-        this.cordinates = xy;
-        this.genes = g;
-        this.ee = ee;
-
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector );
+            profiles.add( profile );
+        }
     }
-    
+
     /**
-     * 
      * @param dvvo
      */
-    
-    public VisualizationValueObject(DoubleVectorValueObject dvvo){
-        this();
-        
-        setEE( dvvo.getExpressionExperiment() );
-        setGenes( dvvo.getGenes() );
-        
-        Collection<DoublePoint> points = new ArrayList<DoublePoint>();
-        double[] data = dvvo.standardize();
-        int i = 0;
-        for(Double d : data){
-            points.add( new DoublePoint(i,d) );
-            i++;
-        }
 
-        
+    public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
+        this();
+        setEE( dvvo.getExpressionExperiment() );
+        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo );
+        profiles.add( profile );
     }
 
     // ---------------------------------
     // Getters and Setters
     // ---------------------------------
 
-    public Collection<DoublePoint> getCordinates() {
-        return cordinates;
-    }
-
-    public void setCordinates( Collection<DoublePoint> cordinates ) {
-        this.cordinates = cordinates;
-    }
-
-    public Collection<Gene> getGenes() {
-        return genes;
-    }
-
-    public void setGenes( Collection<Gene> genes ) {
-        this.genes = genes;
-    }
-
     public ExpressionExperiment getEE() {
         return ee;
     }
 
     public void setEE( ExpressionExperiment ee ) {
+        this.ee = ee;
+    }
+
+    public Collection<GeneExpressionProfile> getProfiles() {
+        return profiles;
+    }
+
+    public void setProfiles( Collection<GeneExpressionProfile> profiles ) {
+        this.profiles = profiles;
+    }
+
+    public ExpressionExperiment getEe() {
+        return ee;
+    }
+
+    public void setEe( ExpressionExperiment ee ) {
         this.ee = ee;
     }
 

@@ -235,15 +235,15 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		s = s + '" usemap="#eeMap" /></span>';
 		return s;
 	},
-	
+
 	downloadDedv : function(value, metadata, record, row, col, ds) {
 
 		var queryGene = record.data.queryGene;
 		var foundGene = record.data.foundGene;
-		
+
 		var activeExperimentsString = "";
 		var activeExperimentsSize = record.data.supportingExperiments.size();
-		
+
 		for (var i = 0; i < activeExperimentsSize; i++) {
 			if (i === 0) {
 				activeExperimentsString = record.data.supportingExperiments[i];
@@ -252,8 +252,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						record.data.supportingExperiments[i]);
 			}
 		}
-		
-		return String.format("<a href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > download </a>",
+
+		return String.format("<a href='javascript: Gemma.CoexpressionGrid.visualize([{0}],[{1},{2}])'> visulize </a> ",
 				activeExperimentsString, queryGene.id, foundGene.id);
 	},
 
@@ -305,3 +305,42 @@ Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 	}
 	return Gemma.CoexpressionGrid.bitImageMapTemplate;
 };
+
+Gemma.CoexpressionGrid.visualize = function(experimentIds, geneIds) {
+
+	var loadVisData = function(data) {
+
+		var index;
+		for (index in data) {
+			 
+			
+			var flotrData = [];
+			var coordinateProfile = data[index].profiles
+
+			for (var i = 0; i < coordinateProfile.size(); i++) {
+				var coordinateObject = coordinateProfile[i].points;
+				var coordinateSimple = [];
+
+				for (var j = 0; j < coordinateObject.size(); j++) {
+					coordinateSimple.push([coordinateObject[j].x, coordinateObject[j].y]);
+				}
+				flotrData.push(coordinateSimple);
+			}
+
+			// Create a DIV for data.
+			var dh = Ext.DomHelper;
+			var newDivName = "visualization4EE" + data[index].ee.shortName;
+			var newDiv = dh.append('coexpression-visualization', {
+				tag : 'div',
+				id : newDivName,
+				style : 'width:300px;height:300px;'
+			});
+			var f = Flotr.draw(newDiv, flotrData);
+
+		}
+
+	};
+
+	DEDVController.getDEDVForVisualization(experimentIds, geneIds, loadVisData);
+
+}

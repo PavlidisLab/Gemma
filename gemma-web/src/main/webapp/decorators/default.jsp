@@ -21,6 +21,7 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/CompositeSequenceController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/CustomCompassIndexController.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/DEDVController.js'></script>	
 		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>
@@ -37,7 +38,6 @@
 		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/SearchService.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/SimpleExpressionExperimentLoadController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
 
 		<jwr:script src="/bundles/include.js" />

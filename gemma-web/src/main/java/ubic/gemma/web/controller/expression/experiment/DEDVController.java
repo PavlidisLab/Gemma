@@ -19,7 +19,6 @@
 
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,7 +32,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.basecode.dataStructure.Point;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -99,7 +97,16 @@ public class DEDVController extends BaseFormController {
 
     }
 
-    Collection<VisualizationValueObject> getDEDVForVisulization( Collection<Long> eeIds, Collection<Long> geneIds ) {
+    /**
+     * AJAX exposed method
+     * 
+     * @param eeIds
+     * @param geneIds
+     * @return
+     */
+
+    public Collection<VisualizationValueObject> getDEDVForVisualization( Collection<Long> eeIds,
+            Collection<Long> geneIds ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -126,21 +133,32 @@ public class DEDVController extends BaseFormController {
     }
 
     /**
-     * Takes the DEDVs and put them in point objects. Get the value objects for the experiment and normalize the values.
+     * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
+     * Currently removes multiple hits for same gene. Tries to pick best DEDV.
      * 
      * @param dedvs
      * @return
      */
     private Collection<VisualizationValueObject> makeVisCollection( Collection<DoubleVectorValueObject> dedvs ) {
 
-                
-        Collection<VisualizationValueObject> vvos = new ArrayList<VisualizationValueObject>();
+        Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
 
         for ( DoubleVectorValueObject dvvo : dedvs ) {
-            VisualizationValueObject vvo = new VisualizationValueObject(dvvo);
+            ExpressionExperiment ee = dvvo.getExpressionExperiment();
+            if ( !vvoMap.containsKey( ee ) ) {
+                vvoMap.put( ee, new HashSet<DoubleVectorValueObject>() );
+            }
+            vvoMap.get( ee ).add( dvvo );
         }
-        
-        return vvos;
+
+        Collection<VisualizationValueObject> result = new HashSet<VisualizationValueObject>();
+
+        for ( ExpressionExperiment ee : vvoMap.keySet() ) {
+            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ) );
+            result.add( vvo );
+        }
+
+        return result;
 
     }
 
@@ -186,7 +204,7 @@ public class DEDVController extends BaseFormController {
 
         ModelAndView mav = new ModelAndView( new TextView() );
 
-        if ( geneIds == null || geneIds.isEmpty() || eeIds == null || eeIds.isEmpty() ) {           
+        if ( geneIds == null || geneIds.isEmpty() || eeIds == null || eeIds.isEmpty() ) {
             mav.addObject( "text", "Input empty for finding DEDVs: " + geneIds + " and " + eeIds );
             return mav;
 

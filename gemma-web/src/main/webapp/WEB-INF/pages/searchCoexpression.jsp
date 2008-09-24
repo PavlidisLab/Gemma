@@ -25,3 +25,4 @@
 <div id='coexpression-results'></div>
 <div id='coexpression-experiments' class="x-hidden"></div>
 <div id='coexpression-genes' class="x-hidden"></div>
+<div id='coexpression-visualization' style='width: 300px; height: 300px; margin: 5px'></div>
