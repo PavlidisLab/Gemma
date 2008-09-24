@@ -132,16 +132,23 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
 
         initializeOntologies( ctx );
 
-        if ( !ConfigUtils.getBoolean( QUARTZ, false ) ) {
-            QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
-            log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
-        } else
-            log.info( "Quartz scheduling enableded.  Set quartzOn=false in Gemma.properties to disable" );
+        configureScheduler( ctx );
 
         sw.stop();
 
         double time = sw.getTime() / 1000.00;
         log.info( "Initialization of Gemma Spring context in " + time + " s " );
+    }
+
+    /**
+     * @param ctx
+     */
+    private void configureScheduler( ApplicationContext ctx ) {
+        if ( !ConfigUtils.getBoolean( QUARTZ, false ) ) {
+            QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
+            log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
+        } else
+            log.info( "Quartz scheduling enableded.  Set quartzOn=false in Gemma.properties to disable" );
     }
 
     /**
