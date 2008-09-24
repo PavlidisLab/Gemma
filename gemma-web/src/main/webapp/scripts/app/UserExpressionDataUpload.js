@@ -196,20 +196,43 @@ function agree() {
 function validate() {
 
 	/*
+	 * Lock the form.
+	 */
+
+	/*
+	 * Assemble the command object.
+	 */
+
+	/*
 	 * Send the data to the server, but don't load it. If everything looks okay, show it to the user for confirmation.
 	 * If not, tell them what to fix.
 	 */
 
-	console.log(commandObject);
 	ExpressionDataFileUploadController.validate.call(commandObject, {
-				callback : onValidated
+				callback : onStartValidation
 			});
-	fireEvent('dataValid');
+	// fireEvent('dataValid');
+}
+
+function onStartValidation(taskId) {
+	Ext.DomHelper.overwrite("messages", "");
+	var p = new progressbar({
+				taskId : taskId
+			});
+	p.createIndeterminateProgressBar();
+	// p.on('fail', handleFailure);
+	// p.on('cancel', reset);
+	p.on('done', onValidated);
+	p.startProgress();
 }
 
 function onValidated(result) {
 	if (result.valid) {
 		Ext.getCmp('agree').enable();
+	} else {
+		/*
+		 * re-enable the form.
+		 */
 	}
 }
 

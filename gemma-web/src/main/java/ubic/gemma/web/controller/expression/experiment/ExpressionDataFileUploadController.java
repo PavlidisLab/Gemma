@@ -25,8 +25,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
-import org.springframework.security.context.SecurityContextHolder;
+import org.apache.commons.lang.StringUtils; 
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -259,6 +258,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
          */
         public ModelAndView call() throws Exception {
             super.init();
+
             // TODO Auto-generated method stub
             Map<Object, Object> model = new HashMap<Object, Object>();
             SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
@@ -270,6 +270,8 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
              * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.F
              */
             doValidate( ( SimpleExpressionExperimentLoadCommand ) this.command );
+
+            Thread.sleep( 5000 );
 
             return null;
         }

@@ -486,6 +486,8 @@
                 ubic.gemma.search.IndexService.runAll=admin
                 ubic.gemma.util.monitor.HibernateMonitor.getStats=admin
                 ubic.gemma.util.monitor.CacheMonitor.getStats=admin
+                ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService.load=user,admin
+                ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService.parse=user,admin
            ]]>
 			</value>
 		</property>
