@@ -30,7 +30,9 @@ import ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimen
  * @author pavlidis
  * @version $Id$
  * @spring.bean id="simpleExpressionExperimentLoadValidator"
+ * @deprecated as we aren't using spring mvc really for this (ext + ajax instead)
  */
+ @Deprecated
 public class SimpleExpressionExperimentLoadValidator implements Validator {
 
     /*
@@ -51,15 +53,14 @@ public class SimpleExpressionExperimentLoadValidator implements Validator {
     public void validate( Object obj, Errors errors ) {
         SimpleExpressionExperimentLoadCommand command = ( SimpleExpressionExperimentLoadCommand ) obj;
 
-        if ( command.getDataFile().getFile() == null ) {
+        if ( command.getServerFilePath() == null ) {
             ValidationUtils.rejectIfEmptyOrWhitespace( errors, "dataFile", "errors.required", "File is required" );
         }
 
         ValidationUtils.rejectIfEmptyOrWhitespace( errors, "name", "errors.required", "Name is required" );
         ValidationUtils.rejectIfEmptyOrWhitespace( errors, "description", "errors.required", "Description is required" );
         ValidationUtils.rejectIfEmptyOrWhitespace( errors, "shortName", "errors.required", "Short name is required" );
-        ValidationUtils.rejectIfEmptyOrWhitespace( errors, "type", "errors.required", "Type is required" ); 
-        
+        ValidationUtils.rejectIfEmptyOrWhitespace( errors, "type", "errors.required", "Type is required" );
 
     }
 

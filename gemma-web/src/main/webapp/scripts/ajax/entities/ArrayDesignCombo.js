@@ -116,8 +116,8 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 	applyFilter : function(taxon) {
 		this.store.filterBy(function(record, id) {
 					if (!record.data.taxon) {
-						return true;
-					} else if (record.data.taxon.id == taxon.id) {
+						return false;
+					} else if (record.data.taxon == taxon.commonName) {
 						return true;
 					}
 				});

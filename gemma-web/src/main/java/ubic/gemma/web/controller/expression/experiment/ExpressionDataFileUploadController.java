@@ -17,6 +17,7 @@
  *
  */package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,9 +40,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
+
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
-import ubic.gemma.web.util.upload.FileUploadUtil;
 
 /**
  * Replaces SimpleExpressionExperimentLoadController
@@ -71,37 +71,6 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
 
         ed.setValidateOnly( false );
 
-        ExpressionExperiment existing = expressionExperimentService.findByShortName( ed.getShortName() );
-
-        if ( existing != null ) {
-            throw new IllegalArgumentException( "There is already an experiment with short name " + ed.getShortName()
-                    + "; please choose something unique." );
-        }
-
-        /*
-         * FIXME get the path to the file, which has already been uploaded, some other safer way.
-         */
-
-        FileUpload fileUpload = ed.getDataFile();
-
-        if ( fileUpload == null || ( fileUpload.getFile() == null && StringUtils.isBlank( fileUpload.getLocalPath() ) ) ) {
-            throw new IllegalArgumentException( "Must provide a file to upload" );
-        }
-
-        if ( StringUtils.isBlank( fileUpload.getLocalPath() ) ) {
-            FileUploadUtil.copyUploadedFile( null, "dataFile.file" );
-        }
-
-        return this.run( ed );
-    }
-
-    /**
-     * @param ed
-     * @return
-     * @throws Exception
-     */
-    public String validate( SimpleExpressionExperimentLoadCommand ed ) throws Exception {
-        ed.setValidateOnly( true );
         return this.run( ed );
     }
 
@@ -118,6 +87,53 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
     public void setSimpleExpressionDataLoaderService(
             SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
         this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
+    }
+
+    /**
+     * @param ed
+     * @return
+     */
+    private boolean doValidate( SimpleExpressionExperimentLoadCommand ed ) {
+        ExpressionExperiment existing = expressionExperimentService.findByShortName( ed.getShortName() );
+
+        if ( existing != null ) {
+            throw new IllegalArgumentException( "There is already an experiment with short name " + ed.getShortName()
+                    + "; please choose something unique." );
+        }
+
+        getFile( ed );
+
+        return false;
+
+    }
+
+    /**
+     * @param ed
+     */
+    private File getFile( SimpleExpressionExperimentLoadCommand ed ) {
+        File file;
+        String localPath = ed.getServerFilePath();
+        if ( StringUtils.isBlank( localPath ) ) {
+            throw new IllegalArgumentException( "Must provide the file" );
+        }
+
+        file = new File( localPath );
+
+        if ( !file.canRead() ) {
+            throw new IllegalArgumentException( "Cannot read from file:" + file );
+        }
+
+        return file;
+    }
+
+    /**
+     * @param ed
+     * @return taskId
+     * @throws Exception
+     */
+    public String validate( SimpleExpressionExperimentLoadCommand ed ) throws Exception {
+        ed.setValidateOnly( true );
+        return this.run( ed );
     }
 
     @Override
@@ -145,38 +161,6 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         return "dataUpload";
     }
 
-    class SimpleEEValidateJob extends BackgroundControllerJob<ModelAndView> {
-
-        SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-
-        public SimpleEEValidateJob( String taskId, Object commandObj,
-                SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
-            super( taskId, commandObj );
-            this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see java.util.concurrent.Callable#call()
-         */
-        public ModelAndView call() throws Exception {
-            // TODO Auto-generated method stub
-            SecurityContextHolder.setContext( securityContext );
-            Map<Object, Object> model = new HashMap<Object, Object>();
-            SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
-            Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
-            // might have used instead of actual ADs.
-            Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds();
-
-            /*
-             * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.F
-             */
-
-            return null;
-        }
-    }
-
     class SimpleEELoadJob extends BackgroundControllerJob<ModelAndView> {
         SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
@@ -188,47 +172,22 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
 
         @SuppressWarnings("synthetic-access")
         public ModelAndView call() throws Exception {
-            SecurityContextHolder.setContext( securityContext );
+            super.init();
             Map<Object, Object> model = new HashMap<Object, Object>();
 
             SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
 
-            FileUpload fileUpload = commandObject.getDataFile();
+            File file = getFile( commandObject );
 
-            Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
-
-            // might have used instead of actual ADs.
-            Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds();
-
-            if ( arrayDesignIds != null && arrayDesignIds.size() > 0 ) {
-                for ( Long adid : arrayDesignIds ) {
-                    arrayDesigns.add( arrayDesignService.load( adid ) );
-                }
-            } else if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
-                log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
-                ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-                arrayDesign.setName( commandObject.getArrayDesignName() );
-                commandObject.getArrayDesigns().add( arrayDesign );
-            }
-
-            Taxon taxon = commandObject.getTaxon();
-            if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
-                taxon = Taxon.Factory.newInstance();
-                taxon.setScientificName( commandObject.getTaxonName() );
-                commandObject.setTaxon( taxon );
-            }
+            populateCommandObject( commandObject );
 
             ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Loading data from " + fileUpload.getLocalPath() );
+                    .getName(), "Loading data from " + file );
 
-            String dataFilePath = fileUpload.getLocalPath();
-
-            assert dataFilePath != null;
-
-            InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( dataFilePath );
+            InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
 
             if ( stream == null ) {
-                throw new IllegalStateException( "Could not read from file " + dataFilePath );
+                throw new IllegalStateException( "Could not read from file " + file );
             }
 
             /*
@@ -252,6 +211,67 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
              */
             return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                     + result.getId() ), model );
+        }
+
+        /**
+         * @param commandObject
+         */
+        private void populateCommandObject( SimpleExpressionExperimentLoadCommand commandObject ) {
+            Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
+
+            // might have used instead of actual ADs.
+            Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds();
+
+            if ( arrayDesignIds != null && arrayDesignIds.size() > 0 ) {
+                for ( Long adid : arrayDesignIds ) {
+                    arrayDesigns.add( arrayDesignService.load( adid ) );
+                }
+            } else if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
+                log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
+                ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
+                arrayDesign.setName( commandObject.getArrayDesignName() );
+                commandObject.getArrayDesigns().add( arrayDesign );
+            }
+
+            Taxon taxon = commandObject.getTaxon();
+            if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
+                taxon = Taxon.Factory.newInstance();
+                taxon.setScientificName( commandObject.getTaxonName() );
+                commandObject.setTaxon( taxon );
+            }
+        }
+    }
+
+    class SimpleEEValidateJob extends BackgroundControllerJob<ModelAndView> {
+
+        SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+
+        public SimpleEEValidateJob( String taskId, Object commandObj,
+                SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
+            super( taskId, commandObj );
+            this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.util.concurrent.Callable#call()
+         */
+        public ModelAndView call() throws Exception {
+            super.init();
+            // TODO Auto-generated method stub
+            Map<Object, Object> model = new HashMap<Object, Object>();
+            SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
+            Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
+            // might have used instead of actual ADs.
+            Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds();
+
+            /*
+             * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.F
+             */
+            doValidate( ( SimpleExpressionExperimentLoadCommand ) this.command );
+
+            return null;
         }
     }
 

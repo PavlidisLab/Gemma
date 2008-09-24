@@ -1264,6 +1264,7 @@
 							<value>name</value>
 							<value>shortName</value>
 							<value>description</value>
+							<value>taxon</value>
 						</list>
 					</property>
 				</bean>
@@ -1325,7 +1326,7 @@
 						</list>
 					</property>
 				</bean>
-			</entry>	
+			</entry>
 			<entry key="ubic.basecode.dataStructure.DoublePoint">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
@@ -1336,15 +1337,18 @@
 						</list>
 					</property>
 				</bean>
-			</entry>	
-				<entry key="ubic.gemma.web.controller.visualization.GeneExpressionProfile">
+			</entry>
+			<entry key="ubic.gemma.web.controller.visualization.GeneExpressionProfile">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>
-			</entry>						
+			</entry>
 		</map>
 	</property>
 </bean>
+
+
+
 <!-- ==================================================== -->
 <!-- 
 	openSessionInViewInterceptor: Interceptor to keep Hibernate sessions available in views. 

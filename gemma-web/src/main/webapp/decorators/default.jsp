@@ -7,7 +7,8 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" />
+		</title>
 
 		<jwr:style src="/bundles/gemma-all.css" />
 
@@ -24,6 +25,7 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/DEDVController.js'></script>	
 		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionDataFileUploadController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script>
@@ -62,10 +64,10 @@
 					<%@ include file="/common/messages.jsp"%>
 
 					<%
-					            //Adds the page help link if not a help page already
-					            String pageUri = request.getRequestURI();
-					            if ( pageUri != null && !pageUri.toLowerCase().contains( "_help" )
-					                    && !pageUri.toLowerCase().contains( "static" ) ) {
+					    //Adds the page help link if not a help page already
+					    String pageUri = request.getRequestURI();
+					    if ( pageUri != null && !pageUri.toLowerCase().contains( "_help" )
+					            && !pageUri.toLowerCase().contains( "static" ) ) {
 					%>
 					<div id="help" style="font-size: smaller; float: right;">
 						<a target="_blank"

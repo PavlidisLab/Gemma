@@ -60,14 +60,14 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 																					+ "; " + m.size + " bytes");
 																	this.fireEvent('finish', m);
 
-																},
+																}.createDelegate(this),
 																failure : function(form, a) {
 																	Ext.Msg.alert('Failure',
 																			'Problem with processing of file "'
 																					+ a.result.originalFile
 																					+ '" on the server');
 																	this.fireEvent('fail', a.result);
-																}
+																}.createDelegate(this)
 															});
 													this.fireEvent('start');
 												}

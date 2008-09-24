@@ -23,19 +23,23 @@ import java.util.HashSet;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 
 /**
- * Extends a SimpleExpressionExperimentMetaData and has a FileUpload for the data.
+ * Extends a SimpleExpressionExperimentMetaData with information about the file
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class SimpleExpressionExperimentLoadCommand extends SimpleExpressionExperimentMetaData {
 
-    FileUpload dataFile;
+    private String serverFilePath;
+
+    private String originalFileName;
+
     private String arrayDesignName;
+
     private String taxonName;
+
     boolean validateOnly;
 
     /**
@@ -52,23 +56,17 @@ public class SimpleExpressionExperimentLoadCommand extends SimpleExpressionExper
     }
 
     public SimpleExpressionExperimentLoadCommand() {
-        this.dataFile = new FileUpload();
+
         this.setArrayDesigns( new HashSet<ArrayDesign>() );
         this.setTaxon( Taxon.Factory.newInstance() );
     }
 
-    /**
-     * @return the sequenceFile
-     */
-    public FileUpload getDataFile() {
-        return this.dataFile;
+    public void setServerFilePath( String serverFilePath ) {
+        this.serverFilePath = serverFilePath;
     }
 
-    /**
-     * @param sequenceFile the sequenceFile to set
-     */
-    public void setDataFile( FileUpload dataFile ) {
-        this.dataFile = dataFile;
+    public void setOriginalFileName( String originalFileName ) {
+        this.originalFileName = originalFileName;
     }
 
     public String getArrayDesignName() {
@@ -85,6 +83,14 @@ public class SimpleExpressionExperimentLoadCommand extends SimpleExpressionExper
 
     public void setTaxonName( String taxonName ) {
         this.taxonName = taxonName;
+    }
+
+    public String getServerFilePath() {
+        return serverFilePath;
+    }
+
+    public String getOriginalFileName() {
+        return originalFileName;
     }
 
 }

@@ -1,6 +1,7 @@
 Ext.namespace('Gemma');
 Ext.form.Field.prototype.msgTarget = 'side';
 Ext.BLANK_IMAGE_URL = "/Gemma/images/s.gif";
+var commandObject = {};
 
 Ext.onReady(function() {
 	Ext.QuickTips.init();
@@ -96,8 +97,41 @@ Ext.onReady(function() {
 					html : 'For help with the file data file format, see '
 							+ '<a target="_blank" href="/Gemma/static/expressionExperiment/upload_help.html">this page</a>. '
 							+ 'The probe identifiers must match those in the array design on record.'
-				}],
+				}, new Ext.form.FormPanel({
+					id : 'availability-form',
+					title : 'Security/availability information',
+					frame : true,
+					labelWidth : 200,
+					items : [{
+								xtype : 'numberfield',
+								enableKeyEvents : true,
+								minLength : 7,
+								maxLength : 9,
+								allowNegative : false,
+								id : 'pubmedid',
+								allowDecimals : false,
+								fieldLabel : 'Pubmed ID',
+								boxLabel : "If provided, your data will be made publicly viewable"
+							}, {
+								xtype : 'checkbox',
+								id : 'public',
+								boxLabel : "Your data will immediately be viewable by anybody",
+								fieldLabel : "Make my data publicly available"
+							}, {
+								xtype : 'checkbox',
+								id : 'agree',
+								enabled : false,
+								handler : agree,
+								fieldLabel : "I have read the '<a target=\'_blank\' href='/Gemma/static/dataUploadTermsAndConditions.html'>terms and conditions</a>'"
+							}]
+				})],
 		buttons : [{
+					id : 'validate-data-button',
+					value : 'Validate entries',
+					handler : validate,
+					text : "Validate entries",
+					enabled : false
+				}, {
 					id : 'submit-data-button',
 					value : 'Submit dataset',
 					handler : submitDataset,
@@ -107,6 +141,19 @@ Ext.onReady(function() {
 
 	});
 
+	Ext.getCmp('pubmedid').on('keyup', function(e, a) {
+				if (!Ext.getCmp('pubmedid').getValue()) {
+					Ext.getCmp('public').setValue(false);
+					Ext.getCmp('public').enable();
+				} else if (Ext.getCmp('pubmedid').isValid()) {
+					Ext.getCmp('public').setValue(true);
+					Ext.getCmp('public').disable();
+				} else {
+					Ext.getCmp('public').setValue(false);
+					Ext.getCmp('public').enable();
+				}
+			});
+
 	arrayDesignCombo.on('select', function(combo, arrayDesign) {
 				console.log(arrayDesign);
 				Ext.getCmp('array-design-info-area').setValue(arrayDesign.data.description);
@@ -114,25 +161,56 @@ Ext.onReady(function() {
 			});
 
 	taxonCombo.on('select', function(combo, taxon) {
-				arrayDesignCombo.taxonChanged(taxon);
-			});
+				arrayDesignCombo.taxonChanged(taxon.data);
+			}.createDelegate(this));
+
+	taxonCombo.on('ready', function(taxon) {
+				var task = new Ext.util.DelayedTask(arrayDesignCombo.taxonChanged, arrayDesignCombo, [taxon]);
+				task.delay(500);
+			}.createDelegate(this));
 
 	uploadForm.on('start', function(result) {
 				Ext.getCmp('submit-data-button').disable();
-			});
+			}.createDelegate(this));
 
 	uploadForm.on('finish', function(result) {
 				/*
-				 * GEt the file information and put it in the value object.
+				 * Get the file information and put it in the value object.
 				 */
-				Ext.getCmp('submit-data-button').enable();
+				if (result.success) {
+					Ext.getCmp('validate-data-button').enable();
+					commandObject.serverFilePath = result.localFile;
+					commandObject.originalFileName = result.originalFile;
+				}
 			});
 
 });
 
+function agree() {
+	if (Ext.getCmp('agree').getValue()) {
+		// FIXME don't do this until the rest of the form is valid.
+		Ext.getCmp('submit-data-button').enable();
+	}
+}
 
 function validate() {
-	
+
+	/*
+	 * Send the data to the server, but don't load it. If everything looks okay, show it to the user for confirmation.
+	 * If not, tell them what to fix.
+	 */
+
+	console.log(commandObject);
+	ExpressionDataFileUploadController.validate.call(commandObject, {
+				callback : onValidated
+			});
+	fireEvent('dataValid');
+}
+
+function onValidated(result) {
+	if (result.valid) {
+		Ext.getCmp('agree').enable();
+	}
 }
 
 function submitDataset() {

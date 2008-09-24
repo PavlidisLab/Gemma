@@ -8,7 +8,7 @@ Ext.namespace("Gemma");
  */
 Gemma.QuantitationTypePanel = Ext.extend(Ext.form.FormPanel, {
 
-			width : 500,
+			width : 570,
 			autoHeight : true,
 			frame : true,
 
@@ -37,13 +37,13 @@ Gemma.QuantitationTypePanel = Ext.extend(Ext.form.FormPanel, {
 										id : 'qtype-isratio',
 										name : 'Ratio',
 										fieldLabel : "Ratios?",
-										boxLabel : "Check if your input values are ratios",
+										boxLabel : "Check the box if the expression values are ratios",
 										tooltip : 'Check if your input values are ratios'
 									}, {
 										xtype : 'checkbox',
 										id : 'qtype-islogged',
 										fieldLabel : 'Log transformed?',
-										boxLabel : "Check if your data are on a log scale",
+										boxLabel : "Check the box if the expression values are on a log scale (log2 assumed)",
 										tooltip : 'Check if your data are on a log scale'
 									}
 
