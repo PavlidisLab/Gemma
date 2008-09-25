@@ -188,6 +188,8 @@
                 PATTERN_TYPE_APACHE_ANT 
                 /signup.html=admin,user,ROLE_ANONYMOUS
                 /securityManager.html=admin
+				/loadExpressionExperiment.html=admin
+				/indexer.html=admin
                 /passwordHint.html*=admin,user
                 /userProfile.html*=admin,user
                 /loadUser.html*=admin,user
