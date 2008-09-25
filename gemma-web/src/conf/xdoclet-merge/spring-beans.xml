@@ -81,6 +81,7 @@
 			<prop key="/blatTrack.html">blatResultTrackController</prop>
 			<prop key="/maintenanceMode.html">maintenanceModeController</prop>
 			<prop key="/ontology.html">ontologyController</prop>
+			<prop key="/diff/diffExpressionAnalysis.html">differentialExpressionAnalysisController</prop>
 			<prop key="/diff/diffExpressionSearch.html">differentialExpressionSearchController</prop>
 			<prop key="/expressionExperimentSetManager.html">expressionExperimentSetController</prop>
 			<prop key="/dedv/downloadDEDV.html">dedvController</prop>
@@ -408,6 +409,20 @@
 						<list>
 							<value>load</value>
 							<value>validate</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="DifferentialExpressionAnalysisController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="differentialExpressionAnalysisController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>run</value>
 						</list>
 					</property>
 				</bean>

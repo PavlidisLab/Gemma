@@ -64,6 +64,17 @@
 			<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask</value>
 		</property>
 	</bean>
+	
+	<bean id="differentialExpressionAnalysisWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+		singleton="false">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="differentialExpressionAnalyzerService" />
+		</property>
+		<property name="businessInterface">
+			<value>ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask</value>
+		</property>
+	</bean>
 
 	<bean id="javaSpaceInterceptor" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
@@ -109,6 +120,7 @@
 				<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask</value>
 				<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask</value>
 				<value>ubic.gemma.grid.javaspaces.index.IndexGemmaTask</value>
+				<value>ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask</value>
 			</list>
 		</property>
 	</bean>
@@ -172,7 +184,6 @@
 		
 		
 	</bean>
-	
 </beans>
 
 
