@@ -6,16 +6,17 @@ Ext.namespace("Gemma");
  * @author paul
  * @version $Id$
  */
-Gemma.QuantitationTypePanel = Ext.extend(Ext.form.FormPanel, {
+Gemma.QuantitationTypePanel = Ext.extend(Ext.form.FieldSet, {
 
 			width : 570,
 			autoHeight : true,
 			frame : true,
+			title : "Quantitation type details",
 
 			initComponent : function() {
 
 				Ext.apply(this, {
-							title : "Quantitation type details",
+
 							items : [{
 										xtype : 'textfield',
 										id : 'qtype-name',

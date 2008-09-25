@@ -645,7 +645,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         Collection<ArrayDesignValueObject> toHide = new HashSet<ArrayDesignValueObject>();
         for ( ArrayDesignValueObject a : valueObjects ) {
-            if ( !showMergees && a.getIsMergee() ) {
+            if ( !showMergees && ( a.getIsMergee() != null ) && a.getIsMergee() ) {
                 toHide.add( a );
             }
             if ( !showOrphans && ( a.getExpressionExperimentCount() == null || a.getExpressionExperimentCount() == 0 ) ) {

@@ -65,7 +65,7 @@ public class ProcessDeleteController extends BaseFormController {
             return new ModelAndView( new RedirectView( "/mainMenu.html" ) );
         }
 
-        taskRunningService.cancelTask( taskId, true );
+        taskRunningService.cancelTask( taskId );
         this.saveMessage( request, "Job cancelled." );
 
         return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );

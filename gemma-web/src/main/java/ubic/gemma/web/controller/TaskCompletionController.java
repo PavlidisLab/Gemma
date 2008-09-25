@@ -64,14 +64,19 @@ public class TaskCompletionController extends BaseFormController {
      * @return
      */
     public Object checkResult( String taskId ) throws Exception {
-        ModelAndView result = ( ModelAndView ) taskRunningService.checkResult( taskId );
+        Object result = taskRunningService.checkResult( taskId );
+
         if ( result == null ) return null;
-        View view = result.getView();
-        if ( view instanceof RedirectView ) {
-            return ( ( RedirectView ) view ).getUrl();
-        } else {
-            return null;
+
+        if ( result instanceof ModelAndView ) {
+            View view = ( ( ModelAndView ) result ).getView();
+            if ( view instanceof RedirectView ) {
+                return ( ( RedirectView ) view ).getUrl();
+            } else {
+                return null;
+            }
         }
+        return result;
     }
 
     /*
@@ -91,7 +96,7 @@ public class TaskCompletionController extends BaseFormController {
         // todo: is this redundant code? see ProcessDeleteController. remove?
         if ( request.getAttribute( CANCEL_ATTRIBUTE ) != null ) {
             log.debug( "Cancelling " + taskId );
-            taskRunningService.cancelTask( taskId, true );
+            taskRunningService.cancelTask( taskId );
             return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
         }
 

@@ -30,7 +30,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
@@ -174,6 +173,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
      * @throws Exception
      */
     public String validate( SimpleExpressionExperimentLoadCommand ed ) throws Exception {
+        assert ed != null;
         ed.setValidateOnly( true );
         return this.run( ed );
     }
@@ -304,17 +304,15 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         public SimpleExpressionExperimentCommandValidation call() throws Exception {
             super.init();
 
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Validation" );
+            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
+                    "Validating" );
+
+            Thread.sleep( 5000 );
 
             /*
-             * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.F
+             * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.
              */
             SimpleExpressionExperimentCommandValidation result = doValidate( ( SimpleExpressionExperimentLoadCommand ) this.command );
-
-            log.info( "Validation done" );
-
-            ProgressManager.destroyProgressJob( job );
 
             return result;
 

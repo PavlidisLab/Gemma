@@ -8,16 +8,15 @@ Ext.namespace('Gemma');
  * @extends Ext.Panel
  */
 Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
-
-			messages : "",
+			BAR_UPDATE_INTERVAL : 2000,
+			allMessages : "",
 			previousMessage : '',
-
+			timeoutid : null,
+			waiting : false,
 			initComponent : function(config) {
 
 				this.progressBar = new Ext.ProgressBar({
-							text : "Initializing ...",
-							width : 400,
-							height : 60
+							text : "Initializing ..."
 						});
 
 				Ext.apply(this, {
@@ -52,9 +51,9 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 			 * Start the progressbar in motion.
 			 */
 			startProgress : function() {
-
-				this.progressBar.updateText("Starting job ...");
-				this.progressBar.show();
+				this.progressBar.wait({
+							text : "Starting ..."
+						});
 
 				if (!this.taskId) {
 
@@ -76,13 +75,9 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 				callParams.push(errorHandler);
 
 				/*
-				 * Call it immediately
-				 */
-				this.refreshProgress(callback, errorHandler);
-
-				/*
 				 * Start it running on a delay.
 				 */
+
 				var f = this.refreshProgress.createDelegate(this, callParams, false);
 				this.timeoutid = window.setInterval(f, this.BAR_UPDATE_INTERVAL);
 			},
@@ -92,69 +87,50 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 				this.previousMessage = null;
 				this.waiting = false;
 				this.progressBar.updateText("Finished ...");
+				this.progressBar.reset();
 			},
 
-			/*
-			 * Private Callback for DWR @param {Object} data
-			 */
+			handleFinalResult : function(result) {
+				this.stopProgress();
+				this.fireEvent('done', result);
+			},
+
+			done : false,
+
 			updateProgress : function(data) {
 				this.waiting = false;
-				this.updateIndeterminateProgress(data);
-			},
-
-			maybeDoForward : function(url) {
-				if (this.doForward && url) {
-					window.location = url;
-				}
-			},
-
-			updateIndeterminateProgress : function(data) {
-
 				var messages = "";
-				if (data.push) {
-					for (var i = 0, len = data.length; i < len; i++) {
-						var d = data[i];
-						messages = messages + "<br/>" + d.description;
-						if (d.failed) {
-							this.stopProgress();
-							return this.handleFailure(d);
-						} else if (d.done) {
-							this.fireEvent('done', d.payload);
-							this.stopProgress();
-							if (this.doFoward && d.forwardingURL !== undefined && d.forwardingURL !== null) {
-								window.location = d.forwardingURL + "?taskId=" + this.taskId;
-							} else {
-								var callback = this.maybeDoForward.createDelegate(this, [], true);
-								var errorHandler = this.handleFailure.createDelegate(this, [], true);
-								TaskCompletionController.checkResult(this.taskId, {
-											callback : callback,
-											errorHandler : errorHandler
-										});
-							}
-							return;
-						}
+				var messagesToSave = '';
+
+				for (var i = 0, len = data.length; i < len; i++) {
+					var d = data[i];
+					if (messages.length > 0) {
+						messages = messages + "; " + d.description;
+					} else {
+						messages = d.description;
 					}
-				} else {
-					if (data.done) {
-						this.stopProgress();
-						return this.handleFailure(data);
-					} else if (d.done) {
-						this.fireEvent('done', data.payload);
-						this.stopProgress();
+					messagesToSave = messagesToSave + "<br/>" + d.description;
+
+					if (d.failed) {
+						return this.handleFailure(d);
+					} else if (d.done && !this.done) {
+						// try to ensure we only call this once.
+						TaskCompletionController.checkResult(this.taskId, {
+									callback : this.handleFinalResult.createDelegate(this),
+									errorHandler : this.handleFailure.createDelegate(this)
+								});
+						this.done = true;
+
 					}
 				}
-
-				if (!document.getElementById("progressTextArea"))
-					return;
 
 				if (this.previousMessage != messages && messages.length > 0) {
 					this.previousMessage = messages;
-
 					this.progressBar.updateText(messages);
-					this.messages = this.messages + messages;
-					document.getElementById("progressTextArea").innerHTML += messages;
+					this.allMessages = this.allMessages + messages;
+					// document.getElementById("progressTextArea").innerHTML += messages;
 				} else {
-					this.progressBar.updateText(this.progressBar + '.');
+					this.progressBar.updateText(this.progressBar.text + '.');
 				}
 			},
 

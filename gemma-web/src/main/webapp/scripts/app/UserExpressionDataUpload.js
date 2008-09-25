@@ -1,7 +1,107 @@
 Ext.namespace('Gemma');
 Ext.form.Field.prototype.msgTarget = 'side';
 Ext.BLANK_IMAGE_URL = "/Gemma/images/s.gif";
-var commandObject = {};
+
+Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
+
+			commandObject : {},
+
+			agree : function() {
+				if (Ext.getCmp('agree').getValue()) {
+					// FIXME don't do this until the rest of the form is valid.
+					Ext.getCmp('submit-data-button').enable();
+				}
+			},
+
+			validate : function() {
+
+				/*
+				 * Lock the form.
+				 */
+
+				/*
+				 * Assemble the command object.
+				 */
+				this.commandObject.shortName = Ext.getCmp('shortName').getValue();
+
+				console.log(this.commandObject);
+
+				/*
+				 * Send the data to the server, but don't load it. If everything looks okay, show it to the user for
+				 * confirmation. If not, tell them what to fix.
+				 */
+
+				ExpressionDataFileUploadController.validate(this.commandObject, {
+							callback : this.onStartValidation.createDelegate(this)
+						});
+				// fireEvent('dataValid');
+			},
+
+			onStartValidation : function(taskId) {
+				Ext.DomHelper.overwrite("messages", "");
+				var p = new Gemma.ProgressWidget({
+							taskId : taskId
+						});
+
+				var window = new Ext.Window({
+							modal : true,
+							width : 400,
+							items : [p]
+						});
+
+				p.on('done', function(payload) {
+							this.onValidated(payload);
+							window.hide('validate-data-button');
+							window.destroy();
+							p.destroy();
+						}.createDelegate(this));
+
+				p.on('fail', function(message) {
+							console.log("failed: " + message);
+							// window.getEl().fadeOut({
+							// duration : 2000
+							// });
+							window.hide('validate-data-button');
+							window.destroy();
+							p.destroy();
+						}.createDelegate(this));
+
+				window.show();
+
+				p.startProgress();
+			},
+
+			onValidated : function(result) {
+				console.log(result);
+				if (result.valid) {
+					Ext.getCmp('agree').enable();
+				} else {
+
+					/*
+					 * Display a summary of the problems
+					 */
+
+					/*
+					 * re-enable the form.
+					 */
+
+					/*
+					 * Invalidate the fields that need work
+					 */
+
+				}
+			},
+
+			submitDataset : function() {
+
+				/*
+				 * Submit to the server. Start a progress bar. On the server, we have to do the following steps: 1)
+				 * validate everything 2) do the conversion 3) forward the user to the new data set page. Make sure they
+				 * get instructions on how to
+				 */
+
+			}
+		});
 
 Ext.onReady(function() {
 	Ext.QuickTips.init();
@@ -9,6 +109,8 @@ Ext.onReady(function() {
 	var q = Ext.QuickTips;
 
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+
+	tool = new Gemma.DatasetUploadTool();
 
 	var uploadForm = new Gemma.FileUploadForm({
 				title : 'Upload your data file',
@@ -28,14 +130,16 @@ Ext.onReady(function() {
 				width : 500
 			});
 
-	var panel = new Ext.Panel({
+	var panel = new Ext.form.FormPanel({
 		renderTo : 'form',
 		width : 600,
 		autoHeight : true,
 		frame : true,
 		title : "Enter expression experiment details",
 		items : [{
-					xtype : 'form',
+					xtype : 'fieldset',
+					title : 'The basics',
+					autoHeight : true,
 					style : 'margin : 5px',
 					bodyStyle : "padding : 10px",
 					items : [{
@@ -55,20 +159,20 @@ Ext.onReady(function() {
 							}, {
 								xtype : 'textarea',
 								id : 'description',
-								height : 100,
+								height : 70,
 								width : 400,
 								fieldLabel : 'Description',
-								allowBlank : false,
-								emptyText : 'Please enter a brief description of your experiment'
+								allowBlank : true,
+								emptyText : 'Please enter a brief abstract describing your experiment'
 							}, taxonCombo]
 				},
 
 				{
-					xtype : 'panel',
+					xtype : 'fieldset',
 					style : 'margin : 5px',
 					height : 'auto',
 					title : "Select the array design you used",
-					frame : true,
+
 					layout : 'table',
 					layoutConfig : {
 						columns : 1
@@ -78,8 +182,8 @@ Ext.onReady(function() {
 								id : 'array-design-info-area',
 								xtype : 'textarea',
 								width : 500,
-								style : 'overflow :scroll;margin: 4px 6px 4px 6px;',
-								height : 150,
+								style : 'overflow :scroll;margin: 4px 0px 4px 0px;',
+								height : 100,
 								readOnly : true
 							}, {
 								xtype : 'label',
@@ -92,16 +196,17 @@ Ext.onReady(function() {
 				}, new Gemma.QuantitationTypePanel({
 							id : 'quantitation-type-panel',
 							style : 'margin : 5px'
-						}), uploadForm, {
+						}),  /* uploadForm,*/ {
 					xtype : 'label',
 					html : 'For help with the file data file format, see '
 							+ '<a target="_blank" href="/Gemma/static/expressionExperiment/upload_help.html">this page</a>. '
 							+ 'The probe identifiers must match those in the array design on record.'
-				}, new Ext.form.FormPanel({
+				}, {
+					xtype : 'fieldset',
 					id : 'availability-form',
 					title : 'Security/availability information',
-					frame : true,
 					labelWidth : 200,
+					autoHeight : true,
 					items : [{
 								xtype : 'numberfield',
 								enableKeyEvents : true,
@@ -115,26 +220,28 @@ Ext.onReady(function() {
 							}, {
 								xtype : 'checkbox',
 								id : 'public',
-								boxLabel : "Your data will immediately be viewable by anybody",
+								boxLabel : "If checked, your data will immediately be viewable by anybody",
 								fieldLabel : "Make my data publicly available"
 							}, {
 								xtype : 'checkbox',
 								id : 'agree',
 								enabled : false,
-								handler : agree,
+								handler : tool.agree,
 								fieldLabel : "I have read the '<a target=\'_blank\' href='/Gemma/static/dataUploadTermsAndConditions.html'>terms and conditions</a>'"
 							}]
-				})],
+				}],
 		buttons : [{
 					id : 'validate-data-button',
 					value : 'Validate entries',
-					handler : validate,
+					handler : tool.validate,
+					scope : tool,
 					text : "Validate entries",
 					enabled : false
 				}, {
 					id : 'submit-data-button',
 					value : 'Submit dataset',
-					handler : submitDataset,
+					handler : tool.submitDataset,
+					scope : tool,
 					text : "Submit dataset",
 					enabled : false
 				}]
@@ -148,6 +255,7 @@ Ext.onReady(function() {
 				} else if (Ext.getCmp('pubmedid').isValid()) {
 					Ext.getCmp('public').setValue(true);
 					Ext.getCmp('public').disable();
+					tool.commandObject.pubMedId = Ext.getCmp('pubmedid').getValue()
 				} else {
 					Ext.getCmp('public').setValue(false);
 					Ext.getCmp('public').enable();
@@ -157,11 +265,12 @@ Ext.onReady(function() {
 	arrayDesignCombo.on('select', function(combo, arrayDesign) {
 				console.log(arrayDesign);
 				Ext.getCmp('array-design-info-area').setValue(arrayDesign.data.description);
-
+				tool.commandObject.arrayDesign = arrayDesign.data;
 			});
 
 	taxonCombo.on('select', function(combo, taxon) {
 				arrayDesignCombo.taxonChanged(taxon.data);
+				tool.commandObject.taxon = taxon.data;
 			}.createDelegate(this));
 
 	taxonCombo.on('ready', function(taxon) {
@@ -179,95 +288,9 @@ Ext.onReady(function() {
 				 */
 				if (result.success) {
 					Ext.getCmp('validate-data-button').enable();
-					commandObject.serverFilePath = result.localFile;
-					commandObject.originalFileName = result.originalFile;
+					tool.commandObject.serverFilePath = result.localFile;
+					tool.commandObject.originalFileName = result.originalFile;
 				}
 			});
 
 });
-
-function agree() {
-	if (Ext.getCmp('agree').getValue()) {
-		// FIXME don't do this until the rest of the form is valid.
-		Ext.getCmp('submit-data-button').enable();
-	}
-}
-
-function validate() {
-
-	/*
-	 * Lock the form.
-	 */
-
-	/*
-	 * Assemble the command object.
-	 */
-
-	/*
-	 * Send the data to the server, but don't load it. If everything looks okay, show it to the user for confirmation.
-	 * If not, tell them what to fix.
-	 */
-
-	ExpressionDataFileUploadController.validate(commandObject, {
-				callback : onStartValidation
-			});
-	// fireEvent('dataValid');
-}
-
-function onStartValidation(taskId) {
-	Ext.DomHelper.overwrite("messages", "");
-	var p = new Gemma.ProgressWidget({
-				taskId : taskId
-			});
-
-	var window = new Ext.Window({
-				modal : true,
-				items : [p]
-			});
-
-	p.on('done', function(payload) {
-				console.log("done");
-				window.hide('validate-data-button');
-				window.destroy();
-				p.destroy();
-			});
-
-	p.on('fail', function(message) {
-				console.log("failed: " + message);
-				// window.getEl().fadeOut({
-				// duration : 2000
-				// });
-				window.hide('validate-data-button');
-				window.destroy();
-				p.destroy();
-			});
-
-	window.show();
-
-	p.on('done', function(payload) {
-				onValidated(payload);
-			});
-	p.startProgress();
-}
-
-function onValidated(result) {
-	console.log(result);
-	if (result.valid) {
-		Ext.getCmp('agree').enable();
-	} else {
-
-		/*
-		 * re-enable the form.
-		 */
-	}
-}
-
-function submitDataset() {
-
-	/*
-	 * Submit to the server. Start a progress bar. On the server, we have to do the following steps: 1) validate
-	 * everything 2) do the conversion 3) forward the user to the new data set page. Make sure they get instructions on
-	 * how to
-	 */
-
-}

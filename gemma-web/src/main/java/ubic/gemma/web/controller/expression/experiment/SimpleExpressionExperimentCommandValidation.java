@@ -39,7 +39,7 @@ public class SimpleExpressionExperimentCommandValidation {
 
     private int numberOfNonMatchingProbes = 0;
 
-    private Collection<String> nonMatchingProbeNameExamples = new HashSet<String>();
+    private Collection<String> nonMatchingProbeNameExamples;
 
     private String quantitationTypeProblemMessage;
 
@@ -47,79 +47,89 @@ public class SimpleExpressionExperimentCommandValidation {
 
     private String arrayDesignMismatchProblemMessage;
 
-    protected boolean isValid() {
-        return quantitationTypeIsValid && shortNameIsUnique && dataFileIsValidFormat && arrayDesignMatchesDataFile;
+    private boolean isValid = true;
+
+    public SimpleExpressionExperimentCommandValidation() {
+        this.nonMatchingProbeNameExamples = new HashSet<String>();
     }
 
-    protected boolean isQuantitationTypeIsValid() {
+    public boolean isValid() {
+        return isValid;
+    }
+
+    public boolean isQuantitationTypeIsValid() {
         return quantitationTypeIsValid;
     }
 
-    protected void setQuantitationTypeIsValid( boolean quantitationTypeIsValid ) {
+    public void setQuantitationTypeIsValid( boolean quantitationTypeIsValid ) {
         this.quantitationTypeIsValid = quantitationTypeIsValid;
+        this.isValid = this.isValid && quantitationTypeIsValid;
     }
 
-    protected boolean isShortNameIsUnique() {
+    public boolean isShortNameIsUnique() {
         return shortNameIsUnique;
     }
 
-    protected void setShortNameIsUnique( boolean shortNameIsUnique ) {
+    public void setShortNameIsUnique( boolean shortNameIsUnique ) {
         this.shortNameIsUnique = shortNameIsUnique;
+        this.isValid = this.isValid && shortNameIsUnique;
     }
 
-    protected boolean isDataFileIsValidFormat() {
+    public boolean isDataFileIsValidFormat() {
         return dataFileIsValidFormat;
     }
 
-    protected void setDataFileIsValidFormat( boolean dataFileIsValidFormat ) {
+    public void setDataFileIsValidFormat( boolean dataFileIsValidFormat ) {
         this.dataFileIsValidFormat = dataFileIsValidFormat;
+        this.isValid = this.isValid && dataFileIsValidFormat;
     }
 
-    protected boolean isArrayDesignMatchesDataFile() {
+    public boolean isArrayDesignMatchesDataFile() {
         return arrayDesignMatchesDataFile;
     }
 
-    protected void setArrayDesignMatchesDataFile( boolean arrayDesignMatchesDataFile ) {
+    public void setArrayDesignMatchesDataFile( boolean arrayDesignMatchesDataFile ) {
         this.arrayDesignMatchesDataFile = arrayDesignMatchesDataFile;
+        this.isValid = this.isValid && arrayDesignMatchesDataFile;
     }
 
-    protected int getNumberOfNonMatchingProbes() {
+    public int getNumberOfNonMatchingProbes() {
         return numberOfNonMatchingProbes;
     }
 
-    protected void setNumberOfNonMatchingProbes( int numberOfNonMatchingProbes ) {
+    public void setNumberOfNonMatchingProbes( int numberOfNonMatchingProbes ) {
         this.numberOfNonMatchingProbes = numberOfNonMatchingProbes;
     }
 
-    protected Collection<String> getNonMatchingProbeNameExamples() {
+    public Collection<String> getNonMatchingProbeNameExamples() {
         return nonMatchingProbeNameExamples;
     }
 
-    protected void setNonMatchingProbeNameExamples( Collection<String> nonMatchingProbeNameExamples ) {
+    public void setNonMatchingProbeNameExamples( Collection<String> nonMatchingProbeNameExamples ) {
         this.nonMatchingProbeNameExamples = nonMatchingProbeNameExamples;
     }
 
-    protected String getQuantitationTypeProblemMessage() {
+    public String getQuantitationTypeProblemMessage() {
         return quantitationTypeProblemMessage;
     }
 
-    protected void setQuantitationTypeProblemMessage( String quantitationTypeProblemMessage ) {
+    public void setQuantitationTypeProblemMessage( String quantitationTypeProblemMessage ) {
         this.quantitationTypeProblemMessage = quantitationTypeProblemMessage;
     }
 
-    protected String getDataFileFormatProblemMessage() {
+    public String getDataFileFormatProblemMessage() {
         return dataFileFormatProblemMessage;
     }
 
-    protected void setDataFileFormatProblemMessage( String dataFileFormatProblemMessage ) {
+    public void setDataFileFormatProblemMessage( String dataFileFormatProblemMessage ) {
         this.dataFileFormatProblemMessage = dataFileFormatProblemMessage;
     }
 
-    protected String getArrayDesignMismatchProblemMessage() {
+   public String getArrayDesignMismatchProblemMessage() {
         return arrayDesignMismatchProblemMessage;
     }
 
-    protected void setArrayDesignMismatchProblemMessage( String arrayDesignMismatchProblemMessage ) {
+    public void setArrayDesignMismatchProblemMessage( String arrayDesignMismatchProblemMessage ) {
         this.arrayDesignMismatchProblemMessage = arrayDesignMismatchProblemMessage;
     }
 

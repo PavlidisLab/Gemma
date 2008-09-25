@@ -63,7 +63,7 @@ public class TaskRunningService {
      * 
      * @param taskId
      */
-    public synchronized void cancelTask( Object taskId, boolean doForward ) {
+    public synchronized void cancelTask( Object taskId ) {
         log.debug( "Cancelling " + taskId );
         if ( submittedTasks.containsKey( taskId ) ) {
             Future toCancel = submittedTasks.get( taskId );
@@ -73,7 +73,7 @@ public class TaskRunningService {
                  * Note that we do this notification stuff here, not in the callable that is watching it. Don't do it
                  * twice.
                  */
-                handleCancel( taskId, toCancel, doForward );
+                handleCancel( taskId, toCancel );
             } else {
                 throw new RuntimeException( "Couldn't cancel " + taskId );
             }
@@ -97,7 +97,7 @@ public class TaskRunningService {
             return clearFinished( taskId );
         } else if ( this.cancelledTasks.containsKey( taskId ) ) {
             log.debug( "Job was cancelled" );
-            return clearCancelled( taskId, true );
+            return clearCancelled( taskId );
         } else if ( this.failedTasks.containsKey( taskId ) ) {
             clearFailed( taskId );
             return null;
@@ -127,7 +127,7 @@ public class TaskRunningService {
      * @param taskId
      * @return
      */
-    private Object clearCancelled( Object taskId, boolean doForward ) throws Exception {
+    private Object clearCancelled( Object taskId ) throws Exception {
         Future cancelled = cancelledTasks.get( taskId );
         cancelledTasks.remove( taskId );
         try {
@@ -183,7 +183,7 @@ public class TaskRunningService {
                 } catch ( CancellationException e ) {
                     // I think this will never happen.
                     log.debug( "Cancellation received for " + taskId );
-                    handleCancel( taskId, task, false );
+                    handleCancel( taskId, task );
                 } catch ( ExecutionException e ) {
                     if ( e.getCause() instanceof InterruptedException ) {
                         if ( cancelledTasks.containsKey( taskId ) ) {
@@ -216,7 +216,7 @@ public class TaskRunningService {
      * @param taskId
      * @param toCancel
      */
-    void handleCancel( Object taskId, Future toCancel, boolean doForward ) {
+    void handleCancel( Object taskId, Future toCancel ) {
         cancelledTasks.put( taskId, toCancel );
         submittedTasks.remove( taskId );
         ProgressManager.signalCancelled( taskId );

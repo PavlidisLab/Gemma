@@ -58,12 +58,12 @@ public class ProgressStatusService {
      * @return
      */
     public List<ProgressData> getProgressStatus( String taskId ) {
-        List<ProgressData> result = new Vector<ProgressData>();
+        List<ProgressData> statusObjects = new Vector<ProgressData>();
 
         ProgressJob job = progressManager.getJob( taskId );
 
         if ( job == null ) {
-            // we might just need to wait a little while for the job to register.
+            // Lost job? Or we might just need to wait a little while for the job to register.
             try {
                 Thread.sleep( 1000 );
                 log.warn( "It looks like job " + taskId + " has gone missing; assuming it is dead or finished already" );
@@ -73,38 +73,39 @@ public class ProgressStatusService {
                     ProgressData data = new ProgressData();
                     data.setTaskId( taskId );
                     data.setFailed( true );
-                    data.setDescription("The job has already finished (due to an error or being too fast)");
-                    result.add( data );
+                    data.setDescription( "The job has already finished or failed but results are unavailable" );
+                    statusObjects.add( data );
                 }
             } catch ( InterruptedException e ) {
 
             }
-
-            return result;
+            return statusObjects;
         }
 
+        // normal situation: deal with accumulated results.
         Queue<ProgressData> pd = job.getProgressData();
 
         boolean isDone = false;
         synchronized ( pd ) {
-            // cleanup.
+            boolean didCleanup = false;
             while ( !pd.isEmpty() ) {
                 ProgressData data = pd.poll();
-                result.add( data );
+                statusObjects.add( data );
 
-                if ( isDone || data.isDone() ) {
+                if ( !didCleanup && ( isDone || data.isDone() ) ) {
                     log.info( "Job " + taskId + " is done!" );
                     if ( data.getForwardingURL() != null ) {
                         log.debug( "forward to " + data.getForwardingURL() );
                     }
                     progressManager.cleanupJob( taskId );
                     isDone = true;
-                    // Do not break. keep adding any stored data to the results.
+                    didCleanup = true;
+                    // Do not break, even if hte job is done. keep adding any stored data to the results.
                 }
             }
         }
 
-        return result;
+        return statusObjects;
     }
 
     /**
@@ -117,7 +118,7 @@ public class ProgressStatusService {
         try {
             log.debug( "Got cancellation for " + taskId );
             spacesUtil.cancel( taskId );
-            taskRunningService.cancelTask( taskId, false );
+            taskRunningService.cancelTask( taskId );
             progressManager.cleanupJob( taskId );
         } catch ( Exception e ) {
             log.error( e, e );
