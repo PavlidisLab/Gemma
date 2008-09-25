@@ -16,12 +16,6 @@ version: $Id$
 	</head>
 	<body style="overflow: hidden">
 
-		<p style='padding: 10px'>
-			Users do not need to log on or register for many uses of Gemma. An account is only needed if you want to take advantage of
-			data upload or 'favorite search' and similar functionality.
-			<strong>Need an account? <a href="<c:url  value='/register.html' />">Register</a>
-			</strong>
-		</p>
 
 		<script>
 		
@@ -127,8 +121,18 @@ version: $Id$
 	});
 
 </script>
+
+
+		<p style='margin-left: 200px; width: 500; padding: 10px'>
+			Users do not need to log on or register for many uses of Gemma. An account is only needed if you want to take advantage of
+			data upload or 'favorite search' and similar functionality.
+			<strong>Need an account? <a href="<c:url  value='register.html' />">Register</a> </strong>
+		</p>
+
 		<div id="login-mask" style=""></div>
 		<div align="center" id="login">
+
+
 			<div id="_login" class="login-indicator"></div>
 
 

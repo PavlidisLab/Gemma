@@ -208,7 +208,7 @@ function validate() {
 	 * If not, tell them what to fix.
 	 */
 
-	ExpressionDataFileUploadController.validate.call(commandObject, {
+	ExpressionDataFileUploadController.validate(commandObject, {
 				callback : onStartValidation
 			});
 	// fireEvent('dataValid');
@@ -216,20 +216,46 @@ function validate() {
 
 function onStartValidation(taskId) {
 	Ext.DomHelper.overwrite("messages", "");
-	var p = new progressbar({
+	var p = new Gemma.ProgressWidget({
 				taskId : taskId
 			});
-	p.createIndeterminateProgressBar();
-	// p.on('fail', handleFailure);
-	// p.on('cancel', reset);
-	p.on('done', onValidated);
+
+	var window = new Ext.Window({
+				modal : true,
+				items : [p]
+			});
+
+	p.on('done', function(payload) {
+				console.log("done");
+				window.hide('validate-data-button');
+				window.destroy();
+				p.destroy();
+			});
+
+	p.on('fail', function(message) {
+				console.log("failed: " + message);
+				// window.getEl().fadeOut({
+				// duration : 2000
+				// });
+				window.hide('validate-data-button');
+				window.destroy();
+				p.destroy();
+			});
+
+	window.show();
+
+	p.on('done', function(payload) {
+				onValidated(payload);
+			});
 	p.startProgress();
 }
 
 function onValidated(result) {
+	console.log(result);
 	if (result.valid) {
 		Ext.getCmp('agree').enable();
 	} else {
+
 		/*
 		 * re-enable the form.
 		 */

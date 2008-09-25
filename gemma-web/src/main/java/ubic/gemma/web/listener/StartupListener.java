@@ -305,6 +305,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
                 }
             }
         }
+        log.info( "Looking for jars in : " + sourceLibdir );
         Map<String, String> appConfig = ( Map<String, String> ) servletContext.getAttribute( "appConfig" );
         String version = appConfig.get( "version" );
         jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-core", version ) ) );

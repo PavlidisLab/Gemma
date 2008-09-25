@@ -4,13 +4,11 @@
  * 
  * To use:
  * 
- * Pass the taskId into the progrsesbar constructor OR (currently doesn't work)
- * create a div with id "progress-area" on your page, and a task id in a div
- * with id "taskId".
+ * Pass the taskId into the progrsesbar constructor OR (currently doesn't work) create a div with id "progress-area" on
+ * your page, and a task id in a div with id "taskId".
  * 
- * An optional update area "messages" may be used. Arrange for
- * createIndeterminateProgressBar or createDeterminateProgressBar to be called,
- * followed by startProgress().
+ * An optional update area "messages" may be used. Arrange for createIndeterminateProgressBar or
+ * createDeterminateProgressBar to be called, followed by startProgress().
  * 
  * @author Kelsey
  * @author Paul
@@ -22,10 +20,10 @@ progressbar = function(config) {
 	Ext.apply(this, config);
 
 	this.addEvents({
-		finish : true,
-		fail : true,
-		cancel : true
-	});
+				finish : true,
+				fail : true,
+				cancel : true
+			});
 
 	progressbar.superclass.constructor.call(this);
 };
@@ -61,7 +59,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 			this.fireEvent('fail');
 		}
 	},
-	
+
 	findTaskId : function() {
 
 		// try to get from query string
@@ -102,7 +100,6 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				alert("no task id");
 				return;
 			}
-			console.log("Task Id: " + taskId);
 
 			this.taskId = taskId;
 
@@ -149,7 +146,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 					// document.getElementById("progressTextArea").innerHTML =
 					// messages + " " + percent + "%";
 					document.getElementById("progress-bar-box-content").style.width = parseInt(percent
-							* detbarwidth / 100)
+							* (detbarwidth / 100))
 							+ "px";
 				}
 
@@ -159,15 +156,11 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				} else if (d.done) {
 					this.fireEvent('done', d.payload);
 					this.stopProgress();
-					if (this.doFoward && d.forwardingURL !== undefined
-							&& d.forwardingURL !== null) {
-						window.location = d.forwardingURL + "?taskId="
-								+ this.taskId;
+					if (this.doFoward && d.forwardingURL !== undefined && d.forwardingURL !== null) {
+						window.location = d.forwardingURL + "?taskId=" + this.taskId;
 					} else {
-						var callback = this.maybeDoForward.createDelegate(this,
-								[], true);
-						TaskCompletionController.checkResult(this.taskId,
-								callback);
+						var callback = this.maybeDoForward.createDelegate(this, [], true);
+						TaskCompletionController.checkResult(this.taskId, callback);
 					}
 					return;
 				}
@@ -185,8 +178,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 
 		// document.getElementById("progressTextArea").innerHTML = messages + "
 		// " + percent + "%";
-		document.getElementById("progress-bar-box-content").style.width = parseInt(percent
-				* this.detbarwidth / 100)
+		document.getElementById("progress-bar-box-content").style.width = parseInt(percent * this.detbarwidth / 100)
 				+ "px";
 	},
 
@@ -209,19 +201,15 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				} else if (d.done) {
 					this.fireEvent('done', d.payload);
 					this.stopProgress();
-					if (this.doFoward && d.forwardingURL !== undefined
-							&& d.forwardingURL !== null) {
-						window.location = d.forwardingURL + "?taskId="
-								+ this.taskId;
+					if (this.doFoward && d.forwardingURL !== undefined && d.forwardingURL !== null) {
+						window.location = d.forwardingURL + "?taskId=" + this.taskId;
 					} else {
-						var callback = this.maybeDoForward.createDelegate(this,
-								[], true);
-						var errorHandler = this.handleFailure.createDelegate(
-								this, [], true);
+						var callback = this.maybeDoForward.createDelegate(this, [], true);
+						var errorHandler = this.handleFailure.createDelegate(this, [], true);
 						TaskCompletionController.checkResult(this.taskId, {
-							callback : callback,
-							errorHandler : errorHandler
-						});
+									callback : callback,
+									errorHandler : errorHandler
+								});
 					}
 					return;
 				}
@@ -242,12 +230,10 @@ Ext.extend(progressbar, Ext.util.Observable, {
 		if (this.previousMessage != messages && messages.length > 0) {
 			this.previousMessage = messages;
 			document.getElementById("progressTextArea").innerHTML += messages;
-			document.getElementById("progressTextArea").scrollTop = document
-					.getElementById("progressTextArea").scrollHeight;
+			document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
 		} else {
 			document.getElementById("progressTextArea").innerHTML += ".";
-			document.getElementById("progressTextArea").scrollTop = document
-					.getElementById("progressTextArea").scrollHeight;
+			document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
 		}
 	},
 
@@ -268,9 +254,9 @@ Ext.extend(progressbar, Ext.util.Observable, {
 		// only check for status if we aren't already waiting for a reply.
 		if (!this.waiting) {
 			ProgressStatusService.getProgressStatus(this.taskId, {
-				callback : callback,
-				errorHandler : errorHandler
-			});
+						callback : callback,
+						errorHandler : errorHandler
+					});
 			this.waiting = true;
 		}
 	},
@@ -283,9 +269,9 @@ Ext.extend(progressbar, Ext.util.Observable, {
 		var messageArea = Ext.get("messages");
 		if (messageArea) {
 			Ext.DomHelper.overwrite("messages", {
-				tag : 'img',
-				src : '/Gemma/images/icons/ok.png'
-			});
+						tag : 'img',
+						src : '/Gemma/images/icons/ok.png'
+					});
 			Ext.DomHelper.append("messages", "&nbsp;Job was cancelled.");
 		}
 		this.fireEvent('cancel');

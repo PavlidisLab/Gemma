@@ -88,7 +88,6 @@ public class SimpleExpressionDataLoaderService {
     /**
      * @param metaData
      * @param matrix
-     * @param taxon TODO
      * @return ExpressionExperiment
      */
     public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData,
@@ -160,7 +159,7 @@ public class SimpleExpressionDataLoaderService {
      * @param design
      * @return
      */
-    private DoubleMatrix getSubMatrixForArrayDesign( DoubleMatrix<String, String> matrix,
+    public DoubleMatrix<String, String> getSubMatrixForArrayDesign( DoubleMatrix<String, String> matrix,
             Collection<Object> usedDesignElements, ArrayDesign design ) {
         List<String> designElements = new ArrayList<String>();
         List<String> columnNames = new ArrayList<String>();
@@ -191,8 +190,10 @@ public class SimpleExpressionDataLoaderService {
         log.info( "Found " + rows.size() + " data rows for " + design );
 
         if ( rows.size() == 0 ) {
-            throw new RuntimeException( "An array design was entered ( " + design
-                    + " ) for which there are no matching rows in the data" );
+            log
+                    .warn( "An array design was entered ( " + design
+                            + " ) for which there are no matching rows in the data" );
+            return null;
         }
 
         double[][] allSubMatrixRows = new double[rows.size()][rows.iterator().next().length];

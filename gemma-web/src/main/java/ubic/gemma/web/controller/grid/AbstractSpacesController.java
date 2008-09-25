@@ -22,8 +22,9 @@ import java.util.concurrent.FutureTask;
 
 import net.jini.core.lease.Lease;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.AbstractUrlViewController;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
@@ -38,28 +39,33 @@ import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 
 /**
- * TODO Document Me
+ * Subclasses implement getRunner() and getSpaceRunner()
  * 
  * @spring.property name="spacesUtil" ref="spacesUtil"
  * @spring.property name="taskRunningService" ref="taskRunningService"
  * @author Paul
  * @version $Id$
+ * @see BackgroundControllerJob
  */
-public abstract class AbstractSpacesController extends AbstractUrlViewController {
+public abstract class AbstractSpacesController<T> extends AbstractUrlViewController {
     protected TaskRunningService taskRunningService;
     protected SpacesUtil spacesUtil = null;
     protected ApplicationContext updatedContext = null;
 
+    private static Log log = LogFactory.getLog( AbstractSpacesController.class.getName() );
+
     /**
-     * This method can be exposed via AJAX to allow asynchronous calls
+     * This method can be exposed via AJAX to allow asynchronous calls. The method returns the task id immediately after
+     * starting the background job in a different thread.
      * 
      * @param command The command object containing parameters.
      * @return the task id.
      */
     public String run( Object command ) {
         String taskId = TaskRunningService.generateTaskId();
-        BackgroundControllerJob<ModelAndView> job = getRunner( taskId, command );
-        taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
+        BackgroundControllerJob<T> job = getRunner( taskId, command );
+        taskRunningService.submitTask( taskId, new FutureTask<T>( job ) );
+        log.debug( "Started job, taskId: " + taskId );
         return taskId;
     }
 
@@ -74,9 +80,9 @@ public abstract class AbstractSpacesController extends AbstractUrlViewController
         this.taskRunningService = taskRunningService;
     }
 
-    protected abstract BackgroundControllerJob<ModelAndView> getRunner( String jobId, Object command );
+    protected abstract BackgroundControllerJob<T> getRunner( String jobId, Object command );
 
-    protected abstract BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, Object command );
+    protected abstract BackgroundControllerJob<T> getSpaceRunner( String jobId, Object command );
 
     /**
      * @param spacesUtil
@@ -108,7 +114,7 @@ public abstract class AbstractSpacesController extends AbstractUrlViewController
         String taskId = null;
 
         updatedContext = addGemmaSpacesToApplicationContext();
-        BackgroundControllerJob<ModelAndView> job = null;
+        BackgroundControllerJob<T> job = null;
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) && ( spacesUtil.canServiceTask( taskName, spaceUrl ) ) ) {
 
             taskId = SpacesHelper.getTaskIdFromTask( updatedContext, taskName );
@@ -132,7 +138,7 @@ public abstract class AbstractSpacesController extends AbstractUrlViewController
 
         assert taskId != null;
 
-        taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
+        taskRunningService.submitTask( taskId, new FutureTask<T>( job ) );
         return taskId;
     }
 }

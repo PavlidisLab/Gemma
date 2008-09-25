@@ -79,9 +79,8 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
     }
 
     public BackgroundControllerJob( String taskId, Object commandObj ) {
+        assert taskId != null;
         this.securityContext = SecurityContextHolder.getContext();
-        log.info( this.securityContext );
-        log.info( this.securityContext.getAuthentication() );
         this.taskId = taskId;
         this.command = commandObj;
     }

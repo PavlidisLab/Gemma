@@ -29,13 +29,13 @@ import java.util.HashSet;
  */
 public class SimpleExpressionExperimentCommandValidation {
 
-    private boolean quantitationTypeIsValid = false;
+    private boolean quantitationTypeIsValid = true;
 
-    private boolean shortNameIsUnique = false;
+    private boolean shortNameIsUnique = true;
 
-    private boolean dataFileIsValidFormat = false;
+    private boolean dataFileIsValidFormat = true;
 
-    private boolean arrayDesignMatchesDataFile = false;
+    private boolean arrayDesignMatchesDataFile = true;
 
     private int numberOfNonMatchingProbes = 0;
 

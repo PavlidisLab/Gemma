@@ -119,10 +119,15 @@ public class ExpressionExperimentSetController extends BaseFormController {
             vo.setName( set.getName() );
             vo.setId( set.getId() );
             Taxon taxon = set.getTaxon();
-            vo.setTaxonId( taxon.getId() );
-            vo.setTaxonName( taxon.getCommonName() ); // If I don't do this, won't be populated in the
-            // downstream object. This is
-            // basically a thaw.
+            if ( taxon == null ) {
+                // happens in test databases that aren't properly populated.
+                log.debug( "No taxon provided" );
+            } else {
+                vo.setTaxonId( taxon.getId() );
+                vo.setTaxonName( taxon.getCommonName() ); // If I don't do this, won't be populated in the
+                // downstream object. This is
+                // basically a thaw.
+            }
 
             vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
             if ( expressionExperimentSetService.getAnalyses( set ).size() > 0 ) {
@@ -257,21 +262,18 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
     }
 
-    
     /**
-     * This is needed or you will have to specify a commandClass in the
-     * DispatcherServlet's context
+     * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
      * 
      * @param request
      * @return Object
      * @throws Exception
      */
     @Override
-    protected Object formBackingObject(HttpServletRequest request)
-            throws Exception {
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         return request;
     }
-    
+
     /**
      * Fill in information about analyses done on the experiments.
      * 

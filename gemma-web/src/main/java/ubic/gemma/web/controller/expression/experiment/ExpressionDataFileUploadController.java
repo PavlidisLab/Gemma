@@ -18,6 +18,9 @@
  */package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,10 +28,11 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils; 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -67,9 +71,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
      * @return the taskid
      */
     public String load( SimpleExpressionExperimentLoadCommand ed ) throws Exception {
-
         ed.setValidateOnly( false );
-
         return this.run( ed );
     }
 
@@ -92,17 +94,58 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
      * @param ed
      * @return
      */
-    private boolean doValidate( SimpleExpressionExperimentLoadCommand ed ) {
-        ExpressionExperiment existing = expressionExperimentService.findByShortName( ed.getShortName() );
+    private SimpleExpressionExperimentCommandValidation doValidate( SimpleExpressionExperimentLoadCommand ed ) {
 
-        if ( existing != null ) {
-            throw new IllegalArgumentException( "There is already an experiment with short name " + ed.getShortName()
-                    + "; please choose something unique." );
+        ExpressionExperiment existing = expressionExperimentService.findByShortName( ed.getShortName() );
+        SimpleExpressionExperimentCommandValidation result = new SimpleExpressionExperimentCommandValidation();
+
+        result.setShortNameIsUnique( existing == null );
+
+        String localPath = ed.getServerFilePath();
+        if ( StringUtils.isBlank( localPath ) ) {
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "File is missing" );
+            return result;
         }
 
-        getFile( ed );
+        File file = new File( localPath );
 
-        return false;
+        if ( !file.canRead() ) {
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "Cannot read from file" );
+            return result;
+        }
+
+        Collection<Long> arrayDesignIds = ed.getArrayDesignIds();
+
+        if ( arrayDesignIds.isEmpty() ) {
+            result.setArrayDesignMatchesDataFile( false );
+            result.setDataFileFormatProblemMessage( "Array design must be provided" );
+        }
+
+        DoubleMatrix<String, String> parse = null;
+        try {
+            parse = simpleExpressionDataLoaderService.parse( new FileInputStream( file ) );
+        } catch ( FileNotFoundException e ) {
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "File is missing" );
+        } catch ( IOException e ) {
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
+        }
+
+        if ( parse != null ) {
+            assert arrayDesignIds.size() == 1;
+            Long arrayDesignId = arrayDesignIds.iterator().next();
+
+            ArrayDesign design = arrayDesignService.load( arrayDesignId );
+            arrayDesignService.thawLite( design );
+
+            // check that the probes can be matched up...
+
+        }
+
+        return result;
 
     }
 
@@ -136,7 +179,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
     }
 
     @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, Object command ) {
+    protected BackgroundControllerJob getRunner( String jobId, Object command ) {
         if ( ( ( SimpleExpressionExperimentLoadCommand ) command ).isValidateOnly() ) {
             return new SimpleEEValidateJob( jobId, command, this.simpleExpressionDataLoaderService );
         } else {
@@ -160,7 +203,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         return "dataUpload";
     }
 
-    class SimpleEELoadJob extends BackgroundControllerJob<ModelAndView> {
+    class SimpleEELoadJob extends BackgroundControllerJob<Long> {
         SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
         public SimpleEELoadJob( String taskId, Object commandObj,
@@ -170,7 +213,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         }
 
         @SuppressWarnings("synthetic-access")
-        public ModelAndView call() throws Exception {
+        public Long call() throws Exception {
             super.init();
             Map<Object, Object> model = new HashMap<Object, Object>();
 
@@ -208,8 +251,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
             /*
              * Forward to the details view for the new experiment.
              */
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                    + result.getId() ), model );
+            return result.getId();
         }
 
         /**
@@ -241,7 +283,10 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         }
     }
 
-    class SimpleEEValidateJob extends BackgroundControllerJob<ModelAndView> {
+    /**
+     *  
+     */
+    class SimpleEEValidateJob extends BackgroundControllerJob<SimpleExpressionExperimentCommandValidation> {
 
         SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
@@ -256,24 +301,23 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
          * 
          * @see java.util.concurrent.Callable#call()
          */
-        public ModelAndView call() throws Exception {
+        public SimpleExpressionExperimentCommandValidation call() throws Exception {
             super.init();
 
-            // TODO Auto-generated method stub
-            Map<Object, Object> model = new HashMap<Object, Object>();
-            SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
-            Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
-            // might have used instead of actual ADs.
-            Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds();
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Validation" );
 
             /*
              * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.F
              */
-            doValidate( ( SimpleExpressionExperimentLoadCommand ) this.command );
+            SimpleExpressionExperimentCommandValidation result = doValidate( ( SimpleExpressionExperimentLoadCommand ) this.command );
 
-            Thread.sleep( 5000 );
+            log.info( "Validation done" );
 
-            return null;
+            ProgressManager.destroyProgressJob( job );
+
+            return result;
+
         }
     }
 
