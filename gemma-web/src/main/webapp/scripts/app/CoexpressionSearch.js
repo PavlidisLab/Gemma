@@ -95,6 +95,15 @@ Ext.onReady(function() {
 			if (fieldName == 'foundGene') {
 				searchPanel.searchForGene(record.get("foundGene").id);
 			}
+			
+			
+			if (fieldName == 'Visualize'){
+					var queryGene = record.data.queryGene;
+					var foundGene = record.data.foundGene;	
+					var activeExperiments = record.data.supportingExperiments;
+					
+				visWindow.displayWindow(activeExperiments, [queryGene, foundGene]);
+			}
 		}
 	}, knownGeneGrid);
 

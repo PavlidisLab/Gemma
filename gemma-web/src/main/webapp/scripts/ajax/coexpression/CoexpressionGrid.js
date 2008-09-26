@@ -92,9 +92,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				tooltip : "Dataset relevence map",
 				sortable : false
 			}, {
-				id : 'download',
-				header : "Download",
-				renderer : this.downloadDedv.createDelegate(this),
+				id : 'Visualize',
+				header : "Visualize",
+				renderer : this.visStyler.createDelegate(this),
 				tooltip : "Link for downloading raw data",
 				sortable : false
 			}]
@@ -205,8 +205,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	foundGeneStyler : function(value, metadata, record, row, col, ds) {
 		
 		var g = record.data.foundGene;
-		var eeIds = record.data.supportingExperiments;
-		var queryG = record.data.queryGene;
 		
 		if (g.officialName === null) {
 			g.officialName = "";
@@ -238,6 +236,10 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		// eeMap is created in CoexpressionSearch.js
 		s = s + '" usemap="#eeMap" /></span>';
 		return s;
+	},
+	
+	visStyler : function(value, metadata, record, row, col, ds){
+		return	"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Visualize the data' />";
 	},
 
 	downloadDedv : function(value, metadata, record, row, col, ds) {
@@ -291,7 +293,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	foundGeneTemplate : new Ext.Template(
 			"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
-			" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a>  <a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}")
+			" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}")
 
 });
 Gemma.CoexpressionGrid.bitImageBarWidth = 1;
