@@ -3,7 +3,7 @@
 
 	<title>File upload demo</title>
 
-	<jwr:script src='/scripts/ajax/fileUpload.js' useRandomParam="false" />
+	<jwr:script src='/scripts/ajax/util/FileUploadForm.js' useRandomParam="false" />
 
 	<style>
 .upload-icon {
