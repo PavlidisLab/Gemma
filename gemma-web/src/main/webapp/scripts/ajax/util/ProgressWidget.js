@@ -13,6 +13,9 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 			previousMessage : '',
 			timeoutid : null,
 			waiting : false,
+
+			style : 'font-weight:normal;font-size:smaller;',
+
 			initComponent : function(config) {
 
 				this.progressBar = new Ext.ProgressBar({

@@ -8,9 +8,7 @@ Ext.namespace("Gemma");
  */
 Gemma.QuantitationTypePanel = Ext.extend(Ext.form.FieldSet, {
 
-			width : 570,
 			autoHeight : true,
-			frame : true,
 			title : "Quantitation type details",
 
 			initComponent : function() {

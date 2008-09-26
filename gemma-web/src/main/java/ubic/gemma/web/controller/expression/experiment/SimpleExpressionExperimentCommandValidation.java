@@ -47,6 +47,11 @@ public class SimpleExpressionExperimentCommandValidation {
 
     private String arrayDesignMismatchProblemMessage;
 
+    private int numberMatchingProbes = 0;
+
+    private int numRows = 0;
+    private int numColumns = 0;
+
     private boolean isValid = true;
 
     public SimpleExpressionExperimentCommandValidation() {
@@ -125,12 +130,36 @@ public class SimpleExpressionExperimentCommandValidation {
         this.dataFileFormatProblemMessage = dataFileFormatProblemMessage;
     }
 
-   public String getArrayDesignMismatchProblemMessage() {
+    public String getArrayDesignMismatchProblemMessage() {
         return arrayDesignMismatchProblemMessage;
     }
 
     public void setArrayDesignMismatchProblemMessage( String arrayDesignMismatchProblemMessage ) {
         this.arrayDesignMismatchProblemMessage = arrayDesignMismatchProblemMessage;
+    }
+
+    public int getNumberMatchingProbes() {
+        return numberMatchingProbes;
+    }
+
+    public int getNumRows() {
+        return numRows;
+    }
+
+    public int getNumColumns() {
+        return numColumns;
+    }
+
+    public void setNumberMatchingProbes( int numberMatchingProbes ) {
+        this.numberMatchingProbes = numberMatchingProbes;
+    }
+
+    public void setNumRows( int numRows ) {
+        this.numRows = numRows;
+    }
+
+    public void setNumColumns( int numColumns ) {
+        this.numColumns = numColumns;
     }
 
 }

@@ -18,12 +18,13 @@
  */package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,11 +35,14 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -52,6 +56,7 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @spring.property name="simpleExpressionDataLoaderService" ref="simpleExpressionDataLoaderService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="taxonService" ref="taxonService"
  * @author Paul
  * @version $Id$
  */
@@ -62,6 +67,12 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
     private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
     private ExpressionExperimentService expressionExperimentService;
+
+    private TaxonService taxonService;
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
 
     /**
      * AJAX
@@ -124,7 +135,8 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
 
         DoubleMatrix<String, String> parse = null;
         try {
-            parse = simpleExpressionDataLoaderService.parse( new FileInputStream( file ) );
+            parse = simpleExpressionDataLoaderService.parse( FileTools.getInputStreamFromPlainOrCompressedFile( file
+                    .getAbsolutePath() ) );
         } catch ( FileNotFoundException e ) {
             result.setDataFileIsValidFormat( false );
             result.setDataFileFormatProblemMessage( "File is missing" );
@@ -134,6 +146,10 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         }
 
         if ( parse != null ) {
+
+            result.setNumRows( parse.rows() );
+            result.setNumColumns( parse.columns() );
+
             assert arrayDesignIds.size() == 1;
             Long arrayDesignId = arrayDesignIds.iterator().next();
 
@@ -141,6 +157,23 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
             arrayDesignService.thawLite( design );
 
             // check that the probes can be matched up...
+            int numRowsMatchingArrayDesign = 0;
+            int numRowsNotMatchingArrayDesign = 0;
+            List<String> mismatches = new ArrayList<String>();
+            for ( CompositeSequence cs : design.getCompositeSequences() ) {
+                if ( parse.containsRowName( cs.getName() ) ) {
+                    numRowsMatchingArrayDesign++;
+                } else {
+                    numRowsNotMatchingArrayDesign++;
+                    mismatches.add( cs.getName() );
+                }
+            }
+
+            result.setNumberMatchingProbes( numRowsMatchingArrayDesign );
+            result.setNumberOfNonMatchingProbes( numRowsNotMatchingArrayDesign );
+            if ( mismatches.size() > 0 ) {
+                result.setNonMatchingProbeNameExamples( mismatches.subList( 0, Math.max( 10, mismatches.size() - 1 ) ) );
+            }
 
         }
 
@@ -223,8 +256,8 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
 
             populateCommandObject( commandObject );
 
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Loading data from " + file );
+            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
+                    "Loading data from " + file.getName() );
 
             InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
 
@@ -239,18 +272,8 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
 
             stream.close();
 
-            /*
-             * FIXME this will fail.
-             */
-            this.saveMessage( "Successfully loaded " + result );
-
             model.put( "expressionExperiment", result );
 
-            ProgressManager.destroyProgressJob( job );
-
-            /*
-             * Forward to the details view for the new experiment.
-             */
             return result.getId();
         }
 
@@ -274,11 +297,14 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
                 commandObject.getArrayDesigns().add( arrayDesign );
             }
 
-            Taxon taxon = commandObject.getTaxon();
-            if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
-                taxon = Taxon.Factory.newInstance();
-                taxon.setScientificName( commandObject.getTaxonName() );
-                commandObject.setTaxon( taxon );
+            commandObject.setType( StandardQuantitationType.AMOUNT );
+            commandObject.setGeneralType( GeneralType.QUANTITATIVE );
+            commandObject.setIsMaskedPreferred( true );
+
+            Long taxonId = commandObject.getTaxonId();
+
+            if ( taxonId != null ) {
+                commandObject.setTaxon( taxonService.load( taxonId ) );
             }
         }
     }
@@ -306,8 +332,6 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
 
             ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
                     "Validating" );
-
-            Thread.sleep( 5000 );
 
             /*
              * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.

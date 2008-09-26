@@ -93,6 +93,8 @@ public class SimpleExpressionExperimentMetaData {
 
     Taxon taxon;
 
+    Long taxonId;
+
     public Collection<ArrayDesign> getArrayDesigns() {
         return this.arrayDesigns;
     }
@@ -319,6 +321,14 @@ public class SimpleExpressionExperimentMetaData {
 
     public void setIsMaskedPreferred( Boolean isMaskedPreferred ) {
         this.isMaskedPreferred = isMaskedPreferred;
+    }
+
+    public Long getTaxonId() {
+        return taxonId;
+    }
+
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
     }
 
 }

@@ -11,6 +11,11 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 			width : 500,
 			autoHeight : true,
 
+			reset : function() {
+				Ext.getCmp('form-file').reset();
+				Ext.getCmp('messages').setStatus('');
+			},
+
 			initComponent : function() {
 				Ext.apply(this, {
 							width : 500,
@@ -37,13 +42,22 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 													emptyText : 'Select a file',
 													fieldLabel : 'File',
 													name : 'file-path',
+													listeners : {
+														'fileselected' : function(field, value) {
+															Ext.getCmp('file-upload-button').enable();
+														}.createDelegate(this)
+
+													},
 													buttonCfg : {
 														text : '',
 														iconCls : 'upload-icon'
+
 													}
 												}],
 										buttons : [{
 											text : 'Upload',
+											id : 'file-upload-button',
+											disabled : true,
 											handler : function() {
 												var taskId = parseInt(Math.random() * 1e12, 12);
 												this.taskId = taskId;
