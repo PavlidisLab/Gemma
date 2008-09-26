@@ -35,9 +35,6 @@ import ubic.gemma.grid.javaspaces.expression.experiment.SpacesExpressionExperime
  */
 public class SpacesCommand implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     private String taskId = null;

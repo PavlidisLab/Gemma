@@ -11,7 +11,8 @@
 
 <beans>
 	<!-- Declaration of GigaSpaces factory bean -->
-	<bean id="gigaspace" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesFactoryBean">
+	<bean id="gigaspace"
+		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesFactoryBean">
 		<property name="urls">
 			<list>
 				<!--  <value>jini://*/*/remotingSpace</value> -->
@@ -27,56 +28,71 @@
 	</bean>
 
 	<!-- Declaration of GigaSpace template-->
-	<bean id="gigaspacesTemplate" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate">
+	<bean id="gigaspacesTemplate"
+		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate">
 		<property name="space" ref="gigaspace" />
 	</bean>
-
-	<bean id="expressionExperimentLoadWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+	
+	<!-- Add workers here -->
+	<bean id="expressionExperimentLoadWorker"
+		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref local="taskBean" />
 		</property>
 		<property name="businessInterface">
-			<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask</value>
+			<value>
+				ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask
+			</value>
 		</property>
 	</bean>
-	
-	<bean id="indexGemmaSpaceWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+
+	<bean id="indexGemmaSpaceWorker"
+		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref local="indexTask" />
 		</property>
 		<property name="businessInterface">
-			<value>ubic.gemma.grid.javaspaces.index.IndexGemmaTask</value>
+			<value>
+				ubic.gemma.grid.javaspaces.index.IndexGemmaTask
+			</value>
 		</property>
 	</bean>
-	
 
-	<bean id="expressionExperimentReportGenerationWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+
+	<bean id="expressionExperimentReportGenerationWorker"
+		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref bean="expressionExperimentReportService" />
 		</property>
 		<property name="businessInterface">
-			<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask</value>
+			<value>
+				ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask
+			</value>
 		</property>
 	</bean>
-	
-	<bean id="differentialExpressionAnalysisWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+
+	<bean id="differentialExpressionAnalysisWorker"
+		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref bean="differentialExpressionAnalyzerService" />
 		</property>
 		<property name="businessInterface">
-			<value>ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask</value>
+			<value>
+				ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask
+			</value>
 		</property>
 	</bean>
 
-	<bean id="javaSpaceInterceptor" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
+	<bean id="javaSpaceInterceptor"
+		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="uidFactory" ref="gigaSpacesUidFactory" />
 		<property name="synchronous">
@@ -104,9 +120,10 @@
 		-->
 	</bean>
 	<!--
-		This is the client-side proxy.
+		This is the client-side proxy to which task interfaces are added to.
 	-->
-	<bean id="proxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+	<bean id="proxy"
+		class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="interceptorNames">
 			<list>
 				<value>javaSpaceInterceptor</value>
@@ -117,16 +134,31 @@
 		</property>
 		<property name="proxyInterfaces">
 			<list>
-				<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask</value>
-				<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask</value>
-				<value>ubic.gemma.grid.javaspaces.index.IndexGemmaTask</value>
-				<value>ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask</value>
+				<value>
+					ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask
+				</value>
+				<value>
+					ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask
+				</value>
+				<value>
+					ubic.gemma.grid.javaspaces.index.IndexGemmaTask
+				</value>
+				<value>
+					ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask
+				</value>
+				<value>
+					ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask
+				</value>
 			</list>
 		</property>
 	</bean>
 
-	<bean id="taskBean" class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskImpl">
-	
+	<!-- Add task impls here if you are not reusing another service elsewhere in the context.  An example of
+		reuse would be the DifferentialExpressionAnalyzerService, which serves as both a regular service and a task 
+		implementation -->
+	<bean id="taskBean"
+		class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskImpl">
+
 		<property name="geoDatasetService">
 			<ref bean="geoDatasetService" />
 		</property>
@@ -136,10 +168,11 @@
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />
 		</property>
-		
+
 	</bean>
-	
-	<bean id="indexTask" class="ubic.gemma.grid.javaspaces.index.IndexGemmaTaskImpl">
+
+	<bean id="indexTask"
+		class="ubic.gemma.grid.javaspaces.index.IndexGemmaTaskImpl">
 
 		<property name="geneGps">
 			<ref bean="geneGps" />
@@ -155,34 +188,32 @@
 		</property>
 		<property name="bibliographicGps">
 			<ref bean="bibliographicGps" />
-		</property>	
+		</property>
 		<property name="bioSequenceGps">
 			<ref bean="biosequenceGps" />
-		</property>		
+		</property>
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />
 		</property>
-		
+
 		<property name="compassExpression">
-			<ref bean="compassExpression"/>
-		</property>		
+			<ref bean="compassExpression" />
+		</property>
 		<property name="compassArray">
-			<ref bean="compassArray"/>
+			<ref bean="compassArray" />
 		</property>
 		<property name="compassProbe">
-			<ref bean="compassProbe"/>
+			<ref bean="compassProbe" />
 		</property>
 		<property name="compassGene">
-			<ref bean="compassGene"/>
+			<ref bean="compassGene" />
 		</property>
 		<property name="compassBiosequence">
-			<ref bean="compassBiosequence"/>
+			<ref bean="compassBiosequence" />
 		</property>
 		<property name="compassBibliographic">
-			<ref bean="compassBibliographic"/>
+			<ref bean="compassBibliographic" />
 		</property>
-		
-		
 	</bean>
 </beans>
 

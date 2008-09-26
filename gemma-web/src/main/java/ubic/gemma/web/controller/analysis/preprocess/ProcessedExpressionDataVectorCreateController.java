@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.diff;
+package ubic.gemma.web.controller.analysis.preprocess;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -25,8 +25,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.grid.javaspaces.SpacesResult;
-import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask;
-import ubic.gemma.grid.javaspaces.diff.SpacesDifferentialExpressionAnalysisCommand;
+import ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask;
+import ubic.gemma.grid.javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -35,13 +35,13 @@ import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
 
 /**
- * A controller to run differential expression analysis either locally or in a space.
+ * A controller to preprocess expression data vectors.
  * 
- * @spring.bean id="differentialExpressionAnalysisController"
+ * @spring.bean id="processedExpressionDataVectorCreateController"
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisController extends AbstractSpacesController {
+public class ProcessedExpressionDataVectorCreateController extends AbstractSpacesController {
 
     /**
      * AJAX entry point.
@@ -50,10 +50,10 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
      * @return
      * @throws Exception
      */
-    public String run( DiffExpressionAnalysisCommand cmd ) throws Exception {
+    public String run( ProcessedExpressionDataVectorCreateCommand cmd ) throws Exception {
         /* this 'run' method is exported in the spring-beans.xml */
 
-        return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
+        return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ProcessedExpressionDataVectorCreateTask.class
                 .getName(), true );
     }
 
@@ -62,10 +62,10 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
      * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, Object command ) {
-        return new DiffAnalysisJob( jobId, command );
+    protected BackgroundControllerJob getRunner( String jobId, Object command ) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     /*
@@ -73,11 +73,9 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
      * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, Object command ) {
-        return new DiffAnalysisSpaceJob( jobId, command );
-
+    protected BackgroundControllerJob getSpaceRunner( String jobId, Object command ) {
+        return new ProcessedExpressionDataVectorCreateSpaceJob( jobId, command );
     }
 
     /**
@@ -86,16 +84,16 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
      * @author keshav
      * @version $Id$
      */
-    private class DiffAnalysisSpaceJob extends DiffAnalysisJob {
+    private class ProcessedExpressionDataVectorCreateSpaceJob extends ProcessedExpressionDataVectorCreateJob {
 
-        final DifferentialExpressionAnalysisTask taskProxy = ( DifferentialExpressionAnalysisTask ) updatedContext
+        final ProcessedExpressionDataVectorCreateTask taskProxy = ( ProcessedExpressionDataVectorCreateTask ) updatedContext
                 .getBean( "proxy" );
 
         /**
          * @param taskId
          * @param commandObj
          */
-        public DiffAnalysisSpaceJob( String taskId, Object commandObj ) {
+        public ProcessedExpressionDataVectorCreateSpaceJob( String taskId, Object commandObj ) {
             super( taskId, commandObj );
 
         }
@@ -103,12 +101,12 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         /*
          * (non-Javadoc)
          * 
-         * @see ubic.gemma.web.controller.diff.DifferentialExpressionAnalysisController.DiffAnalysisJob#processJob(ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisCommand)
+         * @see ubic.gemma.web.controller.analysis.preprocess.ProcessedExpressionDataVectorCreateController.ProcessedExpressionDataVectorCreateJob#processJob(ubic.gemma.web.controller.BaseCommand)
          */
         @Override
         protected ModelAndView processJob( BaseCommand baseCommand ) {
-            DiffExpressionAnalysisCommand diffCommand = ( DiffExpressionAnalysisCommand ) baseCommand;
-            process( diffCommand );
+            ProcessedExpressionDataVectorCreateCommand vectorCommand = ( ProcessedExpressionDataVectorCreateCommand ) baseCommand;
+            process( vectorCommand );
             return new ModelAndView( new RedirectView( "/Gemma" ) );
         }
 
@@ -116,42 +114,50 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
          * @param diffCommand
          * @return
          */
-        private SpacesResult process( DiffExpressionAnalysisCommand diffCommand ) {
-            SpacesDifferentialExpressionAnalysisCommand jsCommand = createCommandObject( diffCommand );
+        private SpacesResult process( ProcessedExpressionDataVectorCreateCommand command ) {
+            SpacesProcessedExpressionDataVectorCreateCommand jsCommand = createCommandObject( command );
             SpacesResult result = taskProxy.execute( jsCommand );
             return result;
         }
 
-        protected SpacesDifferentialExpressionAnalysisCommand createCommandObject(
-                DiffExpressionAnalysisCommand diffCommand ) {
-            return new SpacesDifferentialExpressionAnalysisCommand( taskId, diffCommand.isForceAnalysis(), diffCommand
-                    .getAccession() );
+        /**
+         * @param command
+         * @return
+         */
+        protected SpacesProcessedExpressionDataVectorCreateCommand createCommandObject(
+                ProcessedExpressionDataVectorCreateCommand command ) {
+            return new SpacesProcessedExpressionDataVectorCreateCommand( taskId, command.getAccession() );
         }
 
     }
 
     /**
-     * Regular (local) job.
+     * @author keshav
      */
-    private class DiffAnalysisJob extends BaseControllerJob<ModelAndView> {
+    private class ProcessedExpressionDataVectorCreateJob extends BaseControllerJob<ModelAndView> {
 
         /**
          * @param taskId
          * @param commandObj
          */
-        public DiffAnalysisJob( String taskId, Object commandObj ) {
+        public ProcessedExpressionDataVectorCreateJob( String taskId, Object commandObj ) {
             super( taskId, commandObj );
         }
 
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.util.concurrent.Callable#call()
+         */
         public ModelAndView call() throws Exception {
             SecurityContextHolder.setContext( securityContext );
 
-            DiffExpressionAnalysisCommand diffAnalysisCommand = ( ( DiffExpressionAnalysisCommand ) command );
+            ProcessedExpressionDataVectorCreateCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateCommand ) command );
 
             ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Loading " + diffAnalysisCommand.getAccession() );
+                    "Loading " + vectorCommand.getAccession() );
 
-            return processJob( diffAnalysisCommand );
+            return processJob( vectorCommand );
         }
 
         /*
@@ -172,6 +178,8 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
      */
     @Override
     protected String getViewNameForRequest( HttpServletRequest arg0 ) {
-        return "differentialExpressionAnalysis";
+        // TODO Auto-generated method stub
+        return null;
     }
+
 }

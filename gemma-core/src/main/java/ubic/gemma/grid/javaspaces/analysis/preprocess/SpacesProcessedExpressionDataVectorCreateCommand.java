@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,50 +16,43 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.grid.javaspaces.diff;
+package ubic.gemma.grid.javaspaces.analysis.preprocess;
 
 import ubic.gemma.grid.javaspaces.SpacesCommand;
 
 /**
- * A command object to be used by spaces.
+ * Command object for processing data vectors. Used by spaces.
  * 
  * @author keshav
  * @version $Id$
  */
-public class SpacesDifferentialExpressionAnalysisCommand extends SpacesCommand {
+public class SpacesProcessedExpressionDataVectorCreateCommand extends SpacesCommand {
 
     private static final long serialVersionUID = 1L;
 
-    private boolean forceAnalysis = false;
-
     private String accession = null;
 
+    /**
+     * @return
+     */
     public String getAccession() {
         return accession;
     }
 
+    /**
+     * @param accession
+     */
     public void setAccession( String accession ) {
         this.accession = accession;
     }
 
     /**
-     * NOTE: we can't pass in a we command as they are defined in the web module, which messes up the configuration.
-     * 
      * @param taskId
-     * @param command
      */
-    public SpacesDifferentialExpressionAnalysisCommand( String taskId, boolean forceAnalysis, String accession ) {
+    public SpacesProcessedExpressionDataVectorCreateCommand( String taskId, String accession ) {
         super( taskId );
-        this.forceAnalysis = forceAnalysis;
+
         this.accession = accession;
-    }
-
-    public boolean isForceAnalysis() {
-        return forceAnalysis;
-    }
-
-    public void setForceAnalysis( boolean forceAnalysis ) {
-        this.forceAnalysis = forceAnalysis;
     }
 
 }
