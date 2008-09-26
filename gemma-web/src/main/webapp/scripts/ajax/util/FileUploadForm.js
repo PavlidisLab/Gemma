@@ -65,7 +65,6 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 												if (form.isValid()) {
 													form.submit({
 																url : '/Gemma/uploadFile.html',
-																method : 'post',
 																waitMsg : 'Uploading your file ...',
 																success : function(form, a) {
 																	var m = a.result;
@@ -81,11 +80,13 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 																					+ a.result.originalFile
 																					+ '" on the server');
 																	this.fireEvent('fail', a.result);
-																}.createDelegate(this)
+																}.createDelegate(this),
+																scope : this
 															});
 													this.fireEvent('start');
 												}
-											}.createDelegate(this)
+											},
+											scope : this
 										}]
 									})],
 							bbar : new Ext.StatusBar({

@@ -472,7 +472,7 @@ a.tooltip:hover .tooltiptext {
 }
 
 .upload-icon {
-	background: url('images/icons/add.png') no-repeat 0 0 !important;
+	background: url('../../images/icons/add.png') no-repeat 0 0 !important;
 }
 
 #fi-button-msg {

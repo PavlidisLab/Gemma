@@ -5,19 +5,6 @@
 
 	<jwr:script src='/scripts/ajax/util/FileUploadForm.js' useRandomParam="false" />
 
-	<style>
-.upload-icon {
-	background: url('images/icons/add.png') no-repeat 0 0 !important;
-}
-
-#fi-button-msg {
-	border: 2px solid #ccc;
-	padding: 5px 10px;
-	background: #eee;
-	margin: 5px;
-	float: left;
-}
-</style>
 
 </head>
 
@@ -33,13 +20,11 @@
 	 
 	Ext.onReady( function()
 	 {
+	   Ext.QuickTips.init();
 	 	var form = new Gemma.FileUploadForm({renderTo : 'fi-form'});
 	 });	
 		
 		</script>
-
-	<div id="messages"></div>
 	<div id="fi-form"></div>
-	<div id="progress-area" style="margin: 20px; padding: 5px;"></div>
 
 </body>
