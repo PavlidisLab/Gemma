@@ -39,6 +39,8 @@ public class BaseSpacesTask {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
+    protected String taskId;
+
     protected GigaSpacesTemplate gigaSpacesTemplate = null;
 
     /**
@@ -70,6 +72,10 @@ public class BaseSpacesTask {
      */
     public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
         this.gigaSpacesTemplate = gigaSpacesTemplate;
+    }
+
+    public String getTaskId() {
+        return taskId;
     }
 
 }

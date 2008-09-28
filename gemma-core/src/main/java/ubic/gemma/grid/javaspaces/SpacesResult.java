@@ -32,7 +32,7 @@ public class SpacesResult implements Serializable {
     /**
      * The task id
      */
-    private long taskID; // requestor
+    private Object taskID; // requestor
     /**
      * The answer
      */
@@ -44,6 +44,10 @@ public class SpacesResult implements Serializable {
     public SpacesResult() {
     }
 
+    public SpacesResult( Object taskId ) {
+        this.taskID = taskId;
+    }
+
     public Object getAnswer() {
         return answer;
     }
@@ -52,11 +56,11 @@ public class SpacesResult implements Serializable {
         this.answer = answer;
     }
 
-    public long getTaskID() {
+    public Object getTaskID() {
         return taskID;
     }
 
-    public void setTaskID( long taskID ) {
+    public void setTaskID( Object taskID ) {
         this.taskID = taskID;
     }
 }

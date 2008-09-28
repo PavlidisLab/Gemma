@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,13 @@
 package ubic.gemma.grid.javaspaces;
 
 /**
- * The parent of the spaces interface task hierarchy. All task interfaces should extend this.
+ * TODO Document Me
  * 
- * @author keshav
+ * @author Paul
  * @version $Id$
  */
-public interface SpacesTask<T> {
+public interface TaskCreator<T> {
 
-    /**
-     * @return The task Id.
-     */
-    public String getTaskId();
-
-    public SpacesResult execute( T command );
+    public SpacesTask createTask( T command );
 
 }

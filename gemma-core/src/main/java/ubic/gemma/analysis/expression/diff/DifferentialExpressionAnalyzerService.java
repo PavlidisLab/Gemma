@@ -28,11 +28,10 @@ import java.util.HashSet;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.SpacesTask;
+import ubic.gemma.grid.javaspaces.TaskCreator;
 import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask;
 import ubic.gemma.grid.javaspaces.diff.SpacesDifferentialExpressionAnalysisCommand;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
@@ -47,7 +46,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * A spring loaded differential expression service to run the differential expression analysis (and persist the results
@@ -62,8 +60,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalyzerService extends BaseSpacesTask implements
-        DifferentialExpressionAnalysisTask, InitializingBean {
+public class DifferentialExpressionAnalyzerService implements TaskCreator<SpacesDifferentialExpressionAnalysisCommand> {
 
     private Log log = LogFactory.getLog( this.getClass() );
     private ExpressionExperimentService expressionExperimentService = null;
@@ -71,10 +68,6 @@ public class DifferentialExpressionAnalyzerService extends BaseSpacesTask implem
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
     private PersisterHelper persisterHelper = null;
-
-    /* used in the spaces world */
-    private String taskId = null;
-    private long counter = 0;
 
     /**
      * Finds the persistent expression experiment. If there are no associated analyses with this experiment, the
@@ -392,50 +385,26 @@ public class DifferentialExpressionAnalyzerService extends BaseSpacesTask implem
         this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid.javaspaces.diff.SpacesDifferentialExpressionAnalysisCommand)
-     */
-    public SpacesResult execute( SpacesDifferentialExpressionAnalysisCommand jsDiffAnalysisCommand ) {
-
-        super.initProgressAppender( this.getClass() );
+    public Collection<DifferentialExpressionAnalysis> executeTask(
+            SpacesDifferentialExpressionAnalysisCommand jsDiffAnalysisCommand ) {
 
         boolean forceAnalysis = jsDiffAnalysisCommand.isForceAnalysis();
         String accession = jsDiffAnalysisCommand.getAccession();
-
-        SpacesResult result = new SpacesResult();
-
         ExpressionExperiment ee = expressionExperimentService.findByShortName( accession );
         expressionExperimentService.thaw( ee );
 
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.getDifferentialExpressionAnalyses( ee,
                 forceAnalysis );
 
-        result.setAnswer( expressionAnalyses );
-
-        counter++;
-        result.setTaskID( counter );
-        log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
-                + result.getTaskID() );
-        return result;
+        return expressionAnalyses;
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
+     * @see ubic.gemma.grid.javaspaces.TaskCreator#createTask(java.lang.Object)
      */
-    public String getTaskId() {
-        return taskId;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
+    public SpacesTask createTask( SpacesDifferentialExpressionAnalysisCommand command ) {
+        return new DifferentialExpressionAnalysisTask( command, this );
     }
 }
