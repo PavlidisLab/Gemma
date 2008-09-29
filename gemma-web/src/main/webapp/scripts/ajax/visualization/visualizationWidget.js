@@ -50,7 +50,7 @@ Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {
 
 	}
 
-});
+);
 
 Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	id : 'VisualizationPanel',
@@ -67,7 +67,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 		var store = new Gemma.VisaulizationStore();
 
 		var tpl = new Ext.XTemplate({divName : function(eeName){return "vis" + eeName}},'<div id=this.divName(ee.shortname)>',
-		{[Flotr.draw(this.divName(ee.shortname), flotrData)});
+		'{[Flotr.draw(this.divName(ee.shortname), flotrData)]}');
 
 		var panel = new Ext.Panel({
 
@@ -94,7 +94,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 				prepareData : function(data) {
 
-					//Need to transform the cordinate data from an object to an array for flotr
+					// Need to transform the cordinate data from an object to an array for flotr
 					var flotrData = [];
 					var coordinateProfile = data.profiles;
 
