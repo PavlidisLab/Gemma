@@ -438,8 +438,9 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
 
         eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
-        eeVo.setProcessedExpressionVectorCount( expressionExperimentService
-                .getProcessedExpressionVectorCount( tempEe ) );
+        eeVo
+                .setProcessedExpressionVectorCount( expressionExperimentService
+                        .getProcessedExpressionVectorCount( tempEe ) );
 
         long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
         log.info( numLinks + " links." );
@@ -603,6 +604,16 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         } catch ( Throwable e ) {
             log.warn( e );
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
+     */
+    public SpacesResult execute( Object command ) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

@@ -125,4 +125,14 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
     public String getTaskId() {
         return taskId;
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
+     */
+    public SpacesResult execute( Object command ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

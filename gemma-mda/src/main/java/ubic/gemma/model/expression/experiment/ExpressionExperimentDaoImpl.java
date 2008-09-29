@@ -1347,14 +1347,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected void handleThaw( final ExpressionExperiment expressionExperiment ) throws Exception {
         thawBioAssays( expressionExperiment );
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( expressionExperiment, LockMode.NONE );
                 Hibernate.initialize( expressionExperiment.getRawExpressionDataVectors() );
                 Hibernate.initialize( expressionExperiment.getProcessedExpressionDataVectors() );
                 return null;
             }
-        }, false );
+        } );
     }
 
     // thaw lite. Misnamed becaues it thaws out things other than the bioassays.
@@ -1362,7 +1362,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected void handleThawBioAssays( final ExpressionExperiment ee ) {
         if ( ee == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new HibernateCallback() {
 
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( ee, LockMode.NONE );
@@ -1411,7 +1411,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 return null;
             }
-        }, false );
+        } );
     }
 
     /*
@@ -1422,12 +1422,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, Integer> handleGetAnnotationCounts( Collection ids ) throws Exception {
-        String queryString = "select e.id,count(c.id) from ExpressionExperimentImpl e inner join e.characteristics c where e.id in (:ids) group by e.id";
-        List res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
         Map<Long, Integer> results = new HashMap<Long, Integer>();
         for ( Long id : ( Collection<Long> ) ids ) {
             results.put( id, 0 );
         }
+        if ( ids.size() == 0 ) {
+            return results;
+        }
+        String queryString = "select e.id,count(c.id) from ExpressionExperimentImpl e inner join e.characteristics c where e.id in (:ids) group by e.id";
+        List res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+
         for ( Object r : res ) {
             Object[] ro = ( Object[] ) r;
             Long id = ( Long ) ro[0];
@@ -1445,13 +1449,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, Integer> handleGetPopulatedFactorCounts( Collection ids ) throws Exception {
-        String queryString = "select e.id,count(distinct ef.id) from ExpressionExperimentImpl e inner join e.bioAssays ba"
-                + " inner join ba.samplesUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor ef where e.id in (:ids) group by e.id";
-        List res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
         Map<Long, Integer> results = new HashMap<Long, Integer>();
         for ( Long id : ( Collection<Long> ) ids ) {
             results.put( id, 0 );
         }
+
+        String queryString = "select e.id,count(distinct ef.id) from ExpressionExperimentImpl e inner join e.bioAssays ba"
+                + " inner join ba.samplesUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor ef where e.id in (:ids) group by e.id";
+        List res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+
         for ( Object r : res ) {
             Object[] ro = ( Object[] ) r;
             Long id = ( Long ) ro[0];

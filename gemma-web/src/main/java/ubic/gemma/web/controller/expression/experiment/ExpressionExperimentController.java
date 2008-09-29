@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
+import org.springframework.security.AccessDeniedException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -599,20 +600,69 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         log.info( "Processing link summary request" );
 
         String sId = request.getParameter( "id" );
-        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
-        Collection<ExpressionExperimentValueObject> eeValObjectCol;
 
+        Collection<ExpressionExperimentValueObject> expressionExperiments = loadStatusSummaries( sId );
+
+        // Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
+        // public int compare( Object o1, Object o2 ) {
+        // String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
+        // String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
+        // int comparison = s1.compareToIgnoreCase( s2 );
+        // return comparison;
+        // }
+        // } );
+        if ( sId == null ) {
+            this.saveMessage( request, "Displaying all Datasets" );
+        }
+        Long numExpressionExperiments = new Long( expressionExperiments.size() );
+        ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
+        mav.addObject( "expressionExperiments", expressionExperiments );
+        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
+
+        return mav;
+
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param sId
+     * @return
+     */
+    public Collection<ExpressionExperimentValueObject> loadStatusSummaries( String sId ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        // if no IDs are specified, then load all expressionExperiments
+        // if no IDs are specified, then load all expressionExperiments.
+        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> eeValObjectCol;
+
+        boolean allowViewingAll = false;
+        if ( SecurityService.isUserLoggedIn() ) {
+            if ( SecurityService.isUserAdmin() ) {
+                allowViewingAll = true;
+            } else {
+                // Anonymous
+                throw new AccessDeniedException( "User does not have access to experiment management" );
+            }
+        }
+
+        /*
+         * TODO: if the user is logged in, show only their own experiments. If admin, show them all.
+         */
+
         if ( sId == null ) {
-            this.saveMessage( request, "Displaying all Datasets" );
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
         } else { // if ids are specified, then display only those
             // expressionExperiments
             Collection<Long> ids = parseIdParameterString( sId );
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids );
+
+            if ( ids.size() == 0 ) {
+                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
+            } else {
+                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids );
+            }
+
         }
 
         if ( timer.getTime() > 1000 ) {
@@ -625,26 +675,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
         expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
 
-        // Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
-        // public int compare( Object o1, Object o2 ) {
-        // String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
-        // String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
-        // int comparison = s1.compareToIgnoreCase( s2 );
-        // return comparison;
-        // }
-        // } );
-        Long numExpressionExperiments = new Long( expressionExperiments.size() );
-        ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
-        mav.addObject( "expressionExperiments", expressionExperiments );
-        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
-
         timer.stop();
         if ( timer.getTime() > 1000 ) {
             log.info( "Ready with link reports in " + timer.getTime() + "ms" );
         }
-
-        return mav;
-
+        return expressionExperiments;
     }
 
     /**
@@ -656,7 +691,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         String[] idList = StringUtils.split( sId, ',' );
         for ( int i = 0; i < idList.length; i++ ) {
             if ( StringUtils.isNotBlank( idList[i] ) ) {
-                ids.add( new Long( idList[i] ) );
+                try {
+                    ids.add( new Long( idList[i] ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "Invalid id string" + idList[i] );
+                }
             }
         }
         return ids;
@@ -966,6 +1005,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return result;
     }
 
+    private static final int TRIM_SIZE = 120;
+
     /**
      * AJAX call
      * 
@@ -975,9 +1016,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      *         back a DescriptionValueObject that contains all the info necessary to reconstruct the HTML on the client
      *         side Currently only used by ExpressionExperimentGrid.js (row expander)
      */
-
-    private static final int TRIM_SIZE = 120;
-
     public String getDescription( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) return null;

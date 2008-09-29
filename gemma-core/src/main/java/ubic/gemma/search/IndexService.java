@@ -51,404 +51,374 @@ import ubic.gemma.util.progress.TaskRunningService;
  */
 public class IndexService extends AbstractSpacesProgressService {
 
-	/*
-	 * Note: IndexService has not been configured with xdoclet tags because we
-	 * it needs to reside in applicationContext-search.xml so we can choose
-	 * whether or not to load this part of the application context at spring
-	 * startup.
-	 * 
-	 * Note:  three  inherited dependencies from AbstractSpacesProgressService: TaskRunningService, SpacesUtil, manualAuthenticationProcessing
-	 * 
-	 */
-
-	private Log log = LogFactory.getLog(this.getClass());
-	
-	private CompassGpsInterfaceDevice expressionGps;
-
-	private CompassGpsInterfaceDevice geneGps;
-
-	private CompassGpsInterfaceDevice arrayGps;
-
-	private CompassGpsInterfaceDevice probeGps;
-
-	private CompassGpsInterfaceDevice biosequenceGps;
-
-	private CompassGpsInterfaceDevice bibliographicGps;
-
-	private InternalCompass compassExpression;
-
-	private InternalCompass compassGene;
-
-	private InternalCompass compassArray;
-
-	private InternalCompass compassProbe;
-
-	private InternalCompass compassBiosequence;
-
-	private InternalCompass compassBibliographic;
-
-	/**
-	 * Indexes expression experiments, genes, array designs, probes and
-	 * bibliographic references. This is a convenience method for Quartz to
-	 * schedule indexing of the entire database.
-	 */
-	public void indexAll() {
-		log.debug("rebuilding compass index");
-		CompassUtils.rebuildCompassIndex(expressionGps);
-		CompassUtils.rebuildCompassIndex(geneGps);
-		CompassUtils.rebuildCompassIndex(arrayGps);
-		CompassUtils.rebuildCompassIndex(probeGps);
-		CompassUtils.rebuildCompassIndex(biosequenceGps);
-		CompassUtils.rebuildCompassIndex(bibliographicGps);
-	}
-
-	/**
-	 * @return   Used by quartz to start the index process in a space
-	 */
-	public String runAll() {
-		IndexGemmaCommand command = new IndexGemmaCommand();
-		command.setAll(true);
-		return run(command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(),
-				IndexGemmaTask.class.getName(), false);
-	}
-	/**
-	 * Indexes array designs.
-	 */
-	public void indexArrayDesigns() {
-		CompassUtils.rebuildCompassIndex(arrayGps);
-	}
-
-	/**
-	 * Indexes bibliographic references.
-	 */
-	public void indexBibligraphicReferences() {
-		CompassUtils.rebuildCompassIndex(bibliographicGps);
-	}
-
-	/**
-	 * Indexes probes
-	 */
-	public void indexCompositeSequences() {
-		CompassUtils.rebuildCompassIndex(probeGps);
-	}
-
-	/**
-	 * Indexes expression experiments.
-	 */
-	public void indexExpressionExperiments() {
-		CompassUtils.rebuildCompassIndex(expressionGps);
-	}
-
-	/**
-	 * Indexes genes.
-	 */
-	public void indexGenes() {
-		CompassUtils.rebuildCompassIndex(geneGps);
-	}
-
-	/**
-	 * Indexes probes.
-	 */
-	public void indexProbes() {
-		CompassUtils.rebuildCompassIndex(probeGps);
-	}
-
-	/**
-	 * @param pathToNewIndex
-	 * @throws IOException
-	 */
-	public void replaceExperimentIndex(String pathToNewIndex)
-			throws IOException {
-		CompassUtils.swapCompassIndex(compassExpression, pathToNewIndex);
-	}
-
-	/**
-	 * @param pathToNewIndex
-	 * @throws IOException
-	 */
-	public void replaceGeneIndex(String pathToNewIndex) throws IOException {
-		CompassUtils.swapCompassIndex(compassGene, pathToNewIndex);
-	}
-
-	/**
-	 * @param pathToNewIndex
-	 * @throws IOException
-	 */
-	public void replaceProbeIndex(String pathToNewIndex) throws IOException {
-		CompassUtils.swapCompassIndex(compassProbe, pathToNewIndex);
-	}
-
-	/**
-	 * @param pathToNewIndex
-	 * @throws IOException
-	 */
-	public void replaceArrayIndex(String pathToNewIndex) throws IOException {
-		CompassUtils.swapCompassIndex(compassArray, pathToNewIndex);
-	}
-
-	/**
-	 * @param pathToNewIndex
-	 * @throws IOException
-	 */
-	public void replaceBiosequenceIndex(String pathToNewIndex)
-			throws IOException {
-		CompassUtils.swapCompassIndex(compassBiosequence, pathToNewIndex);
-	}
-
-	/**
-	 * @param pathToNewIndex
-	 * @throws IOException
-	 */
-	public void replaceBibliographicIndex(String pathToNewIndex)
-			throws IOException {
-		CompassUtils.swapCompassIndex(compassBibliographic, pathToNewIndex);
-	}
-
-	
-	protected BackgroundProgressJob<ModelAndView> getRunner(String taskId,
-			SecurityContext securityContext, Object command) {
-
-		return new IndexJob(taskId, securityContext, command);
-	}
-
-	/**
-	 * Starts the job on a compute server resource if the space is running and
-	 * the task can be serviced. If runInWebapp is true, the task will be run in
-	 * the webapp virtual machine. If false the task will only be run if the
-	 * space is started and workers that can service the task exist.
-	 * 
-	 * @param command
-	 * @param spaceUrl
-	 * @param taskName
-	 * @param runInWebapp
-	 * @return {@link ModelAndView}
-	 */
-	public  synchronized ModelAndView startJob(Object command,
-			String spaceUrl, String taskName, boolean runInWebapp) {
-		String taskId = run(command, spaceUrl, taskName, runInWebapp);
-
-		ModelAndView mnv = new ModelAndView(new RedirectView(
-				"/Gemma/processProgress.html?taskid=" + taskId));
-		mnv.addObject(TaskRunningService.JOB_ATTRIBUTE, taskId);
-		return mnv;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#getSpaceRunner(java.lang.String,
-	 *      org.springframework.security.context.SecurityContext,
-	 *      javax.servlet.http.HttpServletRequest, java.lang.Object,
-	 *      ubic.gemma.web.util.MessageUtil)
-	 */
-	// @Override
-	protected BackgroundProgressJob<ModelAndView> getSpaceRunner(String taskId,
-			SecurityContext securityContext, Object command) {
-		return new LoadInSpaceJob(taskId, securityContext, command);
-	}
-
-	/**
-	 * Job that loads in a javaspace.
-	 * 
-	 * @author Paul
-	 * @version $Id: CustomCompassIndexController.java,v 1.22 2007/12/20
-	 *          23:11:05 kelsey Exp $
-	 */
-	private class LoadInSpaceJob extends IndexJob {
-
-		final IndexGemmaTask indexGemmaTaskProxy = (IndexGemmaTask) updatedContext
-				.getBean("proxy");
-
-		/**
-		 * @param taskId
-		 * @param parentSecurityContext
-		 * @param commandObj
-		 * @param messenger
-		 */
-		public LoadInSpaceJob(String taskId,
-				SecurityContext parentSecurityContext, Object commandObj) {
-			super(taskId, parentSecurityContext, commandObj);
-
-		}
-
-		@Override
-		protected void index(IndexGemmaCommand indexCommand) {
-
-			SpacesIndexGemmaCommand jsCommand = createCommandObject(indexCommand);
-			IndexGemmaResult result = indexGemmaTaskProxy.execute(jsCommand);
-
-			try {
-				if (indexCommand.isIndexGene()) {
-					replaceGeneIndex(result.getPathToGeneIndex());
-				}
-				if (indexCommand.isIndexEE()) {
-					replaceExperimentIndex(result.getPathToExpresionIndex());
-				}
-				if (indexCommand.isIndexArray()) {
-					replaceArrayIndex(result.getPathToArrayIndex());
-				}
-				if (indexCommand.isIndexBibliographic()) {
-					replaceBibliographicIndex(result
-							.getPathToBibliographicIndex());
-				}
-				if (indexCommand.isIndexProbe()) {
-					replaceProbeIndex(result.getPathToProbeIndex());
-				}
-				if (indexCommand.isIndexBioSequence()) {
-					replaceBiosequenceIndex(result.getPathToBiosequenceIndex());
-				}
-
-			} catch (IOException ioe) {
-				log.error("Unable to swap indexes. " + ioe);
-			}
-		}
-
-		private SpacesIndexGemmaCommand createCommandObject(IndexGemmaCommand ic) {
-			return new SpacesIndexGemmaCommand(taskId, true, ic.isIndexArray(),
-					ic.isIndexEE(), ic.isIndexGene(), ic.isIndexProbe(), ic
-							.isIndexBibliographic(), ic.isIndexBioSequence());
-		}
-
-	}
-
-	/**
-	 * @author klc
-	 * @version $Id: CustomCompassIndexController.java,v 1.22 2007/12/20
-	 *          23:11:05 kelsey Exp $ This inner class is used for creating a
-	 *          seperate thread that will delete the compass ee index
-	 */
-	class IndexJob extends BackgroundProgressJob<ModelAndView> {
-
-		private String description;
-
-		/**
-		 * @param taskId
-		 * @param parentSecurityContext
-		 * @param commandObj
-		 * @param messenger
-		 */
-		public IndexJob(String taskId, SecurityContext parentSecurityContext,
-				Object commandObj) {
-			super(taskId, parentSecurityContext, commandObj);
-
-		}
-
-		@SuppressWarnings("unchecked")
-		public ModelAndView call() throws Exception {
-
-			init();
-
-			ProgressJob job = ProgressManager.createProgressJob(this
-					.getTaskId(),
-					securityContext.getAuthentication().getName(),
-					"Attempting to index");
-
-			long time = System.currentTimeMillis();
-
-			job.updateProgress("Preparing to rebuild selected indexes ");
-			log.info("Preparing to rebuild selected indexes");
-
-			IndexGemmaCommand indexGemmaCommand = ((IndexGemmaCommand) command);
-
-			index(indexGemmaCommand);
-
-			time = System.currentTimeMillis() - time;
-			CompassIndexResults indexResults = new CompassIndexResults(time);
-			Map<Object, Object> data = new HashMap<Object, Object>();
-			data.put("indexResults", indexResults);
-
-			ProgressManager.destroyProgressJob(job);
-
-			ModelAndView mv = new ModelAndView("indexer");
-			mv.addObject("time", time);
-			mv.addObject("description", this.description);
-
-			return mv;
-
-		}
-
-		protected void index(IndexGemmaCommand command) {
-
-			if (command.isIndexArray())
-				indexArrayDesigns();
-			if (command.isIndexBibliographic())
-				indexBibligraphicReferences();
-			if (command.isIndexEE())
-				indexExpressionExperiments();
-			if (command.isIndexGene())
-				indexGenes();
-			if (command.isIndexProbe())
-				indexProbes();
-			if (command.isIndexBioSequence())
-				indexBibligraphicReferences();
-
-		}
-	}
-
-	/**
-	 * @param arrayGps
-	 *            The arrayGps to set.
-	 */
-	public void setArrayGps(CompassGpsInterfaceDevice arrayGps) {
-		this.arrayGps = arrayGps;
-	}
-
-	public void setBibliographicGps(CompassGpsInterfaceDevice bibliographicGps) {
-		this.bibliographicGps = bibliographicGps;
-	}
-
-	/**
-	 * @param expressionGps
-	 *            The expressionGps to set.
-	 */
-	public void setExpressionGps(CompassGpsInterfaceDevice expressionGps) {
-		this.expressionGps = expressionGps;
-	}
-
-	/**
-	 * @param geneGps
-	 *            The geneGps to set.
-	 */
-	public void setGeneGps(CompassGpsInterfaceDevice geneGps) {
-		this.geneGps = geneGps;
-	}
-
-	/**
-	 * @param probeGps
-	 */
-	public void setProbeGps(CompassGpsInterfaceDevice probeGps) {
-		this.probeGps = probeGps;
-	}
-
-	/**
-	 * @param biosequenceGps
-	 */
-	public void setBiosequenceGps(CompassGpsInterfaceDevice biosequenceGps) {
-		this.biosequenceGps = biosequenceGps;
-	}
-
-	public void setCompassArray(InternalCompass compassArray) {
-		this.compassArray = compassArray;
-	}
-
-	public void setCompassBibliographic(InternalCompass compassBibliographic) {
-		this.compassBibliographic = compassBibliographic;
-	}
-
-	public void setCompassBiosequence(InternalCompass compassBiosequence) {
-		this.compassBiosequence = compassBiosequence;
-	}
-
-	public void setCompassExpression(InternalCompass compassExpression) {
-		this.compassExpression = compassExpression;
-	}
-
-	public void setCompassGene(InternalCompass compassGene) {
-		this.compassGene = compassGene;
-	}
-
-	public void setCompassProbe(InternalCompass compassProbe) {
-		this.compassProbe = compassProbe;
-	}
+    /*
+     * Note: IndexService has not been configured with xdoclet tags because we it needs to reside in
+     * applicationContext-search.xml so we can choose whether or not to load this part of the application context at
+     * spring startup. Note: three inherited dependencies from AbstractSpacesProgressService: TaskRunningService,
+     * SpacesUtil, manualAuthenticationProcessing
+     */
+
+    private Log log = LogFactory.getLog( this.getClass() );
+
+    private CompassGpsInterfaceDevice expressionGps;
+
+    private CompassGpsInterfaceDevice geneGps;
+
+    private CompassGpsInterfaceDevice arrayGps;
+
+    private CompassGpsInterfaceDevice probeGps;
+
+    private CompassGpsInterfaceDevice biosequenceGps;
+
+    private CompassGpsInterfaceDevice bibliographicGps;
+
+    private InternalCompass compassExpression;
+
+    private InternalCompass compassGene;
+
+    private InternalCompass compassArray;
+
+    private InternalCompass compassProbe;
+
+    private InternalCompass compassBiosequence;
+
+    private InternalCompass compassBibliographic;
+
+    /**
+     * Indexes expression experiments, genes, array designs, probes and bibliographic references. This is a convenience
+     * method for Quartz to schedule indexing of the entire database.
+     */
+    public void indexAll() {
+        log.debug( "rebuilding compass index" );
+        CompassUtils.rebuildCompassIndex( expressionGps );
+        CompassUtils.rebuildCompassIndex( geneGps );
+        CompassUtils.rebuildCompassIndex( arrayGps );
+        CompassUtils.rebuildCompassIndex( probeGps );
+        CompassUtils.rebuildCompassIndex( biosequenceGps );
+        CompassUtils.rebuildCompassIndex( bibliographicGps );
+    }
+
+    /**
+     * @return Used by quartz to start the index process in a space
+     */
+    public String runAll() {
+        IndexGemmaCommand command = new IndexGemmaCommand();
+        command.setAll( true );
+        return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), IndexGemmaTask.class.getName(), false );
+    }
+
+    /**
+     * Indexes array designs.
+     */
+    public void indexArrayDesigns() {
+        CompassUtils.rebuildCompassIndex( arrayGps );
+    }
+
+    /**
+     * Indexes bibliographic references.
+     */
+    public void indexBibligraphicReferences() {
+        CompassUtils.rebuildCompassIndex( bibliographicGps );
+    }
+
+    /**
+     * Indexes probes
+     */
+    public void indexCompositeSequences() {
+        CompassUtils.rebuildCompassIndex( probeGps );
+    }
+
+    /**
+     * Indexes expression experiments.
+     */
+    public void indexExpressionExperiments() {
+        CompassUtils.rebuildCompassIndex( expressionGps );
+    }
+
+    /**
+     * Indexes genes.
+     */
+    public void indexGenes() {
+        CompassUtils.rebuildCompassIndex( geneGps );
+    }
+
+    /**
+     * Indexes probes.
+     */
+    public void indexProbes() {
+        CompassUtils.rebuildCompassIndex( probeGps );
+    }
+
+    /**
+     * @param pathToNewIndex
+     * @throws IOException
+     */
+    public void replaceExperimentIndex( String pathToNewIndex ) throws IOException {
+        CompassUtils.swapCompassIndex( compassExpression, pathToNewIndex );
+    }
+
+    /**
+     * @param pathToNewIndex
+     * @throws IOException
+     */
+    public void replaceGeneIndex( String pathToNewIndex ) throws IOException {
+        CompassUtils.swapCompassIndex( compassGene, pathToNewIndex );
+    }
+
+    /**
+     * @param pathToNewIndex
+     * @throws IOException
+     */
+    public void replaceProbeIndex( String pathToNewIndex ) throws IOException {
+        CompassUtils.swapCompassIndex( compassProbe, pathToNewIndex );
+    }
+
+    /**
+     * @param pathToNewIndex
+     * @throws IOException
+     */
+    public void replaceArrayIndex( String pathToNewIndex ) throws IOException {
+        CompassUtils.swapCompassIndex( compassArray, pathToNewIndex );
+    }
+
+    /**
+     * @param pathToNewIndex
+     * @throws IOException
+     */
+    public void replaceBiosequenceIndex( String pathToNewIndex ) throws IOException {
+        CompassUtils.swapCompassIndex( compassBiosequence, pathToNewIndex );
+    }
+
+    /**
+     * @param pathToNewIndex
+     * @throws IOException
+     */
+    public void replaceBibliographicIndex( String pathToNewIndex ) throws IOException {
+        CompassUtils.swapCompassIndex( compassBibliographic, pathToNewIndex );
+    }
+
+    protected BackgroundProgressJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
+            Object command ) {
+
+        return new IndexJob( taskId, securityContext, command );
+    }
+
+    /**
+     * Starts the job on a compute server resource if the space is running and the task can be serviced. If runInWebapp
+     * is true, the task will be run in the webapp virtual machine. If false the task will only be run if the space is
+     * started and workers that can service the task exist.
+     * 
+     * @param command
+     * @param spaceUrl
+     * @param taskName
+     * @param runInWebapp
+     * @return {@link ModelAndView}
+     */
+    public synchronized ModelAndView startJob( Object command, String spaceUrl, String taskName, boolean runInWebapp ) {
+        String taskId = run( command, spaceUrl, taskName, runInWebapp );
+
+        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+        mnv.addObject( TaskRunningService.JOB_ATTRIBUTE, taskId );
+        return mnv;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#getSpaceRunner(java.lang.String,
+     *      org.springframework.security.context.SecurityContext, javax.servlet.http.HttpServletRequest,
+     *      java.lang.Object, ubic.gemma.web.util.MessageUtil)
+     */
+    // @Override
+    protected BackgroundProgressJob<ModelAndView> getSpaceRunner( String taskId, SecurityContext securityContext,
+            Object command ) {
+        return new LoadInSpaceJob( taskId, securityContext, command );
+    }
+
+    /**
+     * Job that loads in a javaspace.
+     * 
+     * @author Paul
+     * @version $Id$
+     */
+    private class LoadInSpaceJob extends IndexJob {
+
+        final IndexGemmaTask indexGemmaTaskProxy = ( IndexGemmaTask ) updatedContext.getBean( "proxy" );
+
+        /**
+         * @param taskId
+         * @param parentSecurityContext
+         * @param commandObj
+         * @param messenger
+         */
+        public LoadInSpaceJob( String taskId, SecurityContext parentSecurityContext, Object commandObj ) {
+            super( taskId, parentSecurityContext, commandObj );
+
+        }
+
+        @Override
+        protected void index( IndexGemmaCommand indexCommand ) {
+
+            SpacesIndexGemmaCommand jsCommand = createCommandObject( indexCommand );
+            IndexGemmaResult result = indexGemmaTaskProxy.execute( jsCommand );
+
+            try {
+                if ( indexCommand.isIndexGene() ) {
+                    replaceGeneIndex( result.getPathToGeneIndex() );
+                }
+                if ( indexCommand.isIndexEE() ) {
+                    replaceExperimentIndex( result.getPathToExpresionIndex() );
+                }
+                if ( indexCommand.isIndexArray() ) {
+                    replaceArrayIndex( result.getPathToArrayIndex() );
+                }
+                if ( indexCommand.isIndexBibliographic() ) {
+                    replaceBibliographicIndex( result.getPathToBibliographicIndex() );
+                }
+                if ( indexCommand.isIndexProbe() ) {
+                    replaceProbeIndex( result.getPathToProbeIndex() );
+                }
+                if ( indexCommand.isIndexBioSequence() ) {
+                    replaceBiosequenceIndex( result.getPathToBiosequenceIndex() );
+                }
+
+            } catch ( IOException ioe ) {
+                log.error( "Unable to swap indexes. " + ioe );
+            }
+        }
+
+        private SpacesIndexGemmaCommand createCommandObject( IndexGemmaCommand ic ) {
+            return new SpacesIndexGemmaCommand( taskId, true, ic.isIndexArray(), ic.isIndexEE(), ic.isIndexGene(), ic
+                    .isIndexProbe(), ic.isIndexBibliographic(), ic.isIndexBioSequence() );
+        }
+
+    }
+
+    /**
+     * @author klc
+     * @version $Id$ This inner class is used
+     *          for creating a seperate thread that will delete the compass ee index
+     */
+    class IndexJob extends BackgroundProgressJob<ModelAndView> {
+
+        private String description;
+
+        /**
+         * @param taskId
+         * @param parentSecurityContext
+         * @param commandObj
+         * @param messenger
+         */
+        public IndexJob( String taskId, SecurityContext parentSecurityContext, Object commandObj ) {
+            super( taskId, parentSecurityContext, commandObj );
+
+        }
+
+        @SuppressWarnings("unchecked")
+        public ModelAndView call() throws Exception {
+
+            init();
+
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Attempting to index" );
+
+            long time = System.currentTimeMillis();
+
+            job.updateProgress( "Preparing to rebuild selected indexes " );
+            log.info( "Preparing to rebuild selected indexes" );
+
+            IndexGemmaCommand indexGemmaCommand = ( ( IndexGemmaCommand ) command );
+
+            index( indexGemmaCommand );
+
+            time = System.currentTimeMillis() - time;
+            CompassIndexResults indexResults = new CompassIndexResults( time );
+            Map<Object, Object> data = new HashMap<Object, Object>();
+            data.put( "indexResults", indexResults );
+
+            ProgressManager.destroyProgressJob( job );
+
+            ModelAndView mv = new ModelAndView( "indexer" );
+            mv.addObject( "time", time );
+            mv.addObject( "description", this.description );
+
+            return mv;
+
+        }
+
+        protected void index( IndexGemmaCommand command ) {
+
+            if ( command.isIndexArray() ) indexArrayDesigns();
+            if ( command.isIndexBibliographic() ) indexBibligraphicReferences();
+            if ( command.isIndexEE() ) indexExpressionExperiments();
+            if ( command.isIndexGene() ) indexGenes();
+            if ( command.isIndexProbe() ) indexProbes();
+            if ( command.isIndexBioSequence() ) indexBibligraphicReferences();
+
+        }
+    }
+
+    /**
+     * @param arrayGps The arrayGps to set.
+     */
+    public void setArrayGps( CompassGpsInterfaceDevice arrayGps ) {
+        this.arrayGps = arrayGps;
+    }
+
+    public void setBibliographicGps( CompassGpsInterfaceDevice bibliographicGps ) {
+        this.bibliographicGps = bibliographicGps;
+    }
+
+    /**
+     * @param expressionGps The expressionGps to set.
+     */
+    public void setExpressionGps( CompassGpsInterfaceDevice expressionGps ) {
+        this.expressionGps = expressionGps;
+    }
+
+    /**
+     * @param geneGps The geneGps to set.
+     */
+    public void setGeneGps( CompassGpsInterfaceDevice geneGps ) {
+        this.geneGps = geneGps;
+    }
+
+    /**
+     * @param probeGps
+     */
+    public void setProbeGps( CompassGpsInterfaceDevice probeGps ) {
+        this.probeGps = probeGps;
+    }
+
+    /**
+     * @param biosequenceGps
+     */
+    public void setBiosequenceGps( CompassGpsInterfaceDevice biosequenceGps ) {
+        this.biosequenceGps = biosequenceGps;
+    }
+
+    public void setCompassArray( InternalCompass compassArray ) {
+        this.compassArray = compassArray;
+    }
+
+    public void setCompassBibliographic( InternalCompass compassBibliographic ) {
+        this.compassBibliographic = compassBibliographic;
+    }
+
+    public void setCompassBiosequence( InternalCompass compassBiosequence ) {
+        this.compassBiosequence = compassBiosequence;
+    }
+
+    public void setCompassExpression( InternalCompass compassExpression ) {
+        this.compassExpression = compassExpression;
+    }
+
+    public void setCompassGene( InternalCompass compassGene ) {
+        this.compassGene = compassGene;
+    }
+
+    public void setCompassProbe( InternalCompass compassProbe ) {
+        this.compassProbe = compassProbe;
+    }
 
 }

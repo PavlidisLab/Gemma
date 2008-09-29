@@ -27,6 +27,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
+import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.progress.TaskRunningService;
 
@@ -34,7 +35,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @author klc
  * @version $Id$
  */
-public class IndexGemmaTaskImpl extends BaseSpacesTask implements
+public class IndexGemmaTaskImpl extends BaseSpacesTask implements 
 		IndexGemmaTask, InitializingBean {
 
 	private static final String PATH_PROPERTY = "compass.engine.connection";
@@ -223,4 +224,12 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
 	public String getTaskId() {
 		return taskId;
 	}
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
+     */
+    public SpacesResult execute( Object command ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

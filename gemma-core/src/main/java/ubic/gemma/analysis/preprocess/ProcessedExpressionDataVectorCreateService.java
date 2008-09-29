@@ -267,4 +267,14 @@ public class ProcessedExpressionDataVectorCreateService extends BaseSpacesTask i
         return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
+     */
+    public SpacesResult execute( Object command ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

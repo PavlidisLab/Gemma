@@ -23,9 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -34,6 +32,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -43,7 +42,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 
@@ -57,6 +55,7 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="taxonService" ref="taxonService"
+ * @spring.property name="processedExpressionDataVectorCreateService" ref="processedExpressionDataVectorCreateService"
  * @author Paul
  * @version $Id$
  */
@@ -69,6 +68,8 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
     private ExpressionExperimentService expressionExperimentService;
 
     private TaxonService taxonService;
+
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
@@ -248,7 +249,6 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         @SuppressWarnings("synthetic-access")
         public Long call() throws Exception {
             super.init();
-            Map<Object, Object> model = new HashMap<Object, Object>();
 
             SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
 
@@ -269,10 +269,13 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
              * Main action here!
              */
             ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
-
             stream.close();
 
-            model.put( "expressionExperiment", result );
+            log.info( "Preprocessing the data for analysis" );
+            processedExpressionDataVectorCreateService.computeProcessedExpressionData( result );
+
+            // In theory we could do the link analysis right away. However, when a data set has new array designs, we
+            // won't be ready yet.
 
             return result.getId();
         }
@@ -345,6 +348,11 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setProcessedExpressionDataVectorCreateService(
+            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
+        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
     }
 
 }

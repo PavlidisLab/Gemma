@@ -39,6 +39,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
@@ -49,6 +50,11 @@ import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.grid.javaspaces.BaseSpacesTask;
+import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.coexpression.LinkAnalysisTask;
+import ubic.gemma.grid.javaspaces.coexpression.SpacesLinkAnalysisCommand;
+import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
@@ -91,7 +97,7 @@ import cern.colt.list.ObjectArrayList;
  * @author Paul
  * @version $Id$
  */
-public class LinkAnalysisService {
+public class LinkAnalysisService  extends BaseSpacesTask implements LinkAnalysisTask {
 
     private static final int LINK_BATCH_SIZE = 5000;
 
@@ -674,6 +680,40 @@ public class LinkAnalysisService {
                 throw new RuntimeException( e );
             }
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.grid.javaspaces.coexpression.LinkAnalysisTask#execute(ubic.gemma.grid.javaspaces.coexpression.SpacesLinkAnalysisCommand)
+     */
+    public SpacesResult execute( SpacesLinkAnalysisCommand command ) {
+        super.initProgressAppender( this.getClass() );
+        SpacesResult result = new SpacesResult();
+
+        try {
+            this
+                    .process( command.getExpressionExperiment(), command.getFilterConfig(), command
+                            .getLinkAnalysisConfig() );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+
+        counter++;
+        result.setTaskID( counter );
+
+        return result;
+
+    }
+
+    private long counter = 0;
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
+     */
+    public SpacesResult execute( Object command ) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

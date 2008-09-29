@@ -60,6 +60,7 @@ public class SecurityService {
     private CrudUtils crudUtils = null;
 
     public static final String ADMIN_AUTHORITY = "admin";
+    public static final String USER_AUTHORITY = "user";
     public static final int PUBLIC_MASK = SimpleAclEntry.READ_WRITE;
     public static final int PRIVATE_MASK = SimpleAclEntry.NOTHING;
 
@@ -306,6 +307,23 @@ public class SecurityService {
         assert authorities != null;
         for ( GrantedAuthority authority : authorities ) {
             if ( authority.getAuthority().equals( ADMIN_AUTHORITY ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the user is non-anonymous.
+     * 
+     * @return
+     */
+    public static boolean isUserLoggedIn() {
+        Authentication authentication = getAuthentication();
+        GrantedAuthority[] authorities = authentication.getAuthorities();
+        assert authorities != null;
+        for ( GrantedAuthority authority : authorities ) {
+            if ( authority.getAuthority().equals( USER_AUTHORITY ) ) {
                 return true;
             }
         }

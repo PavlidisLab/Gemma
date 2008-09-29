@@ -444,6 +444,7 @@
 							<value>getFactorValues</value>
 							<value>getDesignMatrixRows</value>
 							<value>loadExpressionExperiments</value>
+							<value>loadStatusSummaries</value>
 							<value>getDescription</value>
 						</list>
 					</property>
