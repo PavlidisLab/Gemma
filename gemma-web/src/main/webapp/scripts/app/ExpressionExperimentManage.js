@@ -95,6 +95,12 @@ Ext.onReady(function() {
 	};
 
 	var linkAnalysisRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
+		if (record.get('dateLinkAnalysis')) {
+			// TODO: Deal with failure, too small, etc.
+			return dateRenderer(record.get('dateLinkAnalysis'));
+		} else {
+			return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
+		}
 
 	};
 
@@ -105,9 +111,9 @@ Ext.onReady(function() {
 			 */
 			if (record.get('dateMissingValueAnalysis')) {
 				// TODO
-				return record.get('dateMissingValueAnalysis');
+				return dateRenderer(record.get('dateMissingValueAnalysis'));
 			} else {
-				return '<span style="color:#3A3;">Needed</span>';
+				return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
 			}
 
 		} else {
@@ -116,11 +122,11 @@ Ext.onReady(function() {
 	};
 
 	var processedVectorCreateRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
-		if (record.get('dateMissingValueAnalysis')) {
+		if (record.get('dateProcessedDataVectorComputation')) {
 			// TODO
-			return record.get('dateMissingValueAnalysis');
+			return dateRenderer(record.get('dateProcessedDataVectorComputation'));
 		} else {
-			return '<span style="color:#3A3;">Needed</span>';
+			return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
 		}
 	};
 
@@ -128,9 +134,9 @@ Ext.onReady(function() {
 		if (diffIsPossible(record)) {
 			if (record.get('dateDifferentialAnalysis')) {
 				// TODO
-				return record.get('dateDifferentialAnalysis');
+				return dateRenderer(record.get('dateDifferentialAnalysis'));
 			} else {
-				return '<span style="color:#3A3;">Needed</span>';
+				return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
 			}
 		} else {
 			return '<span style="color:#CCF;">NA</span>';
@@ -210,17 +216,17 @@ Ext.onReady(function() {
 				header : 'ProcessVec',
 				sortable : true,
 				dataIndex : 'dateProcessedDataVectorComputation',
-				renderer : dateRenderer
+				renderer : processedVectorCreateRenderer
 			}, {
 				header : 'Diff',
 				sortable : true,
 				dataIndex : 'dateDifferentialAnalysis',
-				renderer : dateRenderer
+				renderer : differentialAnalysisRenderer
 			}, {
 				header : 'Links',
 				sortable : true,
 				dataIndex : 'dateLinkAnalysis',
-				renderer : dateRenderer
+				renderer : linkAnalysisRenderer
 			}, {
 				header : 'Admin',
 				sortable : false,
