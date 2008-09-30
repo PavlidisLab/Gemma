@@ -20,7 +20,6 @@ package ubic.gemma.grid.javaspaces.coexpression;
 
 import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.SpacesTask;
-import ubic.gemma.grid.javaspaces.diff.SpacesDifferentialExpressionAnalysisCommand;
 
 /**
  * @author Paul
