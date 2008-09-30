@@ -451,7 +451,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
         for ( DesignElementDataVector vector : vectors ) {
             if ( vector instanceof ProcessedExpressionDataVector ) {
-                ranks.put( vector.getDesignElement(), ( ( ProcessedExpressionDataVector ) vector ).getRankByMean() );
+                this.ranks.put( vector.getDesignElement(), ( ( ProcessedExpressionDataVector ) vector ).getRankByMean() );
             }
         }
 
