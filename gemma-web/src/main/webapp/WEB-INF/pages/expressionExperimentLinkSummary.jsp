@@ -10,8 +10,19 @@
 </head>
 
 <body>
-	<div id="eemanage"></div>
 
+
+	<authz:authorize ifAnyGranted="admin,user">
+		<div id="messages" style="margin: 10px; width: 400px"></div>
+
+		<div id="eemanage"></div>
+		<div id="taskId" style="display: none;"></div>
+		<div id="progress-area" style="padding: 15px;"></div>
+	</authz:authorize>
+
+
+
+	<!-- 
 	<h3>
 		Expression Experiment Summaries
 		<br>
@@ -19,9 +30,8 @@
 		<b> <c:out value="${numExpressionExperiments}" /> </b> Datasets
 	</h3>
 	<a class="helpLink" href="?" onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
-	<div id="messages" style="margin: 10px; width: 400px"></div>
-	<div id="taskId" style="display: none;"></div>
-	<div id="progress-area" style="padding: 15px;"></div>
+
+	
 	<authz:authorize ifAnyGranted="admin">
 		<p>
 			<a href="<c:url value="/expressionExperiment/generateExpressionExperimentLinkSummary.html"/>"
@@ -72,6 +82,9 @@
 
 		</display:table>
 	</authz:authorize>
+	
+	 -->
+
 	<authz:authorize ifNotGranted="admin">
 		<p>
 			Permission denied.

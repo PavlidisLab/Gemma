@@ -28,8 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent; 
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -62,10 +61,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         if ( object.getDateCached() == null ) {
             return "";
         }
-        if ( object.getDateCached().length() > 10 ) {
-            return object.getDateCached().substring( 0, 10 );
+        if ( object.getDateCached().toString().length() > 10 ) {
+            return object.getDateCached().toString().substring( 0, 10 );
         }
-        return object.getDateCached();
+        return object.getDateCached().toString();
     }
 
     /**
@@ -76,10 +75,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         if ( object.getDateCreated() == null ) {
             return "";
         }
-        if ( object.getDateCreated().length() > 10 ) {
-            return object.getDateCreated().substring( 0, 10 );
+        if ( object.getDateCreated().toString().length() > 10 ) {
+            return object.getDateCreated().toString().substring( 0, 10 );
         }
-        return object.getDateCreated();
+        return object.getDateCreated().toString();
     }
 
     /**
@@ -198,7 +197,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getDateDifferentialAnalysisNoTime() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-        Date dateObject = object.getDataDifferentialAnalysis();
+        Date dateObject = object.getDateDifferentialAnalysis();
         String style = "";
         if ( dateObject != null ) {
             boolean mostRecent = determineIfMostRecent( dateObject, object );
@@ -549,7 +548,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         Date mvdate = object.getDateMissingValueAnalysis();
         Date rankDate = object.getDateProcessedDataVectorComputation();
         Date adDate = object.getDateArrayDesignLastUpdated();
-        Date differentialDate = object.getDataDifferentialAnalysis();
+        Date differentialDate = object.getDateDifferentialAnalysis();
 
         if ( adDate != null && dateObject.before( adDate ) ) return false;
         if ( rankDate != null && dateObject.before( rankDate ) ) return false;

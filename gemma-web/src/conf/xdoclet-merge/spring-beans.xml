@@ -1064,21 +1064,21 @@
 			<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="hibernate3" />
-					<property name="includes">
+					<!-- <property name="includes">
 						<list>
-							<value>id</value>
-							<value>name</value>
-							<value>shortName</value>
-							<value>description</value>
-							<value>probeSpecificForQueryGene</value>
-							<value>arrayDesignCount</value>
-							<value>bioAssayCount</value>
-							<value>rawCoexpressionLinkCount</value>
-							<value>coexpressionLinkCount</value>
-							<value>externalUri</value>
-							<value>differentialExpressionAnalysisId</value>
+						<value>id</value>
+						<value>name</value>
+						<value>shortName</value>
+						<value>description</value>
+						<value>probeSpecificForQueryGene</value>
+						<value>arrayDesignCount</value>
+						<value>bioAssayCount</value>
+						<value>rawCoexpressionLinkCount</value>
+						<value>coexpressionLinkCount</value>
+						<value>externalUri</value>
+						<value>differentialExpressionAnalysisId</value>
 						</list>
-					</property>
+						</property> -->
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject">

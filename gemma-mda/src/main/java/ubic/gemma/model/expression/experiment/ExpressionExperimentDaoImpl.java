@@ -54,6 +54,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -218,8 +219,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return qtCounts;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment ) {
+    public Collection<QuantitationType> handleGetQuantitationTypes( ExpressionExperiment expressionExperiment ) {
         final String queryString = "select distinct quantType "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
                 + "inner join ee.quantitationTypes as quantType " + "where ee  = :ee ";
@@ -228,8 +230,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment, ArrayDesign arrayDesign ) {
+    public Collection<QuantitationType> handleGetQuantitationTypes( ExpressionExperiment expressionExperiment,
+            ArrayDesign arrayDesign ) {
         if ( arrayDesign == null ) {
             return handleGetQuantitationTypes( expressionExperiment );
         }
@@ -251,7 +255,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     public void remove( final ExpressionExperiment expressionExperiment ) {
 
-        // Note that links are deleted separately - see the ExpressionExperimentService.
+        // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
@@ -262,6 +266,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                                 .getId() );
 
                 Hibernate.initialize( toDelete.getBioAssayDataVectors() );
+                Hibernate.initialize( toDelete.getAuditTrail() );
 
                 Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
                 Set<QuantitationType> qts = new HashSet<QuantitationType>();
@@ -274,13 +279,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 Hibernate.initialize( processedVectors );
                 toDelete.setProcessedExpressionDataVectors( null );
 
-                session.update( toDelete );
-
                 int count = 0;
                 log.info( "Removing Design Element Data Vectors ..." );
                 for ( RawExpressionDataVector dv : designElementDataVectors ) {
                     dims.add( dv.getBioAssayDimension() );
                     qts.add( dv.getQuantitationType() );
+                    dv.setBioAssayDimension( null );
+                    dv.setQuantitationType( null );
                     session.delete( dv );
                     if ( ++count % 1000 == 0 ) {
                         session.flush();
@@ -289,10 +294,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         log.info( count + " design Element data vectors deleted" );
                     }
                 }
-
+                designElementDataVectors.clear();
                 for ( ProcessedExpressionDataVector dv : processedVectors ) {
                     dims.add( dv.getBioAssayDimension() );
                     qts.add( dv.getQuantitationType() );
+                    dv.setBioAssayDimension( null );
+                    dv.setQuantitationType( null );
                     session.delete( dv );
                     if ( ++count % 1000 == 0 ) {
                         session.flush();
@@ -301,14 +308,20 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         log.info( count + " processed design Element data vectors deleted" );
                     }
                 }
+                processedVectors.clear();
 
                 session.flush();
+                // session.clear();
+                // session.update( toDelete );
 
                 log.info( "Removing BioAssay Dimensions." );
                 for ( BioAssayDimension dim : dims ) {
+                    dim.getBioAssays().clear();
                     session.update( dim );
                     session.delete( dim );
                 }
+                dims.clear();
+                session.flush();
 
                 log.info( "Removing Bioassays and biomaterials" );
                 Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
@@ -327,7 +340,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     if ( ba.getRawDataFile() != null ) {
                         session.delete( ba.getRawDataFile() );
                         ba.setRawDataFile( null );
-                        session.flush();
+                        // session.flush();
                     }
                     session.saveOrUpdate( ba );
                     Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
@@ -338,36 +351,36 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         // is initialized.
                         bm = ( BioMaterial ) session.merge( bm );
                         Hibernate.initialize( bm.getBioAssaysUsedIn() );
-
+                        Hibernate.initialize( bm.getFactorValues() );
+                        bm.getFactorValues().clear();
                         bm.getBioAssaysUsedIn().clear();
                         session.saveOrUpdate( bm );
-                        session.evict( bm );
                     }
                     biomaterials.clear();
                 }
 
+                session.flush();
+
                 log.info( "Last bits ..." );
 
                 for ( BioMaterial bm : bioMaterialsToDelete ) {
-                    session.delete( bm );
+                    session.evict( bm );
                 }
 
                 for ( QuantitationType qt : qts ) {
                     session.delete( qt );
                 }
 
-                log.info( "Finishing up ..." );
+                // log.info( "Finishing up ..." );
                 session.flush();
-                session.clear();
+                // session.clear();
                 session.update( toDelete );
                 session.delete( toDelete );
-                session.flush();
-                session.clear();
 
                 log.info( "Deleted " + toDelete );
                 return null;
             }
-        }, true );
+        } );
     }
 
     /**
@@ -489,8 +502,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByBibliographicReference(java.lang.Long)
      */
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindByBibliographicReference( Long bibRefID ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByBibliographicReference( Long bibRefID ) throws Exception {
         final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
                 + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) ";
         return getHibernateTemplate().findByNamedParam( queryString, "bibID", bibRefID );
@@ -548,7 +562,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      *      java.lang.Double)
      */
     @Override
-    protected Collection handleFindByExpressedGene( Gene gene, Double rank ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByExpressedGene( Gene gene, Double rank ) throws Exception {
 
         final String queryString = "select distinct ee.ID as eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, PROCESSED_EXPRESSION_DATA_VECTOR dedv, INVESTIGATION ee "
@@ -575,7 +589,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             throw super.convertHibernateAccessException( ex );
         }
 
-        return eeIds;
+        return this.load( eeIds );
 
     }
 
@@ -596,7 +610,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindByFactorValues( Collection fvs ) {
+    protected Collection<ExpressionExperiment> handleFindByFactorValues( Collection fvs ) {
         Collection<ExperimentalDesign> eds = new HashSet<ExperimentalDesign>();
         for ( FactorValue fv : ( Collection<FactorValue> ) fvs ) {
             eds.add( fv.getExperimentalFactor().getExperimentalDesign() );
@@ -631,7 +645,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection handleFindByGene( Gene gene ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByGene( Gene gene ) throws Exception {
 
         /*
          * NOTE uses GENE2CS table.
@@ -659,7 +673,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             throw super.convertHibernateAccessException( ex );
         }
 
-        return eeIds;
+        return this.load( eeIds );
     }
 
     /*
@@ -880,8 +894,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectors(ubic.gemma.model.expression.experiment.ExpressionExperiment,
      *      java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetDesignElementDataVectors( Collection quantitationTypes ) throws Exception {
+    protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors( Collection quantitationTypes )
+            throws Exception {
         // NOTE this essentially does a partial thaw.
         final String queryString = "select dev from RawExpressionDataVectorImpl dev"
                 + " inner join fetch dev.bioAssayDimension bd "
@@ -1083,9 +1099,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType,
      *      java.lang.Integer)
      */
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetSamplingOfVectors( QuantitationType quantitationType, Integer limit )
-            throws Exception {
+    protected Collection<DesignElementDataVector> handleGetSamplingOfVectors( QuantitationType quantitationType,
+            Integer limit ) throws Exception {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev "
                 + "inner join dev.quantitationType as qt where qt.id = :qtid";
         int oldmax = getHibernateTemplate().getMaxResults();
@@ -1204,7 +1221,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadAllValueObjects()
      */
     @Override
-    protected Collection handleLoadAllValueObjects() throws Exception {
+    protected Collection<ExpressionExperimentValueObject> handleLoadAllValueObjects() throws Exception {
         Map<Long, ExpressionExperimentValueObject> vo = new HashMap<Long, ExpressionExperimentValueObject>();
         final String queryString = "select distinct ee.id as id, "
                 + "ee.name as name, "
@@ -1249,7 +1266,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setBioAssayCount( list.getLong( 7 ) );
                 v.setArrayDesignCount( list.getLong( 8 ) );
                 v.setShortName( list.getString( 9 ) );
-                v.setDateCreated( list.getDate( 10 ).toString() );
+                v.setDateCreated( list.getDate( 10 ) );
                 String type = list.get( 11 ) != null ? list.get( 11 ).toString() : null;
                 v.setClazz( list.getString( 12 ) );
                 fillQuantitationTypeInfo( qtMap, v, eeId, type );
@@ -1323,7 +1340,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setBioAssayCount( ( Long ) res[7] );
                 v.setArrayDesignCount( ( Long ) res[8] );
                 v.setShortName( ( String ) res[9] );
-                v.setDateCreated( ( ( Date ) res[10] ).toString() );
+                v.setDateCreated( ( ( Date ) res[10] ) );
                 if ( !qtMap.isEmpty() && res[11] != null ) {
                     String type = res[11].toString();
                     fillQuantitationTypeInfo( qtMap, v, eeId, type );
@@ -1359,12 +1376,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     // thaw lite. Misnamed becaues it thaws out things other than the bioassays.
     @Override
-    protected void handleThawBioAssays( final ExpressionExperiment ee ) {
-        if ( ee == null ) return;
+    protected void handleThawBioAssays( ExpressionExperiment eeToThaw ) {
+        if ( eeToThaw == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new HibernateCallback() {
+        final ExpressionExperiment ee = ( ExpressionExperiment ) templ.load( ExpressionExperimentImpl.class, eeToThaw
+                .getId() );
+
+        templ.execute( new HibernateCallback() {
 
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+
                 session.lock( ee, LockMode.NONE );
                 Hibernate.initialize( ee );
                 Hibernate.initialize( ee.getQuantitationTypes() );
@@ -1412,6 +1433,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 return null;
             }
         } );
+
+        eeToThaw = ee;
     }
 
     /*

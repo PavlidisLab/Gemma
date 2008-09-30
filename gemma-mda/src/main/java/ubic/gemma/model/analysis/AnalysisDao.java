@@ -22,8 +22,6 @@
 //
 package ubic.gemma.model.analysis;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-
 /**
  * @see ubic.gemma.model.analysis.Analysis
  */
@@ -133,8 +131,7 @@ public interface AnalysisDao extends ubic.gemma.model.common.AuditableDao {
     /**
      * 
      */
-    public java.util.Collection<DifferentialExpressionAnalysis> findByInvestigation(
-            ubic.gemma.model.analysis.Investigation investigation );
+    public java.util.Collection findByInvestigation( ubic.gemma.model.analysis.Investigation investigation );
 
     /**
      * <p>

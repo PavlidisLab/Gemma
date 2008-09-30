@@ -210,7 +210,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             if ( differentialAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = differentialAnalysisEvents.get( id );
                 if ( event != null ) {
-                    eeVo.setDataDifferentialAnalysis( event.getDate() );
+                    eeVo.setDateDifferentialAnalysis( event.getDate() );
                     eeVo.setDifferentialAnalysisEventType( event.getEventType() );
                 }
             }
@@ -446,12 +446,12 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         log.info( numLinks + " links." );
         eeVo.setCoexpressionLinkCount( numLinks );
 
-        String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd HH:mm" );
+        Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );
 
         auditTrailService.thaw( tempEe.getAuditTrail() );
         if ( tempEe.getAuditTrail() != null ) {
-            eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
+            eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate() );
         }
         eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate() );
 

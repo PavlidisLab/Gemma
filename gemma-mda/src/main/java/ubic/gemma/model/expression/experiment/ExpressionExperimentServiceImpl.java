@@ -22,10 +22,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-
-import org.apache.commons.lang.time.StopWatch;
-
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -39,6 +37,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -95,6 +94,7 @@ public class ExpressionExperimentServiceImpl extends
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleDelete(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected void handleDelete( ExpressionExperiment ee ) throws Exception {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.getDifferentialExpressionAnalysisDao()
@@ -107,15 +107,32 @@ public class ExpressionExperimentServiceImpl extends
 
         /*
          * Delete any expression experiment sets that only have this ee in it. If there are ones that have multiple, we
-         * can't do it. FIXME remove this experiment from other sets, and update them.
+         * can't do it. If possible remove this experiment from other sets, and update them.
          */
         Collection<ExpressionExperimentSet> sets = this.getExpressionExperimentSetDao().find( ee );
         for ( ExpressionExperimentSet eeset : sets ) {
             if ( eeset.getExperiments().size() == 1 && eeset.getExperiments().iterator().next().equals( ee ) ) {
                 this.getExpressionExperimentSetDao().remove( eeset );
             } else {
-                throw new IllegalArgumentException( "Sorry, you can't delete " + ee
-                        + "; it is part of an expressionExperimentSet: " + eeset );
+
+                /*
+                 * If we remove the experiment from the set, analyses that used the set have to cope with this. For
+                 * G2G,the data sets are stored in order of IDs, but the actual ids are not stored (we refer back to the
+                 * eeset), so coping will not be possible (at best we can mark it as troubled). If there is no analysis
+                 * object using the set, it's okay.
+                 */
+                Collection<GeneCoexpressionAnalysis> g2gAnalyses = this.getGeneCoexpressionAnalysisDao()
+                        .findByInvestigation( ee );
+
+                if ( g2gAnalyses.size() > 0 ) {
+                    throw new IllegalArgumentException( "Sorry, you can't delete " + ee
+                            + "; it is part of at least one coexpression analysis: "
+                            + g2gAnalyses.iterator().next().getName() );
+                } else {
+                    eeset.getExperiments().remove( ee );
+                    this.getExpressionExperimentDao().update( eeset );
+                }
+
             }
         }
 
@@ -148,7 +165,8 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
-    protected Collection handleFindByBibliographicReference( BibliographicReference bibRef ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByBibliographicReference( BibliographicReference bibRef )
+            throws Exception {
         return this.getExpressionExperimentDao().findByBibliographicReference( bibRef.getId() );
     }
 
@@ -164,7 +182,7 @@ public class ExpressionExperimentServiceImpl extends
      *      double)
      */
     @Override
-    protected Collection handleFindByExpressedGene( Gene gene, double rank ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByExpressedGene( Gene gene, double rank ) throws Exception {
         return this.getExpressionExperimentDao().findByExpressedGene( gene, rank );
     }
 
@@ -179,7 +197,7 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection handleFindByGene( Gene gene ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByGene( Gene gene ) throws Exception {
         return this.getExpressionExperimentDao().findByGene( gene );
     }
 
@@ -188,8 +206,9 @@ public class ExpressionExperimentServiceImpl extends
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindByInvestigator( Contact investigator ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByInvestigator( Contact investigator ) throws Exception {
         return this.getExpressionExperimentDao().findByInvestigator( investigator );
     }
 
@@ -214,7 +233,7 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByTaxon( Taxon taxon ) throws Exception {
         return this.getExpressionExperimentDao().findByTaxon( taxon );
     }
 
@@ -460,14 +479,14 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetQuantitationTypes( ExpressionExperiment expressionExperiment, ArrayDesign arrayDesign )
-            throws Exception {
+    protected Collection<QuantitationType> handleGetQuantitationTypes( ExpressionExperiment expressionExperiment,
+            ArrayDesign arrayDesign ) throws Exception {
         return this.getExpressionExperimentDao().getQuantitationTypes( expressionExperiment, arrayDesign );
     }
 
     @Override
-    protected Collection handleGetSamplingOfVectors( QuantitationType quantitationType, Integer limit )
-            throws Exception {
+    protected Collection<DesignElementDataVector> handleGetSamplingOfVectors( QuantitationType quantitationType,
+            Integer limit ) throws Exception {
         return this.getExpressionExperimentDao().getSamplingOfVectors( quantitationType, limit );
     }
 
@@ -493,7 +512,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     @Monitored
-    protected Collection handleLoadAll() throws Exception {
+    protected Collection<ExpressionExperiment> handleLoadAll() throws Exception {
         return this.getExpressionExperimentDao().loadAll();
     }
 
@@ -503,7 +522,7 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAllValueObjects()
      */
     @Override
-    protected Collection handleLoadAllValueObjects() throws Exception {
+    protected Collection<ExpressionExperimentValueObject> handleLoadAllValueObjects() throws Exception {
         return this.getExpressionExperimentDao().loadAllValueObjects();
     }
 
@@ -524,7 +543,7 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadValueObjects(java.util.Collection)
      */
     @Override
-    protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
+    protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection ids ) throws Exception {
         return this.getExpressionExperimentDao().loadValueObjects( ids );
     }
 
@@ -575,12 +594,12 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    protected Collection handleFindByBioMaterials( Collection bioMaterials ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByBioMaterials( Collection bioMaterials ) throws Exception {
         return this.getExpressionExperimentDao().findByBioMaterials( bioMaterials );
     }
 
     @Override
-    protected Collection handleFindByFactorValues( Collection factorValues ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByFactorValues( Collection factorValues ) throws Exception {
         return this.getExpressionExperimentDao().findByFactorValues( factorValues );
     }
 

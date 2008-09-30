@@ -42,7 +42,6 @@ import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -573,15 +572,11 @@ public class GeneCoexpressionService {
      */
     @SuppressWarnings("unchecked")
     private Collection<BioAssaySet> getPossibleExpressionExperiments( Collection<Gene> genes ) {
-        Collection<Long> eeIds = new HashSet<Long>();
+        Collection<BioAssaySet> result = new HashSet<BioAssaySet>();
         for ( Gene g : genes ) {
-            eeIds.addAll( expressionExperimentService.findByGene( g ) );
+            result.addAll( expressionExperimentService.findByGene( g ) );
         }
-
-        // FIXME: Can't add expressionExperiment generic to return value of expressionExperiment.loadMulitple because of
-        // the dependency of BioAssaySet being returned in methods like this.
-
-        return eeIds.isEmpty() ? new HashSet<ExpressionExperiment>() : expressionExperimentService.loadMultiple( eeIds );
+        return result;
     }
 
     /**

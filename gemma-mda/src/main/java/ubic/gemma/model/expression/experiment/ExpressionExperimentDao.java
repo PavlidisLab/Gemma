@@ -24,7 +24,12 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
@@ -108,7 +113,7 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<ExpressionExperiment> loadAll();
 
     /**
      * <p>
@@ -122,7 +127,7 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * @param transform the flag indicating what transformation to use.
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<ExpressionExperiment> loadAll( final int transform );
 
     /**
      * Creates an instance of ubic.gemma.model.expression.experiment.ExpressionExperiment and adds it to the persistent
@@ -417,7 +422,7 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * 
      */
-    public java.util.Collection getSamplingOfVectors(
+    public java.util.Collection<DesignElementDataVector> getSamplingOfVectors(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, java.lang.Integer limit );
 
     /**
@@ -442,22 +447,22 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * Function to get a count of expression experiments, grouped by Taxon
      * </p>
      */
-    public java.util.Map getPerTaxonCount();
+    public java.util.Map<Taxon, Long> getPerTaxonCount();
 
     /**
      * 
      */
-    public java.util.Collection loadAllValueObjects();
+    public java.util.Collection<ExpressionExperimentValueObject> loadAllValueObjects();
 
     /**
      * 
      */
-    public java.util.Collection loadValueObjects( java.util.Collection ids );
+    public java.util.Collection<ExpressionExperimentValueObject> loadValueObjects( java.util.Collection ids );
 
     /**
      * 
      */
-    public java.util.Collection findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -465,7 +470,7 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * useful for expression experiments that use more than one array design.
      * </p>
      */
-    public java.util.Collection getQuantitationTypes(
+    public java.util.Collection<QuantitationType> getQuantitationTypes(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
@@ -496,14 +501,14 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map getAuditEvents( java.util.Collection ids );
+    public java.util.Map getAuditEvents( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * returns a collection of expression experiments that have an AD that assays for the given gene
      * </p>
      */
-    public java.util.Collection findByGene( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<ExpressionExperiment> findByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
@@ -511,14 +516,15 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * rank (percentile)
      * </p>
      */
-    public java.util.Collection findByExpressedGene( ubic.gemma.model.genome.Gene gene, java.lang.Double rank );
+    public java.util.Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene,
+            java.lang.Double rank );
 
     /**
      * <p>
      * Finds all the EE's that reference the given bibliographicReference id
      * </p>
      */
-    public java.util.Collection findByBibliographicReference( java.lang.Long bibRefID );
+    public java.util.Collection<ExpressionExperiment> findByBibliographicReference( java.lang.Long bibRefID );
 
     /**
      * <p>
@@ -531,14 +537,14 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * 
      */
-    public java.util.Map getArrayDesignAuditEvents( java.util.Collection ids );
+    public java.util.Map getArrayDesignAuditEvents( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * Retrieve a collection of the genes assayed in the experiment.
      * </p>
      */
-    public java.util.Collection getAssayedGenes(
+    public java.util.Collection<Gene> getAssayedGenes(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
             java.lang.Double rankThreshold );
 
@@ -547,7 +553,7 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * See getAssayedGenes
      * </p>
      */
-    public java.util.Collection getAssayedProbes(
+    public java.util.Collection<CompositeSequence> getAssayedProbes(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
             java.lang.Double rankThreshold );
 
@@ -607,12 +613,12 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * 
      */
-    public java.util.Collection findByFactorValues( java.util.Collection factorValues );
+    public java.util.Collection<ExpressionExperiment> findByFactorValues( java.util.Collection factorValues );
 
     /**
      * 
      */
-    public java.util.Collection findByBioMaterials( java.util.Collection bioMaterials );
+    public java.util.Collection<ExpressionExperiment> findByBioMaterials( java.util.Collection bioMaterials );
 
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
 

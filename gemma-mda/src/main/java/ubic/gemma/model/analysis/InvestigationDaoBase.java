@@ -98,7 +98,7 @@ public abstract class InvestigationDaoBase extends ubic.gemma.model.common.Audit
                 }
                 return null;
             }
-        }, true );
+        } );
     }
 
     /**

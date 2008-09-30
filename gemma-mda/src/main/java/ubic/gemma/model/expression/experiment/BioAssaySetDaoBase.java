@@ -99,7 +99,7 @@ public abstract class BioAssaySetDaoBase extends ubic.gemma.model.analysis.Inves
                 }
                 return null;
             }
-        }, true );
+        } );
     }
 
     /**

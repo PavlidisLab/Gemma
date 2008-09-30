@@ -309,10 +309,11 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             Object associatedObject = null;
             try {
                 associatedObject = ReflectionUtil.getProperty( object, descriptor );
-            } catch ( RuntimeException e ) {
-                log.error( e, e );
-                log.fatal( "While processing: " + object + " --> " + descriptor );
-                throw ( e );
+            } catch ( Exception e ) {
+                // log.error( e, e );
+                log.fatal( e.getClass() + " while processing: " + object.getClass() + " --> " + propertyNames[j] );
+                continue;
+                // throw ( e );
             }
 
             if ( associatedObject == null ) continue;
@@ -362,9 +363,9 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             return;
         }
 
-        // if ( log.isDebugEnabled() ) {
-        // log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
-        // }
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
+        }
         if ( CrudUtils.methodIsCreate( m ) ) {
             addPermission( ( Securable ) object );
             processAssociations( m, object );

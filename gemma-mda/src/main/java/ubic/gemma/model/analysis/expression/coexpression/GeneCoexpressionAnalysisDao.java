@@ -45,14 +45,14 @@ public interface GeneCoexpressionAnalysisDao extends
      * @param id the identifier of the entity to load.
      * @return either the entity or the object transformed from the entity.
      */
-    public Object load( int transform, java.lang.Long id );
+    public GeneCoexpressionAnalysis load( int transform, java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis}.
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<GeneCoexpressionAnalysis> loadAll();
 
     /**
      * <p>
@@ -66,7 +66,7 @@ public interface GeneCoexpressionAnalysisDao extends
      * @param transform the flag indicating what transformation to use.
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<GeneCoexpressionAnalysis> loadAll( final int transform );
 
     /**
      * Creates an instance of ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis and adds it to

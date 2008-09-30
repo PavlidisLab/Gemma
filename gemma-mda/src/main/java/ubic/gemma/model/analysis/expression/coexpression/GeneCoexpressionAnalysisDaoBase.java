@@ -38,7 +38,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#load(int, java.lang.Long)
      */
     @Override
-    public Object load( final int transform, final java.lang.Long id ) {
+    public GeneCoexpressionAnalysis load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "GeneCoexpressionAnalysis.load - 'id' can not be null" );
         }
@@ -569,9 +569,9 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      * @return the transformed entity (i.e. new value object, etc)
      * @see #transformEntities(int,java.util.Collection)
      */
-    protected Object transformEntity( final int transform,
+    protected GeneCoexpressionAnalysis transformEntity( final int transform,
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis entity ) {
-        Object target = null;
+        GeneCoexpressionAnalysis target = null;
         if ( entity != null ) {
             switch ( transform ) {
                 case TRANSFORM_NONE: // fall-through

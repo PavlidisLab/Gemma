@@ -1023,7 +1023,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
 
         StringBuffer descriptive = new StringBuffer();
-        String eeDescription = ee.getDescription().trim();
+
+        String eeDescription = ee.getDescription() == null ? "" : ee.getDescription().trim();
 
         // Need to trim?
         if ( eeDescription.length() < TRIM_SIZE + 1 )

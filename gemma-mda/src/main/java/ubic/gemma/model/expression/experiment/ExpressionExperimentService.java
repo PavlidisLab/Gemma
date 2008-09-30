@@ -60,7 +60,8 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperiment> findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator );
+    public java.util.Collection<ExpressionExperiment> findByInvestigator(
+            ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 
     /**
      * 
@@ -246,25 +247,26 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
 
     /**
      * <p>
-     * Returns a collection of longs (all the expression experiment ids) that have an AD that detects the given Gene (ie
-     * a probe on the AD hybidizes to the given Gene)
+     * Returns a collection of expression experiments that have an AD that detects the given Gene (ie a probe on the AD
+     * hybidizes to the given Gene)
      * </p>
      */
-    public java.util.Collection findByGene( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<ExpressionExperiment> findByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
      * Returns a collection of expression experiment ids that express the given gene above the given expression level
      * </p>
      */
-    public java.util.Collection findByExpressedGene( ubic.gemma.model.genome.Gene gene, double rank );
+    public java.util.Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene,
+            double rank );
 
     /**
      * <p>
      * given a bibliographicReference returns a collection of EE that have that reference that BibliographicReference
      * </p>
      */
-    public java.util.Collection findByBibliographicReference(
+    public java.util.Collection<ExpressionExperiment> findByBibliographicReference(
             ubic.gemma.model.common.description.BibliographicReference bibRef );
 
     /**

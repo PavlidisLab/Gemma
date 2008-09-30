@@ -3544,6 +3544,9 @@
 				<property name="differentialExpressionAnalysisDao">
 					<ref bean="differentialExpressionAnalysisDao" />
 				</property>
+				<property name="geneCoexpressionAnalysisDao">
+					<ref bean="geneCoexpressionAnalysisDao" />
+				</property>
 				<property name="expressionExperimentSetDao">
 					<ref bean="expressionExperimentSetDao" />
 				</property>

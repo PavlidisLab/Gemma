@@ -156,7 +156,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
     @SuppressWarnings("unchecked")
     public final void testGetPerTaxonCount() throws Exception {
-        Map<String, Long> counts = expressionExperimentDao.getPerTaxonCount();
+        Map<Taxon, Long> counts = expressionExperimentDao.getPerTaxonCount();
         assertNotNull( counts );
     }
 
