@@ -924,7 +924,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 job.updateProgress( "Generating report for all experiments" );
                 expressionExperimentReportService.generateSummaryObjects();
             } else {
-                saveMessage( "Generating report for experiment" );
+                // saveMessage( "Generating report for experiment" );
                 job.updateProgress( "Generating report for specified experiment" );
                 expressionExperimentReportService.generateSummaryObjects( ids );
             }

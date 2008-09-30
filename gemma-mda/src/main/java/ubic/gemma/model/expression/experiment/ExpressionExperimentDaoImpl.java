@@ -1085,9 +1085,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected long handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
             throws Exception {
-        final String queryString = "select count(distinct dedv) from ExpressionExperimentImpl as ee "
-                + "inner join ee.processedExpressionDataVectors as dedv "
-                + "inner join dedv.quantitationType as qType where qType.isPreferred = true and ee = :ee ";
+        final String queryString = "select count(v) from ProcessedExpressionDataVectorImpl v  where v.expressionExperiment = :ee ";
 
         List result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
         return ( Long ) result.iterator().next();

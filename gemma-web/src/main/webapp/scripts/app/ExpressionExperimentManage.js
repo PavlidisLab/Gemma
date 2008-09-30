@@ -23,7 +23,7 @@ Ext.onReady(function() {
 				name : "bioAssayCount",
 				type : "int"
 			}, {
-				name : "designElementDataVectorCount",
+				name : "processedExpressionVectorCount",
 				type : "int"
 			}, {
 				name : "externalUri"
@@ -266,8 +266,8 @@ Ext.onReady(function() {
 			}, {
 				header : '#Vecs',
 				sortable : true,
-				dataIndex : 'designElementDataVectorCount',
-				width : 35
+				dataIndex : 'processedExpressionVectorCount',
+				width : 45
 			}, {
 				header : '#Facs',
 				sortable : true,
@@ -375,6 +375,69 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 
 			refresh : function() {
 				this.store.reload();
+			},
+
+			updateEEReport : function(id) {
+				var callParams = [];
+				callParams.push(id);
+				var delegate = handleWait.createDelegate(this, [], true);
+				var errorHandler = handleFailure.createDelegate(this, [], true);
+				callParams.push({
+							callback : delegate,
+							errorHandler : errorHandler
+						});
+				Ext.DomHelper.overwrite("messages", {
+							tag : 'img',
+							src : '/Gemma/images/default/tree/loading.gif'
+						});
+				Ext.DomHelper.append("messages", "&nbsp;Submitting ...");
+				ExpressionExperimentController.updateReport.apply(this, callParams);
+			},
+
+			deleteExperiment : function(id) {
+				// show confirmation dialog
+				var dialog = new Ext.Window({
+							title : "Confirm deletion",
+							modal : true,
+							layout : 'fit',
+							autoHeight : true,
+							width : 300,
+							closeAction : 'hide',
+							easing : 3,
+							defaultType : 'textfield',
+							items : [{
+										xtype : 'label',
+										text : "This cannot be undone"
+									}],
+							buttons : [{
+										text : 'Cancel',
+										handler : function() {
+											dialog.hide();
+										}
+									}, {
+										text : 'Confirm',
+										handler : function() {
+											dialog.hide();
+											var callParams = []
+											callParams.push(id);
+											var delegate = handleWait.createDelegate(this, [], true);
+											var errorHandler = handleFailure.createDelegate(this, [], true);
+											callParams.push({
+														callback : delegate,
+														errorHandler : errorHandler
+													});
+											Ext.DomHelper.overwrite("messages", {
+														tag : 'img',
+														src : '/Gemma/images/default/tree/loading.gif'
+													});
+											Ext.DomHelper.append("messages", "&nbsp;Submitting ...");
+											ExpressionExperimentController.deleteById.apply(this, callParams);
+										},
+										scope : dialog
+									}]
+						});
+
+				dialog.show();
 			},
 
 			initComponent : function() {
