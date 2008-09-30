@@ -512,6 +512,7 @@
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.load=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataArrays=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataVectors=PROPAGATION_REQUIRED,readOnly				
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.createProcessedDataVectors=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.create=PROPAGATION_REQUIRED
