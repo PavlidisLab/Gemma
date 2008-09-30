@@ -67,6 +67,14 @@ Ext.onReady(function() {
 			}, {
 				name : "dateLinkAnalysis",
 				type : 'date'
+			}, {
+				name : "linkAnalysisEventType"
+			}, {
+				name : "processedDataVectorComputationEventType"
+			}, {
+				name : "missingValueAnalysisEventType"
+			}, {
+				name : "differentialAnalysisEventType"
 			}]);
 
 	var dateRenderer = new Ext.util.Format.dateRenderer("y/M/d");
@@ -96,22 +104,55 @@ Ext.onReady(function() {
 
 	var linkAnalysisRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		if (record.get('dateLinkAnalysis')) {
-			// TODO: Deal with failure, too small, etc.
-			return dateRenderer(record.get('dateLinkAnalysis'));
+			var type = record.get('linkAnalysisEventType');
+			var color = "#3A3";
+			var suggestRun = true;
+			var qtip = 'ext:qtip="OK"';
+			if (type == 'FailedLinkAnalysisEventImpl') {
+				color = 'red';
+				qtip = 'ext:qtip="Failed"';
+			} else if (type == 'TooSmallDatasetLinkAnalysisEventImpl') {
+				color = '#CCC';
+				qtip = 'ext:qtip="Too small"';
+				suggestRun = false;
+			}
+			return '<span style="color:'
+					+ color
+					+ ';" '
+					+ qtip
+					+ '>'
+					+ Ext.util.Format.date(value, 'y/M/d')
+					+ (suggestRun
+							? '</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>'
+							: '');
 		} else {
-			return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
+			return '<span style="color:#3A3;">Needed</span>&nbsp&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
 		}
 
 	};
 
 	var missingValueAnalysisRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		if (record.get('technologyType') != 'ONECOLOR' && record.get('hasBothIntensities')) {
-			/*
-			 * Determine if it was done..
-			 */
 			if (record.get('dateMissingValueAnalysis')) {
-				// TODO
-				return dateRenderer(record.get('dateMissingValueAnalysis'));
+				var type = record.get('missingValueAnalysisEventType');
+
+				var color = "#3A3";
+				var suggestRun = true;
+				var qtip = 'ext:qtip="OK"';
+				if (type == 'FailedMissingValueAnalysisEventImpl') {
+					color = 'red';
+					qtip = 'ext:qtip="Failed"';
+				}
+
+				return '<span style="color:'
+						+ color
+						+ ';" '
+						+ qtip
+						+ '>'
+						+ Ext.util.Format.date(value, 'y/M/d')
+						+ (suggestRun
+								? '</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>'
+								: '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
 			}
@@ -123,8 +164,24 @@ Ext.onReady(function() {
 
 	var processedVectorCreateRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		if (record.get('dateProcessedDataVectorComputation')) {
-			// TODO
-			return dateRenderer(record.get('dateProcessedDataVectorComputation'));
+			var type = record.get('processedDataVectorComputationEventType');
+			var color = "#3A3";
+			var suggestRun = true;
+			var qtip = 'ext:qtip="OK"';
+			if (type == 'FailedProcessedVectorComputationEventImpl') { // note: no such thing.
+				color = 'red';
+				qtip = 'ext:qtip="Failed"';
+			}
+
+			return '<span style="color:'
+					+ color
+					+ ';" '
+					+ qtip
+					+ '>'
+					+ Ext.util.Format.date(value, 'y/M/d')
+					+ (suggestRun
+							? '</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>'
+							: '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
 		}
@@ -134,7 +191,26 @@ Ext.onReady(function() {
 		if (diffIsPossible(record)) {
 			if (record.get('dateDifferentialAnalysis')) {
 				// TODO
-				return dateRenderer(record.get('dateDifferentialAnalysis'));
+				var type = record.get('differentialAnalysisEventType');
+
+				var color = "#3A3";
+				var suggestRun = true;
+				var qtip = 'ext:qtip="OK"';
+				if (type == 'FailedDifferentialExpressionAnalysisEventImpl') { // note: no such thing.
+					color = 'red';
+					qtip = 'ext:qtip="Failed"';
+				}
+
+				return '<span style="color:'
+						+ color
+						+ ';" '
+						+ qtip
+						+ '>'
+						+ Ext.util.Format.date(value, 'y/M/d')
+						+ (suggestRun
+								? '</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>'
+								: '');
+
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
 			}
@@ -153,7 +229,7 @@ Ext.onReady(function() {
 
 			result = result + '<img src="/Gemma/images/icons/error.png" alt="trouble" title="trouble"/>';
 		}
-		if (record.get('isPrivate')) {
+		if (!record.get('isPublic')) {
 			result = result + '<img src="/Gemma/images/icons/lock.png" alt="not public" title="not public"/>';
 		}
 		return result;
@@ -261,14 +337,82 @@ Ext.onReady(function() {
 				width : '100%',
 				autoHeight : true,
 				layout : 'fit',
-				items : [new Ext.grid.GridPanel({
+				items : [new Gemma.EEReportPanel({
 							store : store,
+							loadMask : true,
 							autoHeight : true,
 							columns : columns,
 							rowExpander : rowExpander,
 							plugins : rowExpander
+
 						})]
 
 			});
 
 });
+
+Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
+			searchForText : function(button, keyev) {
+				var text = this.searchInGridField.getValue();
+				if (text.length < 2) {
+					clearFilter();
+					return;
+				}
+				this.getStore().filterBy(this.getSearchFun(text), this, 0);
+			},
+
+			clearFilter : function() {
+				this.getStore().clearFilter();
+			},
+
+			getSearchFun : function(text) {
+				var value = new RegExp(Ext.escapeRe(text), 'i');
+				return function(r, id) {
+					var obj = r.data;
+					return value.match(obj.name) || value.match(obj.shortName);
+				}
+			},
+
+			refresh : function() {
+				this.store.reload();
+			},
+
+			initComponent : function() {
+				this.searchInGridField = new Ext.form.TextField({
+							enableKeyEvents : true,
+							emptyText : 'Filter',
+							tooltip : "Text typed here will ",
+							listeners : {
+								"keyup" : {
+									fn : this.searchForText.createDelegate(this),
+									scope : this,
+									options : {
+										delay : 100
+									}
+								}
+							}
+						});
+
+				Ext.apply(this, {
+							tbar : new Ext.Toolbar({
+										items : [{
+													xtype : 'button',
+													minWidth : 20,
+													cls : 'x-btn-icon',
+													icon : '/Gemma/images/icons/arrow_refresh_small.png',
+													handler : this.refresh,
+													tooltip : "Refresh the table",
+													scope : this
+												}, '->', {
+													xtype : 'button',
+													handler : this.clearFilter.createDelegate(this),
+													tooltip : "Show all",
+													scope : this,
+													cls : 'x-btn-text',
+													text : 'Reset filter'
+												}, ' ', this.searchInGridField]
+									})
+						});
+				Gemma.EEReportPanel.superclass.initComponent.call(this);
+			}
+		});
