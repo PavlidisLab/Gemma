@@ -66,21 +66,6 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     @Override
     protected java.util.List handleCreate( java.util.List p2pExpressions ) throws java.lang.Exception {
         return this.getProbe2ProbeCoexpressionDao().create( p2pExpressions );
-        // if ( !this.validCollection( p2pExpressions ) ) return null;
-        //
-        // Object check = p2pExpressions.iterator().next();
-        // if ( check instanceof RatProbeCoExpression )
-        // return this.getRatProbeCoExpressionDao().create( p2pExpressions );
-        // else if ( check instanceof MouseProbeCoExpression )
-        // return this.getMouseProbeCoExpressionDao().create( p2pExpressions );
-        // else if ( check instanceof HumanProbeCoExpression )
-        // return this.getHumanProbeCoExpressionDao().create( p2pExpressions );
-        // else if ( check instanceof OtherProbeCoExpression )
-        // return this.getOtherProbeCoExpressionDao().create( p2pExpressions );
-        // else
-        // throw new IllegalArgumentException( "Collection contains objects that it can't persist:" + check.getClass()
-        // + " no service method for persisting." );
-
     }
 
     /**
@@ -156,8 +141,9 @@ public class Probe2ProbeCoexpressionServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase#handleDeleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase#handleDeleteLinks(ubic.gemma.model
+     * .expression.experiment.ExpressionExperiment)
      */
     @Override
     protected void handleDeleteLinks( ExpressionExperiment ee ) throws Exception {
