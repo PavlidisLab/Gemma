@@ -39,6 +39,9 @@ public class PubMedXMLFetcherTest extends TestCase {
     public final void testRetrieveByHTTP() throws Exception {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 15173114 );
+
+            assertNotNull( br );
+
             assertEquals( "Lee, Homin K; Hsu, Amy K; Sajdak, Jon; Qin, Jie; Pavlidis, Paul", br.getAuthorList() );
             assertEquals( "Genome Res", br.getPublication() );
             assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
