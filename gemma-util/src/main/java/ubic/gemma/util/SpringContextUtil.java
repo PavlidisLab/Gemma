@@ -18,6 +18,8 @@
  */
 package ubic.gemma.util;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -169,17 +171,18 @@ public class SpringContextUtil {
         paths.add( "classpath*:ubic/gemma/applicationContext-persisterBeans.xml" );
 
         /*
-         * When using a web context, we get the config locations from the web.xml files --- not using this class.
+         * When using a web application, we get the config locations from the web.xml files --- not using this class.
+         * However, this IS used during tests, so we need it.
          */
-        // File f = new File( getGemmaHomeProperty() );
-        // try {
-        // if ( isWebapp ) {
-        // paths.add( f.toURI().toURL() + "gemma-web/target/Gemma/WEB-INF/" + "action-servlet.xml" );
-        // paths.add( "classpath*:ubic/gemma/applicationContext-validation.xml" );
-        // }
-        // } catch ( MalformedURLException e ) {
-        // throw new RuntimeException( "Could not form valid URL for " + f.getAbsolutePath(), e );
-        // }
+        File f = new File( getGemmaHomeProperty() );
+        try {
+            if ( isWebapp ) {
+                paths.add( f.toURI().toURL() + "gemma-web/target/Gemma/WEB-INF/" + "action-servlet.xml" );
+                paths.add( "classpath*:ubic/gemma/applicationContext-validation.xml" );
+            }
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( "Could not form valid URL for " + f.getAbsolutePath(), e );
+        }
     }
 
     /**
