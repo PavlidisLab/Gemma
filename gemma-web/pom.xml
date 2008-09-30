@@ -59,16 +59,6 @@
 		<finalName>Gemma</finalName>
 		<plugins>
 			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<argLine>-ea -Djava.awt.headless=true -Xmx256m</argLine>
-					<excludes>
-						<exclude>**/*Abstract*</exclude>
-						<exclude>**/*IntegrationTest.java</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>xdoclet-maven-plugin</artifactId>
 				<executions>

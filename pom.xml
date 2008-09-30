@@ -314,9 +314,9 @@
 							<report>dependencies</report>
 							<report>dependency-convergence</report>
 							<!--	<report>index</report>
-								
+
 								<report>project-team</report>
-								
+
 								<report>cim</report>
 								<report>issue-tracking</report>
 								<report>license</report>
@@ -355,7 +355,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
 				<configuration>
-					<argLine>-Xmx1024m</argLine>
+					<argLine>-Xmx1g</argLine>
 				</configuration>
 			</plugin>
 			<!--<plugin>
@@ -405,7 +405,11 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>-Xmx256m -ea</argLine>
+					<argLine>-Xmx1g -ea -Djava.awt.headless=true</argLine>
+					<excludes>
+						<exclude>**/*Abstract*</exclude>
+						<exclude>**/*IntegrationTest.java</exclude>
+					</excludes>
 				</configuration>
 			</plugin>
 			<plugin>
