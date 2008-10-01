@@ -19,23 +19,16 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.security.context.SecurityContext;
 import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.validation.BindException;
-import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -53,7 +46,6 @@ import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesFormController;
-import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.util.MessageUtil;
 
 /**
@@ -83,38 +75,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     ArrayDesignService arrayDesignService;
 
     ArrayExpressLoadService arrayExpressLoadService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
-     */
-    @Override
-    @SuppressWarnings("unused")
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-        return startJob( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(),
-                true );
-    }
-
-    /**
-     * Main entry point for Spring MVC
-     * 
-     * @see ubic.gemma.web.controller.BaseFormController#processFormSubmission(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
-     */
-    @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
-        if ( request.getParameter( "cancel" ) != null ) {
-            cancel( request );
-            this.saveMessage( request, "Cancelled processing" );
-            return new ModelAndView( new RedirectView( "mainMenu.html" ) );
-        }
-
-        return super.processFormSubmission( request, response, command, errors );
-    }
 
     /**
      * Main entry point for AJAX calls.
@@ -150,18 +110,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     /*
      * (non-Javadoc)
      * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
-     */
-    @Override
-    @SuppressWarnings("unused")
-    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        ExpressionExperimentLoadCommand command = new ExpressionExperimentLoadCommand();
-        return command;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.web.controller.BaseBackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
      *      java.lang.Object, java.lang.String)
      */
@@ -185,33 +133,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
         return new LoadInSpaceJob( taskId, securityContext, command, messenger );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
-     *      org.springframework.web.bind.ServletRequestDataBinder)
-     */
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor( this.arrayDesignService ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#referenceData(javax.servlet.http.HttpServletRequest)
-     */
-    @SuppressWarnings("unused")
-    @Override
-    protected Map referenceData( HttpServletRequest request ) throws Exception {
-        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
-
-        populateArrayDesignReferenceData( mapping );
-        return mapping;
-
-    }
-
     /**
      * This method has been deprecated in favor of an ajax call.
      * 
@@ -221,30 +142,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     private void cancel( HttpServletRequest request ) {
         Future job = ( Future ) request.getSession().getAttribute( TaskRunningService.JOB_ATTRIBUTE );
         job.cancel( true );
-    }
-
-    /**
-     * @param mapping
-     */
-    @SuppressWarnings("unchecked")
-    private void populateArrayDesignReferenceData( Map<String, List<? extends Object>> mapping ) {
-        List<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
-        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
-            // remove AD's that are mergees or subsumers
-
-            if ( arrayDesign.getSubsumingArrayDesign() != null ) continue;
-
-            if ( arrayDesign.getMergedInto() != null ) continue;
-
-            arrayDesigns.add( arrayDesign );
-        }
-        Collections.sort( arrayDesigns, new Comparator<ArrayDesign>() {
-            public int compare( ArrayDesign o1, ArrayDesign o2 ) {
-                return ( o1 ).getName().compareTo( ( o2 ).getName() );
-            }
-        } );
-
-        mapping.put( "arrayDesigns", arrayDesigns );
     }
 
     /**
