@@ -108,14 +108,17 @@ public abstract class UserRoleDaoBase extends ubic.gemma.model.common.Describabl
         if ( entities == null ) {
             throw new IllegalArgumentException( "UserRole.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.auditAndSecurity.UserRole ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform, ( ubic.gemma.model.common.auditAndSecurity.UserRole ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -137,14 +140,16 @@ public abstract class UserRoleDaoBase extends ubic.gemma.model.common.Describabl
         if ( entities == null ) {
             throw new IllegalArgumentException( "UserRole.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.auditAndSecurity.UserRole ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.common.auditAndSecurity.UserRole ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**

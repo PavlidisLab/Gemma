@@ -169,7 +169,7 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
 					/*
 					 * Show some kind of summary - how many rows etc, any mismatches with probes.
 					 */
-					Ext.Msg.alert("You data look valid", "Your data matrix had " + result.numRows + " rows, "
+					Ext.Msg.alert("Your data look valid", "Your data matrix had " + result.numRows + " rows, "
 									+ result.numColumns + " columns, " + result.numberMatchingProbes
 									+ " probes on the array design matched your data, "
 									+ result.numberOfNonMatchingProbes + " didn't."

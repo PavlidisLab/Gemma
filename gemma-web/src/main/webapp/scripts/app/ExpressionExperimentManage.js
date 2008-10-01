@@ -4,6 +4,89 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
+	handleWait = function(taskId) {
+		try {
+			Ext.DomHelper.overwrite("messages", "");
+
+			var p = new Gemma.ProgressWidget({
+						taskId : taskId
+					});
+
+			var w = new Ext.Window({
+						modal : true,
+						closable : false,
+						width : 500,
+						items : [p]
+					});
+
+			p.on('done', function(payload) {
+						w.destroy();
+						p.destroy();
+						store.reload();
+					}.createDelegate(this));
+
+			p.on('fail', function(message) {
+						Ext.Msg.alert("Error", "There was an error:<br/>" + message);
+						w.destroy();
+						p.destroy();
+					}.createDelegate(this));
+
+			w.show();
+			p.startProgress();
+		} catch (e) {
+			Ext.Msg.alert("Error", "There was an error:<br/>" + e);
+			return;
+		}
+	};
+
+	updateEEReport = function(id) {
+		var callParams = [];
+		callParams.push(id);
+		callParams.push({
+					callback : handleWait.createDelegate(this)
+				});
+
+		ExpressionExperimentController.updateReport.apply(this, callParams);
+	};
+
+	deleteExperiment = function(id) {
+		// show confirmation dialog
+		var dialog = new Ext.Window({
+					title : "Confirm deletion",
+					modal : true,
+					layout : 'fit',
+					autoHeight : true,
+					width : 300,
+					closeAction : 'hide',
+					easing : 3,
+					defaultType : 'textfield',
+					items : [{
+								xtype : 'label',
+								text : "This cannot be undone"
+							}],
+					buttons : [{
+								text : 'Cancel',
+								handler : function() {
+									dialog.hide();
+								}
+							}, {
+								text : 'Confirm',
+								handler : function() {
+									dialog.hide();
+									var callParams = []
+									callParams.push(id);
+									callParams.push({
+												callback : handleWait.createDelegate(this)
+											});
+									ExpressionExperimentController.deleteById.apply(this, callParams);
+								},
+								scope : dialog
+							}]
+				});
+
+		dialog.show();
+	};
+
 	var record = Ext.data.Record.create([{
 				name : "id",
 				type : "int"
@@ -82,7 +165,7 @@ Ext.onReady(function() {
 	var adminRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		return '<a href="#" onClick="return deleteExperiment('
 				+ value
-				+ ')"><img src="/Gemma/images/icons/delete.png" alt="delete" title="delete" /></a>&nbsp<a href="#" onClick="return updateEEReport('
+				+ ')"><img src="/Gemma/images/icons/delete.png" alt="delete" title="delete" /></a>&nbsp<a href="#" onClick="updateEEReport('
 				+ value
 				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" alt="refresh" title="refresh"/></a>'
 				+ '&nbsp<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id=' + value
@@ -351,6 +434,11 @@ Ext.onReady(function() {
 
 });
 
+/**
+ * 
+ * @class Gemma.EEReportPanel
+ * @extends Ext.grid.GridPanel
+ */
 Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 			searchForText : function(button, keyev) {
 				var text = this.searchInGridField.getValue();
@@ -375,69 +463,6 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 
 			refresh : function() {
 				this.store.reload();
-			},
-
-			updateEEReport : function(id) {
-				var callParams = [];
-				callParams.push(id);
-				var delegate = handleWait.createDelegate(this, [], true);
-				var errorHandler = handleFailure.createDelegate(this, [], true);
-				callParams.push({
-							callback : delegate,
-							errorHandler : errorHandler
-						});
-				Ext.DomHelper.overwrite("messages", {
-							tag : 'img',
-							src : '/Gemma/images/default/tree/loading.gif'
-						});
-				Ext.DomHelper.append("messages", "&nbsp;Submitting ...");
-				ExpressionExperimentController.updateReport.apply(this, callParams);
-			},
-
-			deleteExperiment : function(id) {
-				// show confirmation dialog
-				var dialog = new Ext.Window({
-							title : "Confirm deletion",
-							modal : true,
-							layout : 'fit',
-							autoHeight : true,
-							width : 300,
-							closeAction : 'hide',
-							easing : 3,
-							defaultType : 'textfield',
-							items : [{
-										xtype : 'label',
-										text : "This cannot be undone"
-									}],
-							buttons : [{
-										text : 'Cancel',
-										handler : function() {
-											dialog.hide();
-										}
-									}, {
-										text : 'Confirm',
-										handler : function() {
-											dialog.hide();
-											var callParams = []
-											callParams.push(id);
-											var delegate = handleWait.createDelegate(this, [], true);
-											var errorHandler = handleFailure.createDelegate(this, [], true);
-											callParams.push({
-														callback : delegate,
-														errorHandler : errorHandler
-													});
-											Ext.DomHelper.overwrite("messages", {
-														tag : 'img',
-														src : '/Gemma/images/default/tree/loading.gif'
-													});
-											Ext.DomHelper.append("messages", "&nbsp;Submitting ...");
-											ExpressionExperimentController.deleteById.apply(this, callParams);
-										},
-										scope : dialog
-									}]
-						});
-
-				dialog.show();
 			},
 
 			initComponent : function() {
