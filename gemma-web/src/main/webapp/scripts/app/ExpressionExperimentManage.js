@@ -185,10 +185,27 @@ Ext.onReady(function() {
 		return record.get("numPopulatedFactors") > 0;
 	};
 
+	doLinks = function(id) {
+		Ext.Msg.alert("Will run link analysis");
+	};
+
+	doMissingValues = function(id) {
+		Ext.Msg.alert("Will run missing value analysis");
+	};
+
+	doProcessedVectors = function(id) {
+		Ext.Msg.alert("Will compute processed vectors");
+	};
+
+	doDifferential = function(id) {
+		Ext.Msg.alert("Will run differential expression analysis");
+	};
+
 	var linkAnalysisRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		if (record.get('dateLinkAnalysis')) {
 			var type = record.get('linkAnalysisEventType');
 			var color = "#3A3";
+			var id = record.get('id');
 			var suggestRun = true;
 			var qtip = 'ext:qtip="OK"';
 			if (type == 'FailedLinkAnalysisEventImpl') {
@@ -199,17 +216,14 @@ Ext.onReady(function() {
 				qtip = 'ext:qtip="Too small"';
 				suggestRun = false;
 			}
-			return '<span style="color:'
-					+ color
-					+ ';" '
-					+ qtip
-					+ '>'
-					+ Ext.util.Format.date(value, 'y/M/d')
-					+ (suggestRun
-							? '</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>'
-							: '');
+			var runurl = '<a href="#" onClick="return doLinks('
+					+ id
+					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></a>';
+
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+					+ (suggestRun ? runurl : '');
 		} else {
-			return '<span style="color:#3A3;">Needed</span>&nbsp&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
+			return '<span style="color:#3A3;">Needed</span>&nbsp' + runurl;
 		}
 
 	};
@@ -218,7 +232,7 @@ Ext.onReady(function() {
 		if (record.get('technologyType') != 'ONECOLOR' && record.get('hasBothIntensities')) {
 			if (record.get('dateMissingValueAnalysis')) {
 				var type = record.get('missingValueAnalysisEventType');
-
+				var id = record.get('id');
 				var color = "#3A3";
 				var suggestRun = true;
 				var qtip = 'ext:qtip="OK"';
@@ -227,17 +241,14 @@ Ext.onReady(function() {
 					qtip = 'ext:qtip="Failed"';
 				}
 
-				return '<span style="color:'
-						+ color
-						+ ';" '
-						+ qtip
-						+ '>'
-						+ Ext.util.Format.date(value, 'y/M/d')
-						+ (suggestRun
-								? '</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>'
-								: '');
+				var runurl = '<a href="#" onClick="return doMissingValues('
+						+ id
+						+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></a>';
+
+				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+						+ (suggestRun ? runurl : '');
 			} else {
-				return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
+				return '<span style="color:#3A3;">Needed</span>&nbsp' + runurl;
 			}
 
 		} else {
@@ -249,6 +260,7 @@ Ext.onReady(function() {
 		if (record.get('dateProcessedDataVectorComputation')) {
 			var type = record.get('processedDataVectorComputationEventType');
 			var color = "#3A3";
+			var id = record.get('id');
 			var suggestRun = true;
 			var qtip = 'ext:qtip="OK"';
 			if (type == 'FailedProcessedVectorComputationEventImpl') { // note: no such thing.
@@ -256,17 +268,14 @@ Ext.onReady(function() {
 				qtip = 'ext:qtip="Failed"';
 			}
 
-			return '<span style="color:'
-					+ color
-					+ ';" '
-					+ qtip
-					+ '>'
-					+ Ext.util.Format.date(value, 'y/M/d')
-					+ (suggestRun
-							? '</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>'
-							: '');
+			var runurl = '<a href="#" onClick="return doProcessedVectors('
+					+ id
+					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></a>';
+
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+					+ (suggestRun ? runurl : '');
 		} else {
-			return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
+			return '<span style="color:#3A3;">Needed</span>&nbsp' + runurl;
 		}
 	};
 
@@ -275,7 +284,7 @@ Ext.onReady(function() {
 			if (record.get('dateDifferentialAnalysis')) {
 				// TODO
 				var type = record.get('differentialAnalysisEventType');
-
+				var id = record.get('id');
 				var color = "#3A3";
 				var suggestRun = true;
 				var qtip = 'ext:qtip="OK"';
@@ -284,18 +293,14 @@ Ext.onReady(function() {
 					qtip = 'ext:qtip="Failed"';
 				}
 
-				return '<span style="color:'
-						+ color
-						+ ';" '
-						+ qtip
-						+ '>'
-						+ Ext.util.Format.date(value, 'y/M/d')
-						+ (suggestRun
-								? '</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>'
-								: '');
+				var runurl = '<a href="#" onClick="return doDifferential('
+						+ id
+						+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></a>';
 
+				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+						+ (suggestRun ? runurl : '');
 			} else {
-				return '<span style="color:#3A3;">Needed</span>&nbsp<a href="runit"><img src="/Gemma/images/icons/control_play_blue.png" alt="run" title="run"/></a>';
+				return '<span style="color:#3A3;">Needed</span>&nbsp' + runurl;
 			}
 		} else {
 			return '<span style="color:#CCF;">NA</span>';
