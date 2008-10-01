@@ -23,7 +23,6 @@ import java.util.Collection;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
@@ -60,7 +59,7 @@ import cern.colt.list.DoubleArrayList;
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  */
 public class ProcessedExpressionDataVectorCreateService extends BaseSpacesTask implements
-        ProcessedExpressionDataVectorCreateTask, InitializingBean {
+        ProcessedExpressionDataVectorCreateTask {
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateService.class.getName() );
 

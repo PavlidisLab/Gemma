@@ -22,7 +22,6 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
@@ -38,19 +37,17 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements ExpressionExperimentLoadTask,
-        InitializingBean {
+public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements ExpressionExperimentLoadTask {
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
     private long counter = 0;
     private GeoDatasetService geoDatasetService = null;
     ArrayExpressLoadService arrayExpressLoadService;
-    private String taskId = null;
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
     public SpacesResult execute( SpacesExpressionExperimentLoadCommand jsEeLoadCommand ) {
@@ -115,24 +112,5 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
      */
     public void afterPropertiesSet() throws Exception {
         this.taskId = TaskRunningService.generateTaskId();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
-     */
-    public String getTaskId() {
-        return taskId;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
-     */
-    public SpacesResult execute( Object command ) {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

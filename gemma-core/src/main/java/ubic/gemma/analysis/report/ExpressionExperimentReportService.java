@@ -32,11 +32,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.grid.javaspaces.SpacesCommand;
@@ -73,7 +71,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="securityService" ref="securityService"
  */
-public class ExpressionExperimentReportService implements ExpressionExperimentReportTask, InitializingBean {
+public class ExpressionExperimentReportService implements ExpressionExperimentReportTask {
     private Log log = LogFactory.getLog( this.getClass() );
 
     private String EE_LINK_SUMMARY = "AllExpressionLinkSummary";

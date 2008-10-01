@@ -18,19 +18,15 @@
  */
 package ubic.gemma.grid.javaspaces;
 
+import org.springframework.beans.factory.InitializingBean;
+
 /**
  * The parent of the spaces interface task hierarchy. All task interfaces should extend this.
  * 
  * @author keshav
  * @version $Id$
  */
-public interface SpacesTask<T> {
+public interface SpacesTask extends InitializingBean {
 
-    /**
-     * @return The task Id.
-     */
     public String getTaskId();
-
-    public SpacesResult execute( T command );
-
 }

@@ -36,7 +36,6 @@ public interface ExpressionExperimentLoadTask extends SpacesTask {
      * @param javaSpacesExpressionExperimentLoadCommand
      * @return
      */
-    public SpacesResult execute(
-            SpacesExpressionExperimentLoadCommand javaSpacesExpressionExperimentLoadCommand );
+    public SpacesResult execute( SpacesExpressionExperimentLoadCommand javaSpacesExpressionExperimentLoadCommand );
 
 }

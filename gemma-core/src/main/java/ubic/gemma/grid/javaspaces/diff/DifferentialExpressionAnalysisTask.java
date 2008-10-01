@@ -18,15 +18,9 @@
  */
 package ubic.gemma.grid.javaspaces.diff;
 
-import java.util.Collection;
-
 import net.jini.space.JavaSpace;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.SpacesTask;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * A task interface to wrap differential expression type jobs. Tasks of this type are submitted to a {@link JavaSpace}
@@ -35,37 +29,12 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisTask extends BaseSpacesTask implements
-        SpacesTask<SpacesDifferentialExpressionAnalysisCommand> {
-
-    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
-    private SpacesDifferentialExpressionAnalysisCommand command;
-
-    /**
-     * @param command
-     * @param differentialExpressionAnalyzerService
-     */
-    public DifferentialExpressionAnalysisTask( SpacesDifferentialExpressionAnalysisCommand command,
-            DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService ) {
-        this.command = command;
-        this.differentialExpressionAnalyzerService = differentialExpressionAnalyzerService;
-    }
+public interface DifferentialExpressionAnalysisTask extends SpacesTask {
 
     /**
      * @param jsDiffAnalysisCommand
      * @return
      */
-    public SpacesResult execute( SpacesDifferentialExpressionAnalysisCommand jsDiffAnalysisCommand ) {
-        super.initProgressAppender( this.getClass() );
+    public SpacesResult execute( SpacesDifferentialExpressionAnalysisCommand jsDiffAnalysisCommand );
 
-        this.taskId = TaskRunningService.generateTaskId();
-
-        Collection<DifferentialExpressionAnalysis> result = differentialExpressionAnalyzerService
-                .executeTask( this.command );
-
-        SpacesResult r = new SpacesResult( this.taskId );
-        r.setAnswer( result );
-
-        return r;
-    }
 }
