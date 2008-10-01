@@ -27,7 +27,6 @@ import java.util.concurrent.Future;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.security.context.SecurityContext;
 import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -45,8 +44,7 @@ import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.grid.AbstractSpacesFormController;
-import ubic.gemma.web.util.MessageUtil;
+import ubic.gemma.web.controller.grid.AbstractSpacesController;
 
 /**
  * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX,
@@ -54,21 +52,16 @@ import ubic.gemma.web.util.MessageUtil;
  * either case the job runs in its own thread, firing a ProgressJob that the client can monitor.
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  * @spring.bean id="expressionExperimentLoadController"
- * @spring.property name="commandName" value="expressionExperimentLoadCommand"
- * @spring.property name="commandClass"
- *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
- * @spring.property name="validator" ref="genericBeanValidator"
- * @spring.property name="formView" value="loadExpressionExperimentForm"
- * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
  * @spring.property name="geoDatasetService" ref="geoDatasetService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="arrayExpressLoadService" ref="arrayExpressLoadService"
  * @see ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadController for how flat-file data
  *      is loaded.
  */
-public class ExpressionExperimentLoadController extends AbstractSpacesFormController {
+public class ExpressionExperimentLoadController extends AbstractSpacesController {
 
     GeoDatasetService geoDatasetService;
 
@@ -110,27 +103,22 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.web.controller.BaseBackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
-     *      java.lang.Object, java.lang.String)
+     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
-            Object command, MessageUtil messenger ) {
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, Object command ) {
 
-        return new LoadJob( taskId, securityContext, command, messenger );
+        return new LoadJob( taskId, command );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#getSpaceRunner(java.lang.String,
-     *      org.acegisecurity.context.SecurityContext, javax.servlet.http.HttpServletRequest, java.lang.Object,
-     *      ubic.gemma.web.util.MessageUtil)
+     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, SecurityContext securityContext,
-            Object command, MessageUtil messenger ) {
-        return new LoadInSpaceJob( taskId, securityContext, command, messenger );
+    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, Object command ) {
+        return new LoadInSpaceJob( taskId, command );
     }
 
     /**
@@ -161,9 +149,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
          * @param commandObj
          * @param messenger
          */
-        public LoadInSpaceJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
-                MessageUtil messenger ) {
-            super( taskId, parentSecurityContext, commandObj, messenger );
+        public LoadInSpaceJob( String taskId, Object commandObj ) {
+            super( taskId, commandObj );
 
         }
 
@@ -221,8 +208,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
          * @param commandObj
          * @param messenger
          */
-        public LoadJob( String taskId, SecurityContext parentSecurityContext, Object commandObj, MessageUtil messenger ) {
-            super( taskId, commandObj, messenger );
+        public LoadJob( String taskId, Object commandObj ) {
+            super( taskId, commandObj );
             if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
                 geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             }
@@ -379,6 +366,16 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
             accesionNum = StringUtils.upperCase( accesionNum );
             return accesionNum;
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.HttpServletRequest)
+     */
+    @Override
+    protected String getViewNameForRequest( HttpServletRequest arg0 ) {
+        return "loadExpressionExperimentForm";
     }
 
 }

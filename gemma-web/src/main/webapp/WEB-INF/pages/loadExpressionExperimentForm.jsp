@@ -1,6 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
-<jsp:useBean id="command" scope="request"
-	class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand" />
+
 <head>
 
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
@@ -14,19 +13,6 @@
 <fmt:message key="expressionExperimentLoad.title" />
 </content>
 
-<spring:bind path="command.*">
-	<c:if test="${not empty status.errorMessages}">
-		<div class="error">
-			<c:forEach var="error" items="${status.errorMessages}">
-				<img src="<c:url value="/images/iconWarning.gif"/>" alt="<fmt:message key="icon.warning"/>" class="icon" />
-				<c:out value="${error}" escapeXml="false" />
-				<br />
-			</c:forEach>
-		</div>
-	</c:if>
-</spring:bind>
-
-
 <fmt:message key="expressionExperimentLoad.message" />
 
 <div id="messages" style="margin: 10px; width: 400px"></div>
@@ -37,10 +23,8 @@
 			<Gemma:label key="expressionExperimentLoad.accession" />
 		</th>
 		<td>
-			<spring:bind path="command.accession">
 				<input type="text" name="accession" id="accession" size="40" value="<c:out value="${status.value}"/>" />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-			</spring:bind>
 		</td>
 	</tr>
 	<tr>
@@ -51,12 +35,10 @@
 					src="/Gemma/images/help.png" /> </a>
 		</th>
 		<td align="left">
-			<spring:bind path="command.arrayExpress">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">
 				<input id="arrayExpress" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
 					<c:if test="${status.value}">checked</c:if> />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-			</spring:bind>
 		</td>
 	</tr>
 	<tr>
@@ -67,12 +49,10 @@
 					src="/Gemma/images/help.png" /> </a>
 		</th>
 		<td align="left">
-			<spring:bind path="command.loadPlatformOnly">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">
 				<input align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true" id="loadPlatformOnly"
 					<c:if test="${status.value}">checked</c:if> />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-			</spring:bind>
 		</td>
 	</tr>
 	<tr>
@@ -83,12 +63,10 @@
 					src="/Gemma/images/help.png" /> </a>
 		</th>
 		<td align="left">
-			<spring:bind path="command.suppressMatching">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">
 				<input id="suppressMatching" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
 					<c:if test="${status.value}">checked</c:if> />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-			</spring:bind>
 		</td>
 	</tr>
 	<tr>
@@ -99,12 +77,10 @@
 					src="/Gemma/images/help.png" /> </a>
 		</th>
 		<td align="left">
-			<spring:bind path="command.splitByPlatform">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">
 				<input id="splitByPlatform" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
 					<c:if test="${status.value}">checked</c:if> />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-			</spring:bind>
 		</td>
 	</tr>
 <tr>
@@ -115,12 +91,10 @@
 					src="/Gemma/images/help.png" /> </a>
 		</th>
 		<td align="left">
-			<spring:bind path="command.allowSuperSeriesLoad">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">
 				<input checked id="allowSuperSeriesLoad" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
 					<c:if test="${status.value}">checked</c:if> />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-			</spring:bind>
 		</td>
 	</tr>
 
@@ -129,7 +103,6 @@
 			<Gemma:label key="expressionExperimentLoad.arrayDesign" />
 		</th>
 		<td>
-			<spring:bind path="expressionExperimentLoadCommand.arrayDesigns">
 				<select id="arrayDesign" name="${status.expression}" multiple size='5'>
 					<c:forEach items="${arrayDesigns}" var="arrayDesign">
 						<option value="${arrayDesign.name}">
@@ -138,8 +111,6 @@
 					</c:forEach>
 				</select>
 				<span class="fieldError">${status.errorMessage}</span>
-			</spring:bind>
-
 		</td>
 	</tr>
 	<tr>
