@@ -39,6 +39,56 @@ Ext.onReady(function() {
 		}
 	};
 
+	tagger = function(id) {
+		var anngrid = new Gemma.AnnotationGrid({
+					minHeight : 90,
+					readMethod : ExpressionExperimentController.getAnnotation,
+					readParams : [{
+								id : id,
+								classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
+							}],
+					writeMethod : OntologyService.saveExpressionExperimentStatement,
+					removeMethod : OntologyService.removeExpressionExperimentStatement,
+					editable : true,
+					mgedTermKey : "experiment",
+					entId : id
+				});
+
+		var change = false;
+		anngrid.on('refresh', function() {
+					change = true;
+				});
+		var w = new Ext.Window({
+					title : "Add tags",
+					modal : true,
+					layout : 'fit',
+					items : [anngrid],
+					buttons : [{
+						text : 'Help',
+						handler : function() {
+							Ext.Msg
+									.alert(
+											"Help with tagging",
+											"Select a 'category' for the term; then enter a term, "
+													+ "choosing from existing terms if possible. "
+													+ "Click 'create' to save it. You can also edit existing terms;"
+													+ " click 'save' to make the change stick, or 'delete' to remove a selected tag.");
+						}
+					}, {
+						text : 'Done',
+						handler : function() {
+							if (change) {
+								store.reload();
+							}
+							w.hide();
+						}
+					}]
+
+				});
+
+		w.show();
+	};
+
 	updateEEReport = function(id) {
 		var callParams = [];
 		callParams.push(id);
@@ -50,41 +100,23 @@ Ext.onReady(function() {
 	};
 
 	deleteExperiment = function(id) {
-		// show confirmation dialog
-		var dialog = new Ext.Window({
-					title : "Confirm deletion",
-					modal : true,
-					layout : 'fit',
-					autoHeight : true,
-					width : 300,
-					closeAction : 'hide',
-					easing : 3,
-					defaultType : 'textfield',
-					items : [{
-								xtype : 'label',
-								text : "This cannot be undone"
-							}],
-					buttons : [{
-								text : 'Cancel',
-								handler : function() {
-									dialog.hide();
-								}
-							}, {
-								text : 'Confirm',
-								handler : function() {
-									dialog.hide();
-									var callParams = []
-									callParams.push(id);
-									callParams.push({
-												callback : handleWait.createDelegate(this)
-											});
-									ExpressionExperimentController.deleteById.apply(this, callParams);
-								},
-								scope : dialog
-							}]
+		Ext.Msg.show({
+					title : 'Really delete?',
+					msg : 'Are you sure you want to delete the experiment? This cannot be undone.',
+					buttons : Ext.Msg.YESNO,
+					fn : function(btn, text) {
+						if (btn == 'yes') {
+							var callParams = []
+							callParams.push(id);
+							callParams.push({
+										callback : handleWait.createDelegate(this)
+									});
+							ExpressionExperimentController.deleteById.apply(this, callParams);
+						}
+					},
+					animEl : 'elId',
+					icon : Ext.MessageBox.WARNING
 				});
-
-		dialog.show();
 	};
 
 	var record = Ext.data.Record.create([{
@@ -163,13 +195,14 @@ Ext.onReady(function() {
 	var dateRenderer = new Ext.util.Format.dateRenderer("y/M/d");
 
 	var adminRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
-		return '<a href="#" onClick="return deleteExperiment('
+		return '<a href="#" onClick="updateEEReport('
 				+ value
-				+ ')"><img src="/Gemma/images/icons/delete.png" alt="delete" title="delete" /></a>&nbsp;<a href="#" onClick="updateEEReport('
+				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></a>'
+				+ '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
 				+ value
-				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" alt="refresh" title="refresh"/></a>'
-				+ '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id=' + value
-				+ '"  target="_blank"><img src="/Gemma/images/icons/pencil.png" alt="edit" title="edit"/></a>';
+				+ '"  target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></a><a href="#" onClick="return deleteExperiment('
+				+ value
+				+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></a>&nbsp;';
 	};
 
 	var shortNameRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
@@ -201,6 +234,21 @@ Ext.onReady(function() {
 		Ext.Msg.alert("Will run differential expression analysis");
 	};
 
+	var experimentalDesignEditRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
+		var id = record.get('id');
+		var url = '<a target="_blank" href="/Gemma/experimentalDesign/showExperimentalDesign.html?id='
+				+ id
+				+ '"><img src="/Gemma/images/icons/pencil.png" alt="view/edit experimental design" title="view/edit experimental design"/></a>';
+		return value + '&nbsp;' + url;
+	};
+
+	var experimentTaggerRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
+		var id = record.get('id');
+		var url = '<a href="#" onClick="return tagger(' + id
+				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="add tags" title="add tags"/></a>';
+		return value + '&nbsp;' + url;
+	};
+
 	var linkAnalysisRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 		var runurl = '<a href="#" onClick="return doLinks('
@@ -220,7 +268,7 @@ Ext.onReady(function() {
 				suggestRun = false;
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
 					+ (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -245,7 +293,7 @@ Ext.onReady(function() {
 				}
 
 				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
-						+ (suggestRun ? runurl : '');
+						+ '&nbsp;' + (suggestRun ? runurl : '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
@@ -272,7 +320,7 @@ Ext.onReady(function() {
 				qtip = 'ext:qtip="Failed"';
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
 					+ (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -287,7 +335,6 @@ Ext.onReady(function() {
 
 		if (diffIsPossible(record)) {
 			if (record.get('dateDifferentialAnalysis')) {
-				// TODO
 				var type = record.get('differentialAnalysisEventType');
 
 				var color = "#3A3";
@@ -299,7 +346,7 @@ Ext.onReady(function() {
 				}
 
 				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
-						+ (suggestRun ? runurl : '');
+						+ '&nbsp;' + (suggestRun ? runurl : '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
@@ -316,7 +363,7 @@ Ext.onReady(function() {
 
 		if (record.get('troubleFlag')) {
 
-			result = result + '<img src="/Gemma/images/icons/error.png" alt="trouble" title="trouble"/>';
+			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" title="trouble"/>';
 		}
 		if (!record.get('isPublic')) {
 			result = result + '<img src="/Gemma/images/icons/lock.png" alt="not public" title="not public"/>';
@@ -341,56 +388,69 @@ Ext.onReady(function() {
 			}, {
 				header : 'Flags',
 				sortable : true,
-				renderer : flagRenderer
+				renderer : flagRenderer,
+				tooltip : 'Status flags'
 			}, {
 				header : '#ADs',
 				sortable : true,
 				dataIndex : 'arrayDesignCount',
+				tooltip : "The number of different array design platforms used in the study",
 				width : 35
 			}, {
 				header : '#BAs',
 				sortable : true,
 				dataIndex : 'bioAssayCount',
+				tooltip : 'The number of samples in the study',
 				width : 35
 			}, {
-				header : '#Vecs',
+				header : '#Prof',
 				sortable : true,
 				dataIndex : 'processedExpressionVectorCount',
+				tooltip : 'The number of expression profiles',
 				width : 45
 			}, {
 				header : '#Facs',
 				sortable : true,
 				dataIndex : 'numPopulatedFactors',
-				width : 35
+				renderer : experimentalDesignEditRenderer,
+				tooltip : 'The number of experimental factors (variables) defined for the study',
+				width : 45
 			}, {
-				header : '#anns',
+				header : '#tags',
 				sortable : true,
 				dataIndex : 'numAnnotations',
-				width : 35
+				renderer : experimentTaggerRenderer,
+				tooltip : 'The number of terms the experiment is tagged with',
+				width : 45
 			}, {
 				header : 'Created',
 				sortable : true,
 				dataIndex : 'dateCreated',
+				tooltip : 'Create date',
 				renderer : dateRenderer
 			}, {
 				header : 'MissingVals',
 				sortable : true,
 				dataIndex : 'dateMissingValueAnalysis',
+				tooltip : 'Status of missing value computation (two-channel studies only)',
 				renderer : missingValueAnalysisRenderer
 			}, {
-				header : 'ProcessVec',
+				header : 'ProcProf',
 				sortable : true,
 				dataIndex : 'dateProcessedDataVectorComputation',
+				tooltip : 'Status of processed expression profile configuration',
 				renderer : processedVectorCreateRenderer
 			}, {
 				header : 'Diff',
 				sortable : true,
 				dataIndex : 'dateDifferentialAnalysis',
+				tooltip : 'Status of differential expression analysis. Must have factors to enable',
 				renderer : differentialAnalysisRenderer
 			}, {
 				header : 'Links',
 				sortable : true,
 				dataIndex : 'dateLinkAnalysis',
+				tooltip : 'Status of coexpression analysis',
 				renderer : linkAnalysisRenderer
 			}, {
 				header : 'Admin',
@@ -449,7 +509,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 			searchForText : function(button, keyev) {
 				var text = this.searchInGridField.getValue();
 				if (text.length < 2) {
-					clearFilter();
+					this.clearFilter();
 					return;
 				}
 				this.getStore().filterBy(this.getSearchFun(text), this, 0);

@@ -3,8 +3,7 @@
 
 	<title>Expression Experiment Link Summary</title>
 
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/expressionExperiment.js' />
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' /> 
 	<jwr:script src='/scripts/app/ExpressionExperimentManage.js' />
 
 </head>

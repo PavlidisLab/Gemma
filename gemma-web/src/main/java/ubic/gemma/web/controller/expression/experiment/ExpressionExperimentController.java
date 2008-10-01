@@ -1005,7 +1005,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return result;
     }
 
-    private static final int TRIM_SIZE = 120;
+    private static final int TRIM_SIZE = 220;
 
     /**
      * AJAX call

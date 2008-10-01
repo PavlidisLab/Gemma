@@ -204,6 +204,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		}
 		Gemma.AnnotationGrid.superclass.initComponent.call(this);
 
+		
+		
 		this.getStore().setDefaultSort('className');
 
 		this.autoExpandColumn = this.showParent ? 2 : 1;

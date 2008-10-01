@@ -48,7 +48,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	searchForText : function(button, keyev) {
 		var text = this.searchInGridField.getValue();
 		if (text.length < 2) {
-			clearFilter();
+			this.clearFilter();
 			return;
 		}
 		this.getStore().filterBy(this.getSearchFun(text), this, 0);

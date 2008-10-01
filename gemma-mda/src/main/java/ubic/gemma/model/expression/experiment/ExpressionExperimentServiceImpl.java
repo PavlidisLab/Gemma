@@ -97,17 +97,37 @@ public class ExpressionExperimentServiceImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected void handleDelete( ExpressionExperiment ee ) throws Exception {
+
+        /*
+         * If we remove the experiment from the set, analyses that used the set have to cope with this. For G2G,the data
+         * sets are stored in order of IDs, but the actual ids are not stored (we refer back to the eeset), so coping
+         * will not be possible (at best we can mark it as troubled). If there is no analysis object using the set, it's
+         * okay. There are ways around this but it's messy, so for now we just refuse to delete such experiments.
+         */
+        Collection<GeneCoexpressionAnalysis> g2gAnalyses = this.getGeneCoexpressionAnalysisDao().findByInvestigation(
+                ee );
+
+        if ( g2gAnalyses.size() > 0 ) {
+            throw new IllegalArgumentException( "Sorry, you can't delete " + ee
+                    + "; it is part of at least one coexpression meta analysis: "
+                    + g2gAnalyses.iterator().next().getName() );
+        }
+
+        // Remove differential expression analyses
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.getDifferentialExpressionAnalysisDao()
                 .findByInvestigation( ee );
         for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
             Long toDelete = de.getId();
             this.getDifferentialExpressionAnalysisDao().remove( toDelete );
         }
+
+        // Remove probe2probe links
         this.getProbe2ProbeCoexpressionDao().deleteLinks( ee );
 
         /*
-         * Delete any expression experiment sets that only have this ee in it. If there are ones that have multiple, we
-         * can't do it. If possible remove this experiment from other sets, and update them.
+         * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment
+         * from other sets, and update them. IMPORTANT, this section assumes that we already checked for gene2gene
+         * analyses! 
          */
         Collection<ExpressionExperimentSet> sets = this.getExpressionExperimentSetDao().find( ee );
         for ( ExpressionExperimentSet eeset : sets ) {
@@ -115,23 +135,8 @@ public class ExpressionExperimentServiceImpl extends
                 this.getExpressionExperimentSetDao().remove( eeset );
             } else {
 
-                /*
-                 * If we remove the experiment from the set, analyses that used the set have to cope with this. For
-                 * G2G,the data sets are stored in order of IDs, but the actual ids are not stored (we refer back to the
-                 * eeset), so coping will not be possible (at best we can mark it as troubled). If there is no analysis
-                 * object using the set, it's okay.
-                 */
-                Collection<GeneCoexpressionAnalysis> g2gAnalyses = this.getGeneCoexpressionAnalysisDao()
-                        .findByInvestigation( ee );
-
-                if ( g2gAnalyses.size() > 0 ) {
-                    throw new IllegalArgumentException( "Sorry, you can't delete " + ee
-                            + "; it is part of at least one coexpression analysis: "
-                            + g2gAnalyses.iterator().next().getName() );
-                } else {
-                    eeset.getExperiments().remove( ee );
-                    this.getExpressionExperimentDao().update( eeset );
-                }
+                eeset.getExperiments().remove( ee );
+                this.getExpressionExperimentDao().update( eeset );
 
             }
         }
