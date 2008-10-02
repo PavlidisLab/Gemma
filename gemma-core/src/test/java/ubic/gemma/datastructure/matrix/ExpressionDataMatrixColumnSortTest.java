@@ -71,7 +71,6 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
 
         expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
-
         Collection<RawExpressionDataVector> designElementDataVectors = newee.getRawExpressionDataVectors();
         designElementDataVectorService.thaw( designElementDataVectors );
 

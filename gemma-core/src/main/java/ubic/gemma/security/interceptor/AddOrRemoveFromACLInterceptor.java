@@ -198,9 +198,8 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
-     *      java.lang.Object[], java.lang.Object)
+     * java.lang.Object[], java.lang.Object)
      */
     @SuppressWarnings( { "unused", "unchecked" })
     public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
@@ -310,10 +309,8 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             try {
                 associatedObject = ReflectionUtil.getProperty( object, descriptor );
             } catch ( Exception e ) {
-                // log.error( e, e );
                 log.fatal( e.getClass() + " while processing: " + object.getClass() + " --> " + propertyNames[j] );
-                continue;
-                // throw ( e );
+                throw ( new RuntimeException( e ) );
             }
 
             if ( associatedObject == null ) continue;

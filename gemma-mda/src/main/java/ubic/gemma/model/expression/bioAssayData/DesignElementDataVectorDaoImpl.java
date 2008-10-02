@@ -223,103 +223,93 @@ public class DesignElementDataVectorDaoImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected void handleThaw( final Collection designElementDataVectors ) throws Exception {
+        Session session = this.getSessionFactory().getCurrentSession();
 
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.setFetchSize( 400 );
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+        FlushMode oldFlushMode = session.getFlushMode();
+        CacheMode oldCacheMode = session.getCacheMode();
+        session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
+        session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
+        int count = 0;
+        StopWatch timer = new StopWatch();
+        timer.start();
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
+        Collection<DesignElement> cs = new HashSet<DesignElement>();
+        for ( DesignElementDataVector vector : ( Collection<DesignElementDataVector> ) designElementDataVectors ) {
+            session.lock( vector, LockMode.NONE );
+            Hibernate.initialize( vector );
+            Hibernate.initialize( vector.getExpressionExperiment() );
+            dims.add( vector.getBioAssayDimension() );
+            cs.add( vector.getDesignElement() );
+            ees.add( vector.getExpressionExperiment() );
+            session.evict( vector.getQuantitationType() );
+            session.evict( vector );
+        }
 
-                FlushMode oldFlushMode = session.getFlushMode();
-                CacheMode oldCacheMode = session.getCacheMode();
-                session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
-                session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
-                int count = 0;
-                StopWatch timer = new StopWatch();
-                timer.start();
-                Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-                Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-                Collection<DesignElement> cs = new HashSet<DesignElement>();
-                for ( DesignElementDataVector object : ( Collection<DesignElementDataVector> ) designElementDataVectors ) {
-                    session.lock( object, LockMode.NONE );
-                    Hibernate.initialize( object );
-                    Hibernate.initialize( object.getExpressionExperiment() );
-                    dims.add( object.getBioAssayDimension() );
-                    cs.add( object.getDesignElement() );
-                    ees.add( object.getExpressionExperiment() );
-                    session.evict( object.getQuantitationType() );
-                    session.evict( object );
+        // lightly thaw the EEs we saw
+        for ( ExpressionExperiment ee : ees ) {
+            Hibernate.initialize( ee );
+            session.evict( ee );
+        }
+
+        // thaw the bioassaydimensions we saw
+        for ( BioAssayDimension bad : dims ) {
+            Hibernate.initialize( bad );
+            for ( BioAssay ba : bad.getBioAssays() ) {
+                session.lock( ba, LockMode.NONE );
+                Hibernate.initialize( ba );
+                Hibernate.initialize( ba.getSamplesUsed() );
+
+                Collection<BioAssay> bioAssaysUsedIn = null;
+                for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                    // session.lock( bm, LockMode.NONE );
+                    Hibernate.initialize( bm );
+                    bioAssaysUsedIn = bm.getBioAssaysUsedIn();
+                    Hibernate.initialize( bioAssaysUsedIn );
+                    Hibernate.initialize( bm.getFactorValues() );
+                    session.evict( bm );
                 }
 
-                // lightly thaw the EEs we saw
-                for ( ExpressionExperiment ee : ees ) {
-                    Hibernate.initialize( ee );
-                    session.evict( ee );
-                }
-
-                // thaw the bioassaydimensions we saw
-                for ( BioAssayDimension bad : dims ) {
-                    Hibernate.initialize( bad );
-                    for ( BioAssay ba : bad.getBioAssays() ) {
-                        session.lock( ba, LockMode.NONE );
-                        Hibernate.initialize( ba );
-                        Hibernate.initialize( ba.getArrayDesignUsed() );
-                        Hibernate.initialize( ba.getDerivedDataFiles() );
-                        Hibernate.initialize( ba.getSamplesUsed() );
-
-                        Collection<BioAssay> bioAssaysUsedIn = null;
-                        for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                            session.lock( bm, LockMode.NONE );
-                            Hibernate.initialize( bm );
-                            bioAssaysUsedIn = bm.getBioAssaysUsedIn();
-                            Hibernate.initialize( bioAssaysUsedIn );
-                            Hibernate.initialize( bm.getFactorValues() );
-                            session.evict( bm );
-                        }
-
-                        /*
-                         * We have to do it this way, or we risk having the bioassay in the session already.
-                         */
-                        if ( bioAssaysUsedIn != null ) {
-                            for ( BioAssay baui : bioAssaysUsedIn ) {
-                                session.evict( baui );
-                            }
-                        }
-                        // don't do this.
-                        // session.evict( ba );
+                Hibernate.initialize( ba.getArrayDesignUsed() );
+                Hibernate.initialize( ba.getDerivedDataFiles() );
+                /*
+                 * We have to do it this way, or we risk having the bioassay in the session already.
+                 */
+                if ( bioAssaysUsedIn != null ) {
+                    for ( BioAssay baui : bioAssaysUsedIn ) {
+                        session.evict( baui );
                     }
                 }
-
-                // thaw the designelements we saw.
-                int lastTime = 0;
-                for ( DesignElement de : cs ) {
-                    BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
-                    if ( seq == null ) continue;
-                    session.lock( seq, LockMode.NONE );
-                    // Note that these steps are not done in arrayDesign.thawLite; we're assuming this information is
-                    // needed if you are thawing dedvs. That might not be true in all cases.
-                    Hibernate.initialize( seq );
-                    ArrayDesign arrayDesign = ( ( CompositeSequence ) de ).getArrayDesign();
-                    Hibernate.initialize( arrayDesign );
-
-                    if ( ++count % 10000 == 0 ) {
-                        if ( timer.getTime() - lastTime > 1000 ) {
-                            log.info( "Thawed " + count + " vector-associated probes " + timer.getTime() + " ms" );
-                        }
-                    }
-                }
-
-                timer.stop();
-                if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 2000 ) {
-                    log.info( "Done, thawed " + designElementDataVectors.size() + " vectors in " + timer.getTime()
-                            + "ms" );
-                }
-
-                session.setFlushMode( oldFlushMode );
-                session.setCacheMode( oldCacheMode );
-                return null;
+                // don't do this.
+                // session.evict( ba );
             }
+        }
 
-        }, false );
+        // thaw the designelements we saw.
+        int lastTime = 0;
+        for ( DesignElement de : cs ) {
+            BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
+            if ( seq == null ) continue;
+            session.lock( seq, LockMode.NONE );
+            // Note that these steps are not done in arrayDesign.thawLite; we're assuming this information is
+            // needed if you are thawing dedvs. That might not be true in all cases.
+            Hibernate.initialize( seq );
+            ArrayDesign arrayDesign = ( ( CompositeSequence ) de ).getArrayDesign();
+            Hibernate.initialize( arrayDesign );
+
+            if ( ++count % 10000 == 0 ) {
+                if ( timer.getTime() - lastTime > 1000 ) {
+                    log.info( "Thawed " + count + " vector-associated probes " + timer.getTime() + " ms" );
+                }
+            }
+        }
+
+        timer.stop();
+        if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 2000 ) {
+            log.info( "Done, thawed " + designElementDataVectors.size() + " vectors in " + timer.getTime() + "ms" );
+        }
+        session.setFlushMode( oldFlushMode );
+        session.setCacheMode( oldCacheMode );
 
     }
 
@@ -331,7 +321,7 @@ public class DesignElementDataVectorDaoImpl extends
                 thaw( session, designElementDataVector );
                 return null;
             }
-        }, true );
+        } );
 
     }
 

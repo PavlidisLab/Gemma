@@ -45,7 +45,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @Override
@@ -58,12 +57,12 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         ee = expressionExperimentService.findByShortName( shortName );
-        expressionExperimentService.thawLite( ee );
+
+        if ( ee != null ) expressionExperimentService.thawLite( ee );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onTearDownInTransaction()
      */
     @Override
@@ -71,9 +70,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
         super.onTearDownInTransaction();
     }
 
-     /**
-         * @throws Exception
-         */
+    /**
+     * @throws Exception
+     */
     public void testDelete() throws Exception {
 
         if ( ee == null ) return;
