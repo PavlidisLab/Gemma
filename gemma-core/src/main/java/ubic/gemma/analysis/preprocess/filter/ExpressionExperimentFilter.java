@@ -49,9 +49,9 @@ public class ExpressionExperimentFilter {
 
     /**
      * Minimum number of samples for keeping rows when min-present filtering. Note that this should be set to be the
-     * same as {@link  ubic.gemma.analysis.preprocess.filter.FilterConfig.MINIMUM_SAMPLE}. Rows with more missing
-     * values than this are always removed. This can be increased by the use of the min fractio npresent filter which
-     * sets a fraction.
+     * same as {@link ubic.gemma.analysis.preprocess.filter.FilterConfig.MINIMUM_SAMPLE} . Rows with more missing values
+     * than this are always removed. This can be increased by the use of the min fractio npresent filter which sets a
+     * fraction.
      * 
      * @see ubic.gemma.analysis.preprocess.filter.FilterConfig.MINIMUM_SAMPLE
      */
@@ -115,7 +115,7 @@ public class ExpressionExperimentFilter {
      */
     public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors ) {
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
-       return filter( eeDoubleMatrix );
+        return filter( eeDoubleMatrix );
     }
 
     /**
@@ -153,7 +153,7 @@ public class ExpressionExperimentFilter {
      * details of what filters are applied and the ordering.
      * 
      * @param dataMatrix
-     * @param eeDoubleMatrix, already masked for missing values.
+     * @param eeDoubleMatrix , already masked for missing values.
      * @param ee
      * @return A data matrix in which filters have been applied and missing values (in the PRESENTABSENT quantitation
      *         type, if present) are masked
@@ -162,21 +162,27 @@ public class ExpressionExperimentFilter {
 
         ExpressionDataDoubleMatrix filteredMatrix = eeDoubleMatrix;
 
+        int startingRows = eeDoubleMatrix.rows();
         filteredMatrix = noSequencesFilter( eeDoubleMatrix );
+        int afterSequenceRemovalRows = filteredMatrix.rows();
 
         boolean twoColor = isTwoColor();
+
+        int afterAffyControlsFilter = afterSequenceRemovalRows;
+        int afterMinPresentFilter = afterSequenceRemovalRows;
+        int afterLowVarianceCut = afterSequenceRemovalRows;
+        int afterLowExpressionCut = afterSequenceRemovalRows;
 
         if ( usesAffymetrix() ) {
             log.info( "Filtering Affymetrix controls" );
             filteredMatrix = affyControlProbeFilter( filteredMatrix );
+            afterAffyControlsFilter = filteredMatrix.rows();
         }
 
-        if ( config.isMinPresentFractionIsSet() ) {
+        if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() ) {
             log.info( "Filtering for missing data" );
-
-            if ( !config.isIgnoreMinimumSampleThreshold() ) {
-                filteredMatrix = minPresentFilter( filteredMatrix );
-            }
+            filteredMatrix = minPresentFilter( filteredMatrix );
+            afterMinPresentFilter = filteredMatrix.rows();
         }
 
         if ( config.isLowVarianceCutIsSet() ) {
@@ -186,6 +192,7 @@ public class ExpressionExperimentFilter {
             } else {
                 log.info( "Filtering for low CV (signals)" );
                 filteredMatrix = lowCVFilter( filteredMatrix );
+                afterLowVarianceCut = filteredMatrix.rows();
             }
         }
 
@@ -193,6 +200,22 @@ public class ExpressionExperimentFilter {
             log.info( "Filtering for low or too high expression" );
             Map<DesignElement, Double> ranks = eeDoubleMatrix.getRanks();
             filteredMatrix = lowExpressionFilter( filteredMatrix, ranks );
+            afterLowExpressionCut = filteredMatrix.rows();
+        }
+
+        if ( log.isInfoEnabled() ) {
+            StringBuilder buf = new StringBuilder();
+
+            buf.append( "================================================================\n" );
+            buf.append( "Filter summary for " + eeDoubleMatrix.getExpressionExperiment() + ":\n" );
+            buf.append( "Started with\t" + startingRows + "\n" );
+            buf.append( "After Sequence filtering\t" + afterSequenceRemovalRows + "\n" );
+            buf.append( "After removing Affy controls\t" + afterAffyControlsFilter + "\n" );
+            buf.append( "After MinPresent\t" + afterMinPresentFilter + "\n" );
+            buf.append( "After LowVar\t" + afterLowVarianceCut + "\n" );
+            buf.append( "After LowExpr\t" + afterLowExpressionCut + "\n" );
+            buf.append( "================================================================\n" );
+            log.info( buf.toString() );
         }
 
         return filteredMatrix;
@@ -210,7 +233,7 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * @param eeDoubleMatrix, already masked for missing values.
+     * @param eeDoubleMatrix , already masked for missing values.
      * @param ranks
      * @param arrayDesignsUsed
      * @return
@@ -260,7 +283,6 @@ public class ExpressionExperimentFilter {
      * @return
      * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
      */
-    @SuppressWarnings("unchecked")
     private boolean isTwoColor() {
         Boolean answer = null;
         for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
@@ -343,7 +365,6 @@ public class ExpressionExperimentFilter {
         return rowMissingFilter.filter( matrix );
     }
 
-    @SuppressWarnings("unchecked")
     private boolean usesAffymetrix() {
         for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
             if ( arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" ) ) {
