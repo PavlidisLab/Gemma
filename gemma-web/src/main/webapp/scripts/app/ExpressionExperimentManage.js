@@ -231,7 +231,24 @@ Ext.onReady(function() {
 	};
 
 	doDifferential = function(id) {
-		Ext.Msg.alert("Will run differential expression analysis");
+		//Ext.Msg.alert("Will run differential expression analysis");
+		Ext.Msg.show({
+					title : 'Really run differential expression analysis?',
+					msg : 'Will run differential expression analysis.',
+					buttons : Ext.Msg.YESNO,
+					fn : function(btn, text) {
+						if (btn == 'yes') {
+							var callParams = []
+							callParams.push(id);
+							callParams.push({
+										callback : handleWait.createDelegate(this)
+									});
+							DifferentialExpressionAnalysisController.run.apply(this, callParams);
+						}
+					},
+					animEl : 'elId',
+					icon : Ext.MessageBox.WARNING
+				});
 	};
 
 	var experimentalDesignEditRenderer = function(value, metadata, record, rowIndex, colIndex, store) {

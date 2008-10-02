@@ -190,6 +190,7 @@
                 /securityManager.html=admin
 				/loadExpressionExperiment.html=admin
 				/indexer.html=admin
+				/expressionExperiment/showAllExpressionExperimentLinkSummaries.html=admin,user
                 /passwordHint.html*=admin,user
                 /userProfile.html*=admin,user
                 /loadUser.html*=admin,user

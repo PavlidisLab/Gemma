@@ -27,6 +27,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask;
 import ubic.gemma.grid.javaspaces.diff.SpacesDifferentialExpressionAnalysisCommand;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -38,10 +40,27 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * A controller to run differential expression analysis either locally or in a space.
  * 
  * @spring.bean id="differentialExpressionAnalysisController"
+ * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @author keshav
  * @version $Id$
  */
 public class DifferentialExpressionAnalysisController extends AbstractSpacesController {
+
+    private ExpressionExperimentService expressionExperimentService = null;
+
+    // /**
+    // * AJAX entry point.
+    // *
+    // * @param cmd
+    // * @return
+    // * @throws Exception
+    // */
+    // public String run( DiffExpressionAnalysisCommand cmd ) throws Exception {
+    // /* this 'run' method is exported in the spring-beans.xml */
+    //
+    // return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
+    // .getName(), true );
+    // }
 
     /**
      * AJAX entry point.
@@ -50,9 +69,16 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
      * @return
      * @throws Exception
      */
-    public String run( DiffExpressionAnalysisCommand cmd ) throws Exception {
+    public String run( Long id ) throws Exception {
         /* this 'run' method is exported in the spring-beans.xml */
 
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        String shortName = ee.getShortName();
+
+        // FIXME jut pass in the ee to the command object so you don't have to get
+        // it later.
+        DiffExpressionAnalysisCommand cmd = new DiffExpressionAnalysisCommand();
+        cmd.setAccession( shortName );
         return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
                 .getName(), true );
     }
@@ -173,5 +199,9 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
     @Override
     protected String getViewNameForRequest( HttpServletRequest arg0 ) {
         return "differentialExpressionAnalysis";
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 }
