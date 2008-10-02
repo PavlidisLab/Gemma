@@ -82,7 +82,7 @@
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
-			<ref bean="differentialExpressionAnalyzerService" />
+			<ref bean="differentialExpressionAnalysisTask" />
 		</property>
 		<property name="businessInterface">
 			<value>
@@ -153,12 +153,9 @@
 		</property>
 	</bean>
 
-	<!-- Add task impls here if you are not reusing another service elsewhere in the context.  An example of
-		reuse would be the DifferentialExpressionAnalyzerService, which serves as both a regular service and a task 
-		implementation -->
+	<!-- Add task impls here -->
 	<bean id="taskBean"
 		class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskImpl">
-
 		<property name="geoDatasetService">
 			<ref bean="geoDatasetService" />
 		</property>
@@ -168,7 +165,19 @@
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />
 		</property>
-
+	</bean>
+	
+	<bean id="differentialExpressionAnalysisTask"
+		class="ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTaskImpl">
+		<property name="differentialExpressionAnalyzerService">
+			<ref bean="differentialExpressionAnalyzerService" />
+		</property>
+		<property name="expressionExperimentService">
+			<ref bean="expressionExperimentService" />
+		</property>
+		<property name="gigaSpacesTemplate">
+			<ref bean="gigaspacesTemplate" />
+		</property>
 	</bean>
 
 	<bean id="indexTask"
