@@ -58,8 +58,8 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @spring.property name="geoDatasetService" ref="geoDatasetService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="arrayExpressLoadService" ref="arrayExpressLoadService"
- * @see ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadController for how flat-file data
- *      is loaded.
+ * @see ubic.gemma.web.controller.expression.experiment.ExpressionDataFileUploadController for how flat-file data is
+ *      loaded.
  */
 public class ExpressionExperimentLoadController extends AbstractSpacesController {
 
