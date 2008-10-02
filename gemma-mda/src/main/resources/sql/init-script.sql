@@ -29,11 +29,11 @@ insert into AUDIT_TRAIL VALUES ();
 insert into AUDIT_TRAIL VALUES (); 
 
 -- username=administrator: primary key = 1, password = test, audit trail #1, role #1
-insert into CONTACT (CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values ("UserImpl", "nobody",  "nobody", "administrator", "1ee223e4d9a7c2bf81996941705435d7a43bee9a", 1, 1, "admin@gemma.org", "hint");
+insert into CONTACT (CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values ("UserImpl", "nobody",  "nobody", "administrator", "3509a771fbf654f8667f71dbd5eeddc36a575da4", 1, 1, "admin@gemma.org", "hint");
 insert into USER_ROLE (NAME, USER_NAME, USERS_FK ) values ("admin", "administrator", 1 );
 
 -- username=test: primary key = 2, password = test, audit trail #2, role #2
-insert into CONTACT (CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values ("UserImpl", "test", "test", "test", "1ee223e4d9a7c2bf81996941705435d7a43bee9a", 1, 2, "test@gemma.org", "hint");
+insert into CONTACT (CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values ("UserImpl", "test", "test", "test", "3509a771fbf654f8667f71dbd5eeddc36a575da4", 1, 2, "test@gemma.org", "hint");
 insert into USER_ROLE (NAME, USER_NAME, USERS_FK ) values ("user", "test", 2 );
 
 -- contact, audit trail #3.
