@@ -227,7 +227,24 @@ Ext.onReady(function() {
 	};
 
 	doProcessedVectors = function(id) {
-		Ext.Msg.alert("Will compute processed vectors");
+		//Ext.Msg.alert("Will compute processed vectors");
+		Ext.Msg.show({
+					title : 'Really run processed vector computation?',
+					msg : 'Will run processed vector computation.',
+					buttons : Ext.Msg.YESNO,
+					fn : function(btn, text) {
+						if (btn == 'yes') {
+							var callParams = []
+							callParams.push(id);
+							callParams.push({
+										callback : handleWait.createDelegate(this)
+									});
+							ProcessedExpressionDataVectorCreateController.run.apply(this, callParams);
+						}
+					},
+					animEl : 'elId',
+					icon : Ext.MessageBox.WARNING
+				});
 	};
 
 	doDifferential = function(id) {

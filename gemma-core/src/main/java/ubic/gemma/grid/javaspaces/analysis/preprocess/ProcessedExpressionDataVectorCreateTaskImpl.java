@@ -16,54 +16,50 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.grid.javaspaces.diff;
+package ubic.gemma.grid.javaspaces.analysis.preprocess;
 
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.SpacesResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.progress.TaskRunningService;
 
 /**
- * A differential expression analysis spaces task that can be passed into a space and executed by a worker.
+ * A "processed expression data vector create" spaces task that can be passed into a space and executed by a worker.
  * 
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask implements
-        DifferentialExpressionAnalysisTask {
+public class ProcessedExpressionDataVectorCreateTaskImpl extends BaseSpacesTask implements
+        ProcessedExpressionDataVectorCreateTask {
 
-    private Log log = LogFactory.getLog( DifferentialExpressionAnalysisTaskImpl.class );
+    private Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateService.class.getName() );
 
-    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService = null;
 
     private long counter = 0;
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid.javaspaces.diff.SpacesDifferentialExpressionAnalysisCommand)
+     * @see ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask#execute(ubic.gemma.grid.javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand)
      */
-    public SpacesResult execute( SpacesDifferentialExpressionAnalysisCommand jsDiffAnalysisCommand ) {
+    public SpacesResult execute( SpacesProcessedExpressionDataVectorCreateCommand processedVectorCreateCommand ) {
 
         super.initProgressAppender( this.getClass() );
 
-        boolean forceAnalysis = jsDiffAnalysisCommand.isForceAnalysis();
+        ExpressionExperiment ee = processedVectorCreateCommand.getExpressionExperiment();
 
         SpacesResult result = new SpacesResult();
-
-        ExpressionExperiment ee = jsDiffAnalysisCommand.getExpressionExperiment();
-
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalyzerService
-                .getDifferentialExpressionAnalyses( ee, forceAnalysis );
-
-        result.setAnswer( expressionAnalyses );
+        Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService
+                .computeProcessedExpressionData( ee );
+        result.setAnswer( processedVectors );
 
         counter++;
         result.setTaskID( counter );
@@ -81,11 +77,9 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
         this.taskId = TaskRunningService.generateTaskId();
     }
 
-    /**
-     * @param differentialExpressionAnalyzerService
-     */
-    public void setDifferentialExpressionAnalyzerService(
-            DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService ) {
-        this.differentialExpressionAnalyzerService = differentialExpressionAnalyzerService;
+    public void setProcessedExpressionDataVectorCreateService(
+            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
+        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
     }
+
 }

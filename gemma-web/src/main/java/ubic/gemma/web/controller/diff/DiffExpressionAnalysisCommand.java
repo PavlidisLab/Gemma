@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.diff;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.BaseCommand;
 
 /**
@@ -33,14 +34,14 @@ public class DiffExpressionAnalysisCommand extends BaseCommand {
 
     private boolean forceAnalysis = false;
 
-    private String accession = null;
+    private ExpressionExperiment expressionExperiment = null;
 
-    public String getAccession() {
-        return accession;
+    public ExpressionExperiment getExpressionExperiment() {
+        return expressionExperiment;
     }
 
-    public void setAccession( String accession ) {
-        this.accession = accession;
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     public boolean isForceAnalysis() {

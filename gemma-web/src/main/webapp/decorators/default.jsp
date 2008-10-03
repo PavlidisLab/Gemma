@@ -25,6 +25,7 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/DEDVController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionAnalysisController.js'></script>	
 		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/ProcessedExpressionDataVectorCreateController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionDataFileUploadController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>

@@ -19,6 +19,7 @@
 package ubic.gemma.grid.javaspaces.analysis.preprocess;
 
 import ubic.gemma.grid.javaspaces.SpacesCommand;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Command object for processing data vectors. Used by spaces.
@@ -30,29 +31,23 @@ public class SpacesProcessedExpressionDataVectorCreateCommand extends SpacesComm
 
     private static final long serialVersionUID = 1L;
 
-    private String accession = null;
+    private ExpressionExperiment expressionExperiment = null;
 
-    /**
-     * @return
-     */
-    public String getAccession() {
-        return accession;
+    public ExpressionExperiment getExpressionExperiment() {
+        return expressionExperiment;
     }
 
-    /**
-     * @param accession
-     */
-    public void setAccession( String accession ) {
-        this.accession = accession;
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     /**
      * @param taskId
      */
-    public SpacesProcessedExpressionDataVectorCreateCommand( String taskId, String accession ) {
+    public SpacesProcessedExpressionDataVectorCreateCommand( String taskId, ExpressionExperiment expressionExperiment ) {
         super( taskId );
 
-        this.accession = accession;
+        this.expressionExperiment = expressionExperiment;
     }
 
 }

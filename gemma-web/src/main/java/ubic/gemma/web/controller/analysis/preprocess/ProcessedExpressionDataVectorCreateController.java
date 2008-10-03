@@ -27,6 +27,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask;
 import ubic.gemma.grid.javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -38,10 +40,17 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * A controller to preprocess expression data vectors.
  * 
  * @spring.bean id="processedExpressionDataVectorCreateController"
+ * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @author keshav
  * @version $Id$
  */
 public class ProcessedExpressionDataVectorCreateController extends AbstractSpacesController {
+
+    private ExpressionExperimentService expressionExperimentService = null;
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
 
     /**
      * AJAX entry point.
@@ -50,8 +59,14 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
      * @return
      * @throws Exception
      */
-    public String run( ProcessedExpressionDataVectorCreateCommand cmd ) throws Exception {
+    public String run( Long id ) throws Exception {
         /* this 'run' method is exported in the spring-beans.xml */
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        expressionExperimentService.thaw( ee );
+
+        ProcessedExpressionDataVectorCreateCommand cmd = new ProcessedExpressionDataVectorCreateCommand();
+        cmd.setExpressionExperiment( ee );
 
         return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ProcessedExpressionDataVectorCreateTask.class
                 .getName(), true );
@@ -126,7 +141,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
          */
         protected SpacesProcessedExpressionDataVectorCreateCommand createCommandObject(
                 ProcessedExpressionDataVectorCreateCommand command ) {
-            return new SpacesProcessedExpressionDataVectorCreateCommand( taskId, command.getAccession() );
+            return new SpacesProcessedExpressionDataVectorCreateCommand( taskId, command.getExpressionExperiment() );
         }
 
     }
@@ -155,7 +170,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
             ProcessedExpressionDataVectorCreateCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateCommand ) command );
 
             ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Loading " + vectorCommand.getAccession() );
+                    "Loading " + vectorCommand.getExpressionExperiment().getShortName() );
 
             return processJob( vectorCommand );
         }

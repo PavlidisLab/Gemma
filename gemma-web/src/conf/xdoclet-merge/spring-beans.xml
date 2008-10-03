@@ -427,6 +427,20 @@
 					</property>
 				</bean>
 			</entry>
+			<entry key="ProcessedExpressionDataVectorCreateController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="processedExpressionDataVectorCreateController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>run</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
 			<entry key="ExpressionExperimentController">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">

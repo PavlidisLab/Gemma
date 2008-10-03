@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.analysis.preprocess;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.BaseCommand;
 
 /**
@@ -28,20 +29,13 @@ public class ProcessedExpressionDataVectorCreateCommand extends BaseCommand {
 
     private static final long serialVersionUID = 1L;
 
-    private String accession = null;
+    private ExpressionExperiment expressionExperiment = null;
 
-    /**
-     * @return
-     */
-    public String getAccession() {
-        return accession;
+    public ExpressionExperiment getExpressionExperiment() {
+        return expressionExperiment;
     }
 
-    /**
-     * @param accession
-     */
-    public void setAccession( String accession ) {
-        this.accession = accession;
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
-
 }

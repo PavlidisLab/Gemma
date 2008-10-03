@@ -19,6 +19,7 @@
 package ubic.gemma.grid.javaspaces.diff;
 
 import ubic.gemma.grid.javaspaces.SpacesCommand;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * A command object to be used by spaces.
@@ -32,26 +33,28 @@ public class SpacesDifferentialExpressionAnalysisCommand extends SpacesCommand {
 
     private boolean forceAnalysis = false;
 
-    private String accession = null;
+    private ExpressionExperiment expressionExperiment = null;
 
-    public String getAccession() {
-        return accession;
+    public ExpressionExperiment getExpressionExperiment() {
+        return expressionExperiment;
     }
 
-    public void setAccession( String accession ) {
-        this.accession = accession;
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     /**
      * NOTE: we can't pass in a we command as they are defined in the web module, which messes up the configuration.
      * 
      * @param taskId
-     * @param command
+     * @param forceAnalysis
+     * @param expressionExperiment
      */
-    public SpacesDifferentialExpressionAnalysisCommand( String taskId, boolean forceAnalysis, String accession ) {
+    public SpacesDifferentialExpressionAnalysisCommand( String taskId, boolean forceAnalysis,
+            ExpressionExperiment expressionExperiment ) {
         super( taskId );
         this.forceAnalysis = forceAnalysis;
-        this.accession = accession;
+        this.expressionExperiment = expressionExperiment;
     }
 
     public boolean isForceAnalysis() {

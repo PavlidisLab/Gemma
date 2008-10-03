@@ -30,10 +30,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
-import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
-import ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask;
-import ubic.gemma.grid.javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -44,7 +40,6 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorSer
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.progress.TaskRunningService;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -58,8 +53,7 @@ import cern.colt.list.DoubleArrayList;
  * @spring.property name="processedDataService" ref="processedExpressionDataVectorService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  */
-public class ProcessedExpressionDataVectorCreateService extends BaseSpacesTask implements
-        ProcessedExpressionDataVectorCreateTask {
+public class ProcessedExpressionDataVectorCreateService {
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateService.class.getName() );
 
@@ -68,10 +62,6 @@ public class ProcessedExpressionDataVectorCreateService extends BaseSpacesTask i
     private ProcessedExpressionDataVectorService processedDataService = null;
 
     private DesignElementDataVectorService designElementDataVectorService = null;
-
-    /* used in the spaces world */
-    private String taskId = null;
-    private long counter = 0;
 
     /**
      * @param ee
@@ -220,60 +210,6 @@ public class ProcessedExpressionDataVectorCreateService extends BaseSpacesTask i
         this.processedDataService.update( updatedVectors );
 
         return updatedVectors;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
-     */
-    public String getTaskId() {
-        return taskId;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask#execute(ubic.gemma.grid.javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand)
-     */
-    public SpacesResult execute( SpacesProcessedExpressionDataVectorCreateCommand processedVectorCreateCommand ) {
-
-        super.initProgressAppender( this.getClass() );
-
-        String accession = processedVectorCreateCommand.getAccession();
-
-        ExpressionExperiment ee = this.eeService.findByName( accession );
-        eeService.thaw( ee );
-
-        SpacesResult result = new SpacesResult();
-        Collection<ProcessedExpressionDataVector> processedVectors = this.computeProcessedExpressionData( ee );
-        result.setAnswer( processedVectors );
-
-        counter++;
-        result.setTaskID( counter );
-        log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
-                + result.getTaskID() );
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
-     */
-    public SpacesResult execute( Object command ) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
 }

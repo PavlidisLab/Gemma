@@ -48,20 +48,6 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
 
     private ExpressionExperimentService expressionExperimentService = null;
 
-    // /**
-    // * AJAX entry point.
-    // *
-    // * @param cmd
-    // * @return
-    // * @throws Exception
-    // */
-    // public String run( DiffExpressionAnalysisCommand cmd ) throws Exception {
-    // /* this 'run' method is exported in the spring-beans.xml */
-    //
-    // return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
-    // .getName(), true );
-    // }
-
     /**
      * AJAX entry point.
      * 
@@ -73,12 +59,11 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         /* this 'run' method is exported in the spring-beans.xml */
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
-        String shortName = ee.getShortName();
+        expressionExperimentService.thaw( ee );
 
-        // FIXME jut pass in the ee to the command object so you don't have to get
-        // it later.
         DiffExpressionAnalysisCommand cmd = new DiffExpressionAnalysisCommand();
-        cmd.setAccession( shortName );
+        cmd.setExpressionExperiment( ee );
+
         return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
                 .getName(), true );
     }
@@ -151,7 +136,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         protected SpacesDifferentialExpressionAnalysisCommand createCommandObject(
                 DiffExpressionAnalysisCommand diffCommand ) {
             return new SpacesDifferentialExpressionAnalysisCommand( taskId, diffCommand.isForceAnalysis(), diffCommand
-                    .getAccession() );
+                    .getExpressionExperiment() );
         }
 
     }
@@ -175,7 +160,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
             DiffExpressionAnalysisCommand diffAnalysisCommand = ( ( DiffExpressionAnalysisCommand ) command );
 
             ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Loading " + diffAnalysisCommand.getAccession() );
+                    "Loading " + diffAnalysisCommand.getExpressionExperiment().getShortName() );
 
             return processJob( diffAnalysisCommand );
         }

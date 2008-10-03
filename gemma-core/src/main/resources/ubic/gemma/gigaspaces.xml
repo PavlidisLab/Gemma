@@ -90,6 +90,20 @@
 			</value>
 		</property>
 	</bean>
+	
+	<bean id="processedExpressionDataVectorCreateWorker"
+		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+		singleton="false">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="processedExpressionDataVectorCreateTask" />
+		</property>
+		<property name="businessInterface">
+			<value>
+				ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask
+			</value>
+		</property>
+	</bean>
 
 	<bean id="javaSpaceInterceptor"
 		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
@@ -172,8 +186,15 @@
 		<property name="differentialExpressionAnalyzerService">
 			<ref bean="differentialExpressionAnalyzerService" />
 		</property>
-		<property name="expressionExperimentService">
-			<ref bean="expressionExperimentService" />
+		<property name="gigaSpacesTemplate">
+			<ref bean="gigaspacesTemplate" />
+		</property>
+	</bean>
+	
+	<bean id="processedExpressionDataVectorCreateTask"
+		class="ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskImpl">
+		<property name="processedExpressionDataVectorCreateService">
+			<ref bean="processedExpressionDataVectorCreateService" />
 		</property>
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />
