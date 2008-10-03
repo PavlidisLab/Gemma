@@ -126,7 +126,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
         }
 
         /**
-         * @param diffCommand
+         * @param command
          * @return
          */
         private SpacesResult process( ProcessedExpressionDataVectorCreateCommand command ) {
