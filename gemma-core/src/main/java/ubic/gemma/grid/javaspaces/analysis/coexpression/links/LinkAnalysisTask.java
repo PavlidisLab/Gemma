@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.grid.javaspaces.coexpression;
+package ubic.gemma.grid.javaspaces.analysis.coexpression.links;
 
 import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.SpacesTask;

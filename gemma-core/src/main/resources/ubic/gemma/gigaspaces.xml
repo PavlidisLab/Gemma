@@ -104,6 +104,20 @@
 			</value>
 		</property>
 	</bean>
+	
+	<bean id="linkAnalysisWorker"
+		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+		singleton="false">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="linkAnalysisTask" />
+		</property>
+		<property name="businessInterface">
+			<value>
+				ubic.gemma.grid.javaspaces.coexpression.links.LinkAnalysisTask
+			</value>
+		</property>
+	</bean>
 
 	<bean id="javaSpaceInterceptor"
 		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
@@ -163,6 +177,9 @@
 				<value>
 					ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask
 				</value>
+				<value>
+					ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTask
+				</value>
 			</list>
 		</property>
 	</bean>
@@ -195,6 +212,16 @@
 		class="ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskImpl">
 		<property name="processedExpressionDataVectorCreateService">
 			<ref bean="processedExpressionDataVectorCreateService" />
+		</property>
+		<property name="gigaSpacesTemplate">
+			<ref bean="gigaspacesTemplate" />
+		</property>
+	</bean>
+	
+	<bean id="linkAnalysisTask"
+		class="ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTaskImpl">
+		<property name="linkAnalysisService">
+			<ref bean="linkAnalysisService" />
 		</property>
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />

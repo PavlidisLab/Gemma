@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 Columbia University
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,10 +49,6 @@ import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
-import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
-import ubic.gemma.grid.javaspaces.coexpression.LinkAnalysisTask;
-import ubic.gemma.grid.javaspaces.coexpression.SpacesLinkAnalysisCommand;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
@@ -79,7 +75,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.TaxonUtility;
-import ubic.gemma.util.progress.TaskRunningService;
 import cern.colt.list.ObjectArrayList;
 
 /**
@@ -96,7 +91,7 @@ import cern.colt.list.ObjectArrayList;
  * @author Paul
  * @version $Id$
  */
-public class LinkAnalysisService extends BaseSpacesTask implements LinkAnalysisTask {
+public class LinkAnalysisService {
 
     private static final int LINK_BATCH_SIZE = 5000;
 
@@ -109,9 +104,6 @@ public class LinkAnalysisService extends BaseSpacesTask implements LinkAnalysisT
     private Probe2ProbeCoexpressionService ppService = null;
     private PersisterHelper persisterHelper;
     private ExpressionDataMatrixService expressionDataMatrixService = null;
-
-    /* needed for spaces */
-    private long counter = 0;
 
     /**
      * Run a link analysis on an experiment, and persist the results if the configuration says to.
@@ -684,36 +676,4 @@ public class LinkAnalysisService extends BaseSpacesTask implements LinkAnalysisT
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.coexpression.LinkAnalysisTask#execute(ubic.gemma.grid.javaspaces.coexpression.SpacesLinkAnalysisCommand)
-     */
-    public SpacesResult execute( SpacesLinkAnalysisCommand command ) {
-        super.initProgressAppender( this.getClass() );
-        SpacesResult result = new SpacesResult();
-
-        try {
-            this
-                    .process( command.getExpressionExperiment(), command.getFilterConfig(), command
-                            .getLinkAnalysisConfig() );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-
-        counter++;
-        result.setTaskID( counter );
-
-        return result;
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
-    }
 }

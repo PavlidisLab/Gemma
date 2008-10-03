@@ -17,7 +17,7 @@
  *
  */
 
-package ubic.gemma.grid.javaspaces.coexpression;
+package ubic.gemma.grid.javaspaces.analysis.coexpression.links;
 
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
