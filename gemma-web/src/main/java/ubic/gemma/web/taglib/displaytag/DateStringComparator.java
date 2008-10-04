@@ -50,12 +50,11 @@ public class DateStringComparator implements Comparator {
 
     /*
      * (non-Javadoc)
-     * 
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
     public int compare( Object arg0, Object arg1 ) {
-        String d1 = ( String ) arg0;
-        String d2 = ( String ) arg1;
+        String d1 = arg0.toString();
+        String d2 = arg1.toString();
 
         Pattern pat = Pattern.compile( DATE_HTML_PATTERN );
         Matcher m1 = pat.matcher( d1 );
