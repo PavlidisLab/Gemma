@@ -35,98 +35,106 @@ import ubic.gemma.web.util.JSONUtil;
  * 
  * @author pavlidis
  * @author keshav
- * @version $Id$
+ * @version $Id: UserFormMultiActionController.java,v 1.4 2008/09/22 00:34:20
+ *          keshav Exp $
  * @spring.bean id="userFormMultiActionController"
  * @spring.property name="userService" ref="userService"
  * @spring.property name="mailEngine" ref="mailEngine"
  * @spring.property name="mailMessage" ref="mailMessage"
  * @spring.property name="methodNameResolver" ref="editUserActions"
  */
-public class UserFormMultiActionController extends UserAuthenticatingMultiActionController {
+public class UserFormMultiActionController extends
+		UserAuthenticatingMultiActionController {
 
-    public void loadUser( HttpServletRequest request, HttpServletResponse response ) {
+	public void loadUser(HttpServletRequest request,
+			HttpServletResponse response) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAuthenticated = authentication.isAuthenticated();
+		Authentication authentication = SecurityContextHolder.getContext()
+				.getAuthentication();
+		boolean isAuthenticated = authentication.isAuthenticated();
 
-        if ( !isAuthenticated ) {
-            log.error( "User not authenticated.  Cannot populate user data." );
-            return;
-        }
+		if (!isAuthenticated) {
+			log.error("User not authenticated.  Cannot populate user data.");
+			return;
+		}
 
-        String username = authentication.getPrincipal().toString();
-        User user = userService.findByUserName( username );
-        JSONUtil jsonUtil = new JSONUtil( request, response );
+		String username = authentication.getPrincipal().toString();
+		User user = userService.findByUserName(username);
+		JSONUtil jsonUtil = new JSONUtil(request, response);
 
-        String jsonText = null;
-        try {
-            jsonText = "{\"user\": {\"data\": [ {\"class\":\"ubic.gemma.model.common.auditAndSecurity.User\",\"id\":"
-                    + user.getId() + ",\"username\":\"" + user.getUserName() + "\" } ] } }";
-        } catch ( Exception e ) {
-            e.printStackTrace();
-            jsonText = "{\"user\": {\"data\": [], \"message\": \"Exception occurred during the retrieval of the user.\",\"success\":false,\"totalRows\":0} }";
-        } finally {
-            try {
-                jsonUtil.writeToResponse( jsonText );
-            } catch ( IOException e ) {
-                e.printStackTrace();
-            }
-        }
+		String jsonText = null;
+		try {
+			jsonText = "{success:true, data:{username:" + "\"" + username
+					+ "\"" + ",email:" + "\"" + user.getEmail() + "\"" + "}}";
 
-    }
+		} catch (Exception e) {
+			e.printStackTrace();
+			jsonText = "{success:false}";
+		} finally {
+			try {
+				jsonUtil.writeToResponse(jsonText);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
-    /**
-     * AJAX entry point.
-     * 
-     * @param request
-     * @param response
-     * @throws Exception
-     */
-    public void onSubmit( HttpServletRequest request, HttpServletResponse response ) {
+	}
 
-        String email = request.getParameter( "email" );
-        String firstname = request.getParameter( "firstname" );
-        String lastname = request.getParameter( "lastname" );
-        String password = request.getParameter( "password" );
-        String passwordConfirm = request.getParameter( "passwordConfirm" );
+	/**
+	 * AJAX entry point.
+	 * 
+	 * @param request
+	 * @param response
+	 * @throws Exception
+	 */
+	public void onSubmit(HttpServletRequest request,
+			HttpServletResponse response) {
 
-        /*
-         * Pulling username out of security context to ensure users are logged in and can only update themselves.
-         */
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		String email = request.getParameter("email");
+		String firstname = request.getParameter("firstname");
+		String lastname = request.getParameter("lastname");
+		String password = request.getParameter("password");
+		String passwordConfirm = request.getParameter("passwordConfirm");
 
-        User user = userService.findByUserName( username );
-        if ( !StringUtils.equals( password, passwordConfirm ) ) {
-            throw new RuntimeException( "Passwords do not match." );
-        }
-        String encryptedPassword = super.encryptPassword( password, request );
-        user.setPassword( encryptedPassword );
+		/*
+		 * Pulling username out of security context to ensure users are logged
+		 * in and can only update themselves.
+		 */
+		String username = SecurityContextHolder.getContext()
+				.getAuthentication().getName();
 
-        if ( StringUtils.isNotBlank( firstname ) ) {
-            user.setName( firstname );
-        }
+		User user = userService.findByUserName(username);
+		if (!StringUtils.equals(password, passwordConfirm)) {
+			throw new RuntimeException("Passwords do not match.");
+		}
+		String encryptedPassword = super.encryptPassword(password, request);
+		user.setPassword(encryptedPassword);
 
-        if ( StringUtils.isNotBlank( lastname ) ) {
-            user.setName( lastname );
-        }
+		if (StringUtils.isNotBlank(firstname)) {
+			user.setName(firstname);
+		}
 
-        user.setEmail( email );
+		if (StringUtils.isNotBlank(lastname)) {
+			user.setName(lastname);
+		}
 
-        JSONUtil jsonUtil = new JSONUtil( request, response );
-        String jsonText = null;
-        try {
-            userService.update( user );
-            jsonText = "{success:true}";
-        } catch ( Exception e ) {
-            log.error( e.getLocalizedMessage() );
-            jsonText = jsonUtil.getJSONErrorMessage( e );
-            log.info( jsonText );
-        } finally {
-            try {
-                jsonUtil.writeToResponse( jsonText );
-            } catch ( IOException e ) {
-                e.printStackTrace();
-            }
-        }
-    }
+		user.setEmail(email);
+
+		JSONUtil jsonUtil = new JSONUtil(request, response);
+		String jsonText = null;
+		try {
+			userService.update(user);
+			jsonText = "{success:true}";
+		} catch (Exception e) {
+			log.error(e.getLocalizedMessage());
+			jsonText = jsonUtil.getJSONErrorMessage(e);
+			log.info(jsonText);
+		} finally {
+			try {
+				jsonUtil.writeToResponse(jsonText);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }
