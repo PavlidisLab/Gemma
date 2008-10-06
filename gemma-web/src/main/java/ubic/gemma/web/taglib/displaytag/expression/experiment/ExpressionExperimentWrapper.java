@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent; 
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -357,8 +357,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getNameLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
-            return AnchorTagUtil.getExpressionExperimentLink( object.getId(), StringUtils.abbreviate(
-                    object.getName(), 75 ), object.getName() );
+            return AnchorTagUtil.getExpressionExperimentLink( object.getId(), StringUtils.abbreviate( object.getName(),
+                    75 ), object.getName() );
         }
         return "No design";
     }
@@ -512,7 +512,6 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "Expression Experiment unavailable";
         }
         return " <input type=\"button\" value=\"Refresh\" onClick=\"return updateEEReport(" + object.getId() + ")\"/>";
-
     }
 
     public String getEdit() {
@@ -532,7 +531,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( eeVo == null ) return "Expression Experiment unavailable";
 
-        if ( eeVo.isProbeSpecificForQueryGene() ) return "&bull;";
+        if ( eeVo.getHasProbeSpecificForQueryGene() ) return "&bull;";
 
         return "";
     }
