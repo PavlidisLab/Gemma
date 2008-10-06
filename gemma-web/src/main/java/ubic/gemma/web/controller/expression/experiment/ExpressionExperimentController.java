@@ -187,7 +187,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             this.eeId = eeId;
         }
 
-        @Override
         public Boolean call() throws Exception {
             init();
             ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
@@ -272,7 +271,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         }
 
-        @Override
         public ExpressionExperimentDetailsValueObject call() throws Exception {
             init();
 
