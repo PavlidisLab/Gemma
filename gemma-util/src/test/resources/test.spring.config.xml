@@ -3,11 +3,14 @@
     "http://www.springframework.org/dtd/spring-beans.dtd">
 
 <beans>
-
-	<bean id="configurationPropertyConfigurer"
-		class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer">
+	<bean id="configurationPropertyConfigurer" class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer">
 		<property name="configuration">
 			<ref local="buildProperties" />
+		</property>
+		<property name="locations">
+			<list>
+				<value>classpath:default.properties</value>
+			</list>
 		</property>
 		<property name="ignoreUnresolvablePlaceholders" value="false" />
 		<property name="ignoreResourceNotFound" value="false" />
@@ -15,7 +18,7 @@
 
 	<bean id="buildProperties" class="org.apache.commons.configuration.PropertiesConfiguration">
 		<constructor-arg index="0">
-			<value>Gemma.properties</value>
+			<value>default.properties</value>
 		</constructor-arg>
 	</bean>
 
@@ -24,5 +27,5 @@
 			<value>${testProperty}</value>
 		</property>
 	</bean>
-	
+
 </beans>

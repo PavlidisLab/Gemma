@@ -358,37 +358,6 @@
 					<argLine>-Xmx1g</argLine>
 				</configuration>
 			</plugin>
-			<!--<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jxr-plugin</artifactId>
-				</plugin>-->
-			<!-- 	<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>taglist-maven-plugin</artifactId>
-				</plugin> -->
-			<!-- 	<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-pmd-plugin</artifactId>
-				<configuration>
-				<targetJdk>1.5</targetJdk>
-				</configuration>
-				</plugin> -->
-			<!--  <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-changelog-plugin</artifactId>
-				</plugin> -->
-			<!--	<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>cobertura-maven-plugin</artifactId>
-				</plugin>
-				plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>jdepend-maven-plugin</artifactId>
-				<configuration>
-				<linkJavadoc>true</linkJavadoc>
-				<javadocDir>${basedir}/target/site/apidocs</javadocDir>
-				</configuration>
-				</plugin> -->
 		</plugins>
 	</reporting>
 	<build>
@@ -421,7 +390,67 @@
 				</configuration>
 			</plugin>
 		</plugins>
-	</build>
+	</build>			
+	<repositories>
+				<repository>
+					<id>pavlab</id>
+					<name>PavLab</name>
+					<url>http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2</url>
+					<layout>default</layout>
+					<snapshots>
+						<enabled>true</enabled>
+						<updatePolicy>daily</updatePolicy>
+					</snapshots>
+					<releases>
+						<enabled>true</enabled>
+						<updatePolicy>daily</updatePolicy>
+					</releases>
+				</repository>
+			</repositories>
+			<pluginRepositories>
+				<pluginRepository>
+					<id>apache.plugin.snapshots</id>
+					<name>Apache Development Repository</name>
+					<url>
+						http://cvs.apache.org/maven-snapshot-repository
+					</url>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+						<updatePolicy>daily</updatePolicy>
+					</snapshots>
+				</pluginRepository><pluginRepository>
+					<id>mojo</id>
+					<name>Mojo</name>
+					<url>
+						http://snapshots.maven.codehaus.org/maven2/
+					</url>
+					<layout>default</layout>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+						<updatePolicy>daily</updatePolicy>
+					</snapshots>
+				</pluginRepository>
+				<pluginRepository>
+					<id>pavlab</id>
+					<name>PavLab</name>
+					<url>http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2</url>
+					<layout>default</layout>
+					<snapshots>
+						<enabled>true</enabled>
+						<updatePolicy>daily</updatePolicy>
+					</snapshots>
+					<releases>
+						<enabled>true</enabled>
+						<updatePolicy>daily</updatePolicy>
+					</releases>
+				</pluginRepository>
+			</pluginRepositories>
 	<profiles>
 		<profile>
 			<id>assemble-src</id>
@@ -484,4 +513,5 @@
 			<url>scp://broca.ubic.ca:/www/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
+		
 </project>

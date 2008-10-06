@@ -212,12 +212,11 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<springdoclet
-									destdir="${project.build.directory}/generated-sources/resources/ubic/gemma" force="false" validating="false">
+								<springdoclet destdir="${project.build.directory}/generated-sources/resources/ubic/gemma" force="false"
+									validating="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java/" />
 									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true"
-										destDir="${project.build.directory}/generated-sources/resources/ubic/gemma"
-										destinationFile="applicationContext-persisterBeans.xml" />
+										destDir="${project.build.directory}/generated-sources/resources/ubic/gemma" destinationFile="applicationContext-persisterBeans.xml" />
 								</springdoclet>
 							</tasks>
 						</configuration>
@@ -245,8 +244,7 @@
 						</taskdef>
 						<mkdir dir="target/schema" />
 						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
-							output="${project.build.directory}/schema/gemma-ddl.sql"
-							properties="${basedir}/src/main/resources/hibernate.properties">
+							output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
 							<fileset dir="target/generated-sources/resources" includes="**/*.hbm.xml" />
 						</schemaexport>
 					</tasks>
@@ -343,7 +341,7 @@
 									<url>${bootstrap.db.url}</url>
 									<autocommit>false</autocommit>
 									<sqlCommand>
-										<![CDATA[drop database if exists gemdtest]]>
+										<![CDATA[drop database if exists ${gemma.testdb.name}]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
@@ -356,7 +354,7 @@
 								<configuration>
 									<url>${bootstrap.db.url}</url>
 									<sqlCommand>
-										<![CDATA[create database gemdtest]]>
+										<![CDATA[create database ${gemma.testdb.name}]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
