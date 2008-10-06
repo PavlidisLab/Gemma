@@ -1025,6 +1025,22 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     protected abstract java.util.Collection<ExpressionExperiment> handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
+    /*
+     * 
+     */
+    public ExpressionExperiment findByQuantitationType( QuantitationType quantitationType ) {
+        try {
+            return this.handleFindByQuantitationType( quantitationType );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentDao.findByQuantitationType  --> "
+                            + th, th );
+        }
+    }
+
+    protected abstract ExpressionExperiment handleFindByQuantitationType( QuantitationType quantitationType )
+            throws Exception;
+
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getQuantitationTypes(ubic.gemma.model.expression.experiment.ExpressionExperiment,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
@@ -1501,8 +1517,9 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.expression.experiment.ExpressionExperimentDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. <p/> This
-     * method will return instances of these types:
+     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned.
+     * <p/>
+     * This method will return instances of these types:
      * <ul>
      * <li>{@link ubic.gemma.model.expression.experiment.ExpressionExperiment} - {@link #TRANSFORM_NONE}</li>
      * <li>{@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject} -
@@ -1535,7 +1552,9 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     /**
      * Transforms a collection of entities using the
      * {@link #transformEntity(int,ubic.gemma.model.expression.experiment.ExpressionExperiment)} method. This method
-     * does not instantiate a new collection. <p/> This method is to be used internally only.
+     * does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
      * 
      * @param transform one of the constants declared in
      *        <code>ubic.gemma.model.expression.experiment.ExpressionExperimentDao</code>

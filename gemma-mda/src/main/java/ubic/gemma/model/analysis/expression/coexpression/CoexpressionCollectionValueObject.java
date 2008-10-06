@@ -135,16 +135,16 @@ public class CoexpressionCollectionValueObject {
                 if ( ( genes.size() == 1 ) && ( genes.iterator().next().equals( queryGene.getId() ) ) ) {
 
                     if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
-                        this.predictedCoexpressionData.getExpressionExperiment( eeID ).setProbeSpecificForQueryGene(
+                        this.predictedCoexpressionData.getExpressionExperiment( eeID ).setHasProbeSpecificForQueryGene(
                                 true );
 
                     if ( this.knownGeneCoexpressionData.getExpressionExperiment( eeID ) != null )
-                        this.knownGeneCoexpressionData.getExpressionExperiment( eeID ).setProbeSpecificForQueryGene(
+                        this.knownGeneCoexpressionData.getExpressionExperiment( eeID ).setHasProbeSpecificForQueryGene(
                                 true );
 
                     if ( this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID ) != null )
                         this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID )
-                                .setProbeSpecificForQueryGene( true );
+                                .setHasProbeSpecificForQueryGene( true );
 
                 }
             }
@@ -359,8 +359,8 @@ public class CoexpressionCollectionValueObject {
 
     /**
      * @return a collection of expression experiment IDs that have <strong>at least one</strong> probes that are
-     *         predicted to be <strong>specific</strong> for the query gene. Thus, expression experiments that have
-     *         both specific and non-specific probes for the query gene will be included.
+     *         predicted to be <strong>specific</strong> for the query gene. Thus, expression experiments that have both
+     *         specific and non-specific probes for the query gene will be included.
      */
     public Collection<Long> getQueryGeneSpecificExpressionExperiments() {
 

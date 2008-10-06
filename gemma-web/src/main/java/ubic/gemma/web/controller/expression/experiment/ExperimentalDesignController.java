@@ -478,7 +478,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
                     long fvId = Long.parseLong( fvIdString.substring( 2 ) );
                     FactorValue fv = factorValueService.load( fvId );
                     if ( fv == null ) {
-                        log.warn("Illegal request");
+                        log.warn( "Illegal request" );
                         throw new EntityNotFoundException( "No such factorValue with id=" + fvId );
                     }
                     bm.getFactorValues().add( fv );
@@ -486,7 +486,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             }
             bioMaterialService.update( bm );
             log.info( bm );
-        }        
+        }
     }
 
     /**

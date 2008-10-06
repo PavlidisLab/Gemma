@@ -1,30 +1,44 @@
 Ext.namespace('Gemma');
 
-/*
+/**
  * Gemma.AnnotationToolBar constructor... annotationGrid is the grid that contains the annotations. config is a hash
- * with the following options: createHandler : a function with arguments ( characteristic, callback ) where
- * characteristic is the new characteristic to add and callback is the function to be called when the characteristic has
- * been added if this argument is not present, there will be no create button in the toolbar deleteHandler : a function
- * with arguments ( ids, callback ) where ids is an array of characteristic ids to remove and callback is the function
- * to be called when the characteristics have been removed if this argument is not present, there will be no delete
- * button in the toolbar saveHandler : a function with arguments ( characteristics, callback ) where characteristics is
- * an array of characteristics to update and callback is the function to be called when the characteristics have been
- * updated if this argument is not present, there will be no save button in the toolbar
+ * with the following options:
+ * 
+ * @param createHandler :
+ *            a function with arguments ( characteristic, callback ) where characteristic is the new characteristic to
+ *            add and callback is the function to be called when the characteristic has been added if this argument is
+ *            not present, there will be no create button in the toolbar
+ * 
+ * @param deleteHandler :
+ *            a function with arguments ( ids, callback ) where ids is an array of characteristic ids to remove and
+ *            callback is the function to be called when the characteristics have been removed if this argument is not
+ *            present, there will be no delete button in the toolbar
+ * 
+ * @param saveHandler :
+ *            a function with arguments ( characteristics, callback ) where characteristics is an array of
+ *            characteristics to update and callback is the function to be called when the characteristics have been
+ *            updated if this argument is not present, there will be no save button in the toolbar
  */
 
 Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 
-	afterRender : function(l, r) {
+	initComponent : function() {
+
 		if (this.annotationGrid.editable && !this.saveHandler) {
 			this.saveHandler = CharacteristicBrowserController.updateCharacteristics;
 		}
 
-		var charComboOpts = {};
+		var charComboOpts = {
+			emptyText : 'Enter term',
+			width : 140
+		};
+
 		if (this.charComboWidth) {
 			charComboOpts.width = this.charComboWidth;
 		}
 		var mgedComboOpts = {
-			emptyText : "Select a class"
+			emptyText : "Select a category",
+			width : 130
 		};
 		if (this.mgedComboWidth) {
 			mgedComboOpts.width = this.mgedComboWidth;
@@ -32,9 +46,11 @@ Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 		if (this.mgedTermKey) {
 			mgedComboOpts.termKey = this.mgedTermKey;
 		}
+
 		this.charCombo = new Gemma.CharacteristicCombo(charComboOpts);
 
 		this.mgedCombo = new Gemma.MGEDCombo(mgedComboOpts);
+
 		this.mgedCombo.on("select", function(combo, record, index) {
 					this.charCombo.setCategory(record.data.term, record.data.uri);
 					this.createButton.enable();
@@ -80,13 +96,7 @@ Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 						},
 						scope : this
 					});
-			this.annotationGrid.getSelectionModel().on("selectionchange", function(model) {
-						var selected = model.getSelections();
-						if (selected.length > 0)
-							this.deleteButton.enable();
-						else
-							this.deleteButton.disable();
-					}, this);
+
 		}
 
 		if (this.saveHandler) {
@@ -107,30 +117,51 @@ Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 					}.createDelegate(this));
 		}
 
-		this.addField(this.mgedCombo);
+		Gemma.AnnotationToolBar.superclass.initComponent.call(this);
+
+	},
+
+	afterRender : function(l, r) {
+		/*
+		 * These wrapper panels ensure the toolbar displays correctly in things like tabpanels. See
+		 * http://extjs.com/forum/showthread.php?t=45674
+		 */
+
+		// this.add(new Ext.Panel({
+		// bodyStyle : 'background-color:transparent;',
+		// width : 170,
+		// items : [this.mgedCombo]
+		// }));
+		this.add(this.mgedCombo);
 		this.addSpacer();
-		this.addField(this.charCombo);
+
+		// this.add(new Ext.Panel({
+		// bodyStyle : 'background-color:transparent;',
+		// width : 170,
+		// items : [this.charCombo]
+		// }));
+		this.add(this.charCombo);
 		this.addSpacer();
 
 		if (this.addDescription) {
-			this.addField(this.descriptionField);
-			this.addSpacer();
+			this.add(this.descriptionField);
+			// this.addSpacer();
 		}
 
 		if (this.createHandler) {
-			this.addField(this.createButton);
+			this.add(this.createButton);
 		}
-		if (this.createHandler && (this.deleteHandler || this.saveHandler)) {
-			this.addSeparator();
-		}
+		// if (this.createHandler && (this.deleteHandler || this.saveHandler)) {
+		// this.addSeparator();
+		// }
 		if (this.deleteHandler) {
-			this.addField(this.deleteButton);
+			this.add(this.deleteButton);
 		}
-		if ((this.createHandler || this.deleteHandler) && this.saveHandler) {
-			this.addSeparator();
-		}
+		// if ((this.createHandler || this.deleteHandler) && this.saveHandler) {
+		// this.addSeparator();
+		// }
 		if (this.saveHandler) {
-			this.addField(this.saveButton);
+			this.add(this.saveButton);
 		}
 
 		Gemma.AnnotationToolBar.superclass.afterRender.call(this, l, r);

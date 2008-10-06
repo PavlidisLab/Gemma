@@ -62,118 +62,6 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
     private static final int HISTOGRAM_IMAGE_SIZE = 200;
     private ExpressionExperimentService expressionExperimentService;
 
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    public ModelAndView showCorrMat( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        String id = request.getParameter( "id" );
-        String size = request.getParameter( "size" ); // okay if null
-        String contrast = request.getParameter( "contr" ); // okay if null, default is 'hi'
-        String text = request.getParameter( "text" );
-
-        if ( id == null ) {
-            log.warn( "No id!" );
-            return null;
-        }
-
-        String contrVal = "hi";
-        if ( StringUtils.isNotBlank( contrast ) ) {
-            contrVal = contrast;
-        }
-
-        Long idl;
-        try {
-            idl = Long.parseLong( id );
-        } catch ( NumberFormatException e ) {
-            log.warn( "Invalid id: " + id );
-            return null;
-        }
-        assert idl != null;
-
-        ExpressionExperiment ee = expressionExperimentService.load( idl );
-        if ( ee == null ) {
-            log.warn( "No such experiment with id " + idl );
-            return null;
-        }
-
-        if ( StringUtils.isNotBlank( text ) ) {
-            writeCorrData( response, ee );
-        } else {
-            writeCorrMatImage( response, ee, size, contrVal );
-        }
-
-        return null; // nothing to return;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    public ModelAndView showProbeCorrDist( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        String id = request.getParameter( "id" );
-
-        if ( id == null ) {
-            log.warn( "No id!" );
-            return null;
-        }
-        Long idl;
-        try {
-            idl = Long.parseLong( id );
-        } catch ( NumberFormatException e ) {
-            log.warn( "Invalid id: " + id );
-            return null;
-        }
-        assert idl != null;
-
-        ExpressionExperiment ee = expressionExperimentService.load( idl );
-        if ( ee == null ) {
-            log.warn( "No such experiment with id " + idl );
-            return null;
-        }
-
-        writeProbeCorrHistImage( response, ee );
-        return null; // nothing to return;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     * @throws Exception
-     */
-    public ModelAndView showPvalueDist( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        String id = request.getParameter( "id" );
-
-        if ( id == null ) {
-            log.warn( "No id!" );
-            return null;
-        }
-        Long idl;
-        try {
-            idl = Long.parseLong( id );
-        } catch ( NumberFormatException e ) {
-            log.warn( "Invalid id: " + id );
-            return null;
-        }
-        assert idl != null;
-
-        ExpressionExperiment ee = expressionExperimentService.load( idl );
-        if ( ee == null ) {
-            log.warn( "No such experiment with id " + idl );
-            return null;
-        }
-
-        this.writePValueHistImages( response, ee );
-        return null; // nothing to return;
-    }
-
     /**
      * @param ee
      * @return JFreeChart XYSeries representing the histogram.
@@ -199,6 +87,39 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
             }
         }
         return series;
+    }
+
+    /**
+     * @param ee
+     * @return Collection of JFreeChart XYSeries representing the histograms (one for each ResultSet.
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    private Collection<XYSeries> getDiffExPvalueHists( ExpressionExperiment ee ) throws FileNotFoundException,
+            IOException {
+        Collection<File> fs = this.locatePvalueDistFiles( ee );
+
+        Collection<XYSeries> results = new HashSet<XYSeries>();
+
+        for ( File f : fs ) {
+            XYSeries series = new XYSeries( ee.getId(), true, true );
+            BufferedReader in = new BufferedReader( new FileReader( f ) );
+            while ( in.ready() ) {
+                String line = in.readLine().trim();
+                if ( line.startsWith( "#" ) ) continue;
+                String[] split = StringUtils.split( line );
+                if ( split.length < 2 ) continue;
+                try {
+                    double x = Double.parseDouble( split[0] );
+                    double y = Double.parseDouble( split[1] );
+                    series.add( x, y );
+                } catch ( NumberFormatException e ) {
+                    // line wasn't useable.. no big deal. Heading is included.
+                }
+            }
+            results.add( series );
+        }
+        return results;
     }
 
     private File locateCorrMatDataFile( ExpressionExperiment ee ) {
@@ -279,9 +200,135 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
         return files;
     }
 
-    private void writeCorrData( HttpServletResponse response, ExpressionExperiment ee ) {
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    public ModelAndView showCorrMat( HttpServletRequest request, HttpServletResponse response ) throws Exception {
+        String id = request.getParameter( "id" );
+        String size = request.getParameter( "size" ); // okay if null
+        String contrast = request.getParameter( "contr" ); // okay if null, default is 'hi'
+        String text = request.getParameter( "text" );
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+
+        String contrVal = "hi";
+        if ( StringUtils.isNotBlank( contrast ) ) {
+            contrVal = contrast;
+        }
+
+        Long idl;
+        try {
+            idl = Long.parseLong( id );
+        } catch ( NumberFormatException e ) {
+            log.warn( "Invalid id: " + id );
+            return null;
+        }
+        assert idl != null;
+
+        ExpressionExperiment ee = expressionExperimentService.load( idl );
+        if ( ee == null ) {
+            log.warn( "No such experiment with id " + idl );
+            return null;
+        }
+        boolean ok = false;
+        if ( StringUtils.isNotBlank( text ) ) {
+            ok = writeCorrData( response, ee );
+        } else {
+            ok = writeCorrMatImage( response, ee, size, contrVal );
+        }
+
+        if ( !ok ) {
+            // TODO
+        }
+
+        return null; // nothing to return;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    public ModelAndView showProbeCorrDist( HttpServletRequest request, HttpServletResponse response ) throws Exception {
+        String id = request.getParameter( "id" );
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+        Long idl;
+        try {
+            idl = Long.parseLong( id );
+        } catch ( NumberFormatException e ) {
+            log.warn( "Invalid id: " + id );
+            return null;
+        }
+        assert idl != null;
+
+        ExpressionExperiment ee = expressionExperimentService.load( idl );
+        if ( ee == null ) {
+            log.warn( "No such experiment with id " + idl );
+            return null;
+        }
+
+        boolean ok = writeProbeCorrHistImage( response, ee );
+
+        if ( !ok ) {
+            // TODO
+        }
+
+        return null; // nothing to return;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     * @throws Exception
+     */
+    public ModelAndView showPvalueDist( HttpServletRequest request, HttpServletResponse response ) throws Exception {
+        String id = request.getParameter( "id" );
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+        Long idl;
+        try {
+            idl = Long.parseLong( id );
+        } catch ( NumberFormatException e ) {
+            log.warn( "Invalid id: " + id );
+            return null;
+        }
+        assert idl != null;
+
+        ExpressionExperiment ee = expressionExperimentService.load( idl );
+        if ( ee == null ) {
+            log.warn( "No such experiment with id " + idl );
+            return null;
+        }
+
+        boolean ok = this.writePValueHistImages( response, ee );
+
+        if ( !ok ) {
+            // TODO
+        }
+
+        return null; // nothing to return;
+    }
+
+    private boolean writeCorrData( HttpServletResponse response, ExpressionExperiment ee ) {
         File f = locateCorrMatDataFile( ee );
-        writeFile( response, f );
+        return writeFile( response, f );
     }
 
     /**
@@ -289,22 +336,22 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
      * @param ee
      * @param size
      */
-    private void writeCorrMatImage( HttpServletResponse response, ExpressionExperiment ee, String size, String contrast ) {
+    private boolean writeCorrMatImage( HttpServletResponse response, ExpressionExperiment ee, String size,
+            String contrast ) {
         File f = locateCorrMatImageFile( ee, size, contrast );
-
-        writeImage( response, f );
+        return writeImage( response, f );
     }
 
     /**
      * @param response
      * @param f
      */
-    private void writeFile( HttpServletResponse response, File f ) {
+    private boolean writeFile( HttpServletResponse response, File f ) {
         if ( !f.canRead() ) {
-            log.warn( "Could not locate the file" );
-            return;
+            return false;
         }
         writeToClient( response, f, "text/plain" );
+        return true;
     }
 
     /**
@@ -313,21 +360,25 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
      * @param response
      * @param f
      */
-    private void writeImage( HttpServletResponse response, File f ) {
+    private boolean writeImage( HttpServletResponse response, File f ) {
         if ( !f.canRead() ) {
-            log.warn( "Could not locate the image file" );
-            return;
+            return false;
         }
         String contentType = "image/png";
         writeToClient( response, f, contentType );
+        return true;
     }
 
     /**
      * @param response
      * @param ee
      */
-    private void writeProbeCorrHistImage( HttpServletResponse response, ExpressionExperiment ee ) throws IOException {
+    private boolean writeProbeCorrHistImage( HttpServletResponse response, ExpressionExperiment ee ) throws IOException {
         XYSeries series = getCorrelHist( ee );
+
+        if ( series.getItemCount() == 0 ) {
+            return false;
+        }
 
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         xySeriesCollection.addSeries( series );
@@ -352,39 +403,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
                 }
             }
         }
-    }
-
-    /**
-     * @param ee
-     * @return Collection of JFreeChart XYSeries representing the histograms (one for each ResultSet.
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    private Collection<XYSeries> getDiffExPvalueHists( ExpressionExperiment ee ) throws FileNotFoundException,
-            IOException {
-        Collection<File> fs = this.locatePvalueDistFiles( ee );
-
-        Collection<XYSeries> results = new HashSet<XYSeries>();
-
-        for ( File f : fs ) {
-            XYSeries series = new XYSeries( ee.getId(), true, true );
-            BufferedReader in = new BufferedReader( new FileReader( f ) );
-            while ( in.ready() ) {
-                String line = in.readLine().trim();
-                if ( line.startsWith( "#" ) ) continue;
-                String[] split = StringUtils.split( line );
-                if ( split.length < 2 ) continue;
-                try {
-                    double x = Double.parseDouble( split[0] );
-                    double y = Double.parseDouble( split[1] );
-                    series.add( x, y );
-                } catch ( NumberFormatException e ) {
-                    // line wasn't useable.. no big deal. Heading is included.
-                }
-            }
-            results.add( series );
-        }
-        return results;
+        return true;
     }
 
     /**
@@ -394,12 +413,16 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
      * @param ee
      * @throws IOException
      */
-    private void writePValueHistImages( HttpServletResponse response, ExpressionExperiment ee ) throws IOException {
+    private boolean writePValueHistImages( HttpServletResponse response, ExpressionExperiment ee ) throws IOException {
 
         Collection<XYSeries> series = getDiffExPvalueHists( ee );
+
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         for ( XYSeries s : series ) {
             xySeriesCollection.addSeries( s );
+            if ( s.getItemCount() == 0 ) {
+                return false;
+            }
         }
         JFreeChart chart = ChartFactory.createXYLineChart( "", "P-value", "Frequency", xySeriesCollection,
                 PlotOrientation.VERTICAL, false, false, false );
@@ -422,7 +445,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
                 }
             }
         }
-
+        return true;
     }
 
     /**

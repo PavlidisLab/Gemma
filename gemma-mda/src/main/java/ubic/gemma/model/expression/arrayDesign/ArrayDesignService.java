@@ -22,6 +22,10 @@
 //
 package ubic.gemma.model.expression.arrayDesign;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * 
  */
@@ -30,7 +34,7 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<ArrayDesign> loadAll();
 
     /**
      * 
@@ -78,7 +82,8 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.util.Collection loadCompositeSequences( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public java.util.Collection<CompositeSequence> loadCompositeSequences(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
@@ -93,7 +98,7 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.util.Collection getAllAssociatedBioAssays( java.lang.Long id );
+    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( java.lang.Long id );
 
     /**
      * 
@@ -134,7 +139,7 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.util.Collection getExpressionExperiments(
+    public java.util.Collection<ExpressionExperiment> getExpressionExperiments(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
@@ -171,14 +176,14 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
      * loads the Value Objects for the Array Designs specified by the input ids.
      * </p>
      */
-    public java.util.Collection loadValueObjects( java.util.Collection ids );
+    public java.util.Collection<ArrayDesignValueObject> loadValueObjects( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * loads all Array designs as value objects.
      * </p>
      */
-    public java.util.Collection loadAllValueObjects();
+    public java.util.Collection<ArrayDesignValueObject> loadAllValueObjects();
 
     /**
      * <p>
@@ -213,28 +218,28 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
      * Function to return the count of all composite sequences with biosequences, given a list of array design Ids
      * </p>
      */
-    public long numAllCompositeSequenceWithBioSequences( java.util.Collection ids );
+    public long numAllCompositeSequenceWithBioSequences( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * Function to return the count of all composite sequences with blat results, given a list of array design Ids
      * </p>
      */
-    public long numAllCompositeSequenceWithBlatResults( java.util.Collection ids );
+    public long numAllCompositeSequenceWithBlatResults( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * Function to return the count of all composite sequences with genes, given a list of array design Ids
      * </p>
      */
-    public long numAllCompositeSequenceWithGenes( java.util.Collection ids );
+    public long numAllCompositeSequenceWithGenes( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * Returns the number of unique Genes associated with the collection of ArrayDesign ids.
      * </p>
      */
-    public long numAllGenes( java.util.Collection ids );
+    public long numAllGenes( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -277,11 +282,11 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
 
     /**
      * <p>
-     * Gets the AuditEvents of the latest sequence analyses for the specified array design ids. This returns a map of id ->
-     * AuditEvent. If the events do not exist, the map entry will point to null.
+     * Gets the AuditEvents of the latest sequence analyses for the specified array design ids. This returns a map of id
+     * -> AuditEvent. If the events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map getLastSequenceAnalysis( java.util.Collection ids );
+    public java.util.Map getLastSequenceAnalysis( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -289,7 +294,7 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
      * AuditEvent. If the events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map getLastGeneMapping( java.util.Collection ids );
+    public java.util.Map getLastGeneMapping( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -297,15 +302,15 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
      * of id -> AuditEvent. If the events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map getLastAnnotationFile( java.util.Collection ids );
+    public java.util.Map getLastAnnotationFile( java.util.Collection<Long> ids );
 
     /**
      * <p>
-     * Gets the AuditEvents of the latest sequence update for the specified array design ids. This returns a map of id ->
-     * AuditEvent. If the events do not exist, the map entry will point to null.
+     * Gets the AuditEvents of the latest sequence update for the specified array design ids. This returns a map of id
+     * -> AuditEvent. If the events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map getLastSequenceUpdate( java.util.Collection ids );
+    public java.util.Map getLastSequenceUpdate( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -320,12 +325,12 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.util.Map isSubsumer( java.util.Collection ids );
+    public java.util.Map isSubsumer( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map isSubsumed( java.util.Collection ids );
+    public java.util.Map isSubsumed( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -344,17 +349,17 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.util.Map isMergee( java.util.Collection ids );
+    public java.util.Map isMergee( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map isMerged( java.util.Collection ids );
+    public java.util.Map isMerged( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map getLastRepeatAnalysis( java.util.Collection ids );
+    public java.util.Map getLastRepeatAnalysis( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -370,23 +375,23 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.util.Map getLastTroubleEvent( java.util.Collection ids );
+    public java.util.Map getLastTroubleEvent( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map getLastValidationEvent( java.util.Collection ids );
+    public java.util.Map getLastValidationEvent( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * Given a collection of ID (longs) will return a collection of ArrayDesigns
      * </p>
      */
-    public java.util.Collection loadMultiple( java.util.Collection ids );
+    public java.util.Collection<ArrayDesign> loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Collection findByAlternateName( java.lang.String queryString );
+    public java.util.Collection<ArrayDesign> findByAlternateName( java.lang.String queryString );
 
 }

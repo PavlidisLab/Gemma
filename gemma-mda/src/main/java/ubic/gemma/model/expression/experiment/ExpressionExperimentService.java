@@ -24,6 +24,7 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 
@@ -361,15 +362,6 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      */
     public java.util.Map getSampleRemovalEvents( java.util.Collection expressionExperiments );
 
-    // /**
-    // * <p>
-    // * Returns the missing-value-masked preferred quantitation type for the experiment, if it exists, or null
-    // otherwise.
-    // * </p>
-    // */
-    // public ubic.gemma.model.common.quantitationtype.QuantitationType getMaskedPreferredQuantitationType(
-    // ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
-
     /**
      * <p>
      * Return any ExpressionExperimentSubSets this Experiment might have.
@@ -389,4 +381,6 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     public java.util.Collection findByFactorValues( java.util.Collection factorValues );
 
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
+
+    public ExpressionExperiment findByQuantitationType( QuantitationType type );
 }

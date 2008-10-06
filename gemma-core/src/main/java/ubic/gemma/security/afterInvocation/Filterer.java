@@ -22,9 +22,6 @@ import java.util.Iterator;
 
 /**
  * Filter strategy interface.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @author Ben Alex

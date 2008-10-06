@@ -43,7 +43,6 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateCallback;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -696,6 +695,21 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected ExpressionExperiment handleFindByQuantitationType( QuantitationType quantitationType ) throws Exception {
+        final String queryString = "select ee from ExpressionExperimentImpl as ee "
+                + "inner join ee.quantitationTypes qt where qt = :qt ";
+        List results = getHibernateTemplate().findByNamedParam( queryString, "qt", quantitationType );
+        if ( results.size() == 1 ) {
+            return ( ExpressionExperiment ) results.iterator().next();
+        } else if ( results.size() == 0 ) {
+            return null;
+        }
+        throw new IllegalStateException( "More than one ExpressionExperiment associated with " + quantitationType );
+
     }
 
     /*

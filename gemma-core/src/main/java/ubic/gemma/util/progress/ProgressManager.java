@@ -297,7 +297,7 @@ public class ProgressManager {
 
         String toForwardTo = getForwardingUrl( progressJob, doForward );
 
-        ProgressData data = new ProgressData( 100, "Job failed.", true, toForwardTo );
+        ProgressData data = new ProgressData( 100, "Job failed: " + cause.getMessage(), true, toForwardTo );
         data.setFailed( true );
         progressJob.updateProgress( data );
         progressJob.failed( cause );
@@ -322,7 +322,7 @@ public class ProgressManager {
 
         // stored by user?
         if ( ( progressJob.getUser() != null ) && ( progressJobs.containsKey( progressJob.getUser() ) ) ) {
-            Collection jobs = progressJobs.get( progressJob.getUser() );
+            Collection<ProgressJob> jobs = progressJobs.get( progressJob.getUser() );
             jobs.remove( progressJob );
             if ( jobs.isEmpty() ) progressJobs.remove( progressJob.getUser() );
         }
@@ -411,7 +411,7 @@ public class ProgressManager {
         log.error( key + " Failed: " + cause.getMessage() );
         ProgressJob job = progressJobsByTaskId.get( key );
         if ( job != null ) {
-            job.getJobInfo().setFailedMessage( cause.toString() );
+            job.getJobInfo().setFailedMessage( cause.getMessage() );
         } else {
             log.warn( "No job of id " + key );
             return;

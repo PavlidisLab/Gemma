@@ -196,11 +196,11 @@ public class TaskRunningService {
                                     + " Treating it as cancelled (assuming it was already handled)" );
                         }
                     } else {
-                        log.error( "Error thrown for " + taskId, e );
+                        log.error( "Error thrown for " + taskId + ", stack trace follows:", e );
                         handleFailed( taskId, e );
                     }
                 } catch ( Exception e ) {
-                    log.error( "Error thrown for " + taskId, e );
+                    log.error( "Error thrown for " + taskId + ", stack trace follows:", e );
                     handleFailed( taskId, e );
                 }
                 return null;

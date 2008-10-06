@@ -1,19 +1,15 @@
-<!--
-	This document is a "merge file" used by XDoclet to automagically generate a spring beans configuration file 
-	for the web application.  The generated web-context will have the name action-servlet.xml 
-	(name is configured in the gemma-web/pom.xml) and is put in the WEB-INF diretory.
-	
-	Beans defined in this file are used only for web client interaction.
-	
-	author: keshav
-	author: pavlidis
-	version: $Id$
--->
-<!-- 
-	====================================================  
-	Mapping URLS to controllers
-	==================================================== -->
-<!-- explicit mappings of patterns to urls -->
+
+	<!--
+		This document is a "merge file" used by XDoclet to automagically generate a spring beans configuration file for the
+		web application. The generated web-context will have the name action-servlet.xml (name is configured in the
+		gemma-web/pom.xml) and is put in the WEB-INF diretory. Beans defined in this file are used only for web client
+		interaction. author: keshav author: pavlidis version: $Id$
+	-->
+	<!--
+		==================================================== Mapping URLS to controllers
+		====================================================
+	-->
+	<!-- explicit mappings of patterns to urls -->
 <bean id="simpleUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
 	<property name="order" value="1" />
 	<property name="alwaysUseFullPath" value="true" />
@@ -88,7 +84,7 @@
 		</props>
 	</property>
 </bean>
-<!-- default mapping, as a fallback. Avoid using. -->
+	<!-- default mapping, as a fallback. Avoid using. -->
 <bean id="beanNameUrlHandlerMapping" class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
 	<property name="order" value="2" />
 	<property name="interceptors">
@@ -106,27 +102,33 @@
 	<property name="configParams">
 		<map>
 			<entry key="allowScriptTagRemoting" value="true"></entry>
-			<!-- <entry key="crossDomainSessionSecurity" value="false"></entry> Uncomment for development if you are getting DWR security errors -->
-			<!--			 <entry key="activeReverseAjaxEnabled" value="true"></entry>
-				<entry key="org.directwebremoting.extend.ServerLoadMonitor" value="org.directwebremoting.impl.PollingServerLoadMonitor"></entry>
-				<entry key="disconnectedTime" value="1000"></entry>-->
+			<!--
+				<entry key="crossDomainSessionSecurity" value="false"></entry> Uncomment for development if you are getting DWR
+				security errors
+			-->
+			<!--
+				<entry key="activeReverseAjaxEnabled" value="true"></entry> <entry
+				key="org.directwebremoting.extend.ServerLoadMonitor"
+				value="org.directwebremoting.impl.PollingServerLoadMonitor"></entry> <entry key="disconnectedTime"
+				value="1000"></entry>
+			-->
 		</map>
 	</property>
-	<!--  turn debug true on to get access to dwr debugging tools (very helpful) -->
+	<!--
+		turn debug true on to get access to dwr debugging tools (very helpful)
+	-->
 	<property name="debug" value="true" />
 </bean>
-<!--  ============================================ -->
-<!--             DWR CONFIGURATION                 -->
-<!--  ============================================ -->
+	<!--  ============================================ -->
+	<!--             DWR CONFIGURATION                 -->
+	<!--  ============================================ -->
 <bean id="dwrConfiguration" class="org.directwebremoting.spring.SpringConfigurator">
 	<property name="converterTypes">
 		<map>
-			<entry key="characteristicPropertyConverter"
-				value="ubic.gemma.web.remote.CharacteristicPropertyConverter">
+			<entry key="characteristicPropertyConverter" value="ubic.gemma.web.remote.CharacteristicPropertyConverter">
 			</entry>
 			<entry key="characteristicConverter" value="ubic.gemma.web.remote.CharacteristicConverter"></entry>
-			<entry key="standardQuantitationTypeConverter"
-				value="ubic.gemma.web.remote.StandardQuantitationTypeConverter">
+			<entry key="standardQuantitationTypeConverter" value="ubic.gemma.web.remote.StandardQuantitationTypeConverter">
 			</entry>
 			<entry key="scaleTypeConverter" value="ubic.gemma.web.remote.ScaleTypeConverter"></entry>
 			<entry key="ontologyTermConverter" value="ubic.gemma.web.remote.OntologyTermConverter"></entry>
@@ -467,11 +469,17 @@
 							<value>deleteById</value>
 							<value>find</value>
 							<value>updateReport</value>
+							<value>updateBasics</value>
+							<value>updateQuantiationTypes</value>
+							<value>updateBioMaterialMapping</value>
+							<value>updatePubMed</value>
+							<value>removePrimaryPublication</value>
 							<value>getAnnotation</value>
 							<value>getExperimentalFactors</value>
 							<value>getFactorValues</value>
 							<value>getDesignMatrixRows</value>
 							<value>loadExpressionExperiments</value>
+							<value>loadExpressionExperimentDetails</value>
 							<value>loadStatusSummaries</value>
 							<value>getDescription</value>
 						</list>
@@ -624,8 +632,7 @@
 		</map>
 	</property>
 	<!--
-		**************************************************************************** 
-		exporting/importing object definitions: 
+		**************************************************************************** exporting/importing object definitions:
 		Specifications determine what will be marshelled to and from the client
 		***************************************************************************
 	-->
@@ -803,13 +810,14 @@
 					<property name="type" value="ontologyTermConverter" />
 					<property name="includes">
 						<list>
-							<value>restrictions</value>
 							<value>term</value>
 							<value>uri</value>
 							<value>label</value>
-							<value>individuals</value>
 							<value>comment</value>
-							<value>annotations</value>
+							<!--
+								<value>restrictions</value><value>individuals</value>
+								<value>annotations</value>
+							-->
 						</list>
 					</property>
 				</bean>
@@ -1092,21 +1100,23 @@
 			<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="hibernate3" />
-					<!-- <property name="includes">
-						<list>
-						<value>id</value>
-						<value>name</value>
-						<value>shortName</value>
-						<value>description</value>
-						<value>probeSpecificForQueryGene</value>
-						<value>arrayDesignCount</value>
-						<value>bioAssayCount</value>
-						<value>rawCoexpressionLinkCount</value>
-						<value>coexpressionLinkCount</value>
-						<value>externalUri</value>
-						<value>differentialExpressionAnalysisId</value>
-						</list>
-						</property> -->
+					<!--
+						<property name="includes"> <list> <value>id</value> <value>name</value> <value>shortName</value>
+						<value>description</value> <value>probeSpecificForQueryGene</value> <value>arrayDesignCount</value>
+						<value>bioAssayCount</value> <value>rawCoexpressionLinkCount</value> <value>coexpressionLinkCount</value>
+						<value>externalUri</value> <value>differentialExpressionAnalysisId</value> </list> </property>
+					-->
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
+					<!--
+						<property name="includes"> <list> <value>id</value> <value>name</value> <value>shortName</value>
+						<value>description</value> <value>probeSpecificForQueryGene</value> <value>arrayDesignCount</value>
+						<value>bioAssayCount</value> <value>rawCoexpressionLinkCount</value> <value>coexpressionLinkCount</value>
+						<value>externalUri</value> <value>differentialExpressionAnalysisId</value> </list> </property>
+					-->
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject">
@@ -1294,8 +1304,7 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry
-				key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject">
+			<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>
@@ -1408,47 +1417,47 @@
 
 
 
-<!-- ==================================================== -->
-<!-- 
-	openSessionInViewInterceptor: Interceptor to keep Hibernate sessions available in views. 
-	Use this instead of the Filter configured in web.xml. Note that we don't 
-	need a special AndroMDA interceptor, this takes advantage 
-	of the sessionFactory that is already set up in the Spring context.
--->
-<!-- ==================================================== -->
-<bean name="openSessionInViewInterceptor"
-	class="org.springframework.orm.hibernate3.support.OpenSessionInViewInterceptor">
+	<!-- ==================================================== -->
+	<!--
+		openSessionInViewInterceptor: Interceptor to keep Hibernate sessions available in views. Use this instead of the
+		Filter configured in web.xml. Note that we don't need a special AndroMDA interceptor, this takes advantage of the
+		sessionFactory that is already set up in the Spring context.
+	-->
+	<!-- ==================================================== -->
+<bean name="openSessionInViewInterceptor" class="org.springframework.orm.hibernate3.support.OpenSessionInViewInterceptor">
 	<property name="sessionFactory">
 		<ref bean="sessionFactory" />
 	</property>
 </bean>
-<!-- ==================================================== -->
-<!--  
-	Mapping urls to views. List views here that are just jsps and that don't need a controller.
--->
-<!-- ==================================================== -->
-<bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-	name="/flushCache.html /processProgress.html /activeUsers.html" />
-<bean id="registerController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-	name="/register.html" />
-<bean id="userProfileController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-	name="/userProfile.html" />
-<!-- ==================================================== -->
-<!-- Exception handler. -->
-<!-- ==================================================== -->
+	<!-- ==================================================== -->
+	<!--
+		Mapping urls to views. List views here that are just jsps and that
+		don't need a controller.
+	-->
+	<!-- ==================================================== -->
+<bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/flushCache.html /processProgress.html /activeUsers.html" />
+<bean id="registerController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/register.html" />
+<bean id="userProfileController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/userProfile.html" />
+	<!-- ==================================================== -->
+	<!-- Exception handler. -->
+	<!-- ==================================================== -->
 <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
 	<property name="exceptionMappings">
 		<props>
 			<prop key="org.springframework.dao.DataAccessException">dataAccessFailure</prop>
-			<!-- <prop key="ubic.gemma.loader.expression.geo.InvalidAccessionException">invalidGeoAccession</prop> -->
-			<!-- <prop key="ubic.gemma.loader.util.AlreadyExistsInSystemException">alreadyExistsInSystem</prop> -->
+			<!--
+				<prop key="ubic.gemma.loader.expression.geo.InvalidAccessionException">invalidGeoAccession</prop>
+			-->
+			<!--
+				<prop key="ubic.gemma.loader.util.AlreadyExistsInSystemException">alreadyExistsInSystem</prop>
+			-->
 			<prop key="java.lang.Exception">error</prop>
 		</props>
 	</property>
 </bean>
-<!-- ==================================================== -->
-<!-- Action resolvers for MultiActionControllers -->
-<!-- ==================================================== -->
+	<!-- ==================================================== -->
+	<!-- Action resolvers for MultiActionControllers -->
+	<!-- ==================================================== -->
 <bean id="bibRefActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
@@ -1491,8 +1500,7 @@
 		</props>
 	</property>
 </bean>
-<bean id="compositeSequenceActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="compositeSequenceActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/compositeSequence/showAll.html">showAll</prop>
@@ -1501,8 +1509,7 @@
 		</props>
 	</property>
 </bean>
-<bean id="expressionExperimentActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="expressionExperimentActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/expressionExperiment/showAllExpressionExperiments.html">showAll</prop>
@@ -1513,28 +1520,24 @@
 			<prop key="/expressionExperiment/showBioMaterialsFromExpressionExperiment.html">showBioMaterials</prop>
 			<prop key="/expressionExperiment/showExpressionExperimentSubSet.html">showSubSet</prop>
 			<prop key="/expressionExperiment/filterExpressionExperiments.html">filter</prop>
-			<prop key="/expressionExperiment/generateExpressionExperimentLinkSummary.html">generateSummary</prop>
 		</props>
 	</property>
 </bean>
-<bean id="expressionExperimentVisualizationActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="expressionExperimentVisualizationActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/expressionExperiment/visualizeDataMatrix.html">show</prop>
 		</props>
 	</property>
 </bean>
-<bean id="expressionDataFileFetchActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="expressionDataFileFetchActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/getData.html">downloadFile</prop>
 		</props>
 	</property>
 </bean>
-<bean id="expressionExperimentQCActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="expressionExperimentQCActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/expressionExperiment/visualizeCorrMat.html">showCorrMat</prop>
@@ -1543,12 +1546,14 @@
 		</props>
 	</property>
 </bean>
-<bean id="experimentalDesignActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="experimentalDesignActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/experimentalDesign/showAllExpressionExperiments.html">showAll</prop>
-			<!--  <prop key="/expressionExperiment/deleteExpressionExperiment.html">delete</prop> -->
+			<!--
+				<prop
+				key="/expressionExperiment/deleteExpressionExperiment.html">delete</prop>
+			-->
 			<prop key="/experimentalDesign/showExperimentalDesign.html">show</prop>
 		</props>
 	</property>
@@ -1580,18 +1585,18 @@
 		</props>
 	</property>
 </bean>
-<bean id="experimentalFactorActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="experimentalFactorActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/experimentalFactor/showAllExperimentalFactors.html">showAll</prop>
-			<!--  <prop key="/experiment/deleteExperimentalFactor.html">delete</prop> -->
+			<!--
+				<prop key="/experiment/deleteExperimentalFactor.html">delete</prop>
+			-->
 			<prop key="/experimentalFactor/showExperimentalFactor.html">show</prop>
 		</props>
 	</property>
 </bean>
-<bean id="geoRecordBrowserActions"
-	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+<bean id="geoRecordBrowserActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
 	<property name="mappings">
 		<props>
 			<prop key="/geoBrowser/showBatch.html">showBatch</prop>
@@ -1622,33 +1627,35 @@
 		</props>
 	</property>
 </bean>
-<!-- ==================================================== -->
-<!--           Used to configure menus on pages           -->
-<!-- ==================================================== -->
+	<!-- ==================================================== -->
+	<!--           Used to configure menus on pages           -->
+	<!-- ==================================================== -->
 <bean id="menu" class="net.sf.navigator.menu.MenuLoader">
 	<property name="menuConfig">
 		<value>/WEB-INF/menu-config.xml</value>
 	</property>
 </bean>
-<!-- ====================================================  
-	Used for file uploads. Simply defining this makes Spring use it.	  
-	==================================================== -->
+	<!--
+		==================================================== Used for file uploads. Simply defining this makes Spring use it.
+		====================================================
+	-->
 <bean id="multipartResolver" class="ubic.gemma.web.util.upload.CommonsMultipartMonitoredResolver">
 	<property name="maxUploadSize">
 		<value>20097152</value>
 	</property>
 </bean>
-<!-- ====================================================  
-	View Resolver for JSPs. This means that a jsp named 
-	"myform.jsp" can be referred to as "myform" in your 
-	controller bean declarations.
-	==================================================== -->
+	<!--
+		==================================================== View Resolver for JSPs. This means that a jsp named "myform.jsp"
+		can be referred to as "myform" in your controller bean declarations.
+		====================================================
+	-->
 <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 	<property name="requestContextAttribute">
 		<value>rc</value>
 	</property>
 	<property name="viewClass">
-		<value>org.springframework.web.servlet.view.JstlView</value>
+		<value>org.springframework.web.servlet.view.JstlView
+		</value>
 	</property>
 	<property name="prefix">
 		<value>/WEB-INF/pages/</value>
@@ -1657,9 +1664,9 @@
 		<value>.jsp</value>
 	</property>
 </bean>
-<!-- ==================================================== -->
-<!-- Make spring aware of our i18n support files -->
-<!-- ==================================================== -->
+	<!-- ==================================================== -->
+	<!-- Make spring aware of our i18n support files -->
+	<!-- ==================================================== -->
 <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
 	<property name="basenames">
 		<list>
@@ -1667,18 +1674,26 @@
 		</list>
 	</property>
 </bean>
-<!-- ==================================================== -->
-<!--  Validation settings. The validator factory is defined in applicationContext-validation.xml -->
-<!-- ==================================================== -->
-<!--  Use this if the command class is a command object that has Xdoclet validation tags in the source. -->
+	<!-- ==================================================== -->
+	<!--
+		Validation settings. The validator factory is defined in
+		applicationContext-validation.xml
+	-->
+	<!-- ==================================================== -->
+	<!--
+		Use this if the command class is a command object that has Xdoclet
+		validation tags in the source.
+	-->
 <bean id="genericBeanValidator" class="org.springmodules.validation.commons.DefaultBeanValidator">
 	<property name="validatorFactory">
 		<ref bean="validatorFactory" />
 	</property>
 </bean>
-<!-- Use this type of validator if you use a data model object as the command object, or if you can't define the validator using XDoclet tags. Each of these
-	
-	corresonds to a form declared in validation-global.xml (which gets merged into validation.xml) -->
+	<!--
+		Use this type of validator if you use a data model object as the command object, or if you can't define the validator
+		using XDoclet tags. Each of these corresonds to a form declared in validation-global.xml (which gets merged into
+		validation.xml)
+	-->
 <bean id="userValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
 	<property name="validatorFactory">
 		<ref bean="validatorFactory" />

@@ -28,6 +28,8 @@ import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
  * @version $Id$
  */
 public class ExperimentQCTag extends TagSupport {
+
+    private static final long serialVersionUID = -466958848014180520L;
     Long eeid;
     Size size = Size.small;
 
@@ -56,12 +58,12 @@ public class ExperimentQCTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
     public int doStartTag() throws JspException {
         StringBuilder buf = new StringBuilder();
+
         buf.append( "<div class=\"eeqc\" id=\"eeqc\">" );
         buf
                 .append( "<table border=\"0\"  ><tr><td valign=\"top\" align=\"left\" style=\"padding-right:30px;\"><strong>Sample correlation (black &le; "
@@ -72,7 +74,7 @@ public class ExperimentQCTag extends TagSupport {
                         + "&size=large\"><img src=\"visualizeCorrMat.html?id="
                         + this.eeid
                         + "&size="
-                        + this.size + "\" /></a>" );
+                        + this.size + "\" alt='Image unavailable'/></a>" );
 
         // link to lower contrast version
         buf
@@ -87,10 +89,10 @@ public class ExperimentQCTag extends TagSupport {
         buf.append( "</ul></td>" );
 
         buf.append( "<td valign=\"top\" align=\"center\"><strong>Probe correlation</strong><br />" );
-        buf.append( " <img src=\"visualizeProbeCorrDist.html?id=" + this.eeid + "\" /></td>" );
+        buf.append( " <img alt='Image unavailable' src=\"visualizeProbeCorrDist.html?id=" + this.eeid + "\" /></td>" );
 
         buf.append( "<td valign=\"top\" align=\"center\"><strong>Pvalue distributions</strong><br />" );
-        buf.append( " <img src=\"visualizePvalueDist.html?id=" + this.eeid + "\" /></td>" );
+        buf.append( " <img alt='Image unavailable' src=\"visualizePvalueDist.html?id=" + this.eeid + "\" /></td>" );
 
         buf.append( "</tr></table></div>" );
         try {
@@ -103,7 +105,6 @@ public class ExperimentQCTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override

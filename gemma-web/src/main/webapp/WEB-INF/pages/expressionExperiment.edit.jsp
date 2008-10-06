@@ -8,7 +8,8 @@
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">
 			<c:forEach var="error" items="${status.errorMessages}">
-				<img src="<c:url value="/images/iconWarning.gif"/>" alt="<fmt:message key="icon.warning"/>" class="icon" />
+				<img src="<c:url value="/images/iconWarning.gif"/>"
+					alt="<fmt:message key="icon.warning"/>" class="icon" />
 				<c:out value="${error}" escapeXml="false" />
 				<br />
 			</c:forEach>
@@ -16,8 +17,10 @@
 	</c:if>
 </spring:bind>
 
-<title><fmt:message key="expressionExperiment.title" /></title>
-<form method="post" action="<c:url value="/expressionExperiment/editExpressionExperiment.html"/>">
+<title><fmt:message key="expressionExperiment.title" />
+</title>
+<form method="post"
+	action="<c:url value="/expressionExperiment/editExpressionExperiment.html"/>">
 
 
 	<h2>
@@ -31,7 +34,9 @@
 			</td>
 			<td>
 				<spring:bind path="expressionExperiment.name">
-					<input type="text" size="75" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
+					<input type="text" size="75"
+						name="<c:out value="${status.expression}"/>"
+						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
 			</td>
 		</tr>
@@ -42,22 +47,13 @@
 			</td>
 			<td>
 				<spring:bind path="expressionExperiment.description">
-					<textarea rows="8" cols="75" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"
-						type="_moz">${status.value}</textarea>
+					<textarea rows="8" cols="75"
+						name="<c:out value="${status.expression}"/>"
+						value="<c:out value="${status.value}"/>" type="_moz">${status.value}</textarea>
 				</spring:bind>
 			</td>
 		</tr>
 
-		<tr>
-			<td class="label">
-				<b> <fmt:message key="expressionExperiment.source" /> </b>
-			</td>
-			<td>
-				<spring:bind path="expressionExperiment.source">
-					<input type="text" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
-				</spring:bind>
-			</td>
-		</tr>
 		<tr>
 			<td class="label">
 				<b> <fmt:message key="databaseEntry.title" /> </b>
@@ -66,10 +62,13 @@
 				<spring:bind path="expressionExperiment.accession">
 					<c:choose>
 						<c:when test="${expressionExperiment.accession == null}">
-							<input type="text" name="expressionExperiment.accession.accession" value="<c:out value="Accession unavailable"/>" />
+							<input type="text"
+								name="expressionExperiment.accession.accession"
+								value="<c:out value="Accession unavailable"/>" />
 						</c:when>
 						<c:otherwise>
-							<input type="text" name="expressionExperiment.accession.accession"
+							<input type="text"
+								name="expressionExperiment.accession.accession"
 								value="<c:out value="${expressionExperiment.accession.accession}"/>" />
 						</c:otherwise>
 					</c:choose>
@@ -84,7 +83,8 @@
 			</td>
 			<td>
 				<c:if test="${expressionExperiment.accession != null}">
-					<spring:bind path="expressionExperiment.accession.externalDatabase.name">
+					<spring:bind
+						path="expressionExperiment.accession.externalDatabase.name">
 						<select name="${status.expression}">
 							<c:forEach items="${externalDatabases}" var="externalDatabase">
 								<option value="${externalDatabase.name}"
@@ -106,13 +106,13 @@
 			</td>
 			<td>
 				<%
-				    if ( expressionExperiment.getOwner() != null ) {
+				    if (expressionExperiment.getOwner() != null) {
 				%>
 				<jsp:getProperty name="expressionExperiment" property="owner" />
 				<%
 				    } else {
-				        out.print( "Public" );
-				    }
+								out.print("Public");
+							}
 				%>
 			</td>
 		</tr>
@@ -122,19 +122,20 @@
 			</td>
 			<td>
 				<%
-				    if ( ( expressionExperiment.getInvestigators() ) != null
-				            && ( expressionExperiment.getInvestigators().size() > 0 ) ) {
+				    if ((expressionExperiment.getInvestigators()) != null
+									&& (expressionExperiment.getInvestigators().size() > 0)) {
 				%>
-				<c:forEach end="0" var="investigator" items="${ expressionExperiment.investigators }">
+				<c:forEach end="0" var="investigator"
+					items="${ expressionExperiment.investigators }">
 					<c:out value="${ investigator.name}" />
 				</c:forEach>
 				<%
-				    if ( expressionExperiment.getInvestigators().size() > 1 ) {
-				            out.print( ", et al. " );
-				        }
-				    } else {
-				        out.print( "No investigators known" );
-				    }
+				    if (expressionExperiment.getInvestigators().size() > 1) {
+									out.print(", et al. ");
+								}
+							} else {
+								out.print("No investigators known");
+							}
 				%>
 			</td>
 		</tr>
@@ -144,9 +145,10 @@
 			</td>
 			<td>
 				<%
-				    if ( expressionExperiment.getPrimaryPublication() != null ) {
+				    if (expressionExperiment.getPrimaryPublication() != null) {
 				%>
-				<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
+				<Gemma:citation
+					citation="${expressionExperiment.primaryPublication }" />
 				<%
 				    } else {
 				%>
@@ -164,11 +166,12 @@
 			</td>
 			<td>
 				<%
-				    if ( expressionExperiment.getAuditTrail() != null ) {
-				        out.print( expressionExperiment.getAuditTrail().getCreationEvent().getDate() );
-				    } else {
-				        out.print( "Create date unavailable" );
-				    }
+				    if (expressionExperiment.getAuditTrail() != null) {
+								out.print(expressionExperiment.getAuditTrail()
+										.getCreationEvent().getDate());
+							} else {
+								out.print("Create date unavailable");
+							}
 				%>
 			</td>
 		</tr>
@@ -188,19 +191,21 @@
 			<a
 				href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
 				<%
-				    out.print( expressionExperiment.getExperimentalDesign().getName() );
+				    out.print(expressionExperiment.getExperimentalDesign().getName());
 				%> </a>
 		</h3>
 		<p>
 			<b>Description:</b>
 			<%
-			    out.print( StringUtils.abbreviate( expressionExperiment.getExperimentalDesign().getDescription(), 100 ) );
+			    out.print(StringUtils.abbreviate(expressionExperiment
+								.getExperimentalDesign().getDescription(), 100));
 			%>
 			<BR />
 			<BR />
 			This experimental design has
 			<%
-			    out.print( expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+			    out.print(expressionExperiment.getExperimentalDesign()
+								.getExperimentalFactors().size());
 			%>
 			experimental factors.
 		</p>
@@ -248,61 +253,78 @@
 				Rep.
 			</th>
 		</tr>
-		<c:forEach var="index" begin="0" end="<%=expressionExperiment.getQuantitationTypes().size() - 1%>" step="1">
-			<spring:nestedPath path="expressionExperiment.quantitationTypes[${index}]">
+		<c:forEach var="index" begin="0"
+			end="<%=expressionExperiment.getQuantitationTypes().size()
+					- 1%>"
+			step="1">
+			<spring:nestedPath
+				path="expressionExperiment.quantitationTypes[${index}]">
 				<tr>
 					<td>
 						<spring:bind path="name">
-							<input type="text" size="20" name="<c:out value="${status.expression}"/>"
+							<input type="text" size="20"
+								name="<c:out value="${status.expression}"/>"
 								value="<c:out value="${status.value}"/>" />
 						</spring:bind>
 					</td>
 					<td>
 						<spring:bind path="description">
-							<input type="text" size="35" name="<c:out value="${status.expression}"/>"
+							<input type="text" size="35"
+								name="<c:out value="${status.expression}"/>"
 								value="<c:out value="${status.value}"/>" />
 						</spring:bind>
 					</td>
 					<td>
 						<spring:bind path="isPreferred">
-							<input id="preferredCheckbox" type="checkbox" name="${status.expression}"
+							<input id="preferredCheckbox" type="checkbox"
+								name="${status.expression}"
 								<c:if test="${status.value == true}">checked="checked"</c:if> />
-							<input type="hidden" name="_<c:out value="${status.expression}"/>">
+							<input type="hidden"
+								name="_<c:out value="${status.expression}"/>">
 						</spring:bind>
 					</td>
 					<td>
 						<spring:bind path="isRatio">
-							<input id="ratioCheckbox" type="checkbox" name="${status.expression}"
+							<input id="ratioCheckbox" type="checkbox"
+								name="${status.expression}"
 								<c:if test="${status.value == true}">checked="checked"</c:if> />
-							<input type="hidden" name="_<c:out value="${status.expression}"/>">
+							<input type="hidden"
+								name="_<c:out value="${status.expression}"/>">
 						</spring:bind>
 					</td>
 					<td>
 						<spring:bind path="isBackground">
-							<input id="backgroundCheckbox" type="checkbox" name="${status.expression}"
+							<input id="backgroundCheckbox" type="checkbox"
+								name="${status.expression}"
 								<c:if test="${status.value == true}">checked="checked"</c:if> />
-							<input type="hidden" name="_<c:out value="${status.expression}"/>">
+							<input type="hidden"
+								name="_<c:out value="${status.expression}"/>">
 						</spring:bind>
 					</td>
 					<td>
 						<spring:bind path="isBackgroundSubtracted">
-							<input id="bkgsubCheckbox" type="checkbox" name="${status.expression}"
+							<input id="bkgsubCheckbox" type="checkbox"
+								name="${status.expression}"
 								<c:if test="${status.value == true}">checked="checked"</c:if> />
-							<input type="hidden" name="_<c:out value="${status.expression}"/>">
+							<input type="hidden"
+								name="_<c:out value="${status.expression}"/>">
 						</spring:bind>
 					</td>
 					<td>
 						<spring:bind path="isNormalized">
-							<input id="normCheckbox" type="checkbox" name="${status.expression}"
+							<input id="normCheckbox" type="checkbox"
+								name="${status.expression}"
 								<c:if test="${status.value == true}">checked="checked"</c:if> />
-							<input type="hidden" name="_<c:out value="${status.expression}"/>">
+							<input type="hidden"
+								name="_<c:out value="${status.expression}"/>">
 						</spring:bind>
 					</td>
 					<td>
 						<spring:bind path="generalType">
 							<select name="${status.expression}">
 								<c:forEach items="${generalQuantitationTypes}" var="type">
-									<option value="${type}" <c:if test="${status.value == type}">selected</c:if>>
+									<option value="${type}"
+										<c:if test="${status.value == type}">selected</c:if>>
 										${type}
 									</option>
 								</c:forEach>
@@ -315,7 +337,8 @@
 						<spring:bind path="type">
 							<select name="${status.expression}">
 								<c:forEach items="${standardQuantitationTypes}" var="type">
-									<option value="${type}" <c:if test="${status.value == type}">selected</c:if>>
+									<option value="${type}"
+										<c:if test="${status.value == type}">selected</c:if>>
 										${type}
 									</option>
 								</c:forEach>
@@ -328,7 +351,8 @@
 						<spring:bind path="scale">
 							<select name="${status.expression}">
 								<c:forEach items="${scaleTypes}" var="type">
-									<option value="${type}" <c:if test="${status.value == type}">selected</c:if>>
+									<option value="${type}"
+										<c:if test="${status.value == type}">selected</c:if>>
 										${type}
 									</option>
 								</c:forEach>
@@ -341,7 +365,8 @@
 						<spring:bind path="representation">
 							<select name="${status.expression}">
 								<c:forEach items="${representations}" var="type">
-									<option value="${type}" <c:if test="${status.value == type}">selected</c:if>>
+									<option value="${type}"
+										<c:if test="${status.value == type}">selected</c:if>>
 										${type}
 									</option>
 								</c:forEach>
@@ -360,91 +385,129 @@
 		<h3>
 			Biomaterials and Assays
 		</h3>
-		<Gemma:assayView expressionExperiment="${expressionExperiment}" edit="true"></Gemma:assayView>
+		<Gemma:assayView expressionExperiment="${expressionExperiment}"
+			edit="true"></Gemma:assayView>
 	</authz:authorize>
 	<script type="text/javascript" src="<c:url value="/scripts/json.js"/>"></script>
 	<script language="JavaScript" type="text/javascript">
-		var dragItems = document.getElementsByClassName('dragItem');
-		var windowIdArray = new Array(dragItems.length);
-		for (j=0;j<dragItems.length;j++) {
-			windowIdArray[j] = dragItems[j].id;
-		}
-        for(i=0;i<windowIdArray.length;i++)
-    	{
-        	var windowId = windowIdArray[i];
-        	//set to be draggable
-        	new Draggable(windowId,{revert:true, ghosting:true});
-        	//set to be droppable
-        	Droppables.add(windowId, {overlap: 'vertical', accept: 'dragItem',hoverclass: 'drophover',
-        	onDrop: function(element, droppableElement)
-            {
-            	// error check
-            	// if between columns (ArrayDesigns), do not allow
-            	if (element.getAttribute('arrayDesign') == droppableElement.getAttribute('arrayDesign')) {
-             	// initialize variables
-				var removeFromElement = element.getAttribute('material');
-				var removeFromDroppable = droppableElement.getAttribute('material');
-            	// swap the assays
-            	var temp = element.getAttribute('assay');
-            	element.setAttribute('assay', droppableElement.getAttribute('assay'));
-				droppableElement.setAttribute('assay', temp);
+	var dragItems = document.getElementsByClassName('dragItem');
+	var windowIdArray = new Array(dragItems.length);
+	for (j = 0; j < dragItems.length; j++) {
+		windowIdArray[j] = dragItems[j].id;
+	}
+	for (i = 0; i < windowIdArray.length; i++) {
+		var windowId = windowIdArray[i];
+		//set to be draggable
+		new Draggable(windowId, {
+			revert :true,
+			ghosting :true
+		});
+		//set to be droppable
+		Droppables
+				.add(
+						windowId,
+						{
+							overlap :'vertical',
+							accept :'dragItem',
+							hoverclass :'drophover',
+							onDrop : function(element, droppableElement) {
+								// error check
+							// if between columns (ArrayDesigns), do not allow
+							if (element.getAttribute('arrayDesign') == droppableElement
+									.getAttribute('arrayDesign')) {
+								// initialize variables
+								var removeFromElement = element
+										.getAttribute('material');
+								var removeFromDroppable = droppableElement
+										.getAttribute('material');
+								// swap the assays
+								var temp = element.getAttribute('assay');
+								element.setAttribute('assay', droppableElement
+										.getAttribute('assay'));
+								droppableElement.setAttribute('assay', temp);
 
-				// retrieve the JSON object and parse it
-				var materialString = document.getElementById('assayToMaterialMap').value;
-				var materialMap = materialString.parseJSON();
+								// retrieve the JSON object and parse it
+								var materialString = document
+										.getElementById('assayToMaterialMap').value;
+								var materialMap = materialString.parseJSON();
 
-				// write the new values into the materialMap
-                materialMap[element.getAttribute('assay')].push(element.getAttribute('material'));
-                materialMap[droppableElement.getAttribute('assay')].push(droppableElement.getAttribute('material'));       
-				
-				// remove the old values from the materialMap
-				var elementToRemove;
-				for (k=0;k<materialMap[element.getAttribute('assay')].length;k++) {
-					if (materialMap[element.getAttribute('assay')][k] = removeFromElement) {
-						elementToRemove = k;
-						break;
-					}
-				}
+								// write the new values into the materialMap
+								materialMap[element.getAttribute('assay')]
+										.push(element.getAttribute('material'));
+								materialMap[droppableElement
+										.getAttribute('assay')]
+										.push(droppableElement
+												.getAttribute('material'));
 
-				materialMap[element.getAttribute('assay')].splice(k, 1);
-				for (k=0;k<materialMap[droppableElement.getAttribute('assay')].length;k++) {
-					if (materialMap[droppableElement.getAttribute('assay')][k] = removeFromDroppable) {
-						elementToRemove = k;
-						break;
-					}
-				}
-				materialMap[droppableElement.getAttribute('assay')].splice(k, 1);
-				
-                // serialize the JSON object
-                document.getElementById('assayToMaterialMap').value = materialMap.toJSONString();
+								// remove the old values from the materialMap
+								var elementToRemove;
+								for (k = 0; k < materialMap[element
+										.getAttribute('assay')].length; k++) {
+									if (materialMap[element
+											.getAttribute('assay')][k] = removeFromElement) {
+										elementToRemove = k;
+										break;
+									}
+								}
 
-                // swap inner HTML
-                var content1 = element.innerHTML;
-                var content2 = droppableElement.innerHTML;          
-                droppableElement.innerHTML = content1;
-                element.innerHTML = content2;
-                }
-                else {
-					new Effect.Highlight(droppableElement.id,{delay:0, duration: 0.25, startcolor: '#ff0000', endcolor: '#ff0000' });
-					new Effect.Highlight(droppableElement.id,{delay:0.5, duration: 0.25, startcolor: '#ff0000', endcolor: '#ff0000' });
-                }
-            }
-            });
-    	}
-		</script>
+								materialMap[element.getAttribute('assay')]
+										.splice(k, 1);
+								for (k = 0; k < materialMap[droppableElement
+										.getAttribute('assay')].length; k++) {
+									if (materialMap[droppableElement
+											.getAttribute('assay')][k] = removeFromDroppable) {
+										elementToRemove = k;
+										break;
+									}
+								}
+								materialMap[droppableElement
+										.getAttribute('assay')].splice(k, 1);
+
+								// serialize the JSON object
+								document.getElementById('assayToMaterialMap').value = materialMap
+										.toJSONString();
+
+								// swap inner HTML
+								var content1 = element.innerHTML;
+								var content2 = droppableElement.innerHTML;
+								droppableElement.innerHTML = content1;
+								element.innerHTML = content2;
+							} else {
+								new Effect.Highlight(droppableElement.id, {
+									delay :0,
+									duration :0.25,
+									startcolor :'#ff0000',
+									endcolor :'#ff0000'
+								});
+								new Effect.Highlight(droppableElement.id, {
+									delay :0.5,
+									duration :0.25,
+									startcolor :'#ff0000',
+									endcolor :'#ff0000'
+								});
+							}
+						}
+						});
+	}
+</script>
 
 	<table>
 		<tr>
 			<td>
-				<input type="submit" class="button" name="save" value="<fmt:message key="button.save"/>" />
-				<input type="submit" class="button" name="cancel" value="<fmt:message key="button.cancel"/>" />
+				<input type="submit" class="button" name="save"
+					value="<fmt:message key="button.save"/>" />
+				<input type="submit" class="button" name="cancel"
+					value="<fmt:message key="button.cancel"/>" />
 			</td>
 		</tr>
 	</table>
 
 </form>
 
-<validate:javascript formName="expressionExperiment" staticJavascript="false" />
-<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>
-<script type="text/javascript" src="<c:url value="/scripts/aa-init.js"/>"></script>
+<validate:javascript formName="expressionExperiment"
+	staticJavascript="false" />
+<script type="text/javascript"
+	src="<c:url value="/scripts/validator.jsp"/>"></script>
+<script type="text/javascript"
+	src="<c:url value="/scripts/aa-init.js"/>"></script>
 

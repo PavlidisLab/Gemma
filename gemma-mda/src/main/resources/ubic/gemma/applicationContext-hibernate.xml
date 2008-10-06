@@ -398,6 +398,7 @@
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getSubSets=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByBioMaterials=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByFactorValues=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByQuantitationType=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExperimentalDesignService.loadAll=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExperimentalDesignService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.experiment.ExperimentalDesignService.findOrCreate=PROPAGATION_REQUIRED

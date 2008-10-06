@@ -271,7 +271,7 @@ public class OntologyService {
 
         String queryString = givenQueryString;
 
-        log.info( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
+        log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
 
         if ( queryString == null ) return null;
 
@@ -311,7 +311,7 @@ public class OntologyService {
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
         queryString = OntologySearch.stripInvalidCharacters( givenQueryString ); // Strip out invalid characters so
-                                                                                    // that Jena doesn't
+        // that Jena doesn't
         // die parsing them
         // FIXME hard-coding of ontologies to search
         results = mgedOntologyService.findResources( queryString );
@@ -408,7 +408,7 @@ public class OntologyService {
     }
 
     // Private class for sorting Characteristics
-    class TermComparator implements Comparator {
+    class TermComparator implements Comparator<Characteristic> {
 
         String comparator;
 
@@ -417,9 +417,9 @@ public class OntologyService {
             this.comparator = comparator;
         }
 
-        public int compare( Object o1, Object o2 ) {
-            String term1 = ( ( Characteristic ) o1 ).getValue();
-            String term2 = ( ( Characteristic ) o2 ).getValue();
+        public int compare( Characteristic o1, Characteristic o2 ) {
+            String term1 = o1.getValue();
+            String term2 = o2.getValue();
 
             if ( term1.equals( term2 ) ) return 0;
 
@@ -477,18 +477,36 @@ public class OntologyService {
      * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
      * 
      * @param vc
-     * @param bmIdList
+     * @param eeIds
      */
     @SuppressWarnings("unchecked")
-    public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> bmIdList ) {
+    public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> eeIds ) {
+
+        if ( vc == null ) {
+            throw new IllegalArgumentException( "Null characteristic" );
+        }
+
+        if ( eeIds.size() == 0 ) {
+            log.warn( "No EE ids given" );
+            return;
+        }
+
+        if ( StringUtils.isBlank( vc.getCategory() ) ) {
+            throw new IllegalArgumentException( "Must provide a category" );
+        }
+
+        if ( StringUtils.isBlank( vc.getValue() ) ) {
+            throw new IllegalArgumentException( "Must provide a value" );
+
+        }
 
         log.debug( "Vocab Characteristic: " + vc );
-        log.debug( "Expression Experiment ID List: " + bmIdList );
+        log.debug( "Expression Experiment ID List: " + eeIds );
 
         vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
         Set<Characteristic> chars = new HashSet<Characteristic>();
         chars.add( vc );
-        Collection<ExpressionExperiment> ees = eeService.loadMultiple( bmIdList );
+        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIds );
 
         for ( ExpressionExperiment ee : ees ) {
             eeService.thawLite( ee );

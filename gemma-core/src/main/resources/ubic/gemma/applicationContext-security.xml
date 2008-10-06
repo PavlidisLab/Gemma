@@ -289,6 +289,7 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadMultiple=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAllValueObjects=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadValueObjects=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.update=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.create=user,admin
@@ -299,6 +300,7 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByName=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByShortName=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByFactorValue=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByQuantitationType=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByTaxon=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getArrayDesignsUsed=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getQuantitationTypeCountById=user,admin,ROLE_ANONYMOUS
@@ -445,6 +447,8 @@
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.findOrCreate=user,admin
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.update=user,admin
+                ubic.gemma.model.common.quantitationtype.QuantitationTypeService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.common.quantitationtype.QuantitationTypeService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.remove=user,admin 
                 ubic.gemma.model.genome.biosequence.BioSequenceService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.biosequence.BioSequenceService.remove=user,admin 

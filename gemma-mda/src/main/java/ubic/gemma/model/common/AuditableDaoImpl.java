@@ -29,6 +29,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -47,15 +49,25 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
     /**
      * This is basically a thaw method.
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public Collection handleGetAuditEvents( final Auditable auditable ) {
+    public Collection<AuditEvent> handleGetAuditEvents( final Auditable auditable ) {
         if ( auditable == null ) throw new IllegalArgumentException( "Auditable cannot be null" );
-        return ( Collection ) getHibernateTemplate().execute(
+        return ( Collection<AuditEvent> ) getHibernateTemplate().execute(
                 new org.springframework.orm.hibernate3.HibernateCallback() {
-                    @SuppressWarnings("unused")
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        return auditable.getAuditTrail().getEvents();
+                        session.lock( auditable, LockMode.NONE );
+                        Hibernate.initialize( auditable );
+                        Hibernate.initialize( auditable.getAuditTrail() );
+                        Collection<AuditEvent> events = ( Collection<AuditEvent> ) auditable.getAuditTrail()
+                                .getEvents();
+                        Hibernate.initialize( events );
+                        for ( AuditEvent auditEvent : events ) {
+                            Hibernate.initialize( auditEvent );
+                            Hibernate.initialize( auditEvent.getPerformer() );
+                        }
+                        return events;
                     }
                 } );
 
@@ -73,6 +85,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
      * @return
      * @throws java.lang.Exception
      */
+    @SuppressWarnings("unchecked")
     protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final AuditTrail auditTrail,
             AuditEventType type ) throws java.lang.Exception {
 
@@ -99,7 +112,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
             queryObject.setParameter( "trail", auditTrail.getId() );
             queryObject.setMaxResults( 1 );
 
-            Collection results = queryObject.list();
+            Collection<AuditEvent> results = queryObject.list();
 
             if ( results == null || results.isEmpty() ) return null;
 
@@ -117,7 +130,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
      * @param type Class
      * @return A List of class names, including the given type.
      */
-    protected List<String> getClassHierarchy( Class type ) {
+    protected List<String> getClassHierarchy( Class<? extends AuditEventType> type ) {
         List<String> classes = new ArrayList<String>();
         classes.add( type.getCanonicalName() );
 
@@ -140,9 +153,8 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.AuditableDaoBase#handleGetLastAuditEvent(java.util.Collection,
-     *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
+     * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
     @SuppressWarnings("unchecked")
     @Override

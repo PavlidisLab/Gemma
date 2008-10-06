@@ -39,6 +39,7 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter extends ByAssociatedOb
 
     protected static final Log logger = LogFactory.getLog( AclAfterCollectionCompSeqByArrayDesignFilter.class );
 
+    @Override
     public String getProcessConfigAttribute() {
         return "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ";
     }
@@ -47,6 +48,7 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter extends ByAssociatedOb
      * @param targetDomainObject
      * @return
      */
+    @Override
     protected Securable getDomainObject( Object targetDomainObject ) {
         ArrayDesign domainObject = ( ( CompositeSequence ) targetDomainObject ).getArrayDesign();
         return domainObject;

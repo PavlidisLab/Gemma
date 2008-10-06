@@ -36,7 +36,7 @@ public class BlastResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis
         BlastResult result = this.find( toFindOrCreate );
         if ( result != null ) return result;
 
-        logger.debug( "Creating new BlatResult: " + result.toString() );
+        logger.debug( "Creating new BlatResult: " + toFindOrCreate.toString() );
         result = ( BlastResult ) create( toFindOrCreate );
         return result;
     }

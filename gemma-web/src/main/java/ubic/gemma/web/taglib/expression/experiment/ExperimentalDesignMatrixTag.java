@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 University of British Columbia
+ * Copyright (c) 2007-2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,12 +30,10 @@ import java.util.Map;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.Describable;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -87,7 +85,6 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
         return assays;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public int doStartTag() throws JspException {
         StringBuilder buf = new StringBuilder();
@@ -145,7 +142,7 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
             return "unknown";
         } else {
             StringBuffer buf = new StringBuffer();
-            for ( Iterator it = values.iterator(); it.hasNext(); ) {
+            for ( Iterator<FactorValue> it = values.iterator(); it.hasNext(); ) {
                 buf.append( it.next() );
                 if ( it.hasNext() ) buf.append( "<br>" );
             }
@@ -218,8 +215,8 @@ class FactorValueVector {
             buf.append( "; " );
             buf.append( factor.getName() );
             buf.append( " => [ " );
-            for ( Iterator it = getValuesForFactor( factor ).iterator(); it.hasNext(); ) {
-                buf.append( ( FactorValue ) it.next() );
+            for ( Iterator<FactorValue> it = getValuesForFactor( factor ).iterator(); it.hasNext(); ) {
+                buf.append( it.next() );
                 if ( it.hasNext() ) buf.append( ", " );
             }
             buf.append( " ] " );

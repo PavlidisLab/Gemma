@@ -1,9 +1,80 @@
 Ext.namespace('Gemma');
 
 /**
+ * Config options;
+ * 
+ * @param taskId
+ *            (required)
+ * @param callback
+ *            fired when finished, with the task payload as argument
+ * @param showAllMessages
+ *            when finished, show all the messages. Useful for complex jobs.
+ * @class Gemma.ProgressWindow
+ * @extends Ext.Window
+ */
+Gemma.ProgressWindow = Ext.extend(Ext.Window, {
+
+			modal : true,
+			closable : false,
+
+			showAllMessages : false,
+
+			resizable : false,
+			collapsible : false,
+			// width : 600,
+			autoHeight : true,
+			autoWidth : true,
+
+			initComponent : function() {
+
+				this.pBar = new Gemma.ProgressWidget({
+							taskId : this.taskId
+						});
+
+				Ext.apply(this, {
+							items : [this.pBar]
+						});
+
+				Gemma.ProgressWindow.superclass.initComponent.call(this);
+
+				this.addEvents('success', 'failed');
+
+				this.on('show', this.pBar.startProgress.createDelegate(this.pBar));
+			},
+
+			afterRender : function(a, b) {
+				Gemma.ProgressWindow.superclass.afterRender.call(this, a, b);
+
+				this.pBar.on('done', function(payload) {
+							this.getEl().switchOff({
+										callback : function() {
+											if (this.showAllMessages && this.pBar.allMessages.length > 0) {
+												Ext.Msg.alert("The following messages were generated",
+														this.pBar.allMessages);
+											}
+											this.destroy();
+										},
+										scope : this
+									});
+							if (this.callback) {
+								this.callback(payload);
+							}
+						}.createDelegate(this));
+
+				this.pBar.on('fail', function(message) {
+							Ext.Msg.alert("Error", message + "<br/>Additional log messages during run:<br/> "
+											+ this.pBar.allMessages);
+							this.destroy();
+						}.createDelegate(this));
+			}
+
+		});
+
+/**
  * Config options:
  * 
  * @param taskId
+ *            (required)
  * @class Gemma.ProgressWidget
  * @extends Ext.Panel
  */
@@ -13,12 +84,15 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 			previousMessage : '',
 			timeoutid : null,
 			waiting : false,
+			layout : 'fit',
+			bodyBorder : false,
+			// width : 600,
 
-			style : 'font-weight:normal;font-size:smaller;',
-
-			initComponent : function(config) {
+			initComponent : function() {
 
 				this.progressBar = new Ext.ProgressBar({
+							style : 'font-weight:normal;font-size:smaller;',
+							width : 400,
 							text : "Initializing ..."
 						});
 
@@ -28,14 +102,13 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 
 				Gemma.ProgressWidget.superclass.initComponent.call(this);
 
-				Ext.apply(this, config);
+				Ext.apply(this);
 
 				this.addEvents('done', 'fail', 'cancel');
 			},
 
 			handleFailure : function(data, e) {
 				this.stopProgress();
-
 				var messageText = "";
 				if (data.description) {
 					messageText = data.description;
@@ -47,7 +120,6 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 					messageText = e;
 				}
 				this.fireEvent("fail", messageText);
-
 			},
 
 			/**
@@ -130,7 +202,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 				if (this.previousMessage != messages && messages.length > 0) {
 					this.previousMessage = messages;
 					this.progressBar.updateText(messages);
-					this.allMessages = this.allMessages + messages;
+					this.allMessages = this.allMessages + messagesToSave;
 					// document.getElementById("progressTextArea").innerHTML += messages;
 				} else {
 					this.progressBar.updateText(this.progressBar.text + '.');
@@ -142,7 +214,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 			 */
 			cancelJob : function() {
 				this.waiting = false;
-				document.getElementById("progressTextArea").innerHTML = "Cancelling...";
+				// document.getElementById("progressTextArea").innerHTML = "Cancelling...";
 				var f = this.cancelCallback.createDelegate(this, [], true);
 				ProgressStatusService.cancelJob(this.taskId, f);
 			},

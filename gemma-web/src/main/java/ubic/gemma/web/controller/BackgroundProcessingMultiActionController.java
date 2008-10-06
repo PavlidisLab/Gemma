@@ -54,7 +54,7 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
      * @return task id This allows the background controller job to be created outside and passed in effectively
      *         allowing one controller to create more than 1 job
      */
-    protected synchronized ModelAndView startJob( BackgroundControllerJob<ModelAndView> job ) {
+    protected synchronized ModelAndView startJob( BackgroundControllerJob job ) {
         String taskId = run( job );
         ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskId=" + taskId ) );
         mnv.addObject( "taskId", taskId );
@@ -68,7 +68,7 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
      * @param job
      * @return
      */
-    protected String run( BackgroundControllerJob<ModelAndView> job ) {
+    protected String run( BackgroundControllerJob job ) {
 
         String taskId = TaskRunningService.generateTaskId();
         job.setTaskId( taskId );

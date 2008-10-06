@@ -107,7 +107,6 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
 
         /*
          * (non-Javadoc)
-         * 
          * @see java.util.concurrent.Callable#call()
          */
         public ModelAndView call() throws Exception {
@@ -149,6 +148,10 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
             if ( eedId != null ) {
                 log.debug( "Request is for design file." );
                 ee = expressionExperimentService.load( eeId );
+                if ( ee == null ) {
+                    throw new RuntimeException( "Expression experiment id " + eeId
+                            + " was invalid: doesn't exist in system, or you lack authorization." );
+                }
             }
             /* data file */
             else {
@@ -156,16 +159,22 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
                     qType = quantitationTypeService.load( qtId );
                     if ( qType == null ) {
                         throw new RuntimeException( "Quantitation type ID " + qtId
-                                + " was invalid: doesn't exist in system" );
+                                + " was invalid: doesn't exist in system, or you lack authorization." );
                     }
+
+                    /* paranoia: in case QTs aren't secured properly, make sure we have access to the EE */
+                    ee = expressionExperimentService.findByQuantitationType( qType );
                 } else {
                     ee = expressionExperimentService.load( eeId );
-                    if ( ee == null ) {
-                        throw new RuntimeException( "Expression experiment id " + eeId
-                                + " was invalid: doesn't exist in system" );
-                    }
+
                 }
             }
+
+            if ( ee == null ) {
+                throw new RuntimeException(
+                        "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
+            }
+
             File f = null;
 
             /* write out the file using text format */

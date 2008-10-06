@@ -40,10 +40,12 @@ public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServi
     /**
      * @see ubic.gemma.model.common.AuditableService#getEvents(ubic.gemma.model.common.Auditable)
      */
+    @SuppressWarnings("unchecked")
     @Override
-    protected java.util.Collection handleGetEvents( ubic.gemma.model.common.Auditable auditable )
+    protected java.util.Collection<AuditEvent> handleGetEvents( ubic.gemma.model.common.Auditable auditable )
             throws java.lang.Exception {
-        return this.getAuditableDao().getAuditEvents( auditable );
+        Collection<AuditEvent> auditEvents = this.getAuditableDao().getAuditEvents( auditable );
+        return auditEvents;
     }
 
     /**

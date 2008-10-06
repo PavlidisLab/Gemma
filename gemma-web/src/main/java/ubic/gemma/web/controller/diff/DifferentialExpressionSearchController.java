@@ -458,16 +458,22 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param eeIds
      */
     @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperimentExperimentalFactorValueObject> getFactors( Collection<Long> eeIds ) {
+    public Collection<ExpressionExperimentExperimentalFactorValueObject> getFactors( final Collection<Long> eeIds ) {
 
-        log.info( "Getting factors for experiments with ids: " + eeIds.toString() );
+        Collection<ExpressionExperimentExperimentalFactorValueObject> result = new HashSet<ExpressionExperimentExperimentalFactorValueObject>();
 
-        Collection<ExpressionExperimentExperimentalFactorValueObject> eeefvos = new HashSet<ExpressionExperimentExperimentalFactorValueObject>();
+        final Collection<Long> securityFilteredIds = securityFilterExpressionExperimentIds( eeIds );
+
+        if ( securityFilteredIds.size() == 0 ) {
+            return result;
+        }
+
+        log.debug( "Getting factors for experiments with ids: " + securityFilteredIds.toString() );
 
         Collection<Long> filteredEeIds = new HashSet<Long>();
 
         Map<Long, DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-                .findByInvestigationIds( eeIds );
+                .findByInvestigationIds( securityFilteredIds );
 
         Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService
                 .loadValueObjects( diffAnalyses.keySet() );
@@ -497,19 +503,31 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 eeefvo.getExperimentalFactors().add( efvo );
             }
 
-            eeefvos.add( eeefvo );
+            result.add( eeefvo );
         }
         log.info( "Filtered experiments.  Returning factors for experiments with ids: " + filteredEeIds.toString() );
-        return eeefvos;
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
+        /*
+         * Because this method returns the results, we have to screen.
+         */
+        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
+
+        Collection<Long> filteredIds = new HashSet<Long>();
+        for ( ExpressionExperiment ee : securityScreened ) {
+            filteredIds.add( ee.getId() );
+        }
+        return filteredIds;
     }
 
     /*
      * Handles the case exporting results as text.
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse)
+     * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
+     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    @SuppressWarnings( { "unchecked", "unused" })
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {

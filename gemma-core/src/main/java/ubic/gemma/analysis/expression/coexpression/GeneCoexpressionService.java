@@ -469,7 +469,7 @@ public class GeneCoexpressionService {
             ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
             ecdvo.setCoexpressionLinkCount( coexp.getLinkCountForEE( coexpEevo.getId() ) );
             ecdvo.setRawCoexpressionLinkCount( coexp.getRawLinkCountForEE( coexpEevo.getId() ) );
-            ecdvo.setProbeSpecificForQueryGene( coexpEevo.isProbeSpecificForQueryGene() );
+            ecdvo.setProbeSpecificForQueryGene( coexpEevo.getHasProbeSpecificForQueryGene() );
             ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
             ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
             datasetResults.add( ecdvo );

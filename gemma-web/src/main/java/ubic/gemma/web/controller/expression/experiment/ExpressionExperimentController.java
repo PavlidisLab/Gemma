@@ -19,8 +19,10 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,20 +38,27 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
@@ -59,6 +68,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
@@ -87,42 +97,287 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="experimentalFactorService" ref="experimentalFactorService"
  * @spring.property name="securityService" ref="securityService"
  * @spring.property name="auditEventService" ref="auditEventService"
+ * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
+ * @spring.property name = "persisterHelper" ref="persisterHelper"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
  */
 public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
 
-    private static final Boolean AJAX = true;
+    /**
+     * Generates summary reports of expression experiments
+     * 
+     * @author pavlidis
+     * @version $Id$
+     */
+    private class GenerateSummary extends BackgroundControllerJob<Collection<ExpressionExperimentValueObject>> {
 
+        private Collection<Long> ids;
+
+        public GenerateSummary( Collection<Long> id ) {
+            super( getMessageUtil() );
+            this.ids = id;
+        }
+
+        public Collection<ExpressionExperimentValueObject> call() throws Exception {
+
+            init();
+
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Expression experiment report  generating" );
+
+            if ( ids == null ) {
+                saveMessage( "Generating report for all experiments" );
+                job.updateProgress( "Generating report for all experiments" );
+                expressionExperimentReportService.generateSummaryObjects();
+                return null; // / we don't return ALL of them.
+            } else {
+                // saveMessage( "Generating report for experiment" );
+                job.updateProgress( "Generating report for specified experiment(s)" );
+                Collection<ExpressionExperimentValueObject> objs = expressionExperimentReportService
+                        .generateSummaryObjects( ids );
+                return objs;
+            }
+
+        }
+    }
+
+    /**
+     * Delete expression experiments.
+     * 
+     * @author pavlidis
+     * @version $Id$
+     */
+    private class RemoveExpressionExperimentJob extends BackgroundControllerJob<ModelAndView> {
+
+        ExpressionExperiment ee;
+
+        public RemoveExpressionExperimentJob( ExpressionExperiment ee ) {
+            super();
+            this.ee = ee;
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see java.util.concurrent.Callable#call()
+         */
+        public ModelAndView call() throws Exception {
+
+            init();
+
+            expressionExperimentService.thawLite( ee );
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Deleting dataset: " + ee.getId() );
+
+            expressionExperimentService.delete( ee );
+            saveMessage( "Dataset " + ee.getShortName() + " removed from Database" );
+            ee = null;
+
+            ProgressManager.destroyProgressJob( job );
+            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+
+        }
+    }
+
+    private class RemovePubMed extends BackgroundControllerJob<Boolean> {
+
+        Long eeId;
+
+        public RemovePubMed( Long eeId ) {
+            super();
+            this.eeId = eeId;
+        }
+
+        @Override
+        public Boolean call() throws Exception {
+            init();
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Removing primary reference..." );
+
+            job.updateProgress( "Loading experiment" );
+            ExpressionExperiment ee = expressionExperimentService.load( eeId );
+
+            if ( ee == null ) {
+                return false;
+            }
+            expressionExperimentService.thawLite( ee );
+
+            if ( ee.getPrimaryPublication() == null ) {
+                return false;
+            }
+
+            job.updateProgress( "Removing reference" );
+            ee.setPrimaryPublication( null );
+
+            expressionExperimentService.update( ee );
+
+            return true;
+        }
+
+    }
+
+    private class UpdateBasics extends BackgroundControllerJob<ExpressionExperimentDetailsValueObject> {
+
+        ExpressionExperimentDetailsValueObject command;
+        private ExpressionExperimentService eeService;
+
+        public UpdateBasics( ExpressionExperimentService expressionExperimentService,
+                ExpressionExperimentDetailsValueObject command ) {
+            super( getMessageUtil() );
+            this.eeService = expressionExperimentService;
+            this.command = command;
+        }
+
+        public ExpressionExperimentDetailsValueObject call() throws Exception {
+
+            init();
+
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Updating expression experiment info..." );
+
+            ExpressionExperiment ee = expressionExperimentService.load( command.getId() );
+            if ( ee == null )
+                throw new IllegalArgumentException( "Cannot locate or access experiment with id=" + command.getId() );
+
+            if ( StringUtils.isNotBlank( command.getShortName() ) && !command.getShortName().equals( ee.getShortName() ) ) {
+                if ( expressionExperimentService.findByShortName( command.getShortName() ) != null ) {
+                    throw new IllegalArgumentException( "An experiment with short name '" + command.getShortName()
+                            + "' already exists" );
+                }
+                ee.setShortName( command.getShortName() );
+            }
+            if ( StringUtils.isNotBlank( command.getName() ) && !command.getName().equals( ee.getName() ) ) {
+                ee.setName( command.getName() );
+            }
+            if ( StringUtils.isNotBlank( command.getDescription() )
+                    && !command.getDescription().equals( ee.getDescription() ) ) {
+                ee.setDescription( command.getDescription() );
+            }
+
+            job.updateProgress( "Updating ..." );
+            this.eeService.update( ee );
+
+            return loadExpressionExperimentDetails( ee.getId() );
+        }
+    }
+
+    private class UpdatePubMed extends BackgroundControllerJob<ExpressionExperimentDetailsValueObject> {
+
+        Long eeId;
+        String pubmedId;
+
+        public UpdatePubMed( Long eeId, String pubmedId ) {
+            super();
+            this.eeId = eeId;
+            this.pubmedId = pubmedId;
+
+        }
+
+        @Override
+        public ExpressionExperimentDetailsValueObject call() throws Exception {
+            init();
+
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Updating primary reference..." );
+
+            ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId );
+            if ( expressionExperiment == null )
+                throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
+
+            BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
+
+            if ( publication != null ) {
+
+                job.updateProgress( "Reference exists in system, associating..." );
+                expressionExperiment.setPrimaryPublication( publication );
+                expressionExperimentService.update( expressionExperiment );
+            } else {
+                job.updateProgress( "Searching pubmed on line .." );
+
+                // search for pubmedId
+                PubMedSearch pms = new PubMedSearch();
+                Collection<String> searchTerms = new ArrayList<String>();
+                searchTerms.add( pubmedId );
+                Collection<BibliographicReference> publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
+                // check to see if there are publications found
+                // if there are none, or more than one, add an error message and do nothing
+                if ( publications.size() == 0 ) {
+                    job.updateProgress( "No matching publication found" );
+                    throw new IllegalArgumentException( "No matching publication found" );
+                } else if ( publications.size() > 1 ) {
+                    job.updateProgress( "Multiple matching publications found!" );
+                    throw new IllegalArgumentException( "Multiple matching publications found!" );
+                } else {
+                    publication = publications.iterator().next();
+
+                    DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
+                    pubAccession.setAccession( pubmedId );
+                    ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+                    ed.setName( "PubMed" );
+                    pubAccession.setExternalDatabase( ed );
+
+                    publication.setPubAccession( pubAccession );
+
+                    // persist new publication
+                    job.updateProgress( "Found new publication, associating ..." );
+
+                    publication = ( BibliographicReference ) persisterHelper.persist( publication );
+                    // publication = bibliographicReferenceService.findOrCreate( publication );
+                    // assign to expressionExperiment
+                    expressionExperiment.setPrimaryPublication( publication );
+
+                    expressionExperimentService.update( expressionExperiment );
+                }
+            }
+            ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject();
+            result.setPubmedId( Integer.parseInt( pubmedId ) );
+            result.setId( expressionExperiment.getId() );
+            result.setPrimaryCitation( formatCitation( expressionExperiment.getPrimaryPublication() ) );
+            return result;
+        }
+
+    }
+
+    private static final Boolean AJAX = true;
     /*
      * If this is too long, tooltips break.
      */
     private static final int MAX_EVENT_DESCRIPTION_LENGTH = 200;
+    private static final int TRIM_SIZE = 220;
+    PersisterHelper persisterHelper = null;
 
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-    private ExpressionExperimentService expressionExperimentService = null;
-    private ExperimentalFactorService experimentalFactorService;
-
-    private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
-    private ExpressionExperimentReportService expressionExperimentReportService = null;
-
-    private TaxonService taxonService;
-    private SearchService searchService;
-
-    private OntologyService ontologyService;
-
-    private AuditTrailService auditTrailService;
+    private ArrayDesignService arrayDesignService;
 
     private AuditEventService auditEventService;
 
-    private SecurityService securityService;
+    private AuditTrailService auditTrailService;
+
+    private BibliographicReferenceService bibliographicReferenceService;
+
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
+    private ExperimentalFactorService experimentalFactorService;
+
+    private ExpressionExperimentReportService expressionExperimentReportService = null;
+
+    private ExpressionExperimentService expressionExperimentService = null;
+
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
+
+    private OntologyService ontologyService;
+
+    private SearchService searchService;
+
+    private SecurityService securityService;
+
+    private TaxonService taxonService;
 
     /**
      * @param request
      * @param response
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
 
         Long id = null;
@@ -143,7 +398,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         RemoveExpressionExperimentJob removeExpressionExperimentJob = new RemoveExpressionExperimentJob(
-                expressionExperiment, expressionExperimentService );
+                expressionExperiment );
 
         return startJob( removeExpressionExperimentJob );
 
@@ -159,7 +414,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
         if ( expressionExperiment == null ) return null;
         RemoveExpressionExperimentJob removeExpressionExperimentJob = new RemoveExpressionExperimentJob(
-                expressionExperiment, expressionExperimentService );
+                expressionExperiment );
         return run( removeExpressionExperimentJob );
     }
 
@@ -202,45 +457,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 + list ) );
     }
 
-    public String updateReport( Long id ) {
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        if ( expressionExperiment == null ) return null;
-        Collection<Long> ids = new HashSet<Long>();
-        ids.add( id );
-        GenerateSummary runner = new GenerateSummary( expressionExperimentReportService, ids );
-        runner.setDoForward( false );
-        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    @SuppressWarnings( { "unused", "unchecked" })
-    public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
-
-        String sId = request.getParameter( "id" );
-
-        // if no IDs are specified, then load all expressionExperiments and show
-        // the summary (if available)
-        if ( sId == null ) {
-            return startJob( new GenerateSummary( expressionExperimentReportService ) );
-        }
-        Collection ids = new ArrayList<Long>();
-
-        String[] idList = StringUtils.split( sId, ',' );
-        for ( int i = 0; i < idList.length; i++ ) {
-            if ( StringUtils.isNotBlank( idList[i] ) ) {
-                ids.add( new Long( idList[i] ) );
-            }
-        }
-        expressionExperimentReportService.generateSummaryObjects( ids );
-        String idStr = StringUtils.join( ids.toArray(), "," );
-        return new ModelAndView( new RedirectView(
-                "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
-    }
-
     /**
      * AJAX
      * 
@@ -248,10 +464,299 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param taxonId (if null, all taxa are searched)
      * @return EE ids that match
      */
-    @SuppressWarnings("unchecked")
     public Collection<Long> find( String query, Long taxonId ) {
         log.info( "Search: " + query + " taxon=" + taxonId );
         return searchService.searchExpressionExperiments( query, taxonId );
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param e
+     * @return
+     */
+    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
+        if ( e == null || e.getId() == null ) return null;
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( e.getId() );
+        expressionExperimentService.thawLite( expressionExperiment );
+        Collection<AnnotationValueObject> annotations = new ArrayList<AnnotationValueObject>();
+        for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
+            AnnotationValueObject annotationValue = new AnnotationValueObject();
+            annotationValue.setId( c.getId() );
+            annotationValue.setClassName( c.getCategory() );
+            annotationValue.setTermName( c.getValue() );
+            annotationValue.setEvidenceCode( c.getEvidenceCode().toString() );
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                annotationValue.setClassUri( vc.getCategoryUri() );
+                String className = getLabelFromUri( vc.getCategoryUri() );
+                if ( className != null ) annotationValue.setClassName( className );
+                annotationValue.setTermUri( vc.getValueUri() );
+                String termName = getLabelFromUri( vc.getValueUri() );
+                if ( termName != null ) annotationValue.setTermName( termName );
+            }
+            annotations.add( annotationValue );
+        }
+        return annotations;
+    }
+
+    /**
+     * AJAX call
+     * 
+     * @param id
+     * @return a more informative description than the regular description 1st 120 characters of ee.description +
+     *         Experimental Design information returned string contains HTML tags. TODO: Would be more generic if passed
+     *         back a DescriptionValueObject that contains all the info necessary to reconstruct the HTML on the client
+     *         side Currently only used by ExpressionExperimentGrid.js (row expander)
+     */
+    public String getDescription( Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) return null;
+
+        Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
+
+        StringBuffer descriptive = new StringBuffer();
+
+        String eeDescription = ee.getDescription() == null ? "" : ee.getDescription().trim();
+
+        // Need to trim?
+        if ( eeDescription.length() < TRIM_SIZE + 1 )
+            descriptive.append( eeDescription );
+        else
+            descriptive.append( eeDescription.substring( 0, TRIM_SIZE ) + "..." );
+
+        // Is there any factor info to add?
+        if ( efs.size() < 1 ) return descriptive.append( "<b>No Factors</b>" ).toString();
+
+        String efUri = "  <a target='_blank' href='/Gemma/experimentalDesign/showExperimentalDesign.html?id="
+                + ee.getExperimentalDesign().getId() + "'>(details)</a >";
+
+        descriptive.append( "<b>Factors:</b>&nbsp;" );
+        for ( ExperimentalFactor ef : efs ) {
+            descriptive.append( ef.getName() + ", " );
+        }
+
+        // remove trailing "," and return as a string
+        return descriptive.substring( 0, descriptive.length() - 2 ) + efUri;
+
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param e
+     * @return
+     */
+    public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator e ) {
+
+        if ( e == null || e.getId() == null ) return null;
+        ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
+        if ( ee == null ) return null;
+
+        expressionExperimentService.thawLite( ee );
+        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee );
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param eeId
+     * @return a collectino of factor value objects that represent the factors of a given experiment
+     */
+    public Collection<FactorValueObject> getExperimentalFactors( EntityDelegator e ) {
+
+        if ( e == null || e.getId() == null ) return null;
+
+        ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
+        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
+
+        if ( ee.getExperimentalDesign() == null ) return null;
+
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+
+        for ( ExperimentalFactor factor : factors )
+            result.add( new FactorValueObject( factor ) );
+
+        return result;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param id of an experimental factor
+     * @return A collection of factor value objects for the specified experimental factor
+     */
+    public Collection<FactorValueObject> getFactorValues( EntityDelegator e ) {
+
+        if ( e == null || e.getId() == null ) return null;
+
+        ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
+        if ( ef == null ) return null;
+
+        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
+
+        Collection<FactorValue> values = ef.getFactorValues();
+        for ( FactorValue value : values ) {
+            result.add( new FactorValueObject( value ) );
+        }
+
+        return result;
+    }
+
+    /**
+     * AJAX; Populate all the details.
+     * 
+     * @param id Identifier for the experiment
+     */
+    public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+
+        if ( ee == null ) {
+            // possibly not permitted.
+            return null;
+        }
+
+        expressionExperimentService.thawLite( ee );
+        Collection<Long> ids = new HashSet<Long>();
+        ids.add( ee.getId() );
+
+        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids );
+
+        getReportData( initialResults );
+        ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
+        ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject( initialResult );
+
+        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
+        Collection<Long> adids = new HashSet<Long>();
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            adids.add( ad.getId() );
+        }
+
+        finalResult.setArrayDesigns( arrayDesignService.loadValueObjects( adids ) );
+
+        /*
+         * populate the publication and author information
+         */
+        finalResult.setDescription( ee.getDescription() );
+
+        if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
+            finalResult.setPrimaryCitation( formatCitation( ee.getPrimaryPublication() ) );
+            finalResult.setPubmedId( Integer.parseInt( ee.getPrimaryPublication().getPubAccession().getAccession() ) );
+        }
+
+        return finalResult;
+
+    }
+
+    /**
+     * AJAX - for display in tables. Don't retrieve too much detail.
+     * 
+     * @param ids of EEs to load
+     * @return security-filtered set of value objects.
+     */
+    public Collection<ExpressionExperimentValueObject> loadExpressionExperiments( Collection<Long> ids ) {
+        Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( ids );
+        populateAnalyses( ids, result ); // FIXME make this optional.
+        return result;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param sId
+     * @return
+     */
+    public Collection<ExpressionExperimentValueObject> loadStatusSummaries( String sId ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        // if no IDs are specified, then load all expressionExperiments.
+        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> eeValObjectCol;
+
+        boolean allowViewingAll = false;
+        if ( SecurityService.isUserLoggedIn() ) {
+            if ( SecurityService.isUserAdmin() ) {
+                allowViewingAll = true;
+            } else {
+                // Anonymous
+                throw new AccessDeniedException( "User does not have access to experiment management" );
+            }
+        }
+
+        /*
+         * TODO: if the user is logged in, show only their own experiments. If admin, show them all.
+         */
+
+        if ( sId == null ) {
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
+        } else { // if ids are specified, then display only those
+            // expressionExperiments
+            Collection<Long> ids = parseIdParameterString( sId );
+
+            if ( ids.size() == 0 ) {
+                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
+            } else {
+                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids );
+            }
+
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Phase 1 done in " + timer.getTime() + "ms" );
+        }
+
+        expressionExperiments.addAll( eeValObjectCol );
+
+        getReportData( expressionExperiments );
+
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Ready with link reports in " + timer.getTime() + "ms" );
+        }
+        return expressionExperiments;
+    }
+
+    /**
+     * Remove the primary publication for the given expression experiment (by id). The reference is not actually deleted
+     * from the system.
+     * 
+     * @param eeId
+     * @return
+     * @throws Exception
+     */
+    public String removePrimaryPublication( Long eeId ) throws Exception {
+        RemovePubMed runner = new RemovePubMed( eeId );
+        return run( runner );
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    public void setAuditEventService( AuditEventService auditEventService ) {
+        this.auditEventService = auditEventService;
+    }
+
+    /**
+     * @param ausitTrailService the auditTrailService to set
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    public void setexperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
+        this.experimentalFactorService = experimentalFactorService;
     }
 
     /**
@@ -278,6 +783,17 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
+     * @param ontologyService the ontologyService to set
+     */
+    public void setOntologyService( OntologyService ontologyService ) {
+        this.ontologyService = ontologyService;
+    }
+
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
      * @param searchService the searchService to set
      */
     public void setSearchService( SearchService searchService ) {
@@ -285,102 +801,17 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * @param ontologyService the ontologyService to set
+     * @param securityService
      */
-    public void setOntologyService( OntologyService ontologyService ) {
-        this.ontologyService = ontologyService;
-    }
-
-    public void setexperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
-        this.experimentalFactorService = experimentalFactorService;
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
     }
 
     /**
-     * @param ausitTrailService the auditTrailService to set
+     * @param taxonService
      */
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param e
-     * @return
-     */
-    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( e.getId() );
-
-        Collection<AnnotationValueObject> annotation = new ArrayList<AnnotationValueObject>();
-        for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject();
-            annotationValue.setId( c.getId() );
-            annotationValue.setClassName( c.getCategory() );
-            annotationValue.setTermName( c.getValue() );
-            annotationValue.setEvidenceCode( c.getEvidenceCode().toString() );
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                annotationValue.setClassUri( vc.getCategoryUri() );
-                String className = getLabelFromUri( vc.getCategoryUri() );
-                if ( className != null ) annotationValue.setClassName( className );
-                annotationValue.setTermUri( vc.getValueUri() );
-                String termName = getLabelFromUri( vc.getValueUri() );
-                if ( termName != null ) annotationValue.setTermName( termName );
-            }
-            annotation.add( annotationValue );
-        }
-        return annotation;
-    }
-
-    /**
-     * @param uri
-     * @return
-     */
-    private String getLabelFromUri( String uri ) {
-        OntologyResource resource = ontologyService.getResource( uri );
-        if ( resource != null ) return resource.getLabel();
-
-        return null;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    private AuditEvent getLastTroubleEvent( ExpressionExperiment ee ) {
-        // Why doesn't this use expressionExperimentService.getLastTroubleEvent
-        // ???
-        AuditEvent event = auditTrailService.getLastTroubleEvent( ee );
-        if ( event != null ) return event;
-
-        // See if array design have trouble.
-        for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-            event = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
-            if ( event != null ) return event;
-        }
-
-        return null;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<AuditEvent> getSampleRemovalEvents( ExpressionExperiment ee ) {
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        ees.add( ee );
-        Map<ExpressionExperiment, Collection<AuditEvent>> evMap = expressionExperimentService
-                .getSampleRemovalEvents( ees );
-        if ( evMap.containsKey( ee ) ) {
-            return evMap.get( ee );
-        }
-        return new HashSet<AuditEvent>();
-    }
-
-    private AuditEvent getLastValidationEvent( ExpressionExperiment ee ) {
-        return auditTrailService.getLastValidationEvent( ee );
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
     /**
@@ -389,7 +820,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings( { "unused", "unchecked" })
+    @SuppressWarnings( { "unchecked" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         if ( request.getParameter( "id" ) == null ) {
@@ -474,7 +905,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         if ( eeVos != null && eeVos.size() > 0 ) {
             ExpressionExperimentValueObject vo = eeVos.iterator().next();
-            String eeLinks = vo.getCoexpressionLinkCount().toString() + " (as of " + vo.getDateCached() + ")";
+            String eeLinks = vo.getCoexpressionLinkCount().toString();
             mav.addObject( "eeCoexpressionLinks", eeLinks );
         }
 
@@ -488,45 +919,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * Trouble, validation, sample removal.
-     * 
-     * @param expressionExperiment
-     * @param mav
-     */
-    private void getEventsOfInterest( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
-        AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
-        if ( troubleEvent != null ) {
-            mav.addObject( "troubleEvent", troubleEvent );
-            auditEventService.thaw( troubleEvent );
-            mav.addObject( "troubleEventDescription", StringUtils.abbreviate( StringEscapeUtils.escapeXml( troubleEvent
-                    .toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
-        }
-        AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
-        if ( validatedEvent != null ) {
-            mav.addObject( "validatedEvent", validatedEvent );
-            auditEventService.thaw( validatedEvent );
-            mav.addObject( "validatedEventDescription", StringUtils.abbreviate( StringEscapeUtils
-                    .escapeXml( validatedEvent.toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
-        }
-
-        Collection<AuditEvent> sampleRemovalEvents = this.getSampleRemovalEvents( expressionExperiment );
-        if ( sampleRemovalEvents.size() > 0 ) {
-            AuditEvent event = sampleRemovalEvents.iterator().next();
-            mav.addObject( "samplesRemoved", event ); // todo: handle multiple
-            auditEventService.thaw( event );
-            mav.addObject( "samplesRemovedDescription", StringUtils.abbreviate( StringEscapeUtils
-                    .escapeXml( validatedEvent.toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
-        }
-    }
-
-    /**
      * Show all experiments (optionally conditioned on either a taxon, or a list of ids)
      * 
      * @param request
      * @param response
      * @return ModelAndView
      */
-    @SuppressWarnings( { "unused", "unchecked" })
+    @SuppressWarnings( { "unchecked" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );
@@ -595,7 +994,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param response
      * @return ModelAndView
      */
-    @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
         log.info( "Processing link summary request" );
 
@@ -624,90 +1022,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * AJAX
-     * 
-     * @param sId
-     * @return
-     */
-    public Collection<ExpressionExperimentValueObject> loadStatusSummaries( String sId ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        // if no IDs are specified, then load all expressionExperiments.
-        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
-        Collection<ExpressionExperimentValueObject> eeValObjectCol;
-
-        boolean allowViewingAll = false;
-        if ( SecurityService.isUserLoggedIn() ) {
-            if ( SecurityService.isUserAdmin() ) {
-                allowViewingAll = true;
-            } else {
-                // Anonymous
-                throw new AccessDeniedException( "User does not have access to experiment management" );
-            }
-        }
-
-        /*
-         * TODO: if the user is logged in, show only their own experiments. If admin, show them all.
-         */
-
-        if ( sId == null ) {
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
-        } else { // if ids are specified, then display only those
-            // expressionExperiments
-            Collection<Long> ids = parseIdParameterString( sId );
-
-            if ( ids.size() == 0 ) {
-                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
-            } else {
-                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids );
-            }
-
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Phase 1 done in " + timer.getTime() + "ms" );
-        }
-
-        expressionExperiments.addAll( eeValObjectCol );
-
-        expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
-        expressionExperimentReportService.fillEventInformation( expressionExperiments );
-        expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
-
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Ready with link reports in " + timer.getTime() + "ms" );
-        }
-        return expressionExperiments;
-    }
-
-    /**
-     * @param sId
-     * @return
-     */
-    private Collection<Long> parseIdParameterString( String sId ) {
-        Collection<Long> ids = new ArrayList<Long>();
-        String[] idList = StringUtils.split( sId, ',' );
-        for ( int i = 0; i < idList.length; i++ ) {
-            if ( StringUtils.isNotBlank( idList[i] ) ) {
-                try {
-                    ids.add( new Long( idList[i] ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "Invalid id string" + idList[i] );
-                }
-            }
-        }
-        return ids;
-    }
-
-    /**
      * @param request
      * @param response
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView showBioAssays( HttpServletRequest request, HttpServletResponse response ) {
         String idStr = request.getParameter( "id" );
 
@@ -734,7 +1053,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView showBioMaterials( HttpServletRequest request, HttpServletResponse response ) {
         String idStr = request.getParameter( "id" );
 
@@ -783,7 +1101,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView showExpressionExperimentSubSet( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
 
@@ -809,7 +1126,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView showSubSet( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         if ( id == null ) {
@@ -826,11 +1142,106 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays", subset.getBioAssays() );
     }
 
+    public String updateBasics( ExpressionExperimentDetailsValueObject command ) {
+        UpdateBasics runner = new UpdateBasics( expressionExperimentService, command );
+        runner.setDoForward( false );
+        return run( runner );
+    }
+
+    public String updateBioMaterialMapping() {
+        /*
+         * TODO
+         */
+        return null;
+    }
+
+    /**
+     * Associate the given pubmedId with the given expression experiment.
+     * 
+     * @param eeId
+     * @param pubmedId
+     * @return
+     * @throws Exception
+     */
+    public String updatePubMed( Long eeId, String pubmedId ) throws Exception {
+        UpdatePubMed runner = new UpdatePubMed( eeId, pubmedId );
+        return run( runner );
+    }
+
+    public String updateQuantitationTypes() {
+        /*
+         * TODO
+         */
+        return null;
+    }
+
+    public String updateReport( Long id ) {
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) return null;
+        Collection<Long> ids = new HashSet<Long>();
+        ids.add( id );
+        GenerateSummary runner = new GenerateSummary( ids );
+        runner.setDoForward( false );
+        return run( runner );
+    }
+
+    private String formatCitation( BibliographicReference citation ) {
+        StringBuilder buf = new StringBuilder();
+        String[] authors = StringUtils.split( citation.getAuthorList(), ";" );
+        // if there are multiple authors, only display the first author
+        if ( authors.length == 0 ) {
+        } else if ( authors.length == 1 ) {
+            buf.append( authors[0] + " " );
+        } else {
+            buf.append( authors[0] + " et al. " );
+        }
+        // display the publication year
+        Calendar pubDate = new GregorianCalendar();
+        pubDate.setTime( citation.getPublicationDate() );
+        buf.append( "(" + pubDate.get( Calendar.YEAR ) + ") " );
+
+        buf.append( citation.getTitle() + "; " + citation.getPublication() + ", " + citation.getVolume() + ": "
+                + citation.getPages() );
+
+        return buf.toString();
+    }
+
+    /**
+     * Trouble, validation, sample removal.
+     * 
+     * @param expressionExperiment
+     * @param mav
+     */
+    private void getEventsOfInterest( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
+        AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
+        if ( troubleEvent != null ) {
+            mav.addObject( "troubleEvent", troubleEvent );
+            auditEventService.thaw( troubleEvent );
+            mav.addObject( "troubleEventDescription", StringUtils.abbreviate( StringEscapeUtils.escapeXml( troubleEvent
+                    .toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
+        }
+        AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
+        if ( validatedEvent != null ) {
+            mav.addObject( "validatedEvent", validatedEvent );
+            auditEventService.thaw( validatedEvent );
+            mav.addObject( "validatedEventDescription", StringUtils.abbreviate( StringEscapeUtils
+                    .escapeXml( validatedEvent.toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
+        }
+
+        Collection<AuditEvent> sampleRemovalEvents = this.getSampleRemovalEvents( expressionExperiment );
+        if ( sampleRemovalEvents.size() > 0 ) {
+            AuditEvent event = sampleRemovalEvents.iterator().next();
+            mav.addObject( "samplesRemoved", event ); // todo: handle multiple
+            auditEventService.thaw( event );
+            mav.addObject( "samplesRemovedDescription", StringUtils.abbreviate( StringEscapeUtils.escapeXml( event
+                    .toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
+        }
+    }
+
     /**
      * @param securedEEs
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
             Collection<ExpressionExperiment> securedEEs ) {
         StopWatch timer = new StopWatch();
@@ -875,229 +1286,83 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             log.info( "EEs in " + timer.getTime() + "ms" );
         }
 
-        log.info( "Loading value objects ..." );
+        log.debug( "Loading value objects ..." );
         return getExpressionExperimentValueObjects( securedEEs );
     }
 
     /**
-     * @param request
+     * @param uri
      * @return
      */
-    private ModelAndView redirectToList( HttpServletRequest request ) {
-        this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
-        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+    private String getLabelFromUri( String uri ) {
+        OntologyResource resource = ontologyService.getResource( uri );
+        if ( resource != null ) return resource.getLabel();
+
+        return null;
     }
 
     /**
-     * Generates summary reports of expression experiments
-     * 
-     * @author pavlidis
-     * @version $Id$
+     * @param ee
+     * @return
      */
-    private class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
+    private AuditEvent getLastTroubleEvent( ExpressionExperiment ee ) {
+        // Why doesn't this use expressionExperimentService.getLastTroubleEvent
+        // ???
+        AuditEvent event = auditTrailService.getLastTroubleEvent( ee );
+        if ( event != null ) return event;
 
-        private ExpressionExperimentReportService expressionExperimentReportService;
-        private Collection ids;
-
-        public GenerateSummary( ExpressionExperimentReportService expressionExperimentReportService ) {
-            super( getMessageUtil() );
-            this.expressionExperimentReportService = expressionExperimentReportService;
-            ids = null;
+        // See if array design have trouble.
+        for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+            event = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
+            if ( event != null ) return event;
         }
 
-        public GenerateSummary( ExpressionExperimentReportService expressionExperimentReportService, Collection id ) {
-            super( getMessageUtil() );
-            this.expressionExperimentReportService = expressionExperimentReportService;
-            this.ids = id;
-        }
+        return null;
+    }
 
-        @SuppressWarnings("unchecked")
-        public ModelAndView call() throws Exception {
+    private AuditEvent getLastValidationEvent( ExpressionExperiment ee ) {
+        return auditTrailService.getLastValidationEvent( ee );
+    }
 
-            init();
-
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Expression experiment report  generating" );
-
-            if ( ids == null ) {
-                saveMessage( "Generating report for all experiments" );
-                job.updateProgress( "Generating report for all experiments" );
-                expressionExperimentReportService.generateSummaryObjects();
-            } else {
-                // saveMessage( "Generating report for experiment" );
-                job.updateProgress( "Generating report for specified experiment" );
-                expressionExperimentReportService.generateSummaryObjects( ids );
-            }
-            ProgressManager.destroyProgressJob( job );
-            if ( ids != null ) {
-                String idStr = StringUtils.join( ids.toArray(), "," );
-                return new ModelAndView( new RedirectView(
-                        "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?id=" + idStr ) );
-            }
-            return new ModelAndView( new RedirectView(
-                    "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
-
-        }
+    private void getReportData( Collection<ExpressionExperimentValueObject> expressionExperiments ) {
+        expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
+        expressionExperimentReportService.fillEventInformation( expressionExperiments );
+        expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
     }
 
     /**
-     * Delete expression experiments.
-     * 
-     * @author pavlidis
-     * @version $Id$
-     */
-    private class RemoveExpressionExperimentJob extends BackgroundControllerJob<ModelAndView> {
-
-        ExpressionExperimentService expressionExperimentService;
-        ExpressionExperiment ee;
-
-        public RemoveExpressionExperimentJob( ExpressionExperiment ee,
-                ExpressionExperimentService expressionExperimentService ) {
-            super( getMessageUtil() );
-            this.expressionExperimentService = expressionExperimentService;
-            this.ee = ee;
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see java.util.concurrent.Callable#call()
-         */
-        @SuppressWarnings("unchecked")
-        public ModelAndView call() throws Exception {
-
-            init();
-
-            expressionExperimentService.thawLite( ee );
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Deleting dataset: " + ee.getId() );
-
-            expressionExperimentService.delete( ee );
-            saveMessage( "Dataset " + ee.getShortName() + " removed from Database" );
-            ee = null;
-
-            ProgressManager.destroyProgressJob( job );
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
-
-        }
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param eeId
-     * @return a collectino of factor value objects that represent the factors of a given experiment
-     */
-    public Collection<FactorValueObject> getExperimentalFactors( EntityDelegator e ) {
-
-        if ( e == null || e.getId() == null ) return null;
-
-        ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
-        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
-
-        if ( ee.getExperimentalDesign() == null ) return null;
-
-        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-
-        for ( ExperimentalFactor factor : factors )
-            result.add( new FactorValueObject( factor ) );
-
-        return result;
-    }
-
-    private static final int TRIM_SIZE = 220;
-
-    /**
-     * AJAX call
-     * 
-     * @param id
-     * @return a more informative description than the regular description 1st 120 characters of ee.description +
-     *         Experimental Design information returned string contains HTML tags. TODO: Would be more generic if passed
-     *         back a DescriptionValueObject that contains all the info necessary to reconstruct the HTML on the client
-     *         side Currently only used by ExpressionExperimentGrid.js (row expander)
-     */
-    public String getDescription( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) return null;
-
-        Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
-
-        StringBuffer descriptive = new StringBuffer();
-
-        String eeDescription = ee.getDescription() == null ? "" : ee.getDescription().trim();
-
-        // Need to trim?
-        if ( eeDescription.length() < TRIM_SIZE + 1 )
-            descriptive.append( eeDescription );
-        else
-            descriptive.append( eeDescription.substring( 0, TRIM_SIZE ) + "..." );
-
-        // Is there any factor info to add?
-        if ( ( efs != null ) && ( efs.size() < 1 ) ) return descriptive.append( "<b> No Factors </b>" ).toString();
-
-        String efUri = "  <a target='_blank' href='/Gemma/experimentalDesign/showExperimentalDesign.html?id="
-                + ee.getExperimentalDesign().getId() + "'> (details) </a >";
-
-        descriptive.append( "<b> Factors: </b>" );
-        for ( ExperimentalFactor ef : efs ) {
-            descriptive.append( ef.getName() + ", " );
-        }
-
-        // remove trailing "," and return as a string
-        return descriptive.substring( 0, descriptive.length() - 2 ) + efUri;
-
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param id of an experimental factor
-     * @return A collection of factor value objects for the specified experimental factor
-     */
-    public Collection<FactorValueObject> getFactorValues( EntityDelegator e ) {
-
-        if ( e == null || e.getId() == null ) return null;
-
-        ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
-        if ( ef == null ) return null;
-
-        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
-
-        Collection<FactorValue> values = ef.getFactorValues();
-        for ( FactorValue value : values ) {
-            result.add( new FactorValueObject( value ) );
-        }
-
-        return result;
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param ids of EEs to load
-     * @return security-filtered set of value objects.
+     * @param ee
+     * @return
      */
     @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperimentValueObject> loadExpressionExperiments( Collection<Long> ids ) {
-
-        // required for security filtering.
-        Collection<ExpressionExperiment> ees;
-        Collection<Long> filteredIds = new HashSet<Long>();
-        if ( ids == null ) {
-            ees = expressionExperimentService.loadAll();
-        } else if ( ids.isEmpty() ) {
-            return new HashSet<ExpressionExperimentValueObject>();
-        } else {
-            ees = expressionExperimentService.loadMultiple( ids );
+    private Collection<AuditEvent> getSampleRemovalEvents( ExpressionExperiment ee ) {
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        ees.add( ee );
+        Map<ExpressionExperiment, Collection<AuditEvent>> evMap = expressionExperimentService
+                .getSampleRemovalEvents( ees );
+        if ( evMap.containsKey( ee ) ) {
+            return evMap.get( ee );
         }
-        for ( ExpressionExperiment ee : ees ) {
-            filteredIds.add( ee.getId() );
+        return new HashSet<AuditEvent>();
+    }
+
+    /**
+     * @param sId
+     * @return
+     */
+    private Collection<Long> parseIdParameterString( String sId ) {
+        Collection<Long> ids = new ArrayList<Long>();
+        String[] idList = StringUtils.split( sId, ',' );
+        for ( int i = 0; i < idList.length; i++ ) {
+            if ( StringUtils.isNotBlank( idList[i] ) ) {
+                try {
+                    ids.add( new Long( idList[i] ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "Invalid id string" + idList[i] );
+                }
+            }
         }
-        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( filteredIds );
-
-        populateAnalyses( ids, result ); // FIXME make this optional.
-
-        return result;
+        return ids;
     }
 
     /**
@@ -1118,41 +1383,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * AJAX
-     * 
-     * @param e
+     * @param request
      * @return
      */
-    public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator e ) {
-
-        if ( e == null || e.getId() == null ) return null;
-        ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
-        if ( ee == null ) return null;
-
-        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee );
-    }
-
-    /**
-     * @param taxonService
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
-    /**
-     * @param securityService
-     */
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
-
-    public void setAuditEventService( AuditEventService auditEventService ) {
-        this.auditEventService = auditEventService;
-    }
-
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    private ModelAndView redirectToList( HttpServletRequest request ) {
+        this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
+        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
     }
 
 }

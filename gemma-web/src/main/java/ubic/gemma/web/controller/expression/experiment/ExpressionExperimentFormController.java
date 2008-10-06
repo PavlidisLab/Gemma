@@ -221,8 +221,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
-    @Override
-    @SuppressWarnings("unused")
+    @Override 
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
@@ -524,7 +523,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @throws SAXException
      * @throws ParserConfigurationException
      */
-    @SuppressWarnings("unused")
     private void updatePubMed( HttpServletRequest request, ExpressionExperiment command ) throws IOException,
             SAXException, ParserConfigurationException {
         String pubMedId = request.getParameter( "expressionExperiment.PubMedId" );

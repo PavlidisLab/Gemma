@@ -58,7 +58,7 @@ public interface QuantitationTypeService {
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<QuantitationType> loadAll();
 
     /**
      * 

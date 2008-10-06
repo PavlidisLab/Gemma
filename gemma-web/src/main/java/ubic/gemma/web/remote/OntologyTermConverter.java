@@ -47,16 +47,16 @@ public class OntologyTermConverter extends BeanConverter {
         // Where we collect out converted children
         Map<String, OutboundVariable> ovs = new TreeMap<String, OutboundVariable>();
 
-        // We need to do this before collecing the children to save recurrsion
+        // We need to do this before collecing the children to save recursion
         ObjectOutboundVariable ov = new ObjectOutboundVariable( outctx );
         outctx.put( data, ov );
 
         try {
             Map properties = getPropertyMapFromObject( data, true, false );
-            props: for ( Iterator it = properties.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry entry = ( Map.Entry ) it.next();
-                String name = ( String ) entry.getKey();
-                Property property = ( Property ) entry.getValue();
+            props: for ( Iterator<Map.Entry<String, Property>> it = properties.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<String, Property> entry = it.next();
+                String name = entry.getKey();
+                Property property = entry.getValue();
 
                 Object value = property.getValue( data );
 

@@ -70,27 +70,23 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @spring.property name="auditEventService" ref="auditEventService"
  * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="securityService" ref="securityService"
+ * @version $Id$
  */
 public class ExpressionExperimentReportService implements ExpressionExperimentReportTask {
-    private Log log = LogFactory.getLog( this.getClass() );
+    private AuditEventService auditEventService;
 
+    private AuditTrailService auditTrailService;
     private String EE_LINK_SUMMARY = "AllExpressionLinkSummary";
     private String EE_REPORT_DIR = "ExpressionExperimentReports";
-    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
     private ExpressionExperimentService expressionExperimentService;
+    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private Log log = LogFactory.getLog( this.getClass() );
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
-    private AuditTrailService auditTrailService;
-    private AuditEventService auditEventService;
     private SecurityService securityService;
     private String taskId = null;
 
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
-
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -99,7 +95,15 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
     /*
      * (non-Javadoc)
-     * 
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
+     */
+    public SpacesResult execute( Object command ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
      */
     public SpacesResult execute( SpacesCommand spacesCommand ) {
@@ -243,11 +247,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * @return the filled out value objects fills the link statistics from the cache. If it is not in the cache, the
      *         values will be null.
      */
-    public void fillLinkStatsFromCache( Collection vos ) {
+    public void fillLinkStatsFromCache( Collection<ExpressionExperimentValueObject> vos ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( Object object : vos ) {
-            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
+        for ( ExpressionExperimentValueObject eeVo : vos ) { 
             ExpressionExperimentValueObject cacheVo = retrieveValueObject( eeVo.getId() );
             if ( cacheVo != null ) {
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
@@ -268,17 +271,22 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * Generate a value object that contain summary information about links, biomaterials, and datavectors
      */
     @SuppressWarnings("unchecked")
-    public void generateSummaryObject( Long id ) {
+    public ExpressionExperimentValueObject generateSummaryObject( Long id ) {
         Collection ids = new ArrayList<Long>();
         ids.add( id );
-        generateSummaryObjects( ids );
+        Collection<ExpressionExperimentValueObject> results = generateSummaryObjects( ids );
+        if ( results.size() > 0 ) {
+            return results.iterator().next();
+        }
+        return null;
     }
 
     /**
-     * generates a collection of value objects that contain summary information about links, biomaterials, and
-     * datavectors
+     * Generates a collection of value objects that contain summary information about links, biomaterials, and
+     * datavectors. Use of this method should be restricted to admins (see security settings)
+     * 
+     * @return
      */
-    @SuppressWarnings("unchecked")
     public void generateSummaryObjects() {
         initDirectories( false );
         Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadAllValueObjects();
@@ -288,12 +296,16 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     /**
      * generates a collection of value objects that contain summary information about links, biomaterials, and
      * datavectors
+     * 
+     * @return
      */
-    @SuppressWarnings("unchecked")
-    public void generateSummaryObjects( Collection<Long> ids ) {
+    public Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids ) {
         initDirectories( false );
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids );
+
+        Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( filteredIds );
         getStats( vos );
+        return vos;
     }
 
     /**
@@ -312,7 +324,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
      */
     public String getTaskId() {
@@ -324,7 +335,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * 
      * @return a collection of cached value objects
      */
-    public Collection retrieveSummaryObjects() {
+    public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects() {
         return retrieveValueObjects();
     }
 
@@ -333,7 +344,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * 
      * @return a collection of cached value objects
      */
-    public Collection retrieveSummaryObjects( Collection ids ) {
+    public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
         return retrieveValueObjects( ids );
     }
 
@@ -360,6 +371,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      */
     public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
         this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
+    }
+
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
     }
 
     @SuppressWarnings("unchecked")
@@ -398,6 +413,14 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         return result;
     }
 
+    /**
+     * @param id
+     * @return
+     */
+    private String getReportPath( long id ) {
+        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_LINK_SUMMARY + "." + id;
+    }
+
     @SuppressWarnings("unchecked")
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
         Map<Long, Collection<AuditEvent>> result = new HashMap<Long, Collection<AuditEvent>>();
@@ -407,14 +430,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             result.put( e.getId(), rawr.get( e ) );
         }
         return result;
-    }
-
-    /**
-     * @param id
-     * @return
-     */
-    private String getReportPath( long id ) {
-        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_LINK_SUMMARY + "." + id;
     }
 
     /**
@@ -458,6 +473,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         log.info( "Generated report for " + eeVo.getShortName() );
     }
 
+    // Methods needed to allow this to be used in a space.
+
     /**
      * Check to see if the top level report storage directory exists. If it doesn't, create it, Check to see if the
      * reports directory exists. If it doesn't, create it.
@@ -480,38 +497,27 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         }
     }
 
-    // Methods needed to allow this to be used in a space.
-
     /**
      * @return the serialized value object
      */
     private ExpressionExperimentValueObject retrieveValueObject( long id ) {
 
-        ExpressionExperimentValueObject eeVo = null;
-        try {
-            File f = new File( getReportPath( id ) );
-            if ( f.exists() ) {
-                FileInputStream fis = new FileInputStream( getReportPath( id ) );
-                ObjectInputStream ois = new ObjectInputStream( fis );
-                eeVo = ( ExpressionExperimentValueObject ) ois.readObject();
-                ois.close();
-                fis.close();
-            }
-        } catch ( IOException e ) {
-            log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
-            return null;
-        } catch ( ClassNotFoundException e ) {
-            log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
-            return null;
+        Collection<Long> ids = new HashSet<Long>();
+        ids.add( id );
+
+        Collection<ExpressionExperimentValueObject> obs = retrieveValueObjects( ids );
+        if ( obs.size() == 1 ) {
+            return obs.iterator().next();
         }
-        return eeVo;
+        return null;
     }
 
     /**
      * @return the serialized value objects
      */
-    private Collection retrieveValueObjects() {
-        Collection eeValueObjects = null;
+    @SuppressWarnings("unchecked")
+    private Collection<ExpressionExperimentValueObject> retrieveValueObjects() {
+        Collection<ExpressionExperimentValueObject> eeValueObjects = null;
         // load all files that start with EE_LINK_SUMMARY
         FilenameFilter filter = new FilenameFilter() {
             public boolean accept( File dir, String name ) {
@@ -528,7 +534,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 FileInputStream fis = new FileInputStream( HOME_DIR + File.separatorChar + EE_REPORT_DIR
                         + File.separatorChar + objectFile );
                 ObjectInputStream ois = new ObjectInputStream( fis );
-                eeValueObjects = ( Collection ) ois.readObject();
+                eeValueObjects = ( Collection<ExpressionExperimentValueObject> ) ois.readObject();
                 ois.close();
                 fis.close();
             } catch ( IOException e ) {
@@ -555,11 +561,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     /**
      * @return the serialized value objects
      */
-    @SuppressWarnings("unchecked")
-    private Collection retrieveValueObjects( Collection ids ) {
-        Collection eeValueObjects = new ArrayList<ExpressionExperiment>();
-
-        for ( Object object : ids ) {
+    private Collection<ExpressionExperimentValueObject> retrieveValueObjects( Collection<Long> ids ) {
+        Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<ExpressionExperimentValueObject>();
+        Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
+        for ( Object object : filteredIds ) {
             Long id = ( Long ) object;
 
             try {
@@ -567,7 +572,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 if ( f.exists() ) {
                     FileInputStream fis = new FileInputStream( getReportPath( id ) );
                     ObjectInputStream ois = new ObjectInputStream( fis );
-                    eeValueObjects.add( ois.readObject() );
+                    eeValueObjects.add( ( ExpressionExperimentValueObject ) ois.readObject() );
                     ois.close();
                     fis.close();
                 } else {
@@ -604,14 +609,18 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
-     */
-    public SpacesResult execute( Object command ) {
-        // TODO Auto-generated method stub
-        return null;
+    @SuppressWarnings("unchecked")
+    private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
+        /*
+         * Because this method returns the results, we have to screen.
+         */
+        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
+
+        Collection<Long> filteredIds = new HashSet<Long>();
+        for ( ExpressionExperiment ee : securityScreened ) {
+            filteredIds.add( ee.getId() );
+        }
+        return filteredIds;
     }
 
 }

@@ -113,7 +113,6 @@ public class LinkAnalysisService {
      * @param linkAnalysisConfig Configuration for the link analysis.
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     public void process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig )
             throws Exception {
 
@@ -440,11 +439,9 @@ public class LinkAnalysisService {
          * now create 'reversed' links, first by sorting by the 'y' coordinate. Again, this sort is critical to keep the
          * links in an ordering that the RDBMS can use efficiently.
          */
-        links.mergeSortFromTo( 0, links.size() - 1, new Comparator() {
-            public int compare( Object arg0, Object arg1 ) {
-                if ( arg0 == null || arg1 == null ) return 1;
-                Link a = ( Link ) arg0;
-                Link b = ( Link ) arg1;
+        links.mergeSortFromTo( 0, links.size() - 1, new Comparator<Link>() {
+            public int compare( Link a, Link b ) {
+                if ( a == null || b == null ) return 1;
 
                 if ( a.gety() < b.gety() ) {
                     return -1;
@@ -644,9 +641,11 @@ public class LinkAnalysisService {
 
         Method m;
         private Object[] arg;
+        @SuppressWarnings("unchecked")
         private Class clazz;
         private BioAssaySet ebas;
 
+        @SuppressWarnings("unchecked")
         Creator( Class clazz, BioAssaySet experiment ) {
             this.ebas = experiment;
             this.clazz = clazz;

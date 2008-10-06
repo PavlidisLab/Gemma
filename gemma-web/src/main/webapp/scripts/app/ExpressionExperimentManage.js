@@ -1,123 +1,24 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-	handleWait = function(taskId) {
-		try {
-			Ext.DomHelper.overwrite("messages", "");
+	manager = new Gemma.EEManager({
+				editable : true,
+				id : 'eemanager'
+			});
 
-			var p = new Gemma.ProgressWidget({
-						taskId : taskId
-					});
-
-			var w = new Ext.Window({
-						modal : true,
-						closable : false,
-						width : 500,
-						items : [p]
-					});
-
-			p.on('done', function(payload) {
-						w.destroy();
-						p.destroy();
-						store.reload();
-					}.createDelegate(this));
-
-			p.on('fail', function(message) {
-						Ext.Msg.alert("Error", "There was an error:<br/>" + message);
-						w.destroy();
-						p.destroy();
-					}.createDelegate(this));
-
-			w.show();
-			p.startProgress();
-		} catch (e) {
-			Ext.Msg.alert("Error", "There was an error:<br/>" + e);
-			return;
-		}
-	};
-
-	tagger = function(id) {
-		var anngrid = new Gemma.AnnotationGrid({
-					minHeight : 90,
-					readMethod : ExpressionExperimentController.getAnnotation,
-					readParams : [{
-								id : id,
-								classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
-							}],
-					writeMethod : OntologyService.saveExpressionExperimentStatement,
-					removeMethod : OntologyService.removeExpressionExperimentStatement,
-					editable : true,
-					mgedTermKey : "experiment",
-					entId : id
-				});
-
-		var change = false;
-		anngrid.on('refresh', function() {
-					change = true;
-				});
-		var w = new Ext.Window({
-					title : "Add tags",
-					modal : true,
-					layout : 'fit',
-					items : [anngrid],
-					buttons : [{
-						text : 'Help',
-						handler : function() {
-							Ext.Msg
-									.alert(
-											"Help with tagging",
-											"Select a 'category' for the term; then enter a term, "
-													+ "choosing from existing terms if possible. "
-													+ "Click 'create' to save it. You can also edit existing terms;"
-													+ " click 'save' to make the change stick, or 'delete' to remove a selected tag.");
-						}
-					}, {
-						text : 'Done',
-						handler : function() {
-							if (change) {
-								store.reload();
-							}
-							w.hide();
-						}
-					}]
-
-				});
-
-		w.show();
-	};
-
-	updateEEReport = function(id) {
-		var callParams = [];
-		callParams.push(id);
-		callParams.push({
-					callback : handleWait.createDelegate(this)
-				});
-
-		ExpressionExperimentController.updateReport.apply(this, callParams);
-	};
-
-	deleteExperiment = function(id) {
-		Ext.Msg.show({
-					title : 'Really delete?',
-					msg : 'Are you sure you want to delete the experiment? This cannot be undone.',
-					buttons : Ext.Msg.YESNO,
-					fn : function(btn, text) {
-						if (btn == 'yes') {
-							var callParams = []
-							callParams.push(id);
-							callParams.push({
-										callback : handleWait.createDelegate(this)
-									});
-							ExpressionExperimentController.deleteById.apply(this, callParams);
-						}
-					},
-					animEl : 'elId',
-					icon : Ext.MessageBox.WARNING
-				});
-	};
+	manager.on('reportUpdated', function() {
+				store.reload();
+			});
+	manager.on('tagsUpdated', function() {
+				store.reload();
+			});
+	manager.on('deleted', function() {
+				store.reload();
+			});
 
 	var record = Ext.data.Record.create([{
 				name : "id",
@@ -195,12 +96,12 @@ Ext.onReady(function() {
 	var dateRenderer = new Ext.util.Format.dateRenderer("y/M/d");
 
 	var adminRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
-		return '<a href="#" onClick="updateEEReport('
+		return '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
 				+ value
 				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></a>'
 				+ '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
 				+ value
-				+ '"  target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></a><a href="#" onClick="return deleteExperiment('
+				+ '"  target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></a><a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
 				+ value
 				+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></a>&nbsp;';
 	};
@@ -218,56 +119,6 @@ Ext.onReady(function() {
 		return record.get("numPopulatedFactors") > 0;
 	};
 
-	doLinks = function(id) {
-		Ext.Msg.alert("Will run link analysis");
-	};
-
-	doMissingValues = function(id) {
-		Ext.Msg.alert("Will run missing value analysis");
-	};
-
-	doProcessedVectors = function(id) {
-		//Ext.Msg.alert("Will compute processed vectors");
-		Ext.Msg.show({
-					title : 'Really run processed vector computation?',
-					msg : 'Will run processed vector computation.',
-					buttons : Ext.Msg.YESNO,
-					fn : function(btn, text) {
-						if (btn == 'yes') {
-							var callParams = []
-							callParams.push(id);
-							callParams.push({
-										callback : handleWait.createDelegate(this)
-									});
-							ProcessedExpressionDataVectorCreateController.run.apply(this, callParams);
-						}
-					},
-					animEl : 'elId',
-					icon : Ext.MessageBox.WARNING
-				});
-	};
-
-	doDifferential = function(id) {
-		//Ext.Msg.alert("Will run differential expression analysis");
-		Ext.Msg.show({
-					title : 'Really run differential expression analysis?',
-					msg : 'Will run differential expression analysis.',
-					buttons : Ext.Msg.YESNO,
-					fn : function(btn, text) {
-						if (btn == 'yes') {
-							var callParams = []
-							callParams.push(id);
-							callParams.push({
-										callback : handleWait.createDelegate(this)
-									});
-							DifferentialExpressionAnalysisController.run.apply(this, callParams);
-						}
-					},
-					animEl : 'elId',
-					icon : Ext.MessageBox.WARNING
-				});
-	};
-
 	var experimentalDesignEditRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 		var url = '<a target="_blank" href="/Gemma/experimentalDesign/showExperimentalDesign.html?id='
@@ -278,14 +129,14 @@ Ext.onReady(function() {
 
 	var experimentTaggerRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
-		var url = '<a href="#" onClick="return tagger(' + id
+		var url = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id
 				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="add tags" title="add tags"/></a>';
 		return value + '&nbsp;' + url;
 	};
 
 	var linkAnalysisRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
-		var runurl = '<a href="#" onClick="return doLinks('
+		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doLinks('
 				+ id
 				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></a>';
 		if (record.get('dateLinkAnalysis')) {
@@ -312,7 +163,7 @@ Ext.onReady(function() {
 
 	var missingValueAnalysisRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
-		var runurl = '<a href="#" onClick="return doMissingValues('
+		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
 				+ id
 				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></a>';
 		if (record.get('technologyType') != 'ONECOLOR' && record.get('hasBothIntensities')) {
@@ -339,7 +190,7 @@ Ext.onReady(function() {
 
 	var processedVectorCreateRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
-		var runurl = '<a href="#" onClick="return doProcessedVectors('
+		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('
 				+ id
 				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></a>';
 
@@ -363,7 +214,7 @@ Ext.onReady(function() {
 
 	var differentialAnalysisRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
-		var runurl = '<a href="#" onClick="return doDifferential('
+		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doDifferential('
 				+ id
 				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></a>';
 
@@ -418,7 +269,8 @@ Ext.onReady(function() {
 			}, {
 				header : 'Taxon',
 				sortable : true,
-				dataIndex : 'taxon'
+				dataIndex : 'taxon',
+				width : 40
 			}, {
 				header : 'Flags',
 				sortable : true,
@@ -511,24 +363,18 @@ Ext.onReady(function() {
 	var tpl = new Ext.XTemplate('<tpl for="."><div class="itemwrap" id="{shortName}">',
 			'<p>{id} {name} {shortName} {externalUri} {[this.log(values.id)]}</p>', "</div></tpl>", {
 				log : function(id) {
-					console.log(id);
+					// console.log(id);
 				}
 			});
 
-	var manager = new Ext.Panel({
+	var manager = new Gemma.EEReportPanel({
 				renderTo : 'eemanage',
-				width : '100%',
+				store : store,
+				loadMask : true,
 				autoHeight : true,
-				layout : 'fit',
-				items : [new Gemma.EEReportPanel({
-							store : store,
-							loadMask : true,
-							autoHeight : true,
-							columns : columns,
-							rowExpander : rowExpander,
-							plugins : rowExpander
-
-						})]
+				columns : columns,
+				rowExpander : rowExpander,
+				plugins : rowExpander
 
 			});
 
@@ -540,6 +386,12 @@ Ext.onReady(function() {
  * @extends Ext.grid.GridPanel
  */
 Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
+
+			viewConfig : {
+				autoFill : true,
+				forceFit : false
+			},
+
 			searchForText : function(button, keyev) {
 				var text = this.searchInGridField.getValue();
 				if (text.length < 2) {

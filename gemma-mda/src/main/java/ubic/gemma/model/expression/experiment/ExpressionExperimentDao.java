@@ -38,8 +38,10 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or
      * other types, different methods in a class implementing this interface support this feature: look for an
-     * <code>int</code> parameter called <code>transform</code>. <p/> This specific flag denotes entities must be
-     * transformed into objects of type {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject}.
+     * <code>int</code> parameter called <code>transform</code>.
+     * <p/>
+     * This specific flag denotes entities must be transformed into objects of type
+     * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject}.
      */
     public final static int TRANSFORM_EXPRESSIONEXPERIMENTVALUEOBJECT = 1;
 
@@ -98,9 +100,9 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * <p>
      * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
      * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
      * </p>
      * 
      * @param id the identifier of the entity to load.
@@ -117,9 +119,9 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
 
     /**
      * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
      * operation which can optionally transform the entity (into a value object for example). By default, transformation
      * does not occur.
      * </p>
@@ -140,9 +142,9 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.expression.experiment.ExpressionExperiment)} with an
      * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined
-     * here then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entity (into a value object for example). By default, transformation does not occur.
+     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
+     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity
+     * (into a value object for example). By default, transformation does not occur.
      * </p>
      */
     public Object create( int transform,
@@ -162,9 +164,9 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.expression.experiment.ExpressionExperiment)} with an
      * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined
-     * here then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
+     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
+     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities
+     * (into value objects for example). By default, transformation does not occur.
      * </p>
      */
     public java.util.Collection create( int transform, java.util.Collection entities );
@@ -215,10 +217,10 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * <p>
      * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExpressionExperiment)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
     public Object findOrCreate( int transform,
@@ -228,9 +230,9 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * <p>
      * Does the same thing as
      * {@link #findOrCreate(boolean, ubic.gemma.model.expression.experiment.ExpressionExperiment)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in
-     * {@link #findOrCreate(int, ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)}.
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #findOrCreate(int, ubic.gemma.model.expression.experiment.ExpressionExperiment
+     * expressionExperiment)}.
      * </p>
      */
     public Object findOrCreate( int transform, String queryString,
@@ -244,8 +246,8 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * <p>
      * Does the same thing as {@link #findByName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByName(java.lang.String)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByName(java.lang.String)}.
      * </p>
      */
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findByName( String queryString,
@@ -265,8 +267,8 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * <p>
      * Does the same thing as {@link #findByName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByName(int, java.lang.String name)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByName(int, java.lang.String name)}.
      * </p>
      */
     public Object findByName( int transform, String queryString, java.lang.String name );
@@ -290,10 +292,10 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * <p>
      * Does the same thing as {@link #find(ubic.gemma.model.expression.experiment.ExpressionExperiment)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
     public Object find( int transform, ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
@@ -302,8 +304,8 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * <p>
      * Does the same thing as {@link #find(boolean, ubic.gemma.model.expression.experiment.ExpressionExperiment)} with
      * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #find(int, ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)}.
+     * override the query string defined in {@link #find(int,
+     * ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)}.
      * </p>
      */
     public Object find( int transform, String queryString,
@@ -328,10 +330,10 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * <p>
      * Does the same thing as {@link #findByAccession(ubic.gemma.model.common.description.DatabaseEntry)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
     public Object findByAccession( int transform, ubic.gemma.model.common.description.DatabaseEntry accession );
@@ -340,8 +342,8 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * <p>
      * Does the same thing as {@link #findByAccession(boolean, ubic.gemma.model.common.description.DatabaseEntry)} with
      * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findByAccession(int, ubic.gemma.model.common.description.DatabaseEntry accession)}.
+     * override the query string defined in {@link #findByAccession(int,
+     * ubic.gemma.model.common.description.DatabaseEntry accession)}.
      * </p>
      */
     public Object findByAccession( int transform, String queryString,
@@ -355,8 +357,8 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * <p>
      * Does the same thing as {@link #findByShortName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByShortName(java.lang.String)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByShortName(java.lang.String)}.
      * </p>
      */
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findByShortName( String queryString,
@@ -376,8 +378,8 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * <p>
      * Does the same thing as {@link #findByShortName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByShortName(int, java.lang.String shortName)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByShortName(int, java.lang.String shortName)}.
      * </p>
      */
     public Object findByShortName( int transform, String queryString, java.lang.String shortName );
@@ -457,12 +459,14 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperimentValueObject> loadValueObjects( java.util.Collection ids );
+    public java.util.Collection<ExpressionExperimentValueObject> loadValueObjects( java.util.Collection<Long> ids );
 
     /**
      * 
      */
     public java.util.Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+
+    public ExpressionExperiment findByQuantitationType( QuantitationType quantitationType );
 
     /**
      * <p>

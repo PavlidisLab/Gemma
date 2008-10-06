@@ -64,9 +64,9 @@ public class FileUploadController extends AbstractUrlViewController {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse)
+     * @see
+     * org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest
+     * , javax.servlet.http.HttpServletResponse)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -93,16 +93,12 @@ public class FileUploadController extends AbstractUrlViewController {
                     copiedFile = FileUploadUtil.copyUploadedFile( multipartFile, request );
                     log.info( "Uploaded file! " + copiedFile );
                 } catch ( Exception e ) {
-                    response.getWriter().write(
-                            "{success : false, error: '" + e.getMessage() + "', localFile : '"
-                                    + StringEscapeUtils.escapeJava( copiedFile.getAbsolutePath() ) + "'}" );
+                    response.getWriter().write( "{success : false, error: '" + e.getMessage() + "'}" );
                     return null;
                 }
 
                 if ( copiedFile == null ) {
-                    response.getWriter().write(
-                            "{success : false, error : 'unknown problem getting file' ,localFile : '"
-                                    + StringEscapeUtils.escapeJava( copiedFile.getAbsolutePath() ) + "'}" );
+                    response.getWriter().write( "{success : false, error : 'unknown problem getting file'  }" );
                     return null;
                 }
 
@@ -121,10 +117,11 @@ public class FileUploadController extends AbstractUrlViewController {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.HttpServletRequest)
+     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
+     * HttpServletRequest)
      */
     @Override
+    @SuppressWarnings("unused")
     protected String getViewNameForRequest( HttpServletRequest request ) {
         return "uploadForm";
     }
