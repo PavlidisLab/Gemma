@@ -631,7 +631,6 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getProcessedDataVectors( ee );
     }
 
-    @Override
     public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
         return this.getExpressionExperimentDao().findByQuantitationType( type );
     }
