@@ -56,13 +56,23 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 		this.store = new Gemma.VisualizationStore();
 
-		//If there are any compile errors with the template the error will not make its way to the console. 
-		//Tried every combination i could think of to get the profile to display... 
-		//Can't seem to access the data even though its there... 
-		
-		var tpl = new Ext.XTemplate('<tpl for="."><tpl for="ee">','<div id = "{shortName}"> {shortName} </div>','</tpl></tpl>', 
-		{drawGraph: function(div, profile){Flotr.draw(div, profile);}});
-				
+		// If there are any compile errors with the template the error will not make its way to the console.
+		// Tried every combination i could think of to get the profile to display...
+		// Can't seem to access the data even though its there...
+
+		var tpl = new Ext.XTemplate('<tpl for="."><tpl for="ee">', '<div id ="{shortName}"> {shortName} </div>',
+				'</tpl>', '{[ this.drawGraph(values.ee, values.profiles)]}', '</tpl>', {
+					drawGraph : function(ee, profile) {
+						console.log("hehe");
+						flotrDraw(ee.shortName, profile);
+//						Ext.DomHelper.overwrite(shortName, {
+//							tag : 'h1',
+//							html : "this is a test"
+//						});
+						return ee.shortName + ": " + profile;
+					}
+				});
+
 		Ext.apply(this, {
 			items : [new Ext.DataView({
 				store : this.store,
@@ -99,6 +109,21 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 		Gemma.VisualizationWindow.superclass.initComponent.call(this);
 
+		// this.on("click", function(o) {
+		// console.log("render:" + o);
+		// o.store.each(function() {
+		// console.log("in each")
+		// var shortName = this.get("ee").shortName;
+		// console.log(shortName);
+		// Ext.DomHelper.overwrite(shortName, {
+		// tag : 'h1',
+		// html : "this is a test"
+		// });
+
+		// });
+
+		// });
+
 	},
 
 	displayWindow : function(eeIds, geneIds) {
@@ -110,7 +135,6 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 		this.store.load({
 			params : params,
 			callback : function() {
-			
 
 			}.createDelegate(this)
 		});
@@ -118,9 +142,14 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	},
 
 	clearWindow : function() {
-
-		this.hide();
+		//this.hide();
 		// TODO: Clear the window of old graphs
 	}
 
 });
+
+flotrDraw = function(divId, profiles) {
+	console.log(divId);
+	console.log(profiles);
+	Flotr.draw(divId, profiles);
+}
