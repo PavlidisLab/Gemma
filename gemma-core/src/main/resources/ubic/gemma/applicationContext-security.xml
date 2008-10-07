@@ -11,7 +11,11 @@
 
 	<!--
 		======================== FILTER CHAIN ======================= 
-		The order of filters is as described at http://www.acegisecurity.org/docbook/acegi.html#filters
+		Order here matters.  We were using this guide but it is not longer available:  
+		
+		http://www.acegisecurity.org/docbook/acegi.html#filters
+		
+		Currently looking for an up-to-date guide on filter ordering. 
 	-->
 	<bean id="filterChainProxy"
 		class="org.springframework.security.util.FilterChainProxy">
@@ -259,7 +263,10 @@
 
 	<!-- ===================== AUTHORIZATION ==================== -->
 
-	<!-- acegi serviceSecurityInterceptor. You must manually add objectDefinitionSource lines for methods in services. -->
+	<!-- Spring-Security serviceSecurityInterceptor. You must manually add objectDefinitionSource lines for methods in services. 
+		 If you don't add methods to this, the default is they can be invoked by anyone.  See
+		 http://www.bioinformatics.ubc.ca/pavlidis/lab/bugzilla/show_bug.cgi?id=1375
+	-->
 	<!--  <bean id="serviceSecurityInterceptor" class="org.springframework.security.intercept.method.aopalliance.MethodSecurityInterceptor"> -->
 	<bean id="serviceSecurityInterceptor"
 		class="ubic.gemma.security.interceptor.method.aopalliance.CustomMethodSecurityInterceptor">
