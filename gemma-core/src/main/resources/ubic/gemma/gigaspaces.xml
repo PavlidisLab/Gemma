@@ -118,6 +118,34 @@
 			</value>
 		</property>
 	</bean>
+	
+	<bean id="arrayDesignProbeMapperWorker"
+		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+		singleton="false">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="arrayDesignProbeMapperTask" />
+		</property>
+		<property name="businessInterface">
+			<value>
+				ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTask
+			</value>
+		</property>
+	</bean>
+	
+	<bean id="arrayDesignRepeatScanWorker"
+		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+		singleton="false">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="arrayDesignProbeMapperTask" />
+		</property>
+		<property name="businessInterface">
+			<value>
+				ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask
+			</value>
+		</property>
+	</bean>
 
 	<bean id="javaSpaceInterceptor"
 		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
@@ -180,6 +208,12 @@
 				<value>
 					ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTask
 				</value>
+				<value>
+					ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTask
+				</value>
+				<value>
+					ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask
+				</value>
 			</list>
 		</property>
 	</bean>
@@ -223,6 +257,23 @@
 		<property name="linkAnalysisService">
 			<ref bean="linkAnalysisService" />
 		</property>
+		<property name="gigaSpacesTemplate">
+			<ref bean="gigaspacesTemplate" />
+		</property>
+	</bean>
+	
+	<bean id="arrayDesignProbeMapperTask"
+		class="ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTaskImpl">
+		<property name="arrayDesignProbeMapperService">
+			<ref bean="arrayDesignProbeMapperService" />
+		</property>
+		<property name="gigaSpacesTemplate">
+			<ref bean="gigaspacesTemplate" />
+		</property>
+	</bean>
+	
+	<bean id="arrayDesignRepeatScanTask"
+		class="ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTaskImpl">
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />
 		</property>
