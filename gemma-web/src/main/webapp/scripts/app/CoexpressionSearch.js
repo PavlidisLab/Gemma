@@ -19,6 +19,11 @@ Ext.onReady(function() {
 	});
 	searchPanel.render("coexpression-form");
 
+	var visWindow = new Gemma.VisualizationWindow({
+		admin : admin
+	});
+//	visWindow.render("coexpression-visualization");
+
 	var summaryPanel;
 
 	var knownGeneDatasetGrid = new Gemma.CoexpressionDatasetGrid({
@@ -59,8 +64,7 @@ Ext.onReady(function() {
 			collapsed : true
 		});
 
-		probeAlignedGrid.on("cellclick", function(grid, rowIndex, columnIndex,
-				e) {
+		probeAlignedGrid.on("cellclick", function(grid, rowIndex, columnIndex, e) {
 			if (this.getSelectionModel().hasSelection()) {
 
 				var record = this.getStore().getAt(rowIndex);
@@ -72,8 +76,7 @@ Ext.onReady(function() {
 			}
 		}, probeAlignedGrid);
 
-		predictedGeneGrid.on("cellclick", function(grid, rowIndex, columnIndex,
-				e) {
+		predictedGeneGrid.on("cellclick", function(grid, rowIndex, columnIndex, e) {
 			if (this.getSelectionModel().hasSelection()) {
 
 				var record = this.getStore().getAt(rowIndex);
@@ -95,14 +98,13 @@ Ext.onReady(function() {
 			if (fieldName == 'foundGene') {
 				searchPanel.searchForGene(record.get("foundGene").id);
 			}
-			
-			
-			if (fieldName == 'Visualize'){
-					var queryGene = record.data.queryGene;
-					var foundGene = record.data.foundGene;	
-					var activeExperiments = record.data.supportingExperiments;
-					
-				visWindow.displayWindow(activeExperiments, [queryGene, foundGene]);
+
+			if (fieldName == 'visualize') {
+				var queryGene = record.data.queryGene;
+				var foundGene = record.data.foundGene;
+				var activeExperiments = record.data.supportingExperiments;
+
+				visWindow.displayWindow(activeExperiments, [queryGene.id, foundGene.id]);
 			}
 		}
 	}, knownGeneGrid);
@@ -138,41 +140,29 @@ Ext.onReady(function() {
 				name : 'eeMap'
 			});
 		}
-		Gemma.CoexpressionGrid.getBitImageMapTemplate().overwrite(imageMap,
-				result.datasets);
+		Gemma.CoexpressionGrid.getBitImageMapTemplate().overwrite(imageMap, result.datasets);
 
 		var link = panel.getBookmarkableLink();
-		knownGeneGrid
-				.setTitle(String
-						.format(
-								"Coexpressed genes <a href='{0}'>(bookmarkable link)</a> <a href='{0}&export'>(export as text)</a>",
-								link));
+		knownGeneGrid.setTitle(String.format(
+				"Coexpressed genes <a href='{0}'>(bookmarkable link)</a> <a href='{0}&export'>(export as text)</a>",
+				link));
 
-		Gemma.CoexpressionDatasetGrid.updateDatasetInfo(
-				result.knownGeneDatasets, eeMap);
-		knownGeneDatasetGrid.loadData(result.isCannedAnalysis,
-				result.queryGenes.length, result.knownGeneDatasets);
-		knownGeneGrid.loadData(result.isCannedAnalysis,
-				result.queryGenes.length, result.knownGeneResults,
+		Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.knownGeneDatasets, eeMap);
+		knownGeneDatasetGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets);
+		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
 				result.knownGeneDatasets);
 
 		if (admin) {
-			Gemma.CoexpressionDatasetGrid.updateDatasetInfo(
-					result.predictedGeneDatasets, eeMap);
-			predictedGeneDatasetGrid.loadData(result.isCannedAnalysis,
-					result.queryGenes.length, result.predictedGeneDatasets);
-			predictedGeneGrid.loadData(result.isCannedAnalysis,
-					result.queryGenes.length, result.predictedGeneResults,
+			Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.predictedGeneDatasets, eeMap);
+			predictedGeneDatasetGrid.loadData(result.isCannedAnalysis, result.queryGenes.length,
 					result.predictedGeneDatasets);
-			Gemma.CoexpressionDatasetGrid.updateDatasetInfo(
-					result.probeAlignedRegionDatasets, eeMap);
-			probeAlignedDatasetGrid
-					.loadData(result.isCannedAnalysis,
-							result.queryGenes.length,
-							result.probeAlignedRegionDatasets);
-			probeAlignedGrid.loadData(result.isCannedAnalysis,
-					result.queryGenes.length, result.probeAlignedRegionResults,
+			predictedGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.predictedGeneResults,
+					result.predictedGeneDatasets);
+			Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.probeAlignedRegionDatasets, eeMap);
+			probeAlignedDatasetGrid.loadData(result.isCannedAnalysis, result.queryGenes.length,
 					result.probeAlignedRegionDatasets);
+			probeAlignedGrid.loadData(result.isCannedAnalysis, result.queryGenes.length,
+					result.probeAlignedRegionResults, result.probeAlignedRegionDatasets);
 		}
 	});
 

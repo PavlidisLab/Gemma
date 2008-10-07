@@ -92,8 +92,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				tooltip : "Dataset relevence map",
 				sortable : false
 			}, {
-				id : 'Visualize',
+				id : 'visualize',
 				header : "Visualize",
+				dataIndex : "visualize",
 				renderer : this.visStyler.createDelegate(this),
 				tooltip : "Link for downloading raw data",
 				sortable : false
