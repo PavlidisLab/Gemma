@@ -603,15 +603,24 @@ var Flotr = (function(){
 			var found = false;
 			for(var i = 0; i < series.length; ++i){
 				if (series[i].data.length > 0) {
-					xaxis.datamin = xaxis.datamax = series[i].data[0][0];
-					yaxis.datamin = yaxis.datamax = series[i].data[0][1];
-					found = true;
+					for (var j = 0; j < series[i].data.length; j++) {
+						var y = series[i].data[j][1];
+						if (isNaN(y)) {
+							continue;
+						}
+						xaxis.datamin = xaxis.datamax = series[i].data[j][0];
+						yaxis.datamin = yaxis.datamax = y;
+						found = true;
+						break;
+					}
+				}
+				if (found) {
 					break;
 				}
 			}
 			
 			/**
-			 * Return because series are empty.
+			 * Return because series are empty (or all missing values).
 			 */
 			if(!found) return;
 	
@@ -623,6 +632,9 @@ var Flotr = (function(){
 				for(var h = 0; h < data.length; ++h){
 					var x = data[h][0];
 					var y = data[h][1];
+					if (isNaN(y)) {
+						continue;
+					}
 					if(x < xaxis.datamin) xaxis.datamin = x;
 					else if(x > xaxis.datamax) xaxis.datamax = x;
 					if(y < yaxis.datamin) yaxis.datamin = y;
@@ -997,14 +1009,30 @@ var Flotr = (function(){
 			function plotLine(data, offset){
 				if(data.length < 2) return;
 	
-				var prevx = tHoz(data[0][0]),
-					prevy = tVert(data[0][1]) + offset;
+				var i = 0;
+				
+				// Find the first non-missing value.
+				while (i < data.length) {
+					var y = data[i][1];
+					if (isNaN(y)) {
+						i++;
+						continue;
+					}
+					var x = data[i][0];
+					var prevx = tHoz(x),
+					prevy = tVert(y) + offset;
+					break;
+				}
 	
 				ctx.beginPath();
 				ctx.moveTo(prevx, prevy);
-				for(var i = 0; i < data.length - 1; ++i){
+				for(; i < data.length - 1; ++i){
 					var x1 = data[i][0], y1 = data[i][1],
 						x2 = data[i+1][0], y2 = data[i+1][1];
+						
+					if (isNaN(y1) || isNaN(y2)) { 
+						continue;
+					}
 	
 					/**
 					 * Clip with ymin.
