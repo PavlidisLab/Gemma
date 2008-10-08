@@ -358,8 +358,7 @@ public class ArrayDesignSequenceProcessingService {
      * @param arrayDesign An existing ArrayDesign that already has compositeSequences filled in.
      * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
      * @throws IOException
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
             Taxon taxon ) throws IOException {
 
@@ -619,7 +618,6 @@ public class ArrayDesignSequenceProcessingService {
      * @see ArrayDesignProbeRenamingService.DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR for the specification of how duplicate
      *      probes are munged.
      */
-    @SuppressWarnings("unchecked")
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
             SequenceType sequenceType, Taxon taxon ) throws IOException {
 
