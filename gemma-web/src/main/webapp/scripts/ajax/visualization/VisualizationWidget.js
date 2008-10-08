@@ -82,6 +82,24 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 			}
 		});
 
+Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
+
+			overwrite : function(el, values, ret) {
+				Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
+				for (var i = 0; i < values.length; i++) {
+					var record = values[i];
+					var shortName = record.ee.shortName;
+					var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
+								tag : 'div',
+								id : shortName + "_vis",
+								style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px;'
+							});
+
+					Heatmap.draw($(shortName + "_vis"), record.profiles);
+				}
+			}
+		});
+
 Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			id : 'VisualizationWindow',
 			width : 800,
@@ -102,7 +120,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 							emptyText : 'No images to display',
 							store : new Gemma.VisualizationStore(),
 
-							tpl : new Gemma.ProfileTemplate('<tpl for="."><tpl for="ee">',
+							tpl : new Gemma.HeatmapTemplate('<tpl for="."><tpl for="ee">',
 									'<div id ="{shortName}_vizwrap" > {shortName} </div>', '</tpl></tpl>'),
 
 							prepareData : function(data) {
