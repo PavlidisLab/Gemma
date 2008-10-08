@@ -1,4 +1,4 @@
-Heatmap = (function() {
+Heatmap = function() {
 
 	var colors = ["black", "red", "orange", "yellow", "white"];
 
@@ -99,5 +99,5 @@ Heatmap = (function() {
 			var plot = new HeatMap(target, data, options);
 			return plot;
 		}
-	}
-})();
+	};
+}();
