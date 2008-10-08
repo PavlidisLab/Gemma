@@ -20,45 +20,70 @@
 package ubic.gemma.web.controller.visualization;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 public class VisualizationValueObject {
 
     private Collection<GeneExpressionProfile> profiles;
     private ExpressionExperiment ee = null;
+    private Map<Long, String> colorMap = new HashMap<Long, String>();
+
+    private static String[] colors = new String[] { "black", "red", "blue", "green" };
 
     public VisualizationValueObject() {
         super();
         this.profiles = new HashSet<GeneExpressionProfile>();
     }
 
-    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors ) {
+    /**
+     * @param vectors
+     * @param genes
+     */
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, Collection<Gene> genes ) {
         this();
-        
+
+        int i = 0;
+        if ( genes.size() > colors.length ) {
+            // / FIXME
+        }
+        for ( Gene g : genes ) {
+            colorMap.put( g.getId(), colors[i] );
+            i++;
+        }
+
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.ee == null ) {
                 this.ee = vector.getExpressionExperiment();
-            } 
-            else if (!( this.ee.equals( vector.getExpressionExperiment() ))) {
-                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "+ this.ee.getId() + "  ee2: " + vector.getExpressionExperiment().getId());
+            } else if ( !( this.ee.equals( vector.getExpressionExperiment() ) ) ) {
+                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "
+                        + this.ee.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
             }
 
-            GeneExpressionProfile profile = new GeneExpressionProfile( vector );
+            String color = null;
+            for ( Gene g : genes ) {
+                if ( vector.getGenes().contains( g ) ) {
+                    color = colorMap.get( g.getId() );
+                }
+            }
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color );
             profiles.add( profile );
+
         }
     }
 
     /**
      * @param dvvo
      */
-
     public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
         this();
         setEE( dvvo.getExpressionExperiment() );
-        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo );
+        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo, null );
         profiles.add( profile );
     }
 

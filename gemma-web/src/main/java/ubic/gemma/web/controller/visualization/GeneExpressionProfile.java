@@ -39,17 +39,31 @@ public class GeneExpressionProfile {
     Collection<Gene> genes;
     List<DoublePoint> points;
     DesignElement probe;
+    private String color = "black";
 
-    public GeneExpressionProfile( DoubleVectorValueObject vector ) {
+    public GeneExpressionProfile( DoubleVectorValueObject vector, String color ) {
         this.genes = vector.getGenes();
         this.probe = vector.getDesignElement();
         this.points = new ArrayList<DoublePoint>();
+
+        if ( color != null ) {
+            this.color = color;
+        }
+
         double[] data = vector.standardize();
         int i = 0;
         for ( Double d : data ) {
             points.add( new DoublePoint( i, d ) );
             i++;
         }
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor( String color ) {
+        this.color = color;
     }
 
     public Collection<Gene> getGenes() {

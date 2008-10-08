@@ -105,8 +105,7 @@ public class DEDVController extends BaseFormController {
      * @return
      */
 
-    public VisualizationValueObject[] getDEDVForVisualization( Collection<Long> eeIds,
-            Collection<Long> geneIds ) {
+    public VisualizationValueObject[] getDEDVForVisualization( Collection<Long> eeIds, Collection<Long> geneIds ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -128,7 +127,7 @@ public class DEDVController extends BaseFormController {
         log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
                 + " genes in " + time + " ms." );
 
-        return makeVisCollection( dedvs );
+        return makeVisCollection( dedvs, genes );
 
     }
 
@@ -137,13 +136,15 @@ public class DEDVController extends BaseFormController {
      * Currently removes multiple hits for same gene. Tries to pick best DEDV.
      * 
      * @param dedvs
+     * @param genes
      * @return
      */
-    private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs ) {
+    private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs,
+            Collection<Gene> genes ) {
 
         Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
 
-        //Organize by expression experiment
+        // Organize by expression experiment
         for ( DoubleVectorValueObject dvvo : dedvs ) {
             ExpressionExperiment ee = dvvo.getExpressionExperiment();
             if ( !vvoMap.containsKey( ee ) ) {
@@ -154,10 +155,10 @@ public class DEDVController extends BaseFormController {
 
         VisualizationValueObject[] result = new VisualizationValueObject[vvoMap.keySet().size()];
 
-        //Create collection of visualizationValueObject for flotr on js side
+        // Create collection of visualizationValueObject for flotr on js side
         int i = 0;
-        for ( ExpressionExperiment ee : vvoMap.keySet() ) {            
-            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ) );
+        for ( ExpressionExperiment ee : vvoMap.keySet() ) {
+            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ), genes );
             result[i] = vvo;
             i++;
         }
@@ -191,9 +192,8 @@ public class DEDVController extends BaseFormController {
 
     /*
      * Handle case of text export of the results.
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse)
+     * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
+     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @SuppressWarnings( { "unchecked", "unused" })
     @Override

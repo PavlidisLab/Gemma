@@ -240,7 +240,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 	
 	visStyler : function(value, metadata, record, row, col, ds){
-		return	"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Visualize the data' />";
+		return	"<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
 	},
 
 	downloadDedv : function(value, metadata, record, row, col, ds) {
@@ -260,7 +260,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			}
 		}
 
-		return String.format("<a href='javascript: Gemma.CoexpressionGrid.visualize([{0}],[{1},{2}])'> visulize </a> ",
+		return String.format("<a href='javascript: Gemma.CoexpressionGrid.visualize([{0}],[{1},{2}])'> visualize </a> ",
 				activeExperimentsString, queryGene.id, foundGene.id);
 	},
 

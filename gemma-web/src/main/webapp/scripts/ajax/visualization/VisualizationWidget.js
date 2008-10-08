@@ -42,24 +42,43 @@ Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {
 
 		});
 
+Gemma.PLOT_SIZE = 150;
+
 Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
+
+			graphConfig : {
+				lines : {
+					lineWidth : 1
+				},
+				xaxis : {
+					noTicks : 0
+				},
+				yaxis : {
+					noTicks : 0
+				},
+				grid : {
+					color : "white"
+				},
+				shadowSize : 0,
+				legend : {
+					position : 'n'
+				}
+			},
 
 			overwrite : function(el, values, ret) {
 				Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
-				console.log(values);
 				for (var i = 0; i < values.length; i++) {
 					var record = values[i];
 					var shortName = record.ee.shortName;
-					console.log(shortName);
-
-					var newDiv = Ext.DomHelper.append(shortName, {
+					var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
 								tag : 'div',
 								id : shortName + "_vis",
-								style : 'width:300px;height:300px;'
+								style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px;'
 							});
 
-					flotrDraw(newDiv, record.profiles);
-				};
+					// Must use prototype extraction here -- putting in newDiv fails.
+					Flotr.draw($(shortName + "_vis"), record.profiles, this.graphConfig);
+				}
 			}
 		});
 
@@ -68,6 +87,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			width : 800,
 			height : 500,
 			closeAction : 'destroy',
+			bodyStyle : "background:white",
 			layout : 'fit',
 			constrainHeader : true,
 			title : "Visualization",
@@ -83,24 +103,37 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 							store : new Gemma.VisualizationStore(),
 
 							tpl : new Gemma.ProfileTemplate('<tpl for="."><tpl for="ee">',
-									'<div id ="{shortName}" style="height:300px;width:300px;"> {shortName} </div>',
-									'</tpl></tpl>'),
+									'<div id ="{shortName}_vizwrap" > {shortName} </div>', '</tpl></tpl>'),
 
 							prepareData : function(data) {
 
 								// Need to transform the cordinate data from an object to an array for flotr
+								// probe, genes
 								var flotrData = [];
 								var coordinateProfile = data.profiles;
 
 								for (var i = 0; i < coordinateProfile.size(); i++) {
 									var coordinateObject = coordinateProfile[i].points;
-									var coordinateSimple = [];
+
+									var probe = coordinateProfile[i].probe.name;
+									var genes = coordinateProfile[i].genes;
+									var color = coordinateProfile[i].color;
+
+									var oneProfile = [];
 
 									for (var j = 0; j < coordinateObject.size(); j++) {
-										coordinateSimple.push([coordinateObject[j].x, coordinateObject[j].y]);
+										var point = [coordinateObject[j].x, coordinateObject[j].y];
+										oneProfile.push(point);
 									}
-									flotrData.push(coordinateSimple);
+									var plotConfig = {
+										data : oneProfile,
+										color : color
+									};
+
+									flotrData.push(plotConfig);
 								}
+
+								var data
 
 								data.profiles = flotrData;
 								return data;
@@ -133,9 +166,3 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			}
 
 		});
-
-flotrDraw = function(divId, profiles) {
-	console.log(divId);
-	console.log(profiles);
-	Flotr.draw(divId, profiles);
-}
