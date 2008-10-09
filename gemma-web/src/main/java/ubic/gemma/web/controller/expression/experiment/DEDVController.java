@@ -19,9 +19,11 @@
 
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -127,10 +129,51 @@ public class DEDVController extends BaseFormController {
         log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
                 + " genes in " + time + " ms." );
 
+        return makeVisCollection( dedvs, new ArrayList<Gene>(genes) );
+
+    }
+
+    
+    /**
+     * AJAX exposed method
+     * 
+     * @param eeIds
+     * @param geneIds
+     * @return
+     */
+
+    public VisualizationValueObject[] getDEDVForCoexpressionVisualization( Collection<Long> eeIds, Long queryGeneId, Long coexpressedGeneId ) {
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+        if ( ees == null || ees.isEmpty() ) return null;
+
+        // Performance note: the above is fast except for the need to security-filter the EEs. This takes 90% of the
+        // time.            
+        Gene queryGene = geneService.load( queryGeneId );
+        Gene coexpressedGene = geneService.load( coexpressedGeneId );
+        
+        List<Gene> genes = new ArrayList<Gene>();
+        genes.add(queryGene);
+        genes.add( coexpressedGene );
+
+        if ( genes == null || genes.isEmpty() ) return null;
+
+        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
+                genes );
+
+        watch.stop();
+        Long time = watch.getTime();
+
+        log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + genes.size()
+                + " genes in " + time + " ms." );
+
         return makeVisCollection( dedvs, genes );
 
     }
 
+    
     /**
      * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
      * Currently removes multiple hits for same gene. Tries to pick best DEDV.
@@ -140,7 +183,7 @@ public class DEDVController extends BaseFormController {
      * @return
      */
     private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs,
-            Collection<Gene> genes ) {
+            List<Gene> genes ) {
 
         Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
 

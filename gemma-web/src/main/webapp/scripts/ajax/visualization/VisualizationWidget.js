@@ -14,8 +14,12 @@ Gemma.VisualizationStore = function(config) {
 			}, {
 				name : "profiles"
 			}]);
-
-	this.readMethod = DEDVController.getDEDVForVisualization;
+			
+			
+ 	if(config && config.readMethod) 
+		this.readMethod = config.readMethod;
+	else
+		this.readMethod = DEDVController.getDEDVForCoexpressionVisualization;
 
 	this.proxy = new Ext.data.DWRProxy(this.readMethod);
 
@@ -85,7 +89,7 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 
 			overwrite : function(el, values, ret) {
-				Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
+				Gemma.HeatmapTemplate.superclass.overwrite.call(this, el, values, ret);
 				for (var i = 0; i < values.length; i++) {
 					var record = values[i];
 					var shortName = record.ee.shortName;
@@ -120,7 +124,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 							emptyText : 'No images to display',
 							store : new Gemma.VisualizationStore(),
 
-							tpl : new Gemma.HeatmapTemplate('<tpl for="."><tpl for="ee">',
+							tpl : new Gemma.ProfileTemplate('<tpl for="."><tpl for="ee">',
 									'<div id ="{shortName}_vizwrap" > {shortName} </div>', '</tpl></tpl>'),
 
 							prepareData : function(data) {
@@ -166,21 +170,17 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 			},
 
-			displayWindow : function(eeIds, geneIds) {
+			displayWindow : function(eeIds, queryGene, coexpressedGene) {
 
 				var params = [];
 				params.push(eeIds);
-				params.push(geneIds);
+				params.push(queryGene);
+				params.push(coexpressedGene);
 				this.show();
 				this.dv.store.load({
 							params : params
 						});
 
-			},
-
-			clearWindow : function() {
-				// this.hide();
-				// TODO: Clear the window of old graphs
 			}
 
 		});

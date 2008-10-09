@@ -610,6 +610,7 @@
 						<list>
 							<value>getDEDV</value>
 							<value>getDEDVForVisualization</value>
+							<value>getDEDVForCoexpressionVisualization</value>
 						</list>
 					</property>
 				</bean>

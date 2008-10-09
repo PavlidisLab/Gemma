@@ -22,7 +22,11 @@ package ubic.gemma.web.controller.visualization;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -35,7 +39,9 @@ public class VisualizationValueObject {
     private Map<Long, String> colorMap = new HashMap<Long, String>();
 
     private static String[] colors = new String[] { "black", "red", "blue", "green" };
+    private static Log log = LogFactory.getLog( VisualizationValueObject.class );
 
+    
     public VisualizationValueObject() {
         super();
         this.profiles = new HashSet<GeneExpressionProfile>();
@@ -43,9 +49,9 @@ public class VisualizationValueObject {
 
     /**
      * @param vectors
-     * @param genes
+     * @param genes  Is list so that order is gauranteed.  Need this so that color's are consistent.  Query gene is always black, coexpressed is always red. 
      */
-    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, Collection<Gene> genes ) {
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes ) {
         this();
 
         int i = 0;
@@ -68,6 +74,9 @@ public class VisualizationValueObject {
             String color = null;
             for ( Gene g : genes ) {
                 if ( vector.getGenes().contains( g ) ) {
+                    if (color != null){
+                        log.warn("Probe: " +vector.getDesignElement().getName() + " contains both the query gene and the expressed gene");
+                    }
                     color = colorMap.get( g.getId() );
                 }
             }

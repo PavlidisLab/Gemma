@@ -20,15 +20,13 @@ package ubic.gemma.web.controller.visualization;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-
-import cern.colt.list.DoubleArrayList;
 
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * Processes data requests for visualization of expression profiles. Designed for ajax applications
@@ -41,9 +39,11 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
  * 'clipped'.
  * </ul>
  * 
+ * This might be deprecated in favor of DEDV controller
+ * 
  * @spring.bean id="visualizationController"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
- * @author Paul
+ * @author Paul, klc
  * @version $Id$
  */
 public class VisualizationController {
