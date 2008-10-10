@@ -23,15 +23,11 @@ package ubic.gemma.model.genome;
 import org.apache.commons.lang.builder.CompareToBuilder;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.genome.CytogeneticLocation
  */
-public class CytogeneticLocationImpl extends ubic.gemma.model.genome.CytogeneticLocation implements Comparable {
+public class CytogeneticLocationImpl extends ubic.gemma.model.genome.CytogeneticLocation {
 
     /**
      * 
