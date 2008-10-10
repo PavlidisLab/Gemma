@@ -130,13 +130,13 @@ Ext.onReady(function() {
 				enabled : false
 			});
 
-	setTimeout(function() {
+	searchPanel.geneChooserPanel.toolbar.taxonCombo.on('ready', function() {
 				Ext.get('loading').remove();
 				Ext.get('loading-mask').fadeOut({
 							duration : 0.5,
 							remove : true
 						});
-			}, 350);
+			});
 
 	var predictedGeneDatasetGrid;
 	var probeAlignedDatasetGrid;

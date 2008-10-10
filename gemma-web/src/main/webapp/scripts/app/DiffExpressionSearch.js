@@ -27,13 +27,13 @@ Ext.onReady(function() {
 				pageSize : 25
 			});
 
-	setTimeout(function() {
+	searchPanel.geneChooserPanel.toolbar.taxonCombo.on('ready', function() {
 				Ext.get('loading').remove();
 				Ext.get('loading-mask').fadeOut({
 							duration : 0.5,
 							remove : true
 						});
-			}, 350);
+			});
 
 	searchPanel.on("aftersearch", function(panel, result) {
 
