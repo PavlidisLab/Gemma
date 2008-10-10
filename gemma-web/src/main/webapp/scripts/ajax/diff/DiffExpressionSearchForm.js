@@ -46,10 +46,10 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		Gemma.DiffExpressionSearchForm.superclass.afterRender.call(this, container, position);
 
 		Ext.apply(this, {
-			loadMask : new Ext.LoadMask(this.getEl(), {
-				msg : "Searching  ..."
-			})
-		});
+					loadMask : new Ext.LoadMask(this.getEl(), {
+								msg : "Searching  ..."
+							})
+				});
 
 	},
 
@@ -84,11 +84,11 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		var efMap = this.efChooserPanel.eeFactorsMap;
 
 		Ext.apply(newDsc, {
-			geneIds : this.geneChooserPanel.getGeneIds(),
-			selectedFactors : efMap,
-			threshold : Ext.getCmp('thresholdField').getValue(),
-			taxonId : this.geneChooserPanel.getTaxonId()
-		});
+					geneIds : this.geneChooserPanel.getGeneIds(),
+					selectedFactors : efMap,
+					threshold : Ext.getCmp('thresholdField').getValue(),
+					taxonId : this.geneChooserPanel.getTaxonId()
+				});
 
 		if (this.currentSet) {
 			newDsc.eeIds = this.getActiveEeIds();
@@ -143,9 +143,9 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 				var m = fm.split(".");
 				if (m.length == 2) {
 					factorMap.push({
-						eeId : m[0],
-						efId : m[1]
-					});
+								eeId : m[0],
+								efId : m[1]
+							});
 				}
 			}
 			dsc.selectedFactors = factorMap;
@@ -247,7 +247,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (dsc.eeSetName) {
 			url += String.format("&setName={0}", dsc.eeSetName);
 		}
-		
+
 		if (dsc.selectedFactors) {
 			url += "&fm=";
 			for (var i in dsc.selectedFactors) {
@@ -265,10 +265,10 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	doSearch : function(dsc) {
 		if ((dsc && !dsc.selectedFactors) || (!dsc && !this.efChooserPanel.eeFactorsMap)) {
 			this.efChooserPanel.on("factors-chosen", function(efmap) {
-				this.doSearch();
-			}, this, {
-				single : true
-			});
+						this.doSearch();
+					}, this, {
+						single : true
+					});
 			this.chooseFactors();
 		} else {
 			if (!dsc) {
@@ -281,9 +281,9 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 					this.loadMask.show();
 					var errorHandler = this.handleError.createDelegate(this, [], true);
 					DifferentialExpressionSearchController.getDiffExpressionForGenes(dsc, {
-						callback : this.returnFromSearch.createDelegate(this),
-						errorHandler : errorHandler
-					});
+								callback : this.returnFromSearch.createDelegate(this),
+								errorHandler : errorHandler
+							});
 				}
 				if (pageTracker) {
 					pageTracker._trackPageview("/Gemma/differentialExpressionSearch.doSearch");
@@ -296,13 +296,13 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	handleError : function(msg, e) {
 		Ext.DomHelper.overwrite("diffExpression-messages", {
-			tag : 'img',
-			src : '/Gemma/images/icons/warning.png'
-		});
+					tag : 'img',
+					src : '/Gemma/images/icons/warning.png'
+				});
 		Ext.DomHelper.append("diffExpression-messages", {
-			tag : 'span',
-			html : "&nbsp;&nbsp;" + msg
-		});
+					tag : 'span',
+					html : "&nbsp;&nbsp;" + msg
+				});
 		this.loadMask.hide();
 	},
 
@@ -357,93 +357,93 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		var isAdmin = dwr.util.getValue("hasAdmin");
 
 		this.geneChooserPanel = new Gemma.GeneChooserPanel({
-			id : 'gene-chooser-panel',
-			region : 'center',
-			height : 100
-		});
+					id : 'gene-chooser-panel',
+					region : 'center',
+					height : 100
+				});
 
 		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
-			isAdmin : isAdmin
-		});
+					isAdmin : isAdmin
+				});
 
 		/* factor chooser */
 		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
-			modal : true
-		});
+					modal : true
+				});
 
 		this.geneChooserPanel.on("taxonchanged", function(taxon) {
-			this.eeSetChooserPanel.filterByTaxon(taxon);
-		}.createDelegate(this));
+					this.eeSetChooserPanel.filterByTaxon(taxon);
+				}.createDelegate(this));
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
-			this.currentSet = eeSetRecord;
-			this.updateDatasetsToBeSearched(eeSetRecord.get("expressionExperimentIds"), eeSetRecord);
-			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
-			this.efChooserPanel.reset(eeSetRecord.get("name"));
-		}.createDelegate(this));
+					this.currentSet = eeSetRecord;
+					this.updateDatasetsToBeSearched(eeSetRecord.get("expressionExperimentIds"), eeSetRecord);
+					this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
+					this.efChooserPanel.reset(eeSetRecord.get("name"));
+				}.createDelegate(this));
 
 		this.eeSetChooserPanel.combo.on("comboReady", this.restoreState.createDelegate(this));
 
 		this.eeSetChooserPanel.on('commit', function(eeSetRecord) {
-			if (!eeSetRecord) {
-				return;
-			}
-			this.currentSet = eeSetRecord;
-			this.chooseFactors();
-		}.createDelegate(this));
+					if (!eeSetRecord) {
+						return;
+					}
+					this.currentSet = eeSetRecord;
+					this.chooseFactors();
+				}.createDelegate(this));
 
 		Ext.apply(this, {
-			items : [this.geneChooserPanel, {
-				xtype : 'panel',
-				region : 'south',
-				title : 'Analysis options',
-				collapsedTitle : '[Analysis options]',
-				id : 'analysis-options-wrapper',
-				width : 250,
-				height : 140,
-				minSize : 90,
-				cmargins : '5 5 5 5 ',
-				margins : '5 5 5 5 ',
-				plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
-				items : [{
-					xtype : 'fieldset',
-					defaults : {
-						bodyStyle : 'padding:3px'
-					},
-					id : 'diff-ex-analysis-options',
-					height : 100,
-					items : [{
-						xtype : 'numberfield',
-						id : 'thresholdField',
-						allowBlank : false,
-						allowDecimals : true,
-						allowNegative : false,
-						minValue : Gemma.MIN_THRESHOLD,
-						maxValue : Gemma.MAX_THRESHOLD,
-						fieldLabel : 'Threshold',
-						invalidText : "Minimum threshold is " + Gemma.MIN_THRESHOLD + ".  Max threshold is "
-								+ Gemma.MAX_THRESHOLD,
-						value : Gemma.DEFAULT_THRESHOLD,
-						width : 60,
-						tooltip : "Only genes with a qvalue less than this threshold are returned."
-					}, this.eeSetChooserPanel, {
-						xtype : 'button',
-						id : 'showFactorChooserButton',
-						text : "Factor chooser",
-						tooltip : "Show experimental factor chooser",
-						handler : this.chooseFactors,
-						scope : this
-					}]
-				}]
-			}],
-			buttons : [{
-				text : "Find Differential Expression",
-				handler : this.doSearch.createDelegate(this, [], false)
-			// pass
-			// no
-			// parameters!
-			}]
-		});
+					items : [this.geneChooserPanel, {
+						xtype : 'panel',
+						region : 'south',
+						title : 'Analysis options',
+						collapsedTitle : '[Analysis options]',
+						id : 'analysis-options-wrapper',
+						width : 250,
+						height : 150,
+						minSize : 90,
+						cmargins : '5 5 5 5 ',
+						margins : '5 5 5 5 ',
+						plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
+						items : [{
+							xtype : 'fieldset',
+							defaults : {
+								bodyStyle : 'padding:3px'
+							},
+							id : 'diff-ex-analysis-options',
+							autoHeight : true,
+							items : [{
+								xtype : 'numberfield',
+								id : 'thresholdField',
+								allowBlank : false,
+								allowDecimals : true,
+								allowNegative : false,
+								minValue : Gemma.MIN_THRESHOLD,
+								maxValue : Gemma.MAX_THRESHOLD,
+								fieldLabel : 'Threshold',
+								invalidText : "Minimum threshold is " + Gemma.MIN_THRESHOLD + ".  Max threshold is "
+										+ Gemma.MAX_THRESHOLD,
+								value : Gemma.DEFAULT_THRESHOLD,
+								width : 60,
+								tooltip : "Only genes with a qvalue less than this threshold are returned."
+							}, this.eeSetChooserPanel, {
+								xtype : 'button',
+								id : 'showFactorChooserButton',
+								text : "Factor chooser",
+								tooltip : "Show experimental factor chooser",
+								handler : this.chooseFactors,
+								scope : this
+							}]
+						}]
+					}],
+					buttons : [{
+						text : "Find Differential Expression",
+						handler : this.doSearch.createDelegate(this, [], false)
+							// pass
+							// no
+							// parameters!
+						}]
+				});
 		Gemma.DiffExpressionSearchForm.superclass.initComponent.call(this);
 		this.addEvents('beforesearch', 'aftersearch');
 
@@ -451,19 +451,19 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		 * This horrible mess. We listen to taxon ready event and filter the presets on the taxon.
 		 */
 		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
-			// console.log("setting up filtering of combo");
-			if (taxon) {
-				if (this.eeSetChooserPanel.store.getRange().length > 0) {
-					// console.log("Load was done, filtering");
-					this.eeSetChooserPanel.filterByTaxon(taxon);
-				} else {
-					this.eeSetChooserPanel.store.on("load", function() {
-						// console.log("Filtering after load");
-						this.eeSetChooserPanel.filterByTaxon(taxon);
-					}, this);
-				}
-			}
-		}, this);
+					// console.log("setting up filtering of combo");
+					if (taxon) {
+						if (this.eeSetChooserPanel.store.getRange().length > 0) {
+							// console.log("Load was done, filtering");
+							this.eeSetChooserPanel.filterByTaxon(taxon);
+						} else {
+							this.eeSetChooserPanel.store.on("load", function() {
+										// console.log("Filtering after load");
+										this.eeSetChooserPanel.filterByTaxon(taxon);
+									}, this);
+						}
+					}
+				}, this);
 
 	}
 
