@@ -48,6 +48,7 @@ public abstract class AbstractGeoService {
      * @return
      * @deprecated Use {@link #fetchAndLoad(String,boolean,boolean,boolean,boolean,boolean)} instead
      */
+    @Deprecated
     public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
             boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms );
 

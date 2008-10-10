@@ -72,6 +72,7 @@ public class GeoDatasetService extends AbstractGeoService {
      * @param geoDataSetAccession
      * @deprecated Use {@link #fetchAndLoad(String,boolean,boolean,boolean,boolean,boolean)} instead
      */
+    @Deprecated
     @SuppressWarnings("unchecked")
     @Override
     public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,

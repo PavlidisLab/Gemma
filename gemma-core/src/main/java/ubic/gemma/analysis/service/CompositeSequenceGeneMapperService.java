@@ -40,6 +40,7 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @deprecated Methods here can be done other ways, or added to the CompositeSequenceService if need be.
  */
+@Deprecated
 public class CompositeSequenceGeneMapperService {
     private Log log = LogFactory.getLog( this.getClass() );
 

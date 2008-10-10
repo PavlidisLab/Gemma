@@ -469,6 +469,7 @@ public class ArrayDesignSequenceProcessingService {
      * @deprecated This method creates the Affymetrix array design using an input file format we no longer really
      *             support, so it should be avoided (for Affymetrix).
      */
+    @Deprecated
     protected ArrayDesign processAffymetrixDesign( String arrayDesignName, Taxon taxon, InputStream arrayDesignFile,
             InputStream probeSequenceFile ) throws IOException {
         ArrayDesign result = ArrayDesign.Factory.newInstance();
@@ -505,6 +506,7 @@ public class ArrayDesignSequenceProcessingService {
      *         filled in.
      * @deprecated {@see processAffymetrixDesign}
      */
+    @Deprecated
     public ArrayDesign processAffymetrixDesign( String arrayDesignName, String arrayDesignFile,
             String probeSequenceFile, Taxon taxon ) throws IOException {
         InputStream arrayDesignFileStream = new BufferedInputStream( new FileInputStream( arrayDesignFile ) );

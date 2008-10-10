@@ -1207,6 +1207,7 @@ public class MageMLConverterHelper {
      * @param getter
      * @deprecated at least temporarily
      */
+    @Deprecated
     public void convertDerivedBioAssayAssociations( DerivedBioAssay mageObj,
             ubic.gemma.model.expression.bioAssay.BioAssay gemmaObj, Method getter ) {
         Object associatedObject = intializeConversion( mageObj, getter );
@@ -2679,6 +2680,7 @@ public class MageMLConverterHelper {
      * @return Returns the bioAssayDimensions.
      * @deprecated
      */
+    @Deprecated
     public BioAssayDimensions getBioAssayDimensions() {
         return this.bioAssayDimensions;
     }

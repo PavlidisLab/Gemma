@@ -66,6 +66,7 @@ public class ExpressionDataMatrixVisualizationService {
     /**
      * @deprecated
      */
+    @Deprecated
     private static final int NUM_PROFILES_TO_DISPLAY = 3;
 
     /**
@@ -98,6 +99,7 @@ public class ExpressionDataMatrixVisualizationService {
      * @return JFreeChart
      * @deprecated
      */
+    @Deprecated
     public JFreeChart createXYLineChart( String title, Collection<double[]> dataCol, int numProfiles ) {
         if ( dataCol == null ) throw new RuntimeException( "dataCol cannot be " + null );
 
