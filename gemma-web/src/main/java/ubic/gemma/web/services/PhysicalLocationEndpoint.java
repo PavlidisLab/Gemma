@@ -71,6 +71,7 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
+    @Override
     protected Element invokeInternal( Element requestElement, Document document ) {
         StopWatch watch = new StopWatch();
         watch.start();

@@ -28,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
@@ -64,6 +63,7 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();

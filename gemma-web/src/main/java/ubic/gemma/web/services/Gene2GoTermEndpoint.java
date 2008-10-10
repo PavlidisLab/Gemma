@@ -73,6 +73,7 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
+    @Override
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();

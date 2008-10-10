@@ -65,6 +65,7 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         authenticate();
