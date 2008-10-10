@@ -31,11 +31,10 @@
 		style="width: 100%; height: 100%; background: #FFFFFF; position: absolute; z-index: 120000; left: 0; top: 0;">
 		<div id="loading">
 			<div>
-				<img src="images/icons/strobing-gemma.gif" style="margin-right: 8px;" align="absmiddle" />
+				<img src="images/default/tree/loading.gif" style="margin-right: 8px;" align="absmiddle" />
 				Loading interface...
 			</div>
 		</div>
-
 	</div>
 	<div id='coexpression-all'></div>
 </div>

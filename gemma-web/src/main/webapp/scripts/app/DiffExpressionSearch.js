@@ -22,10 +22,18 @@ Ext.onReady(function() {
 	searchPanel.render("diffExpression-form");
 
 	var diffExGrid = new Gemma.DiffExpressionGrid({
-		renderTo : "diffExpression-results",
-		title : "Differentially expressed genes", 
-		pageSize : 25
-	});
+				renderTo : "diffExpression-results",
+				title : "Differentially expressed genes",
+				pageSize : 25
+			});
+
+	setTimeout(function() {
+				Ext.get('loading').remove();
+				Ext.get('loading-mask').fadeOut({
+							duration : 0.5,
+							remove : true
+						});
+			}, 350);
 
 	searchPanel.on("aftersearch", function(panel, result) {
 
