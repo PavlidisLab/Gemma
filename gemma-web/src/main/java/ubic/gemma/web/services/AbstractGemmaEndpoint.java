@@ -95,8 +95,8 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * @return a collection contain one string element
      */
     /*
-     *TODO return value should be single string object.  Note that many services will be affected should 
-     *we make this change.
+     * TODO return value should be single string object. Note that many services will be affected shouldwe make this
+     * change.
      */
     protected Collection<String> getSingleNodeValue( Element requestElement, String tagName ) {
         Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
@@ -110,12 +110,12 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         for ( int i = 0; i < children.getLength(); i++ ) {
 
             if ( children.item( i ).getNodeType() == Node.TEXT_NODE ) {
-                node = children.item( i ).getNodeValue();                
+                node = children.item( i ).getNodeValue();
                 value.add( node );
             }
             node = null;
         }
-        if ( value == null || value.isEmpty()) {
+        if ( value.isEmpty() ) {
             throw new IllegalArgumentException( "Could not find request text node" );
         }
         return value;
@@ -136,57 +136,55 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         authenticate();
 
         Collection<String> value = new HashSet<String>();
-        String node = "";       
+        String node = "";
         NodeList children = requestElement.getElementsByTagName( tagName ).item( 0 ).getChildNodes();
 
         // generic clients
         // iterate over the child nodes
         for ( int i = 0; i < children.getLength(); i++ ) {
             // need to go one more level down into the great-grandchildren
-            Node child = children.item( i ).getChildNodes().item( 0 );                    
-            //new check to see if the request is a Matlab one
-            //Matlab seems to package the xml such that values are found in every odd (ie. 1, 3, 5, 7, etc) 
-            //great-grandchild.  If at i=0, there is no value, then it IS a Matlab request.
-            if (i==0 && child ==null)
-                break;
-            if (child.getNodeType() == Node.TEXT_NODE ) {
-                node = child.getNodeValue();              
+            Node child = children.item( i ).getChildNodes().item( 0 );
+            // new check to see if the request is a Matlab one
+            // Matlab seems to package the xml such that values are found in every odd (ie. 1, 3, 5, 7, etc)
+            // great-grandchild. If at i=0, there is no value, then it IS a Matlab request.
+            if ( i == 0 && child == null ) break;
+            if ( child.getNodeType() == Node.TEXT_NODE ) {
+                node = child.getNodeValue();
                 value.add( node );
             }
             node = "";
         }
-        if ( value!=null && !value.isEmpty() )
-            return value;
-        else {
-        //MATLAB specific
-        //but it appears that MATLAB encodes it so that every odd (ie. 1, 3, 5, 7, etc) great-grandchild holds the
+
+        if ( !value.isEmpty() ) return value;
+
+        // MATLAB specific
+        // but it appears that MATLAB encodes it so that every odd (ie. 1, 3, 5, 7, etc) great-grandchild holds the
         // array value
         value = new HashSet<String>();
         node = "";
-        if ( value==null || value.isEmpty() ) {
-            
-            for ( int i = 1; i < children.getLength(); i=i+2 ) {
+        if ( value == null || value.isEmpty() ) {
+
+            for ( int i = 1; i < children.getLength(); i = i + 2 ) {
 
                 // need to go one more level down into the great-grandchildren
                 Node child = children.item( i ).getChildNodes().item( 0 );
                 // Node child = children.item(i).getFirstChild();
 
                 if ( child.getNodeType() == Node.TEXT_NODE ) {
-                    node = child.getNodeValue();                   
+                    node = child.getNodeValue();
                     value.add( node );
                 }
                 node = null;
             }
-            if ( value==null || value.isEmpty() ) { 
-              throw new IllegalArgumentException( "Could not find request text node" );
+            if ( value == null || value.isEmpty() ) {
+                throw new IllegalArgumentException( "Could not find request text node" );
             }
         }
-        
+
         return value;
-        }
+
     }
 
-   
     /**
      * Function to handle the constructing of output in xml format for returning the response to the client. Use this
      * method for simple value returns such as single value or a single array of values. building Mapped values is not
@@ -227,7 +225,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
         responseElement.appendChild( document.createTextNode( msg ) );
 
-        log.error( localName+": "+ msg );
+        log.error( localName + ": " + msg );
         return responseWrapper;
     }
 
@@ -236,7 +234,6 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * @return a string delimited representation of the objects array passed in.
      */
     protected String encode( Object[] data ) {
-        String DELIMITER = " ";
         StringBuffer result = new StringBuffer();
 
         for ( int i = 0; i < data.length; i++ ) {
@@ -259,20 +256,20 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      */
     protected void writeReport( Element responseWrapper, Document document, String filename ) {
         String fullFileName = filename + ".xml";
-        String path = HOME_DIR + File.separatorChar + "dataFiles" + File.separatorChar + "xml" +File.separatorChar;
+        String path = HOME_DIR + File.separatorChar + "dataFiles" + File.separatorChar + "xml" + File.separatorChar;
         try {
             File file = new File( path, fullFileName );
 
             if ( !file.exists() ) {
-                new File(path).mkdirs();  //in case of the subdirs doesn't exisit. 
-                FileOutputStream out = new FileOutputStream( path +fullFileName );
+                new File( path ).mkdirs(); // in case of the subdirs doesn't exisit.
+                FileOutputStream out = new FileOutputStream( path + fullFileName );
                 OutputFormat format = new OutputFormat( document );
                 format.setIndenting( true );
                 // to generate a file output use fileoutputstream
                 XMLSerializer serializer = new XMLSerializer( out, null );
-                serializer.serialize( responseWrapper );                
+                serializer.serialize( responseWrapper );
                 out.close();
-                
+
                 log.info( "A report with the filename, " + fullFileName + ", has been created in path, " + path );
             } else
                 log.info( "A report with the filename, " + fullFileName

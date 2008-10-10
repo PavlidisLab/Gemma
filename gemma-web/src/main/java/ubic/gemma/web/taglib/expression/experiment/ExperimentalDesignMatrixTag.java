@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @deprecated use eeDesignMatrix.js (Ext table)
  * @version $Id$
  */
+@Deprecated
 public class ExperimentalDesignMatrixTag extends TagSupport {
 
     private static Log log = LogFactory.getLog( ExperimentalDesignMatrixTag.class.getName() );

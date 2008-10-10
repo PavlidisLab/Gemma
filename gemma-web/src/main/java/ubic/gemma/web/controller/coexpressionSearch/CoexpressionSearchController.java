@@ -83,6 +83,7 @@ public class CoexpressionSearchController extends BaseFormController {
      * @return
      * @deprecated redundant with method in ExpressionExperimentController.
      */
+    @Deprecated
     @SuppressWarnings("unchecked")
     public Collection<Long> findExpressionExperiments( String query, Long taxonId ) {
         log.info( "Search: " + query + " taxon=" + taxonId );

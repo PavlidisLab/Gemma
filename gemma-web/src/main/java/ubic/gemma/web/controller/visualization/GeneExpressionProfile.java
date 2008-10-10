@@ -21,6 +21,9 @@ package ubic.gemma.web.controller.visualization;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
+
+import org.apache.commons.lang.math.RandomUtils;
 
 import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -53,7 +56,12 @@ public class GeneExpressionProfile {
         double[] data = vector.standardize();
         int i = 0;
         for ( Double d : data ) {
-            points.add( new DoublePoint( i, d ) );
+
+            if ( RandomUtils.nextDouble() < 0.1 || i == 0) {
+                points.add( new DoublePoint( i, Double.NaN ) );
+            } else {
+                points.add( new DoublePoint( i, d ) );
+            }
             i++;
         }
     }

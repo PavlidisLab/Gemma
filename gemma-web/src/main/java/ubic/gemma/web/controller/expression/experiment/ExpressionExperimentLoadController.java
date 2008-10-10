@@ -127,6 +127,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
      * @param request
      * @deprecated
      */
+    @Deprecated
     private void cancel( HttpServletRequest request ) {
         Future job = ( Future ) request.getSession().getAttribute( TaskRunningService.JOB_ATTRIBUTE );
         job.cancel( true );

@@ -167,7 +167,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 	},
 
 	build : function(e) {
-		console.log(e);
+		// console.log(e);
 		adminLinks = '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
 				+ e.id
 				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></a>'
@@ -227,7 +227,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 		manager.on('reportUpdated', function(data) {
 					ob = data[0];
-					console.log(ob);
+					// console.log(ob);
 					var k = Ext.get('coexpressionLinkCount-region');
 					Ext.DomHelper.overwrite(k, {
 								html : ob.coexpressionLinkCount
