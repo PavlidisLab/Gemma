@@ -1,7 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="searchCoexpression.title" />
-	</title>
+	<title><fmt:message key="searchCoexpression.title" /></title>
 
 	<jwr:script src='/scripts/ajax/coexpression/CoexpressionSearchForm.js' useRandomParam="false" />
 	<jwr:script src='/scripts/app/CoexpressionSearch.js' useRandomParam="false" />
@@ -28,7 +27,7 @@
 
 <div id="coexpression-wrap">
 	<div id="loading-mask"
-		style="width: 100%; height: 100%; background: #FFFFFF; position: absolute; z-index: 120000; left: 0; top: 0;">
+		style="width: 900px; height: 900px; background: #FFFFFF; position: absolute; z-index: 120000; left: 0; top: 0;">
 		<div id="loading">
 			<div>
 				<img src="images/default/tree/loading.gif" style="margin-right: 8px;" align="absmiddle" />

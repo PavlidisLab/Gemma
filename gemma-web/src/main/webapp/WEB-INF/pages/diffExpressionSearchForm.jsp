@@ -4,7 +4,8 @@ version: $Id$
 --%>
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="diffExpressionSearch.title" /></title>
+	<title><fmt:message key="diffExpressionSearch.title" />
+	</title>
 
 	<jwr:script src='/scripts/ajax/diff/DiffExpressionSearchForm.js' useRandomParam='false' />
 	<jwr:script src='/scripts/app/DiffExpressionSearch.js' useRandomParam='false' />
@@ -23,17 +24,20 @@ version: $Id$
 <authz:authorize ifNotGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
-<div id="loading-mask"
-	style="width: 100%; height: 100%; background: #FFFFFF; position: absolute; z-index: 120000; left: 0; top: 0;">
-	<div id="loading">
-		<div>
-			<img src="/Gemma/images/default/tree/loading.gif" style="margin-right: 8px;" align="absmiddle" />
-			Loading interface...
+
+<div id="diff-wrap">
+	<div id="loading-mask"
+		style="width: 900%; height: 800px; background: #FFFFFF; position: absolute; z-index: 120000; left: 0; top: 0;">
+		<div id="loading">
+			<div>
+				<img src="/Gemma/images/default/tree/loading.gif" style="margin-right: 8px;" align="absmiddle" />
+				Loading interface...
+			</div>
 		</div>
+
 	</div>
+	<div id='diffExpression-messages' style='width: 100%; height: 1.2em; margin: 5px'></div>
+	<div id='diffExpression-form' style='width: 500px; margin-bottom: 1em;'></div>
+	<div id='diffExpression-results'></div>
 
 </div>
-<div id='diffExpression-messages' style='width: 100%; height: 1.2em; margin: 5px'></div>
-<div id='diffExpression-form' style='width: 500px; margin-bottom: 1em;'></div>
-<div id='diffExpression-results'></div>
-
