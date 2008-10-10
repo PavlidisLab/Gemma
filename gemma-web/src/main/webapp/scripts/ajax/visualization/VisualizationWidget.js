@@ -128,7 +128,8 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 									'<div id ="{shortName}_vizwrap" > {shortName} </div>', '</tpl></tpl>'),
 
 							prepareData : function(data) {
-
+									
+								console.log(data);
 								// Need to transform the cordinate data from an object to an array for flotr
 								// probe, genes
 								var flotrData = [];

@@ -134,6 +134,8 @@
 			<entry key="ontologyTermConverter" value="ubic.gemma.web.remote.OntologyTermConverter"></entry>
 			<entry key="classConverter" value="ubic.gemma.web.remote.ClassConverter"></entry>
 			<entry key="goEvidenceCodeConverter" value="ubic.gemma.web.remote.GOEvidenceCodeConverter"></entry>
+			<entry key="doublePointConverter" value="ubic.gemma.web.remote.DoublePointConverter"></entry>
+
 		</map>
 	</property>
 	<property name="creators">
@@ -1398,13 +1400,18 @@
 			</entry>
 			<entry key="ubic.basecode.dataStructure.DoublePoint">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="bean" />
+					<property name="type" value="doublePointConverter" />
 					<property name="includes">
 						<list>
 							<value>x</value>
 							<value>y</value>
 						</list>
 					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.web.remote.StringPoint">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />				
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.web.controller.visualization.GeneExpressionProfile">
