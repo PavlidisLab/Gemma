@@ -24,5 +24,6 @@
 	</profiles>
 	<activeProfiles>
 		<activeProfile>dev</activeProfile> 
+		<activeProfile>eclipse build</activeProfile>
 	</activeProfiles>
 </settings>
