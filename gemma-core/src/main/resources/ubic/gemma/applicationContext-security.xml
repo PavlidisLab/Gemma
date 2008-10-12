@@ -192,8 +192,15 @@
                 PATTERN_TYPE_APACHE_ANT 
                 /signup.html=admin,user,ROLE_ANONYMOUS
                 /securityManager.html=admin
-				/loadExpressionExperiment.html=admin
 				/indexer.html=admin
+				/maintenanceMode.html=admin
+				/geneLinkAnalysisManager.html=admin
+				/whatsnew/generateCache.html=admin
+				/arrayDesign/associateSequences.html=admin
+				/geoBrowser/showBatch.html=admin
+				/characteristicBrowser.html=admin,user
+				/loadExpressionExperiment.html=admin,user
+				/loadSimpleExpressionExperiment.html=admin,user
 				/expressionExperiment/showAllExpressionExperimentLinkSummaries.html=admin,user
                 /passwordHint.html*=admin,user
                 /userProfile.html*=admin,user
