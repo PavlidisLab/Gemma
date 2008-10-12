@@ -19,7 +19,19 @@ Ext.onReady(function() {
 	manager.on('deleted', function() {
 				store.reload();
 			});
-
+	manager.on('differential', function() {
+				store.reload();
+			});
+	manager.on('processedVector', function() {
+				store.reload();
+			});
+	manager.on('link', function() {
+				store.reload();
+			});
+	manager.on('missingValue', function() {
+				store.reload();
+			});			
+			
 	var record = Ext.data.Record.create([{
 				name : "id",
 				type : "int"

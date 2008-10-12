@@ -11,7 +11,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 		Gemma.EEManager.superclass.initComponent.call(this);
 
-		this.addEvents('reportUpdated', 'deleted', 'tagsUpdated', 'updated', 'pubmedUpdated', 'pubmedRemove');
+		this.addEvents('reportUpdated', 'differential', 'missingValue', 'link' , 'processedVector', 'deleted', 'tagsUpdated', 'updated', 'pubmedUpdated', 'pubmedRemove');
 
 		/**
 		 * Paramters are passed to ProgressWindow config; eventToFire is fired in the callback.
@@ -132,16 +132,48 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			w.show();
 		};
 
-		doLinks = function(id) {
-			Ext.Msg.alert("Will run link analysis");
+		this.doLinks = function(id) {
+			Ext.Msg.show({
+						title : 'Link analysis',
+						msg : 'Please confirm. Previous analaysis results will be deleted.',
+						buttons : Ext.Msg.YESNO,
+						fn : function(btn, text) {
+							if (btn == 'yes') {
+								var callParams = []
+								callParams.push(id);
+								callParams.push({
+											callback : function(data) {
+												this.handleWait(data, 'link', true);
+											}.createDelegate(this)
+										});
+								LinkAnalysisController.run.apply(this, callParams);
+							}
+						},
+						animEl : 'elId',
+						icon : Ext.MessageBox.WARNING
+					});
 		};
 
 		this.doMissingValues = function(id) {
-			Ext.Msg.alert("Will run missing value analysis");
-		};
-
-		this.doProcessedVectors = function(id) {
-			Ext.Msg.alert("Will compute processed vectors");
+			Ext.Msg.show({
+						title : 'Missing value analysis',
+						msg : 'Please confirm. Previous analaysis results will be deleted.',
+						buttons : Ext.Msg.YESNO,
+						fn : function(btn, text) {
+							if (btn == 'yes') {
+								var callParams = []
+								callParams.push(id);
+								callParams.push({
+											callback : function(data) {
+												this.handleWait(data, 'missingValue', true);
+											}.createDelegate(this)
+										});
+								ArrayDesignRepeatScanController.run.apply(this, callParams);
+							}
+						},
+						animEl : 'elId',
+						icon : Ext.MessageBox.WARNING
+					});
 		};
 
 		this.doDifferential = function(id) {
@@ -154,7 +186,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 								var callParams = []
 								callParams.push(id);
 								callParams.push({
-											callback : this.handleWait.createDelegate(this)
+											callback : function(data) {
+												this.handleWait(data, 'differential', true);
+											}.createDelegate(this)
 										});
 								DifferentialExpressionAnalysisController.run.apply(this, callParams);
 							}
@@ -162,6 +196,28 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						animEl : 'elId',
 						icon : Ext.MessageBox.WARNING
 					});
+		};
+		
+		this.doProcessedVectors = function(id) {
+		Ext.Msg.show({
+					title : 'Processed vector analysis',
+					msg : 'Please confirm. Previous analaysis results will be deleted.',
+					buttons : Ext.Msg.YESNO,
+					fn : function(btn, text) {
+						if (btn == 'yes') {
+							var callParams = []
+							callParams.push(id);
+							callParams.push({
+										callback : function(data) {
+												this.handleWait(data, 'processedVector', true);
+											}.createDelegate(this)
+									});
+							ProcessedExpressionDataVectorCreateController.run.apply(this, callParams);
+						}
+					},
+					animEl : 'elId',
+					icon : Ext.MessageBox.WARNING
+				});
 		};
 
 	}
