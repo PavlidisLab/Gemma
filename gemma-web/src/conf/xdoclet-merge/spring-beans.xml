@@ -445,11 +445,25 @@
 					</property>
 				</bean>
 			</entry>
-			<entry key="linkAnalysisController">
+			<entry key="LinkAnalysisController">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">
 						<bean class="org.directwebremoting.spring.BeanCreator">
 							<property name="bean" ref="linkAnalysisController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>run</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ArrayDesignRepeatScanController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="arrayDesignRepeatScanController" />
 						</bean>
 					</property>
 					<property name="includes">
