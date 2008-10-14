@@ -26,7 +26,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.directwebremoting.convert.BeanConverter;
 import org.directwebremoting.dwrp.ObjectOutboundVariable;
-import org.directwebremoting.dwrp.SimpleOutboundVariable;
 import org.directwebremoting.extend.MarshallException;
 import org.directwebremoting.extend.OutboundContext;
 import org.directwebremoting.extend.OutboundVariable;
@@ -53,48 +52,40 @@ public class DoublePointConverter extends BeanConverter {
         // Where we collect out converted children
         Map ovs = new TreeMap();
 
-        // We need to do this before collecting the children to save recurrsion
-        ObjectOutboundVariable ov = new ObjectOutboundVariable(outctx);
-        outctx.put(data, ov);
+        // We need to do this before collecing the children to save recurrsion
+        ObjectOutboundVariable ov = new ObjectOutboundVariable( outctx );
+        outctx.put( data, ov );
 
-        try
-        {
-            Map properties = getPropertyMapFromObject(data, true, false);
-            for (Iterator it = properties.entrySet().iterator(); it.hasNext();)
-            {
-                Map.Entry entry = (Map.Entry) it.next();
-                String name = (String) entry.getKey();
-                Property property = (Property) entry.getValue();
+        try {
+            Map properties = getPropertyMapFromObject( data, true, false );
+            for ( Iterator it = properties.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry entry = ( Map.Entry ) it.next();
+                String name = ( String ) entry.getKey();
+                Property property = ( Property ) entry.getValue();
 
-                Object value = property.getValue(data);
+                Object value = property.getValue( data );
                 OutboundVariable nested;
-                if ( value instanceof Double ){
-                    
-                    String valueString = Double.toString( (Double)value );
-                    if ( valueString.length() > PERCISSION ) valueString = valueString.substring( 0, PERCISSION );
-                    
-                    nested = new SimpleOutboundVariable(valueString, outctx, true);
+                if ( value instanceof Double ) {
 
+                    // Reduce precision to save bandwidth
+                    Double v = Double.parseDouble( String.format( "%.3f", value ) );
+
+                    nested = getConverterManager().convertOutbound( v, outctx );
+
+                } else {
+                    nested = getConverterManager().convertOutbound( value, outctx );
                 }
-                else{
-                 nested = getConverterManager().convertOutbound(value, outctx);
-                }
-                ovs.put(name, nested);
+                ovs.put( name, nested );
             }
-        }
-        catch (MarshallException ex)
-        {
+        } catch ( MarshallException ex ) {
             throw ex;
-        }
-        catch (Exception ex)
-        {
-            throw new MarshallException(data.getClass(), ex);
+        } catch ( Exception ex ) {
+            throw new MarshallException( data.getClass(), ex );
         }
 
-        ov.init(ovs, getJavascript());
+        ov.init( ovs, getJavascript() );
 
         return ov;
     }
-    
-}    
 
+}
