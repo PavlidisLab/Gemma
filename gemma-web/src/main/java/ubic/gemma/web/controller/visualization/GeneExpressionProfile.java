@@ -56,12 +56,12 @@ public class GeneExpressionProfile {
         double[] data = vector.standardize();
         int i = 0;
         for ( Double d : data ) {
-
-            if ( RandomUtils.nextDouble() < 0.1 || i == 0) {
-                points.add( new DoublePoint( i, Double.NaN ) );
-            } else {
-                points.add( new DoublePoint( i, d ) );
-            }
+            // TESTING: simulate missing data.
+            // if ( RandomUtils.nextDouble() < 0.1 || i == 0) {
+            // points.add( new DoublePoint( i, Double.NaN ) );
+            // } else {
+            points.add( new DoublePoint( i, d ) );
+            // }
             i++;
         }
     }
