@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.directwebremoting.convert.BeanConverter;
 import org.directwebremoting.dwrp.ObjectOutboundVariable;
+import org.directwebremoting.dwrp.SimpleOutboundVariable;
 import org.directwebremoting.extend.MarshallException;
 import org.directwebremoting.extend.OutboundContext;
 import org.directwebremoting.extend.OutboundVariable;
@@ -52,7 +53,7 @@ public class DoublePointConverter extends BeanConverter {
         // Where we collect out converted children
         Map ovs = new TreeMap();
 
-        // We need to do this before collecing the children to save recurrsion
+        // We need to do this before collecting the children to save recurrsion
         ObjectOutboundVariable ov = new ObjectOutboundVariable(outctx);
         outctx.put(data, ov);
 
@@ -68,10 +69,11 @@ public class DoublePointConverter extends BeanConverter {
                 Object value = property.getValue(data);
                 OutboundVariable nested;
                 if ( value instanceof Double ){
+                    
                     String valueString = Double.toString( (Double)value );
                     if ( valueString.length() > PERCISSION ) valueString = valueString.substring( 0, PERCISSION );
                     
-                    nested = getConverterManager().convertOutbound(valueString, outctx);
+                    nested = new SimpleOutboundVariable(valueString, outctx, true);
 
                 }
                 else{
