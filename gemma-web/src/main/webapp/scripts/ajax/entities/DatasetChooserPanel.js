@@ -27,7 +27,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 				bodyStyle : 'padding:3px'
 			},
 			border : false,
-			autoWidth: true,
+			autoWidth : true,
 			isAdmin : false,
 
 			setState : function(state) {
@@ -101,7 +101,8 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 						}.createDelegate(this));
 
 				this.combo.on("ready", function(combo, sel) {
-							this.fireEvent('set-chosen', sel);
+							// keeps ready event from propogating??
+							// this.fireEvent('set-chosen', sel);
 						}.createDelegate(this));
 
 				this.dcp.on("datasets-selected", function(sel) {
@@ -208,13 +209,14 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	restoreState : function() {
-		// console.log("Restoring state");
 		if (this.tmpState) {
 			this.selectById(this.tmpState);
 			delete this.tmpState;
 			this.isReady = true;
 		}
+		// console.log("Restore state");
 		if (this.store.getSelected()) {
+
 			this.fireEvent('ready', this.store.getSelected().data);
 		} else {
 			this.fireEvent('ready');

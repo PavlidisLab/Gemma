@@ -56,7 +56,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		// console.log("restoreState");
 		var queryStart = document.URL.indexOf("?");
 		if (queryStart > -1) {
-			// Ext.log("Loading from url= " + document.URL);
+			// console.log("Loading from url= " + document.URL);
 			this.initializeFromQueryString(document.URL.substr(queryStart + 1));
 		} else if (this.csc && queryStart < 0) {
 			this.initializeFromCoexpressionSearchCommand(this.csc);
@@ -348,6 +348,9 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				}.createDelegate(this));
 
 		this.eeSetChooserPanel.combo.on("ready", this.restoreState.createDelegate(this));
+		// this.eeSetChooserPanel.combo.on("ready", function() {
+		// alert("yay");
+		// }.createDelegate(this));
 
 		Ext.apply(this, {
 
