@@ -261,7 +261,6 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param eePositionToIdMap
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static Collection<Long> getTestedExperimentIds( Gene2GeneCoexpression ggc,
             Map<Integer, Long> eePositionToIdMap ) {
         return convertBitVector( eePositionToIdMap, ggc.getDatasetsTestedVector() );
@@ -272,7 +271,6 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param eePositionToIdMap
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static Collection<Long> getSupportingExperimentIds( Gene2GeneCoexpression ggc,
             Map<Integer, Long> eePositionToIdMap ) {
         return convertBitVector( eePositionToIdMap, ggc.getDatasetsSupportingVector() );
