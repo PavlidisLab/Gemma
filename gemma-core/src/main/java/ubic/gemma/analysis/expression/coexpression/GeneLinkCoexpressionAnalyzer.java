@@ -410,9 +410,14 @@ public class GeneLinkCoexpressionAnalyzer {
         analysis.setTaxon( taxon );
         analysis.setStringency( stringency );
         analysis.setName( analysisName );
+        analysis.setDescription( "Coexpression analysis of " + expressionExperiments.size() + " EEs from "
+                + taxon.getCommonName() );
         analysis.setProtocol( protocol );
         ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
 
+        eeSet.setTaxon( taxon );
+        eeSet.setName( "Set for " + analysisName );
+        eeSet.setDescription( "Automatically generated for " + expressionExperiments.size() + " EEs" );
         eeSet.setExperiments( expressionExperiments );
         analysis.setExpressionExperimentSetAnalyzed( eeSet );
 
