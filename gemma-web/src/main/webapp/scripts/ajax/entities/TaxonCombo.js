@@ -68,29 +68,30 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 			this.isReady = true;
 			// console.log("ready");
 		}
-		this.fireEvent('ready', this.getTaxon().data);
+		// this.fireEvent('ready', this.getTaxon().data); // scope problem!
+		this.fireEvent('ready');
 	},
 
 	record : Ext.data.Record.create([{
-		name : "id",
-		type : "int"
-	}, {
-		name : "commonName",
-		type : "string"
-	}, {
-		name : "scientificName",
-		type : "string"
-	}]),
+				name : "id",
+				type : "int"
+			}, {
+				name : "commonName",
+				type : "string"
+			}, {
+				name : "scientificName",
+				type : "string"
+			}]),
 
 	filter : function(taxon) {
 		this.store.clearFilter();
 		this.store.filterBy(function(record, id) {
-			if (taxon.id == record.get("id")) {
-				return true;
-			} else {
-				return false;
-			}
-		});
+					if (taxon.id == record.get("id")) {
+						return true;
+					} else {
+						return false;
+					}
+				});
 		this.setTaxon(taxon);
 		this.onLoad();
 	},
@@ -100,22 +101,22 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 		var tmpl = new Ext.XTemplate('<tpl for="."><div class="x-combo-list-item">{commonName} ({scientificName})</div></tpl>');
 
 		Ext.apply(this, {
-			store : new Ext.data.Store({
-				proxy : new Ext.data.DWRProxy(GenePickerController.getTaxa),
-				reader : new Ext.data.ListRangeReader({
-					id : "id"
-				}, this.record),
-				remoteSort : true
-			}),
-			tpl : tmpl
-		});
-		
+					store : new Ext.data.Store({
+								proxy : new Ext.data.DWRProxy(GenePickerController.getTaxa),
+								reader : new Ext.data.ListRangeReader({
+											id : "id"
+										}, this.record),
+								remoteSort : true
+							}),
+					tpl : tmpl
+				});
+
 		this.store.load({
-			params : [],
-			callback : this.restoreState.createDelegate(this),
-			scope : this,
-			add : false
-		});
+					params : [],
+					callback : this.restoreState.createDelegate(this),
+					scope : this,
+					add : false
+				});
 
 		Gemma.TaxonCombo.superclass.initComponent.call(this);
 
