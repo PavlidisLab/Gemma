@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
  * @author paul
  */
 public class ExpressionExperimentDetailsValueObject extends
-        ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject implements java.io.Serializable {
+        ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
