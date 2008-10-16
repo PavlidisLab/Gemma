@@ -1,18 +1,16 @@
 function handleFailure(data, e) {
 	Ext.DomHelper.overwrite("messages", {
-		tag : 'img',
-		src : '/Gemma/images/icons/warning.png'
-	});
+				tag : 'img',
+				src : '/Gemma/images/icons/warning.png'
+			});
 	Ext.DomHelper.append("messages", {
-		tag : 'span',
-		html : "&nbsp;There was an error:<br/>" + data + " " + (e ? e : "")
-	});
+				tag : 'span',
+				html : "&nbsp;There was an error:<br/>" + data + " " + (e ? e : "")
+			});
 }
 
-function handleDoneGeneratingFile(data) {
-	// Ext.DomHelper.overwrite("messages", "");
-	// var url = data.url;
-	// Now fetch the url that the server has given us.
+function handleDoneGeneratingFile(url) {
+	window.location = url;
 }
 
 /*
@@ -21,16 +19,13 @@ function handleDoneGeneratingFile(data) {
 function handleStartSuccess(taskId) {
 	try {
 		Ext.DomHelper.overwrite("messages", "");
-		var p = new progressbar({
-			taskId : taskId,
-			doForward : true
-		});
-		p.createIndeterminateProgressBar();
-		p.on('fail', handleFailure);
-		p.on('done', handleDoneGeneratingFile);
-		p.startProgress();
+		var p = new Gemma.ProgressWindow({
+					taskId : taskId,
+					callback : handleDoneGeneratingFile
+				});
+		p.show();
 	} catch (e) {
-		alert("error: " + e);
+		console.log(e);
 		handleFailure(data, e);
 		return;
 	}
@@ -56,14 +51,14 @@ function fetchData(filter, eeId, formatType, qtId, eeDId) {
 	var errorHandler = handleFailure;
 
 	callParams.push({
-		callback : cb,
-		errorHandler : errorHandler
-	});
+				callback : cb,
+				errorHandler : errorHandler
+			});
 
 	Ext.DomHelper.overwrite("messages", {
-		tag : 'img',
-		src : '/Gemma/images/default/tree/loading.gif'
-	});
+				tag : 'img',
+				src : '/Gemma/images/default/tree/loading.gif'
+			});
 	Ext.DomHelper.append("messages", "&nbsp;Fetching ...");
 
 	ExpressionExperimentDataFetchController.getDataFile.apply(this, callParams);

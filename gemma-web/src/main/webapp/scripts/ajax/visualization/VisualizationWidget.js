@@ -14,9 +14,8 @@ Gemma.VisualizationStore = function(config) {
 			}, {
 				name : "profiles"
 			}]);
-			
-			
- 	if(config && config.readMethod) 
+
+	if (config && config.readMethod)
 		this.readMethod = config.readMethod;
 	else
 		this.readMethod = DEDVController.getDEDVForCoexpressionVisualization;
@@ -122,13 +121,16 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 				this.dv = new Ext.DataView({
 							autoHeight : true,
 							emptyText : 'No images to display',
+							loadingText : 'Loading data...',
 							store : new Gemma.VisualizationStore(),
 
-							tpl : new Gemma.ProfileTemplate('<tpl for="."><tpl for="eevo">',
-									'<div id ="{shortName}_vizwrap" style="float:left; padding: 10px"> {shortName} </div>', '</tpl></tpl>'),
+							tpl : new Gemma.ProfileTemplate(
+									'<tpl for="."><tpl for="eevo">',
+									'<div id ="{shortName}_vizwrap" style="float:left; padding: 10px"> {shortName} </div>',
+									'</tpl></tpl>'),
 
 							prepareData : function(data) {
-									
+
 								// Need to transform the cordinate data from an object to an array for flotr
 								// probe, genes
 								var flotrData = [];
@@ -172,7 +174,8 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 			displayWindow : function(eeIds, queryGene, coexpressedGene) {
 
-				this.setTitle("Visualization of: " + queryGene.officialSymbol + " (black) with " + coexpressedGene.officialSymbol + " (red)");
+				this.setTitle("Visualization of: " + queryGene.officialSymbol + " (black) with "
+						+ coexpressedGene.officialSymbol + " (red)");
 
 				var params = [];
 				params.push(eeIds);
@@ -186,13 +189,12 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			}
 
 		});
-		
-		
-		//-----------------------------------------------------
-		//FIXME:  this could be abstracted out better
-		//-----------------------------------------------------
-		
-		Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
+
+// -----------------------------------------------------
+// FIXME: this could be abstracted out better
+// -----------------------------------------------------
+
+Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 			id : 'VisualizationWindow',
 			width : 800,
 			height : 500,
@@ -209,14 +211,20 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 				this.dv = new Ext.DataView({
 							autoHeight : true,
-							emptyText : 'No images to display',			
-							store : new Gemma.VisualizationStore({readMethod: DEDVController.getDEDVForVisualization}),
+
+							emptyText : 'No images to display',
+
+							loadingText : 'Loading data...',
+
+							store : new Gemma.VisualizationStore({
+										readMethod : DEDVController.getDEDVForVisualization
+									}),
 
 							tpl : new Gemma.ProfileTemplate('<tpl for="."><tpl for="eevo">',
 									'<div id ="{shortName}_vizwrap" > {shortName} </div>', '</tpl></tpl>'),
 
 							prepareData : function(data) {
-									
+
 								// Need to transform the cordinate data from an object to an array for flotr
 								// probe, genes
 								var flotrData = [];
@@ -259,7 +267,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			},
 
 			displayWindow : function(eeIds, gene) {
-			
+
 				this.setTitle("Visualization of: " + gene.officialSymbol);
 				var params = [];
 				params.push(eeIds);
