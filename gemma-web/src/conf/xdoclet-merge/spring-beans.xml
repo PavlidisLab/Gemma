@@ -1407,7 +1407,7 @@
 					<property name="includes">
 						<list>
 							<value>profiles</value>
-							<value>ee</value>
+							<value>eevo</value>
 						</list>
 					</property>
 				</bean>

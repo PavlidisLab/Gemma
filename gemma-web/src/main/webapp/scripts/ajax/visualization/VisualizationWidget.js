@@ -10,7 +10,7 @@ Gemma.VisualizationStore = function(config) {
 				name : "id",
 				type : "int"
 			}, {
-				name : "ee"
+				name : "eevo"
 			}, {
 				name : "profiles"
 			}]);
@@ -40,7 +40,7 @@ Gemma.VisualizationStore = function(config) {
 Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {
 
 			loadVisData : function(data) {
-				var newDivName = "vis" + ee.shortName;
+				var newDivName = "vis" + eevo.shortName;
 				var f = Flotr.draw(newDivName, flotrData);
 			}
 
@@ -73,7 +73,7 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 				Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
 				for (var i = 0; i < values.length; i++) {
 					var record = values[i];
-					var shortName = record.ee.shortName;
+					var shortName = record.eevo.shortName;
 					var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
 								tag : 'div',
 								id : shortName + "_vis",
@@ -92,7 +92,7 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 				Gemma.HeatmapTemplate.superclass.overwrite.call(this, el, values, ret);
 				for (var i = 0; i < values.length; i++) {
 					var record = values[i];
-					var shortName = record.ee.shortName;
+					var shortName = record.eevo.shortName;
 					var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
 								tag : 'div',
 								id : shortName + "_vis",
@@ -124,12 +124,11 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 							emptyText : 'No images to display',
 							store : new Gemma.VisualizationStore(),
 
-							tpl : new Gemma.ProfileTemplate('<tpl for="."><tpl for="ee">',
+							tpl : new Gemma.ProfileTemplate('<tpl for="."><tpl for="eevo">',
 									'<div id ="{shortName}_vizwrap" > {shortName} </div>', '</tpl></tpl>'),
 
 							prepareData : function(data) {
 									
-								console.log(data);
 								// Need to transform the cordinate data from an object to an array for flotr
 								// probe, genes
 								var flotrData = [];

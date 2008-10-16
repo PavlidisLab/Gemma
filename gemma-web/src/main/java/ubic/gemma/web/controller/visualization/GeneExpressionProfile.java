@@ -21,9 +21,6 @@ package ubic.gemma.web.controller.visualization;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
-
-import org.apache.commons.lang.math.RandomUtils;
 
 import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -47,6 +44,7 @@ public class GeneExpressionProfile {
     public GeneExpressionProfile( DoubleVectorValueObject vector, String color ) {
         this.genes = vector.getGenes();
         this.probe = vector.getDesignElement();
+        this.probe.setArrayDesign( null );
         this.points = new ArrayList<DoublePoint>();
 
         if ( color != null ) {

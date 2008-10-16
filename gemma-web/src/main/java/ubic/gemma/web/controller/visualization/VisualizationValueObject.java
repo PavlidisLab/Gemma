@@ -30,12 +30,13 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 
 public class VisualizationValueObject {
 
     private Collection<GeneExpressionProfile> profiles;
-    private ExpressionExperiment ee = null;
+    private ExpressionExperimentValueObject eevo = null;
     private Map<Long, String> colorMap = new HashMap<Long, String>();
 
     private static String[] colors = new String[] { "black", "red", "blue", "green" };
@@ -64,11 +65,11 @@ public class VisualizationValueObject {
         }
 
         for ( DoubleVectorValueObject vector : vectors ) {
-            if ( this.ee == null ) {
-                this.ee = vector.getExpressionExperiment();
-            } else if ( !( this.ee.equals( vector.getExpressionExperiment() ) ) ) {
+            if ( this.eevo == null ) {
+                setEE(vector.getExpressionExperiment());
+            } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
                 throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "
-                        + this.ee.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
+                        + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
             }
 
             String color = null;
@@ -100,28 +101,29 @@ public class VisualizationValueObject {
     // Getters and Setters
     // ---------------------------------
 
-    public ExpressionExperiment getEE() {
-        return ee;
+    public ExpressionExperimentValueObject getEevo() {
+        return eevo;
     }
 
     public void setEE( ExpressionExperiment ee ) {
-        this.ee = ee;
+        this.eevo = new ExpressionExperimentValueObject();
+        this.eevo = new ExpressionExperimentValueObject();
+        this.eevo.setId(  ee.getId());
+        this.eevo.setName( ee.getName());
+        this.eevo.setShortName( ee.getShortName() );
+        this.eevo.setClazz( "ExpressionExperimentValueObject" );
     }
 
+    public void setEevo(ExpressionExperimentValueObject eevo){
+        this.eevo = eevo;
+    }
+    
     public Collection<GeneExpressionProfile> getProfiles() {
         return profiles;
     }
 
     public void setProfiles( Collection<GeneExpressionProfile> profiles ) {
         this.profiles = profiles;
-    }
-
-    public ExpressionExperiment getEe() {
-        return ee;
-    }
-
-    public void setEe( ExpressionExperiment ee ) {
-        this.ee = ee;
     }
 
 }
