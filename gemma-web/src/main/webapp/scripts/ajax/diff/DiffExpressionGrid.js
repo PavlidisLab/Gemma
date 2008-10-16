@@ -17,11 +17,8 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	record : Ext.data.Record.create([{
-		name : "gene",
-		convert : function(g) {
-			return g.officialSymbol;
-		}
-	}, {
+		name : "gene"
+		}, {
 		name : "fisherPValue",
 		type : "float"
 	}, {
@@ -85,6 +82,9 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				id : 'gene',
 				dataIndex : "gene",
 				header : "Query Gene",
+				renderer : function(value, metadata, record, row, col, ds) {
+											return value.officialSymbol;
+										},
 				sortable : false
 			}, {
 				id : 'fisherPValue',
@@ -117,11 +117,12 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				tooltip : "How many datasets met the q-value threshold you selected / # testing gene",
 				renderer : this.metThresholdStyler
 			}, {
-				id : 'dedvData',
-				header : 'download',
-				width : 75,
-				tooltip : "click button to download the data",
-				renderer : this.downloadDedv.createDelegate(this)
+				id : 'visualize',
+				header : "Visualize",
+				dataIndex : "visualize",
+				renderer : this.visStyler.createDelegate(this),
+				tooltip : "Link for visualizing raw data",
+				sortable : false
 			}]
 		});
 
@@ -158,6 +159,10 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		window.alert("This is an anchor test.")
 	},
 
+	visStyler : function(value, metadata, record, row, col, ds) {
+				return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+	},
+	
 	downloadDedv : function(value, metadata, record, row, col, ds) {
 		var d = record.data;
 		var activeExperimentsString = "";

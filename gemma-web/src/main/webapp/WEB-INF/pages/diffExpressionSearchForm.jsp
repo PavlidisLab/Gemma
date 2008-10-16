@@ -9,7 +9,9 @@ version: $Id$
 
 	<jwr:script src='/scripts/ajax/diff/DiffExpressionSearchForm.js' useRandomParam='false' />
 	<jwr:script src='/scripts/app/DiffExpressionSearch.js' useRandomParam='false' />
-	<script type='text/javascript' src='/Gemma/dwr/interface/DEDVController.js useRandomParam='false'></script>
+	<jwr:script src='/Gemma/dwr/interface/DEDVController.js' useRandomParam='false'/>
+	<jwr:script src='/scripts/ajax/visualization/VisualizationWidget.js' useRandomParam='false' />
+	
 
 
 	<content tag="heading">

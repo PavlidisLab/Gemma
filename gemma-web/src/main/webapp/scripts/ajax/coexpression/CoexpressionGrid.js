@@ -99,7 +99,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										header : "Visualize",
 										dataIndex : "visualize",
 										renderer : this.visStyler.createDelegate(this),
-										tooltip : "Link for downloading raw data",
+										tooltip : "Link for visualizing raw data",
 										sortable : false
 									}]
 
@@ -319,6 +319,7 @@ Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 	return Gemma.CoexpressionGrid.bitImageMapTemplate;
 };
 
+//Left over cruft i believe - klc
 Gemma.CoexpressionGrid.visualize = function(experimentIds, geneIds) {
 
 	var loadVisData = function(data) {

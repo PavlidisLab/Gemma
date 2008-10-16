@@ -35,7 +35,7 @@ Ext.onReady(function() {
 				visWindow = new Gemma.VisualizationWindow({
 							admin : admin
 						});
-				visWindow.displayWindow(activeExperiments, queryGene.id, foundGene.id);
+				visWindow.displayWindow(activeExperiments, queryGene, foundGene);
 			}
 		}
 	};

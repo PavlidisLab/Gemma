@@ -22,18 +22,49 @@ Ext.onReady(function() {
 	searchPanel.render("diffExpression-form");
 
 	var diffExGrid = new Gemma.DiffExpressionGrid({
-				renderTo : "diffExpression-results",
-				title : "Differentially expressed genes",
-				pageSize : 25
-			});
+		renderTo : "diffExpression-results",
+		title : "Differentially expressed genes",
+		pageSize : 25
+	});
+
+	var visWindow;
+	var geneRowClickHandler = function(grid, rowIndex, columnIndex, e) {
+		if (this.getSelectionModel().hasSelection()) {
+
+			var record = this.getStore().getAt(rowIndex);
+			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+
+			if (fieldName == 'visualize') {
+				var gene = record.data.gene;
+				var activeExperiments = record.data.activeExperiments;
+				var activeExperimentIds = [];
+				
+				for(var i = 0;  i<activeExperiments.size(); i++){
+					activeExperimentIds.push(activeExperiments[i].id);
+				}
+
+				// destroy if already open
+				if (visWindow) {
+					visWindow.close();
+				}
+
+				visWindow = new Gemma.VisualizationDifferentialWindow({
+					admin : admin
+				});
+				visWindow.displayWindow(activeExperimentIds, gene);
+			}
+		}
+	};
+
+	diffExGrid.on("cellclick", geneRowClickHandler, diffExGrid);
 
 	searchPanel.geneChooserPanel.toolbar.taxonCombo.on('ready', function() {
-				Ext.get('loading').remove();
-				Ext.get('loading-mask').fadeOut({
-							duration : 0.5,
-							remove : true
-						});
-			});
+		Ext.get('loading').remove();
+		Ext.get('loading-mask').fadeOut({
+			duration : 0.5,
+			remove : true
+		});
+	});
 
 	searchPanel.on("aftersearch", function(panel, result) {
 
