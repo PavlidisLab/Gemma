@@ -35,7 +35,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
 
-    @SuppressWarnings("unchecked")
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
@@ -65,7 +64,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
 
         req.addParameter( "name", "Experimental Design 0" );
 
-        req.addParameter( "id", String.valueOf( ed.getId() ) );
+        req.addParameter( "eeid", String.valueOf( ee.getId() ) );
 
         req.setRequestURI( "/experimentalDesign/showExperimentalDesign.html" );
 
