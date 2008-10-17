@@ -173,7 +173,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 			displayWindow : function(eeIds, queryGene, coexpressedGene) {
 
-				this.setTitle("Visualization of: " + queryGene.officialSymbol + " (black) with " + coexpressedGene.officialSymbol + " (red)");
+				this.setTitle("Visualization of: " + queryGene.officialSymbol + " (red) with " + coexpressedGene.officialSymbol + " (black)");
 
 				var params = [];
 				params.push(eeIds);

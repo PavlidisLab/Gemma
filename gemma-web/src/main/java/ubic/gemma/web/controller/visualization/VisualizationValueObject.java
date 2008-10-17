@@ -39,7 +39,7 @@ public class VisualizationValueObject {
     private ExpressionExperimentValueObject eevo = null;
     private Map<Long, String> colorMap = new HashMap<Long, String>();
 
-    private static String[] colors = new String[] { "black", "red", "blue", "green" };
+    private static String[] colors = new String[] { "red", "black", "blue", "green" };
     private static Log log = LogFactory.getLog( VisualizationValueObject.class );
 
     
