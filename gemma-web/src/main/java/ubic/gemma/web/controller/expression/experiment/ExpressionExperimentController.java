@@ -85,9 +85,9 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @author keshav
  * @version $Id$
  * @spring.bean id="expressionExperimentController"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name = "expressionExperimentSubSetService" ref="expressionExperimentSubSetService"
- * @spring.property name = "expressionExperimentReportService" ref="expressionExperimentReportService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="expressionExperimentSubSetService" ref="expressionExperimentSubSetService"
+ * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  * @spring.property name="searchService" ref="searchService"
@@ -98,7 +98,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="securityService" ref="securityService"
  * @spring.property name="auditEventService" ref="auditEventService"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
- * @spring.property name = "persisterHelper" ref="persisterHelper"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  */
 public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
@@ -130,13 +130,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 job.updateProgress( "Generating report for all experiments" );
                 expressionExperimentReportService.generateSummaryObjects();
                 return null; // / we don't return ALL of them.
-            } else {
-                // saveMessage( "Generating report for experiment" );
-                job.updateProgress( "Generating report for specified experiment(s)" );
-                Collection<ExpressionExperimentValueObject> objs = expressionExperimentReportService
-                        .generateSummaryObjects( ids );
-                return objs;
             }
+            // saveMessage( "Generating report for experiment" );
+            job.updateProgress( "Generating report for specified experiment(s)" );
+            Collection<ExpressionExperimentValueObject> objs = expressionExperimentReportService
+                    .generateSummaryObjects( ids );
+            return objs;
 
         }
     }
@@ -654,6 +653,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @return security-filtered set of value objects.
      */
     public Collection<ExpressionExperimentValueObject> loadExpressionExperiments( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return new HashSet<ExpressionExperimentValueObject>();
+        }
         Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( ids );
         populateAnalyses( ids, result ); // FIXME make this optional.
         return result;
@@ -1370,6 +1372,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     @SuppressWarnings("unchecked")
     private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
+
+        if ( eeids.isEmpty() ) return;
+
         Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
                 .findByInvestigationIds( eeids );
         for ( ExpressionExperimentValueObject eevo : result ) {
