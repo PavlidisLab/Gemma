@@ -1,6 +1,8 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
+Gemma.EE_REPORT_PAGE_SIZE = 2;
+
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
@@ -30,8 +32,8 @@ Ext.onReady(function() {
 			});
 	manager.on('missingValue', function() {
 				store.reload();
-			});			
-			
+			});
+
 	var record = Ext.data.Record.create([{
 				name : "id",
 				type : "int"
@@ -153,7 +155,7 @@ Ext.onReady(function() {
 				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></a>';
 		if (record.get('dateLinkAnalysis')) {
 			var type = record.get('linkAnalysisEventType');
-			var color = "#3A3";
+			var color = "#000";
 			var suggestRun = true;
 			var qtip = 'ext:qtip="OK"';
 			if (type == 'FailedLinkAnalysisEventImpl') {
@@ -181,7 +183,7 @@ Ext.onReady(function() {
 		if (record.get('technologyType') != 'ONECOLOR' && record.get('hasBothIntensities')) {
 			if (record.get('dateMissingValueAnalysis')) {
 				var type = record.get('missingValueAnalysisEventType');
-				var color = "#3A3";
+				var color = "#000";
 				var suggestRun = true;
 				var qtip = 'ext:qtip="OK"';
 				if (type == 'FailedMissingValueAnalysisEventImpl') {
@@ -208,7 +210,7 @@ Ext.onReady(function() {
 
 		if (record.get('dateProcessedDataVectorComputation')) {
 			var type = record.get('processedDataVectorComputationEventType');
-			var color = "#3A3";
+			var color = "#000";
 
 			var suggestRun = true;
 			var qtip = 'ext:qtip="OK"';
@@ -234,7 +236,7 @@ Ext.onReady(function() {
 			if (record.get('dateDifferentialAnalysis')) {
 				var type = record.get('differentialAnalysisEventType');
 
-				var color = "#3A3";
+				var color = "#000";
 				var suggestRun = true;
 				var qtip = 'ext:qtip="OK"';
 				if (type == 'FailedDifferentialExpressionAnalysisEventImpl') { // note: no such thing.
@@ -357,12 +359,13 @@ Ext.onReady(function() {
 				renderer : adminRenderer
 			}];
 
-	var store = new Ext.data.Store({
+	var store = new Gemma.PagingDataStore({
 				proxy : new Ext.data.DWRProxy(ExpressionExperimentController.loadStatusSummaries),
 				reader : new Ext.data.ListRangeReader({
 							id : "id"
 						}, record),
 				remoteSort : false,
+				pageSize : Gemma.EE_REPORT_PAGE_SIZE,
 				sortInfo : {
 					field : 'dateCreated',
 					direction : 'DESC'
@@ -463,6 +466,10 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 													cls : 'x-btn-text',
 													text : 'Reset filter'
 												}, ' ', this.searchInGridField]
+									}),
+							bbar : new Gemma.PagingToolbar({
+										pageSize : Gemma.EE_REPORT_PAGE_SIZE,
+										store : this.store
 									})
 						});
 				Gemma.EEReportPanel.superclass.initComponent.call(this);

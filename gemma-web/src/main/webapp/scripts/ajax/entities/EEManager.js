@@ -135,7 +135,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		this.doLinks = function(id) {
 			Ext.Msg.show({
 						title : 'Link analysis',
-						msg : 'Please confirm. Previous analaysis results will be deleted.',
+						msg : 'Please confirm. Previous analysis results will be deleted.',
 						buttons : Ext.Msg.YESNO,
 						fn : function(btn, text) {
 							if (btn == 'yes') {
