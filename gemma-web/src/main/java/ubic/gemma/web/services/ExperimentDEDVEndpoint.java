@@ -48,7 +48,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
     private static Log log = LogFactory.getLog( ExperimentDEDVEndpoint.class );
 
     private ExpressionExperimentService expressionExperimentService;
-    private ExpressionDataMatrixService analysisHelperService;
+    private ExpressionDataMatrixService expressionDataMatrixService;
     private CompositeSequenceService compositeSequenceService;
 
     /**
@@ -63,8 +63,8 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
         this.expressionExperimentService = ees;
     }
 
-    public void setAnalysisHelperService( ExpressionDataMatrixService analysisHelperService ) {
-        this.analysisHelperService = analysisHelperService;
+    public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
+        this.expressionDataMatrixService = expressionDataMatrixService;
     }
 
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
@@ -97,7 +97,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeid ) );
         expressionExperimentService.thawLite( ee );
 
-        ExpressionDataDoubleMatrix dmatrix = analysisHelperService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
 
         // start building the wrapper
         // build xml manually rather than use buildWrapper inherited from AbstractGemmeEndpoint

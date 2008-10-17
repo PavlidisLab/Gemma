@@ -165,7 +165,7 @@
         <property name="compositeSequenceService" ref="compositeSequenceService"/>
         <property name="expressionExperimentService" ref="expressionExperimentService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
-        <property name="analysisHelperService" ref="analysisHelperService"/>
+        <property name="expressionDataMatrixService" ref="expressionDataMatrixService"/>
     </bean>
     
     <bean id="gene2GoTermEndpoint" class="ubic.gemma.web.services.Gene2GoTermEndpoint">
@@ -235,7 +235,7 @@
         </description>
         <property name="expressionExperimentService" ref="expressionExperimentService"/>
         <property name="geneService" ref="geneService"/>
-        <property name="designElementDataVectorService" ref="designElementDataVectorService"/>
+        <property name="processedExpressionDataVectorService" ref="processedExpressionDataVectorService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
     
