@@ -132,16 +132,19 @@ public class ExpressionDataSampleCorrelation {
         }
 
         DoubleMatrix columns = new DenseDoubleMatrix( rawcols );
-        DoubleMatrix<BioAssay, BioAssay> mat = MatrixStats.correlationMatrix( columns );
-
+        
         List<BioAssay> colElements = new ArrayList<BioAssay>();
         for ( BioMaterial bioMaterial : ordered ) {
             int i = matrix.getColumnIndex( bioMaterial );
             Collection<BioAssay> bas = matrix.getBioAssaysForColumn( i );
             colElements.add( bas.iterator().next() );
         }
-        mat.setRowNames( colElements );
-        mat.setColumnNames( colElements );
+        columns.setRowNames( colElements );
+        columns.setColumnNames( colElements );        
+        
+        DoubleMatrix<BioAssay, BioAssay> mat = MatrixStats.correlationMatrix( columns );
+
+
         return mat;
     }
 
