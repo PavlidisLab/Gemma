@@ -69,8 +69,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     private FactorValueService factorValueService = null;
     private CharacteristicService characteristicService = null;
 
-    private final String identifierNotFound = "Must provide a valid ExperimentalDesign identifier";
-
     /**
      * Creates a new ExperimentalFactor and adds it to the ExperimentalDesign specified by the EntityDelegator.
      * 
@@ -116,9 +114,9 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             if ( ef.getCategory() == null ) {
                 throw new IllegalArgumentException(
                         "You cannot create new factor values on a experimental factor that is not defined by a formal Category" );
-            } else {
-                chars.add( createTemplateCharacteristic( ef.getCategory() ) );
             }
+            chars.add( createTemplateCharacteristic( ef.getCategory() ) );
+
         }
 
         FactorValue fv = FactorValue.Factory.newInstance();
@@ -423,24 +421,31 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
 
-        if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( identifierNotFound );
+        String idstr = request.getParameter( "eeid" );
+        if ( StringUtils.isBlank( idstr ) ) {
+            throw new IllegalArgumentException( "Must supply 'eeid' parameter" );
         }
 
-        ExperimentalDesign experimentalDesign = experimentalDesignService.load( id );
-        if ( experimentalDesign == null ) {
-            throw new EntityNotFoundException( id + " not found" );
+        Long id = null;
+        try {
+            id = Long.parseLong( idstr );
+        } catch ( NumberFormatException e ) {
+            throw new IllegalArgumentException( "eeid must be a number" );
         }
 
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( experimentalDesign );
+        ExpressionExperiment ee = expressionExperimentService.load( id );
 
         if ( ee == null ) {
-            throw new EntityNotFoundException( "Expression experiment  for design " + experimentalDesign + " not found" );
+            throw new EntityNotFoundException( "Expression experiment with id=" + id + " cannot be accessed" );
+        }
+
+        Long designId = ee.getExperimentalDesign().getId();
+
+        ExperimentalDesign experimentalDesign = experimentalDesignService.load( designId );
+        if ( experimentalDesign == null ) {
+            throw new EntityNotFoundException( id + " not found" );
         }
 
         request.setAttribute( "id", id );
@@ -458,7 +463,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * @param response
      * @return
      */
-    @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "experimentalDesigns" ).addObject( "experimentalDesigns", experimentalDesignService
                 .loadAll() );
@@ -570,51 +574,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         }
         template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic
         return template;
-    }
-
-    /**
-     * @param factor
-     * @return
-     */
-    private String getExperimentalFactorString( ExperimentalFactor factor ) {
-        return factor.getName();
-    }
-
-    /**
-     * @param value
-     * @return
-     */
-    private String getFactorValueString( FactorValue value ) {
-        /*
-         * Note that normally we should not have 'blanks' in the factor values; this is just to make sure something
-         * shows up if that happens.
-         */
-        StringBuffer buf = new StringBuffer();
-        if ( value.getMeasurement() != null ) {
-            if ( StringUtils.isBlank( value.getMeasurement().getValue() ) ) {
-                return "[NA]";
-            } else {
-                return value.getMeasurement().getValue();
-            }
-        } else if ( value.getCharacteristics().size() > 0 ) {
-            for ( Iterator<Characteristic> iter = value.getCharacteristics().iterator(); iter.hasNext(); ) {
-                Characteristic c = iter.next();
-                String category = c.getCategory();
-                if ( category != null ) {
-                    buf.append( category );
-                    buf.append( ": " );
-                }
-                buf.append( StringUtils.isBlank( c.getValue() ) ? "[NA]" : c.getValue() );
-                if ( iter.hasNext() ) buf.append( ", " );
-            }
-            return buf.length() > 0 ? buf.toString() : value.getValue() + " [Non-CSC]";
-        } else {
-            if ( StringUtils.isBlank( value.getValue() ) ) {
-                return "[NA]";
-            } else {
-                return value.getValue();
-            }
-        }
     }
 
 }

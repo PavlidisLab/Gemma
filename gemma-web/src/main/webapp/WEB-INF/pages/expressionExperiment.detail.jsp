@@ -41,7 +41,7 @@
 			<fmt:message key="experimentalDesign.title" />
 			&nbsp;
 			<a title="Open the design details window" target="_blank"
-				href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=${expressionExperiment.id}"> <img
+				href="/Gemma/experimentalDesign/showExperimentalDesign.html?eeid=${expressionExperiment.id}"> <img
 					src="/Gemma/images/magnifier.png" /> </a>
 		</h3>
 		<div id="eeDesignMatrix"></div>
