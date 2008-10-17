@@ -1,7 +1,7 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
-Gemma.EE_REPORT_PAGE_SIZE = 2;
+Gemma.EE_REPORT_PAGE_SIZE = 100;
 
 Ext.onReady(function() {
 	Ext.QuickTips.init();
