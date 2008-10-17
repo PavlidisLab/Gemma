@@ -250,7 +250,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     public void fillLinkStatsFromCache( Collection<ExpressionExperimentValueObject> vos ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( ExpressionExperimentValueObject eeVo : vos ) { 
+        for ( ExpressionExperimentValueObject eeVo : vos ) {
             ExpressionExperimentValueObject cacheVo = retrieveValueObject( eeVo.getId() );
             if ( cacheVo != null ) {
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
@@ -564,11 +564,14 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     private Collection<ExpressionExperimentValueObject> retrieveValueObjects( Collection<Long> ids ) {
         Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<ExpressionExperimentValueObject>();
         Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
+
+        int numWarnings = 0;
+        int maxWarnings = 5; // don't put 1000 warnings in the logs!
+
         for ( Object object : filteredIds ) {
             Long id = ( Long ) object;
-
+            File f = new File( getReportPath( id ) );
             try {
-                File f = new File( getReportPath( id ) );
                 if ( f.exists() ) {
                     FileInputStream fis = new FileInputStream( getReportPath( id ) );
                     ObjectInputStream ois = new ObjectInputStream( fis );
@@ -579,10 +582,20 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                     continue;
                 }
             } catch ( IOException e ) {
-                log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
+                if ( numWarnings < maxWarnings ) {
+                    log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
+                } else if ( numWarnings == maxWarnings ) {
+                    log.warn( "Skipping futher warnings ... reports need refreshing." );
+                }
+                numWarnings++;
                 continue;
             } catch ( ClassNotFoundException e ) {
-                log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
+                if ( numWarnings < maxWarnings ) {
+                    log.warn( "Unable to read report object from " + f + ": " + e.getMessage() );
+                } else if ( numWarnings == maxWarnings ) {
+                    log.warn( "Skipping futher warnings ... reports need refreshing" );
+                }
+                numWarnings++;
                 continue;
             }
         }
