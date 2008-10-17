@@ -103,11 +103,11 @@ public class CompassUtils {
             enableIndexMirroring( gps );
         }
 
-        /*
-         * We don't need to check if index already exists. If it doesn't, it won't be deleted.
-         */
-        gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
-        log.info( "Deleting old index" );
+        if (gps.getIndexCompass().getSearchEngineIndexManager().indexExists()){
+            gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
+            log.info( "Deleting old index" );
+        }
+        
         gps.getIndexCompass().getSearchEngineIndexManager().createIndex();
         log.info( "indexing now ... " );
         gps.index();
