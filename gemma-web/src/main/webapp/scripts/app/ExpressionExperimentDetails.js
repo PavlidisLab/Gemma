@@ -172,21 +172,165 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		var logo = '';
 		if (ee.externalDatabase == 'GEO') {
 			logo = '/Gemma/images/logo/geoTiny.png';
-			result = '<a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + ee.accession + '"><img src="'
-					+ logo + '"/></a>';
+			result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + ee.accession
+					+ '"><img src="' + logo + '"/></a>';
 
 		} else if (ee.externalDatabase == 'ArrayExpress') {
 			logo = '/Gemma/images/logo/arrayExpressTiny.png';
-			result = '<a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + ee.accession + '"><img src="'
-					+ logo + '"/></a>';
+			result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
+					+ ee.accession + '"><img src="' + logo + '"/></a>';
 		}
 
 		return result;
 
 	},
 
+	renderStatus : function(ee) {
+		var result = '';
+		if (ee.validatedFlag) {
+			result = result + '<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" title="validated"/>';
+		}
+
+		if (ee.troubleFlag) {
+
+			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" title="trouble"/>';
+		}
+		if (!ee.isPublic) {
+			result = result + '<img src="/Gemma/images/icons/lock.png" alt="not public" title="not public"/>';
+		} else {
+			result = result + '<img src="/Gemma/images/icons/lock_open2.png" alt="public" title="public"/>';
+		}
+		return result;
+
+	},
+
+	linkAnalysisRenderer : function(ee) {
+		var id = ee.id;
+		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doLinks('
+				+ id
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></a>';
+		if (ee.dateLinkAnalysis) {
+			var type = ee.linkAnalysisEventType;
+			var color = "#000";
+			var suggestRun = true;
+			var qtip = 'ext:qtip="OK"';
+			if (type == 'FailedLinkAnalysisEventImpl') {
+				color = 'red';
+				qtip = 'ext:qtip="Failed"';
+			} else if (type == 'TooSmallDatasetLinkAnalysisEventImpl') {
+				color = '#CCC';
+				qtip = 'ext:qtip="Too small"';
+				suggestRun = false;
+			}
+
+			return '<span style="color:' + color + ';" ' + qtip + '>'
+					+ Ext.util.Format.date(ee.dateLinkAnalysis, 'y/M/d') + '&nbsp;' + (suggestRun ? runurl : '');
+		} else {
+			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+		}
+
+	},
+
+	missingValueAnalysisRenderer : function(ee) {
+		var id = ee.id;
+		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
+				+ id
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></a>';
+		if (ee.technologyType != 'ONECOLOR' && ee.hasBothIntensities) {
+			if (ee.dateMissingValueAnalysis) {
+				var type = ee.missingValueAnalysisEventType;
+				var color = "#000";
+				var suggestRun = true;
+				var qtip = 'ext:qtip="OK"';
+				if (type == 'FailedMissingValueAnalysisEventImpl') {
+					color = 'red';
+					qtip = 'ext:qtip="Failed"';
+				}
+
+				return '<span style="color:' + color + ';" ' + qtip + '>'
+						+ Ext.util.Format.date(ee.dateMissingValueAnalysis, 'y/M/d') + '&nbsp;'
+						+ (suggestRun ? runurl : '');
+			} else {
+				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+			}
+
+		} else {
+			return '<span style="color:#CCF;">NA</span>';
+		}
+	},
+
+	processedVectorCreateRenderer : function(ee) {
+		var id = ee.id;
+		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('
+				+ id
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></a>';
+
+		if (ee.dateProcessedDataVectorComputation) {
+			var type = ee.processedDataVectorComputationEventType;
+			var color = "#000";
+
+			var suggestRun = true;
+			var qtip = 'ext:qtip="OK"';
+			if (type == 'FailedProcessedVectorComputationEventImpl') { // note: no such thing.
+				color = 'red';
+				qtip = 'ext:qtip="Failed"';
+			}
+
+			return '<span style="color:' + color + ';" ' + qtip + '>'
+					+ Ext.util.Format.date(ee.dateProcessedDataVectorComputation, 'y/M/d') + '&nbsp;'
+					+ (suggestRun ? runurl : '');
+		} else {
+			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+		}
+	},
+
+	differentialAnalysisRenderer : function(ee) {
+		var id = ee.id;
+		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doDifferential('
+				+ id
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></a>';
+
+		if (ee.numPopulatedFactors > 0) {
+			if (ee.dateDifferentialAnalysis) {
+				var type = ee.differentialAnalysisEventType;
+
+				var color = "#000";
+				var suggestRun = true;
+				var qtip = 'ext:qtip="OK"';
+				if (type == 'FailedDifferentialExpressionAnalysisEventImpl') { // note: no such thing.
+					color = 'red';
+					qtip = 'ext:qtip="Failed"';
+				}
+
+				return '<span style="color:' + color + ';" ' + qtip + '>'
+						+ Ext.util.Format.date(ee.dateDifferentialAnalysis, 'y/M/d') + '&nbsp;'
+						+ (suggestRun ? runurl : '');
+			} else {
+				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+			}
+		} else {
+			return '<span style="color:#CCF;">NA</span>';
+		}
+	},
+
 	build : function(e) {
-		// console.log(e);
+
+		var manager = new Gemma.EEManager({
+					editable : this.editable,
+					id : "eemanager"
+				});
+		this.manager = manager;
+		//
+		// /*
+		// * Create a store with one record.
+		// */
+		// var store = new Ext.data.Store({
+		// proxy : new Ext.data.MemoryProxy([e]),
+		// reader : new Ext.data.ListRangeReader({}, this.manager.record)
+		// });
+		//
+		// this.rec = store.getAt(0);
+
 		adminLinks = '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
 				+ e.id
 				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></a>'
@@ -208,13 +352,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		}
 
 		/*
-		 * TODO use this.
+		 * Show the experimental design
 		 */
-		var externalLink = '';
-		if (e.externalUri && e.accession) {
-			externalLink = "<a href=\"" + e.externalUri + "\">" + e.accession + "</a>"
-		}
-
 		DesignMatrix.init({
 					id : e.id
 				});
@@ -226,12 +365,6 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 		var taggerurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').tagger(' + e.id
 				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="add tags" title="add tags"/></a>';
-
-		manager = new Gemma.EEManager({
-					editable : this.editable,
-					id : "eemanager"
-				});
-		this.manager = manager;
 
 		tagView = new Gemma.AnnotationDataView({
 					readParams : [{
@@ -308,7 +441,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 			baseCls : 'x-plain-panel',
 			bodyStyle : 'padding:10px',
 			defaults : {
-				bodyStyle : 'vertical-align:top',
+				bodyStyle : 'vertical-align:top;font-size:12px;color:black',
 				baseCls : 'x-plain-panel',
 				fieldClass : 'x-bare-field',
 
@@ -453,16 +586,41 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					}, {
 						html : 'Tags&nbsp;' + taggerurl
 					}, tagView, {
+						html : 'Status'
+					}, {
+						html : this.renderStatus(e)
+					}, {
 						html : this.editable ? 'Admin' : ''
 					}, {
+						id : 'admin-links',
 						html : this.editable ? adminLinks : ''
 					}
 
 			/*
-			 * data download, array designs used , accession, authors
+			 * authors
 			 */
 			]
 		});
+
+		if (this.editable) {
+			Ext.DomHelper.append('admin-links', {
+						tag : 'ul',
+						cls : 'plainlist',
+						children : [{
+									tag : 'li',
+									html : 'Missing values: ' + this.missingValueAnalysisRenderer(e)
+								}, {
+									tag : 'li',
+									html : 'Proc. vec:  ' + this.processedVectorCreateRenderer(e)
+								}, {
+									tag : 'li',
+									html : 'Diff ex:  ' + this.differentialAnalysisRenderer(e)
+								}, {
+									tag : 'li',
+									html : 'Link an.:  ' + this.linkAnalysisRenderer(e)
+								}]
+					});
+		}
 
 		if (Ext.get('history')) {
 			var history = new Gemma.AuditTrailGrid({
@@ -490,15 +648,11 @@ Ext.onReady(function() {
 
 			eePanel.on("ready", function(panel) {
 						setTimeout(function() {
-							Ext.get('loading').remove();
-							Ext.get('loading-mask').fadeOut({
-										remove : true
-									});
-								// Ext.get('eedetails').fadeIn({
-								// duration : 0.9
-								// });
-
-							}, 250);
+									Ext.get('loading').remove();
+									Ext.get('loading-mask').fadeOut({
+												remove : true
+											});
+								}, 250);
 					});
 
 		});

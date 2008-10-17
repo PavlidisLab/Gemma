@@ -6,14 +6,11 @@
 	<jwr:script src='/scripts/app/ExpressionExperimentDetails.js' />
 </head>
 
-<h2>
-	Details for ${expressionExperiment.shortName}
-</h2>
 
 <div id="loading-mask" style=""></div>
 <div id="loading">
 	<div class="loading-indicator">
-		&nbsp;Loading...
+		&nbsp;Loading details for ${expressionExperiment.shortName} ...
 	</div>
 </div>
 

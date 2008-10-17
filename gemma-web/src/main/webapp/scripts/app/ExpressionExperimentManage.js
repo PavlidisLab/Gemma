@@ -12,6 +12,21 @@ Ext.onReady(function() {
 				id : 'eemanager'
 			});
 
+	this.manager = manager;
+
+	var store = new Gemma.PagingDataStore({
+				proxy : new Ext.data.DWRProxy(ExpressionExperimentController.loadStatusSummaries),
+				reader : new Ext.data.ListRangeReader({
+							id : "id"
+						}, manager.record),
+				remoteSort : false,
+				pageSize : Gemma.EE_REPORT_PAGE_SIZE,
+				sortInfo : {
+					field : 'dateCreated',
+					direction : 'DESC'
+				}
+			});
+
 	manager.on('reportUpdated', function() {
 				store.reload();
 			});
@@ -33,79 +48,6 @@ Ext.onReady(function() {
 	manager.on('missingValue', function() {
 				store.reload();
 			});
-
-	var record = Ext.data.Record.create([{
-				name : "id",
-				type : "int"
-			}, {
-				name : "shortName"
-			}, {
-				name : "name"
-			}, {
-				name : "arrayDesignCount",
-				type : "int"
-			}, {
-				name : "technologyType"
-			}, {
-				name : "hasBothIntensities",
-				type : 'bool'
-			}, {
-				name : "bioAssayCount",
-				type : "int"
-			}, {
-				name : "processedExpressionVectorCount",
-				type : "int"
-			}, {
-				name : "externalUri"
-			}, {
-				name : "description"
-			}, {
-				name : "taxon"
-			}, {
-				name : "numAnnotations"
-			}, {
-				name : "numPopulatedFactors"
-			}, {
-				name : "isPublic"
-			}, {
-				name : "sourceExperiment"
-			}, {
-				name : "coexpressionLinkCount"
-			}, {
-				name : "validatedFlag"
-			}, {
-				name : "troubleFlag"
-			}, {
-				name : "missingValueAnalysisEventType"
-			}, {
-				name : "processedDataVectorComputationEventType"
-			}, {
-				name : "dateCreated",
-				type : 'date'
-			}, {
-				name : "dateProcessedDataVectorComputation",
-				type : 'date'
-			}, {
-				name : "dateMissingValueAnalysis",
-				type : 'date'
-			}, {
-				name : "dateDifferentialAnalysis",
-				type : 'date'
-			}, {
-				name : "dateLastUpdated",
-				type : 'date'
-			}, {
-				name : "dateLinkAnalysis",
-				type : 'date'
-			}, {
-				name : "linkAnalysisEventType"
-			}, {
-				name : "processedDataVectorComputationEventType"
-			}, {
-				name : "missingValueAnalysisEventType"
-			}, {
-				name : "differentialAnalysisEventType"
-			}]);
 
 	var dateRenderer = new Ext.util.Format.dateRenderer("y/M/d");
 
@@ -359,18 +301,6 @@ Ext.onReady(function() {
 				renderer : adminRenderer
 			}];
 
-	var store = new Gemma.PagingDataStore({
-				proxy : new Ext.data.DWRProxy(ExpressionExperimentController.loadStatusSummaries),
-				reader : new Ext.data.ListRangeReader({
-							id : "id"
-						}, record),
-				remoteSort : false,
-				pageSize : Gemma.EE_REPORT_PAGE_SIZE,
-				sortInfo : {
-					field : 'dateCreated',
-					direction : 'DESC'
-				}
-			});
 	store.load({
 				params : [null]
 			});
