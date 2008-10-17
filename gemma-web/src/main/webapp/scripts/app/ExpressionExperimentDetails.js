@@ -166,6 +166,25 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		return result;
 	},
 
+	renderSourceDatabaseEntry : function(ee) {
+		var result = '';
+
+		var logo = '';
+		if (ee.externalDatabase == 'GEO') {
+			logo = '/Gemma/images/logo/geoTiny.png';
+			result = '<a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + ee.accession + '"><img src="'
+					+ logo + '"/></a>';
+
+		} else if (ee.externalDatabase == 'ArrayExpress') {
+			logo = '/Gemma/images/logo/arrayExpressTiny.png';
+			result = '<a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + ee.accession + '"><img src="'
+					+ logo + '"/></a>';
+		}
+
+		return result;
+
+	},
+
 	build : function(e) {
 		// console.log(e);
 		adminLinks = '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
@@ -394,6 +413,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						html : 'Created:'
 					}, {
 						html : Ext.util.Format.date(e.dateCreated)
+					}, {
+						html : 'Source:'
+					}, {
+						html : this.renderSourceDatabaseEntry(e)
 					}, {
 						html : 'Samples:'
 					}, {
