@@ -62,9 +62,11 @@ Ext.onReady(function() {
 		return '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
 				+ value
 				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></a>'
-				+ '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
-				+ value
-				+ '"  target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></a><a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
+				// + '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
+				// + value
+				// + '" target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this
+				// experiment" title="edit"/></a>'
+				+ '&nbsp;&nbsp;&nbsp;<a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
 				+ value
 				+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></a>&nbsp;';
 	};
@@ -101,7 +103,7 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doLinks('
 				+ id
-				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></a>';
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run coexpression analysis"  alt="link analysis" /></a>';
 		if (record.get('dateLinkAnalysis')) {
 			var type = record.get('linkAnalysisEventType');
 			var color = "#000";
@@ -112,7 +114,7 @@ Ext.onReady(function() {
 				qtip = 'ext:qtip="Failed"';
 			} else if (type == 'TooSmallDatasetLinkAnalysisEventImpl') {
 				color = '#CCC';
-				qtip = 'ext:qtip="Too small"';
+				qtip = 'ext:qtip="Too small to perform link analysis"';
 				suggestRun = false;
 			}
 
@@ -128,7 +130,7 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
 				+ id
-				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></a>';
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run missing value analysis" alt="missing value computation"  /></a>';
 		if (record.get('technologyType') != 'ONECOLOR' && record.get('hasBothIntensities')) {
 			if (record.get('dateMissingValueAnalysis')) {
 				var type = record.get('missingValueAnalysisEventType');
@@ -147,7 +149,7 @@ Ext.onReady(function() {
 			}
 
 		} else {
-			return '<span style="color:#CCF;">NA</span>';
+			return '<span style="color:#CCF;" ext:qtip="Only relevant for two-channel microarray studies">NA</span>';
 		}
 	};
 
@@ -155,7 +157,7 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('
 				+ id
-				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></a>';
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run processed vector generation" alt="processed vector generation"/></a>';
 
 		if (record.get('dateProcessedDataVectorComputation')) {
 			var type = record.get('processedDataVectorComputationEventType');
@@ -179,7 +181,7 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doDifferential('
 				+ id
-				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></a>';
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" ext:qtip="Run differential expression analysis"/></a>';
 
 		if (diffIsPossible(record)) {
 			if (record.get('dateDifferentialAnalysis')) {
@@ -199,7 +201,7 @@ Ext.onReady(function() {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
 		} else {
-			return '<span style="color:#CCF;">NA</span>';
+			return '<span style="color:#CCF;" ext:qtip="You must create at least one experimental factor to enable this analysis.">NA</span>';
 		}
 	};
 
