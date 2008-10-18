@@ -12,6 +12,13 @@ Ext.onReady(function() {
 				id : 'eemanager'
 			});
 
+	if (Ext.get('updateAllReports-area')) {
+		Ext.DomHelper.overwrite('updateAllReports-area', '<p>' + 'To update all reports click here: '
+						+ '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateAllEEReports(1)"><img '
+						+ 'src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh all reports" /> </a>'
+						+ '</p>');
+	}
+
 	this.manager = manager;
 
 	var store = new Gemma.PagingDataStore({
@@ -77,7 +84,7 @@ Ext.onReady(function() {
 
 	var experimentalDesignEditRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
-		var url = '<a target="_blank" href="/Gemma/experimentalDesign/showExperimentalDesign.html?id='
+		var url = '<a target="_blank" href="/Gemma/experimentalDesign/showExperimentalDesign.html?eeid='
 				+ id
 				+ '"><img src="/Gemma/images/icons/pencil.png" alt="view/edit experimental design" title="view/edit experimental design"/></a>';
 		return value + '&nbsp;' + url;

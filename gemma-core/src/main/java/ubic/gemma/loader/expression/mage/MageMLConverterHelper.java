@@ -150,8 +150,8 @@ import ubic.gemma.util.ReflectionUtil;
  * 'convertXXXXAssociations' to handle the associations. Special cases (outlined below) have additional methods to map
  * MAGE associations to Gemma objects.
  * </p>
- * <h2>Zoo of packages that have references between them, but don't map directly to Gemma</h2>
- * <h3>DesignElement_package and ArrayDesign_package</h3>
+ * <h2>Zoo of packages that have references between them, but don't map directly to Gemma</h2> <h3>DesignElement_package
+ * and ArrayDesign_package</h3>
  * <p>
  * DesignElement Contains the ReporterCompositeMap (and the FeatureReporterMap). This allows us to fill in the map in
  * the CompositeSequence.
@@ -1908,8 +1908,8 @@ public class MageMLConverterHelper {
          *       
          *       - Category is a MO term
          *       - Value is a MO instance
-         *       
-         *       
+         * 
+         * 
          * </pre>
          */
 
@@ -3116,8 +3116,12 @@ public class MageMLConverterHelper {
 
         File p = new File( path );
         if ( !p.canRead() ) {
-            log.error( "Cannot read from " + path );
-            return;
+            log.warn( "Cannot read from " + path + ", creating." );
+            if ( !p.mkdirs() ) {
+                log.error( "Could not make directories, bailing" );
+                return;
+            }
+
         }
         localExternalDataPaths.add( path );
 
@@ -3389,7 +3393,8 @@ public class MageMLConverterHelper {
      * @param getter
      * @param actualGemmaAssociationName
      * @param actualArgumentClass - example, sometimes we get a VocabCharacteristic but setter wants a Characteristic.
-     * @see simpleFillIn( Object associatedMageObject, Object gemmaObj, Method getter, String actualGemmaAssociationName )
+     * @see simpleFillIn( Object associatedMageObject, Object gemmaObj, Method getter, String actualGemmaAssociationName
+     *      )
      */
     private void simpleFillIn( Object associatedMageObject, Object gemmaObj, Method getter,
             String actualGemmaAssociationName, Class actualArgumentClass ) {

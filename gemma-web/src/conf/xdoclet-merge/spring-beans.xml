@@ -485,6 +485,7 @@
 							<value>deleteById</value>
 							<value>find</value>
 							<value>updateReport</value>
+							<value>updateAllReports</value>
 							<value>updateBasics</value>
 							<value>updateQuantiationTypes</value>
 							<value>updateBioMaterialMapping</value>

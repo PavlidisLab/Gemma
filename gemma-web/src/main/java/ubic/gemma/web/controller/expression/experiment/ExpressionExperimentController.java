@@ -113,9 +113,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         private Collection<Long> ids;
 
-        public GenerateSummary( Collection<Long> id ) {
+        public GenerateSummary( Collection<Long> ids ) {
             super( getMessageUtil() );
-            this.ids = id;
+            if ( ids == null || ids.isEmpty() ) {
+                throw new IllegalArgumentException( "Must provide ids to run report generation on" );
+            }
+            this.ids = ids;
         }
 
         public Collection<ExpressionExperimentValueObject> call() throws Exception {
@@ -125,16 +128,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
                     .getName(), "Expression experiment report  generating" );
 
-            if ( ids == null ) {
-                saveMessage( "Generating report for all experiments" );
-                job.updateProgress( "Generating report for all experiments" );
-                expressionExperimentReportService.generateSummaryObjects();
-                return null; // / we don't return ALL of them.
-            }
             // saveMessage( "Generating report for experiment" );
             job.updateProgress( "Generating report for specified experiment(s)" );
             Collection<ExpressionExperimentValueObject> objs = expressionExperimentReportService
                     .generateSummaryObjects( ids );
+
+            /*
+             * This can be a lot of stuff.
+             */
             return objs;
 
         }
@@ -520,13 +521,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( eeDescription.length() < TRIM_SIZE + 1 )
             descriptive.append( eeDescription );
         else
-            descriptive.append( eeDescription.substring( 0, TRIM_SIZE ) + "..." );
+            descriptive.append( eeDescription.substring( 0, TRIM_SIZE ) + "...&nbsp;&nbsp;" );
 
         // Is there any factor info to add?
-        if ( efs.size() < 1 ) return descriptive.append( "<b>No Factors</b>" ).toString();
+        if ( efs.size() < 1 ) return descriptive.append( "<b>(No Factors)</b>" ).toString();
 
-        String efUri = "  <a target='_blank' href='/Gemma/experimentalDesign/showExperimentalDesign.html?id="
-                + ee.getExperimentalDesign().getId() + "'>(details)</a >";
+        String efUri = "&nbsp;<a target='_blank' href='/Gemma/experimentalDesign/showExperimentalDesign.html?eeid="
+                + ee.getId() + "'>(details)</a >";
 
         descriptive.append( "<b>Factors:</b>&nbsp;" );
         for ( ExperimentalFactor ef : efs ) {
@@ -1142,6 +1143,24 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays", subset.getBioAssays() );
     }
 
+    /**
+     * Update all summary reports. This takes a while so should only be called by administrators.
+     * 
+     * @return
+     */
+    public String updateAllReports() {
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadAll();
+        if ( ees.isEmpty() ) return null;
+        Collection<Long> ids = new HashSet<Long>();
+        for ( ExpressionExperiment ee : ees ) {
+            ids.add( ee.getId() );
+        }
+        GenerateSummary runner = new GenerateSummary( ids );
+        runner.setDoForward( false );
+        String taskId = run( runner );
+        return taskId;
+    }
+
     public String updateBasics( ExpressionExperimentDetailsValueObject command ) {
         UpdateBasics runner = new UpdateBasics( expressionExperimentService, command );
         runner.setDoForward( false );
@@ -1175,6 +1194,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return null;
     }
 
+    /**
+     * Update the Summary resport for a single experiment
+     * 
+     * @param id
+     * @return
+     */
     public String updateReport( Long id ) {
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
         if ( expressionExperiment == null ) return null;

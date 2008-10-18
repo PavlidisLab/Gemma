@@ -92,6 +92,18 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		ExpressionExperimentController.updateReport.apply(this, callParams);
 	},
 
+	updateAllEEReports : function() {
+		var callParams = [];
+		callParams.push([]);
+		callParams.push({
+					callback : function(data) {
+						this.handleWait(data, 'reportUpdated', false);
+					}.createDelegate(this)
+				});
+
+		ExpressionExperimentController.updateAllReports.apply(this, callParams);
+	},
+
 	deleteExperiment : function(id) {
 		Ext.Msg.show({
 					title : 'Really delete?',
@@ -262,31 +274,31 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				});
 	},
 
+	/**
+	 * Parameters are passed to ProgressWindow config; eventToFire is fired in the callback.
+	 */
+	handleWait : function(taskId, eventToFire, showAllMessages) {
+		try {
+			var p = new Gemma.ProgressWindow({
+						taskId : taskId,
+						callback : function(data) {
+							this.fireEvent(eventToFire, data);
+						}.createDelegate(this),
+						showAllMessages : showAllMessages
+					});
+
+			p.show();
+		} catch (e) {
+			Ext.Msg.alert("Error", e);
+		}
+	},
+
 	initComponent : function() {
 
 		Gemma.EEManager.superclass.initComponent.call(this);
 
 		this.addEvents('reportUpdated', 'differential', 'missingValue', 'link', 'processedVector', 'deleted',
 				'tagsUpdated', 'updated', 'pubmedUpdated', 'pubmedRemove');
-
-		/**
-		 * Parameters are passed to ProgressWindow config; eventToFire is fired in the callback.
-		 */
-		this.handleWait = function(taskId, eventToFire, showAllMessages) {
-			try {
-				var p = new Gemma.ProgressWindow({
-							taskId : taskId,
-							callback : function(data) {
-								this.fireEvent(eventToFire, data);
-							}.createDelegate(this),
-							showAllMessages : showAllMessages
-						});
-
-				p.show();
-			} catch (e) {
-				Ext.Msg.alert("Error", e);
-			}
-		};
 
 		this.save = function(id, fields) {
 			/*

@@ -421,7 +421,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_LINK_SUMMARY + "." + id;
     }
 
-    @SuppressWarnings("unchecked")
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
         Map<Long, Collection<AuditEvent>> result = new HashMap<Long, Collection<AuditEvent>>();
         Map<ExpressionExperiment, Collection<AuditEvent>> rawr = expressionExperimentService
@@ -439,9 +438,15 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      */
     private void getStats( Collection<ExpressionExperimentValueObject> vos ) {
         log.info( "Getting stats for " + vos.size() + " value objects." );
+        int count = 0;
         for ( ExpressionExperimentValueObject object : vos ) {
             getStats( object );
+            // periodic updates.
+            if ( ++count % 10 == 0 ) {
+                log.info( "Processed " + count + " reports." );
+            }
         }
+        log.info( "Done, processed " + count + " reports" );
     }
 
     /**
@@ -456,7 +461,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                         .getProcessedExpressionVectorCount( tempEe ) );
 
         long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
-        log.info( numLinks + " links." );
+        log.debug( numLinks + " links." );
         eeVo.setCoexpressionLinkCount( numLinks );
 
         Date timestamp = new Date( System.currentTimeMillis() );
@@ -470,7 +475,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
         saveValueObject( eeVo );
 
-        log.info( "Generated report for " + eeVo.getShortName() );
+        log.debug( "Generated report for " + eeVo.getShortName() );
     }
 
     // Methods needed to allow this to be used in a space.

@@ -23,7 +23,9 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
+import java.util.Map;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -360,7 +362,8 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Map getSampleRemovalEvents( java.util.Collection expressionExperiments );
+    public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
+            java.util.Collection<ExpressionExperiment> expressionExperiments );
 
     /**
      * <p>

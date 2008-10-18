@@ -47,7 +47,6 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
         return true;
     }
 
-    @SuppressWarnings("unchecked")
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
 
         if ( !fastaCmdExecutableExists() ) {
