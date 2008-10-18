@@ -33,7 +33,8 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.GeneOntologyService;
 
 /**
- * Given a Gene Ontology Term URI and a Taxon ID as input, will return a collection of gene IDs that match the GO Term and Taxon.
+ * Given a Gene Ontology Term URI and a Taxon ID as input, will return a collection of gene IDs that match the GO Term
+ * and Taxon.
  * 
  * @author gavin, klc
  * @version$Id$
@@ -74,7 +75,7 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( GO2Gene_LOCAL_NAME );
         String goId = "";
         String taxonId = "";
@@ -91,8 +92,8 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
             taxonId = id;
         }
 
-        log.info( "XML input read: GO id, "+goId+" & taxon id, "+taxonId );
-        
+        log.debug( "XML input read: GO id, " + goId + " & taxon id, " + taxonId );
+
         // get gene from GO term
         Taxon taxon = taxonService.load( Long.parseLong( taxonId ) );
         if ( taxon == null ) {
@@ -101,8 +102,9 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
         }
 
         Collection<Gene> genes = geneOntologyService.getGenes( goId, taxon );
-        if (genes == null || genes.isEmpty()){
-            return buildBadResponse( document, "No genes associated with goId = " + goId + " and taxon = " + taxon.getCommonName() );
+        if ( genes == null || genes.isEmpty() ) {
+            return buildBadResponse( document, "No genes associated with goId = " + goId + " and taxon = "
+                    + taxon.getCommonName() );
         }
         // build results in the form of a collection
         Collection<String> geneIds = new HashSet<String>();
@@ -111,10 +113,10 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
         }
 
         Element wrapper = buildWrapper( document, geneIds, "gene_id" );
-        
+
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for gene id results built in " + time + "ms." );   
+        log.debug( "XML response for gene id results built in " + time + "ms." );
         return wrapper;
 
     }
