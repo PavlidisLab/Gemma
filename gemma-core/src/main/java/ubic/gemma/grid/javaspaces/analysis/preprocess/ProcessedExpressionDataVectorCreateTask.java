@@ -1,7 +1,8 @@
 package ubic.gemma.grid.javaspaces.analysis.preprocess;
 
-import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.SpacesTask;
+import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.TaskResult;
 
 /**
  * A task interface to wrap preprocessing expression data vectors.
@@ -10,7 +11,5 @@ import ubic.gemma.grid.javaspaces.SpacesTask;
  * @version $Id$
  */
 public interface ProcessedExpressionDataVectorCreateTask extends SpacesTask {
-
-    public SpacesResult execute( SpacesProcessedExpressionDataVectorCreateCommand processedVectorCreateCommand );
-
+    public TaskResult execute( TaskCommand command );
 }

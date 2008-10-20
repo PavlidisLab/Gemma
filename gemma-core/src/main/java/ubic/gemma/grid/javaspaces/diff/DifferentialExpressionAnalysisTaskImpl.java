@@ -25,10 +25,10 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * A differential expression analysis spaces task that can be passed into a space and executed by a worker.
@@ -47,22 +47,18 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid.javaspaces.diff.SpacesDifferentialExpressionAnalysisCommand)
+     * @seeubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid.javaspaces.diff.
+     * SpacesDifferentialExpressionAnalysisCommand)
      */
-    public SpacesResult execute( SpacesDifferentialExpressionAnalysisCommand jsDiffAnalysisCommand ) {
+    public TaskResult execute( TaskCommand command ) {
+
+        DifferentialExpressionAnalysisTaskCommand jsDiffAnalysisCommand = ( DifferentialExpressionAnalysisTaskCommand ) command;
 
         super.initProgressAppender( this.getClass() );
 
-        boolean forceAnalysis = jsDiffAnalysisCommand.isForceAnalysis();
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = doAnalysis( jsDiffAnalysisCommand );
 
-        SpacesResult result = new SpacesResult();
-
-        ExpressionExperiment ee = jsDiffAnalysisCommand.getExpressionExperiment();
-
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalyzerService
-                .getDifferentialExpressionAnalyses( ee, forceAnalysis );
-
+        TaskResult result = new TaskResult();
         result.setAnswer( expressionAnalyses );
 
         counter++;
@@ -72,13 +68,13 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
+    private Collection<DifferentialExpressionAnalysis> doAnalysis(
+            DifferentialExpressionAnalysisTaskCommand jsDiffAnalysisCommand ) {
+        ExpressionExperiment ee = jsDiffAnalysisCommand.getExpressionExperiment();
+
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalyzerService
+                .getDifferentialExpressionAnalyses( ee, jsDiffAnalysisCommand.isForceAnalysis() );
+        return expressionAnalyses;
     }
 
     /**

@@ -24,15 +24,15 @@ import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask;
-import ubic.gemma.grid.javaspaces.analysis.sequence.SpacesArrayDesignRepeatScanCommand;
+import ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BaseCommand;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
 
@@ -44,7 +44,7 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignRepeatScanController extends AbstractSpacesController {
+public class ArrayDesignRepeatScanController extends AbstractSpacesController<ModelAndView> {
 
     private ArrayDesignService arrayDesignService = null;
 
@@ -61,18 +61,15 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController {
         ArrayDesign ad = arrayDesignService.load( id );
         arrayDesignService.thaw( ad );
 
-        ArrayDesignRepeatScanCommand cmd = new ArrayDesignRepeatScanCommand();
-        cmd.setArrayDesign( ad );
+        ArrayDesignRepeatScanTaskCommand cmd = new ArrayDesignRepeatScanTaskCommand( ad );
 
         return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ArrayDesignRepeatScanTask.class.getName(), true );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, Object command ) {
         return new ArrayDesignRepeatScanJob( jobId, command );
@@ -80,10 +77,8 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, Object command ) {
         return new ArrayDesignRepeatScanSpaceJob( jobId, command );
@@ -111,13 +106,15 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController {
 
         /*
          * (non-Javadoc)
-         * 
-         * @see ubic.gemma.web.controller.analysis.sequence.ArrayDesignRepeatScanController.ArrayDesignRepeatScanJob#processJob(ubic.gemma.web.controller.BaseCommand)
+         * @see
+         * ubic.gemma.web.controller.analysis.sequence.ArrayDesignRepeatScanController.ArrayDesignRepeatScanJob#processJob
+         * (ubic.gemma.web.controller.BaseCommand)
          */
         @Override
-        protected ModelAndView processJob( BaseCommand baseCommand ) {
-            ArrayDesignRepeatScanCommand command = ( ArrayDesignRepeatScanCommand ) baseCommand;
-            process( command );
+        protected ModelAndView processJob( TaskCommand baseCommand ) {
+            baseCommand.setTaskId( this.taskId );
+            ArrayDesignRepeatScanTaskCommand c = ( ArrayDesignRepeatScanTaskCommand ) baseCommand;
+            process( c );
             return new ModelAndView( new RedirectView( "/Gemma" ) );
         }
 
@@ -125,14 +122,9 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController {
          * @param command
          * @return
          */
-        private SpacesResult process( ArrayDesignRepeatScanCommand command ) {
-            SpacesArrayDesignRepeatScanCommand jsCommand = createCommandObject( command );
-            SpacesResult result = taskProxy.execute( jsCommand );
+        private TaskResult process( TaskCommand c ) {
+            TaskResult result = taskProxy.execute( c );
             return result;
-        }
-
-        protected SpacesArrayDesignRepeatScanCommand createCommandObject( ArrayDesignRepeatScanCommand command ) {
-            return new SpacesArrayDesignRepeatScanCommand( taskId, command.getArrayDesign() );
         }
 
     }
@@ -153,7 +145,7 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController {
         public ModelAndView call() throws Exception {
             SecurityContextHolder.setContext( securityContext );
 
-            ArrayDesignRepeatScanCommand repeatScanCommand = ( ( ArrayDesignRepeatScanCommand ) command );
+            ArrayDesignRepeatScanTaskCommand repeatScanCommand = ( ( ArrayDesignRepeatScanTaskCommand ) command );
 
             ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
                     "Loading " + repeatScanCommand.getArrayDesign().getShortName() );
@@ -163,19 +155,18 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController {
 
         /*
          * (non-Javadoc)
-         * 
          * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.web.controller.BaseCommand)
          */
         @Override
-        protected ModelAndView processJob( BaseCommand command ) {
+        protected ModelAndView processJob( TaskCommand c ) {
             throw new UnsupportedOperationException( "Cannot run locally at this time.  Run in a space." );
         }
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.HttpServletRequest)
+     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
+     * HttpServletRequest)
      */
     @Override
     protected String getViewNameForRequest( HttpServletRequest arg0 ) {

@@ -113,8 +113,7 @@ public class LinkAnalysisService {
      * @param linkAnalysisConfig Configuration for the link analysis.
      * @throws Exception
      */
-    public void process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig )
-            throws Exception {
+    public void process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
 
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
         la.clear();
@@ -165,7 +164,11 @@ public class LinkAnalysisService {
 
             saveLinks( p2v, la );
         } else if ( linkAnalysisConfig.isTextOut() ) {
-            writeLinks( la, new PrintWriter( System.out ) );
+            try {
+                writeLinks( la, new PrintWriter( System.out ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
         }
 
         log.info( "Done with processing of " + ee );

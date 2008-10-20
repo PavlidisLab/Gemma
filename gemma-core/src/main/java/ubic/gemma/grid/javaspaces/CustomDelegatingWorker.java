@@ -155,8 +155,8 @@ public class CustomDelegatingWorker implements Runnable {
                     try {
                         Object[] args = call.getArguments();
 
-                        if ( args[0] instanceof SpacesCommand ) {
-                            SpacesCommand javaSpacesCommand = ( SpacesCommand ) args[0];
+                        if ( args[0] instanceof TaskCommand ) {
+                            TaskCommand javaSpacesCommand = ( TaskCommand ) args[0];
                             taskId = javaSpacesCommand.getTaskId();
                         }
 

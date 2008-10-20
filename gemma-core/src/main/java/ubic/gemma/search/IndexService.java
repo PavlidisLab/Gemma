@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.compass.core.spi.InternalCompass;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.compass.spring.web.mvc.CompassIndexResults;
@@ -32,11 +30,10 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.grid.javaspaces.AbstractSpacesProgressService;
 
-import ubic.gemma.grid.javaspaces.index.IndexGemmaResult;
-import ubic.gemma.grid.javaspaces.index.IndexGemmaTask;
-import ubic.gemma.grid.javaspaces.index.SpacesIndexGemmaCommand;
+import ubic.gemma.grid.javaspaces.index.IndexerResult;
+import ubic.gemma.grid.javaspaces.index.IndexerTask;
+import ubic.gemma.grid.javaspaces.index.IndexerTaskCommand;
 import ubic.gemma.util.CompassUtils;
-import ubic.gemma.util.IndexGemmaCommand;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.BackgroundProgressJob;
 import ubic.gemma.util.progress.ProgressJob;
@@ -57,8 +54,6 @@ public class IndexService extends AbstractSpacesProgressService {
      * spring startup. Note: three inherited dependencies from AbstractSpacesProgressService: TaskRunningService,
      * SpacesUtil, manualAuthenticationProcessing
      */
-
-    private Log log = LogFactory.getLog( this.getClass() );
 
     private CompassGpsInterfaceDevice expressionGps;
 
@@ -102,9 +97,9 @@ public class IndexService extends AbstractSpacesProgressService {
      * @return Used by quartz to start the index process in a space
      */
     public String runAll() {
-        IndexGemmaCommand command = new IndexGemmaCommand();
+        IndexerTaskCommand command = new IndexerTaskCommand();
         command.setAll( true );
-        return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), IndexGemmaTask.class.getName(), false );
+        return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), IndexerTask.class.getName(), false );
     }
 
     /**
@@ -122,10 +117,10 @@ public class IndexService extends AbstractSpacesProgressService {
     }
 
     /**
-     * Indexes probes
+     * Indexes sequences
      */
-    public void indexCompositeSequences() {
-        CompassUtils.rebuildCompassIndex( probeGps );
+    public void indexBioSequences() {
+        CompassUtils.rebuildCompassIndex( biosequenceGps );
     }
 
     /**
@@ -197,6 +192,7 @@ public class IndexService extends AbstractSpacesProgressService {
         CompassUtils.swapCompassIndex( compassBibliographic, pathToNewIndex );
     }
 
+    @Override
     protected BackgroundProgressJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
             Object command ) {
 
@@ -214,6 +210,7 @@ public class IndexService extends AbstractSpacesProgressService {
      * @param runInWebapp
      * @return {@link ModelAndView}
      */
+    @Override
     public synchronized ModelAndView startJob( Object command, String spaceUrl, String taskName, boolean runInWebapp ) {
         String taskId = run( command, spaceUrl, taskName, runInWebapp );
 
@@ -224,15 +221,15 @@ public class IndexService extends AbstractSpacesProgressService {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#getSpaceRunner(java.lang.String,
-     *      org.springframework.security.context.SecurityContext, javax.servlet.http.HttpServletRequest,
-     *      java.lang.Object, ubic.gemma.web.util.MessageUtil)
+     * @see
+     * ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#getSpaceRunner(java.lang.String,
+     * org.springframework.security.context.SecurityContext, javax.servlet.http.HttpServletRequest, java.lang.Object,
+     * ubic.gemma.web.util.MessageUtil)
      */
-    // @Override
+    @Override
     protected BackgroundProgressJob<ModelAndView> getSpaceRunner( String taskId, SecurityContext securityContext,
             Object command ) {
-        return new LoadInSpaceJob( taskId, securityContext, command );
+        return new IndexInSpaceJob( taskId, securityContext, command );
     }
 
     /**
@@ -241,9 +238,9 @@ public class IndexService extends AbstractSpacesProgressService {
      * @author Paul
      * @version $Id$
      */
-    private class LoadInSpaceJob extends IndexJob {
+    private class IndexInSpaceJob extends IndexJob {
 
-        final IndexGemmaTask indexGemmaTaskProxy = ( IndexGemmaTask ) updatedContext.getBean( "proxy" );
+        final IndexerTask indexGemmaTaskProxy = ( IndexerTask ) updatedContext.getBean( "proxy" );
 
         /**
          * @param taskId
@@ -251,16 +248,16 @@ public class IndexService extends AbstractSpacesProgressService {
          * @param commandObj
          * @param messenger
          */
-        public LoadInSpaceJob( String taskId, SecurityContext parentSecurityContext, Object commandObj ) {
+        public IndexInSpaceJob( String taskId, SecurityContext parentSecurityContext, Object commandObj ) {
             super( taskId, parentSecurityContext, commandObj );
 
         }
 
         @Override
-        protected void index( IndexGemmaCommand indexCommand ) {
+        protected void index( IndexerTaskCommand indexCommand ) {
+            indexCommand.setTaskId( this.taskId );
 
-            SpacesIndexGemmaCommand jsCommand = createCommandObject( indexCommand );
-            IndexGemmaResult result = indexGemmaTaskProxy.execute( jsCommand );
+            IndexerResult result = ( IndexerResult ) indexGemmaTaskProxy.execute( indexCommand );
 
             try {
                 if ( indexCommand.isIndexGene() ) {
@@ -269,10 +266,10 @@ public class IndexService extends AbstractSpacesProgressService {
                 if ( indexCommand.isIndexEE() ) {
                     replaceExperimentIndex( result.getPathToExpresionIndex() );
                 }
-                if ( indexCommand.isIndexArray() ) {
+                if ( indexCommand.isIndexAD() ) {
                     replaceArrayIndex( result.getPathToArrayIndex() );
                 }
-                if ( indexCommand.isIndexBibliographic() ) {
+                if ( indexCommand.isIndexBibRef() ) {
                     replaceBibliographicIndex( result.getPathToBibliographicIndex() );
                 }
                 if ( indexCommand.isIndexProbe() ) {
@@ -286,18 +283,12 @@ public class IndexService extends AbstractSpacesProgressService {
                 log.error( "Unable to swap indexes. " + ioe );
             }
         }
-
-        private SpacesIndexGemmaCommand createCommandObject( IndexGemmaCommand ic ) {
-            return new SpacesIndexGemmaCommand( taskId, true, ic.isIndexArray(), ic.isIndexEE(), ic.isIndexGene(), ic
-                    .isIndexProbe(), ic.isIndexBibliographic(), ic.isIndexBioSequence() );
-        }
-
     }
 
     /**
      * @author klc
-     * @version $Id$ This inner class is used
-     *          for creating a seperate thread that will delete the compass ee index
+     * @version $Id$ This inner class is used for creating a
+     *          seperate thread that will delete the compass ee index
      */
     class IndexJob extends BackgroundProgressJob<ModelAndView> {
 
@@ -314,7 +305,6 @@ public class IndexService extends AbstractSpacesProgressService {
 
         }
 
-        @SuppressWarnings("unchecked")
         public ModelAndView call() throws Exception {
 
             init();
@@ -327,7 +317,7 @@ public class IndexService extends AbstractSpacesProgressService {
             job.updateProgress( "Preparing to rebuild selected indexes " );
             log.info( "Preparing to rebuild selected indexes" );
 
-            IndexGemmaCommand indexGemmaCommand = ( ( IndexGemmaCommand ) command );
+            IndexerTaskCommand indexGemmaCommand = ( ( IndexerTaskCommand ) command );
 
             index( indexGemmaCommand );
 
@@ -346,14 +336,14 @@ public class IndexService extends AbstractSpacesProgressService {
 
         }
 
-        protected void index( IndexGemmaCommand command ) {
+        protected void index( IndexerTaskCommand command ) {
 
-            if ( command.isIndexArray() ) indexArrayDesigns();
-            if ( command.isIndexBibliographic() ) indexBibligraphicReferences();
+            if ( command.isIndexAD() ) indexArrayDesigns();
+            if ( command.isIndexBibRef() ) indexBibligraphicReferences();
             if ( command.isIndexEE() ) indexExpressionExperiments();
             if ( command.isIndexGene() ) indexGenes();
             if ( command.isIndexProbe() ) indexProbes();
-            if ( command.isIndexBioSequence() ) indexBibligraphicReferences();
+            if ( command.isIndexBioSequence() ) indexBioSequences();
 
         }
     }

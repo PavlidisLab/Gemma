@@ -19,8 +19,9 @@
 package ubic.gemma.grid.javaspaces.analysis.sequence;
 
 import net.jini.space.JavaSpace;
-import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.SpacesTask;
+import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.TaskResult;
 
 /**
  * A task interface to wrap array design repeat scan type jobs. Tasks of this type are submitted to a {@link JavaSpace}
@@ -30,11 +31,5 @@ import ubic.gemma.grid.javaspaces.SpacesTask;
  * @version $Id$
  */
 public interface ArrayDesignRepeatScanTask extends SpacesTask {
-
-    /**
-     * @param jsArrayDesignRepeatCommand
-     * @return
-     */
-    public SpacesResult execute( SpacesArrayDesignRepeatScanCommand jsArrayDesignRepeatCommand );
-
+    public TaskResult execute( TaskCommand command );
 }

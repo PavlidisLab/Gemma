@@ -25,7 +25,8 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.progress.TaskRunningService;
@@ -47,16 +48,17 @@ public class ProcessedExpressionDataVectorCreateTaskImpl extends BaseSpacesTask 
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask#execute(ubic.gemma.grid.javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand)
+     * @see
+     * ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask#execute(ubic.gemma.grid
+     * .javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand)
      */
-    public SpacesResult execute( SpacesProcessedExpressionDataVectorCreateCommand processedVectorCreateCommand ) {
-
+    public TaskResult execute( TaskCommand command ) {
+        ProcessedExpressionDataVectorCreateTaskCommand processedVectorCreateCommand = ( ProcessedExpressionDataVectorCreateTaskCommand ) command;
         super.initProgressAppender( this.getClass() );
 
         ExpressionExperiment ee = processedVectorCreateCommand.getExpressionExperiment();
 
-        SpacesResult result = new SpacesResult();
+        TaskResult result = new TaskResult();
         Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
         result.setAnswer( processedVectors );
@@ -66,15 +68,6 @@ public class ProcessedExpressionDataVectorCreateTaskImpl extends BaseSpacesTask 
         log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
                 + result.getTaskID() );
         return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
     }
 
     public void setProcessedExpressionDataVectorCreateService(

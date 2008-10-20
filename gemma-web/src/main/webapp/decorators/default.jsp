@@ -7,8 +7,7 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" />
-		</title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
 
 		<jwr:style src="/bundles/gemma-all.css" />
 
@@ -23,7 +22,7 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/CompositeSequenceController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/CustomCompassIndexController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/DEDVController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionAnalysisController.js'></script>	
+		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionAnalysisController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ProcessedExpressionDataVectorCreateController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ArrayDesignRepeatScanController.js'></script>
@@ -69,18 +68,17 @@
 
 					<%
 					    //Adds the page help link if not a help page already
-					    String pageUri = request.getRequestURI();
-					    if ( pageUri != null && !pageUri.toLowerCase().contains( "_help" )
-					            && !pageUri.toLowerCase().contains( "static" ) ) {
+								String pageUri = request.getRequestURI();
+								if (pageUri != null && !pageUri.toLowerCase().contains("_help")
+										&& !pageUri.toLowerCase().contains("static")) {
 					%>
 					<div id="help" style="font-size: smaller; float: right;">
 						<a target="_blank"
 							href="
-	<%
-		String helpuri = pageUri.substring(0,pageUri.length() - 5) + "_help.html";
-		helpuri = helpuri.replace("Gemma/", "Gemma/static/");
-		out.print(helpuri );
- 	%>
+	<%String helpuri = pageUri.substring(0, pageUri.length() - 5)
+						+ "_help.html";
+				helpuri = helpuri.replace("Gemma/", "Gemma/static/");
+				out.print(helpuri);%>
 		">page
 							help</a>
 					</div>
@@ -127,15 +125,21 @@
 				<jsp:include page="/common/footer.jsp" />
 			</div>
 		</div>
-		<script type="text/javascript">
-var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+		<c:if test='${appConfig["ga.tracker"]}'>
+			<script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl."
+			: "http://www.");
+	document
+			.write(unescape("%3Cscript src='"
+					+ gaJsHost
+					+ "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
 </script>
-		<script type="text/javascript">
-var pageTracker = _gat._getTracker('${appConfig["ga.tracker"]}');
-pageTracker._initData();
-pageTracker._trackPageview();
+			<script type="text/javascript">
+	var pageTracker = _gat._getTracker('${appConfig["ga.tracker"]}');
+	pageTracker._initData();
+	pageTracker._trackPageview();
 </script>
+		</c:if>
 	</body>
 </html>
 

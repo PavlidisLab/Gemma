@@ -22,16 +22,15 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * @author keshav
@@ -46,12 +45,11 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
-    public SpacesResult execute( SpacesExpressionExperimentLoadCommand jsEeLoadCommand ) {
-
+    public TaskResult execute( TaskCommand command ) {
+        ExpressionExperimentLoadTaskCommand jsEeLoadCommand = ( ExpressionExperimentLoadTaskCommand ) command;
         super.initProgressAppender( this.getClass() );
 
         String accession = jsEeLoadCommand.getAccession();
@@ -61,7 +59,7 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
         boolean splitIncompatiblePlatforms = jsEeLoadCommand.isSplitIncompatiblePlatforms();
         boolean allowSuperSeriesLoad = jsEeLoadCommand.isAllowSuperSeriesLoad();
 
-        SpacesResult result = new SpacesResult();
+        TaskResult result = new TaskResult();
         if ( jsEeLoadCommand.isArrayExpress() ) {
             ExpressionExperiment dataset = arrayExpressLoadService.load( accession, jsEeLoadCommand
                     .getArrayDesignName() );
@@ -97,20 +95,4 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
         this.arrayExpressLoadService = arrayExpressLoadService;
     }
 
-    /**
-     * @param gigaSpacesTemplate
-     */
-    @Override
-    public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
-        super.setGigaSpacesTemplate( gigaSpacesTemplate );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
-    }
 }

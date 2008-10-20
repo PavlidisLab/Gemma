@@ -21,7 +21,7 @@ package ubic.gemma.grid.javaspaces.analysis.coexpression.links;
 
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.grid.javaspaces.SpacesCommand;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -30,17 +30,18 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author Paul
  * @version $Id$
  */
-public class SpacesLinkAnalysisCommand extends SpacesCommand {
+public class LinkAnalysisTaskCommand extends TaskCommand {
 
-    ExpressionExperiment expressionExperiment;
+    private ExpressionExperiment expressionExperiment;
     private FilterConfig filterConfig;
     private LinkAnalysisConfig linkAnalysisConfig;
 
     /**
      * @param taskId
      */
-    public SpacesLinkAnalysisCommand( String taskId, ExpressionExperiment ee, LinkAnalysisConfig lac, FilterConfig fg ) {
-        super( taskId );
+    public LinkAnalysisTaskCommand( String taskId, ExpressionExperiment ee, LinkAnalysisConfig lac, FilterConfig fg ) {
+        super();
+        this.setTaskId( taskId );
         this.expressionExperiment = ee;
         this.filterConfig = fg;
         this.linkAnalysisConfig = lac;
@@ -51,6 +52,10 @@ public class SpacesLinkAnalysisCommand extends SpacesCommand {
      */
     public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
+    }
+
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     /**

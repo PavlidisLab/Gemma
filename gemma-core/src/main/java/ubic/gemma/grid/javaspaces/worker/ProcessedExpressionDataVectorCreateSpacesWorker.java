@@ -16,48 +16,42 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.grid.javaspaces.diff;
+package ubic.gemma.grid.javaspaces.worker;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
+import ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask;
 import ubic.gemma.util.SecurityUtil;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisSpacesWorkerCLI extends AbstractSpacesWorkerCLI {
-
-    private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisSpacesWorkerCLI.class );
+public class ProcessedExpressionDataVectorCreateSpacesWorker extends AbstractSpacesWorkerCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#setRegistrationEntryTask()
      */
     @Override
     protected void setRegistrationEntryTask() throws Exception {
-        registrationEntry.message = DifferentialExpressionAnalysisTask.class.getName();
+        registrationEntry.message = ProcessedExpressionDataVectorCreateTask.class.getName();
 
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#setWorker()
      */
     @Override
     protected void setWorker() {
-        worker = ( CustomDelegatingWorker ) updatedContext.getBean( "differentialExpressionAnalysisWorker" );
+        worker = ( CustomDelegatingWorker ) updatedContext.getBean( "processedExpressionDataVectorCreateWorker" );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#start()
      */
     @Override
@@ -76,11 +70,11 @@ public class DifferentialExpressionAnalysisSpacesWorkerCLI extends AbstractSpace
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "Starting spaces worker to run differential expression analysis ... \n" );
+        log.info( "Starting spaces worker to run processed expression data vector creation ... \n" );
 
         SecurityUtil.passAuthenticationToChildThreads();
 
-        DifferentialExpressionAnalysisSpacesWorkerCLI p = new DifferentialExpressionAnalysisSpacesWorkerCLI();
+        ProcessedExpressionDataVectorCreateSpacesWorker p = new ProcessedExpressionDataVectorCreateSpacesWorker();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
@@ -89,17 +83,6 @@ public class DifferentialExpressionAnalysisSpacesWorkerCLI extends AbstractSpace
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
-    @Override
-    protected void buildOptions() {
-        // TODO Auto-generated method stub
-
     }
 
 }

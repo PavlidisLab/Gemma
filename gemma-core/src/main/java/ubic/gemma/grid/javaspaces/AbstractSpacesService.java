@@ -27,92 +27,85 @@ import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.progress.TaskRunningService;
 
 /**
+ * DOCUMENT ME
+ * 
  * @spring.property name="spacesUtil" ref="spacesUtil"
  * @author keshav
  * @version $Id$
  */
 public abstract class AbstractSpacesService {
-	private Log log = LogFactory.getLog(AbstractSpacesService.class);
+    private Log log = LogFactory.getLog( AbstractSpacesService.class );
 
-	protected SpacesUtil spacesUtil = null;
+    protected SpacesUtil spacesUtil = null;
 
-	protected ApplicationContext updatedContext = null;
+    protected ApplicationContext updatedContext = null;
 
-	/**
-	 * @return ApplicationContext
-	 */
-	public ApplicationContext addGemmaSpacesToApplicationContext() {
-		assert spacesUtil != null;
-		return spacesUtil
-				.addGemmaSpacesToApplicationContext(SpacesEnum.DEFAULT_SPACE
-						.getSpaceUrl());
-	}
+    /**
+     * @return ApplicationContext
+     */
+    public ApplicationContext addGemmaSpacesToApplicationContext() {
+        assert spacesUtil != null;
+        return spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+    }
 
-	protected void startJob(String spaceUrl, String taskName,
-			boolean runInLocalContext) {
-		run(spaceUrl, taskName, runInLocalContext);
-	}
+    protected void startJob( String spaceUrl, String taskName, boolean runInLocalContext ) {
+        run( spaceUrl, taskName, runInLocalContext );
+    }
 
-	protected String run(String spaceUrl, String taskName,
-			boolean runInLocalContext){
-		
-			return run(spaceUrl, taskName, runInLocalContext, null);
-	}
-			
-	protected String run(String spaceUrl, String taskName,
-			boolean runInLocalContext, Object command) {
+    protected String run( String spaceUrl, String taskName, boolean runInLocalContext ) {
 
-		String taskId = null;
+        return run( spaceUrl, taskName, runInLocalContext, null );
+    }
 
-		updatedContext = addGemmaSpacesToApplicationContext();
+    protected String run( String spaceUrl, String taskName, boolean runInLocalContext, Object command ) {
 
-		if (updatedContext.containsBean("gigaspacesTemplate")
-				&& spacesUtil.canServiceTask(taskName, spaceUrl)) {
-			log.info("Running task " + taskName + " remotely.");
+        String taskId = null;
 
-			taskId = SpacesHelper.getTaskIdFromTask(updatedContext, taskName);
-			runRemotely(taskId, command);
-		} else if (!updatedContext.containsBean("gigaspacesTemplate")
-				&& !runInLocalContext) {
-			throw new RuntimeException(
-					"This task must be run on the compute server, but the space is not running. Please try again later");
-		}
+        updatedContext = addGemmaSpacesToApplicationContext();
 
-		else {
-			log.info("Running task " + taskName + " locally.");
-			taskId = TaskRunningService.generateTaskId();
-			runLocally(taskId, command);
-		}
+        if ( updatedContext.containsBean( "gigaspacesTemplate" ) && spacesUtil.canServiceTask( taskName, spaceUrl ) ) {
+            log.info( "Running task " + taskName + " remotely." );
 
-		return taskId;
-	}
+            taskId = SpacesHelper.getTaskIdFromTask( updatedContext, taskName );
+            runRemotely( taskId, command );
+        } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInLocalContext ) {
+            throw new RuntimeException(
+                    "This task must be run on the compute server, but the space is not running. Please try again later" );
+        }
 
-	/**
-	 * @param taskId
-	 * @param command could be null
-	 */
-	public abstract void runLocally(String taskId, Object command);
+        else {
+            log.info( "Running task " + taskName + " locally." );
+            taskId = TaskRunningService.generateTaskId();
+            runLocally( taskId, command );
+        }
 
-	/**
-	 * @param taskId
-	 * @param command could be null
-	 */
-	public abstract void runRemotely(String taskId, Object command);
+        return taskId;
+    }
 
-	/**
-	 * 
-	 * 
-	 * @param spacesUtil
-	 */
-	public void setSpacesUtil(SpacesUtil spacesUtil) {
-		this.spacesUtil = spacesUtil;
-	}
+    /**
+     * @param taskId
+     * @param command could be null
+     */
+    public abstract void runLocally( String taskId, Object command );
 
-	/**
-	 * @param spacesUtil
-	 */
-	protected void injectSpacesUtil(SpacesUtil spacesUtil) {
-		this.spacesUtil = spacesUtil;
-	}
+    /**
+     * @param taskId
+     * @param command could be null
+     */
+    public abstract void runRemotely( String taskId, Object command );
+
+    /**
+     * @param spacesUtil
+     */
+    public void setSpacesUtil( SpacesUtil spacesUtil ) {
+        this.spacesUtil = spacesUtil;
+    }
+
+    /**
+     * @param spacesUtil
+     */
+    protected void injectSpacesUtil( SpacesUtil s ) {
+        this.spacesUtil = s;
+    }
 
 }

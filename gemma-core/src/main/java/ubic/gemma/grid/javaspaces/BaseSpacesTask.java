@@ -26,6 +26,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
 
 /**
@@ -35,13 +36,25 @@ import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
  * @author keshav
  * @version $Id$
  */
-public class BaseSpacesTask {
+public abstract class BaseSpacesTask implements SpacesTask {
 
-    private Log log = LogFactory.getLog( this.getClass() );
+    protected GigaSpacesTemplate gigaSpacesTemplate = null;
 
     protected String taskId;
 
-    protected GigaSpacesTemplate gigaSpacesTemplate = null;
+    private Log log = LogFactory.getLog( this.getClass() );
+
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
+    public void afterPropertiesSet() throws Exception {
+        this.taskId = TaskRunningService.generateTaskId();
+    }
+
+    public String getTaskId() {
+        return taskId;
+    }
 
     /**
      * Initializes the progress appender for tasks. Typically, this method should be called at the beginning of the
@@ -72,10 +85,6 @@ public class BaseSpacesTask {
      */
     public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
         this.gigaSpacesTemplate = gigaSpacesTemplate;
-    }
-
-    public String getTaskId() {
-        return taskId;
     }
 
 }

@@ -19,8 +19,9 @@
 package ubic.gemma.grid.javaspaces.expression.arrayDesign;
 
 import net.jini.space.JavaSpace;
-import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.SpacesTask;
+import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.TaskResult;
 
 /**
  * A task interface to wrap array design probe mapper type jobs. Tasks of this type are submitted to a {@link JavaSpace}
@@ -30,11 +31,5 @@ import ubic.gemma.grid.javaspaces.SpacesTask;
  * @version $Id$
  */
 public interface ArrayDesignProbeMapperTask extends SpacesTask {
-
-    /**
-     * @param jsProbeMapperCommand
-     * @return
-     */
-    public SpacesResult execute( SpacesArrayDesignProbeMapperCommand jsProbeMapperCommand );
-
+    public TaskResult execute( TaskCommand command );
 }

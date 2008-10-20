@@ -29,4 +29,12 @@ import org.springframework.beans.factory.InitializingBean;
 public interface SpacesTask extends InitializingBean {
 
     public String getTaskId();
+
+    /**
+     * NOTE that the interfaces derived from this MUST define this exact same method as well.
+     * 
+     * @param command
+     * @return
+     */
+    public TaskResult execute( TaskCommand command );
 }

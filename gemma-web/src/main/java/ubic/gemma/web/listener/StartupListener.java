@@ -30,7 +30,6 @@ import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -72,30 +71,67 @@ import ubic.gemma.util.QuartzUtils;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a> (original version)
  * @version $Id$
  */
-public class StartupListener extends ContextLoaderListener implements ServletContextListener {
+public class StartupListener extends ContextLoaderListener {
 
     /**
-     * The style to be used if one is not defined in web.xml.
+     * Configuration parameter for lib directory.
      */
-    private static final String DEFAULT_THEME = "simplicity";
+    private static final String GEMMA_LIB_DIR = "gemma.lib.dir";
 
     /**
      * Key for the tracker ID in your configuration file. Tracker id for Google is something like 'UA-12441-1'. In your
      * Gemma.properties file add a line like
      * 
      * <pre>
-     * ga.tracker = UA - 12441 - 1
+     * ga.tracker = UA_123456_1
      * </pre>
      */
     private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
 
-    private static final String QUARTZ = "quartzOn";
+    /**
+     * The style to be used if one is not defined in web.xml.
+     */
+    private static final String DEFAULT_THEME = "simplicity";
 
     private static final Log log = LogFactory.getLog( StartupListener.class );
 
+    private static final String[] modules = new String[] { "core", "mda", "util" };
+
+    private static final String QUARTZ = "quartzOn";
+
+    /**
+     * This is used to get information from the system that does not change and which can be reused throughout -
+     * typically used in drop-down menus.
+     * 
+     * @param context
+     */
+    @SuppressWarnings("unchecked")
+    public static void populateDropDowns( ServletContext context ) {
+        log.debug( "Populating drop-downs..." );
+        ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
+
+        // mimic the functionality of the LookupManager in Appfuse.
+        UserService mgr = ( UserService ) ctx.getBean( "userService" );
+        Set<LabelValue> roleList = new HashSet<LabelValue>();
+
+        // get list of possible roles, used to populate admin tool where roles can be altered.
+        Collection<UserRole> roles = mgr.loadAllRoles();
+        for ( UserRole role : roles ) {
+            roleList.add( new LabelValue( role.getName(), role.getName() ) );
+        }
+
+        context.setAttribute( Constants.AVAILABLE_ROLES, roleList );
+
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Drop-down initialization complete [OK]" );
+        }
+
+        assert ( context.getAttribute( Constants.AVAILABLE_ROLES ) != null );
+
+    }
+
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.web.context.ContextLoaderListener#contextInitialized(javax.servlet.ServletContextEvent)
      */
     @Override
@@ -152,6 +188,152 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
     }
 
     /**
+     * Copy the JAR files required by the JavaSpaces workers to the defined shared location. This includes all jars in
+     * the WEB-INF/lib directory.
+     */
+    @SuppressWarnings("unchecked")
+    private void copyWorkerJars( ServletContext servletContext ) {
+
+        String appName = "gemma";
+        Map<String, String> appConfig = ( Map<String, String> ) servletContext.getAttribute( "appConfig" );
+        String version = appConfig.get( "version" );
+
+        File targetLibdir = null;
+        String libpath = ConfigUtils.getString( GEMMA_LIB_DIR );
+        if ( StringUtils.isNotBlank( libpath ) ) {
+            targetLibdir = new File( libpath );
+            if ( !targetLibdir.exists() ) {
+                if ( !targetLibdir.mkdirs() ) {
+                    log.warn( "destination directory " + targetLibdir
+                            + " does not exist and could not be created; using " );
+                    return;
+                }
+            }
+        } else {
+            targetLibdir = new File( System.getProperty( "java.io.tmpdir" ) + "Gemma" + File.separator + "lib" );
+            targetLibdir.mkdirs();
+            log.info( "Using " + targetLibdir + " as worker jar file target location" );
+        }
+
+        Collection<File> jars = new HashSet<File>();
+
+        /*
+         * Locate all the dependency jar files in the webapp's lib directory.
+         */
+        File sourceLibdir = null;
+        for ( Enumeration e = servletContext.getAttributeNames(); e.hasMoreElements(); ) {
+            String key = ( String ) e.nextElement();
+            // Looking for something like org.apache.catalina.jsp_classpath.
+            // FIXME: will this work with other engines? Can we use java.class.path instead?
+            if ( key.endsWith( "classpath" ) ) {
+                String classpath = ( String ) servletContext.getAttribute( key );
+                for ( String entry : classpath.split( File.pathSeparator ) ) {
+                    if ( entry.endsWith( "jar" ) ) {
+                        File jar = new File( entry );
+                        jars.add( jar );
+                        if ( entry.matches( ".*Gemma/WEB-INF/lib.*\\.jar" ) ) {
+                            sourceLibdir = jar.getParentFile();
+                        }
+                    }
+                }
+            }
+        }
+
+        boolean foundAppJars = false;
+        if ( sourceLibdir != null ) {
+            for ( String module : modules ) {
+                File jar = new File( sourceLibdir, String.format( appName + "-%s-%s.jar", module, version ) );
+                if ( jar.canRead() && jars.contains( jar ) ) {
+                    // jars.add( jar );
+                    // log.info( "Gemma jar: " + jar );
+                    foundAppJars = true; // if we found one, we probably found them all.
+                }
+            }
+        }
+
+        /*
+         * In a development environment, the jar files are not relevant for the webapp (they won't be in WEB-INF/lib),
+         * and might have been built. However, we'd still like to copy them if they exist. Let's assume that the user
+         * has run 'mvn install' and therefore the jars will be in their maven target directories.
+         */
+        if ( !foundAppJars ) {
+            log.warn( "Web application seems to be running in a development or test environment. "
+                    + "Jars for javaspaces workers will be copied from the maven build directories. "
+                    + "Make sure these are up to date if you are testing javaspaces." );
+            String workDir = ConfigUtils.getString( "gemma.home" );
+            if ( StringUtils.isNotBlank( workDir ) ) {
+                for ( String module : modules ) {
+                    File moduleDir = new File( workDir, appName + "-" + module );
+                    if ( moduleDir.exists() ) {
+                        File buildDir = new File( moduleDir, "target" );
+                        if ( buildDir.exists() ) {
+                            File jar = new File( buildDir, String.format( appName + "-%s-%s.jar", module, version ) );
+                            if ( jar.canRead() ) {
+                                // log.info( "Gemma jar: " + jar );
+                                foundAppJars = true;
+                                jars.add( jar );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if ( jars.isEmpty() ) {
+            log.warn( "Unable to locate any jar files for copying to grid worker location. "
+                    + "Javaspaces initialization may fail." );
+            return;
+        }
+
+        if ( !foundAppJars ) {
+            log.warn( "Gemma jar files for grid workers were not located -- you may need to build them. "
+                    + "Javaspaces initializion may fail." );
+        }
+
+        Collection<File> copiedJars = new HashSet<File>();
+        for ( File sourceJar : jars ) {
+            try {
+                File targetJar = new File( targetLibdir, sourceJar.getName() );
+                if ( sourceJar.exists() ) {
+                    FileUtils.copyFile( sourceJar, targetJar );
+                    copiedJars.add( targetJar );
+                } else {
+                    log.warn( "Grid config: Cannot locate " + sourceJar );
+                }
+            } catch ( IOException e ) {
+                log.error( "Error copying " + sourceJar + " to " + targetLibdir + ": " + e );
+            }
+        }
+
+        try {
+            File classpathFile = new File( targetLibdir, "CLASSPATH" );
+
+            String classpath = StringUtils.join( copiedJars, File.pathSeparator );
+            FileUtils.writeStringToFile( classpathFile, classpath, null );
+        } catch ( IOException e ) {
+            log.error( "Error creating classpath file in " + targetLibdir );
+        }
+
+        log.info( copiedJars.size() + " jar files copied to " + targetLibdir + " for grid configuration" );
+    }
+
+    /**
+     * @param context
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> initializeConfiguration( ServletContext context ) {
+        // Check if the config
+        // object already exists
+        Map<String, Object> config = ( Map<String, Object> ) context.getAttribute( Constants.CONFIG );
+
+        if ( config == null ) {
+            config = new HashMap<String, Object>();
+        }
+        return config;
+    }
+
+    /**
      * Intialize ontologies as configured by the user's configuration file (Gemma.properties).
      * <p>
      * FIXME make this smarter so it can figure this out without hard-coding ontology names.
@@ -170,22 +352,6 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
             os.init( false );
         }
 
-    }
-
-    /**
-     * @param context
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> initializeConfiguration( ServletContext context ) {
-        // Check if the config
-        // object already exists
-        Map<String, Object> config = ( Map<String, Object> ) context.getAttribute( Constants.CONFIG );
-
-        if ( config == null ) {
-            config = new HashMap<String, Object>();
-        }
-        return config;
     }
 
     /**
@@ -227,109 +393,23 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
     }
 
     /**
-     * @param config
-     */
-    private void loadVersionInformation( Map<String, Object> config ) {
-        log.debug( "Version is " + ConfigUtils.getAppVersion() );
-        config.put( "version", ConfigUtils.getAppVersion() );
-    }
-
-    /**
      * For google analytics
      * 
      * @param config
      */
     private void loadTrackerInformation( Map<String, Object> config ) {
-        log.debug( "Tracker is " + ConfigUtils.getProperty( ANALYTICS_TRACKER_PROPERTY ) );
-        config.put( "ga.tracker", ConfigUtils.getProperty( ANALYTICS_TRACKER_PROPERTY ) );
+        String gaTrackerKey = ConfigUtils.getString( ANALYTICS_TRACKER_PROPERTY );
+        if ( StringUtils.isNotBlank( gaTrackerKey ) ) {
+            log.debug( "Tracker is " + gaTrackerKey );
+            config.put( "ga.tracker", gaTrackerKey );
+        }
     }
 
     /**
-     * This is used to get information from the system that does not change and which can be reused throughout -
-     * typically used in drop-down menus.
-     * 
-     * @param context
+     * @param config
      */
-    @SuppressWarnings("unchecked")
-    public static void populateDropDowns( ServletContext context ) {
-        log.debug( "Populating drop-downs..." );
-        ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
-
-        // mimic the functionality of the LookupManager in Appfuse.
-        UserService mgr = ( UserService ) ctx.getBean( "userService" );
-        Set<LabelValue> roleList = new HashSet<LabelValue>();
-
-        // get list of possible roles, used to populate admin tool where roles can be altered.
-        Collection<UserRole> roles = mgr.loadAllRoles();
-        for ( UserRole role : roles ) {
-            roleList.add( new LabelValue( role.getName(), role.getName() ) );
-        }
-
-        context.setAttribute( Constants.AVAILABLE_ROLES, roleList );
-
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Drop-down initialization complete [OK]" );
-        }
-
-        assert ( context.getAttribute( Constants.AVAILABLE_ROLES ) != null );
-
-    }
-
-    /**
-     * Copy the JAR files required by the JavaSpaces workers to the defined shared location.
-     */
-    @SuppressWarnings("unchecked")
-    private void copyWorkerJars( ServletContext servletContext ) {
-        String libpath = ConfigUtils.getString( "gemma.lib.path" );
-        File targetLibdir = new File( libpath );
-        if ( !targetLibdir.exists() ) {
-            if ( !targetLibdir.mkdirs() ) {
-                log.error( "destination directory " + targetLibdir + " does not exist and could not be created" );
-                return;
-            }
-        }
-
-        File sourceLibdir = null;
-        Collection<File> jars = new HashSet<File>();
-        for ( Enumeration e = servletContext.getAttributeNames(); e.hasMoreElements(); ) {
-            String key = ( String ) e.nextElement();
-            if ( key.endsWith( "classpath" ) ) {
-                String classpath = ( String ) servletContext.getAttribute( key );
-                for ( String entry : classpath.split( ":" ) ) {
-                    if ( entry.endsWith( ".jar" ) ) {
-                        File jar = new File( entry );
-                        jars.add( jar );
-                        if ( sourceLibdir == null && entry.matches( ".*Gemma/WEB-INF/lib.*" ) )
-                            sourceLibdir = jar.getParentFile();
-                    }
-                }
-            }
-        }
-        log.info( "Looking for jars in : " + sourceLibdir );
-        Map<String, String> appConfig = ( Map<String, String> ) servletContext.getAttribute( "appConfig" );
-        String version = appConfig.get( "version" );
-        jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-core", version ) ) );
-        jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-mda", version ) ) );
-        jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-testing", version ) ) );
-        jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-util", version ) ) );
-
-        Collection<File> copiedJars = new HashSet<File>();
-        for ( File sourceJar : jars ) {
-            try {
-                File targetJar = new File( targetLibdir, sourceJar.getName() );
-                FileUtils.copyFile( sourceJar, targetJar );
-                copiedJars.add( targetJar );
-            } catch ( IOException e ) {
-                log.error( "error copying " + sourceJar + " to " + targetLibdir + ": " + e );
-            }
-        }
-
-        try {
-            File classpathFile = new File( targetLibdir, "CLASSPATH" );
-            String classpath = StringUtils.join( copiedJars, ":" );
-            FileUtils.writeStringToFile( classpathFile, classpath, null );
-        } catch ( IOException e ) {
-            log.error( "error creating classpath file in " + targetLibdir );
-        }
+    private void loadVersionInformation( Map<String, Object> config ) {
+        log.debug( "Version is " + ConfigUtils.getAppVersion() );
+        config.put( "version", ConfigUtils.getAppVersion() );
     }
 }

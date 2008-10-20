@@ -31,9 +31,9 @@ import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask;
-import ubic.gemma.grid.javaspaces.expression.experiment.SpacesExpressionExperimentLoadCommand;
+import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -61,7 +61,7 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @see ubic.gemma.web.controller.expression.experiment.ExpressionDataFileUploadController for how flat-file data is
  *      loaded.
  */
-public class ExpressionExperimentLoadController extends AbstractSpacesController {
+public class ExpressionExperimentLoadController extends AbstractSpacesController<ModelAndView> {
 
     GeoDatasetService geoDatasetService;
 
@@ -75,7 +75,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
      * @param command
      * @return
      */
-    public String run( ExpressionExperimentLoadCommand command ) {
+    public String run( ExpressionExperimentLoadTaskCommand command ) {
         return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(), true );
     }
 
@@ -102,7 +102,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
@@ -113,7 +112,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override
@@ -156,18 +154,19 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
         }
 
         @Override
-        protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
-            SpacesResult result = process( eeLoadCommand );
+        protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
+            TaskResult result = this.process( eeLoadCommand );
             return super.processArrayExpressResult( ( ExpressionExperiment ) result.getAnswer() );
         }
 
         /**
-         * @param eeLoadCommand
+         * @param command
          * @return
          */
-        private SpacesResult process( ExpressionExperimentLoadCommand eeLoadCommand ) {
-            SpacesExpressionExperimentLoadCommand jsCommand = createCommandObject( eeLoadCommand );
-            SpacesResult result = eeTaskProxy.execute( jsCommand );
+        private TaskResult process( ExpressionExperimentLoadTaskCommand command ) {
+            log.info( "Putting job in space" );
+            command.setTaskId( this.taskId );
+            TaskResult result = eeTaskProxy.execute( command );
             return result;
         }
 
@@ -178,22 +177,16 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          */
         @Override
         @SuppressWarnings("unchecked")
-        protected ModelAndView processGEODataJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
-            SpacesResult result = process( eeLoadCommand );
+        protected ModelAndView processGEODataJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
+            TaskResult result = this.process( eeLoadCommand );
             return super.processGeoLoadResult( ( Collection<ExpressionExperiment> ) result.getAnswer() );
         }
 
         @Override
         @SuppressWarnings("unchecked")
-        protected ModelAndView processPlatformOnlyJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
-            SpacesResult result = process( eeLoadCommand );
+        protected ModelAndView processPlatformOnlyJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
+            TaskResult result = this.process( eeLoadCommand );
             return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result.getAnswer() );
-        }
-
-        private SpacesExpressionExperimentLoadCommand createCommandObject( ExpressionExperimentLoadCommand eelc ) {
-            return new SpacesExpressionExperimentLoadCommand( taskId, eelc.isLoadPlatformOnly(), eelc
-                    .isSuppressMatching(), eelc.getAccession(), eelc.isAggressiveQtRemoval(), eelc.isArrayExpress(),
-                    eelc.getArrayDesignName() );
         }
 
     }
@@ -219,15 +212,13 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
 
         /*
          * (non-Javadoc)
-         * 
          * @see java.util.concurrent.Callable#call()
          */
-        @SuppressWarnings("unchecked")
         public ModelAndView call() throws Exception {
 
             SecurityContextHolder.setContext( securityContext );
 
-            ExpressionExperimentLoadCommand expressionExperimentLoadCommand = ( ( ExpressionExperimentLoadCommand ) command );
+            ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand = ( ( ExpressionExperimentLoadTaskCommand ) command );
 
             ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
                     "Loading " + expressionExperimentLoadCommand.getAccession() );
@@ -267,7 +258,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @return
          * @throws IOException
          */
-        protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+        protected ModelAndView processArrayExpressJob(
+                ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
 
             String accession = getAccession( expressionExperimentLoadCommand );
             ExpressionExperiment result = arrayExpressLoadService.load( accession, expressionExperimentLoadCommand
@@ -295,7 +287,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @return
          */
         @SuppressWarnings("unchecked")
-        protected ModelAndView processGEODataJob( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+        protected ModelAndView processGEODataJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
 
             String accession = getAccession( expressionExperimentLoadCommand );
             boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
@@ -344,7 +336,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @return
          */
         @SuppressWarnings("unchecked")
-        protected ModelAndView processPlatformOnlyJob( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+        protected ModelAndView processPlatformOnlyJob(
+                ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
             String accession = getAccession( expressionExperimentLoadCommand );
 
             boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
@@ -361,7 +354,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @param expressionExperimentLoadCommand
          * @return
          */
-        private String getAccession( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+        private String getAccession( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
             String accesionNum = expressionExperimentLoadCommand.getAccession();
             accesionNum = StringUtils.strip( accesionNum );
             accesionNum = StringUtils.upperCase( accesionNum );
@@ -371,8 +364,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.HttpServletRequest)
+     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
+     * HttpServletRequest)
      */
     @Override
     protected String getViewNameForRequest( HttpServletRequest arg0 ) {

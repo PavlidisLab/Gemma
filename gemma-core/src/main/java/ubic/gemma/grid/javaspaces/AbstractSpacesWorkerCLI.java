@@ -89,8 +89,7 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
     private void preInit() throws Exception {
         spacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
 
-        updatedContext = spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
-                .getSpaceUrl() );
+        updatedContext = spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
         setWorker();
     }
 
@@ -127,7 +126,6 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -168,7 +166,6 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
 
     /*
      * (non-Javadoc)
-     * 
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
     public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
@@ -192,5 +189,19 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
             throw new RuntimeException( e );
         }
 
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     */
+    @Override
+    protected void buildOptions() {
+        // no-op
     }
 }

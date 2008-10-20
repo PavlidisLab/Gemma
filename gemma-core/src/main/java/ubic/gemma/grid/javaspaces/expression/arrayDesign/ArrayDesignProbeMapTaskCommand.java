@@ -18,7 +18,7 @@
  */
 package ubic.gemma.grid.javaspaces.expression.arrayDesign;
 
-import ubic.gemma.grid.javaspaces.SpacesCommand;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * @author keshav
  * @version $Id$
  */
-public class SpacesArrayDesignProbeMapperCommand extends SpacesCommand {
+public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
 
@@ -49,6 +49,10 @@ public class SpacesArrayDesignProbeMapperCommand extends SpacesCommand {
         this.arrayDesign = arrayDesign;
     }
 
+    public ArrayDesignProbeMapTaskCommand() {
+        super();
+    }
+
     /**
      * NOTE: we can't pass in a we command as they are defined in the web module, which messes up the configuration.
      * 
@@ -56,8 +60,9 @@ public class SpacesArrayDesignProbeMapperCommand extends SpacesCommand {
      * @param forceAnalysis
      * @param arrayDesign
      */
-    public SpacesArrayDesignProbeMapperCommand( String taskId, boolean forceAnalysis, ArrayDesign arrayDesign ) {
-        super( taskId );
+    public ArrayDesignProbeMapTaskCommand( String taskId, boolean forceAnalysis, ArrayDesign arrayDesign ) {
+        super();
+        this.setTaskId( taskId );
         this.forceAnalysis = forceAnalysis;
         this.arrayDesign = arrayDesign;
     }

@@ -1220,12 +1220,12 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.util.IndexGemmaCommand">
+			<entry key="ubic.gemma.grid.javaspaces.index.IndexerTaskCommand">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand">
+			<entry key="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskCommand">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>
@@ -1426,7 +1426,7 @@
 			</entry>
 			<entry key="ubic.gemma.web.remote.StringPoint">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="bean" />				
+					<property name="type" value="bean" />
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.web.controller.visualization.GeneExpressionProfile">

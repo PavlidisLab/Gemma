@@ -20,12 +20,9 @@ package ubic.gemma.web.controller.compass;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.grid.javaspaces.index.IndexGemmaTask;
+import ubic.gemma.grid.javaspaces.index.IndexerTask;
+import ubic.gemma.grid.javaspaces.index.IndexerTaskCommand;
 import ubic.gemma.search.IndexService;
-import ubic.gemma.util.IndexGemmaCommand;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.web.controller.BaseFormController;
 
@@ -37,9 +34,9 @@ import ubic.gemma.web.controller.BaseFormController;
  * Will perform the index operation if the {@link org.compass.spring.web.mvc.CompassIndexCommand} <code>doIndex</code>
  * property is set to true.
  * <p>
- * The controller has two views to be set, the <code>indexView</code>, which is the view that holds the screen which
- * the user will initiate the index operation, and the <code>indexResultsView</code>, which will show the results of
- * the index operation.
+ * The controller has two views to be set, the <code>indexView</code>, which is the view that holds the screen which the
+ * user will initiate the index operation, and the <code>indexResultsView</code>, which will show the results of the
+ * index operation.
  * <p>
  * The results of the index operation will be saved under the <code>indexResultsName</code>, which defaults to
  * "indexResults".
@@ -53,8 +50,6 @@ import ubic.gemma.web.controller.BaseFormController;
  */
 public class CustomCompassIndexController extends BaseFormController {
 
-    private Log log = LogFactory.getLog( CustomCompassIndexController.class );
-
     private IndexService indexService;
 
     /**
@@ -63,8 +58,8 @@ public class CustomCompassIndexController extends BaseFormController {
      * @param IndexGemmaCommand
      * @return
      */
-    public String run( IndexGemmaCommand command ) {
-        return indexService.run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), IndexGemmaTask.class.getName(), true );
+    public String run( IndexerTaskCommand command ) {
+        return indexService.run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), IndexerTask.class.getName(), true );
 
     }
 
@@ -76,15 +71,10 @@ public class CustomCompassIndexController extends BaseFormController {
      */
     public String indexAllInSpace() {
 
-        IndexGemmaCommand command = new IndexGemmaCommand();
-        command.setIndexArray( true );
-        command.setIndexBibliographic( true );
-        command.setIndexBioSequence( true );
-        command.setIndexEE( true );
-        command.setIndexGene( true );
-        command.setIndexProbe( true );
+        IndexerTaskCommand command = new IndexerTaskCommand();
+        command.setAll( true );
 
-        return indexService.run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), IndexGemmaTask.class.getName(), true );
+        return indexService.run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), IndexerTask.class.getName(), true );
     }
 
     /**

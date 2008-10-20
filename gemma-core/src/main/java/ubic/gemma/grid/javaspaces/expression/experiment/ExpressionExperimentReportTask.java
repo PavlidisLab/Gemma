@@ -18,8 +18,6 @@
  */
 package ubic.gemma.grid.javaspaces.expression.experiment;
 
-import ubic.gemma.grid.javaspaces.SpacesCommand;
-import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.SpacesTask;
 
 /**
@@ -27,11 +25,5 @@ import ubic.gemma.grid.javaspaces.SpacesTask;
  * @version $Id$
  */
 public interface ExpressionExperimentReportTask extends SpacesTask {
-
-    /**
-     * @param spacesCommand
-     * @return
-     */
-    public SpacesResult execute( SpacesCommand spacesCommand );
 
 }

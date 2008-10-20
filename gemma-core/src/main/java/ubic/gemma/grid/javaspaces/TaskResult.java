@@ -28,7 +28,7 @@ import java.io.Serializable;
  * @author keshav
  * @version $Id$
  */
-public class SpacesResult implements Serializable {
+public class TaskResult implements Serializable {
     /**
      * The task id
      */
@@ -41,10 +41,10 @@ public class SpacesResult implements Serializable {
     /**
      * Constructor
      */
-    public SpacesResult() {
+    public TaskResult() {
     }
 
-    public SpacesResult( Object taskId ) {
+    public TaskResult( Object taskId ) {
         this.taskID = taskId;
     }
 

@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 University of British Columbia
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,63 +16,42 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.grid.javaspaces.expression.experiment;
-
-import net.jini.space.JavaSpace;
+package ubic.gemma.grid.javaspaces.worker;
 
 import org.springframework.security.context.SecurityContextHolder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
+import ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask;
 import ubic.gemma.util.SecurityUtil;
 
 /**
- * This command line interface is used to take {@link ExpressionExperimentLoadTask} tasks from the {@link JavaSpace} and
- * returns the results.
- * 
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentLoadSpacesWorkerCLI extends AbstractSpacesWorkerCLI {
-
-    private static Log log = LogFactory.getLog( ExpressionExperimentLoadSpacesWorkerCLI.class );
+public class ArrayDesignRepeatScanSpacesWorker extends AbstractSpacesWorkerCLI {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
-    @Override
-    protected void buildOptions() {
-        // TODO Auto-generated method stub
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#setWorker()
-     */
-    @Override
-    protected void setWorker() {
-        worker = ( CustomDelegatingWorker ) updatedContext.getBean( "expressionExperimentLoadWorker" );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#setRegistrationEntryTask()
      */
     @Override
     protected void setRegistrationEntryTask() throws Exception {
-        registrationEntry.message = ExpressionExperimentLoadTask.class.getName();
+        registrationEntry.message = ArrayDesignRepeatScanTask.class.getName();
+
     }
 
     /*
      * (non-Javadoc)
-     * 
+     * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#setWorker()
+     */
+    @Override
+    protected void setWorker() {
+        worker = ( CustomDelegatingWorker ) updatedContext.getBean( "arrayDesignRepeatScanWorker" );
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#start()
      */
     @Override
@@ -83,7 +62,6 @@ public class ExpressionExperimentLoadSpacesWorkerCLI extends AbstractSpacesWorke
         itbThread.start();
 
         log.info( this.getClass().getSimpleName() + " started successfully." );
-
     }
 
     /**
@@ -92,11 +70,11 @@ public class ExpressionExperimentLoadSpacesWorkerCLI extends AbstractSpacesWorke
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "Starting GemmaSpaces worker to load expression experiments ... \n" );
+        log.info( "Starting spaces worker to run array design repeat scan ... \n" );
 
         SecurityUtil.passAuthenticationToChildThreads();
 
-        ExpressionExperimentLoadSpacesWorkerCLI p = new ExpressionExperimentLoadSpacesWorkerCLI();
+        ArrayDesignRepeatScanSpacesWorker p = new ArrayDesignRepeatScanSpacesWorker();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
@@ -107,13 +85,4 @@ public class ExpressionExperimentLoadSpacesWorkerCLI extends AbstractSpacesWorke
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#processOptions()
-     */
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-    }
 }

@@ -80,6 +80,10 @@ public class ProcessedDataMerger {
             ad = baAd;
         }
 
+        if ( ad == null ) {
+            throw new IllegalStateException( "No array design for any assays!" );
+        }
+
         if ( ad.getCompositeSequences().size() == 0 ) {
             throw new IllegalStateException(
                     "The array design has not been associated with the composite sequences yet" );

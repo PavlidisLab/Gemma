@@ -16,48 +16,42 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.grid.javaspaces.expression.arrayDesign;
+package ubic.gemma.grid.javaspaces.worker;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
+import ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTask;
 import ubic.gemma.util.SecurityUtil;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignProbeMapperSpacesWorkerCLI extends AbstractSpacesWorkerCLI {
-
-    private static Log log = LogFactory.getLog( ArrayDesignProbeMapperSpacesWorkerCLI.class );
+public class LinkAnalysisSpacesWorker extends AbstractSpacesWorkerCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#setRegistrationEntryTask()
      */
     @Override
     protected void setRegistrationEntryTask() throws Exception {
-        registrationEntry.message = ArrayDesignProbeMapperTask.class.getName();
+        registrationEntry.message = LinkAnalysisTask.class.getName();
 
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#setWorker()
      */
     @Override
     protected void setWorker() {
-        worker = ( CustomDelegatingWorker ) updatedContext.getBean( "arrayDesignProbeMapperWorker" );
+        worker = ( CustomDelegatingWorker ) updatedContext.getBean( "linkAnalysisWorker" );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#start()
      */
     @Override
@@ -76,11 +70,11 @@ public class ArrayDesignProbeMapperSpacesWorkerCLI extends AbstractSpacesWorkerC
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "Starting spaces worker to run array design probe mapper ... \n" );
+        log.info( "Starting spaces worker to run link analysis ... \n" );
 
         SecurityUtil.passAuthenticationToChildThreads();
 
-        ArrayDesignProbeMapperSpacesWorkerCLI p = new ArrayDesignProbeMapperSpacesWorkerCLI();
+        LinkAnalysisSpacesWorker p = new LinkAnalysisSpacesWorker();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
@@ -89,17 +83,6 @@ public class ArrayDesignProbeMapperSpacesWorkerCLI extends AbstractSpacesWorkerC
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
-    @Override
-    protected void buildOptions() {
-        // TODO Auto-generated method stub
-
     }
 
 }

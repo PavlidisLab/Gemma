@@ -26,7 +26,7 @@ import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.progress.TaskRunningService;
 
@@ -34,7 +34,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @author klc
  * @version $Id$
  */
-public class IndexGemmaTaskImpl extends BaseSpacesTask implements IndexGemmaTask {
+public class IndexerTaskImpl extends BaseSpacesTask implements IndexerTask {
 
     private static final String PATH_PROPERTY = "compass.engine.connection";
 
@@ -43,8 +43,6 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements IndexGemmaTask
     private static final String FILE = "file://";
 
     private Log log = LogFactory.getLog( this.getClass().getName() );
-
-    private String taskId = null;
 
     private CompassGpsInterfaceDevice geneGps;
 
@@ -120,15 +118,15 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements IndexGemmaTask
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
      */
-    @SuppressWarnings("unchecked")
-    public IndexGemmaResult execute( SpacesIndexGemmaCommand indexCommand ) {
+    public IndexerResult execute( TaskCommand command ) {
+
+        IndexerTaskCommand indexCommand = ( IndexerTaskCommand ) command;
 
         super.initProgressAppender( this.getClass() );
 
-        IndexGemmaResult result = new IndexGemmaResult();
+        IndexerResult result = new IndexerResult();
 
         try {
             if ( indexCommand.isIndexGene() ) {
@@ -192,39 +190,4 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements IndexGemmaTask
 
     }
 
-    /**
-     * @param gigaSpacesTemplate
-     */
-    @Override
-    public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
-        super.setGigaSpacesTemplate( gigaSpacesTemplate );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
-     */
-    public String getTaskId() {
-        return taskId;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
-     */
-    public SpacesResult execute( Object command ) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

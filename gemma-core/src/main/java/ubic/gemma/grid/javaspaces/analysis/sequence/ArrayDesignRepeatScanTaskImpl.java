@@ -25,7 +25,8 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.RepeatScan;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -45,14 +46,17 @@ public class ArrayDesignRepeatScanTaskImpl extends BaseSpacesTask implements Arr
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask#execute(ubic.gemma.grid.javaspaces.analysis.sequence.SpacesArrayDesignRepeatScanCommand)
+     * @see
+     * ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask#execute(ubic.gemma.grid.javaspaces.analysis
+     * .sequence.SpacesArrayDesignRepeatScanCommand)
      */
-    public SpacesResult execute( SpacesArrayDesignRepeatScanCommand jsAdRepeateScanCommand ) {
+    public TaskResult execute( TaskCommand command ) {
+
+        ArrayDesignRepeatScanTaskCommand jsAdRepeateScanCommand = ( ArrayDesignRepeatScanTaskCommand ) command;
 
         super.initProgressAppender( this.getClass() );
 
-        SpacesResult result = new SpacesResult();
+        TaskResult result = new TaskResult();
 
         ArrayDesign ad = jsAdRepeateScanCommand.getArrayDesign();
 
@@ -69,12 +73,4 @@ public class ArrayDesignRepeatScanTaskImpl extends BaseSpacesTask implements Arr
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
-    }
 }

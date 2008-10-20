@@ -20,8 +20,8 @@ package ubic.gemma.grid.javaspaces.analysis.coexpression.links;
 
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
-import ubic.gemma.util.progress.TaskRunningService;
+import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 
 /**
  * @author keshav
@@ -39,16 +39,17 @@ public class LinkAnalysisTaskImpl extends BaseSpacesTask implements LinkAnalysis
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.coexpression.LinkAnalysisTask#execute(ubic.gemma.grid.javaspaces.coexpression.SpacesLinkAnalysisCommand)
+     * @seeubic.gemma.grid.javaspaces.coexpression.LinkAnalysisTask#execute(ubic.gemma.grid.javaspaces.coexpression.
+     * SpacesLinkAnalysisCommand)
      */
-    public SpacesResult execute( SpacesLinkAnalysisCommand command ) {
+    public TaskResult execute( TaskCommand command ) {
+        LinkAnalysisTaskCommand jsLinkCommand = ( LinkAnalysisTaskCommand ) command;
         super.initProgressAppender( this.getClass() );
-        SpacesResult result = new SpacesResult();
+        TaskResult result = new TaskResult();
 
         try {
-            linkAnalysisService.process( command.getExpressionExperiment(), command.getFilterConfig(), command
-                    .getLinkAnalysisConfig() );
+            linkAnalysisService.process( jsLinkCommand.getExpressionExperiment(), jsLinkCommand.getFilterConfig(),
+                    jsLinkCommand.getLinkAnalysisConfig() );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -58,15 +59,6 @@ public class LinkAnalysisTaskImpl extends BaseSpacesTask implements LinkAnalysis
 
         return result;
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
     }
 
 }

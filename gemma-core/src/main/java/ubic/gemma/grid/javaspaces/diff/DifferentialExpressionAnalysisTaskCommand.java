@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2008 University of British Columbia
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,22 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.analysis.preprocess;
+package ubic.gemma.grid.javaspaces.diff;
 
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.web.controller.BaseCommand;
 
 /**
+ * A command object to be used by spaces.
+ * 
  * @author keshav
  * @version $Id$
  */
-public class ProcessedExpressionDataVectorCreateCommand extends BaseCommand {
+public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
+
+    private boolean forceAnalysis = false;
 
     private ExpressionExperiment expressionExperiment = null;
 
@@ -38,4 +42,31 @@ public class ProcessedExpressionDataVectorCreateCommand extends BaseCommand {
     public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
     }
+
+    /**
+     * @param taskId
+     * @param forceAnalysis
+     * @param expressionExperiment
+     */
+    public DifferentialExpressionAnalysisTaskCommand( String taskId, boolean forceAnalysis,
+            ExpressionExperiment expressionExperiment ) {
+        super();
+        this.setTaskId( taskId );
+        this.forceAnalysis = forceAnalysis;
+        this.expressionExperiment = expressionExperiment;
+    }
+
+    public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee ) {
+        super();
+        this.expressionExperiment = ee;
+    }
+
+    public boolean isForceAnalysis() {
+        return forceAnalysis;
+    }
+
+    public void setForceAnalysis( boolean forceAnalysis ) {
+        this.forceAnalysis = forceAnalysis;
+    }
+
 }

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.grid.javaspaces.analysis.sequence;
 
-import ubic.gemma.grid.javaspaces.SpacesCommand;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * @author keshav
  * @version $Id$
  */
-public class SpacesArrayDesignRepeatScanCommand extends SpacesCommand {
+public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
 
@@ -53,9 +53,15 @@ public class SpacesArrayDesignRepeatScanCommand extends SpacesCommand {
      * @param taskId
      * @param arrayDesign
      */
-    public SpacesArrayDesignRepeatScanCommand( String taskId, ArrayDesign arrayDesign ) {
-        super( taskId );
+    public ArrayDesignRepeatScanTaskCommand( String taskId, ArrayDesign arrayDesign ) {
+        super();
+        this.setTaskId( taskId );
         this.arrayDesign = arrayDesign;
+    }
+
+    public ArrayDesignRepeatScanTaskCommand( ArrayDesign ad ) {
+        super();
+        this.arrayDesign = ad;
     }
 
 }

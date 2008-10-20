@@ -69,6 +69,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         if ( arrayDesign == null ) {
             log.error( "No arrayDesign " + arrayDesignName + " found" );
             bail( ErrorCode.INVALID_OPTION );
+            return null;
         }
 
         unlazifyArrayDesign( arrayDesign );

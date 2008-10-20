@@ -18,19 +18,14 @@
  */
 package ubic.gemma.grid.javaspaces.analysis.coexpression.links;
 
-import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.SpacesTask;
+import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.TaskResult;
 
 /**
  * @author Paul
  * @version $Id$
  */
 public interface LinkAnalysisTask extends SpacesTask {
-
-    /**
-     * @param command
-     * @return
-     */
-    public SpacesResult execute( SpacesLinkAnalysisCommand command );
-
+    public TaskResult execute( TaskCommand command );
 }

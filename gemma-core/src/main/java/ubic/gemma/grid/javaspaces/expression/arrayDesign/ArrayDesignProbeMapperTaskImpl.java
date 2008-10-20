@@ -22,10 +22,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * A probe mapper spaces task that can be passed into a space and executed by a worker.
@@ -43,20 +43,21 @@ public class ArrayDesignProbeMapperTaskImpl extends BaseSpacesTask implements Ar
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTask#execute(ubic.gemma.grid.javaspaces.expression.arrayDesign.SpacesProbeMapperCommand)
+     * @see
+     * ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTask#execute(ubic.gemma.grid.javaspaces
+     * .expression.arrayDesign.SpacesProbeMapperCommand)
      */
-    public SpacesResult execute( SpacesArrayDesignProbeMapperCommand jsProbeMapperCommand ) {
+    public TaskResult execute( TaskCommand command ) {
+
+        ArrayDesignProbeMapTaskCommand jsProbeMapperCommand = ( ArrayDesignProbeMapTaskCommand ) command;
 
         super.initProgressAppender( this.getClass() );
-
-        boolean forceAnalysis = jsProbeMapperCommand.isForceAnalysis();
-
-        SpacesResult result = new SpacesResult();
 
         ArrayDesign ad = jsProbeMapperCommand.getArrayDesign();
 
         arrayDesignProbeMapperService.processArrayDesign( ad );
+
+        TaskResult result = new TaskResult();
 
         result.setAnswer( ad.getName() );
 
@@ -65,15 +66,6 @@ public class ArrayDesignProbeMapperTaskImpl extends BaseSpacesTask implements Ar
         log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
                 + result.getTaskID() );
         return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
     }
 
     public void setArrayDesignProbeMapperService( ArrayDesignProbeMapperService arrayDesignProbeMapperService ) {

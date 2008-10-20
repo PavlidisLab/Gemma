@@ -24,15 +24,15 @@ import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask;
-import ubic.gemma.grid.javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand;
+import ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BaseCommand;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
 
@@ -65,8 +65,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
         ExpressionExperiment ee = expressionExperimentService.load( id );
         expressionExperimentService.thaw( ee );
 
-        ProcessedExpressionDataVectorCreateCommand cmd = new ProcessedExpressionDataVectorCreateCommand();
-        cmd.setExpressionExperiment( ee );
+        ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
 
         return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ProcessedExpressionDataVectorCreateTask.class
                 .getName(), true );
@@ -74,7 +73,6 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
@@ -85,7 +83,6 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override
@@ -110,17 +107,17 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
          */
         public ProcessedExpressionDataVectorCreateSpaceJob( String taskId, Object commandObj ) {
             super( taskId, commandObj );
-
         }
 
         /*
          * (non-Javadoc)
-         * 
-         * @see ubic.gemma.web.controller.analysis.preprocess.ProcessedExpressionDataVectorCreateController.ProcessedExpressionDataVectorCreateJob#processJob(ubic.gemma.web.controller.BaseCommand)
+         * @seeubic.gemma.web.controller.analysis.preprocess.ProcessedExpressionDataVectorCreateController.
+         * ProcessedExpressionDataVectorCreateJob#processJob(ubic.gemma.web.controller.BaseCommand)
          */
         @Override
-        protected ModelAndView processJob( BaseCommand baseCommand ) {
-            ProcessedExpressionDataVectorCreateCommand vectorCommand = ( ProcessedExpressionDataVectorCreateCommand ) baseCommand;
+        protected ModelAndView processJob( TaskCommand baseCommand ) {
+            baseCommand.setTaskId( this.taskId );
+            ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ProcessedExpressionDataVectorCreateTaskCommand ) baseCommand;
             process( vectorCommand );
             return new ModelAndView( new RedirectView( "/Gemma" ) );
         }
@@ -129,9 +126,9 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
          * @param command
          * @return
          */
-        private SpacesResult process( ProcessedExpressionDataVectorCreateCommand command ) {
-            SpacesProcessedExpressionDataVectorCreateCommand jsCommand = createCommandObject( command );
-            SpacesResult result = taskProxy.execute( jsCommand );
+        private TaskResult process( ProcessedExpressionDataVectorCreateTaskCommand command ) {
+            ProcessedExpressionDataVectorCreateTaskCommand jsCommand = createCommandObject( command );
+            TaskResult result = taskProxy.execute( jsCommand );
             return result;
         }
 
@@ -139,9 +136,9 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
          * @param command
          * @return
          */
-        protected SpacesProcessedExpressionDataVectorCreateCommand createCommandObject(
-                ProcessedExpressionDataVectorCreateCommand command ) {
-            return new SpacesProcessedExpressionDataVectorCreateCommand( taskId, command.getExpressionExperiment() );
+        protected ProcessedExpressionDataVectorCreateTaskCommand createCommandObject(
+                ProcessedExpressionDataVectorCreateTaskCommand command ) {
+            return new ProcessedExpressionDataVectorCreateTaskCommand( taskId, command.getExpressionExperiment() );
         }
 
     }
@@ -161,13 +158,12 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
 
         /*
          * (non-Javadoc)
-         * 
          * @see java.util.concurrent.Callable#call()
          */
         public ModelAndView call() throws Exception {
             SecurityContextHolder.setContext( securityContext );
 
-            ProcessedExpressionDataVectorCreateCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateCommand ) command );
+            ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateTaskCommand ) command );
 
             ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
                     "Loading " + vectorCommand.getExpressionExperiment().getShortName() );
@@ -177,19 +173,18 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
 
         /*
          * (non-Javadoc)
-         * 
          * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.web.controller.BaseCommand)
          */
         @Override
-        protected ModelAndView processJob( BaseCommand command ) {
+        protected ModelAndView processJob( TaskCommand command ) {
             throw new UnsupportedOperationException( "Cannot run locally at this time.  Run in a space." );
         }
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.HttpServletRequest)
+     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
+     * HttpServletRequest)
      */
     @Override
     protected String getViewNameForRequest( HttpServletRequest arg0 ) {

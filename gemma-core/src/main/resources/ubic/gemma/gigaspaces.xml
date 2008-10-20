@@ -48,7 +48,7 @@
 		</property>
 	</bean>
 
-	<bean id="indexGemmaSpaceWorker"
+	<bean id="indexerSpaceWorker"
 		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
@@ -57,7 +57,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.grid.javaspaces.index.IndexGemmaTask
+				ubic.gemma.grid.javaspaces.index.IndexerTask
 			</value>
 		</property>
 	</bean>
@@ -197,7 +197,7 @@
 					ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask
 				</value>
 				<value>
-					ubic.gemma.grid.javaspaces.index.IndexGemmaTask
+					ubic.gemma.grid.javaspaces.index.IndexerTask
 				</value>
 				<value>
 					ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask
@@ -280,7 +280,7 @@
 	</bean>
 
 	<bean id="indexTask"
-		class="ubic.gemma.grid.javaspaces.index.IndexGemmaTaskImpl">
+		class="ubic.gemma.grid.javaspaces.index.IndexerTaskImpl">
 
 		<property name="geneGps">
 			<ref bean="geneGps" />

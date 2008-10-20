@@ -21,30 +21,29 @@ package ubic.gemma.grid.javaspaces;
 import java.io.Serializable;
 
 import net.jini.space.JavaSpace;
-import ubic.gemma.grid.javaspaces.expression.experiment.SpacesExpressionExperimentLoadCommand;
+import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskCommand;
 
 /**
  * This command class is used to allow communication of parameters for a task between a client and a compute server in a
  * {@link JavaSpace} Master-Worker environment.
  * <p>
- * This class should be extended to create a command object to pass parameters for a specific task. See
- * {@link SpacesExpressionExperimentLoadCommand}.
+ * This class can be used directly, or extended to create a command object to pass parameters for a specific task. See
+ * {@link ExpressionExperimentLoadTaskCommand}.
  * 
  * @author keshav
  * @version $Id$
  */
-public class SpacesCommand implements Serializable {
+public class TaskCommand implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private String taskId = null;
 
     /**
-     * @param taskId
+     * 
      */
-    public SpacesCommand( String taskId ) {
-        super();
-        this.taskId = taskId;
+    public TaskCommand() {
+
     }
 
     /**

@@ -34,7 +34,8 @@ import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.grid.javaspaces.SpacesTask;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesProgressEntry;
@@ -44,9 +45,9 @@ import com.j_spaces.core.client.ExternalEntry;
 import com.j_spaces.core.client.NotifyModifiers;
 
 /**
- * This command line interface (CLI) serves as a handy tool/test to submit a task (@see ExpressionExperimentTask) to a
- * {@link JavaSpace}. The CLI implements {@link RemoteEventListener} to be able to receive notifications from the
- * server side.
+ * This is an example of a CLI that makes use of the grid. This command line interface (CLI) serves as a handy tool/test
+ * to submit a task (@see ExpressionExperimentTask) to a {@link JavaSpace}. The CLI implements
+ * {@link RemoteEventListener} to be able to receive notifications from the server side.
  * 
  * @author keshav
  * @version $Id$
@@ -63,7 +64,6 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.apps.LoadExpressionDataCli#buildOptions()
      */
     @Override
@@ -92,7 +92,6 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.apps.LoadExpressionDataCli#doWork(java.lang.String[])
      */
     @Override
@@ -140,7 +139,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
 
         log.debug( "Got accession(s) from command line " + accessions );
 
-        SpacesResult res = null;
+        TaskResult res = null;
         if ( accessions != null ) {
             String[] accsToRun = StringUtils.split( accessions, ',' );
 
@@ -172,7 +171,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
                 ExpressionExperimentLoadTaskImpl eeTaskImpl = ( ExpressionExperimentLoadTaskImpl ) this
                         .getBean( "taskBean" );
 
-                SpacesExpressionExperimentLoadCommand command = new SpacesExpressionExperimentLoadCommand( eeTaskImpl
+                ExpressionExperimentLoadTaskCommand command = new ExpressionExperimentLoadTaskCommand( eeTaskImpl
                         .getTaskId(), platformOnly, !doMatching, accession, aggressive, false, null );
 
                 res = proxy.execute( command );
@@ -194,7 +193,6 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.apps.LoadExpressionDataCli#processOptions()
      */
     @Override
@@ -204,7 +202,6 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
 
     /*
      * (non-Javadoc)
-     * 
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
     public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {

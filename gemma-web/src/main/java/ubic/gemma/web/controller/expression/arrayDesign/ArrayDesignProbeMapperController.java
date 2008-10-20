@@ -24,15 +24,16 @@ import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapTaskCommand;
 import ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTask;
-import ubic.gemma.grid.javaspaces.expression.arrayDesign.SpacesArrayDesignProbeMapperCommand;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BaseCommand;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
 
@@ -41,12 +42,15 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * 
  * @spring.bean id="arrayDesignProbeMapperController"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="arrayDesignProbeMapperService" ref="arrayDesignProbeMapperService"
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignProbeMapperController extends AbstractSpacesController {
+public class ArrayDesignProbeMapperController extends AbstractSpacesController<ModelAndView> {
 
     private ArrayDesignService arrayDesignService = null;
+
+    private ArrayDesignProbeMapperService arrayDesignProbeMapperService = null;
 
     /**
      * AJAX entry point.
@@ -61,19 +65,21 @@ public class ArrayDesignProbeMapperController extends AbstractSpacesController {
         ArrayDesign ad = arrayDesignService.load( id );
         arrayDesignService.thaw( ad );
 
-        ArrayDesignProbeMapperCommand cmd = new ArrayDesignProbeMapperCommand();
+        ArrayDesignProbeMapTaskCommand cmd = new ArrayDesignProbeMapTaskCommand();
         cmd.setArrayDesign( ad );
 
         return super
                 .run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ArrayDesignProbeMapperTask.class.getName(), true );
     }
 
+    public void setArrayDesignProbeMapperService( ArrayDesignProbeMapperService arrayDesignProbeMapperService ) {
+        this.arrayDesignProbeMapperService = arrayDesignProbeMapperService;
+    }
+
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, Object command ) {
         return new ArrayDesignProbeMapperJob( jobId, command );
@@ -81,10 +87,8 @@ public class ArrayDesignProbeMapperController extends AbstractSpacesController {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, Object command ) {
         return new ArrayDesignProbeMapperSpaceJob( jobId, command );
@@ -112,13 +116,14 @@ public class ArrayDesignProbeMapperController extends AbstractSpacesController {
 
         /*
          * (non-Javadoc)
-         * 
-         * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignProbeMapperController.ArrayDesignProbeMapperJob#processJob(ubic.gemma.web.controller.BaseCommand)
+         * @see
+         * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignProbeMapperController.ArrayDesignProbeMapperJob
+         * #processJob(ubic.gemma.web.controller.BaseCommand)
          */
         @Override
-        protected ModelAndView processJob( BaseCommand baseCommand ) {
-            ArrayDesignProbeMapperCommand command = ( ArrayDesignProbeMapperCommand ) baseCommand;
-            process( command );
+        protected ModelAndView processJob( TaskCommand baseCommand ) {
+            ArrayDesignProbeMapTaskCommand c = ( ArrayDesignProbeMapTaskCommand ) baseCommand;
+            process( c );
             return new ModelAndView( new RedirectView( "/Gemma" ) );
         }
 
@@ -126,14 +131,13 @@ public class ArrayDesignProbeMapperController extends AbstractSpacesController {
          * @param command
          * @return
          */
-        private SpacesResult process( ArrayDesignProbeMapperCommand command ) {
-            SpacesArrayDesignProbeMapperCommand jsCommand = createCommandObject( command );
-            SpacesResult result = taskProxy.execute( jsCommand );
+        private TaskResult process( TaskCommand c ) {
+            TaskResult result = taskProxy.execute( c );
             return result;
         }
 
-        protected SpacesArrayDesignProbeMapperCommand createCommandObject( ArrayDesignProbeMapperCommand command ) {
-            return new SpacesArrayDesignProbeMapperCommand( taskId, command.isForceAnalysis(), command.getArrayDesign() );
+        protected ArrayDesignProbeMapTaskCommand createCommandObject( ArrayDesignProbeMapTaskCommand c ) {
+            return new ArrayDesignProbeMapTaskCommand( taskId, c.isForceAnalysis(), c.getArrayDesign() );
         }
 
     }
@@ -154,7 +158,7 @@ public class ArrayDesignProbeMapperController extends AbstractSpacesController {
         public ModelAndView call() throws Exception {
             SecurityContextHolder.setContext( securityContext );
 
-            ArrayDesignProbeMapperCommand pmCommand = ( ( ArrayDesignProbeMapperCommand ) command );
+            ArrayDesignProbeMapTaskCommand pmCommand = ( ( ArrayDesignProbeMapTaskCommand ) command );
 
             ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
                     "Loading " + pmCommand.getArrayDesign().getShortName() );
@@ -164,19 +168,21 @@ public class ArrayDesignProbeMapperController extends AbstractSpacesController {
 
         /*
          * (non-Javadoc)
-         * 
          * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.web.controller.BaseCommand)
          */
         @Override
-        protected ModelAndView processJob( BaseCommand command ) {
-            throw new UnsupportedOperationException( "Cannot run locally at this time.  Run in a space." );
+        protected ModelAndView processJob( TaskCommand c ) {
+            ArrayDesignProbeMapTaskCommand probeMapperCommand = ( ArrayDesignProbeMapTaskCommand ) c;
+            arrayDesignProbeMapperService.processArrayDesign( probeMapperCommand.getArrayDesign() );
+            return new ModelAndView( new RedirectView( "/Gemma" ) );
+
         }
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.HttpServletRequest)
+     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
+     * HttpServletRequest)
      */
     @Override
     protected String getViewNameForRequest( HttpServletRequest arg0 ) {

@@ -19,7 +19,7 @@
 
 package ubic.gemma.grid.javaspaces.index;
 
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskResult;
 
 /**
  * 
@@ -27,7 +27,7 @@ import ubic.gemma.grid.javaspaces.SpacesResult;
  * 
  */
 
-public class IndexGemmaResult extends SpacesResult {
+public class IndexerResult extends TaskResult {
 
 
 	private static final long serialVersionUID = -150285942553712429L;

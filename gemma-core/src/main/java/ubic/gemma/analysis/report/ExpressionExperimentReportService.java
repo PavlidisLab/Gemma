@@ -37,8 +37,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.grid.javaspaces.SpacesCommand;
-import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.Auditable;
@@ -63,7 +63,11 @@ import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.progress.TaskRunningService;
 
 /**
+ * Handles creation, serialization and/or marshalling of reports about expression experiments. Reports are stored in
+ * ExpressionExperimentValueObjects.
+ * 
  * @author jsantos
+ * @author paul
  * @spring.bean name="expressionExperimentReportService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="auditTrailService" ref="auditTrailService"
@@ -97,7 +101,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * (non-Javadoc)
      * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
      */
-    public SpacesResult execute( Object command ) {
+    public TaskResult execute( Object command ) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -106,7 +110,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * (non-Javadoc)
      * @see ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
      */
-    public SpacesResult execute( SpacesCommand spacesCommand ) {
+    public TaskResult execute( TaskCommand spacesCommand ) {
         this.generateSummaryObjects();
         return null;
     }
@@ -240,7 +244,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 eeVo.setIsPublic( !privacyInfo.get( ee ) );
             }
         }
-        log.info( "processed events" );
+        log.debug( "processed events" );
     }
 
     /**

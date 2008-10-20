@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2008 University of British Columbia
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,48 +16,47 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.grid.javaspaces.analysis.coexpression.links;
+package ubic.gemma.grid.javaspaces.worker;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import net.jini.space.JavaSpace;
+
 import org.springframework.security.context.SecurityContextHolder;
 
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
+import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
 import ubic.gemma.util.SecurityUtil;
 
 /**
+ * This command line interface is used to take {@link ExpressionExperimentReportService} tasks from the
+ * {@link JavaSpace} and returns the results.
+ * 
  * @author keshav
  * @version $Id$
  */
-public class LinkAnalysisSpacesWorkerCLI extends AbstractSpacesWorkerCLI {
-
-    private static Log log = LogFactory.getLog( LinkAnalysisSpacesWorkerCLI.class );
+public class ExpressionExperimentReportGenerationSpacesWorker extends AbstractSpacesWorkerCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#setRegistrationEntryTask()
      */
     @Override
     protected void setRegistrationEntryTask() throws Exception {
-        registrationEntry.message = LinkAnalysisTask.class.getName();
-
+        registrationEntry.message = ExpressionExperimentReportTask.class.getName();
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#setWorker()
      */
     @Override
     protected void setWorker() {
-        worker = ( CustomDelegatingWorker ) updatedContext.getBean( "linkAnalysisWorker" );
+        worker = ( CustomDelegatingWorker ) updatedContext.getBean( "expressionExperimentReportGenerationWorker" );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI#start()
      */
     @Override
@@ -76,11 +75,11 @@ public class LinkAnalysisSpacesWorkerCLI extends AbstractSpacesWorkerCLI {
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "Starting spaces worker to run link analysis ... \n" );
+        log.info( "Starting spaces worker to generate expression experiment reports ... \n" );
 
         SecurityUtil.passAuthenticationToChildThreads();
 
-        LinkAnalysisSpacesWorkerCLI p = new LinkAnalysisSpacesWorkerCLI();
+        ExpressionExperimentReportGenerationSpacesWorker p = new ExpressionExperimentReportGenerationSpacesWorker();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
@@ -89,17 +88,6 @@ public class LinkAnalysisSpacesWorkerCLI extends AbstractSpacesWorkerCLI {
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
-    @Override
-    protected void buildOptions() {
-        // TODO Auto-generated method stub
-
     }
 
 }

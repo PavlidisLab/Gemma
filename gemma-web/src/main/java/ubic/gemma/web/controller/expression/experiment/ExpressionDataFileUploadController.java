@@ -228,8 +228,8 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.HttpServletRequest)
+     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
+     * HttpServletRequest)
      */
     @Override
     @SuppressWarnings("unused")
@@ -327,7 +327,6 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
 
         /*
          * (non-Javadoc)
-         * 
          * @see java.util.concurrent.Callable#call()
          */
         public SimpleExpressionExperimentCommandValidation call() throws Exception {

@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2008 University of British Columbia
+ * Copyright (c) 2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,11 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller;
 
-import java.io.Serializable;
+package ubic.gemma.grid.javaspaces.index;
 
-/**
- * @author keshav
- * @version $Id$
- */
-public abstract class BaseCommand implements Serializable {
+import ubic.gemma.grid.javaspaces.SpacesTask;
+
+public interface IndexerTask extends SpacesTask {
 
 }
