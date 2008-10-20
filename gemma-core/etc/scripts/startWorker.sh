@@ -9,6 +9,7 @@ GEMMA_USER=administrator
 GEMMA_PWD=$1
 WORKER_CLASS=$2
 VMARGS=$3
+APPARGS=$4
 
 CP=`cat ${GEMMA_LIB}/CLASSPATH`
 
@@ -20,5 +21,6 @@ JARS="${JSHOMEDIR}${CPS}${JSHOMEDIR}/lib/JSpaces.jar${CPS}${COMMON_JARS}${CPS}$C
 
 $JAVACMD $VMARGS -Dcom.gs.home=$JSHOMEDIR \
  -classpath "${CPS}${JARS}" ubic.gemma.grid.javaspaces.worker.$WORKER_CLASS \
--u $GEMMA_USER -p $GEMMA_PWD -gigaspacesOn
+-u $GEMMA_USER -p $GEMMA_PWD -gigaspacesOn $APPARGS
+
 
