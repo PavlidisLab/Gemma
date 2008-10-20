@@ -43,10 +43,10 @@ function index(event) {
 	var callParams = [];
 
 	var commandObj = {
-		indexArray : adCheckBox.getValue(),
+		indexAD : adCheckBox.getValue(),
 		indexEE : eeCheckBox.getValue(),
 		indexProbe : probeCheckBox.getValue(),
-		indexBibliographic : bibRefCheckBox.getValue(),
+		indexBibRef : bibRefCheckBox.getValue(),
 		indexGene : geneCheckBox.getValue(),
 		indexBioSequence : bsCheckBox.getValue()
 	};

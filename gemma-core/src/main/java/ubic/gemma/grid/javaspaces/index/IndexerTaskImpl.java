@@ -23,12 +23,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.spi.InternalCompass;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
-import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
-
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.util.CompassUtils;
-import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * @author klc
