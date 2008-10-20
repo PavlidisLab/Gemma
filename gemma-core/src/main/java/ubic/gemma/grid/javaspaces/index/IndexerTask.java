@@ -23,6 +23,10 @@ import ubic.gemma.grid.javaspaces.SpacesTask;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 
+/**
+ * @author keshav
+ * @version $Id$
+ */
 public interface IndexerTask extends SpacesTask {
     public TaskResult execute( TaskCommand command );
 }

@@ -68,7 +68,7 @@ public class IndexerResult extends TaskResult {
 		this.pathToBiosequenceIndex = pathToBiosequenceIndex;
 	}
 
-	public String getPathToExpresionIndex() {
+	public String getPathToExpressionIndex() {
 		return pathToExpresionIndex;
 	}
 

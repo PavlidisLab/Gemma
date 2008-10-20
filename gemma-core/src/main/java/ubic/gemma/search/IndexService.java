@@ -255,6 +255,7 @@ public class IndexService extends AbstractSpacesProgressService {
 
         @Override
         protected void index( IndexerTaskCommand indexCommand ) {
+            log.info( "Submitting job to space" );
             indexCommand.setTaskId( this.taskId );
 
             IndexerResult result = ( IndexerResult ) indexGemmaTaskProxy.execute( indexCommand );
@@ -264,7 +265,7 @@ public class IndexService extends AbstractSpacesProgressService {
                     replaceGeneIndex( result.getPathToGeneIndex() );
                 }
                 if ( indexCommand.isIndexEE() ) {
-                    replaceExperimentIndex( result.getPathToExpresionIndex() );
+                    replaceExperimentIndex( result.getPathToExpressionIndex() );
                 }
                 if ( indexCommand.isIndexAD() ) {
                     replaceArrayIndex( result.getPathToArrayIndex() );
@@ -314,7 +315,6 @@ public class IndexService extends AbstractSpacesProgressService {
 
             long time = System.currentTimeMillis();
 
-            job.updateProgress( "Preparing to rebuild selected indexes " );
             log.info( "Preparing to rebuild selected indexes" );
 
             IndexerTaskCommand indexGemmaCommand = ( ( IndexerTaskCommand ) command );
