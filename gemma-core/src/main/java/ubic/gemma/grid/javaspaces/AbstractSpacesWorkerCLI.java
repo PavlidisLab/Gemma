@@ -131,6 +131,9 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( this.getClass().getName(), args );
+        if ( err != null ) {
+            return err;
+        }
         try {
             preInit();
             init();
