@@ -49,7 +49,6 @@ import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserImpl;
 import ubic.gemma.model.common.auditAndSecurity.UserRoleImpl;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
@@ -82,14 +81,11 @@ import ubic.gemma.util.ReflectionUtil;
  * @spring.property name="crudUtils" ref="crudUtils"
  * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  * @spring.property name="customAclDao" ref="customAclDao"
- * @spring.property name="userService" ref="userService"
  */
 @SuppressWarnings("deprecation")
 public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
     CrudUtils crudUtils;
-
-    private UserService userService = null;// TODO remove this .. unused
 
     public AddOrRemoveFromACLInterceptor() {
         this.crudUtils = new CrudUtils();
@@ -495,9 +491,4 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     public void setCustomAclDao( CustomAclDao customAclDao ) {
         this.customAclDao = customAclDao;
     }
-
-    public void setUserService( UserService userService ) {
-        this.userService = userService;
-    }
-
 }

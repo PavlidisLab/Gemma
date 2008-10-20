@@ -695,7 +695,7 @@
 	</bean>
 
 	<bean id="basicAclExtendedDao"
-		class="org.springframework.security.acl.basic.jdbc.JdbcExtendedDaoImpl">
+		class="ubic.gemma.security.acl.basic.jdbc.CustomJdbcExtendedDaoImpl">
 		<property name="dataSource">
 			<ref bean="dataSource" />
 		</property>

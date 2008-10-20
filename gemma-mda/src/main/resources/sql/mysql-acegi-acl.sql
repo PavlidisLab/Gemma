@@ -23,13 +23,14 @@ CREATE TABLE acl_permission (
 ) TYPE=InnoDB;
 
 --- (id, object identity (of form class:getId()), parent object, acl class)
-INSERT INTO acl_object_identity VALUES (1, 'globalDummyParent:1', null, 'org.springframework.security.acl.basic.SimpleAclEntry');
+INSERT INTO acl_object_identity VALUES (1, 'adminControlNode:1', null, 'org.springframework.security.acl.basic.SimpleAclEntry');
+INSERT INTO acl_object_identity VALUES (2, 'publicControlNode:2', 1, 'org.springframework.security.acl.basic.SimpleAclEntry');
 
 --- (id, acl object identity, recepient (principal username), mask)
 INSERT INTO acl_permission VALUES (null, 1, 'administrator', 1);
+INSERT INTO acl_permission VALUES (null, 2, 'anonymous', 2);
 
 alter table acl_permission add index acl_object_identity_key (acl_object_identity);
-
 
 --- Mask integer 0  = no permissions
 --- Mask integer 1  = administrator
