@@ -19,11 +19,13 @@
 package ubic.gemma.grid.javaspaces.expression.experiment;
 
 import ubic.gemma.grid.javaspaces.SpacesTask;
+import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.TaskResult;
 
 /**
  * @author keshav
  * @version $Id$
  */
 public interface ExpressionExperimentReportTask extends SpacesTask {
-
+    public TaskResult execute( TaskCommand command );
 }
