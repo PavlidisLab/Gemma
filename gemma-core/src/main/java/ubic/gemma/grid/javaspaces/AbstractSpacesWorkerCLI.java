@@ -172,18 +172,15 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
     public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
-        log.info( "notified ..." );
+        log.debug( "Worker received notification: " + remoteEvent );
 
         try {
             EntryArrivedRemoteEvent arrivedRemoteEvent = ( EntryArrivedRemoteEvent ) remoteEvent;
-
-            log.debug( "event: " + arrivedRemoteEvent );
             ExternalEntry entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
             Object taskId = entry.getFieldValue( "taskId" );
 
             if ( taskId.equals( worker.getTaskId() ) ) {
                 log.info( "Stopping execution of task: " + taskId );
-
                 log.debug( itbThread.getState() );
                 itbThread.stop();
             }

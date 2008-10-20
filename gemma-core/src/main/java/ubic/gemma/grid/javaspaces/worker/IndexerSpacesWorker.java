@@ -20,8 +20,6 @@
 package ubic.gemma.grid.javaspaces.worker;
 
 import org.springframework.security.context.SecurityContextHolder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
@@ -43,7 +41,7 @@ public class IndexerSpacesWorker extends AbstractSpacesWorkerCLI {
     @Override
     protected void setWorker() {
         worker = ( CustomDelegatingWorker ) updatedContext.getBean( "indexerSpaceWorker" );
-
+        assert worker != null;
     }
 
     /*

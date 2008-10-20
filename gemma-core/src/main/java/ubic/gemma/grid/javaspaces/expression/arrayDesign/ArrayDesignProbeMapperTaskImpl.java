@@ -47,13 +47,11 @@ public class ArrayDesignProbeMapperTaskImpl extends BaseSpacesTask implements Ar
      * ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTask#execute(ubic.gemma.grid.javaspaces
      * .expression.arrayDesign.SpacesProbeMapperCommand)
      */
-    public TaskResult execute( TaskCommand command ) {
-
-        ArrayDesignProbeMapTaskCommand jsProbeMapperCommand = ( ArrayDesignProbeMapTaskCommand ) command;
+    public TaskResult execute( ArrayDesignProbeMapTaskCommand command ) {
 
         super.initProgressAppender( this.getClass() );
 
-        ArrayDesign ad = jsProbeMapperCommand.getArrayDesign();
+        ArrayDesign ad = command.getArrayDesign();
 
         arrayDesignProbeMapperService.processArrayDesign( ad );
 

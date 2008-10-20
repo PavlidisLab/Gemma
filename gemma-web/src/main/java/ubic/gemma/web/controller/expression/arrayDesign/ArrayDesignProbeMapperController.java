@@ -131,7 +131,7 @@ public class ArrayDesignProbeMapperController extends AbstractSpacesController<M
          * @param command
          * @return
          */
-        private TaskResult process( TaskCommand c ) {
+        private TaskResult process( ArrayDesignProbeMapTaskCommand c ) {
             TaskResult result = taskProxy.execute( c );
             return result;
         }

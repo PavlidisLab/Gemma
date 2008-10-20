@@ -26,10 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * A "processed expression data vector create" spaces task that can be passed into a space and executed by a worker.
@@ -52,11 +50,10 @@ public class ProcessedExpressionDataVectorCreateTaskImpl extends BaseSpacesTask 
      * ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask#execute(ubic.gemma.grid
      * .javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand)
      */
-    public TaskResult execute( TaskCommand command ) {
-        ProcessedExpressionDataVectorCreateTaskCommand processedVectorCreateCommand = ( ProcessedExpressionDataVectorCreateTaskCommand ) command;
+    public TaskResult execute( ProcessedExpressionDataVectorCreateTaskCommand command ) {
         super.initProgressAppender( this.getClass() );
 
-        ExpressionExperiment ee = processedVectorCreateCommand.getExpressionExperiment();
+        ExpressionExperiment ee = command.getExpressionExperiment();
 
         TaskResult result = new TaskResult();
         Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService

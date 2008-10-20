@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -50,13 +49,11 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
      * @seeubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid.javaspaces.diff.
      * SpacesDifferentialExpressionAnalysisCommand)
      */
-    public TaskResult execute( TaskCommand command ) {
-
-        DifferentialExpressionAnalysisTaskCommand jsDiffAnalysisCommand = ( DifferentialExpressionAnalysisTaskCommand ) command;
+    public TaskResult execute( DifferentialExpressionAnalysisTaskCommand command ) {
 
         super.initProgressAppender( this.getClass() );
 
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = doAnalysis( jsDiffAnalysisCommand );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = doAnalysis( command );
 
         TaskResult result = new TaskResult();
         result.setAnswer( expressionAnalyses );

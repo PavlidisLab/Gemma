@@ -33,6 +33,6 @@ import ubic.gemma.grid.javaspaces.TaskResult;
  */
 public interface ExpressionExperimentLoadTask extends SpacesTask {
 
-    public TaskResult execute( TaskCommand command );
+    public TaskResult execute( ExpressionExperimentLoadTaskCommand command );
 
 }

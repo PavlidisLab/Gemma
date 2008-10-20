@@ -99,15 +99,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
-     */
-    public TaskResult execute( Object command ) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
      * @see ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
      */
     public TaskResult execute( TaskCommand spacesCommand ) {

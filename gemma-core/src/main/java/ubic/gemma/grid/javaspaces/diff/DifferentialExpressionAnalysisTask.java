@@ -20,7 +20,6 @@ package ubic.gemma.grid.javaspaces.diff;
 
 import net.jini.space.JavaSpace;
 import ubic.gemma.grid.javaspaces.SpacesTask;
-import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 
 /**
@@ -31,5 +30,5 @@ import ubic.gemma.grid.javaspaces.TaskResult;
  * @version $Id$
  */
 public interface DifferentialExpressionAnalysisTask extends SpacesTask {
-    public TaskResult execute( TaskCommand command );
+    public TaskResult execute( DifferentialExpressionAnalysisTaskCommand command );
 }

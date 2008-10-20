@@ -120,7 +120,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         @Override
         protected ModelAndView processJob( TaskCommand baseCommand ) {
             baseCommand.setTaskId( this.taskId );
-            process( baseCommand );
+            process( ( DifferentialExpressionAnalysisTaskCommand ) baseCommand );
             return new ModelAndView( new RedirectView( "/Gemma" ) );
         }
 
@@ -128,7 +128,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
          * @param diffCommand
          * @return
          */
-        private TaskResult process( TaskCommand diffCommand ) {
+        private TaskResult process( DifferentialExpressionAnalysisTaskCommand diffCommand ) {
             TaskResult result = taskProxy.execute( diffCommand );
             return result;
         }

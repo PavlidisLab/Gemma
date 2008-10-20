@@ -48,7 +48,7 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
      * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
-    public TaskResult execute( TaskCommand command ) {
+    public TaskResult execute( ExpressionExperimentLoadTaskCommand command ) {
         ExpressionExperimentLoadTaskCommand jsEeLoadCommand = ( ExpressionExperimentLoadTaskCommand ) command;
         super.initProgressAppender( this.getClass() );
 

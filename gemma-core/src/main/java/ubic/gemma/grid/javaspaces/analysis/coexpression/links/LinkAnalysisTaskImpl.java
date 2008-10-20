@@ -21,7 +21,6 @@ package ubic.gemma.grid.javaspaces.analysis.coexpression.links;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.TaskCommand;
 
 /**
  * @author keshav
@@ -42,14 +41,13 @@ public class LinkAnalysisTaskImpl extends BaseSpacesTask implements LinkAnalysis
      * @seeubic.gemma.grid.javaspaces.coexpression.LinkAnalysisTask#execute(ubic.gemma.grid.javaspaces.coexpression.
      * SpacesLinkAnalysisCommand)
      */
-    public TaskResult execute( TaskCommand command ) {
-        LinkAnalysisTaskCommand jsLinkCommand = ( LinkAnalysisTaskCommand ) command;
+    public TaskResult execute( LinkAnalysisTaskCommand command ) {
         super.initProgressAppender( this.getClass() );
         TaskResult result = new TaskResult();
 
         try {
-            linkAnalysisService.process( jsLinkCommand.getExpressionExperiment(), jsLinkCommand.getFilterConfig(),
-                    jsLinkCommand.getLinkAnalysisConfig() );
+            linkAnalysisService.process( command.getExpressionExperiment(), command.getFilterConfig(), command
+                    .getLinkAnalysisConfig() );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }

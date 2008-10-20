@@ -117,7 +117,7 @@ public class IndexerTaskImpl extends BaseSpacesTask implements IndexerTask {
      * (non-Javadoc)
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
      */
-    public IndexerResult execute( TaskCommand command ) {
+    public IndexerResult execute( IndexerTaskCommand command ) {
 
         IndexerTaskCommand indexCommand = ( IndexerTaskCommand ) command;
 

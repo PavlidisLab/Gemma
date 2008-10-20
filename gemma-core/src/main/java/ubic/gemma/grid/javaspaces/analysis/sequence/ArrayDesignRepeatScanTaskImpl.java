@@ -26,11 +26,9 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.analysis.sequence.RepeatScan;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * An array design repeat scan spaces task that can be passed into a space and executed by a worker.
@@ -50,15 +48,13 @@ public class ArrayDesignRepeatScanTaskImpl extends BaseSpacesTask implements Arr
      * ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask#execute(ubic.gemma.grid.javaspaces.analysis
      * .sequence.SpacesArrayDesignRepeatScanCommand)
      */
-    public TaskResult execute( TaskCommand command ) {
-
-        ArrayDesignRepeatScanTaskCommand jsAdRepeateScanCommand = ( ArrayDesignRepeatScanTaskCommand ) command;
+    public TaskResult execute( ArrayDesignRepeatScanTaskCommand command ) {
 
         super.initProgressAppender( this.getClass() );
 
         TaskResult result = new TaskResult();
 
-        ArrayDesign ad = jsAdRepeateScanCommand.getArrayDesign();
+        ArrayDesign ad = command.getArrayDesign();
 
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentService.getSequences( ad );
         RepeatScan scanner = new RepeatScan();

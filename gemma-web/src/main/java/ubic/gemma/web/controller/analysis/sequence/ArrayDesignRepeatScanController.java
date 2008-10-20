@@ -122,7 +122,7 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController<Mo
          * @param command
          * @return
          */
-        private TaskResult process( TaskCommand c ) {
+        private TaskResult process( ArrayDesignRepeatScanTaskCommand c ) {
             TaskResult result = taskProxy.execute( c );
             return result;
         }

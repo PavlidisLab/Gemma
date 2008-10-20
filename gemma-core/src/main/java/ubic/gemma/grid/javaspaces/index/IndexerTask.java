@@ -20,7 +20,6 @@
 package ubic.gemma.grid.javaspaces.index;
 
 import ubic.gemma.grid.javaspaces.SpacesTask;
-import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 
 /**
@@ -28,5 +27,5 @@ import ubic.gemma.grid.javaspaces.TaskResult;
  * @version $Id$
  */
 public interface IndexerTask extends SpacesTask {
-    public TaskResult execute( TaskCommand command );
+    public TaskResult execute( IndexerTaskCommand command );
 }
