@@ -20,9 +20,9 @@ package ubic.gemma.security.acl.basic.jdbc;
 
 import javax.sql.DataSource;
 
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.acl.basic.AbstractBasicAclEntry;
 import org.springframework.security.acl.basic.BasicAclEntry;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * This Dao should be used to do things to the acl_permission and acl_object_identity tables that are not included as
@@ -32,7 +32,22 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * @author keshav
  * @version $Id$
  */
+@SuppressWarnings("deprecation")
 public class CustomAclDao {
+
+    /*
+     * Objects are grouped in a hierarchy. A default 'parent' is defined in the database. This must match an entry in
+     * the ACL_OBJECT_IDENTITY table. In Gemma this is added as part of database initialization (see mysql-acegy-acl.sql
+     * for MySQL version)
+     */
+
+    public static final String ADMIN_CONTROL_NODE = "adminControlNode";
+
+    public static final String PUBLIC_CONTROL_NODE = "publicControlNode";
+
+    public static final String ADMIN_CONTROL_NODE_PARENT_ID = "1";
+
+    public static final String PUBLIC_CONTROL_NODE_PARENT_ID = "2";
 
     private DataSource dataSource = null;
 
@@ -42,9 +57,23 @@ public class CustomAclDao {
      * @param recipient
      */
     public void updateAclObjectIdentityInAclPermission( String recipient ) {
+        // TODO remove me as this method is unused
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
         jdbcTemplate.execute( "update acl_permission set acl_object_identity=1 where recipient=" + "\'" + recipient
                 + "\'" );
+    }
+
+    /**
+     * Inserts a "control node" (row in acl_permission table) giving the recipient access to the public data. Call this
+     * when adding a new user to the database.
+     * 
+     * @param recipient
+     * @param mask
+     */
+    public void insertPublicAccessControlNodeForRecipient( String recipient, int mask ) {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
+        jdbcTemplate.execute( "insert into acl_permission values(" + null + "," + PUBLIC_CONTROL_NODE_PARENT_ID + ","
+                + "\'" + recipient + "\'" + "," + mask + ")" );
     }
 
     /**

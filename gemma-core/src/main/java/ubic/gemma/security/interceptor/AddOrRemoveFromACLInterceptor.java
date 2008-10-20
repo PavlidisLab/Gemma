@@ -24,7 +24,6 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
@@ -49,7 +48,7 @@ import ubic.gemma.model.association.Relationship;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserImpl;
-import ubic.gemma.model.common.auditAndSecurity.UserRole;
+import ubic.gemma.model.common.auditAndSecurity.UserRoleImpl;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -61,7 +60,9 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.persistence.CrudUtils;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.acl.basic.jdbc.CustomAclDao;
+import ubic.gemma.security.acl.basic.jdbc.CustomJdbcExtendedDaoImpl;
 import ubic.gemma.security.principal.UserDetailsServiceImpl;
 import ubic.gemma.util.ReflectionUtil;
 
@@ -83,29 +84,16 @@ import ubic.gemma.util.ReflectionUtil;
  * @spring.property name="customAclDao" ref="customAclDao"
  * @spring.property name="userService" ref="userService"
  */
+@SuppressWarnings("deprecation")
 public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
-    private static final String ROLE_ADMIN = "admin";
-
-    private static final String ANONYMOUS = "anonymous";
-
     CrudUtils crudUtils;
+
+    private UserService userService = null;// TODO remove this .. unused
 
     public AddOrRemoveFromACLInterceptor() {
         this.crudUtils = new CrudUtils();
     }
-
-    /**
-     * Objects are grouped in a hierarchy. A default 'parent' is defined in the database. This must match an entry in
-     * the ACL_OBJECT_IDENTITY table. In Gemma this is added as part of database initialization (see mysql-acegy-acl.sql
-     * for MySQL version)
-     */
-    private static final String DEFAULT_PARENT = "globalDummyParent";
-
-    /**
-     * @see DEFAULT_PARENT
-     */
-    private static final String DEFAULT_PARENT_ID = "1";
 
     private static Log log = LogFactory.getLog( AddOrRemoveFromACLInterceptor.class.getName() );
 
@@ -139,8 +127,6 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
     private CustomAclDao customAclDao;
 
-    private UserService userService;
-
     /**
      * Creates the acl_permission object and the acl_object_identity object.
      * 
@@ -148,17 +134,37 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     public void addPermission( Securable object ) {
 
-        simpleAclEntry = getAclEntry( object );
+        /*
+         * When adding a new user to the system, make sure they can see the public data by adding a control node for
+         * that user and set the acl_object_identity of this to CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID
+         */
+        if ( object instanceof UserImpl ) {
+            User u = ( User ) object;
+            String recipient = u.getUserName();
+            customAclDao.insertPublicAccessControlNodeForRecipient( recipient, SimpleAclEntry.READ );
+        }
 
-        /* By default we assign the object to have the default global parent. */
-        simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( DEFAULT_PARENT, DEFAULT_PARENT_ID ) );
+        /* Set up the SimpleAclEntry, which includes both acl_permission and acl_object_identity stuff. */
+        // When persisting to the database, the acl_permission may not be persisted.
+        // Create acl_permission entry in database only if:
+        // 1. creating a new user
+        // 2. adding Securable(s) and not logged in as an admin. If user is logged in
+        // as an admin, the data they load will be public because their corresponding
+        // acl_object_identity.parent_object will be set to CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID.
+        /*                                                                                              */
+        simpleAclEntry = this.createNonPersistentAclEntry( object );
 
         try {
-            basicAclExtendedDao.create( simpleAclEntry );
-            if ( log.isDebugEnabled() ) {
-                log.debug( "Added permission " + getAuthority() + " for recipient "
-                        + UserDetailsServiceImpl.getCurrentUsername() + " on " + object );
-            }
+            boolean isAdmin = SecurityService.isUserAdmin();
+
+            boolean createAclPermission = false;// default case for admin
+
+            if ( object instanceof UserImpl ) createAclPermission = true;
+
+            if ( !isAdmin && !( object instanceof UserRoleImpl ) ) createAclPermission = true;
+
+            ( ( CustomJdbcExtendedDaoImpl ) basicAclExtendedDao ).create( simpleAclEntry, createAclPermission );
+
         } catch ( DataIntegrityViolationException ignored ) {
 
             // This happens in two situations:
@@ -178,28 +184,13 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             // throw ( ignored );
             // }
         }
-
-        /*
-         * If not anonymous, then we are adding an admin. If userJustAdded is null, then we are not adding a new user to
-         * the system, we are adding other data so skip this.
-         */
-        // FIXME this will be a problem if recipient is not anonymous. Currently, we don't do that but beware.
-        User userJustAdded = userService.findByUserName( simpleAclEntry.getRecipient().toString() );
-        if ( userJustAdded != null ) {
-            Collection<UserRole> roles = userJustAdded.getRoles();
-            for ( UserRole r : roles ) {
-                if ( StringUtils.equals( r.getName(), ROLE_ADMIN ) ) {
-                    customAclDao.updateAclObjectIdentityInAclPermission( simpleAclEntry.getRecipient().toString() );
-                    break;
-                }
-            }
-        }
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
-     * java.lang.Object[], java.lang.Object)
+     *      java.lang.Object[], java.lang.Object)
      */
     @SuppressWarnings( { "unused", "unchecked" })
     public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
@@ -391,41 +382,36 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    public static AbstractBasicAclEntry getAclEntry( Securable object ) {
+    public AbstractBasicAclEntry createNonPersistentAclEntry( Securable object ) {
         SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
         simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
-        simpleAclEntry.setMask( getAuthority() );
+        simpleAclEntry.setMask( getMaskByAuthority() );
+        simpleAclEntry.setRecipient( UserDetailsServiceImpl.getCurrentUsername() );
+        simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( CustomAclDao.PUBLIC_CONTROL_NODE,
+                CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID ) );
 
-        String recipient = UserDetailsServiceImpl.getCurrentUsername();
-
-        Collection<UserRole> roles = UserDetailsServiceImpl.getCurrentUser().getRoles();
-
+        /* If we are logged in, then we are adding private data. */
+        if ( SecurityService.isUserLoggedIn() ) {
+            simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( CustomAclDao.ADMIN_CONTROL_NODE,
+                    CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID ) );
+        }
         /*
-         * First, check if we are adding a new user to the system. If so, set the entry in the acl permissions table to
-         * have a recipient equal to the username of the user to be added. Also, set the object_identity=1.
-         */
-
-        /*
-         * FIXME - you only want to do this to the acl_permission of the UserImpl if the user being added is an
-         * administrator (has role=admin) since only admins can load data.
+         * Now check to see if the data we are adding is a new user (UserImpl). If so, decide what mask to use depending
+         * on the type of user (i.e. based on role: user, admin).
          */
         if ( object instanceof UserImpl ) {
-            UserImpl newUser = ( UserImpl ) object;
-            recipient = newUser.getUserName();
-            simpleAclEntry.setMask( SimpleAclEntry.ADMINISTRATION );
-        }
+            simpleAclEntry.setMask( SimpleAclEntry.READ_WRITE );
 
-        /* If you are an admin (any admin) and are loading data, set recipient = ANONYMOUS on the data */
-        else {
-            for ( UserRole role : roles ) {
-                if ( StringUtils.equals( role.getName(), ROLE_ADMIN ) ) {
-                    recipient = ANONYMOUS;
-                    break;
-                }
+            UserImpl newUser = ( UserImpl ) object;
+
+            simpleAclEntry.setRecipient( newUser.getUserName() );
+
+            if ( SecurityService.isUserAdmin() ) {
+                simpleAclEntry.setMask( SimpleAclEntry.ADMINISTRATION );
+                // FIXME - do we need to add a parent other than the global if we are adding another admin to the
+                // system.
             }
         }
-
-        simpleAclEntry.setRecipient( recipient );
         return simpleAclEntry;
     }
 
@@ -472,22 +458,27 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     }
 
     /**
-     * For the current principal (user), return the permissions mask. If the current principal has role "admin", they
-     * are granted ADMINISTRATION authority. If they are role "user", they are granted READ_WRITE authority.
+     * When an 'admin' loads data, we want to make this readable by everyone so we set the mask to SimpleAclEntry.READ
+     * (anonymous). When a 'user' loads data, we want to make this readable and writeable by that user only so we set
+     * the mask to SimpleAclEntry.READ_WRITE.
      * 
      * @return Integer
      */
-    protected static Integer getAuthority() {
+    protected static Integer getMaskByAuthority() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        GrantedAuthority[] authorities = auth.getAuthorities();
+        for ( GrantedAuthority a : authorities ) {
+            if ( a.getAuthority() == "admin" ) {
+                /*
+                 * When an admin loads data, we want to make this readable by everyone (anonymous) ... unless the admin
+                 * adds a new user to the system in which case the new user should should be readable and writeable by
+                 * himself/herself. This handled later by using the UserRole of the User that was added.
+                 */
+                return SimpleAclEntry.READ;
 
-        GrantedAuthority[] ga = auth.getAuthorities();
-        for ( int i = 0; i < ga.length; i++ ) {
-            if ( ga[i].equals( ROLE_ADMIN ) ) {
-                // if ( log.isDebugEnabled() ) log.debug( "Granting ADMINISTRATION privileges" );
-                return SimpleAclEntry.ADMINISTRATION;
             }
         }
-        // if ( log.isDebugEnabled() ) log.debug( "Granting READ_WRITE privileges" );
+        /* When a user loads data, we want to make this readable and writeable by that user */
         return SimpleAclEntry.READ_WRITE;
     }
 
@@ -505,9 +496,6 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         this.customAclDao = customAclDao;
     }
 
-    /**
-     * @param userService
-     */
     public void setUserService( UserService userService ) {
         this.userService = userService;
     }
