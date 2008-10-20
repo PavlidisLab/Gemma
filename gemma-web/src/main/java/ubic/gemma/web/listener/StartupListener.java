@@ -229,6 +229,14 @@ public class StartupListener extends ContextLoaderListener {
                 String classpath = ( String ) servletContext.getAttribute( key );
                 for ( String entry : classpath.split( File.pathSeparator ) ) {
                     if ( entry.endsWith( "jar" ) ) {
+                        /*
+                         * exclude the JSpaces jars, because they are provided by the space server as well, which can
+                         * cause conflicts.
+                         */
+                        if ( entry.matches( ".*Gemma/WEB-INF/lib.*JSpaces.*\\.jar" ) ) {
+                            // log.info( "Skipping: " + entry );
+                            continue;
+                        }
                         File jar = new File( entry );
                         jars.add( jar );
                         if ( entry.matches( ".*Gemma/WEB-INF/lib.*\\.jar" ) ) {
@@ -291,6 +299,7 @@ public class StartupListener extends ContextLoaderListener {
         }
 
         Collection<File> copiedJars = new HashSet<File>();
+        // TODO: clear out old jars.
         for ( File sourceJar : jars ) {
             try {
                 File targetJar = new File( targetLibdir, sourceJar.getName() );
