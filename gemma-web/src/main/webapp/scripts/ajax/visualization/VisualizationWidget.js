@@ -46,7 +46,7 @@ Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {
 
 		});
 
-Gemma.PLOT_SIZE = 150;
+Gemma.PLOT_SIZE = 100;
 
 Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 
@@ -106,13 +106,12 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 
 Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			id : 'VisualizationWindow',
-			width : 800,
-			height : 500,
 			closeAction : 'destroy',
 			bodyStyle : "background:white",
 			layout : 'fit',
 			constrainHeader : true,
 			title : "Visualization",
+			autoScroll : true,
 
 			initComponent : function() {
 				// If there are any compile errors with the template the error will not make its way to the console.
