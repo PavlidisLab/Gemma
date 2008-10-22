@@ -57,6 +57,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 							columns : [this.rowExpander, {
 										id : 'query',
 										header : "Query Gene",
+										hidden : true,
 										dataIndex : "queryGene",
 										tooltip : "Query Gene",
 										renderer : function(value, metadata, record, row, col, ds) {
