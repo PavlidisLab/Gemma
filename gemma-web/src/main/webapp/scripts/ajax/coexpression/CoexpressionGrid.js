@@ -272,12 +272,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			},
 
 			loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
-				var queryCol = this.getColumnModel().getColumnById('query');
+				var queryIndex = this.getColumnModel().getIndexById('query');
 				if (numQueryGenes > 1) {
-					queryCol.hidden = false;
+					this.getColumnModel().setHidden(queryIndex,false);
 				} else {
-					queryCol.hidden = true;
+					this.getColumnModel().setHidden(queryIndex,true);
+
 				}
+				this.getColumnModel().getColumnById
 				this.rowExpander.clearCache();
 				this.datasets = datasets; // the datasets that are 'relevant'.
 				this.getStore().proxy.data = data;

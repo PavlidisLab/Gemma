@@ -70,12 +70,7 @@ Ext.extend(Gemma.DatasetSearchField, Ext.form.TriggerField, {
 				&& (params[0] == this.lastParams[0] && params[1] == this.lastParams[1])) {
 			return;
 		}
-		if (this.fireEvent('beforesearch', this, params) !== false) {
-			this.lastParams = params;
-			GeneLinkAnalysisManagerController.filterExpressionExperiments(
-					params[0], params[1], params[2], this.foundDatasets
-							.createDelegate(this));
-		}
+
 	},
 
 	findDatasets : function() {
