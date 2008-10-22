@@ -42,6 +42,7 @@ import ubic.gemma.model.common.Securable;
  * @author Paul
  * @version $Id$
  */
+@SuppressWarnings("deprecation")
 public abstract class ByAssociatedObjectFilter implements AfterInvocationProvider {
     protected static final Log logger = LogFactory.getLog( ByAssociatedObjectFilter.class );
 
