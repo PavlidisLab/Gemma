@@ -21,15 +21,16 @@ package ubic.gemma.security;
 import java.util.HashSet;
 
 import ubic.gemma.model.common.Securable;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequenceImpl;
-import ubic.gemma.model.genome.GeneImpl;
-import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
-import ubic.gemma.model.genome.gene.GeneProductImpl;
+import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneProduct;
 
 /**
- * A datastructure to hold {@link Securable} classes that are not to be secured directly.
+ * A datastructure to hold {@link Securable} classes that are not to be secured
+ * directly.
  * <p>
  * Example: We secure the ArrayDesign, but not the CompositeSequence.
  * 
@@ -38,30 +39,30 @@ import ubic.gemma.model.genome.gene.GeneProductImpl;
  */
 public class UnsecuredSecurableSet extends HashSet {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    /**
-     * For some types of objects, we don't put permissions on them directly, but on the containing object.
-     * 
-     * @param additionalClasses Additional classes to add to the initial set of unsecured classes.
-     */
-    @SuppressWarnings("unchecked")
-    public UnsecuredSecurableSet( Class[] additionalClasses ) {
-        // these are Securable but we don't use acls on them directly
-        this.add( BioSequenceImpl.class );
-        this.add( CompositeSequenceImpl.class );
-        this.add( GeneImpl.class );
-        this.add( GeneProductImpl.class );
-        this.add( QuantitationTypeImpl.class );
-        this.add( DataVector.class );
+	/**
+	 * For some types of objects, we don't put permissions on them directly, but
+	 * on the containing object.
+	 * 
+	 * @param additionalClasses
+	 *            Additional classes to add to the initial set of unsecured
+	 *            classes.
+	 */
+	@SuppressWarnings("unchecked")
+	public UnsecuredSecurableSet(Class[] additionalClasses) {
+		// these are Securable but we don't use acls on them directly
+		this.add(BioSequence.class);
+		this.add(DesignElement.class);
+		this.add(Gene.class);
+		this.add(GeneProduct.class);
+		this.add(QuantitationType.class);
+		this.add(DataVector.class);
 
-        if ( additionalClasses != null ) {
-            for ( Class clazz : additionalClasses ) {
-                this.add( clazz );
-            }
-        }
-    }
+		if (additionalClasses != null) {
+			for (Class clazz : additionalClasses) {
+				this.add(clazz);
+			}
+		}
+	}
 }
