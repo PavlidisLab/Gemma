@@ -426,6 +426,32 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 				}.createDelegate(this));
 
+		var descriptionArea = new Ext.form.TextArea({
+					id : 'description',
+					grow : true,
+					growMax : 300,
+					readOnly : !this.editable,
+					disabledClass : 'disabled-plain',
+					growMin : 40,
+					emptyText : 'No description provided',
+					enableKeyEvents : true,
+					listeners : {
+						'keyup' : {
+							fn : function(e) {
+								if (Ext.getCmp('description').isDirty() && Ext.getCmp('description').isValid()) {
+									// show save button
+									Ext.getCmp('update-button-region').show();
+								} else {
+									Ext.getCmp('update-button-region').hide();
+								}
+							}
+						}
+					},
+					width : 500,
+					// height : 100,
+					value : e.description
+				});
+
 		var basics = new Ext.Panel({
 			autoHeight : true,
 			layout : 'table',
@@ -462,7 +488,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 									enableKeyEvents : true,
 									disabledClass : 'disabled-plain',
 									fieldClass : 'x-bare-field',
-									disabled : !this.editable,
+									readOnly : !this.editable,
 									listeners : {
 										'keyup' : {
 											fn : function(e) {
@@ -493,7 +519,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						xtype : 'textfield',
 						value : e.name,
 						id : 'name',
-						disabled : !this.editable,
+						readOnly : !this.editable,
 						disabledClass : 'disabled-plain',
 						enableKeyEvents : true,
 						listeners : {
@@ -517,32 +543,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						html : e.taxon
 					}, {
 						html : 'Description:'
-					}, {
-						xtype : 'textarea',
-						id : 'description',
-						grow : true,
-						growMax : 300,
-						disabled : !this.editable,
-						disabledClass : 'disabled-plain',
-						growMin : 40,
-						emptyText : 'No description provided',
-						enableKeyEvents : true,
-						listeners : {
-							'keyup' : {
-								fn : function(e) {
-									if (Ext.getCmp('description').isDirty() && Ext.getCmp('description').isValid()) {
-										// show save button
-										Ext.getCmp('update-button-region').show();
-									} else {
-										Ext.getCmp('update-button-region').hide();
-									}
-								}
-							}
-						},
-						width : 500,
-						// height : 100,
-						value : e.description
-					}, {
+					}, descriptionArea, {
 						html : 'Created:'
 					}, {
 						html : Ext.util.Format.date(e.dateCreated)
