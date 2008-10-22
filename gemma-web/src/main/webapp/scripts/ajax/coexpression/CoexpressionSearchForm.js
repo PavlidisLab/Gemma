@@ -240,7 +240,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 							errorHandler : errorHandler
 						});
 			}
-			if (pageTracker) {
+			if (typeof pageTracker != 'undefined') {
 				pageTracker._trackPageview("/Gemma/coexpressionSearch.doSearch");
 			}
 		} else {
@@ -284,10 +284,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	returnFromSearch : function(result) {
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, result);
-		if (typeof pageTracker == 'function') {
-			// console.log("yay");
-			pageTracker._trackPageview("/pagefilename1"); // google analytics.
-		}
 	},
 
 	/**
