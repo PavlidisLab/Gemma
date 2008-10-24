@@ -1486,8 +1486,9 @@ var Flotr = (function(){
 					}
 				}
 			}
-		}		
-		var lastMousePos = { pageX: null, pageY: null };
+		}	
+		//Define as global works but with var def i get a lastMousePos not defined error : klc
+		lastMousePos = { pageX: null, pageY: null };
 		var selection = { first: { x: -1, y: -1}, second: { x: -1, y: -1} };
 		var prevSelection = null;
 		var selectionInterval = null;
@@ -1816,7 +1817,8 @@ var Flotr = (function(){
 				dist:Number.MAX_VALUE,
 				x:null,
 				y:null,
-				mouse:null
+				mouse:null,
+				label:null
 			};
 			
 			for(var i = 0, data, xsens, ysens; i < series.length; i++){
@@ -1833,6 +1835,7 @@ var Flotr = (function(){
 						n.x = data[j][0];
 						n.y = data[j][1];
 						n.mouse = series[i].mouse;
+						n.label = series[i].label;
 					}
 				}
 			}
