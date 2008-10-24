@@ -40,37 +40,41 @@ Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {});
 
 Gemma.PLOT_SIZE = 100;
 Gemma.ZOOM_PLOT_SIZE = 400;
-Gemma.COLD_COLORS = ["#0033FF","#6699FF","#3399CC", "#336666", "#66CCCC", "#33FF99", "#339966", "#009900", "#66CC66", "#00CC00" ];
-Gemma.HOT_COLORS = ["#FFCC00","#FF9900","#FF6600", "#FF3300", "#CC3300", "#660000", "#FF0000", "#990033", "#FF3399", "#990099" ];
-Gemma.GRAPH_ZOOM_CONFIG =  {
-												xaxis : {
-													noTicks : 0
-												},
-												yaxis : {
-													noTicks : 0
-												},
-												grid : {
-														labelMargin: 0		// => margin in pixels
-													//color : "white"  //this turns the letters in the legend  to white
-												},
-												shadowSize : 0,
-											
-												legend : {
-													show: true,
-													position : 'nw'
-													//backgroundOpacity : 0.5
-												}
-													
-												};
-			
-//Tests if object is in the array
-Gemma.geneContained = function(geneName, arrayOfGenes){
-	for(var i = 0; i < arrayOfGenes.size(); i++){
+Gemma.COLD_COLORS = ["#0033FF", "#6699FF", "#3399CC", "#336666", "#66CCCC",
+		"#33FF99", "#339966", "#009900", "#66CC66", "#00CC00"];
+Gemma.HOT_COLORS = ["#FFCC00", "#FF9900", "#FF6600", "#FF3300", "#CC3300",
+		"#660000", "#FF0000", "#990033", "#FF3399", "#990099"];
+Gemma.GRAPH_ZOOM_CONFIG = {
+	xaxis : {
+		noTicks : 0
+	},
+	yaxis : {
+		noTicks : 0
+	},
+	grid : {
+		labelMargin : 0
+	// => margin in pixels
+	// color : "white" //this turns the letters in the legend to white
+	},
+	shadowSize : 0,
+
+	legend : {
+		show : true,
+		position : 'nw'
+	// backgroundOpacity : 0.5
+	}
+
+};
+
+// Tests if gene is in the array of genes. uses the name of the gene to resolove
+// identity.
+Gemma.geneContained = function(geneName, arrayOfGenes) {
+	for (var i = 0; i < arrayOfGenes.size(); i++) {
 		if (arrayOfGenes[i].name === geneName)
 			return true;
 	}
 	return false;
-	
+
 };
 
 Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
@@ -89,7 +93,7 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 			color : "white"
 		},
 		shadowSize : 0,
-		
+
 		legend : {
 			show : false
 		}
@@ -103,11 +107,14 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 			var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
 				tag : 'div',
 				id : shortName + "_vis",
-				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px;'
+				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:'
+						+ Gemma.PLOT_SIZE + 'px;'
 			});
 
 			// Must use prototype extraction here -- putting in newDiv fails.
-			Flotr.draw($(shortName + "_vis"), record.profiles, this.graphConfig);
+			Flotr
+					.draw($(shortName + "_vis"), record.profiles,
+							this.graphConfig);
 		}
 	}
 });
@@ -122,7 +129,8 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 			var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
 				tag : 'div',
 				id : shortName + "_vis",
-				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px;'
+				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:'
+						+ Gemma.PLOT_SIZE + 'px;'
 			});
 
 			Heatmap.draw($(shortName + "_vis"), record.profiles);
@@ -134,15 +142,18 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	id : 'VisualizationWindow',
 	closeAction : 'destroy',
 	bodyStyle : "background:white",
-	layout : 'fit',
+	layout : 'border',
 	constrainHeader : true,
 	title : "Visualization",
-	autoScroll : true,
-	zoomWindow : null,
+	height : Gemma.ZOOM_PLOT_SIZE + 50,
+	width : Gemma.ZOOM_PLOT_SIZE + Gemma.PLOT_SIZE + 100,
+	
 
 	initComponent : function() {
-		// If there are any compile errors with the template the error will not make its way to the console.
-		// Tried every combination i could think of to get the profile to display...
+		// If there are any compile errors with the template the error will not
+		// make its way to the console.
+		// Tried every combination i could think of to get the profile to
+		// display...
 		// Can't seem to access the data even though its there...
 
 		this.dv = new Ext.DataView({
@@ -159,63 +170,14 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			listeners : {
 				selectionchange : {
 					fn : function(dv, nodes) {
-						
+
 						var record = dv.getRecords(nodes)[0];
 						var eevo = record.get("eevo");
 						var profiles = record.get("profiles");
 
-						
-						//FIXME closing the window needs to be done better
-						//Multiple clicks can get the new window into a funny state (fixable only by a reload)
-							
-						zoomWindow = new Ext.Window({
+						this.zoomPanel.displayWindow( eevo, profiles);
 
-							id : 'visualization-zoom-window',
-							closeAction : 'destroy',
-							bodyStyle : "background:white",
-							constrainHeader : true,
-							layout : 'fit',
-							title : "Visualization Zoom In",
-
-
-							html : {
-								id : 'graphzoompanel',
-								tag : 'div',
-								style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px;'						
-							},
-
-							displayWindow : function(eevo, profiles) {
-
-								this.setTitle("Visualization of:  " + eevo.shortName);
-
-								
-								//Change color to hot and cold variety
-								var coldGeneName =  profiles[0].genes[0].name;								
-								var coldIndex=0,hotIndex=0;								
-								
-								//Add cold colors
-								for(var i = 0; i< profiles.size(); i++){									
-									if (Gemma.geneContained(coldGeneName, profiles[i].genes)) {
-										profiles[i].color = Gemma.COLD_COLORS[coldIndex];
-										coldIndex++;
-									}
-									else{
-										profiles[i].color = Gemma.HOT_COLORS[hotIndex];
-										hotIndex++;
-									}
-									profiles[i].lines = {linewidth : 1/profiles[i].genes.size()}; // Vary line width size on probe specificity?
-
-								}
-															
-								Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
-
-							}
-
-						});
-
-						zoomWindow.show(nodes[0], function() {zoomWindow.displayWindow(eevo, profiles);});
-
-					}
+					}.createDelegate(this)
 				}
 			},
 
@@ -225,7 +187,8 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 			prepareData : function(data) {
 
-				// Need to transform the cordinate data from an object to an array for flotr
+				// Need to transform the cordinate data from an object to an
+				// array for flotr
 				// probe, genes
 				var flotrData = [];
 				var coordinateProfile = data.profiles;
@@ -238,14 +201,15 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 					var color = coordinateProfile[i].color;
 
 					var geneNames = genes[0].name;
-					for(var k = 1; k < genes.size(); k++){
-							geneNames = geneNames + "," + genes[k].name;
+					for (var k = 1; k < genes.size(); k++) {
+						geneNames = geneNames + "," + genes[k].name;
 					}
 
 					var oneProfile = [];
 
 					for (var j = 0; j < coordinateObject.size(); j++) {
-						var point = [coordinateObject[j].x, coordinateObject[j].y];
+						var point = [coordinateObject[j].x,
+								coordinateObject[j].y];
 						oneProfile.push(point);
 					}
 					var plotConfig = {
@@ -258,15 +222,76 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 					flotrData.push(plotConfig);
 				}
 
-				var data
-
 				data.profiles = flotrData;
 				return data;
 			}
 		});
 
+		this.thumbnailPanel = new Ext.Panel({
+			title : 'query gene (red) with coexpressed gene (black)',
+			region : 'west',
+			split : true,
+			width : Gemma.PLOT_SIZE + 50,
+			collapsible : true,
+			margins : '3 0 3 3',
+			cmargins : '3 3 3 3',
+			items : this.dv,
+			autoScroll : true
+		});
+
+		this.zoomPanel = new Ext.Panel({
+
+			region : 'center',
+			split : true,
+			width : Gemma.ZOOM_PLOT_SIZE,
+			hight : Gemma.ZOOM_PLOT_SIZE,
+			id : 'visualization-zoom-window',
+			closeAction : 'destroy',
+			bodyStyle : "background:white",
+			constrainHeader : true,
+			layout : 'fit',
+			title : "Click thumbnail to zoom in",
+
+			html : {
+				id : 'graphzoompanel',
+				tag : 'div',
+				style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:'
+						+ Gemma.ZOOM_PLOT_SIZE + 'px;'
+			},
+
+			displayWindow : function(eevo, profiles) {
+
+				this.setTitle("Visualization for genes in dataset:  " + eevo.shortName);
+
+				// Change color to hot and cold variety
+				var coldGeneName = profiles[0].genes[0].name;
+				var coldIndex = 0, hotIndex = 0;
+
+				// Add cold colors
+				for (var i = 0; i < profiles.size(); i++) {
+					if (Gemma.geneContained(coldGeneName, profiles[i].genes)) {
+						profiles[i].color = Gemma.COLD_COLORS[coldIndex];
+						coldIndex++;
+					} else {
+						profiles[i].color = Gemma.HOT_COLORS[hotIndex];
+						hotIndex++;
+					}
+					profiles[i].lines = {
+						linewidth : 1 / profiles[i].genes.size()
+					}; // Vary line width size on probe specificity?
+
+				}
+
+				Flotr.draw($('graphzoompanel'), profiles,
+						Gemma.GRAPH_ZOOM_CONFIG);
+
+			}
+
+		});
+
+
 		Ext.apply(this, {
-			items : [this.dv]
+			items : [this.thumbnailPanel, this.zoomPanel]
 		});
 
 		Gemma.VisualizationWindow.superclass.initComponent.call(this);
@@ -275,9 +300,12 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 	displayWindow : function(eeIds, queryGene, coexpressedGene) {
 
-		this.setTitle("Visualization of: " + queryGene.officialSymbol + " (red) with " + coexpressedGene.officialSymbol
-				+ " (black)");
-
+		this.setTitle("Visualization of query gene: " + queryGene.officialSymbol
+				+ " with coexpressed gene <b> " + coexpressedGene.officialSymbol + "</b>");
+		
+		this.thumbnailPanel.setTitle(queryGene.officialSymbol + " (red) with "
+				+ coexpressedGene.officialSymbol + " (black)");
+		
 		var params = [];
 		params.push(eeIds);
 		params.push(queryGene.id);
@@ -306,8 +334,10 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	title : "Visualization",
 
 	initComponent : function() {
-		// If there are any compile errors with the template the error will not make its way to the console.
-		// Tried every combination i could think of to get the profile to display...
+		// If there are any compile errors with the template the error will not
+		// make its way to the console.
+		// Tried every combination i could think of to get the profile to
+		// display...
 		// Can't seem to access the data even though its there...
 
 		this.dv = new Ext.DataView({
@@ -336,7 +366,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 			itemSelector : 'div.vizWrap',
 			prepareData : function(data) {
 
-				// Need to transform the cordinate data from an object to an array for flotr
+				// Need to transform the cordinate data from an object to an
+				// array for flotr
 				// probe, genes
 				var flotrData = [];
 				var coordinateProfile = data.profiles;
@@ -351,7 +382,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					var oneProfile = [];
 
 					for (var j = 0; j < coordinateObject.size(); j++) {
-						var point = [coordinateObject[j].x, coordinateObject[j].y];
+						var point = [coordinateObject[j].x,
+								coordinateObject[j].y];
 						oneProfile.push(point);
 					}
 					var plotConfig = {
@@ -361,8 +393,6 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 					flotrData.push(plotConfig);
 				}
-
-				var data
 
 				data.profiles = flotrData;
 				return data;
