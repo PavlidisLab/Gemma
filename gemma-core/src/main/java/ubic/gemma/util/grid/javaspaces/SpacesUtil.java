@@ -44,6 +44,7 @@ import com.j_spaces.core.admin.StatisticsAdmin;
 import com.j_spaces.core.client.FinderException;
 import com.j_spaces.core.client.SpaceFinder;
 import com.j_spaces.core.exception.StatisticsNotAvailable;
+import com.j_spaces.core.filters.StatisticsContext;
 
 /**
  * A utility class to test javaspaces features such as if the space is running, whether to add the gigaspaces beans to
@@ -81,14 +82,12 @@ public class SpacesUtil implements ApplicationContextAware {
      */
     public static boolean isSpaceRunning( String url ) {
         if ( url == null ) return false;
-        boolean running = true;
         try {
             SpaceFinder.find( url );
+            return true;
         } catch ( FinderException e ) {
-            running = false;
-            log.error( "Error finding space at: " + url + "." );
+            return false;
         }
-        return running;
     }
 
     /**
@@ -99,21 +98,17 @@ public class SpacesUtil implements ApplicationContextAware {
      * @return ApplicatonContext
      */
     public ApplicationContext addGemmaSpacesToApplicationContext( String url ) {
-
         if ( !isSpaceRunning( url ) ) {
-            log.error( "Cannot add Gigaspaces to application context. Space not started at " + url
+            log.warn( "Cannot add Gigaspaces to application context. Space not started at " + url
                     + ". Returning context without gigaspaces beans." );
-
             return applicationContext;
-
         }
 
         if ( !contextContainsGigaspaces() ) {
             return SpringContextUtil.addResourceToContext( applicationContext, new ClassPathResource(
                     SpringContextUtil.GRID_SPRING_BEAN_CONFIG ) );
-        } else {
-            log.info( "Application context unchanged. Gigaspaces beans already exist." );
         }
+        log.info( "Application context unchanged. Gigaspaces beans already exist." );
 
         return applicationContext;
 
@@ -127,7 +122,6 @@ public class SpacesUtil implements ApplicationContextAware {
      */
     public static StatisticsAdmin getStatisticsAdmin( String url ) {
         if ( !isSpaceRunning( url ) ) {
-            log.error( "Space not started at " + url + ". Cannot get statistics admin." );
             return null;
         }
         try {
@@ -145,24 +139,40 @@ public class SpacesUtil implements ApplicationContextAware {
      * 
      * @param url
      */
-    public static void logSpaceStatistics( String url ) {
+    @SuppressWarnings("unchecked")
+    public static String logSpaceStatistics( String url ) {
         StatisticsAdmin admin = getStatisticsAdmin( url );
 
         if ( admin != null ) {
             try {
-                Map statsMap = admin.getStatistics();
-                Collection keys = statsMap.keySet();
-                Iterator iter = keys.iterator();
-                while ( iter.hasNext() ) {
-                    log.debug( statsMap.get( iter.next() ) );
+                if ( !admin.isStatisticsAvailable() ) {
+                    return "Space is running but there are no statistics available";
                 }
+            } catch ( RemoteException e ) {
+                return "Error while checking for statistics: " + e.getMessage();
+            }
+
+            StringBuilder buf = new StringBuilder();
+            try {
+                Map<Integer, StatisticsContext> statsMap = admin.getStatistics();
+                Collection<Integer> keys = statsMap.keySet();
+                Iterator<Integer> iter = keys.iterator();
+                while ( iter.hasNext() ) {
+                    StatisticsContext message = statsMap.get( iter.next() );
+                    buf.append( message + "\n" );
+                    log.debug( message );
+                }
+                if ( buf.length() == 0 ) {
+                    return "No statistics!";
+                }
+                return buf.toString();
             } catch ( StatisticsNotAvailable e ) {
                 throw new RuntimeException( e );
             } catch ( RemoteException e ) {
                 throw new RuntimeException( e );
             }
         }
-        log.error( "Statistics unavailable." );
+        return "Space not running";
     }
 
     /**
@@ -335,6 +345,10 @@ public class SpacesUtil implements ApplicationContextAware {
      */
     public void cancel( Object taskId ) {
 
+        if ( !isSpaceRunning( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) ) {
+            return;
+        }
+
         ApplicationContext updatedContext = addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         if ( !updatedContext.containsBean( GIGASPACES_TEMPLATE ) ) {
@@ -357,8 +371,8 @@ public class SpacesUtil implements ApplicationContextAware {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+     * @seeorg.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.
+     * ApplicationContext)
      */
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.applicationContext = applicationContext;

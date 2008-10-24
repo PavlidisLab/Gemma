@@ -22,6 +22,7 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -37,9 +38,9 @@ public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.G
      * <p>
      * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
      * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
      * </p>
      * 
      * @param id the identifier of the entity to load.
@@ -56,9 +57,9 @@ public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.G
 
     /**
      * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
      * operation which can optionally transform the entity (into a value object for example). By default, transformation
      * does not occur.
      * </p>
@@ -101,20 +102,22 @@ public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.G
      * </p>
      */
     public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships(
-            ubic.gemma.model.genome.Gene gene, int stringency, int maxResults );
+            ubic.gemma.model.genome.Gene gene, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * <p>
      * Returns a map of genes to coexpression results.
      * </p>
      */
-    public java.util.Map findCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency, int maxResults );
+    public java.util.Map findCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency,
+            int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * <p>
      * Return coexpression relationships among the given genes.
      * </p>
      */
-    public java.util.Map findInterCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency );
+    public java.util.Map findInterCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency,
+            GeneCoexpressionAnalysis sourceAnalysis );
 
 }

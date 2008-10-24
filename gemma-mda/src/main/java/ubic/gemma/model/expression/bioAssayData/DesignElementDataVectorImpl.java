@@ -22,8 +22,6 @@
 //
 package ubic.gemma.model.expression.bioAssayData;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */

@@ -22,7 +22,11 @@
 //
 package ubic.gemma.model.genome.gene;
 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PredictedGene;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
 
 /**
  * 
@@ -42,7 +46,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public void remove( java.util.Collection genes );
+    public void remove( java.util.Collection<Gene> genes );
 
     /**
      * 
@@ -63,7 +67,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public java.util.Collection findByOfficialSymbolInexact( java.lang.String officialSymbol );
+    public java.util.Collection<Gene> findByOfficialSymbolInexact( java.lang.String officialSymbol );
 
     /**
      * 
@@ -73,7 +77,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<Gene> loadAll();
 
     /**
      * 
@@ -83,7 +87,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public java.util.Collection create( java.util.Collection genes );
+    public java.util.Collection<Gene> create( java.util.Collection<Gene> genes );
 
     /**
      * 
@@ -93,7 +97,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public java.util.Collection findByAlias( java.lang.String search );
+    public java.util.Collection<Gene> findByAlias( java.lang.String search );
 
     /**
      * 
@@ -119,14 +123,14 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * Gets all the genes for a given taxon
      * </p>
      */
-    public java.util.Collection getGenesByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection<Gene> getGenesByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
      * load all genes specified by the given ids.
      * </p>
      */
-    public java.util.Collection<Gene> loadMultiple( java.util.Collection ids );
+    public java.util.Collection<Gene> loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -141,13 +145,13 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * Returns a list of compositeSequences associated with the given gene and array design
      * </p>
      */
-    public java.util.Collection getCompositeSequences( ubic.gemma.model.genome.Gene gene,
+    public java.util.Collection<CompositeSequence> getCompositeSequences( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
-    /**
-     * 
-     */
-    public java.util.Map getCompositeSequenceMap( java.util.Collection genes );
+//    /**
+//     * 
+//     */
+//    public java.util.Map getCompositeSequenceMap( java.util.Collection genes );
 
     /**
      * 
@@ -155,31 +159,24 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     public long getCompositeSequenceCountById( java.lang.Long id );
 
     /**
-     * 
+     * Return probes for a gene id.
      */
-    public java.util.Collection getCompositeSequencesById( java.lang.Long id );
-
-    /**
-     * <p>
-     * Return the csId->geneIds map for the given csIds.
-     * </p>
-     */
-    public java.util.Map getCS2GeneMap( java.util.Collection csIds );
+    public java.util.Collection<CompositeSequence> getCompositeSequencesById( java.lang.Long id );
 
     /**
      * <p>
      * Returns a CoexpressionCollection similar to getCoexpressedGenes() but for multiple input genes.
      * </p>
      */
-    public java.lang.Object getMultipleCoexpressionResults( java.util.Collection genes, java.util.Collection ees,
-            java.lang.Integer stringency );
+    public java.lang.Object getMultipleCoexpressionResults( java.util.Collection<Gene> genes,
+            java.util.Collection<ExpressionExperiment> ees, java.lang.Integer stringency );
 
     /**
      * <p>
      * Returns a collection of all ProbeAlignedRegion's for the specfied taxon
      * </p>
      */
-    public java.util.Collection loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -193,7 +190,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * Returns a collection of Predicted Genes for the specified taxon
      * </p>
      */
-    public java.util.Collection loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -201,8 +198,8 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * didn't have any specificty problems (ie all the probes were clean).
      * </p>
      */
-    public java.util.Collection getCoexpressedKnownGenes( ubic.gemma.model.genome.Gene gene, java.util.Collection ees,
-            java.lang.Integer stringency );
+    public java.util.Collection<Gene> getCoexpressedKnownGenes( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<ExpressionExperiment> ees, java.lang.Integer stringency );
 
     /**
      * 
@@ -218,7 +215,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public void thawLite( java.util.Collection genes );
+    public void thawLite( java.util.Collection<Gene> genes );
 
     /**
      * 

@@ -63,8 +63,8 @@ import ubic.gemma.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.loader.util.parser.Parser;
 
 /**
- * Class for parsing GSE and GDS files from NCBI GEO. See
- * {@link http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html} for format information.
+ * Class for parsing GSE and GDS files from NCBI GEO. See {@link http
+ * ://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html} for format information.
  * 
  * @author keshav
  * @author pavlidis
@@ -154,7 +154,6 @@ public class GeoFamilyParser implements Parser {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Parser#getResults()
      */
     public Collection<Object> getResults() {
@@ -165,7 +164,6 @@ public class GeoFamilyParser implements Parser {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.io.File)
      */
     public void parse( File f ) throws IOException {
@@ -176,7 +174,6 @@ public class GeoFamilyParser implements Parser {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.io.InputStream)
      */
     public void parse( InputStream is ) throws IOException {
@@ -244,7 +241,6 @@ public class GeoFamilyParser implements Parser {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.lang.String)
      */
     public void parse( String fileName ) throws IOException {
@@ -490,6 +486,9 @@ public class GeoFamilyParser implements Parser {
      * @throws IOException
      */
     private Exception doParse( BufferedReader dis ) {
+        if ( dis == null ) {
+            throw new RuntimeException( "Null reader" );
+        }
         haveReadPlatformHeader = false;
         haveReadSampleDataHeader = false;
         alreadyWarnedAboutClobbering = false;
@@ -821,7 +820,6 @@ public class GeoFamilyParser implements Parser {
      * #ID_REF = probe id 
      * #VALUE = RMA value
      * </pre>
-     * 
      * <p>
      * FIXME For subsets, these lines are ignored (do they even occur?). In 'series' sections of GSE files, the data are
      * kept (but does this occur?) .

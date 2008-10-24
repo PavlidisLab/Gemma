@@ -146,7 +146,19 @@ Ext.onReady(function() {
 
 	knownGeneGrid.on("cellclick", geneRowClickHandler, knownGeneGrid);
 
+	/*
+	 * Handler for the coexpression search results.
+	 */
 	searchPanel.on("aftersearch", function(panel, result) {
+
+				/*
+				 * Report any errors.
+				 */
+				if (result.errorState) {
+					Ext.DomHelper.overwrite('coexpression-messages', result.errorState);
+					return;
+				}
+
 				var eeMap = {};
 				if (result.datasets) {
 					for (var i = 0; i < result.datasets.length; ++i) {

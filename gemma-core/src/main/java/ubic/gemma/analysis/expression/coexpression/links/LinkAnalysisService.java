@@ -36,6 +36,7 @@ import java.util.Map;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.TransformIterator;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,6 +46,8 @@ import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.preprocess.ExpressionDataSVD;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.preprocess.filter.InsufficientSamplesException;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -57,6 +60,10 @@ import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -88,22 +95,64 @@ import cern.colt.list.ObjectArrayList;
  * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
  * @spring.property name="expressionDataMatrixService" ref="expressionDataMatrixService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
+ * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
  * @author Paul
  * @version $Id$
  */
 public class LinkAnalysisService {
 
+    // a closure would be just the thing here.
+    private class Creator {
+
+        Method m;
+        private Object[] arg;
+        @SuppressWarnings("unchecked")
+        private Class clazz;
+        private BioAssaySet ebas;
+
+        @SuppressWarnings("unchecked")
+        Creator( Class clazz, BioAssaySet experiment ) {
+            this.ebas = experiment;
+            this.clazz = clazz;
+            this.arg = new Object[] {};
+            try {
+                m = clazz.getMethod( "newInstance", new Class[] {} );
+            } catch ( SecurityException e ) {
+                throw new RuntimeException( e );
+            } catch ( NoSuchMethodException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
+        public Probe2ProbeCoexpression create() {
+            Probe2ProbeCoexpression result = null;
+            try {
+                result = ( Probe2ProbeCoexpression ) m.invoke( clazz, arg );
+                result.setExpressionBioAssaySet( ebas );
+                return result;
+            } catch ( IllegalArgumentException e ) {
+                throw new RuntimeException( e );
+            } catch ( IllegalAccessException e ) {
+                throw new RuntimeException( e );
+            } catch ( InvocationTargetException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+    }
+
     private static final int LINK_BATCH_SIZE = 5000;
 
-    private static final boolean useDB = true; // useful for debugging.
-
     private static Log log = LogFactory.getLog( LinkAnalysisService.class.getName() );
-    QuantitationTypeService quantitationTypeService;
-    ExpressionExperimentService eeService;
-    CompositeSequenceService csService;
-    private Probe2ProbeCoexpressionService ppService = null;
-    private PersisterHelper persisterHelper;
+    private static final boolean useDB = true; // useful for debugging.
+    private AuditTrailService auditTrailService;
+    private CompositeSequenceService csService;
+    private ExpressionExperimentService eeService;
     private ExpressionDataMatrixService expressionDataMatrixService = null;
+    private ExpressionExperimentReportService expressionExperimentReportService;
+    private PersisterHelper persisterHelper;
+    private Probe2ProbeCoexpressionService ppService = null;
+    private QuantitationTypeService quantitationTypeService;
 
     /**
      * Run a link analysis on an experiment, and persist the results if the configuration says to.
@@ -115,64 +164,76 @@ public class LinkAnalysisService {
      */
     public void process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
 
-        LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
-        la.clear();
+        try {
+            LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
+            la.clear();
 
-        log.info( "Fetching expression data ... " + ee );
-        eeService.thawLite( ee );
-        Collection<ProcessedExpressionDataVector> dataVectors = expressionDataMatrixService
-                .getProcessedExpressionDataVectors( ee );
+            log.info( "Fetching expression data ... " + ee );
+            eeService.thawLite( ee );
+            Collection<ProcessedExpressionDataVector> dataVectors = expressionDataMatrixService
+                    .getProcessedExpressionDataVectors( ee );
 
-        checkVectors( ee, dataVectors );
+            checkVectors( ee, dataVectors );
 
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
-                dataVectors );
+            ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
+                    dataVectors );
 
-        if ( datamatrix.rows() == 0 ) {
-            log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( "No rows left after filtering" );
-        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
-                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
-                    + " rows" );
-        }
-
-        datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
-
-        /*
-         * Might as well while we have the data handy
-         */
-        if ( linkAnalysisConfig.isMakeSampleCorrMatImages() ) {
-            log.info( "Creating sample correlation matrix ..." );
-            ExpressionDataSampleCorrelation.process( datamatrix, ee );
-        }
-
-        /*
-         * Link analysis section.
-         */
-        log.info( "Starting link analysis... " + ee );
-        setUpForAnalysis( ee, la, dataVectors, datamatrix );
-        addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
-        Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
-        la.analyze();
-
-        // output
-        if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
-
-            Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-            ees.add( ee );
-
-            saveLinks( p2v, la );
-        } else if ( linkAnalysisConfig.isTextOut() ) {
-            try {
-                writeLinks( la, new PrintWriter( System.out ) );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
+            if ( datamatrix.rows() == 0 ) {
+                log.info( "No rows left after filtering" );
+                throw new InsufficientProbesException( "No rows left after filtering" );
+            } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+                throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
+                        + "), data sets are not analyzed unless they have at least "
+                        + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
             }
+
+            datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
+
+            /*
+             * Might as well while we have the data handy
+             */
+            if ( linkAnalysisConfig.isMakeSampleCorrMatImages() ) {
+                log.info( "Creating sample correlation matrix ..." );
+                ExpressionDataSampleCorrelation.process( datamatrix, ee );
+            }
+
+            /*
+             * Link analysis section.
+             */
+            log.info( "Starting link analysis... " + ee );
+            setUpForAnalysis( ee, la, dataVectors, datamatrix );
+            addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
+            Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
+            la.analyze();
+
+            // output
+            if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
+
+                Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+                ees.add( ee );
+
+                saveLinks( p2v, la );
+
+                audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
+
+            } else if ( linkAnalysisConfig.isTextOut() ) {
+                try {
+                    writeLinks( la, new PrintWriter( System.out ) );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
+            }
+
+            log.info( "Done with processing of " + ee );
+        } catch ( Exception e ) {
+            logFailure( ee, e );
+            throw new RuntimeException( e );
         }
 
-        log.info( "Done with processing of " + ee );
+    }
 
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
     }
 
     public void setCsService( CompositeSequenceService csService ) {
@@ -185,6 +246,11 @@ public class LinkAnalysisService {
 
     public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
         this.expressionDataMatrixService = expressionDataMatrixService;
+    }
+
+    public void setExpressionExperimentReportService(
+            ExpressionExperimentReportService expressionExperimentReportService ) {
+        this.expressionExperimentReportService = expressionExperimentReportService;
     }
 
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
@@ -236,6 +302,11 @@ public class LinkAnalysisService {
         analysis.setProbesUsed( probesUsed );
 
         la.setAnalysisObj( analysis );
+    }
+
+    private void audit( ExpressionExperiment ee, String note, LinkAnalysisEvent eventType ) {
+        expressionExperimentReportService.generateSummaryObject( ee.getId() );
+        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**
@@ -330,6 +401,21 @@ public class LinkAnalysisService {
         ppCoexpression.setMetric( metric );
         ppCoexpression.setSourceAnalysis( analysisObj );
         return ppCoexpression;
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param e
+     */
+    private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
+        if ( e instanceof InsufficientSamplesException ) {
+            audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
+        } else if ( e instanceof InsufficientProbesException ) {
+            audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
+        } else {
+            audit( expressionExperiment, ExceptionUtils.getFullStackTrace( e ), FailedLinkAnalysisEvent.Factory
+                    .newInstance() );
+        }
     }
 
     /**
@@ -637,45 +723,6 @@ public class LinkAnalysisService {
         }
         wr.flush();
         log.info( "Done, " + numPrinted + "/" + links.size() + " links printed (some may have been filtered)" );
-    }
-
-    // a closure would be just the thing here.
-    private class Creator {
-
-        Method m;
-        private Object[] arg;
-        @SuppressWarnings("unchecked")
-        private Class clazz;
-        private BioAssaySet ebas;
-
-        @SuppressWarnings("unchecked")
-        Creator( Class clazz, BioAssaySet experiment ) {
-            this.ebas = experiment;
-            this.clazz = clazz;
-            this.arg = new Object[] {};
-            try {
-                m = clazz.getMethod( "newInstance", new Class[] {} );
-            } catch ( SecurityException e ) {
-                throw new RuntimeException( e );
-            } catch ( NoSuchMethodException e ) {
-                throw new RuntimeException( e );
-            }
-        }
-
-        public Probe2ProbeCoexpression create() {
-            Probe2ProbeCoexpression result = null;
-            try {
-                result = ( Probe2ProbeCoexpression ) m.invoke( clazz, arg );
-                result.setExpressionBioAssaySet( ebas );
-                return result;
-            } catch ( IllegalArgumentException e ) {
-                throw new RuntimeException( e );
-            } catch ( IllegalAccessException e ) {
-                throw new RuntimeException( e );
-            } catch ( InvocationTargetException e ) {
-                throw new RuntimeException( e );
-            }
-        }
     }
 
 }

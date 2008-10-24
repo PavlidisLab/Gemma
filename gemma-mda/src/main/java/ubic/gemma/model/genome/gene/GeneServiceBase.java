@@ -22,10 +22,14 @@
 //
 package ubic.gemma.model.genome.gene;
 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
+
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.genome.gene.GeneService</code>, provides access to all
- * services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.genome.gene.GeneService</code>, provides access to all services
+ * and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.genome.gene.GeneService
@@ -122,7 +126,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#findByOfficialName(java.lang.String)
      */
-    public java.util.Collection findByOfficialName( final java.lang.String officialName ) {
+    public java.util.Collection<Gene> findByOfficialName( final java.lang.String officialName ) {
         try {
             return this.handleFindByOfficialName( officialName );
         } catch ( Throwable th ) {
@@ -135,7 +139,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #findByOfficialName(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByOfficialName( java.lang.String officialName )
+    protected abstract java.util.Collection<Gene> handleFindByOfficialName( java.lang.String officialName )
             throws java.lang.Exception;
 
     /**
@@ -161,7 +165,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#findByOfficialSymbol(java.lang.String)
      */
-    public java.util.Collection findByOfficialSymbol( final java.lang.String officialSymbol ) {
+    public java.util.Collection<Gene> findByOfficialSymbol( final java.lang.String officialSymbol ) {
         try {
             return this.handleFindByOfficialSymbol( officialSymbol );
         } catch ( Throwable th ) {
@@ -174,13 +178,13 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #findByOfficialSymbol(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByOfficialSymbol( java.lang.String officialSymbol )
+    protected abstract java.util.Collection<Gene> handleFindByOfficialSymbol( java.lang.String officialSymbol )
             throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#findByOfficialSymbolInexact(java.lang.String)
      */
-    public java.util.Collection findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
+    public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
         try {
             return this.handleFindByOfficialSymbolInexact( officialSymbol );
         } catch ( Throwable th ) {
@@ -193,7 +197,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #findByOfficialSymbolInexact(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByOfficialSymbolInexact( java.lang.String officialSymbol )
+    protected abstract java.util.Collection<Gene> handleFindByOfficialSymbolInexact( java.lang.String officialSymbol )
             throws java.lang.Exception;
 
     /**
@@ -218,7 +222,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<Gene> loadAll() {
         try {
             return this.handleLoadAll();
         } catch ( Throwable th ) {
@@ -230,7 +234,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleLoadAll() throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#create(ubic.gemma.model.genome.Gene)
@@ -254,7 +258,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#create(java.util.Collection)
      */
-    public java.util.Collection create( final java.util.Collection genes ) {
+    public java.util.Collection<Gene> create( final java.util.Collection<Gene> genes ) {
         try {
             return this.handleCreate( genes );
         } catch ( Throwable th ) {
@@ -267,7 +271,8 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #create(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleCreate( java.util.Collection genes ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleCreate( java.util.Collection<Gene> genes )
+            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#load(long)
@@ -289,7 +294,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#findByAlias(java.lang.String)
      */
-    public java.util.Collection findByAlias( final java.lang.String search ) {
+    public java.util.Collection<Gene> findByAlias( final java.lang.String search ) {
         try {
             return this.handleFindByAlias( search );
         } catch ( Throwable th ) {
@@ -302,7 +307,8 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #findByAlias(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByAlias( java.lang.String search ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleFindByAlias( java.lang.String search )
+            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#find(ubic.gemma.model.genome.Gene)
@@ -422,7 +428,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
      * @see ubic.gemma.model.genome.gene.GeneService#getCompositeSequences(ubic.gemma.model.genome.Gene,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public java.util.Collection getCompositeSequences( final ubic.gemma.model.genome.Gene gene,
+    public java.util.Collection<CompositeSequence> getCompositeSequences( final ubic.gemma.model.genome.Gene gene,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
             return this.handleGetCompositeSequences( gene, arrayDesign );
@@ -437,27 +443,28 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
      * Performs the core logic for
      * {@link #getCompositeSequences(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Collection handleGetCompositeSequences( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneService#getCompositeSequenceMap(java.util.Collection)
-     */
-    public java.util.Map getCompositeSequenceMap( final java.util.Collection genes ) {
-        try {
-            return this.handleGetCompositeSequenceMap( genes );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.gene.GeneServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.GeneService.getCompositeSequenceMap(java.util.Collection genes)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getCompositeSequenceMap(java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetCompositeSequenceMap( java.util.Collection genes )
+    protected abstract java.util.Collection<CompositeSequence> handleGetCompositeSequences(
+            ubic.gemma.model.genome.Gene gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception;
+
+    // /**
+    // * @see ubic.gemma.model.genome.gene.GeneService#getCompositeSequenceMap(java.util.Collection)
+    // */
+    // public java.util.Map getCompositeSequenceMap( final java.util.Collection genes ) {
+    // try {
+    // return this.handleGetCompositeSequenceMap( genes );
+    // } catch ( Throwable th ) {
+    // throw new ubic.gemma.model.genome.gene.GeneServiceException(
+    // "Error performing 'ubic.gemma.model.genome.gene.GeneService.getCompositeSequenceMap(java.util.Collection genes)' --> "
+    // + th, th );
+    // }
+    // }
+    //
+    // /**
+    // * Performs the core logic for {@link #getCompositeSequenceMap(java.util.Collection)}
+    // */
+    // protected abstract java.util.Map handleGetCompositeSequenceMap( java.util.Collection genes )
+    // throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#getCompositeSequenceCountById(java.lang.Long)
@@ -497,24 +504,6 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
             throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneService#getCS2GeneMap(java.util.Collection)
-     */
-    public java.util.Map getCS2GeneMap( final java.util.Collection csIds ) {
-        try {
-            return this.handleGetCS2GeneMap( csIds );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.gene.GeneServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.GeneService.getCS2GeneMap(java.util.Collection csIds)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getCS2GeneMap(java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetCS2GeneMap( java.util.Collection csIds ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.genome.gene.GeneService#getMultipleCoexpressionResults(java.util.Collection,
      *      java.util.Collection, java.lang.Integer)
      */
@@ -552,13 +541,13 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection handleLoadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions(
+            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#loadKnownGenes(ubic.gemma.model.genome.Taxon)
      */
-    public java.util.Collection loadKnownGenes( final ubic.gemma.model.genome.Taxon taxon ) {
+    public java.util.Collection<Gene> loadKnownGenes( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleLoadKnownGenes( taxon );
         } catch ( Throwable th ) {
@@ -571,7 +560,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #loadKnownGenes(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection handleLoadKnownGenes( ubic.gemma.model.genome.Taxon taxon )
+    protected abstract java.util.Collection<Gene> handleLoadKnownGenes( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
     /**

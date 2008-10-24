@@ -76,7 +76,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     /*
      * (non-Javadoc) This should be faster than doing it one at a time; uses the "DML-style" syntax. This implementation
      * assumes all the links in the collection are of the same class!F
-     * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression#remove(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -130,8 +129,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCountLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCountLinks(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
@@ -178,8 +178,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleDeleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleDeleteLinks(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -194,7 +194,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         Analysis analysis = null;
         for ( String p2pClassName : p2pClassNames ) {
 
-            final String findLinkAnalysisObject = "select p from ProbeCoexpressionAnalysisImpl p inner join p.expressionExperimentSetAnalyzed eas inner join eas.experiments e where e = :ee";
+            final String findLinkAnalysisObject = "select p from ProbeCoexpressionAnalysisImpl p inner join"
+                    + " p.expressionExperimentSetAnalyzed eas inner join eas.experiments e where e = :ee";
             List o = this.getHibernateTemplate().findByNamedParam( findLinkAnalysisObject, "ee", ee );
             if ( o.size() > 0 ) {
                 analysis = ( Analysis ) o.iterator().next();
@@ -229,17 +230,19 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
-     *      java.util.Collection, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
+     * (ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
      */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleGetExpressionExperimentsLinkTestedIn( Gene gene,
             Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
 
-        if ( expressionExperiments == null || expressionExperiments.isEmpty() )
+        if ( expressionExperiments == null || expressionExperiments.isEmpty() ) {
+            log.warn( "No expression experiments entered" );
             return new HashSet<ExpressionExperiment>();
+        }
 
         // FIXME implement filterNonSpecific.
         if ( filterNonSpecific ) {
@@ -251,16 +254,17 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         if ( probes.size() == 0 ) return new HashSet<ExpressionExperiment>();
 
         // Locate analyses which use these probes, return the expression experiments
-        String queryString = "select distinct ees from ProbeCoexpressionAnalysisImpl pca inner join pca.expressionExperimentSetAnalyzed eesa inner join eesa.experiments ees inner join pca.probesUsed pu where ees in (:ees) and pu in (:probes)";
+        String queryString = "select distinct ees from ProbeCoexpressionAnalysisImpl pca inner join"
+                + " pca.expressionExperimentSetAnalyzed eesa inner join eesa.experiments ees inner join pca.probesUsed pu where ees in (:ees) and pu in (:probes)";
         return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
                 new Object[] { expressionExperiments, probes } );
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model
+     * .expression.experiment.ExpressionExperiment, boolean)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -290,15 +294,14 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
+     * (ubic.gemma.model.genome.Gene, ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
      */
     @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsLinkTestedIn( Gene geneA,
-            Collection /* Long */genesB, Collection expressionExperiments, boolean filterNonSpecific )
-            throws Exception {
+            Collection /* Long */genesB, Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
 
         // FIXME implement filterNonSpecific.
         if ( filterNonSpecific ) {
@@ -320,9 +323,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsTestedIn(java.util.Collection,
-     *      java.util.Collection, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsTestedIn
+     * (java.util.Collection, java.util.Collection, boolean)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -344,7 +347,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         // this step is fast.
         Map<Long, Collection<Long>> cs2genes = this.getCs2GenesMapFromGenes( genes );
 
-        log.info( cs2genes.size() + " probes for " + genes.size() + " genes to examine in "
+        log.info( cs2genes.size() + " probes for " + genes.size() + " genes to examined in "
                 + expressionExperiments.size() + " ees." );
         List eesre = new ArrayList();
         StopWatch watch = new StopWatch();
@@ -353,6 +356,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             // This is very rather slow, if doing this with big collections.
             eesre.addAll( this.getHibernateTemplate().findByNamedParam( queryString, "probes", csBatch ) );
         }
+
         if ( watch.getTime() > 1000 ) {
             log.info( "Done in " + watch.getTime() + "ms: " + eesre.size() + " records." );
         }
@@ -374,9 +378,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetProbeCoExpression(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      java.lang.String, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetProbeCoExpression(ubic.gemma
+     * .model.expression.experiment.ExpressionExperiment, java.lang.String, boolean)
      */
     @Override
     protected Collection<ProbeLink> handleGetProbeCoExpression( ExpressionExperiment expressionExperiment,
@@ -388,9 +392,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(java.util.Collection,
-     *      java.util.Collection)
+     * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(java.util.
+     * Collection, java.util.Collection)
      */
     @Override
     protected Map<Gene, Collection<DesignElementDataVector>> handleGetVectorsForLinks( Collection genes, Collection ees )
@@ -444,9 +447,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(ubic.gemma.model.genome.Gene,
-     *      java.util.Collection)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(ubic.gemma.
+     * model.genome.Gene, java.util.Collection)
      */
     @SuppressWarnings("unchecked")
     protected java.util.Collection<DesignElementDataVector> handleGetVectorsForLinks( Gene gene,
@@ -484,9 +487,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handlePrepareForShuffling(java.util.Collection,
-     *      java.lang.String, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handlePrepareForShuffling(java.util.
+     * Collection, java.lang.String, boolean)
      */
     @Override
     protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )

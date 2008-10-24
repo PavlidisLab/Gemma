@@ -47,7 +47,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$
  */
 public class DifferentialExpressionAnalyzer {
-    DifferentialExpressionAnalysis expressionAnalysis = null;
 
     private Log log = LogFactory.getLog( this.getClass() );
     private int EXPERIMENTAL_FACTOR_ONE = 1;
@@ -66,24 +65,16 @@ public class DifferentialExpressionAnalyzer {
      * Initiates the differential expression analysis (this is the entry point).
      * 
      * @param expressionExperiment
+     * @return
      */
-    public void analyze( ExpressionExperiment expressionExperiment ) {
+    public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment ) {
 
         AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment );
 
-        expressionAnalysis = analyzer.getDifferentialExpressionAnalysis( expressionExperiment );
+        DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment );
 
-    }
+        return analysis;
 
-    /**
-     * Returns the expression analysis and results from the executed analysis.
-     * 
-     * @return
-     */
-    public DifferentialExpressionAnalysis getExpressionAnalysis() {
-        if ( expressionAnalysis == null ) return null;
-
-        return expressionAnalysis;
     }
 
     public void setDifferentialExpressionAnalysisHelperService(
@@ -176,10 +167,10 @@ public class DifferentialExpressionAnalyzer {
             if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment ) ) {
                 log.info( "Running two way anova without interactions." );
                 return twoWayAnovaWithoutInteractionsAnalyzer;
-            } else {
-                log.info( "Running two way anova with interactions." );
-                return twoWayAnovaWithInteractionsAnalyzer;
             }
+            log.info( "Running two way anova with interactions." );
+            return twoWayAnovaWithInteractionsAnalyzer;
+
         }
 
         throw new RuntimeException(
@@ -191,9 +182,8 @@ public class DifferentialExpressionAnalyzer {
      * @param col
      * @return
      */
-    private boolean colIsEmpty( Collection col ) {
-        if ( col == null || col.size() == 0 ) return true;
-
+    private boolean colIsEmpty( Collection<? extends Object> col ) {
+        if ( col == null || col.isEmpty() ) return true;
         return false;
     }
 

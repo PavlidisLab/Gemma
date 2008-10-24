@@ -37,6 +37,8 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -53,6 +55,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
  * @spring.property name="differentialExpressionAnalyzer" ref="differentialExpressionAnalyzer"
  * @spring.property name="persisterHelper" ref="persisterHelper"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  * @author keshav
  * @version $Id$
  */
@@ -64,6 +67,7 @@ public class DifferentialExpressionAnalyzerService {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
     private PersisterHelper persisterHelper = null;
+    private AuditTrailService auditTrailService = null;
 
     /**
      * Finds the persistent expression experiment. If there are no associated analyses with this experiment, the
@@ -85,7 +89,8 @@ public class DifferentialExpressionAnalyzerService {
         Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
 
-        DifferentialExpressionAnalysis diffExpressionAnalysis = differentialExpressionAnalyzer.getExpressionAnalysis();
+        DifferentialExpressionAnalysis diffExpressionAnalysis = differentialExpressionAnalyzer
+                .analyze( expressionExperiment );
 
         if ( diffExpressionAnalysis == null ) {
             log.error( "No differential expression analyses for " + expressionExperiment.getShortName() );
@@ -101,6 +106,12 @@ public class DifferentialExpressionAnalyzerService {
         diffExpressionAnalysis = ( DifferentialExpressionAnalysis ) persisterHelper.persist( diffExpressionAnalysis );
         expressionAnalyses.add( diffExpressionAnalysis );
 
+        /*
+         * Audit event!
+         */
+        auditTrailService.addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.Factory
+                .newInstance(), "" );
+
         differentialExpressionAnalysisService.thaw( expressionAnalyses );
 
         /* return the expression analyses of type differential expression */
@@ -115,6 +126,10 @@ public class DifferentialExpressionAnalyzerService {
         return differentialExpressionAnalyses;
     }
 
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
     /**
      * Run differential expression on the {@link ExpressionExperiment} if analyses do not already exist. If forceRun =
      * true, runs even if analyses exist but first deletes the old differential expression analysis.
@@ -127,7 +142,7 @@ public class DifferentialExpressionAnalyzerService {
     @SuppressWarnings("unchecked")
     public boolean runDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment, boolean forceRun ) {
 
-        boolean analysisRun = false;
+        boolean anaylysisWasRun = false;
 
         Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
@@ -156,7 +171,7 @@ public class DifferentialExpressionAnalyzerService {
             log.warn( message );
 
             differentialExpressionAnalyzer.analyze( expressionExperiment );
-            analysisRun = true;
+            anaylysisWasRun = true;
         } else {
             boolean hasDiffex = false;
             for ( ExpressionAnalysis expressionAnalysis : expressionAnalyses ) {
@@ -168,10 +183,10 @@ public class DifferentialExpressionAnalyzerService {
                 log.warn( "Differential expression analysis already run for experiment "
                         + expressionExperiment.getShortName()
                         + ".  Not running again.  To force a re-analysis, set forceRun = true." );
-                analysisRun = false;
+                anaylysisWasRun = false;
             }
         }
-        return analysisRun;
+        return anaylysisWasRun;
     }
 
     /**
@@ -213,7 +228,6 @@ public class DifferentialExpressionAnalyzerService {
      * 
      * @param shortName
      */
-    @SuppressWarnings("unchecked")
     public void delete( String shortName ) {
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
         if ( ee == null ) {

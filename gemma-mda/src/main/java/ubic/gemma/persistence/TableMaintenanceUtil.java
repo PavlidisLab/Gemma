@@ -177,7 +177,7 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
     private void generateGene2CsEntries() throws Exception {
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        this.getHibernateTemplate().executeWithNewSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
                 log.info( "Deleting all entries for Gene2Cs." );
                 String queryString = "TRUNCATE TABLE GENE2CS";
@@ -196,7 +196,7 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
                 session.clear();
                 return null;
             }
-        }, true );
+        } );
     }
 
     /**

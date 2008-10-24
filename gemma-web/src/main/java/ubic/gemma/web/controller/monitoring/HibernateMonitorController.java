@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.monitoring;
 
+import ubic.gemma.util.grid.javaspaces.SpacesEnum;
+import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.monitor.CacheMonitor;
 import ubic.gemma.util.monitor.HibernateMonitor;
 
@@ -38,6 +40,10 @@ public class HibernateMonitorController {
      */
     public String getHibernateStatus() {
         return this.hibernateMonitor.getStats( true, true, true );
+    }
+
+    public String getSpaceStatus() {
+        return SpacesUtil.logSpaceStatistics( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
     public String getCacheStatus() {

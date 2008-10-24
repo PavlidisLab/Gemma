@@ -39,18 +39,19 @@ public class VisualizationValueObject {
     private ExpressionExperimentValueObject eevo = null;
     private Map<Long, String> colorMap = new HashMap<Long, String>();
 
-    private static String[] colors = new String[] { "red", "black", "blue", "green" };
+    private static String[] colors = new String[] { "red", "black", "blue", "green", "orange" };
     private static Log log = LogFactory.getLog( VisualizationValueObject.class );
 
-    
     public VisualizationValueObject() {
         super();
         this.profiles = new HashSet<GeneExpressionProfile>();
     }
 
     /**
-     * @param vectors
-     * @param genes  Is list so that order is gauranteed.  Need this so that color's are consistent.  Query gene is always black, coexpressed is always red. 
+     * @param vectors from a single expression experiment.
+     * @param genes Is list so that order is gauranteed. Need this so that color's are consistent. Query gene is always
+     *        black, coexpressed is always red.
+     * @throws IllegalArgumentException if vectors are mixed between EEs.
      */
     public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes ) {
         this();
@@ -60,27 +61,38 @@ public class VisualizationValueObject {
             // / FIXME
         }
         for ( Gene g : genes ) {
+            log.debug( "Gene: " + g.getName() + " color=" + colors[i] );
             colorMap.put( g.getId(), colors[i] );
             i++;
         }
 
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
-                setEE(vector.getExpressionExperiment());
+                setEE( vector.getExpressionExperiment() );
             } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
                 throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "
                         + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
             }
 
             String color = null;
+            // log.info( vector + " GENES=" + StringUtils.join( vector.getGenes(), ',' ) );
             for ( Gene g : genes ) {
                 if ( vector.getGenes().contains( g ) ) {
-                    if (color != null){
-                        log.warn("Probe: " +vector.getDesignElement().getName() + " contains both the query gene and the expressed gene");
+                    if ( color != null ) {
+                        /*
+                         * Special color to denote probes that hyb to both genes.
+                         */
+                        color = "#CCCCCC";
+                        if ( log.isDebugEnabled() )
+                            log.debug( "EE: " + eevo.getId() + "; Probe: " + vector.getDesignElement().getName()
+                                    + " (id=" + vector.getDesignElement().getId()
+                                    + ") matches more than one of the genes" );
+                    } else {
+                        color = colorMap.get( g.getId() );
                     }
-                    color = colorMap.get( g.getId() );
                 }
             }
+            // log.info( vector + " -> " + color );
             GeneExpressionProfile profile = new GeneExpressionProfile( vector, color );
             profiles.add( profile );
 
@@ -108,16 +120,16 @@ public class VisualizationValueObject {
     public void setEE( ExpressionExperiment ee ) {
         this.eevo = new ExpressionExperimentValueObject();
         this.eevo = new ExpressionExperimentValueObject();
-        this.eevo.setId(  ee.getId());
-        this.eevo.setName( ee.getName());
+        this.eevo.setId( ee.getId() );
+        this.eevo.setName( ee.getName() );
         this.eevo.setShortName( ee.getShortName() );
         this.eevo.setClazz( "ExpressionExperimentValueObject" );
     }
 
-    public void setEevo(ExpressionExperimentValueObject eevo){
+    public void setEevo( ExpressionExperimentValueObject eevo ) {
         this.eevo = eevo;
     }
-    
+
     public Collection<GeneExpressionProfile> getProfiles() {
         return profiles;
     }

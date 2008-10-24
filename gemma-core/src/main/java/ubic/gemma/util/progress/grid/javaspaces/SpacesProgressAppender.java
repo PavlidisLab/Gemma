@@ -61,6 +61,7 @@ public class SpacesProgressAppender extends ProgressAppender {
             if ( entry == null ) {
                 entry = new SpacesProgressEntry();
                 entry.message = "Logging Server Task";
+                gigaSpacesTemplate.clear(entry);
                 gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
             } else {
                 try {

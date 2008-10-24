@@ -58,7 +58,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
     private Collection<Gene> toUseGenes;
     private int toUseStringency;
 
-    private String toUseAnalysisName;
+    // private String toUseAnalysisName;
     private boolean knownGenesOnly = true;
 
     @SuppressWarnings("static-access")
@@ -73,22 +73,21 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         Option stringencyOption = OptionBuilder.hasArg().withArgName( "stringency" ).withDescription(
                 "The stringency value: Defaults to " + DEFAULT_STRINGINCY ).withLongOpt( "stringency" ).create( 's' );
 
-        Option analysisNameOption = OptionBuilder.hasArg().isRequired().withArgName( "name" ).withDescription(
-                "The name of the analysis to create" ).withLongOpt( "name" ).create( 'a' );
+        // Option analysisNameOption = OptionBuilder.hasArg().isRequired().withArgName( "name" ).withDescription(
+        // "The name of the analysis to create" ).withLongOpt( "name" ).create( 'a' );
 
         Option allGenesOption = OptionBuilder.withDescription( "Run on all genes, including predicted and PARs" )
                 .create( ALLGENES_OPTION );
 
         addOption( geneFileOption );
         addOption( stringencyOption );
-        addOption( analysisNameOption );
+        // addOption( analysisNameOption );
         addOption( allGenesOption );
 
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -98,15 +97,19 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
         log.debug( displayEEs() );
         if ( this.expressionExperimentSet != null ) {
-            log.info( "Using EESet:" + this.expressionExperimentSet.getName() + " - "
-                    + this.expressionExperiments.size() + " Expression Experiments." );
-            geneVoteAnalyzer.analyze( this.expressionExperimentSet, toUseGenes, toUseStringency, knownGenesOnly,
-                    toUseAnalysisName );
-        } else {
-            log.info( "Using " + this.expressionExperiments.size() + " Expression Experiments." );
-            geneVoteAnalyzer.analyze( this.expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly,
-                    toUseAnalysisName );
+            // log.info( "Using EESet:" + this.expressionExperimentSet.getName() + " - "
+            // + this.expressionExperiments.size() + " Expression Experiments." );
+            // geneVoteAnalyzer.analyze( this.expressionExperimentSet, toUseGenes, toUseStringency, knownGenesOnly,
+            // toUseAnalysisName );
+            throw new UnsupportedOperationException( "Don't use an EEset; Use all EEs instead please" );
         }
+        assert this.taxon != null : "Please provide a taxon.";
+
+        String analysisName = "All " + taxon.getCommonName();
+
+        log.info( "Using " + this.expressionExperiments.size() + " Expression Experiments." );
+        geneVoteAnalyzer
+                .analyze( this.expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly, analysisName );
 
         return null;
     }
@@ -114,8 +117,6 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
     /**
      * 
      */
-
-    @SuppressWarnings("unchecked")
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -146,9 +147,9 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
             toUseStringency = Integer.parseInt( this.getOptionValue( 's' ) );
         }
 
-        if ( this.hasOption( 'a' ) ) {
-            toUseAnalysisName = this.getOptionValue( 'a' );
-        }
+        // if ( this.hasOption( 'a' ) ) {
+        // toUseAnalysisName = this.getOptionValue( 'a' );
+        // }
 
         if ( this.hasOption( ALLGENES_OPTION ) ) {
             this.knownGenesOnly = false;

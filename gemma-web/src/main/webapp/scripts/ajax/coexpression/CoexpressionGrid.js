@@ -132,19 +132,19 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						sortType : Ext.data.SortTypes.asInt,
 						sortDir : "DESC"
 					}, {
-						name : "posLinks",
+						name : "posSupp",
 						type : "int"
 					}, {
-						name : "negLinks",
+						name : "negSupp",
 						type : "int"
 					}, {
 						name : "numTestedIn",
 						type : "int"
 					}, {
-						name : "nonSpecPosLinks",
+						name : "nonSpecPosSupp",
 						type : "int"
 					}, {
-						name : "nonSpecNegLinks",
+						name : "nonSpecNegSupp",
 						type : "int"
 					}, {
 						name : "hybWQuery",
@@ -167,19 +167,19 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			 */
 			supportStyler : function(value, metadata, record, row, col, ds) {
 				var d = record.data;
-				if (d.posLinks || d.negLinks) {
+				if (d.posSupp || d.negSupp) {
 					var s = "";
-					if (d.posLinks) {
+					if (d.posSupp) {
 						s = s
-								+ String.format("<span class='positiveLink'>{0}{1}</span> ", d.posLinks, this
-												.getSpecificLinkString(d.posLinks, d.nonSpecPosLinks));
+								+ String.format("<span class='positiveLink'>{0}{1}</span> ", d.posSupp, this
+												.getSpecificLinkString(d.posSupp, d.nonSpecPosSupp));
 					}
-					if (d.negLinks) {
+					if (d.negSupp) {
 						s = s
-								+ String.format("<span class='negativeLink'>{0}{1}</span> ", d.negLinks, this
-												.getSpecificLinkString(d.negLinks, d.nonSpecNegLinks));
+								+ String.format("<span class='negativeLink'>{0}{1}</span> ", d.negSupp, this
+												.getSpecificLinkString(d.negSupp, d.nonSpecNegSupp));
 					}
-					s = s + String.format("{0}/ {1}", d.hybWQuery ? " *" : "", d.numTestedIn);
+					s = s + String.format("/ {0}", d.numTestedIn);
 					return s;
 				} else {
 					return "-";
@@ -221,10 +221,20 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			bitImageStyler : function(value, metadata, record, row, col, ds) {
 				var bits = record.data.datasetVector;
-				var width = Gemma.CoexpressionGrid.bitImageBarWidth * bits.length;
+				var width;
+				var gap = 0;
+				if (bits.length < 10) {
+					width = 4 * bits.length;
+					gap = 1;
+				} else if (bits.length < 100) {
+					width = 2 * bits.length;
+				} else {
+					width = bits.legnth;
+				}
+
 				var height = Gemma.CoexpressionGrid.bitImageBarHeight;
-				var s = '<span style="background-color:#DDDDDD;">' + '<img src="/Gemma/spark?type=bar&width=' + width
-						+ '&height=' + height + '&color=black&spacing=0&data=';
+				var s = ''
+				var maxheight = 0;
 				for (var i = 0; i < bits.length; ++i) {
 					if (i > 0) {
 						s = s + ",";
@@ -232,17 +242,35 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					var state = bits.charAt(i);
 					var b = "";
 					if (state === "0") {
-						b = "0";
+						b = "0"; // not tested
 					} else if (state === "1") {
-						b = "4";
+						b = "2"; // tested but no support
+						if (2 > maxheight) {
+							maxheight = 2;
+						}
 					} else if (state === "2") {
-						b = "20";
+						b = "6"; // supported but nonspecific
+						if (6 > maxheight) {
+							maxheight = 6;
+						}
+					} else if (state === "3") {
+						maxheight = height;
+						b = height; // supported and specific
 					}
 					s = s + b;
 				}
+
+				var result = '<span style="margin:0;padding-top:'
+						+ (Gemma.CoexpressionGrid.bitImageBarHeight - maxheight) + 'px;height:'
+						+ Gemma.CoexpressionGrid.bitImageBarHeight + ';background-color:#EEEEEE" >'
+						+ '<img style="vertical-align:bottom" src="/Gemma/spark?type=bar&width=' + width + '&height='
+						+ maxheight + '&highcolor=black&color=black&spacing=' + gap + '&data=';
+
+				// dataset-bits is defined in typo.css
+
 				// eeMap is created in CoexpressionSearch.js
-				s = s + '" usemap="#eeMap" /></span>';
-				return s;
+				result = result + s + '" usemap="#eeMap" /></span>';
+				return result;
 			},
 
 			visStyler : function(value, metadata, record, row, col, ds) {
@@ -274,9 +302,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
 				var queryIndex = this.getColumnModel().getIndexById('query');
 				if (numQueryGenes > 1) {
-					this.getColumnModel().setHidden(queryIndex,false);
+					this.getColumnModel().setHidden(queryIndex, false);
 				} else {
-					this.getColumnModel().setHidden(queryIndex,true);
+					this.getColumnModel().setHidden(queryIndex, true);
 
 				}
 				this.getColumnModel().getColumnById
@@ -306,7 +334,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}")
 
 		});
-Gemma.CoexpressionGrid.bitImageBarWidth = 1;
+
 Gemma.CoexpressionGrid.bitImageBarHeight = 15;
 
 Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
@@ -322,7 +350,7 @@ Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 	return Gemma.CoexpressionGrid.bitImageMapTemplate;
 };
 
-//Left over cruft i believe - klc
+// Left over cruft i believe - klc
 Gemma.CoexpressionGrid.visualize = function(experimentIds, geneIds) {
 
 	var loadVisData = function(data) {

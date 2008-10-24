@@ -37,7 +37,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author jsantos
- * @version $Id $
+ * @version $Id$
  */
 public class GeneDaoTest extends BaseSpringContextTest {
 
@@ -52,7 +52,6 @@ public class GeneDaoTest extends BaseSpringContextTest {
         assertNotNull( num );
     }
 
-    @SuppressWarnings("unchecked")
     public void testGetCompositeSequencesById() {
         geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
@@ -62,7 +61,6 @@ public class GeneDaoTest extends BaseSpringContextTest {
         assertNotNull( cs );
     }
 
-    @SuppressWarnings("unchecked")
     public void testGetByGeneAlias() {
         geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
@@ -80,7 +78,6 @@ public class GeneDaoTest extends BaseSpringContextTest {
         assertNotNull( genes );
     }
 
-    @SuppressWarnings("unchecked")
     public void testGetCoexpressedGenes() {
         geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
@@ -112,7 +109,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
 
         geneDao.create( gene );
 
-        Collection genes = geneDao.getMicroRnaByTaxon( human );
+        Collection<Gene> genes = geneDao.getMicroRnaByTaxon( human );
         assertNotNull( genes );
         assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );
@@ -133,7 +130,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
 
         geneDao.create( gene );
 
-        Collection genes = geneDao.findByNcbiId( "12345" );
+        Collection<Gene> genes = geneDao.findByNcbiId( "12345" );
         assertNotNull( genes );
         assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );
@@ -225,7 +222,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
         gene.setTaxon( human );
         geneDao.create( gene );
 
-        Collection genes = geneDao.loadKnownGenes( human );
+        Collection<Gene> genes = geneDao.loadKnownGenes( human );
         assertNotNull( genes );
         assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );
@@ -246,7 +243,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
         gene.setTaxon( human );
         geneDao.create( gene );
 
-        Collection genes = geneDao.loadProbeAlignedRegions( human );
+        Collection<ProbeAlignedRegion> genes = geneDao.loadProbeAlignedRegions( human );
         assertNotNull( genes );
         assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );
@@ -267,7 +264,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
         gene.setTaxon( human );
         geneDao.create( gene );
 
-        Collection genes = geneDao.loadPredictedGenes( human );
+        Collection<PredictedGene> genes = geneDao.loadPredictedGenes( human );
         assertNotNull( genes );
         assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );

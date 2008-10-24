@@ -640,9 +640,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
             return results;
 
-        } else {
-            return new HashSet<ExpressionExperiment>();
         }
+        return new HashSet<ExpressionExperiment>();
+
     }
 
     /*
@@ -837,7 +837,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 log.debug( "Loading " + probeIds.size() + " assayed probes" );
                 final String gqs = "select distinct cs from CompositeSequenceImpl cs where cs.id in (:ids)";
                 Collection<Long> batch = new ArrayList<Long>();
-                final int BATCH_SIZE = 1000;
 
                 for ( Long probeId : probeIds ) {
                     batch.add( probeId );
@@ -952,6 +951,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 new Object[] { designElements, quantitationType } );
     }
 
+    @Override
     protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
         String queryString = "select q from ExpressionExperimentImpl e inner join e.quantitationTypes q where e = :ee and q.isMaskedPreferred = true";
         List k = this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
@@ -1418,7 +1418,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
                 if ( experimentalDesign != null ) {
+                    // try {
                     session.lock( experimentalDesign, LockMode.NONE );
+                    // } catch ( NonUniqueObjectException e ) {
+
+                    // }
                     Hibernate.initialize( experimentalDesign );
                     Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
                     experimentalDesign.getTypes().size();
@@ -1427,7 +1431,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         for ( FactorValue f : factor.getFactorValues() ) {
                             Hibernate.initialize( f.getCharacteristics() );
                         }
+                        session.evict( factor );
                     }
+                    // session.evict( experimentalDesign );
                 }
 
                 if ( ee.getAccession() != null ) ee.getAccession().getExternalDatabase();

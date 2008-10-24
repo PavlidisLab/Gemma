@@ -29,8 +29,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
@@ -72,19 +70,13 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         }
     }
 
-    private AuditTrailService auditTrailService;
-
     private TwoChannelMissingValues tcmv;
 
     private DesignElementDataVectorService dedvs;
 
     private ProcessedExpressionDataVectorService pedvs;
 
-    private ExpressionExperimentService eeService;
-
     private double s2n = DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
-
-    private boolean force = false;
 
     private Collection<Double> extraMissingValueIndicators = new HashSet<Double>();
 
@@ -97,7 +89,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -122,10 +113,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
 
@@ -166,7 +155,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 this.bail( ErrorCode.INVALID_OPTION );
             }
         }
-        auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
         tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
         dedvs = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
@@ -177,7 +165,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     /**
      * @param ee
      */
-    @SuppressWarnings("unchecked")
     private void processExperiment( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
 
@@ -198,9 +185,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         if ( !wasProcessed ) {
             errorObjects.add( ee.getShortName() + " does not use a two-color array design." );
         } else {
-            AuditEventType type = MissingValueAnalysisEvent.Factory.newInstance();
-            auditTrailService.addUpdateEvent( ee, type, "Computed missing value data on array designs: "
-                    + arrayDesignsUsed );
+            // Aduit iting is done separately.
             successObjects.add( ee.toString() );
         }
 

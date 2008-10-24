@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.analysis.expression;
 
+import ubic.gemma.model.analysis.Analysis;
+
 /**
  * 
  */
@@ -46,14 +48,15 @@ public interface ExpressionExperimentSetService {
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<ExpressionExperimentSet> loadAll();
 
     /**
      * <p>
      * Load all ExpressionExperimentSets that belong to the given user.
      * </p>
      */
-    public java.util.Collection loadUserSets( ubic.gemma.model.common.auditAndSecurity.User user );
+    public java.util.Collection<ExpressionExperimentSet> loadUserSets(
+            ubic.gemma.model.common.auditAndSecurity.User user );
 
     /**
      * 
@@ -66,12 +69,12 @@ public interface ExpressionExperimentSetService {
      * expressionexperimentset should be disallowed.
      * </p>
      */
-    public java.util.Collection getAnalyses(
+    public java.util.Collection<Analysis> getAnalyses(
             ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * 
      */
-    public java.util.Collection findByName( java.lang.String name );
+    public java.util.Collection<ExpressionExperimentSet> findByName( java.lang.String name );
 
 }

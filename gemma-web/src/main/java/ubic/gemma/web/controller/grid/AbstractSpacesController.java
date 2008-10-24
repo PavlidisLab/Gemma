@@ -87,8 +87,8 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
     /**
      * @param spacesUtil
      */
-    protected void injectSpacesUtil( SpacesUtil spacesUtil ) {
-        this.spacesUtil = spacesUtil;
+    protected void injectSpacesUtil( SpacesUtil s ) {
+        this.spacesUtil = s;
     }
 
     /**
@@ -97,7 +97,10 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
     public ApplicationContext addGemmaSpacesToApplicationContext() {
         if ( spacesUtil == null ) spacesUtil = new SpacesUtil();
 
-        return spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        if ( SpacesUtil.isSpaceRunning( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) ) {
+            return spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        }
+        return null;
     }
 
     /**
@@ -115,7 +118,8 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
 
         updatedContext = addGemmaSpacesToApplicationContext();
         BackgroundControllerJob<T> job = null;
-        if ( updatedContext.containsBean( "gigaspacesTemplate" ) && ( spacesUtil.canServiceTask( taskName, spaceUrl ) ) ) {
+        if ( updatedContext != null && updatedContext.containsBean( "gigaspacesTemplate" )
+                && spacesUtil.canServiceTask( taskName, spaceUrl ) ) {
 
             taskId = SpacesHelper.getTaskIdFromTask( updatedContext, taskName );
 
@@ -137,6 +141,7 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
         }
 
         assert taskId != null;
+        assert job != null;
 
         taskRunningService.submitTask( taskId, new FutureTask<T>( job ) );
         return taskId;

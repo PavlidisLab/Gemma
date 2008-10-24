@@ -78,6 +78,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		Ext.apply(newCsc, {
 					geneIds : this.geneChooserPanel.getGeneIds(),
 					stringency : Ext.getCmp('stringencyfield').getValue(),
+					forceProbeLevelSearch : Ext.getCmp('forceProbeLevelSearch').getValue(),
 					taxonId : this.geneChooserPanel.getTaxonId(),
 					queryGenesOnly : Ext.getCmp('querygenesonly').getValue()
 				});
@@ -230,6 +231,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			csc = this.getCoexpressionSearchCommand();
 		}
 		this.clearError();
+
 		var msg = this.validateSearch(csc);
 		if (msg.length === 0) {
 			if (this.fireEvent('beforesearch', this, csc) !== false) {
@@ -361,7 +363,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				margins : '5 0 0 0 ',
 				plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
 				width : 250,
-				height : 140,
+				height : this.admin ? 200 : 140,
 				items : [{
 					xtype : 'fieldset',
 					autoHeight : true,
@@ -379,6 +381,14 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 								value : 2,
 								width : 60,
 								tooltip : "The minimum number of datasets that must show coexpression for a result to appear"
+							}, {
+								xtype : 'checkbox',
+								id : 'forceProbeLevelSearch',
+								fieldLabel : 'Force Probe query',
+								disabled : !this.admin,
+								hidden : !this.admin,
+								hideLabel : !this.admin,
+								tooltip : "Do the query at the level of probes (for debugging)"
 							}, {
 								xtype : 'checkbox',
 								id : 'querygenesonly',

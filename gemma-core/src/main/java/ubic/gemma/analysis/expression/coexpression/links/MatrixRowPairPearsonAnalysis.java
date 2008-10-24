@@ -99,8 +99,8 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
         int numcols = this.dataMatrix.columns();
 
         boolean docalcs = this.needToCalculateMetrics();
-        boolean[][] usedB = null;
-        double[][] data = null;
+        boolean[][] usedB = new boolean[][] {};
+        double[][] data = new double[][] {};
         if ( docalcs ) {
             // Temporarily copy the data in this matrix, for performance.
             usedB = new boolean[numrows][numcols];
@@ -116,7 +116,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
 
         /* for each vector, compare it to all other vectors */
         ExpressionDataMatrixRowElement itemA = null;
-        double[] vectorA = null;
+        double[] vectorA = new double[] {};
         double syy, sxy, sxx, sx, sy, xj, yj;
         int count = 0;
         int numComputed = 0;
@@ -194,7 +194,6 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
      */
     public QuantitationType getMetricType() {
@@ -226,7 +225,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
         int numcols = this.dataMatrix.columns();
         boolean docalcs = this.needToCalculateMetrics();
 
-        double[][] data = null;
+        double[][] data = new double[][] {};
         if ( docalcs ) {
             rowStatistics();
 
@@ -281,7 +280,6 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
      */
     public double correctedPvalue( int i, int j, double correl, int numused ) {

@@ -128,6 +128,11 @@ public abstract class DataVectorValueObject {
         return genes;
     }
 
+    @Override
+    public String toString() {
+        return "EE=" + this.expressionExperiment.getId() + " Probe=" + this.designElement.getId();
+    }
+
     /**
      * @param genes the genes to set
      */

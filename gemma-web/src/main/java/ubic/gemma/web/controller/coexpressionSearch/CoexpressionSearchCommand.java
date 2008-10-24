@@ -27,22 +27,12 @@ import org.apache.commons.lang.StringUtils;
  */
 public class CoexpressionSearchCommand {
 
-    private Collection<Long> geneIds;
-
-    private Collection<Long> eeIds;
-
-    private Long eeSetId;
-
-    private String eeSetName;
-
-    private Integer stringency;
-
-    private boolean queryGenesOnly;
-
     /**
      * Set to true to signal that the eeSet has been modified from its stored version.
      */
     private boolean dirty = false;
+
+    private Collection<Long> eeIds;
 
     /*
      * we're storing the actual ee ids in the command object; the query string is only here so we can use this object to
@@ -50,57 +40,101 @@ public class CoexpressionSearchCommand {
      */
     private String eeQuery;
 
+    private Long eeSetId;
+
+    private String eeSetName;
+
+    private boolean forceProbeLevelSearch;
+
+    private Collection<Long> geneIds;
+
+    private boolean queryGenesOnly;
+
+    private Integer stringency;
+
     /*
      * as eeQuery above, the taxon is only here so we can use this object to store the entire state of the form...
      */
     private Long taxonId;
 
-    public Collection<Long> getGeneIds() {
-        return geneIds;
-    }
-
-    public void setGeneIds( Collection<Long> geneIds ) {
-        this.geneIds = geneIds;
-    }
-
     public Collection<Long> getEeIds() {
         return eeIds;
-    }
-
-    public void setEeIds( Collection<Long> eeIds ) {
-        this.eeIds = eeIds;
-    }
-
-    public Integer getStringency() {
-        return stringency;
-    }
-
-    public void setStringency( Integer stringency ) {
-        this.stringency = stringency;
     }
 
     public String getEeQuery() {
         return eeQuery;
     }
 
-    public void setEeQuery( String eeQuery ) {
-        this.eeQuery = eeQuery;
+    public Long getEeSetId() {
+        return eeSetId;
     }
 
-    public Long getTaxonId() {
-        return taxonId;
+    public String getEeSetName() {
+        return eeSetName;
     }
 
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
+    public Collection<Long> getGeneIds() {
+        return geneIds;
     }
 
     public boolean getQueryGenesOnly() {
         return queryGenesOnly;
     }
 
+    public Integer getStringency() {
+        return stringency;
+    }
+
+    public Long getTaxonId() {
+        return taxonId;
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public boolean isForceProbeLevelSearch() {
+        return forceProbeLevelSearch;
+    }
+
+    public void setDirty( boolean dirty ) {
+        this.dirty = dirty;
+    }
+
+    public void setEeIds( Collection<Long> eeIds ) {
+        this.eeIds = eeIds;
+    }
+
+    public void setEeQuery( String eeQuery ) {
+        this.eeQuery = eeQuery;
+    }
+
+    public void setEeSetId( Long eeSetId ) {
+        this.eeSetId = eeSetId;
+    }
+
+    public void setEeSetName( String eeSetName ) {
+        this.eeSetName = eeSetName;
+    }
+
+    public void setForceProbeLevelSearch( boolean forceProbeLevelSearch ) {
+        this.forceProbeLevelSearch = forceProbeLevelSearch;
+    }
+
+    public void setGeneIds( Collection<Long> geneIds ) {
+        this.geneIds = geneIds;
+    }
+
     public void setQueryGenesOnly( boolean queryGenesOnly ) {
         this.queryGenesOnly = queryGenesOnly;
+    }
+
+    public void setStringency( Integer stringency ) {
+        this.stringency = stringency;
+    }
+
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
     }
 
     @Override
@@ -108,30 +142,6 @@ public class CoexpressionSearchCommand {
         return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " Analysis=" + this.getEeSetId()
                 + " QueryGenesOnly=" + this.getQueryGenesOnly() + " taxon=" + getTaxonId() + " eeQuery=" + getEeQuery()
                 + " Stringency=" + stringency + " ees=" + StringUtils.join( getEeIds(), "," );
-    }
-
-    public Long getEeSetId() {
-        return eeSetId;
-    }
-
-    public void setEeSetId( Long eeSetId ) {
-        this.eeSetId = eeSetId;
-    }
-
-    public String getEeSetName() {
-        return eeSetName;
-    }
-
-    public void setEeSetName( String eeSetName ) {
-        this.eeSetName = eeSetName;
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void setDirty( boolean dirty ) {
-        this.dirty = dirty;
     }
 
 }

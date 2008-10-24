@@ -30,6 +30,7 @@ import java.util.concurrent.FutureTask;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.CancellationException;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.common.description.LocalFile;
 
@@ -81,9 +82,13 @@ public abstract class AbstractFetcher implements Fetcher {
             try {
                 Thread.sleep( INFO_UPDATE_INTERVAL );
             } catch ( InterruptedException ie ) {
-                log.info( "Looks like we should stop" );
-                future.cancel( true );
-                return false;
+                log.info( "Cancelling download" );
+                boolean cancelled = future.cancel( true );
+                if ( cancelled ) {
+                    log.info( "Download stopped successfully." );
+                } else {
+                    throw new RuntimeException( "Cancellation failed." );
+                }
             }
 
             if ( log.isInfoEnabled() ) {

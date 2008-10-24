@@ -85,7 +85,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		callParams.push(id);
 		callParams.push({
 					callback : function(data) {
-						this.handleWait(data, 'reportUpdated', false);
+						var k = new Gemma.WaitHandler();
+						k.handleWait(data, 'reportUpdated', false);
 					}.createDelegate(this)
 				});
 
@@ -97,7 +98,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		callParams.push([]);
 		callParams.push({
 					callback : function(data) {
-						this.handleWait(data, 'reportUpdated', false);
+						var k = new Gemma.WaitHandler();
+						k.handleWait(data, 'reportUpdated', false);
 					}.createDelegate(this)
 				});
 
@@ -115,7 +117,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push(id);
 							callParams.push({
 										callback : function(data) {
-											this.handleWait(data, 'deleted', true);
+											var k = new Gemma.WaitHandler();
+											k.handleWait(data, 'deleted', true);
 										}.createDelegate(this)
 									});
 							ExpressionExperimentController.deleteById.apply(this, callParams);
@@ -197,7 +200,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push(id);
 							callParams.push({
 										callback : function(data) {
-											this.handleWait(data, 'link', true);
+											var k = new Gemma.WaitHandler();
+											k.handleWait(data, 'link', true);
 										}.createDelegate(this)
 									});
 							LinkAnalysisController.run.apply(this, callParams);
@@ -219,7 +223,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push(id);
 							callParams.push({
 										callback : function(data) {
-											this.handleWait(data, 'missingValue', true);
+											var k = new Gemma.WaitHandler();
+											k.handleWait(data, 'missingValue', true);
 										}.createDelegate(this)
 									});
 							ArrayDesignRepeatScanController.run.apply(this, callParams);
@@ -241,7 +246,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push(id);
 							callParams.push({
 										callback : function(data) {
-											this.handleWait(data, 'differential', true);
+											var k = new Gemma.WaitHandler();
+											k.handleWait(data, 'differential', true);
 										}.createDelegate(this)
 									});
 							DifferentialExpressionAnalysisController.run.apply(this, callParams);
@@ -255,7 +261,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	doProcessedVectors : function(id) {
 		Ext.Msg.show({
 					title : 'Processed vector analysis',
-					msg : 'Please confirm. Previous analaysis results will be deleted.',
+					msg : 'Please confirm. Any existing processed vectors will be deleted.',
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						if (btn == 'yes') {
@@ -263,7 +269,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push(id);
 							callParams.push({
 										callback : function(data) {
-											this.handleWait(data, 'processedVector', true);
+											var k = new Gemma.WaitHandler();
+											k.handleWait(data, 'processedVector', true);
 										}.createDelegate(this)
 									});
 							ProcessedExpressionDataVectorCreateController.run.apply(this, callParams);
@@ -274,31 +281,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				});
 	},
 
-	/**
-	 * Parameters are passed to ProgressWindow config; eventToFire is fired in the callback.
-	 */
-	handleWait : function(taskId, eventToFire, showAllMessages) {
-		try {
-			var p = new Gemma.ProgressWindow({
-						taskId : taskId,
-						callback : function(data) {
-							this.fireEvent(eventToFire, data);
-						}.createDelegate(this),
-						showAllMessages : showAllMessages
-					});
-
-			p.show();
-		} catch (e) {
-			Ext.Msg.alert("Error", e);
-		}
-	},
-
 	initComponent : function() {
 
 		Gemma.EEManager.superclass.initComponent.call(this);
-
-		this.addEvents('reportUpdated', 'differential', 'missingValue', 'link', 'processedVector', 'deleted',
-				'tagsUpdated', 'updated', 'pubmedUpdated', 'pubmedRemove');
+		this.addEvents('tagsUpdated');
 
 		this.save = function(id, fields) {
 			/*
@@ -309,3 +295,33 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	}
 
 });
+
+Gemma.WaitHandler = Ext.extend(Ext.Component, {
+			initComponent : function() {
+
+				Gemma.WaitHandler.superclass.initComponent.call(this);
+
+				this.addEvents('reportUpdated', 'differential', 'missingValue', 'link', 'processedVector', 'deleted',
+						'tagsUpdated', 'updated', 'pubmedUpdated', 'pubmedRemove');
+
+			},
+			/**
+			 * Parameters are passed to ProgressWindow config; eventToFire is fired in the callback.
+			 */
+			handleWait : function(taskId, eventToFire, showAllMessages) {
+				try {
+					var p = new Gemma.ProgressWindow({
+								taskId : taskId,
+								callback : function(data) {
+									this.fireEvent(eventToFire, data);
+								}.createDelegate(this),
+								showAllMessages : showAllMessages
+							});
+
+					p.show();
+				} catch (e) {
+					Ext.Msg.alert("Error", e);
+				}
+			}
+
+		});

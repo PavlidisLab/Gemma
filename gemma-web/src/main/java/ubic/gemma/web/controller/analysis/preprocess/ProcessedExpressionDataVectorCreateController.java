@@ -18,16 +18,18 @@
  */
 package ubic.gemma.web.controller.analysis.preprocess;
 
+import java.util.Collection;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask;
 import ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskCommand;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
@@ -41,12 +43,15 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * 
  * @spring.bean id="processedExpressionDataVectorCreateController"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="processedExpressionDataVectorCreateService" ref="processedExpressionDataVectorCreateService"
  * @author keshav
  * @version $Id$
  */
-public class ProcessedExpressionDataVectorCreateController extends AbstractSpacesController {
+public class ProcessedExpressionDataVectorCreateController extends AbstractSpacesController<Boolean> {
 
     private ExpressionExperimentService expressionExperimentService = null;
+
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService = null;
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
@@ -76,9 +81,8 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob getRunner( String jobId, Object command ) {
-        // TODO Auto-generated method stub
-        return null;
+    protected BackgroundControllerJob<Boolean> getRunner( String jobId, Object command ) {
+        return new ProcessedExpressionDataVectorCreateJob( jobId, command );
     }
 
     /*
@@ -86,7 +90,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob getSpaceRunner( String jobId, Object command ) {
+    protected BackgroundControllerJob<Boolean> getSpaceRunner( String jobId, Object command ) {
         return new ProcessedExpressionDataVectorCreateSpaceJob( jobId, command );
     }
 
@@ -115,11 +119,11 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
          * ProcessedExpressionDataVectorCreateJob#processJob(ubic.gemma.web.controller.BaseCommand)
          */
         @Override
-        protected ModelAndView processJob( TaskCommand baseCommand ) {
+        protected Boolean processJob( TaskCommand baseCommand ) {
             baseCommand.setTaskId( this.taskId );
             ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ProcessedExpressionDataVectorCreateTaskCommand ) baseCommand;
             process( vectorCommand );
-            return new ModelAndView( new RedirectView( "/Gemma" ) );
+            return true;
         }
 
         /**
@@ -143,10 +147,15 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
 
     }
 
+    public void setProcessedExpressionDataVectorCreateService(
+            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
+        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
+    }
+
     /**
      * @author keshav
      */
-    private class ProcessedExpressionDataVectorCreateJob extends BaseControllerJob<ModelAndView> {
+    private class ProcessedExpressionDataVectorCreateJob extends BaseControllerJob<Boolean> {
 
         /**
          * @param taskId
@@ -160,7 +169,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
          * (non-Javadoc)
          * @see java.util.concurrent.Callable#call()
          */
-        public ModelAndView call() throws Exception {
+        public Boolean call() throws Exception {
             SecurityContextHolder.setContext( securityContext );
 
             ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateTaskCommand ) command );
@@ -176,8 +185,14 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
          * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.web.controller.BaseCommand)
          */
         @Override
-        protected ModelAndView processJob( TaskCommand command ) {
-            throw new UnsupportedOperationException( "Cannot run locally at this time.  Run in a space." );
+        protected Boolean processJob( TaskCommand command ) {
+            ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateTaskCommand ) command );
+
+            ExpressionExperiment ee = vectorCommand.getExpressionExperiment();
+
+            Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService
+                    .computeProcessedExpressionData( ee );
+            return processedVectors.size() > 0;
         }
     }
 

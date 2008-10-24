@@ -122,6 +122,12 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         Collection<ExpressionExperiment> eesQueryTestedIn = probe2ProbeCoexpressionService
                 .getExpressionExperimentsLinkTestedIn( gene, ees, false );
 
+        if ( eesQueryTestedIn.size() == 0 ) {
+            CoexpressionCollectionValueObject r = new CoexpressionCollectionValueObject( gene, stringency );
+            r.setErrorState( "No experiments have coexpression data for  " + gene.getOfficialSymbol() );
+            return r;
+        }
+
         /*
          * Perform the coexpression search, some postprocessing done. If eesQueryTestedIn is empty, this returns real
          * quick.
@@ -171,7 +177,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      */
     private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions ) {
         Collection<Long> eeIds = new HashSet<Long>();
-        log.info( "Filling in EE info" );
+        log.debug( "Filling in EE info" );
 
         CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
         fillInEEInfo( coexpressions, eeIds, coexps );
@@ -189,7 +195,6 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * @param eeIds
      * @param coexps
      */
-    @SuppressWarnings("unchecked")
     private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions, Collection<Long> eeIds,
             CoexpressedGenesDetails coexps ) {
         for ( ExpressionExperimentValueObject evo : coexpressions.getExpressionExperiments() ) {
@@ -222,7 +227,6 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * @param unorganizedGeneCoexpression
      * @param coexpressions
      */
-    @SuppressWarnings("unchecked")
     private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions ) {
         log.debug( "Filling in Gene info" );
         CoexpressedGenesDetails coexp = coexpressions.getKnownGeneCoexpression();
@@ -241,7 +245,6 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * @param coexpressions
      * @param coexp
      */
-    @SuppressWarnings("unchecked")
     private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions,
             CoexpressedGenesDetails coexp ) {
         StopWatch timer = new StopWatch();

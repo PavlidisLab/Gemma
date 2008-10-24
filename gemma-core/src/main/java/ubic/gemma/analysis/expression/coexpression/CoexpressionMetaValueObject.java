@@ -30,98 +30,112 @@ import ubic.gemma.model.genome.Gene;
  */
 public class CoexpressionMetaValueObject {
 
-    boolean isCannedAnalysis;
-    boolean knownGenesOnly;
-    List<Gene> queryGenes;
-    Map<String, CoexpressionSummaryValueObject> summary;
     List<ExpressionExperimentValueObject> datasets;
+    String errorState;
+    boolean isCannedAnalysis;
     Collection<CoexpressionDatasetValueObject> knownGeneDatasets;
     Collection<CoexpressionValueObjectExt> knownGeneResults;
+
+    boolean knownGenesOnly;
+
     Collection<CoexpressionDatasetValueObject> predictedGeneDatasets;
+
     Collection<CoexpressionValueObjectExt> predictedGeneResults;
     Collection<CoexpressionDatasetValueObject> probeAlignedRegionDatasets;
     Collection<CoexpressionValueObjectExt> probeAlignedRegionResults;
-
-    public void setIsCannedAnalysis( boolean isCannedAnalysis ) {
-        this.isCannedAnalysis = isCannedAnalysis;
-    }
-
-    public void setKnownGenesOnly( boolean knownGenesOnly ) {
-        this.knownGenesOnly = knownGenesOnly;
-    }
-
-    public void setQueryGenes( List<Gene> queryGenes ) {
-        this.queryGenes = queryGenes;
-    }
-
+    List<Gene> queryGenes;
+    Map<String, CoexpressionSummaryValueObject> summary;
     public List<ExpressionExperimentValueObject> getDatasets() {
         return datasets;
     }
-
-    public Collection<Gene> getQueryGenes() {
-        return queryGenes;
+    public String getErrorState() {
+        return errorState;
     }
-
-    public void setDatasets( List<ExpressionExperimentValueObject> datasets ) {
-        this.datasets = datasets;
+    public Collection<CoexpressionDatasetValueObject> getKnownGeneDatasets() {
+        return knownGeneDatasets;
     }
 
     public Collection<CoexpressionValueObjectExt> getKnownGeneResults() {
         return knownGeneResults;
     }
 
-    public void setKnownGeneResults( Collection<CoexpressionValueObjectExt> knownGeneResults ) {
-        this.knownGeneResults = knownGeneResults;
+    public Collection<CoexpressionDatasetValueObject> getPredictedGeneDatasets() {
+        return predictedGeneDatasets;
     }
 
     public Collection<CoexpressionValueObjectExt> getPredictedGeneResults() {
         return predictedGeneResults;
     }
 
-    public void setPredictedGeneResults( Collection<CoexpressionValueObjectExt> predictedGeneResults ) {
-        this.predictedGeneResults = predictedGeneResults;
+    public Collection<CoexpressionDatasetValueObject> getProbeAlignedRegionDatasets() {
+        return probeAlignedRegionDatasets;
     }
 
     public Collection<CoexpressionValueObjectExt> getProbeAlignedRegionResults() {
         return probeAlignedRegionResults;
     }
 
-    public void setProbeAlignedRegionResults( Collection<CoexpressionValueObjectExt> probeAlignedRegionResults ) {
-        this.probeAlignedRegionResults = probeAlignedRegionResults;
-    }
-
-    public Collection<CoexpressionDatasetValueObject> getKnownGeneDatasets() {
-        return knownGeneDatasets;
-    }
-
-    public void setKnownGeneDatasets( Collection<CoexpressionDatasetValueObject> knownGeneDatasets ) {
-        this.knownGeneDatasets = knownGeneDatasets;
-    }
-
-    public Collection<CoexpressionDatasetValueObject> getPredictedGeneDatasets() {
-        return predictedGeneDatasets;
-    }
-
-    public void setPredictedGeneDatasets( Collection<CoexpressionDatasetValueObject> predictedGeneDatasets ) {
-        this.predictedGeneDatasets = predictedGeneDatasets;
-    }
-
-    public Collection<CoexpressionDatasetValueObject> getProbeAlignedRegionDatasets() {
-        return probeAlignedRegionDatasets;
-    }
-
-    public void setProbeAlignedRegionDatasets( Collection<CoexpressionDatasetValueObject> probeAlignedRegionDatasets ) {
-        this.probeAlignedRegionDatasets = probeAlignedRegionDatasets;
+    public Collection<Gene> getQueryGenes() {
+        return queryGenes;
     }
 
     public Map<String, CoexpressionSummaryValueObject> getSummary() {
         return summary;
     }
 
+    public boolean isKnownGenesOnly() {
+        return knownGenesOnly;
+    }
+
+    public void setDatasets( List<ExpressionExperimentValueObject> datasets ) {
+        this.datasets = datasets;
+    }
+
+    public void setErrorState( String errorState ) {
+        this.errorState = errorState;
+    }
+
+    public void setIsCannedAnalysis( boolean isCannedAnalysis ) {
+        this.isCannedAnalysis = isCannedAnalysis;
+    }
+
+    public void setKnownGeneDatasets( Collection<CoexpressionDatasetValueObject> knownGeneDatasets ) {
+        this.knownGeneDatasets = knownGeneDatasets;
+    }
+
+    public void setKnownGeneResults( Collection<CoexpressionValueObjectExt> knownGeneResults ) {
+        this.knownGeneResults = knownGeneResults;
+    }
+
+    public void setKnownGenesOnly( boolean knownGenesOnly ) {
+        this.knownGenesOnly = knownGenesOnly;
+    }
+
+    public void setPredictedGeneDatasets( Collection<CoexpressionDatasetValueObject> predictedGeneDatasets ) {
+        this.predictedGeneDatasets = predictedGeneDatasets;
+    }
+
+    public void setPredictedGeneResults( Collection<CoexpressionValueObjectExt> predictedGeneResults ) {
+        this.predictedGeneResults = predictedGeneResults;
+    }
+
+    public void setProbeAlignedRegionDatasets( Collection<CoexpressionDatasetValueObject> probeAlignedRegionDatasets ) {
+        this.probeAlignedRegionDatasets = probeAlignedRegionDatasets;
+    }
+
+    public void setProbeAlignedRegionResults( Collection<CoexpressionValueObjectExt> probeAlignedRegionResults ) {
+        this.probeAlignedRegionResults = probeAlignedRegionResults;
+    }
+
+    public void setQueryGenes( List<Gene> queryGenes ) {
+        this.queryGenes = queryGenes;
+    }
+
     public void setSummary( Map<String, CoexpressionSummaryValueObject> summary ) {
         this.summary = summary;
     }
 
+    @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
         for ( CoexpressionValueObjectExt ecvo : getKnownGeneResults() ) {

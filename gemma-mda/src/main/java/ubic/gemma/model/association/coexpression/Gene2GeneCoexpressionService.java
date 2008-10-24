@@ -22,6 +22,9 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.genome.Gene;
+
 /**
  * <p>
  * A service for caching gene coexpression results
@@ -38,7 +41,8 @@ public interface Gene2GeneCoexpressionService {
     /**
      * 
      */
-    public java.util.Collection create( java.util.Collection gene2geneCoexpressions );
+    public java.util.Collection<Gene2GeneCoexpression> create(
+            java.util.Collection<Gene2GeneCoexpression> gene2geneCoexpressions );
 
     /**
      * 
@@ -48,21 +52,23 @@ public interface Gene2GeneCoexpressionService {
     /**
      * 
      */
-    public java.util.Collection findCoexpressionRelationships( ubic.gemma.model.genome.Gene gene, int stringency,
-            int maxResults );
+    public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships(
+            ubic.gemma.model.genome.Gene gene, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * <p>
      * Returns a map of genes to coexpression results.
      * </p>
      */
-    public java.util.Map findCoexpressionRelationships( java.util.Collection genes, int stringency, int maxResults );
+    public java.util.Map findCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency,
+            int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * <p>
      * Return coexpression relationships among the given genes, in a map of query gene to coexpression objects.
      * </p>
      */
-    public java.util.Map findInterCoexpressionRelationship( java.util.Collection genes, int stringency );
+    public java.util.Map findInterCoexpressionRelationship( java.util.Collection<Gene> genes, int stringency,
+            GeneCoexpressionAnalysis sourceAnalysis );
 
 }

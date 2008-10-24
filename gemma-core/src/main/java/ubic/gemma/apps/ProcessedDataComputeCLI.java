@@ -19,14 +19,10 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.lang.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -39,8 +35,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @see ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService
  */
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
-
-    private static Log log = LogFactory.getLog( ProcessedDataComputeCLI.class.getName() );
 
     /**
      * @param args
@@ -71,7 +65,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     /**
      * 
      */
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
 
@@ -83,7 +76,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     /**
      * 
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "processed expression data updater ", args );
@@ -111,15 +103,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
-        // AuditEventType eventType = RankComputationEvent.Factory.newInstance(); // FIXME temporary until code merge
-        auditTrailService.addUpdateEvent( ee, eventType, note );
-    }
-
-    /**
      * @param errorObjects
      * @param persistedObjects
      * @param ee
@@ -135,8 +118,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
             if ( !needToRun ) return;
             this.processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+            // Note tha tauditing is done by the service.
             successObjects.add( ee.toString() );
-            audit( ee, "Processed data computation" );
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
             log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );

@@ -25,8 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * Implementation note: This has very abbreviated field names to reduce the size of strings sent to browsers. Some
- * browsers have a problem.
+ * Implementation note: This has very abbreviated field names to reduce the size of strings sent to browsers.
  * 
  * @author luke
  * @version $Id$
@@ -37,11 +36,11 @@ public class CoexpressionValueObjectExt {
     private Gene foundGene;
     private String sortKey;
     private Integer supportKey;
-    private Integer posLinks;
-    private Integer negLinks;
-    private Integer nonSpecPosLinks;
-    private Integer nonSpecNegLinks;
-    private Boolean hybWQuery;
+    private Integer posSupp;
+    private Integer negSupp;
+    private Integer nonSpecPosSupp;
+    private Integer nonSpecNegSupp;
+    // private Boolean hybWQuery;
     private Integer numTestedIn;
     private Integer goSim;
     private Integer maxGoSim;
@@ -88,14 +87,15 @@ public class CoexpressionValueObjectExt {
         this.datasetVector = datasetVector;
     }
 
+    @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        if ( getPosLinks() > 0 ) {
-            buf.append( getSupportRow( getPosLinks(), "+" ) );
+        if ( this.getPosSupp() > 0 ) {
+            buf.append( getSupportRow( getPosSupp(), "+" ) );
         }
-        if ( getNegLinks() > 0 ) {
+        if ( getNegSupp() > 0 ) {
             if ( buf.length() > 0 ) buf.append( "\n" );
-            buf.append( getSupportRow( getNegLinks(), "-" ) );
+            buf.append( getSupportRow( getNegSupp(), "-" ) );
         }
         return buf.toString();
     }
@@ -106,44 +106,36 @@ public class CoexpressionValueObjectExt {
         return StringUtils.join( fields, "\t" );
     }
 
-    public Integer getPosLinks() {
-        return posLinks;
+    public Integer getPosSupp() {
+        return posSupp;
     }
 
-    public void setPosLinks( Integer posLinks ) {
-        this.posLinks = posLinks;
+    public void setPosSupp( Integer posSupp ) {
+        this.posSupp = posSupp;
     }
 
-    public Integer getNegLinks() {
-        return negLinks;
+    public Integer getNegSupp() {
+        return negSupp;
     }
 
-    public void setNegLinks( Integer negLinks ) {
-        this.negLinks = negLinks;
+    public void setNegSupp( Integer negSupp ) {
+        this.negSupp = negSupp;
     }
 
-    public Integer getNonSpecPosLinks() {
-        return nonSpecPosLinks;
+    public Integer getNonSpecPosSupp() {
+        return nonSpecPosSupp;
     }
 
-    public void setNonSpecPosLinks( Integer nonSpecPosLinks ) {
-        this.nonSpecPosLinks = nonSpecPosLinks;
+    public void setNonSpecPosSupp( Integer nonSpecPosSupp ) {
+        this.nonSpecPosSupp = nonSpecPosSupp;
     }
 
-    public Integer getNonSpecNegLinks() {
-        return nonSpecNegLinks;
+    public Integer getNonSpecNegSupp() {
+        return nonSpecNegSupp;
     }
 
-    public void setNonSpecNegLinks( Integer nonSpecNegLinks ) {
-        this.nonSpecNegLinks = nonSpecNegLinks;
-    }
-
-    public Boolean getHybWQuery() {
-        return hybWQuery;
-    }
-
-    public void setHybWQuery( Boolean hybWQuery ) {
-        this.hybWQuery = hybWQuery;
+    public void setNonSpecNegSupp( Integer nonSpecNegSupp ) {
+        this.nonSpecNegSupp = nonSpecNegSupp;
     }
 
     public Integer getNumTestedIn() {

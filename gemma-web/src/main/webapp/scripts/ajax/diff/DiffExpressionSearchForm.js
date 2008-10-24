@@ -285,7 +285,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 								errorHandler : errorHandler
 							});
 				}
-				if (pageTracker) {
+				if (typeof pageTracker != 'undefined') {
 					pageTracker._trackPageview("/Gemma/differentialExpressionSearch.doSearch");
 				}
 			} else {

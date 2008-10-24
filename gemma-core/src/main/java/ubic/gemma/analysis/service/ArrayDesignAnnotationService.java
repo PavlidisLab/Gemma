@@ -203,7 +203,6 @@ public class ArrayDesignAnnotationService {
      * @return number processed.
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     public int generateAnnotationFile( Writer writer,
             Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity,
             OutputType ty, boolean knownGenesOnly ) throws IOException {

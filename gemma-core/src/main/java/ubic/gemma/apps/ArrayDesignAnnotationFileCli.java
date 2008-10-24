@@ -94,7 +94,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -173,7 +172,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -337,7 +335,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      * @return true if the file was made.
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     private boolean processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
             Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity )
             throws IOException {

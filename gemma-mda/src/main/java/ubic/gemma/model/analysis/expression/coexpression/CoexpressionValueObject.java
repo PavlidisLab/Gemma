@@ -18,25 +18,27 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.OntologyTerm;
 
 /**
- * The results for one gene that is coexpressed with a query gene. Keeps track of specificity, pValues, Scores, goTerms,
- * GO overlap with the query, stringency value. Information about positive and negative correlations are stored,
- * separately.
+ * The results for one gene that is coexpressed with a query gene, across multiple expression experiments; possibly with
+ * multiple probes per expression experiment.
+ * <p>
+ * Keeps track of specificity, pValues, Scores, goTerms, GO overlap with the query, stringency value. Information about
+ * positive and negative correlations are stored, separately.
  * 
  * @author klc
  * @version $Id$
@@ -45,22 +47,43 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     private static Log log = LogFactory.getLog( CoexpressionValueObject.class.getName() );
 
-    /*
-     * Basic information about the gene.
+    /**
+     * Genes that were predicted to cross-hybridize with the target gene
+     */
+    private Collection<Long> crossHybridizingGenes = new HashSet<Long>();
+    private Collection<BioAssaySet> datasetsTestedIn = new HashSet<BioAssaySet>();
+
+    // the expression experiments that this coexpression was involved in. The number of these will total the 'support'
+    // (pos+neg correlations, minus # of experiments that support both + and -)
+    private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
+
+    /**
+     * ID of thecoexpressed gene.
      */
     private Long geneId;
-    private String geneName;
-    private String geneOfficialName;
-    private String geneType = null;
-    private Long taxonId;
 
-    /*
-     * Maps of Expression Experiment IDs to maps of Probe IDs to scores/pvalues that are in support of this
-     * coexpression.
+    /**
+     * Name of the coexpressed gene
      */
-    private Map<Long, Map<Long, Double>> positiveScores;
+    private String geneName;
+
+    /**
+     * Official symbol of the coexpressed gene
+     */
+    private String geneOfficialName;
+
+    /**
+     * Gene type fo the coexpressed gene
+     */
+    private String geneType = null;
+
+    /**
+     * Number of GO terms this gene shares with the query gene.
+     */
+    private Collection<OntologyTerm> goOverlap;
+
     private Map<Long, Map<Long, Double>> negativeScores;
-    private Map<Long, Map<Long, Double>> posPvalues;
+
     private Map<Long, Map<Long, Double>> negPvalues;
 
     /**
@@ -70,32 +93,26 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     private Collection<Long> nonspecificEE;
 
     /**
-     * Genes that were predicted to cross-hybridize with the target gene
-     */
-    private Collection<Long> crossHybridizingGenes = new HashSet<Long>();
-
-    /**
-     * True if any of the probes for this gene are predicted to cross-hybridize with the query gene. This is an obvious
-     * risk of false positives.
-     */
-    private boolean hybridizesWithQueryGene;
-
-    /**
      * Number of GO terms the query gene has. This is the highest possible overlap
      */
     private int numQueryGeneGOTerms;
 
     /**
-     * Number of GO terms this gene shares with the query gene.
+     * Maps of Expression Experiment IDs to maps of Probe IDs to scores/pvalues that are in support of this
+     * coexpression.
      */
-    private Collection<OntologyTerm> goOverlap;
+    private Map<Long, Map<Long, Double>> positiveScores;
 
-    private List<Long> experimentBitList = new ArrayList<Long>();
+    private Map<Long, Map<Long, Double>> posPvalues;
 
-    // the expression experiments that this coexpression was involved in
-    private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
+    private Gene queryGene;
 
-    private Collection<BioAssaySet> datasetsTestedIn = new HashSet<BioAssaySet>();
+    /**
+     * Map of eeId -> probe IDs for the _query_.
+     */
+    private Map<Long, Collection<Long>> queryProbeInfo;
+
+    private Long taxonId;
 
     public CoexpressionValueObject() {
         geneName = "";
@@ -106,6 +123,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         negativeScores = new HashMap<Long, Map<Long, Double>>();
         posPvalues = new HashMap<Long, Map<Long, Double>>();
         negPvalues = new HashMap<Long, Map<Long, Double>>();
+        queryProbeInfo = new HashMap<Long, Collection<Long>>();
 
         numQueryGeneGOTerms = 0;
     }
@@ -116,6 +134,37 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     public void addCrossHybridizingGene( Long geneid ) {
         if ( geneid.equals( this.geneId ) ) return;
         this.crossHybridizingGenes.add( geneid );
+    }
+
+    /**
+     * @param eeID
+     * @param score
+     * @param pvalue
+     * @param probeID
+     * @param outputProbeId
+     */
+    public void addScore( Long eeID, Double score, Double pvalue, Long queryProbe, Long coexpressedProbe ) {
+
+        assert !queryProbe.equals( coexpressedProbe );
+        if ( !queryProbeInfo.containsKey( eeID ) ) {
+            queryProbeInfo.put( eeID, new HashSet<Long>() );
+        }
+        queryProbeInfo.get( eeID ).add( queryProbe );
+
+        if ( score < 0 ) {
+            if ( !negativeScores.containsKey( eeID ) ) negativeScores.put( eeID, new HashMap<Long, Double>() );
+            if ( !negPvalues.containsKey( eeID ) ) negPvalues.put( eeID, new HashMap<Long, Double>() );
+            negPvalues.get( eeID ).put( coexpressedProbe, pvalue );
+            negativeScores.get( eeID ).put( coexpressedProbe, score );
+
+        } else {
+            if ( !positiveScores.containsKey( eeID ) ) positiveScores.put( eeID, new HashMap<Long, Double>() );
+            if ( !posPvalues.containsKey( eeID ) ) posPvalues.put( eeID, new HashMap<Long, Double>() );
+            posPvalues.get( eeID ).put( coexpressedProbe, pvalue );
+            positiveScores.get( eeID ).put( coexpressedProbe, score );
+
+        }
+
     }
 
     /**
@@ -131,31 +180,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.expressionExperimentValueObjects.put( eeVo.getId(), eeVo );
     }
 
-    /**
-     * @param eeID
-     * @param score
-     * @param pvalue
-     * @param probeID
-     */
-    public void addScore( Long eeID, Double score, Double pvalue, long probeID ) {
-        if ( score < 0 ) {
-            if ( !negativeScores.containsKey( eeID ) ) negativeScores.put( eeID, new HashMap<Long, Double>() );
-            if ( !negPvalues.containsKey( eeID ) ) negPvalues.put( eeID, new HashMap<Long, Double>() );
-            negPvalues.get( eeID ).put( probeID, pvalue );
-            negativeScores.get( eeID ).put( probeID, score );
-
-        } else {
-            if ( !positiveScores.containsKey( eeID ) ) positiveScores.put( eeID, new HashMap<Long, Double>() );
-            if ( !posPvalues.containsKey( eeID ) ) posPvalues.put( eeID, new HashMap<Long, Double>() );
-            posPvalues.get( eeID ).put( probeID, pvalue );
-            positiveScores.get( eeID ).put( probeID, score );
-
-        }
-    }
-
     /*
      * (non-Javadoc)
-     * 
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     public int compareTo( CoexpressionValueObject o ) {
@@ -170,21 +196,16 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         }
     }
 
-    /**
-     * Initialize the vector of 'bits'.
-     * 
-     * @param eeIds
-     */
-    public void computeExperimentBits( List<Long> eeIds ) {
-        experimentBitList.clear();
-        Collection<Long> thisUsed = expressionExperimentValueObjects.keySet();
-        for ( Long eeId : eeIds ) {
-            if ( thisUsed.contains( eeId ) ) {
-                experimentBitList.add( eeId );
-            } else {
-                experimentBitList.add( 0l );
-            }
-        }
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        CoexpressionValueObject other = ( CoexpressionValueObject ) obj;
+        if ( geneId == null ) {
+            if ( other.geneId != null ) return false;
+        } else if ( !geneId.equals( other.geneId ) ) return false;
+        return true;
     }
 
     /**
@@ -192,6 +213,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      */
     public Collection<Long> getCrossHybridizingGenes() {
         return crossHybridizingGenes;
+    }
+
+    public Collection<ubic.gemma.model.expression.experiment.BioAssaySet> getDatasetsTestedIn() {
+        return this.datasetsTestedIn;
     }
 
     /**
@@ -210,46 +235,17 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     /**
-     * @return
-     */
-    public List<Long> getExperimentBitIds() {
-        return experimentBitList;
-    }
-
-    /**
-     * @return String holding a list of values for creating the 'bit image'.
-     */
-    public String getExperimentBitList() {
-        StringBuffer buf = new StringBuffer();
-        for ( Iterator<Long> it = experimentBitList.iterator(); it.hasNext(); ) {
-            long i = it.next();
-            buf.append( i == 0 ? 0 : 20 );
-            if ( it.hasNext() ) buf.append( "," );
-        }
-        return buf.toString();
-    }
-
-    /**
-     * @return the nonspecificEE
+     * @return experiments that are supporting coexpression.
      */
     public Collection<Long> getExpressionExperiments() {
-        return expressionExperimentValueObjects.keySet();
-    }
-
-    /**
-     * @param eeID expression experiment ID (long)
-     * @return null if the EEid is not part of the ee's that contribute to this genes coexpression returns the
-     *         EEValueObject if it does.
-     */
-    public ExpressionExperimentValueObject getExpressionExperimentValueObject( Long eeID ) {
-        return expressionExperimentValueObjects.get( eeID );
-    }
-
-    /**
-     * @return the expressionExperiments that actually contained coexpression relationtionships for coexpressed gene
-     */
-    public Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects() {
-        return expressionExperimentValueObjects.values();
+        /*
+         * We don't use the expresionexperimentvalueobject keyset because there may be 'cruft' after pruning the
+         * results.
+         */
+        Collection<Long> eeIDs = new HashSet<Long>();
+        eeIDs.addAll( this.getNegativeScores().keySet() );
+        eeIDs.addAll( this.getPositiveScores().keySet() );
+        return eeIDs;
     }
 
     /**
@@ -370,32 +366,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     /**
-     * FIXME just returning zero for now.
-     * 
-     * @param mean
-     * @param size
-     * @param values
-     * @return
-     */
-    private double computePvalue( Collection<Map<Long, Double>> values ) {
-        return 0.0;
-        // double mean = 0.0;
-        // int size = 0;
-        // for ( Map<Long, Double> scores : values ) {
-        // for ( Double score : scores.values() ) {
-        // if ( score.doubleValue() == 0 ) {
-        // score = Constants.SMALL;
-        // }
-        // mean += Math.log( score );
-        // size++;
-        // }
-        // }
-        // assert size > 0;
-        //
-        // return Math.exp( mean / size );
-    }
-
-    /**
      * @return the nonspecificEE
      */
     public Collection<Long> getNonspecificEE() {
@@ -479,6 +449,14 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return result;
     }
 
+    public Gene getQueryGene() {
+        return queryGene;
+    }
+
+    public Map<Long, Collection<Long>> getQueryProbeInfo() {
+        return queryProbeInfo;
+    }
+
     /**
      * @return
      */
@@ -486,11 +464,78 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return taxonId;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
+        return result;
+    }
+
     /**
-     * @return the hybridizesWithQueryGene
+     * Delete the data for a specific EE-probe combination. This is done during filtering to remove, for example, probes
+     * that hybridize with the query gene.
+     * 
+     * @param probeId
+     * @param eeId
+     * @return true if there is still evidence of coexpression left in this object, false if not.
      */
-    public boolean isHybridizesWithQueryGene() {
-        return hybridizesWithQueryGene;
+    public boolean removeProbeEvidence( Long probeId, Long eeId ) {
+        if ( this.positiveScores.containsKey( eeId ) ) {
+            Map<Long, Double> map = this.positiveScores.get( eeId );
+            if ( map.containsKey( probeId ) ) {
+                map.remove( probeId );
+            }
+
+            /*
+             * At this point, we may have removed all evidence for the EE supporting the coexpression. In that case,
+             * remove the ee.
+             */
+            if ( map.size() == 0 ) {
+                this.positiveScores.remove( eeId );
+            }
+
+            Map<Long, Double> map2 = this.posPvalues.get( eeId );
+            if ( map2.containsKey( probeId ) ) {
+                map2.remove( probeId );
+            }
+
+            if ( map2.size() == 0 ) {
+                this.posPvalues.remove( eeId );
+            }
+        }
+
+        /*
+         * Do the same thing for negative correlations.
+         */
+        if ( this.negativeScores.containsKey( eeId ) ) {
+            Map<Long, Double> map = this.negativeScores.get( eeId );
+            if ( map.containsKey( probeId ) ) {
+                map.remove( probeId );
+            }
+            if ( map.size() == 0 ) {
+                this.negativeScores.remove( eeId );
+            }
+
+            Map<Long, Double> map2 = this.negPvalues.get( eeId );
+            if ( map2.containsKey( probeId ) ) {
+                map2.remove( probeId );
+            }
+
+            if ( map2.size() == 0 ) {
+                this.negPvalues.remove( eeId );
+            }
+        }
+
+        if ( this.positiveScores.size() == 0 && this.negativeScores.size() == 0 ) {
+            return false;
+        }
+        return true;
+
+    }
+
+    public void setDatasetsTestedIn( Collection<BioAssaySet> datasetsTestedIn ) {
+        this.datasetsTestedIn = datasetsTestedIn;
     }
 
     /**
@@ -529,13 +574,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     /**
-     * @param hybridizesWithQueryGene the hybridizesWithQueryGene to set
-     */
-    public void setHybridizesWithQueryGene( boolean hybridizesWithQueryGene ) {
-        this.hybridizesWithQueryGene = hybridizesWithQueryGene;
-    }
-
-    /**
      * @param nonspecificEE the nonspecificEE to set
      */
     public void setNonspecificEE( Collection<Long> nonspecificEE ) {
@@ -549,6 +587,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.numQueryGeneGOTerms = numQueryGeneGOTerms;
     }
 
+    public void setQueryGene( Gene queryGene ) {
+        this.queryGene = queryGene;
+    }
+
     /**
      * @param taxonId
      */
@@ -558,15 +600,35 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     @Override
     public String toString() {
-        return geneName;
+        return StringUtils.isBlank( geneName ) ? "Gene " + geneId : "=" + geneName;
     }
 
-    public Collection<ubic.gemma.model.expression.experiment.BioAssaySet> getDatasetsTestedIn() {
-        return this.datasetsTestedIn;
-    }
-
-    public void setDatasetsTestedIn( Collection<BioAssaySet> datasetsTestedIn ) {
-        this.datasetsTestedIn = datasetsTestedIn;
+    /**
+     * FIXME just returning zero for now.
+     * <p>
+     * Compute a combined pvalue for the scores.
+     * 
+     * @param mean
+     * @param size
+     * @param values
+     * @return
+     */
+    private double computePvalue( Collection<Map<Long, Double>> values ) {
+        return 0.0;
+        // double mean = 0.0;
+        // int size = 0;
+        // for ( Map<Long, Double> scores : values ) {
+        // for ( Double score : scores.values() ) {
+        // if ( score.doubleValue() == 0 ) {
+        // score = Constants.SMALL;
+        // }
+        // mean += Math.log( score );
+        // size++;
+        // }
+        // }
+        // assert size > 0;
+        //
+        // return Math.exp( mean / size );
     }
 
 }

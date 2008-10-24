@@ -68,7 +68,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         configureMocks();
 
         DifferentialExpressionAnalysis differentialExpressionAnalysis = analyzer
-                .getDifferentialExpressionAnalysis( expressionExperiment );
+                .run( expressionExperiment );
 
         Collection<ExpressionAnalysisResultSet> resultSets = differentialExpressionAnalysis.getResultSets();
 

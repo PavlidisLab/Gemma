@@ -63,8 +63,8 @@ public class ProgressManager {
      * Must use the getter methods to use these static hashmaps so that i can gaurantee syncronization amongst different
      * threads using the maps.
      */
-    private static Map<Object, List<ProgressJob>> progressJobs = new ConcurrentHashMap<Object, List<ProgressJob>>();
-    private static Map<Object, ProgressJob> progressJobsByTaskId = new ConcurrentHashMap<Object, ProgressJob>();
+    private static Map<String, List<ProgressJob>> progressJobs = new ConcurrentHashMap<String, List<ProgressJob>>();
+    private static Map<String, ProgressJob> progressJobsByTaskId = new ConcurrentHashMap<String, ProgressJob>();
 
     private static JobInfoDao jobInfoDao;
     private static UserService userService;
@@ -176,12 +176,12 @@ public class ProgressManager {
         log.debug( "Thread Local variable: " + currentJob.get() );
 
         log.debug( "ProgressJobs Dump:  " );
-        for ( Iterator iter = progressJobs.keySet().iterator(); iter.hasNext(); ) {
-            String name = ( String ) iter.next();
+        for ( Iterator<String> iter = progressJobs.keySet().iterator(); iter.hasNext(); ) {
+            String name = iter.next();
             log.debug( "name: " + name );
 
-            for ( Iterator values = progressJobs.get( name ).iterator(); values.hasNext(); ) {
-                ProgressJob job = ( ProgressJob ) values.next();
+            for ( Iterator<ProgressJob> values = progressJobs.get( name ).iterator(); values.hasNext(); ) {
+                ProgressJob job = values.next();
                 log.debug( "====> progressJob: " + job.getTaskId() );
             }
         }
@@ -309,8 +309,8 @@ public class ProgressManager {
     }
 
     /**
-     * To be called ONLY if the task is completely done with and no clients care any more. This is a hack! But if we
-     * don't do this, we will leak memory.
+     * To be called ONLY if the task is completely done with and no clients care any more (canceling included). This is
+     * a hack! But if we don't do this, we will leak memory.
      * 
      * @param progressJob
      */

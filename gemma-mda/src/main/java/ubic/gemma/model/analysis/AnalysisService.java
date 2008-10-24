@@ -92,6 +92,6 @@ public interface AnalysisService {
     /**
      * 
      */
-    public java.util.Collection findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection<? extends Analysis> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
 }

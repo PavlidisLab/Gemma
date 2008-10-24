@@ -35,9 +35,9 @@ public interface ChromosomeFeatureDao extends ubic.gemma.model.common.AuditableD
      * <p>
      * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
      * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
      * </p>
      * 
      * @param id the identifier of the entity to load.
@@ -54,9 +54,9 @@ public interface ChromosomeFeatureDao extends ubic.gemma.model.common.AuditableD
 
     /**
      * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
      * operation which can optionally transform the entity (into a value object for example). By default, transformation
      * does not occur.
      * </p>
@@ -112,10 +112,10 @@ public interface ChromosomeFeatureDao extends ubic.gemma.model.common.AuditableD
     /**
      * <p>
      * Does the same thing as {@link #findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
     public java.util.Collection findByPhysicalLocation( int transform, ubic.gemma.model.genome.PhysicalLocation location );
@@ -124,8 +124,8 @@ public interface ChromosomeFeatureDao extends ubic.gemma.model.common.AuditableD
      * <p>
      * Does the same thing as {@link #findByPhysicalLocation(boolean, ubic.gemma.model.genome.PhysicalLocation)} with an
      * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findByPhysicalLocation(int, ubic.gemma.model.genome.PhysicalLocation location)}.
+     * override the query string defined in {@link #findByPhysicalLocation(int, ubic.gemma.model.genome.PhysicalLocation
+     * location)}.
      * </p>
      */
     public java.util.Collection findByPhysicalLocation( int transform, String queryString,
@@ -139,8 +139,8 @@ public interface ChromosomeFeatureDao extends ubic.gemma.model.common.AuditableD
     /**
      * <p>
      * Does the same thing as {@link #findByNcbiId(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByNcbiId(java.lang.String)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByNcbiId(java.lang.String)}.
      * </p>
      */
     public java.util.Collection findByNcbiId( String queryString, java.lang.String ncbiId );
@@ -159,8 +159,8 @@ public interface ChromosomeFeatureDao extends ubic.gemma.model.common.AuditableD
     /**
      * <p>
      * Does the same thing as {@link #findByNcbiId(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByNcbiId(int, java.lang.String ncbiId)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByNcbiId(int, java.lang.String ncbiId)}.
      * </p>
      */
     public java.util.Collection findByNcbiId( int transform, String queryString, java.lang.String ncbiId );

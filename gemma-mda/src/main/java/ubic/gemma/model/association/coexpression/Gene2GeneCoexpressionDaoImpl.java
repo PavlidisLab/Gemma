@@ -32,6 +32,7 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Element;
 
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.TaxonUtility;
 
@@ -64,15 +65,16 @@ public class Gene2GeneCoexpressionDaoImpl extends
     }
 
     /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindCoexpressionRelationships(java.util.Collection,
-     *      ubic.gemma.model.analysis.Analysis, int)
+     * Implementation note: we need the sourceAnalysis because although we normally have only one analysis per taxon,
+     * when reanalyses are in progress there can be more than one temporarily. (non-Javadoc)
+     * @see
+     * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindCoexpressionRelationships(java
+     * .util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
     @SuppressWarnings("unchecked")
     @Override
     protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
-            Collection<Gene> genes, int stringency, int maxResults ) {
+            Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 
         Collection<Gene> genesNeeded = new HashSet<Gene>();
         Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
@@ -91,18 +93,22 @@ public class Gene2GeneCoexpressionDaoImpl extends
         // WARNING we assume the genes are from the same taxon.
         String g2gClassName = getClassName( genes.iterator().next() );
 
-        final String queryStringFirstVector = "select g2g from " + g2gClassName
-                + " as g2g where  g2g.firstGene in (:genes) and g2g.numDataSets >= :stringency";
+        final String queryStringFirstVector = "select g2g from "
+                + g2gClassName
+                + " as g2g where  g2g.firstGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
-        final String queryStringSecondVector = "select g2g from " + g2gClassName
-                + " as g2g where  g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency";
+        final String queryStringSecondVector = "select g2g from "
+                + g2gClassName
+                + " as g2g where  g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
         Collection<Gene2GeneCoexpression> r = new HashSet<Gene2GeneCoexpression>();
 
         r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
-                new String[] { "genes", "stringency" }, new Object[] { genes, stringency } ) );
+                new String[] { "genes", "stringency", "sourceAnalysis" },
+                new Object[] { genes, stringency, sourceAnalysis } ) );
         r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
-                new String[] { "genes", "stringency" }, new Object[] { genes, stringency } ) );
+                new String[] { "genes", "stringency", "sourceAnalysis" },
+                new Object[] { genes, stringency, sourceAnalysis } ) );
 
         List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
 
@@ -131,11 +137,14 @@ public class Gene2GeneCoexpressionDaoImpl extends
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null,
      *      java.util.Collection)
+     *      <p>
+     *      Implementation note: we need the sourceAnalysis because although we normally have only one analysis per *
+     *      taxon, when reanalyses are in progress there can be more than one temporarily.
      */
     @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
-            int stringency, int maxResults ) {
+            int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 
         Element element = cache.get( gene.getId() );
         if ( element != null ) {
@@ -146,18 +155,22 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
         g2gClassName = getClassName( gene );
 
-        final String queryStringFirstVector = "select distinct g2g from " + g2gClassName
-                + " as g2g where g2g.firstGene = :gene and g2g.numDataSets >= :stringency";
+        final String queryStringFirstVector = "select distinct g2g from "
+                + g2gClassName
+                + " as g2g where g2g.firstGene = :gene and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
-        final String queryStringSecondVector = "select distinct g2g from " + g2gClassName
-                + " as g2g where g2g.secondGene = :gene and g2g.numDataSets >= :stringency";
+        final String queryStringSecondVector = "select distinct g2g from "
+                + g2gClassName
+                + " as g2g where g2g.secondGene = :gene and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
         Collection<Gene2GeneCoexpression> results = new HashSet<Gene2GeneCoexpression>();
 
         results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
-                new String[] { "gene", "stringency" }, new Object[] { gene, stringency } ) );
+                new String[] { "gene", "stringency", "sourceAnalysis" },
+                new Object[] { gene, stringency, sourceAnalysis } ) );
         results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
-                new String[] { "gene", "stringency" }, new Object[] { gene, stringency } ) );
+                new String[] { "gene", "stringency", "sourceAnalysis" },
+                new Object[] { gene, stringency, sourceAnalysis } ) );
 
         List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( results );
         Collections.sort( lr, new SupportComparator() );
@@ -177,15 +190,16 @@ public class Gene2GeneCoexpressionDaoImpl extends
     }
 
     /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindInterCoexpressionRelationships(java.util.Collection,
-     *      ubic.gemma.model.analysis.Analysis, int)
+     * Implementation note: we need the sourceAnalysis because although we normally have only one analysis per taxon,
+     * when reanalyses are in progress there can be more than one temporarily. (non-Javadoc)
+     * @see
+     * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindInterCoexpressionRelationships
+     * (java.util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
     @SuppressWarnings("unchecked")
     @Override
     protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationships(
-            Collection<Gene> genes, int stringency ) {
+            Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis ) {
 
         if ( genes.size() == 0 ) return new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
 
@@ -194,10 +208,11 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
         final String queryString = "select g2g from "
                 + g2gClassName
-                + " as g2g where g2g.firstGene in (:genes) and g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency";
+                + " as g2g where g2g.firstGene in (:genes) and g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
         Collection<Gene2GeneCoexpression> r = this.getHibernateTemplate().findByNamedParam( queryString,
-                new String[] { "genes", "stringency" }, new Object[] { genes, stringency } );
+                new String[] { "genes", "stringency", "sourceAnalysis" },
+                new Object[] { genes, stringency, sourceAnalysis } );
 
         List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
         Collections.sort( lr, new SupportComparator() );
@@ -220,7 +235,6 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.dao.support.DaoSupport#initDao()
      */
     @Override

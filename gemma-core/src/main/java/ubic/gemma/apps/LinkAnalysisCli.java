@@ -20,21 +20,13 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.NormalizationMethod;
-import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.analysis.preprocess.filter.InsufficientSamplesException;
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -70,8 +62,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             throw new RuntimeException( e );
         }
     }
-
-    private ExpressionExperimentReportService expressionExperimentReportService;
 
     private LinkAnalysisService linkAnalysisService;
 
@@ -141,7 +131,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addAutoOption();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Link Analysis Data Loader", args );
@@ -173,15 +162,14 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             return;
         }
 
+        /*
+         * Note that auditing is handled by the service.
+         */
         try {
             linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
             successObjects.add( ee.toString() );
-            if ( !linkAnalysisConfig.isTextOut() && linkAnalysisConfig.isUseDb() ) {
-                audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
-            }
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
-            logFailure( ee, e );
             log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
             log.error( e, e );
         }
@@ -240,19 +228,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             this.linkAnalysisConfig.setNormalizationMethod( value );
         }
 
-        this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
-                .getBean( "expressionExperimentReportService" );
-        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
-        if ( linkAnalysisConfig.isUseDb() ) {
-            expressionExperimentReportService.generateSummaryObject( ee.getId() );
-            auditTrailService.addUpdateEvent( ee, eventType, note );
-        }
     }
 
     @SuppressWarnings("static-access")
@@ -291,18 +266,4 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     }
 
-    /**
-     * @param expressionExperiment
-     * @param e
-     */
-    private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
-        if ( e instanceof InsufficientSamplesException ) {
-            audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
-        } else if ( e instanceof InsufficientProbesException ) {
-            audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
-        } else {
-            audit( expressionExperiment, ExceptionUtils.getFullStackTrace( e ), FailedLinkAnalysisEvent.Factory
-                    .newInstance() );
-        }
-    }
 }

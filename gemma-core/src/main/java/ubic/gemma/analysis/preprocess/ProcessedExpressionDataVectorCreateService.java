@@ -30,6 +30,9 @@ import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -52,8 +55,13 @@ import cern.colt.list.DoubleArrayList;
  * @spring.property name="eeService" ref="expressionExperimentService"
  * @spring.property name="processedDataService" ref="processedExpressionDataVectorService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  */
 public class ProcessedExpressionDataVectorCreateService {
+
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateService.class.getName() );
 
@@ -63,6 +71,8 @@ public class ProcessedExpressionDataVectorCreateService {
 
     private DesignElementDataVectorService designElementDataVectorService = null;
 
+    private AuditTrailService auditTrailService;
+
     /**
      * @param ee
      * @param method2
@@ -71,7 +81,7 @@ public class ProcessedExpressionDataVectorCreateService {
 
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
 
-        eeService.thawLite( ee );
+        // eeService.thawLite( ee );
 
         Collection<ProcessedExpressionDataVector> processedVectors = processedDataService
                 .createProcessedDataVectors( ee );
@@ -123,6 +133,14 @@ public class ProcessedExpressionDataVectorCreateService {
         }
 
         return processedDataVectors;
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**

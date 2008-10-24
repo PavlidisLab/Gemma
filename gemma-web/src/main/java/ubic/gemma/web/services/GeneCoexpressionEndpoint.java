@@ -37,18 +37,15 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- *Allows access to the gene co-expression analysis.  Given 1) a collection of gene ids, 2) a taxon id, 3) a stringency,
- *4) an expression experiment set id, and 5) a boolean for whether to return results that are within the query set only.
- *
- * The Expression Experiment Set ID (4) can be found by using the ExpressionExperimentSetIDEndpoint, which will return
- * all the expression experiment set ids for all taxons and their corresponding description.
- *The stringency is the miniumum number of times we found a particular relationship. 
- *
- *  Returns a list consisting of 7 columns:
- *  1) the query Gene, 2) the query gene ID, 3) the found Gene, 4) the found gene ID, 5) the support ( the number of times that coexpression was found ), 
- *  6) Sign(+/-; denotes whehter the correlation between the coexpression pair is positive or negative), and 7)the experiment ids
- *  that this co-expression was found in (since there should be more than 1 experiment this list will be returned as a 
- *  space delimted string of EE Ids.)
+ *Allows access to the gene co-expression analysis. Given 1) a collection of gene ids, 2) a taxon id, 3) a stringency,
+ * 4) an expression experiment set id, and 5) a boolean for whether to return results that are within the query set
+ * only. The Expression Experiment Set ID (4) can be found by using the ExpressionExperimentSetIDEndpoint, which will
+ * return all the expression experiment set ids for all taxons and their corresponding description. The stringency is
+ * the miniumum number of times we found a particular relationship. Returns a list consisting of 7 columns: 1) the query
+ * Gene, 2) the query gene ID, 3) the found Gene, 4) the found gene ID, 5) the support ( the number of times that
+ * coexpression was found ), 6) Sign(+/-; denotes whehter the correlation between the coexpression pair is positive or
+ * negative), and 7)the experiment ids that this co-expression was found in (since there should be more than 1
+ * experiment this list will be returned as a space delimted string of EE Ids.)
  * 
  * @author gavin, klc
  * @version$Id$
@@ -69,7 +66,8 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
      */
     public static final String LOCAL_NAME = "geneCoexpression";
 
-    // The maximum number of coexpression results to return; a value of zero will return all possible results (ie. max is infinity)
+    // The maximum number of coexpression results to return; a value of zero will return all possible results (ie. max
+    // is infinity)
     public static final int MAX_RESULTS = 0;
 
     /**
@@ -83,7 +81,6 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
         this.geneService = geneS;
     }
 
- 
     public void setgeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
         this.geneCoexpressionService = geneCoexpressionService;
     }
@@ -96,17 +93,16 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
         setLocalName( LOCAL_NAME );
 
-        Collection<String> geneInput = getArrayValues( requestElement, "gene_ids" );        
+        Collection<String> geneInput = getArrayValues( requestElement, "gene_ids" );
         Collection<Long> geneIDLong = new HashSet<Long>();
         for ( String id : geneInput )
             geneIDLong.add( Long.parseLong( id ) );
-        
+
         Collection<String> taxonInput = getSingleNodeValue( requestElement, "taxon_id" );
         String taxonId = "";
         for ( String id : taxonInput ) {
@@ -118,37 +114,36 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
         for ( String id : analysisInput ) {
             analysisId = id;
         }
-        
+
         Collection<String> stringencyInput = getSingleNodeValue( requestElement, "stringency" );
         String string = "";
         for ( String id : stringencyInput ) {
             string = id;
         }
-        
-        Collection<String> queryGenesOnlyInput = getSingleNodeValue( requestElement, "queryGenesOnly");
+
+        Collection<String> queryGenesOnlyInput = getSingleNodeValue( requestElement, "queryGenesOnly" );
         String query = "";
-        for (String id : queryGenesOnlyInput)
+        for ( String id : queryGenesOnlyInput )
             query = id;
-        boolean queryGenesOnly = false; 
-        if (query.endsWith( "1" ))
-            queryGenesOnly = true;
-       
-        
-        log.info( "XML input read: "+geneInput.size()+" gene ids,  & taxon id, "+taxonId+" & stringency, "+string+ " & queryGenesOnly="+ query);
-        
+        boolean queryGenesOnly = false;
+        if ( query.endsWith( "1" ) ) queryGenesOnly = true;
+
+        log.info( "XML input read: " + geneInput.size() + " gene ids,  & taxon id, " + taxonId + " & stringency, "
+                + string + " & queryGenesOnly=" + query );
+
         Taxon taxon = taxonService.load( Long.parseLong( taxonId ) );
         if ( taxon == null ) {
             String msg = "No taxon with id, " + taxon + ", can be found.";
             return buildBadResponse( document, msg );
         }
-        
+
         Collection<Gene> rawGeneCol = geneService.loadMultiple( geneIDLong );
-        if ( rawGeneCol == null || rawGeneCol.isEmpty()) {
+        if ( rawGeneCol == null || rawGeneCol.isEmpty() ) {
             String msg = "None of the gene id's can be found.";
             return buildBadResponse( document, msg );
         }
-        Collection<Gene> geneCol = retainGenesInCorrectTaxon(rawGeneCol, taxon);
-        if (geneCol == null || geneCol.isEmpty()){
+        Collection<Gene> geneCol = retainGenesInCorrectTaxon( rawGeneCol, taxon );
+        if ( geneCol == null || geneCol.isEmpty() ) {
             String msg = "Input genes do not match input taxon.";
             return buildBadResponse( document, msg );
         }
@@ -156,21 +151,22 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
         int stringency = Integer.parseInt( string );
 
-//        Collection<GeneCoexpressionAnalysis> analysisCol = geneCoexpressionAnalysisService.findByTaxon( taxon );
-//        GeneCoexpressionAnalysis analysis2Use = null;
-//
-//        // use the 1st canned analysis that isn't virtual  for the given taxon (should be the all"Taxon" analysis)
-//        for ( GeneCoexpressionAnalysis analysis : analysisCol ) {
-//            if (analysis instanceof GeneCoexpressionVirtualAnalysis)                
-//                continue;
-//            else{
-//                    analysis2Use = analysis;
-//                    break;
-//            }
-//        }
-              
+        // Collection<GeneCoexpressionAnalysis> analysisCol = geneCoexpressionAnalysisService.findByTaxon( taxon );
+        // GeneCoexpressionAnalysis analysis2Use = null;
+        //
+        // // use the 1st canned analysis that isn't virtual for the given taxon (should be the all"Taxon" analysis)
+        // for ( GeneCoexpressionAnalysis analysis : analysisCol ) {
+        // if (analysis instanceof GeneCoexpressionVirtualAnalysis)
+        // continue;
+        // else{
+        // analysis2Use = analysis;
+        // break;
+        // }
+        // }
+
         // get Gene2GeneCoexpressio objects canned analysis
-        CoexpressionMetaValueObject coexpressedGenes = geneCoexpressionService.getCannedAnalysisResults( Long.parseLong(analysisId), geneCol, stringency, MAX_RESULTS, queryGenesOnly );
+        CoexpressionMetaValueObject coexpressedGenes = geneCoexpressionService.coexpressionSearch( Long
+                .parseLong( analysisId ), geneCol, stringency, MAX_RESULTS, queryGenesOnly );
 
         if ( coexpressedGenes == null || coexpressedGenes.getKnownGeneResults().isEmpty() ) {
             String msg = "No coexpressed genes can be found.";
@@ -194,33 +190,32 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             Element e1 = document.createElement( QUERY_GENE_NAME );
             e1.appendChild( document.createTextNode( cvo.getQueryGene().getOfficialSymbol() ) );
             responseElement.appendChild( e1 );
-            
+
             Element e2 = document.createElement( QUERY_GENE_ID );
             e2.appendChild( document.createTextNode( cvo.getQueryGene().getId().toString() ) );
             responseElement.appendChild( e2 );
-            
+
             Element e3 = document.createElement( FOUND_GENE_NAME );
             e3.appendChild( document.createTextNode( cvo.getFoundGene().getOfficialSymbol() ) );
             responseElement.appendChild( e3 );
-            
+
             Element e4 = document.createElement( FOUND_GENE_ID );
             e4.appendChild( document.createTextNode( cvo.getFoundGene().getId().toString() ) );
             responseElement.appendChild( e4 );
 
             Integer support = 0;
             String sign = "";
-            
-            if (cvo.getPosLinks() > 0){
-                support = cvo.getPosLinks();
+
+            if ( cvo.getPosSupp() > 0 ) {
+                support = cvo.getPosSupp();
                 sign = "+";
-            }
-            else if (cvo.getNegLinks() > 0){
-                support = cvo.getNegLinks();
+            } else if ( cvo.getNegSupp() > 0 ) {
+                support = cvo.getNegSupp();
                 sign = "-";
             }
-           
-            //If it happens that a result has both neg and pos links, then the pos link and sign will be used
-            //TODO: Handle cases where a result can have both neg and pos links 
+
+            // If it happens that a result has both neg and pos links, then the pos link and sign will be used
+            // TODO: Handle cases where a result can have both neg and pos links
             Element e5 = document.createElement( SUPPORT_NAME );
             e5.appendChild( document.createTextNode( support.toString() ) );
             responseElement.appendChild( e5 );
@@ -228,15 +223,15 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             Element e6 = document.createElement( SIGN_NAME );
             e6.appendChild( document.createTextNode( sign ) );
             responseElement.appendChild( e6 );
-            
+
             Element e7 = document.createElement( EEID_NAME );
-            e7.appendChild( document.createTextNode( encode(cvo.getSupportingExperiments().toArray())) );
+            e7.appendChild( document.createTextNode( encode( cvo.getSupportingExperiments().toArray() ) ) );
             responseElement.appendChild( e7 );
 
         }
         watch.stop();
         Long time = watch.getTime();
-        
+
         log.info( "XML response for coexpression canned result built in " + time + "ms." );
         return responseWrapper;
 
@@ -244,9 +239,8 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
     private Collection<Gene> retainGenesInCorrectTaxon( Collection<Gene> rawGeneCol, Taxon taxon ) {
         Collection<Gene> genesToUse = new HashSet<Gene>();
-        for (Gene gene:rawGeneCol){
-            if (gene.getTaxon().getId().equals( taxon.getId() ))
-                genesToUse.add( gene );
+        for ( Gene gene : rawGeneCol ) {
+            if ( gene.getTaxon().getId().equals( taxon.getId() ) ) genesToUse.add( gene );
         }
         return genesToUse;
     }

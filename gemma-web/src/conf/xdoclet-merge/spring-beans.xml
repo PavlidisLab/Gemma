@@ -643,6 +643,7 @@
 						<list>
 							<value>getHibernateStatus</value>
 							<value>getCacheStatus</value>
+							<value>getSpaceStatus</value>
 						</list>
 					</property>
 				</bean>

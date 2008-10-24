@@ -26,7 +26,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
  * @author pavlidis
  * @version $Id$
  */
-public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements TwoChannelNormalizer {
+public class TwoColorArrayLoessNormalizer extends MarrayNormalizer {
 
     public TwoColorArrayLoessNormalizer() throws IOException {
         super();
@@ -34,10 +34,10 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements Tw
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
-     *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed,
-     *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed)
+     * @see
+     * ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
+     * baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed,
+     * baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
     public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal, DoubleMatrix<String, String> channelOneBackground,
@@ -50,9 +50,9 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements Tw
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
-     *      baseCode.dataStructure.matrix.DoubleMatrixNamed)
+     * @see
+     * ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
+     * baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
     public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal ) {

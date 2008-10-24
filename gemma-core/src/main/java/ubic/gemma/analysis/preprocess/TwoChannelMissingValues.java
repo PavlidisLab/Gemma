@@ -31,6 +31,9 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.Constants;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -70,8 +73,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * <li>This only works if there are signal values for both channels
  * <li>If there are background values, they are used to compute signal-to-noise ratios</li>
  * <li>If the signal values already contain missing data, these are still considered missing.</li>
- * <li>If there are no background values, all values will be considered 'present' unless the signal values are both
- * zero or missing.
+ * <li>If there are no background values, all values will be considered 'present' unless the signal values are both zero
+ * or missing.
  * <li>If the preferred quantitation type data is a missing value, then the data are considered missing (for
  * consistency).
  * </ol>
@@ -80,6 +83,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  * @author pavlidis
  * @version $Id$
  */
@@ -87,9 +91,11 @@ public class TwoChannelMissingValues {
 
     private static Log log = LogFactory.getLog( TwoChannelMissingValues.class.getName() );
 
-    private ExpressionExperimentService expressionExperimentService;
+    private AuditTrailService auditTrailService;
 
     private DesignElementDataVectorService designElementDataVectorService;
+
+    private ExpressionExperimentService expressionExperimentService;
 
     private QuantitationTypeService quantitationTypeService;
 
@@ -151,13 +157,27 @@ public class TwoChannelMissingValues {
 
         finalResults.addAll( dimRes );
 
+        AuditEventType type = MissingValueAnalysisEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( expExp, type, "Computed missing value data for data run on array designs: "
+                + ads );
+
         return finalResults;
     }
 
-    private void logTimeInfo( StopWatch timer, Collection<DesignElementDataVector> items ) {
-        NumberFormat nf = DecimalFormat.getInstance();
-        nf.setMaximumFractionDigits( 2 );
-        log.info( "Loaded in " + nf.format( timer.getTime() / 1000 ) + "s. Thawing " + items.size() + " vectors" );
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
+        this.quantitationTypeService = quantitationTypeService;
     }
 
     /**
@@ -174,7 +194,7 @@ public class TwoChannelMissingValues {
      * @see computeMissingValues( ExpressionExperiment expExp, double signalToNoiseThreshold )
      */
     @SuppressWarnings("unchecked")
-    public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment source,
+    protected Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment source,
             ExpressionDataDoubleMatrix preferred, ExpressionDataDoubleMatrix signalChannelA,
             ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
             ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold,
@@ -257,8 +277,15 @@ public class TwoChannelMissingValues {
     }
 
     private boolean computeCall( double signalToNoiseThreshold, Double sigAV, Double sigBV, Double bkgAV, Double bkgBV ) {
-        if ( ( sigAV == null && sigBV == null ) || ( sigAV.isNaN() && sigBV.isNaN() ) ) return false;
-        return sigAV > bkgAV * signalToNoiseThreshold || sigBV > bkgBV * signalToNoiseThreshold;
+        if ( sigAV == null && sigBV == null ) return false;
+
+        if ( ( sigAV == null || sigAV.isNaN() ) && ( sigBV == null || sigBV.isNaN() ) ) return false;
+
+        if ( sigAV != null && sigAV > bkgAV * signalToNoiseThreshold ) return true;
+
+        if ( sigBV != null && sigBV > bkgBV * signalToNoiseThreshold ) return true;
+
+        return false;
     }
 
     /**
@@ -283,6 +310,12 @@ public class TwoChannelMissingValues {
         present.setIsRatio( false );
         present.setType( StandardQuantitationType.PRESENTABSENT );
         return this.quantitationTypeService.create( present );
+    }
+
+    private void logTimeInfo( StopWatch timer, Collection<DesignElementDataVector> items ) {
+        NumberFormat nf = DecimalFormat.getInstance();
+        nf.setMaximumFractionDigits( 2 );
+        log.info( "Loaded in " + nf.format( timer.getTime() / 1000 ) + "s. Thawing " + items.size() + " vectors" );
     }
 
     /**
@@ -332,18 +365,6 @@ public class TwoChannelMissingValues {
             throw new IllegalArgumentException( "Number of samples doesn't match!" );
         }
 
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
-    }
-
-    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
-        this.quantitationTypeService = quantitationTypeService;
     }
 
 }

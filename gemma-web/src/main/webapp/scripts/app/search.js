@@ -119,7 +119,7 @@ Gemma.Search.app = function() {
 				}]
 			});
 
-			if (pageTracker) {
+			if (typeof pageTracker != 'undefined') {
 				pageTracker._trackPageview("/Gemma/searcher.search?query=" + escape(query) + scopes);
 			}
 

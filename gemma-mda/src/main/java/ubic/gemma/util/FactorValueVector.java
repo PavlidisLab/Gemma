@@ -72,12 +72,12 @@ public class FactorValueVector {
     protected String buildKey() {
         StringBuffer buf = new StringBuffer();
         buf.append( "[" );
-        for ( Iterator i = factors.iterator(); i.hasNext(); ) {
-            ExperimentalFactor factor = ( ExperimentalFactor ) i.next();
+        for ( Iterator<ExperimentalFactor> i = factors.iterator(); i.hasNext(); ) {
+            ExperimentalFactor factor = i.next();
             buf.append( factor.getCategory() );
             buf.append( factor.getName() + " (" + factor.getDescription() + ")" );
             buf.append( " => [ " );
-            for ( Iterator it = getValuesForFactor( factor ).iterator(); it.hasNext(); ) {
+            for ( Iterator<FactorValue> it = getValuesForFactor( factor ).iterator(); it.hasNext(); ) {
                 buf.append( it.next() );
                 if ( it.hasNext() ) buf.append( ", " );
             }
@@ -101,19 +101,20 @@ public class FactorValueVector {
         return factors;
     }
 
+    @Override
     public String toString() {
         return key;
     }
 
+    @Override
     public int hashCode() {
         return key.hashCode();
     }
 
     @Override
     public boolean equals( Object obj ) {
-        if ( obj instanceof FactorValueVector )
-            return key.equals( ( ( FactorValueVector ) obj ).key );
-        else
-            return false;
+        if ( obj instanceof FactorValueVector ) return key.equals( ( ( FactorValueVector ) obj ).key );
+
+        return false;
     }
 }

@@ -52,7 +52,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param expressionExperiment
      * @return ExpressionAnalysis
      */
-    public abstract DifferentialExpressionAnalysis getDifferentialExpressionAnalysis(
+    public abstract DifferentialExpressionAnalysis run(
             ExpressionExperiment expressionExperiment );
 
     /**

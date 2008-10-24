@@ -67,13 +67,14 @@ public class CoexpressionSearchController extends BaseFormController {
             return getEmptyResult();
         }
         Long eeSetId = searchOptions.getEeSetId();
-        if ( eeSetId != null && ( eeSetId >= 0 && !searchOptions.isDirty() ) ) {
-            return geneCoexpressionService.getCannedAnalysisResults( eeSetId, genes, searchOptions.getStringency(),
+        if ( eeSetId != null && !searchOptions.isForceProbeLevelSearch() && ( eeSetId >= 0 && !searchOptions.isDirty() ) ) {
+            return geneCoexpressionService.coexpressionSearch( eeSetId, genes, searchOptions.getStringency(),
                     MAX_RESULTS, searchOptions.getQueryGenesOnly() );
         }
         assert ( searchOptions.getEeIds() != null && searchOptions.getEeIds().size() > 0 );
-        return geneCoexpressionService.getCustomAnalysisResults( searchOptions.getEeIds(), genes, searchOptions
-                .getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly() );
+        return geneCoexpressionService.coexpressionSearch( searchOptions.getEeIds(), genes, searchOptions
+                .getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly(), searchOptions
+                .isForceProbeLevelSearch() );
 
     }
 
@@ -84,7 +85,6 @@ public class CoexpressionSearchController extends BaseFormController {
      * @deprecated redundant with method in ExpressionExperimentController.
      */
     @Deprecated
-    @SuppressWarnings("unchecked")
     public Collection<Long> findExpressionExperiments( String query, Long taxonId ) {
         log.info( "Search: " + query + " taxon=" + taxonId );
         return searchService.searchExpressionExperiments( query, taxonId );
@@ -141,12 +141,12 @@ public class CoexpressionSearchController extends BaseFormController {
 
             CoexpressionMetaValueObject result;
             if ( eeSetId != null ) {
-                result = geneCoexpressionService.getCannedAnalysisResults( eeSetId, genes, stringency, 500,
+                result = geneCoexpressionService.coexpressionSearch( eeSetId, genes, stringency, 500,
                         queryGenesOnly );
             } else {
                 Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) );
-                result = geneCoexpressionService.getCustomAnalysisResults( eeIds, genes, stringency, MAX_RESULTS,
-                        queryGenesOnly );
+                result = geneCoexpressionService.coexpressionSearch( eeIds, genes, stringency, MAX_RESULTS,
+                        queryGenesOnly, false );
             }
 
             ModelAndView mav = new ModelAndView( new TextView() );

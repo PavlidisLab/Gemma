@@ -49,16 +49,18 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     String[] linkClasses = new String[] { "HumanGeneCoExpressionImpl", "MouseGeneCoExpressionImpl",
             "RatGeneCoExpressionImpl", "OtherGeneCoExpressionImpl" };
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Collection /* analyses */findByName( String name ) {
+    public Collection<GeneCoexpressionAnalysis> /* analyses */findByName( String name ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select a from GeneCoexpressionAnalysisImpl as a where a.name = :name", "name", name );
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysisDaoBase#remove(ubic.gemma.model.analysis.GeneCoexpressionAnalysis)
+     * @see
+     * ubic.gemma.model.analysis.GeneCoexpressionAnalysisDaoBase#remove(ubic.gemma.model.analysis.GeneCoexpressionAnalysis
+     * )
      */
     @Override
     public void remove( final GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
@@ -92,18 +94,17 @@ public class GeneCoexpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
     @Override
-    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+    protected Collection<GeneCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation )
+            throws Exception {
         final String queryString = "select distinct a from GeneCoexpressionAnalysisImpl a where :e in elements (a.expressionExperimentSetAnalyzed.experiments)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigations(java.util.Collection)
      */
     @Override
@@ -118,7 +119,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) {
+    protected Collection<GeneCoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         final String queryString = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.expressionExperimentSetAnalyzed"
                 + " as eesa inner join eesa.experiments as ee "
                 + "inner join ee.bioAssays as ba "

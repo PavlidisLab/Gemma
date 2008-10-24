@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.Serializable;
@@ -21,49 +39,48 @@ import ubic.gemma.util.FactorValueVector;
 
 /**
  * @author luke
- *
+ * @version $Id$
  */
 public class DesignMatrixRowValueObject implements Serializable {
-    
+
     private static final long serialVersionUID = 1;
-    
+
     private List<String> factors;
-    
+
     private Map<String, String> factorValueMap;
-    
+
     private int count;
-    
+
     public DesignMatrixRowValueObject( FactorValueVector factorValues, int n ) {
         factors = new ArrayList<String>();
         factorValueMap = new HashMap<String, String>();
         for ( ExperimentalFactor factor : factorValues.getFactors() ) {
             factors.add( getFactorString( factor ) );
-            factorValueMap.put( getFactorString( factor ), getFactorValueString( factorValues.getValuesForFactor( factor ) ) );
+            factorValueMap.put( getFactorString( factor ), getFactorValueString( factorValues
+                    .getValuesForFactor( factor ) ) );
         }
         count = n;
     }
-    
+
     private String getFactorString( ExperimentalFactor factor ) {
         return factor.getName();
     }
-    
+
     private String getFactorValueString( List<FactorValue> factorValues ) {
         StringBuffer buf = new StringBuffer();
-        for ( Iterator i = factorValues.iterator(); i.hasNext(); ) {
-            buf.append( getFactorValueString( (FactorValue)i.next() ) );
-            if ( i.hasNext() )
-                buf.append( ", " );
+        for ( Iterator<FactorValue> i = factorValues.iterator(); i.hasNext(); ) {
+            buf.append( getFactorValueString( i.next() ) );
+            if ( i.hasNext() ) buf.append( ", " );
         }
         return buf.toString();
     }
-    
+
     private String getFactorValueString( FactorValue factorValue ) {
         StringBuffer buf = new StringBuffer();
-        if ( !factorValue.getCharacteristics().isEmpty() ) { 
+        if ( !factorValue.getCharacteristics().isEmpty() ) {
             for ( Iterator<Characteristic> i = factorValue.getCharacteristics().iterator(); i.hasNext(); ) {
                 buf.append( i.next() );
-                if ( i.hasNext() )
-                    buf.append( ", " );
+                if ( i.hasNext() ) buf.append( ", " );
             }
         } else if ( !StringUtils.isEmpty( factorValue.getValue() ) ) {
             buf.append( factorValue.getValue() );
@@ -114,27 +131,25 @@ public class DesignMatrixRowValueObject implements Serializable {
     }
 
     public static final class Factory {
-        
-        private Map<FactorValueVector, Collection<BioAssay>> assayCount;
-        
+
         public static Collection<DesignMatrixRowValueObject> getDesignMatrix( ExpressionExperiment expressionExperiment ) {
-            
+
             CountingMap<FactorValueVector> assayCount = new CountingMap<FactorValueVector>();
             for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
                 for ( BioMaterial sample : assay.getSamplesUsed() ) {
                     assayCount.increment( new FactorValueVector( sample.getFactorValues() ) );
                 }
             }
-            
+
             Collection<DesignMatrixRowValueObject> matrix = new ArrayList<DesignMatrixRowValueObject>();
             List<FactorValueVector> keys = assayCount.sortedKeyList( true );
             for ( FactorValueVector key : keys ) {
                 matrix.add( new DesignMatrixRowValueObject( key, assayCount.get( key ) ) );
             }
             return matrix;
-            
+
         }
-        
+
     }
-    
+
 }

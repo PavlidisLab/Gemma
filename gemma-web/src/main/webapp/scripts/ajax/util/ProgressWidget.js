@@ -126,6 +126,12 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 			 * Start the progressbar in motion.
 			 */
 			startProgress : function() {
+				/*
+				 * Don't start twice.
+				 */
+				if (this.waiting) {
+					return;
+				}
 				this.progressBar.wait({
 							text : "Starting ..."
 						});
@@ -213,7 +219,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 			 * Private Send a cancel notification to the server.
 			 */
 			cancelJob : function() {
-				this.waiting = false;
+				this.stopProgress();
 				// document.getElementById("progressTextArea").innerHTML = "Cancelling...";
 				var f = this.cancelCallback.createDelegate(this, [], true);
 				ProgressStatusService.cancelJob(this.taskId, f);
@@ -237,7 +243,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 			 * Private callback to handle cancellation @param {Object} data
 			 */
 			cancelCallback : function(data) {
-				this.stopProgress();
+				this.stopProgress(); // should already be stopped.
 				var messageArea = Ext.get("messages");
 				if (messageArea) {
 					Ext.DomHelper.overwrite("messages", {

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletRequest;
@@ -166,8 +167,16 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
         private TaskResult process( ExpressionExperimentLoadTaskCommand command ) {
             log.info( "Putting job in space" );
             command.setTaskId( this.taskId );
-            TaskResult result = eeTaskProxy.execute( command );
-            return result;
+            try {
+                TaskResult result = eeTaskProxy.execute( command );
+                return result;
+            } catch ( Exception e ) {
+                if ( e instanceof InterruptedException ) {
+                    log.info( "Job was cancelled" );
+                    return null;
+                }
+                throw new RuntimeException( e );
+            }
         }
 
         /**
@@ -307,6 +316,9 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          */
         protected ModelAndView processGeoLoadResult( Collection<ExpressionExperiment> result ) {
             Map<Object, Object> model = new HashMap<Object, Object>();
+            if ( result == null || result.size() == 0 ) {
+                throw new RuntimeException( "No results were returned (cancelled or failed)" );
+            }
             if ( result.size() == 1 ) {
                 ExpressionExperiment loaded = result.iterator().next();
                 this.saveMessage( "Successfully loaded " + loaded );

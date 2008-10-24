@@ -95,6 +95,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         g2gCoexpression.setNumDataSets( 3 );
         g2gCoexpression.setDatasetsSupportingVector( new byte[] { 2, 3, 8 } );
         g2gCoexpression.setDatasetsTestedVector( new byte[] { 2, 9, 8 } );
+        g2gCoexpression.setSpecificityVector( new byte[] { 2, 3, 8 } );
         g2gCoexpressionS.create( g2gCoexpression );
     }
 
@@ -106,7 +107,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
     public void testFindCoexpressionRelationships() {
 
-        Collection results = g2gCoexpressionS.findCoexpressionRelationships( firstGene, 3, 100 );
+        Collection results = g2gCoexpressionS.findCoexpressionRelationships( firstGene, 3, 100, null );
         assertEquals( 1, results.size() );
 
     }

@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -41,10 +43,13 @@ import ubic.gemma.model.genome.Gene;
  */
 public class CommonQueries {
 
+    private static Log log = LogFactory.getLog( CommonQueries.class.getName() );
+
     /**
      * @param ees collection of expression experiments.
      * @return map of array designs to the experiments they were used in.
      */
+    @SuppressWarnings("unchecked")
     public static Map<ArrayDesign, Collection<ExpressionExperiment>> getArrayDesignsUsed(
             Collection<ExpressionExperiment> ees, Session session ) {
         Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = new HashMap<ArrayDesign, Collection<ExpressionExperiment>>();
@@ -94,12 +99,11 @@ public class CommonQueries {
      * @param genes
      * @return
      */
-    public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection genes, Session session ) {
+    public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes, Session session ) {
 
-        // first get the composite sequences - FIXME could be done with GENE2CS native query
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
                 + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene in (:genes)";
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and gene in (:genes)";
 
         Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
@@ -111,7 +115,6 @@ public class CommonQueries {
             if ( !cs2gene.containsKey( cs ) ) {
                 cs2gene.put( cs, new HashSet<Gene>() );
             }
-
             cs2gene.get( cs ).add( g );
         }
         results.close();

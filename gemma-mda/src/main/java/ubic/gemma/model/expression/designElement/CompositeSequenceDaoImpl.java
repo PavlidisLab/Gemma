@@ -43,6 +43,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.util.CommonQueries;
 
 /**
  * @author pavlidis
@@ -93,9 +94,11 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#find(ubic.gemma.model.expression.designElement.CompositeSequence)
+     * @see
+     * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#find(ubic.gemma.model.expression.designElement
+     * .CompositeSequence)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public CompositeSequence find( CompositeSequence compositeSequence ) {
 
@@ -133,7 +136,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findByGene(ubic.gemma.model.genome.Gene)
      */
     @SuppressWarnings("unchecked")
@@ -146,9 +148,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findByGene(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -161,7 +162,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findByName(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -173,8 +173,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findOrCreate(ubic.gemma.model.expression.designElement.CompositeSequence)
+     * @seeubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findOrCreate(ubic.gemma.model.expression.
+     * designElement.CompositeSequence)
      */
     @Override
     public CompositeSequence findOrCreate( CompositeSequence compositeSequence ) {
@@ -205,8 +205,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see
+     * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequence(ubic.gemma.model.genome
+     * .biosequence.BioSequence)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -227,8 +228,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequenceName(java.lang.String)
+     * @see
+     * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequenceName(java.lang.String)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -371,8 +372,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetGenes(ubic.gemma.model.expression.designElement.CompositeSequence)
+     * @see
+     * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetGenes(ubic.gemma.model.expression
+     * .designElement.CompositeSequence)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -385,8 +387,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetGenesWithSpecificity(java.util.Collection)
+     * @see
+     * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetGenesWithSpecificity(java.util.Collection
+     * )
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -427,8 +430,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see
+     * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression
+     * .arrayDesign.ArrayDesign)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -463,7 +467,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(java.util.Collection)
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
@@ -516,8 +519,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression.designElement.CompositeSequence)
+     * @see
+     * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression
+     * .designElement.CompositeSequence)
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
     @Override
@@ -548,7 +552,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -570,7 +573,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @Override
     protected void handleThaw( final Collection compositeSequences ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             @SuppressWarnings("unchecked")
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 int i = 0;
@@ -624,7 +627,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                 session.clear();
                 return null;
             }
-        }, true );
+        } );
 
     }
 
