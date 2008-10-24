@@ -40,6 +40,38 @@ Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {});
 
 Gemma.PLOT_SIZE = 100;
 Gemma.ZOOM_PLOT_SIZE = 400;
+Gemma.COLD_COLORS = ["#0033FF","#6699FF","#3399CC", "#336666", "#66CCCC", "#33FF99", "#339966", "#009900", "#66CC66", "#00CC00" ];
+Gemma.HOT_COLORS = ["#FFCC00","#FF9900","#FF6600", "#FF3300", "#CC3300", "#660000", "#FF0000", "#990033", "#FF3399", "#990099" ];
+Gemma.GRAPH_ZOOM_CONFIG =  {
+												xaxis : {
+													noTicks : 0
+												},
+												yaxis : {
+													noTicks : 0
+												},
+												grid : {
+														labelMargin: 0		// => margin in pixels
+													//color : "white"  //this turns the letters in the legend  to white
+												},
+												shadowSize : 0,
+											
+												legend : {
+													show: true,
+													position : 'nw'
+													//backgroundOpacity : 0.5
+												}
+													
+												};
+			
+//Tests if object is in the array
+Gemma.geneContained = function(geneName, arrayOfGenes){
+	for(var i = 0; i < arrayOfGenes.size(); i++){
+		if (arrayOfGenes[i].name === geneName)
+			return true;
+	}
+	return false;
+	
+};
 
 Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 
@@ -75,7 +107,6 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 			});
 
 			// Must use prototype extraction here -- putting in newDiv fails.
-			console.log(record.profiles);
 			Flotr.draw($(shortName + "_vis"), record.profiles, this.graphConfig);
 		}
 	}
@@ -155,35 +186,28 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 							displayWindow : function(eevo, profiles) {
 
-								this.setTitle("Visualization of: " + eevo.shortName);
+								this.setTitle("Visualization of:  " + eevo.shortName);
 
-								//Remove color
-								for(var i = 0; i< profiles.size(); i++){
-									profiles[i].color = null;
-									
-								}
-								var graphZoomConfig =  {
-													lines : {lineWidth : 2
-												},
-												xaxis : {
-													noTicks : 0
-												},
-												yaxis : {
-													noTicks : 0
-												},
-												grid : {
-													//color : "white"  //this turns the letters in the legend  to white
-												},
-												shadowSize : 1,
-											
-												legend : {
-													show: true,
-													position : 'nw'
-													//backgroundOpacity : 0.5
-												}};
-												
 								
-								Flotr.draw($('graphzoompanel'), profiles, graphZoomConfig);
+								//Change color to hot and cold variety
+								var coldGeneName =  profiles[0].genes[0].name;								
+								var coldIndex=0,hotIndex=0;								
+								
+								//Add cold colors
+								for(var i = 0; i< profiles.size(); i++){									
+									if (Gemma.geneContained(coldGeneName, profiles[i].genes)) {
+										profiles[i].color = Gemma.COLD_COLORS[coldIndex];
+										coldIndex++;
+									}
+									else{
+										profiles[i].color = Gemma.HOT_COLORS[hotIndex];
+										hotIndex++;
+									}
+									profiles[i].lines = {linewidth : 1/profiles[i].genes.size()}; // Vary line width size on probe specificity?
+
+								}
+															
+								Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
 							}
 
