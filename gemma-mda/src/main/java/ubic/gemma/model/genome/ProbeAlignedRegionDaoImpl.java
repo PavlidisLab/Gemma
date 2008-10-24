@@ -42,7 +42,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<ProbeAlignedRegion> find( BlatResult blatResult ) {
+    public Collection<Gene> find( BlatResult blatResult ) {
         Chromosome chrom = blatResult.getTargetChromosome();
         final Long targetStart = blatResult.getTargetStart();
         final Long targetEnd = blatResult.getTargetEnd();
@@ -57,7 +57,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDaoBase#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
      */
     @Override
-    public Collection<ProbeAlignedRegion> findByPhysicalLocation( PhysicalLocation location ) {
+    public Collection<Gene> findByPhysicalLocation( PhysicalLocation location ) {
         Chromosome chrom = location.getChromosome();
         final Long targetStart = location.getNucleotide();
         final Long targetEnd = location.getNucleotide() + location.getNucleotideLength();
@@ -67,7 +67,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<ProbeAlignedRegion> findByPosition( Chromosome chrom, final Long targetStart,
+    private Collection<Gene> findByPosition( Chromosome chrom, final Long targetStart,
             final Long targetEnd, final String strand ) {
 
         // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
