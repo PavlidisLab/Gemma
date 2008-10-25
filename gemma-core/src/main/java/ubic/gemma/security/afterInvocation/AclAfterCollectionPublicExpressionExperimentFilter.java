@@ -186,7 +186,7 @@ public class AclAfterCollectionPublicExpressionExperimentFilter implements After
      * 
      * @see org.springframework.security.afterinvocation.AfterInvocationProvider#supports(java.lang.Class)
      */
-    public boolean supports( Class arg0 ) {
+    public boolean supports( Class clazz ) {
         return true;
     }
 
