@@ -344,16 +344,21 @@ public class GeneCoexpressionService {
                 // necessary in case any were filtered out.
                 supportingDatasets.retainAll( filteredEeIds );
 
-                supportingExperimentIds.addAll( supportingDatasets );
-
                 ecvo.setSupportingExperiments( supportingDatasets );
 
-                Collection<Long> specificExperimentIds = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
+                Collection<Long> specificDatasets = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
                         positionToIDMap );
-                specificExperimentIds.retainAll( filteredEeIds );
-                specificProbeExperimentIds.addAll( specificExperimentIds );
+                specificDatasets.retainAll( supportingDatasets );
 
-                ecvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificExperimentIds,
+                /*
+                 * Specific probe EEids contains 1 even if the data set wasn't supporting.
+                 */
+                specificDatasets.retainAll( supportingExperimentIds );
+
+                assert specificDatasets.size() <= supportingExperimentIds.size();
+                assert testingDatasets.size() >= supportingExperimentIds.size();
+
+                ecvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
                         filteredEeIds ) );
 
                 int numTestingDatasets = testingDatasets.size();
@@ -369,7 +374,7 @@ public class GeneCoexpressionService {
 
                 datasetsTested.addAll( testingDatasets );
 
-                int supportFromSpecificProbes = specificProbeExperimentIds.size();
+                int supportFromSpecificProbes = specificDatasets.size();
                 if ( g2g.getEffect() < 0 ) {
                     ecvo.setPosSupp( 0 );
                     ecvo.setNegSupp( numSupportingDatasets );
@@ -402,6 +407,9 @@ public class GeneCoexpressionService {
                 }
 
                 seen.add( g2g );
+
+                supportingExperimentIds.addAll( supportingDatasets );
+                specificProbeExperimentIds.addAll( specificDatasets );
             }
 
             CoexpressionSummaryValueObject summary = makeSummary( eevos, datasetsTested, specificProbeExperimentIds,

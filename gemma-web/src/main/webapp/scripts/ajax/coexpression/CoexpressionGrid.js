@@ -221,16 +221,16 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			bitImageStyler : function(value, metadata, record, row, col, ds) {
 				var bits = record.data.datasetVector;
-				var width;
+				var width = bits.length * Gemma.CoexpressionGrid.bitImageBarWidth;
 				var gap = 0;
-				if (bits.length < 10) {
-					width = 4 * bits.length;
-					gap = 1;
-				} else if (bits.length < 100) {
-					width = 2 * bits.length;
-				} else {
-					width = bits.legnth;
-				}
+				// if (bits.length < 10) {
+				// width = 4 * bits.length;
+				// gap = 1;
+				// } else if (bits.length < 100) {
+				// width = 2 * bits.length;
+				// } else {
+				// width = bits.legnth;
+				// }
 
 				var height = Gemma.CoexpressionGrid.bitImageBarHeight;
 				var s = ''
@@ -249,9 +249,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 							maxheight = 2;
 						}
 					} else if (state === "2") {
-						b = "6"; // supported but nonspecific
-						if (6 > maxheight) {
-							maxheight = 6;
+						b = "10"; // supported but nonspecific
+						if (10 > maxheight) {
+							maxheight = 10;
 						}
 					} else if (state === "3") {
 						maxheight = height;
@@ -336,6 +336,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		});
 
 Gemma.CoexpressionGrid.bitImageBarHeight = 15;
+Gemma.CoexpressionGrid.bitImageBarWidth = 2;
 
 Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 	if (Gemma.CoexpressionGrid.bitImageMapTemplate === undefined) {

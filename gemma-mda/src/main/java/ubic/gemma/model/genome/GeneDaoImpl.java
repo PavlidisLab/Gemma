@@ -766,21 +766,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         coExVO.addScore( eeID, score, pvalue, queryProbe, coexpressedProbe );
 
-        /*
-         * specificity data. For the coexpressed genes, specificity only has to do with crosshybridization to other
-         * genes which appear in the result set.
-         */
         coexpressions.initializeSpecificityDataStructure( eeID, queryProbe );
-//        if ( geneType.equals( CoexpressionCollectionValueObject.GENE_IMPL ) ) {
-//            coexpressions.getKnownGeneCoexpression().addSpecificityInfo( eeID, coexpressedProbe, coexpressedGene );
-//        } else if ( geneType.equals( CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL ) ) {
-//            coexpressions.getPredictedCoexpressionType().addSpecificityInfo( eeID, coexpressedProbe, coexpressedGene );
-//        } else if ( geneType.equals( CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL ) ) {
-//            coexpressions.getProbeAlignedCoexpressionType()
-//                    .addSpecificityInfo( eeID, coexpressedProbe, coexpressedGene );
-//        } else {
-//            throw new IllegalStateException( "Gene is not one of the recognized types" );
-//        }
 
     }
 

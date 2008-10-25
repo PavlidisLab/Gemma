@@ -100,6 +100,7 @@ public class GeneLinkCoexpressionAnalyzer {
         if ( ggc.getSpecificityVector() == null ) {
             return new HashSet<Long>();
         }
+        // log.info( BitUtil.prettyPrint( ggc.getSpecificityVector() ) );
         return convertBitVector( eePositionToIdMap, ggc.getSpecificityVector() );
     }
 
@@ -140,7 +141,8 @@ public class GeneLinkCoexpressionAnalyzer {
         return ids;
     }
 
-    ExpressionExperimentSetService expressionExperimentSetService;
+    private ExpressionExperimentSetService expressionExperimentSetService;
+
     private Gene2GeneCoexpressionService gene2GeneCoexpressionService;
 
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
@@ -280,7 +282,7 @@ public class GeneLinkCoexpressionAnalyzer {
         }
 
         /*
-         * Set it so 1= specific 0=nonspecific
+         * Set it so 1=specific 0=nonspecific
          */
         for ( Long id : nonspecificEE ) {
             BitUtil.clear( result, eeIdOrder.get( id ) );

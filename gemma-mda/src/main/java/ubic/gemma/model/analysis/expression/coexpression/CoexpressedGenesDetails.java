@@ -119,21 +119,6 @@ public class CoexpressedGenesDetails {
         this.expressionExperiments.put( id, vo );
     }
 
-    // /**
-    // * Populate information about probe -> gene relationships for a single probe.
-    // * <p>
-    // * Implementation note: Specificity information is stored in ee->probe->gene maps. For each gene in the
-    // * 'coexpression' results, genes are added.
-    // *
-    // * @param eeID
-    // * @param probeID
-    // * @param geneID
-    // */
-    // public void addSpecificityInfo( Long eeID, Long probeID, Long geneID ) {
-    // Map<Long, Collection<Long>> probe2geneMap = getOrInitSpecificityMap( eeID, probeID );
-    // probe2geneMap.get( probeID ).add( geneID );
-    // }
-
     /**
      * Populate information about probe -> gene relationships for a single probe, for the query gene's probe.
      * 
@@ -659,29 +644,6 @@ public class CoexpressedGenesDetails {
         coExValObj.setNonspecificEEs( result );
         return result;
     }
-
-    // /**
-    // * Provide an initialized data structure for a map of probes -> genes, keyed by the expression experiment. This is
-    // * populated by this.addSpecificityInfo.
-    // *
-    // * @param eeID
-    // * @param probeID
-    // * @return map of probeID to Gene ids for the specific eee
-    // */
-    // private Map<Long, Collection<Long>> getOrInitSpecificityMap( Long eeID, Long probeID ) {
-    // if ( !expressionExperimentProbe2GeneMaps.containsKey( eeID ) ) {
-    // Map<Long, Collection<Long>> probe2geneMap = Collections
-    // .synchronizedMap( new HashMap<Long, Collection<Long>>() );
-    // expressionExperimentProbe2GeneMaps.put( eeID, probe2geneMap );
-    // }
-    //
-    // Map<Long, Collection<Long>> probe2geneMap = expressionExperimentProbe2GeneMaps.get( eeID );
-    // if ( !probe2geneMap.containsKey( probeID ) ) {
-    // Collection<Long> genes = Collections.synchronizedSet( new HashSet<Long>() );
-    // probe2geneMap.put( probeID, genes );
-    // }
-    // return probe2geneMap;
-    // }
 
     /**
      * Counting up how many support-threshold exceeding links each data set contributed.
