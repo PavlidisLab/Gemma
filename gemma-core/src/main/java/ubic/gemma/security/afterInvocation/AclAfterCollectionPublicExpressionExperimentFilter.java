@@ -69,11 +69,11 @@ public class AclAfterCollectionPublicExpressionExperimentFilter implements After
      */
     public final Object decide( Authentication authentication, Object object, ConfigAttributeDefinition config,
             Object returnedObject ) throws AccessDeniedException {
-        Collection configAttribs = config.getConfigAttributes();
-        Iterator iter = configAttribs.iterator();
+        Collection<ConfigAttribute> configAttribs = config.getConfigAttributes();
+        Iterator<ConfigAttribute> iter = configAttribs.iterator();
 
         while ( iter.hasNext() ) {
-            ConfigAttribute attr = ( ConfigAttribute ) iter.next();
+            ConfigAttribute attr = iter.next();
 
             if ( this.supports( attr ) ) {
                 // Need to process the Collection for this invocation
