@@ -647,7 +647,7 @@ public class ExpressionExperimentServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadExpressionExperimentsForLoggedInUser()
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadExpressionExperimentsForUser()
      */
     public Collection<ExpressionExperiment> loadExpressionExperimentsForUser() {
         return this.loadAll();

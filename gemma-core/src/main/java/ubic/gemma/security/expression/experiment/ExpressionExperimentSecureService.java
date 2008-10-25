@@ -36,6 +36,8 @@ import ubic.gemma.security.RunAsManager;
  * The global security provided by Spring Security still applies here, but there are certain security related tasks
  * (such as filtering out public objects for a user) that cannot be done by Spring Security directly so we do it here.
  * 
+ * @spring.bean id="expressionExperimentSecureService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author keshav
  * @version $Id$
  */
@@ -44,10 +46,6 @@ public class ExpressionExperimentSecureService {
     private Log log = LogFactory.getLog( this.getClass() );
 
     ExpressionExperimentService expressionExperimentService = null;
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
 
     /**
      * Returns the {@link ExpressionExperiment}s for the {@link User} u. This would generally be used by an
@@ -77,6 +75,13 @@ public class ExpressionExperimentSecureService {
         Collection<ExpressionExperiment> eeCol = expressionExperimentService.loadAll();
         SecurityContextHolder.getContext().setAuthentication( auth );
         return eeCol;
+    }
+
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 
 }
