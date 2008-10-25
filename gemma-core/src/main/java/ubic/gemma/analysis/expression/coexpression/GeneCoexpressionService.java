@@ -186,6 +186,13 @@ public class GeneCoexpressionService {
                     return getFilteredCannedAnalysisResults( eeSet.getId(), eeIds, genes, stringency, maxResults,
                             queryGenesOnly );
                 }
+
+                /*
+                 * FIXME: if there is an analysis that contains 'most' of the experiments, it may be performant to split
+                 * it up: get the expression results for some datasets from gene2gene, and some via probe-level query.
+                 * This will be necessary to allow inclusion of 'new' data sets like ones uploaded by users, that aren't
+                 * included in the gene2gene analysis. (Bug 1398, 1399)
+                 */
             }
         }
 
@@ -246,7 +253,7 @@ public class GeneCoexpressionService {
 
     /**
      * Get coexpression results using a pure gene2gene query (without visiting the probe2probe tables. This is generally
-     * faster, even if we're only interested in data from a subset of the exeriments.
+     * faster, probably even if we're only interested in data from a subset of the exeriments.
      * 
      * @param eeSetId the base expression experimnent set to refer to for analysis results.
      * @param eeIds Experiments to limit the results to (can be null)
@@ -316,8 +323,10 @@ public class GeneCoexpressionService {
 
                 Collection<Gene> geneToThaw = new ArrayList<Gene>();
                 geneToThaw.add( foundGene );
-                geneService.thawLite( geneToThaw ); // The thaw needs to be done here because building the value object
+
+                // The thaw needs to be done here because building the value object
                 // calls methods that require the gene's info (setSortKey, hashCode)
+                geneService.thawLite( geneToThaw );
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
@@ -445,7 +454,7 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * convert CoexpressedGenesDetails into value objects to be passed to the client for display.
+     * convert CoexpressionValueObject into CoexpressionValueObjectExt objects to be passed to the client for display.
      * 
      * @param queryGene
      * @param eevos
@@ -490,6 +499,7 @@ public class GeneCoexpressionService {
 
             for ( int i = 0; i < eevos.size(); ++i ) {
                 ExpressionExperimentValueObject eevo = eevos.get( i );
+
                 boolean tested = cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eevo.getId() );
 
                 assert cvo.getExpressionExperiments().size() <= cvo.getPositiveLinkSupport()
@@ -520,8 +530,6 @@ public class GeneCoexpressionService {
             ecvo.setSortKey();
             results.add( ecvo );
         }
-
-        results.size(); // for breakpoint
 
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             if ( !coexp.getExpressionExperimentIds().contains( eevo.getId() ) ) continue;
@@ -701,7 +709,8 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * Retrieve all gene2gene coexpression information for the genes, using methods that don't filter by experiment.
+     * Retrieve all gene2gene coexpression information for the genes at the specified stringency, using methods that
+     * don't filter by experiment.
      * 
      * @param queryGenes
      * @param stringency

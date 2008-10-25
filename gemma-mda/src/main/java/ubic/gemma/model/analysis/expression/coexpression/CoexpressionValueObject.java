@@ -22,13 +22,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.OntologyTerm;
@@ -51,14 +49,14 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * Genes that were predicted to cross-hybridize with the target gene
      */
     private Collection<Long> crossHybridizingGenes = new HashSet<Long>();
-    private Collection<BioAssaySet> datasetsTestedIn = new HashSet<BioAssaySet>();
+    private Collection<Long> datasetsTestedIn = new HashSet<Long>();
 
     // the expression experiments that this coexpression was involved in. The number of these will total the 'support'
     // (pos+neg correlations, minus # of experiments that support both + and -)
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
 
     /**
-     * ID of thecoexpressed gene.
+     * ID of the coexpressed gene.
      */
     private Long geneId;
 
@@ -90,7 +88,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * Expression Experiments whihc have evidence for coexpression of this gene with the query, but the probes are not
      * specific for the target gene.
      */
-    private Collection<Long> nonspecificEE;
+    private Collection<Long> nonspecificEEs;
 
     /**
      * Number of GO terms the query gene has. This is the highest possible overlap
@@ -215,7 +213,12 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return crossHybridizingGenes;
     }
 
-    public Collection<ubic.gemma.model.expression.experiment.BioAssaySet> getDatasetsTestedIn() {
+    /**
+     * Collection of EE IDs in which the link was tested.
+     * 
+     * @return
+     */
+    public Collection<Long> getDatasetsTestedIn() {
         return this.datasetsTestedIn;
     }
 
@@ -228,7 +231,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     /**
-     * @return a collectino of EEids that contributed to this genes positive expression
+     * @return a collection of EEids that contributed to this genes positive expression
      */
     public Collection<Long> getEEContributing2PositiveLinks() {
         return positiveScores.keySet();
@@ -369,7 +372,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * @return the nonspecificEE
      */
     public Collection<Long> getNonspecificEE() {
-        return nonspecificEE;
+        return nonspecificEEs;
     }
 
     public int getNumDatasetsTestedIn() {
@@ -534,7 +537,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     }
 
-    public void setDatasetsTestedIn( Collection<BioAssaySet> datasetsTestedIn ) {
+    public void setDatasetsTestedIn( Collection<Long> datasetsTestedIn ) {
         this.datasetsTestedIn = datasetsTestedIn;
     }
 
@@ -574,10 +577,12 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     /**
-     * @param nonspecificEE the nonspecificEE to set
+     * A 'non-specific ee' is an expression experiment that lacks specific probes for BOTH the query and target genes.
+     * 
+     * @param nonspecificEEs the nonspecificEE to set
      */
-    public void setNonspecificEE( Collection<Long> nonspecificEE ) {
-        this.nonspecificEE = nonspecificEE;
+    public void setNonspecificEEs( Collection<Long> nonspecificEEs ) {
+        this.nonspecificEEs = nonspecificEEs;
     }
 
     /**
@@ -600,7 +605,36 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     @Override
     public String toString() {
-        return StringUtils.isBlank( geneName ) ? "Gene " + geneId : "=" + geneName;
+        // return StringUtils.isBlank( geneName ) ? "Gene " + geneId : geneName;
+        StringBuilder buf = new StringBuilder();
+        buf.append( "Coexpression value object: query=" + queryGene + " target=" + geneId + " " + geneName + "\n" );
+        buf.append( "Tested in " + datasetsTestedIn.size() + ": " + StringUtils.join( datasetsTestedIn, ',' ) + "\n" );
+        if ( positiveScores.size() > 0 ) {
+            buf.append( "Positive correlation support=" + positiveScores.size() + "\n" );
+            for ( Long eeid : positiveScores.keySet() ) {
+
+                Collection<Long> qprobes = queryProbeInfo.get( eeid );
+
+                for ( Long probe : positiveScores.get( eeid ).keySet() ) {
+                    for ( Long qprobe : qprobes ) {
+                        buf.append( "EE=" + eeid + " tprobe=" + probe + " qprobe=" + qprobe + " specific="
+                                + ( this.nonspecificEEs.contains( eeid ) ? "n" : "y" ) + "\n" );
+                    }
+                }
+            }
+        }
+
+        if ( negativeScores.size() > 0 ) {
+            buf.append( "Negative correlation support=" + negativeScores.size() + "\n" );
+            for ( Long eeid : negativeScores.keySet() ) {
+                for ( Long probe : negativeScores.get( eeid ).keySet() ) {
+                    buf.append( "EE=" + eeid + " probe=" + probe + " specific="
+                            + ( this.nonspecificEEs.contains( eeid ) ? "n" : "y" ) + "\n" );
+                }
+            }
+        }
+
+        return buf.toString();
     }
 
     /**

@@ -338,7 +338,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
 
             for ( Long g : genes ) {
                 if ( !gmap.containsKey( g ) ) continue;
-                gmap.get( g ).getDatasetsTestedIn().add( ee );
+                gmap.get( g ).getDatasetsTestedIn().add( ee.getId() );
             }
         }
 
@@ -353,11 +353,11 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * For the genes that the query is coexpressed with. This is limited to the top MAX_GENES_TO_COMPUTE_EESTESTEDIN.
      * This is not very fast if MAX_GENES_TO_COMPUTE_EESTESTEDIN is large. We use this version for on-line requests.
      * 
-     * @param ees, limited to the ees that the query gene is tested in.
+     * @param eesQueryTestedIn, limited to the ees that the query gene is tested in.
      * @param coexpressionData
      */
     @SuppressWarnings("unchecked")
-    private void computeEesTestedIn( Collection<ExpressionExperiment> ees,
+    private void computeEesTestedIn( Collection<ExpressionExperiment> eesQueryTestedIn,
             List<CoexpressionValueObject> coexpressionData ) {
         Collection<Long> coexGeneIds = new HashSet<Long>();
 
@@ -374,11 +374,18 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         log.debug( "Computing EEs tested in for " + coexGeneIds.size() + " genes." );
 
         Map<Long, Collection<BioAssaySet>> eesTestedIn = probe2ProbeCoexpressionService
-                .getExpressionExperimentsTestedIn( coexGeneIds, ees, false );
+                .getExpressionExperimentsTestedIn( coexGeneIds, eesQueryTestedIn, false );
         for ( Long g : eesTestedIn.keySet() ) {
-            CoexpressionValueObject o = gmap.get( g );
-            assert o != null;
-            o.setDatasetsTestedIn( eesTestedIn.get( g ) );
+            CoexpressionValueObject cvo = gmap.get( g );
+            assert cvo != null;
+            assert eesTestedIn.get( g ).size() <= eesQueryTestedIn.size();
+
+            Collection<Long> ids = new HashSet<Long>();
+            for ( BioAssaySet ee : eesTestedIn.get( g ) ) {
+                ids.add( ee.getId() );
+            }
+
+            cvo.setDatasetsTestedIn( ids );
         }
     }
 

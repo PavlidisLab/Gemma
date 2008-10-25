@@ -73,15 +73,11 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         Option stringencyOption = OptionBuilder.hasArg().withArgName( "stringency" ).withDescription(
                 "The stringency value: Defaults to " + DEFAULT_STRINGINCY ).withLongOpt( "stringency" ).create( 's' );
 
-        // Option analysisNameOption = OptionBuilder.hasArg().isRequired().withArgName( "name" ).withDescription(
-        // "The name of the analysis to create" ).withLongOpt( "name" ).create( 'a' );
-
         Option allGenesOption = OptionBuilder.withDescription( "Run on all genes, including predicted and PARs" )
                 .create( ALLGENES_OPTION );
 
         addOption( geneFileOption );
         addOption( stringencyOption );
-        // addOption( analysisNameOption );
         addOption( allGenesOption );
 
     }
@@ -97,11 +93,8 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
         log.debug( displayEEs() );
         if ( this.expressionExperimentSet != null ) {
-            // log.info( "Using EESet:" + this.expressionExperimentSet.getName() + " - "
-            // + this.expressionExperiments.size() + " Expression Experiments." );
-            // geneVoteAnalyzer.analyze( this.expressionExperimentSet, toUseGenes, toUseStringency, knownGenesOnly,
-            // toUseAnalysisName );
-            throw new UnsupportedOperationException( "Don't use an EEset; Use all EEs instead please" );
+            throw new UnsupportedOperationException(
+                    "Don't use an EEset; Use all EEs instead please, by specifying a Taxon" );
         }
         assert this.taxon != null : "Please provide a taxon.";
 
@@ -130,7 +123,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
             }
             assert taxon != null;
             try {
-                super.readGeneListFile( this.getOptionValue( 'g' ), taxon );
+                toUseGenes = super.readGeneListFile( this.getOptionValue( 'g' ), taxon );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
@@ -142,15 +135,14 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
             toUseGenes.addAll( geneService.loadProbeAlignedRegions( taxon ) );
         }
 
+        if ( toUseGenes.size() < 2 ) {
+            throw new IllegalArgumentException( "You must specify at least two genes" );
+        }
+
         toUseStringency = DEFAULT_STRINGINCY;
         if ( this.hasOption( 's' ) ) {
             toUseStringency = Integer.parseInt( this.getOptionValue( 's' ) );
         }
-
-        // if ( this.hasOption( 'a' ) ) {
-        // toUseAnalysisName = this.getOptionValue( 'a' );
-        // }
-
         if ( this.hasOption( ALLGENES_OPTION ) ) {
             this.knownGenesOnly = false;
         }

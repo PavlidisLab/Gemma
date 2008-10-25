@@ -22,6 +22,9 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
+
 /**
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression
  */
@@ -35,9 +38,9 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
      * <p>
      * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
      * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
      * </p>
      * 
      * @param id the identifier of the entity to load.
@@ -54,9 +57,9 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
 
     /**
      * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
      * operation which can optionally transform the entity (into a value object for example). By default, transformation
      * does not occur.
      * </p>
@@ -96,7 +99,8 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
     /**
      * 
      */
-    public java.util.Collection getVectorsForLinks( ubic.gemma.model.genome.Gene gene, java.util.Collection ees );
+    public java.util.Collection getVectorsForLinks( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<ExpressionExperiment> ees );
 
     /**
      * <p>
@@ -119,7 +123,8 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
      * DesignElementDataVectors that are coexpressed
      * </p>
      */
-    public java.util.Map getVectorsForLinks( java.util.Collection genes, java.util.Collection ees );
+    public java.util.Map getVectorsForLinks( java.util.Collection<Gene> genes,
+            java.util.Collection<ExpressionExperiment> ees );
 
     /**
      * <p>
@@ -135,7 +140,8 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
      * Create working table if links to use in shuffled-link experiments.
      * </p>
      */
-    public void prepareForShuffling( java.util.Collection ees, java.lang.String taxon, boolean filterNonSpecific );
+    public void prepareForShuffling( java.util.Collection<ExpressionExperiment> ees, java.lang.String taxon,
+            boolean filterNonSpecific );
 
     /**
      * <p>
@@ -159,7 +165,8 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
      * </p>
      */
     public java.util.Map getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene geneA,
-            java.util.Collection genesB, java.util.Collection expressionExperiments, boolean filterNonSpecific );
+            java.util.Collection<Gene> genesB, java.util.Collection<ExpressionExperiment> expressionExperiments,
+            boolean filterNonSpecific );
 
     /**
      * 
@@ -177,7 +184,7 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
     /**
      * 
      */
-    public java.util.Map getExpressionExperimentsTestedIn( java.util.Collection geneIds,
-            java.util.Collection experiments, boolean filterNonSpecific );
+    public java.util.Map getExpressionExperimentsTestedIn( java.util.Collection<Long> geneIds,
+            java.util.Collection<Long> experiments, boolean filterNonSpecific );
 
 }

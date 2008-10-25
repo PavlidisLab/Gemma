@@ -92,7 +92,6 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
             ppc.setExpressionBioAssaySet( ee );
             ppc.setSourceAnalysis( analysis );
             ppcs.create( ppc );
-            log.info( ":" );
         }
 
         this.flushAndClearSession();

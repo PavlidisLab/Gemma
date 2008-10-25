@@ -319,8 +319,7 @@ public class CoexpressionCollectionValueObject {
      * @return a unique collection of probeIDs that the queried gene was expressed from
      */
     public Collection<Long> getQueryGeneProbes() {
-
-        Collection<Long> results = Collections.synchronizedSet( new HashSet<Long>() );
+        Collection<Long> results = new HashSet<Long>();
         synchronized ( queryProbes ) {
             for ( Long eeID : queryProbes.keySet() )
                 results.addAll( queryProbes.get( eeID ).keySet() );
@@ -330,35 +329,17 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * @return a collection of expression experiment IDs that have <strong>at least one</strong> probes that are
-     *         predicted to be <strong>specific</strong> for the query gene. Thus, expression experiments that have both
-     *         specific and non-specific probes for the query gene will be included.
+     * @return all the probes for all the target genes.
      */
-    public Collection<Long> getQueryGeneSpecificExpressionExperiments() {
-
-        Collection<Long> specificEE = Collections.synchronizedSet( new HashSet<Long>() );
-
-        if ( queryGene == null ) return null;
-
-        synchronized ( queryProbes ) {
-            for ( Long eeID : queryProbes.keySet() ) {
-
-                // this is a map for ALL the probes from this data set that came up.
-                Map<Long, Collection<Long>> probe2geneMap = queryProbes.get( eeID );
-
-                for ( Long probeID : probe2geneMap.keySet() ) {
-
-                    Collection<Long> genes = probe2geneMap.get( probeID );
-
-                    if ( ( genes.size() == 1 ) && ( genes.iterator().next().equals( queryGene.getId() ) ) ) {
-                        log.debug( "Expression Experiment: + " + eeID + " is specific" );
-                        specificEE.add( eeID );
-                    }
-                }
-
+    public Collection<Long> getTargetGeneProbes() {
+        Collection<Long> result = new HashSet<Long>();
+        List<CoexpressionValueObject> data = this.getAllGeneCoexpressionData( 0 );
+        for ( CoexpressionValueObject coVo : data ) {
+            for ( Long ee : coVo.getExpressionExperiments() ) {
+                result.addAll( coVo.getProbes( ee ) );
             }
         }
-        return specificEE;
+        return result;
     }
 
     /**
@@ -467,6 +448,23 @@ public class CoexpressionCollectionValueObject {
             }
 
         }
+    }
+
+    public void setTargetGeneSpecificityInfo( Map<Long, Collection<Long>> probe2GeneMap ) {
+        for ( Long eeID : queryProbes.keySet() ) {
+            addTargetSpecificityData( eeID, probe2GeneMap );
+        }
+    }
+
+    private void addTargetSpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
+        if ( this.knownGeneCoexpressionData.getExpressionExperiment( eeID ) != null )
+            this.knownGeneCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
+
+        if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
+            this.predictedCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
+
+        if ( this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID ) != null )
+            this.probeAlignedRegionCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
     }
 
     private void addQuerySpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {

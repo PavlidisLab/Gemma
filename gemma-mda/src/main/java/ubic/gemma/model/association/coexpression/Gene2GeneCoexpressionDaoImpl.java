@@ -57,6 +57,14 @@ public class Gene2GeneCoexpressionDaoImpl extends
     }
 
     /**
+     * Clear the cache of gene2gene objects. This should be run when gene2gene is updated. FIXME externalize this and
+     * set it up so it can be done in a taxon-specific way?
+     */
+    protected void clearCache() {
+        this.cache.removeAll();
+    }
+
+    /**
      * @param object
      */
     protected void removeFromCache( Gene2GeneCoexpression object ) {
@@ -88,7 +96,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
             }
         }
 
-        if ( genes.size() == 0 ) return result;
+        if ( genesNeeded.size() == 0 ) return result;
 
         // WARNING we assume the genes are from the same taxon.
         String g2gClassName = getClassName( genes.iterator().next() );
@@ -139,7 +147,8 @@ public class Gene2GeneCoexpressionDaoImpl extends
      *      java.util.Collection)
      *      <p>
      *      Implementation note: we need the sourceAnalysis because although we normally have only one analysis per *
-     *      taxon, when reanalyses are in progress there can be more than one temporarily.
+     *      taxon, when reanalyses are in progress there can be more than one temporarily. NOTE: this method is pretty
+     *      redundant with the one that takes a collection of genes - possibly deprecate this.
      */
     @SuppressWarnings("unchecked")
     @Override

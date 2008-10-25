@@ -256,8 +256,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         // Locate analyses which use these probes, return the expression experiments
         String queryString = "select distinct ees from ProbeCoexpressionAnalysisImpl pca inner join"
                 + " pca.expressionExperimentSetAnalyzed eesa inner join eesa.experiments ees inner join pca.probesUsed pu where ees in (:ees) and pu in (:probes)";
-        return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
+        List result = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
                 new Object[] { expressionExperiments, probes } );
+
+        assert result.size() <= expressionExperiments.size();
+        return result;
     }
 
     /*
@@ -347,8 +350,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         // this step is fast.
         Map<Long, Collection<Long>> cs2genes = this.getCs2GenesMapFromGenes( genes );
 
-        log.info( cs2genes.size() + " probes for " + genes.size() + " genes to examined in "
-                + expressionExperiments.size() + " ees." );
+        if ( log.isDebugEnabled() )
+            log.debug( cs2genes.size() + " probes for " + genes.size() + " genes to examinedin "
+                    + expressionExperiments.size() + " ees." );
         List eesre = new ArrayList();
         StopWatch watch = new StopWatch();
         watch.start();
@@ -365,6 +369,14 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             Object[] ol = ( Object[] ) o;
             CompositeSequence c = ( CompositeSequence ) ol[0];
             BioAssaySet e = ( BioAssaySet ) ol[1];
+
+            /*
+             * We could put a restrict clause on the query, but this may be faster.
+             */
+            if ( !expressionExperiments.contains( e ) ) {
+                continue;
+            }
+
             Collection<Long> geneIds = cs2genes.get( c.getId() );
             for ( Long id : geneIds ) {
                 if ( !result.containsKey( id ) ) {
@@ -372,7 +384,13 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 }
                 result.get( id ).add( e );
             }
+
         }
+
+        for ( Long gene : result.keySet() ) {
+            assert result.get( gene ).size() <= expressionExperiments.size();
+        }
+
         return result;
     }
 

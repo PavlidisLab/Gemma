@@ -167,12 +167,6 @@ public class GeneLinkCoexpressionAnalyzer {
     public void analyze( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
             boolean knownGenesOnly, String analysisName ) {
 
-        // Analysis existingAnalysis = geneCoexpressionAnalysisService.findByName( analysisName );
-        // if ( existingAnalysis != null ) {
-        // throw new IllegalArgumentException( "Analysis with name '" + analysisName + "' exists already (id="
-        // + existingAnalysis.getId() + ")" );
-        // }
-
         if ( !knownGenesOnly ) {
             throw new UnsupportedOperationException(
                     "Sorry, using other than 'known genes' is not currently supported." );
@@ -200,8 +194,9 @@ public class GeneLinkCoexpressionAnalyzer {
 
         doAnalysis( expressionExperiments, toUseGenes, stringency, knownGenesOnly, analysisName, genesToAnalyzeMap,
                 analysis );
-        // Small risk here: there may be two enabled analyses until the next call is completed. If it fails we
-        // definitely have a problem.
+
+        // FIXME Small risk here: there may be two enabled analyses until the next call is completed. If it fails we
+        // definitely have a problem. Ideally there would be a transaction here...
         disableOldAnalyses( oldAnalyses );
         /*
          * Note that we don't delete the old analysis. That has to be done manually for now -- just in case we need it
@@ -325,14 +320,13 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param eeIdOrder
      * @return
      */
-    private byte[] computeTestedDatasetVector( Collection<BioAssaySet> datasetsTestedIn, Map<Long, Integer> eeIdOrder ) {
+    private byte[] computeTestedDatasetVector( Collection<Long> datasetsTestedIn, Map<Long, Integer> eeIdOrder ) {
         byte[] result = new byte[( int ) Math.ceil( eeIdOrder.size() / ( double ) Byte.SIZE )];
         for ( int i = 0, j = result.length; i < j; i++ ) {
             result[i] = 0x0;
         }
 
-        for ( BioAssaySet ee : datasetsTestedIn ) {
-            Long id = ee.getId();
+        for ( Long id : datasetsTestedIn ) {
             BitUtil.set( result, eeIdOrder.get( id ) );
         }
         assert BitUtil.count( result ) == datasetsTestedIn.size();
@@ -413,7 +407,9 @@ public class GeneLinkCoexpressionAnalyzer {
             securityService.makePublic( analysis );
 
         } catch ( Exception e ) {
-            log.error( "There was an error during analysis. Cleaning up ..." );
+            log.error( "There was an error during analysis:" );
+            log.error( e, e );
+            log.error( "Cleaning up if possible ..." );
             geneCoexpressionAnalysisService.delete( analysis );
             throw new RuntimeException( e );
         }

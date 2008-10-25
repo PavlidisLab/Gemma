@@ -184,7 +184,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * Gets all the genes that are coexpressed with another gene.
+     * Gets all the genes that are coexpressed with another gene based on stored coexpression 'links', essentially as
+     * described in Lee et al. (2004) Genome Research.
      * 
      * @param gene to use as the query
      * @param ees Data sets to restrict the search to.
@@ -235,12 +236,19 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Long overallElapsed = overallWatch.getTime();
         if ( overallElapsed > 1000 )
             log.info( "Query for " + gene.getName() + " took a total of " + overallElapsed + "ms" );
+
         coexpressions.setDbQuerySeconds( overallElapsed );
 
         // fill in information about the query gene
         Collection<Long> queryGeneProbeIds = coexpressions.getQueryGeneProbes();
+        Collection<Long> targetGeneProbeIds = coexpressions.getTargetGeneProbes();
+
         Map<Long, Collection<Long>> querySpecificity = getCS2GeneMap( queryGeneProbeIds );
+        Map<Long, Collection<Long>> targetSpecificity = getCS2GeneMap( targetGeneProbeIds );
+
         coexpressions.setQueryGeneSpecifityInfo( querySpecificity );
+        coexpressions.setTargetGeneSpecificityInfo( targetSpecificity );
+
         postProcess( coexpressions, knownGenesOnly );
         return coexpressions;
     }
@@ -677,7 +685,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     private void postProcessKnownGenes( CoexpressionCollectionValueObject coexpressions ) {
         CoexpressedGenesDetails knownGeneCoexpression = coexpressions.getKnownGeneCoexpression();
-        knownGeneCoexpression.postProcess( coexpressions.getQueryGeneSpecificExpressionExperiments() );
+        knownGeneCoexpression.postProcess();
     }
 
     /**
@@ -685,7 +693,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     private void postProcessPredictedGenes( CoexpressionCollectionValueObject coexpressions ) {
         CoexpressedGenesDetails predictedCoexpressionType = coexpressions.getPredictedCoexpressionType();
-        predictedCoexpressionType.postProcess( coexpressions.getQueryGeneSpecificExpressionExperiments() );
+        predictedCoexpressionType.postProcess();
     }
 
     /**
@@ -693,7 +701,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     private void postProcessProbeAlignedRegions( CoexpressionCollectionValueObject coexpressions ) {
         CoexpressedGenesDetails probeAlignedCoexpressionType = coexpressions.getProbeAlignedCoexpressionType();
-        probeAlignedCoexpressionType.postProcess( coexpressions.getQueryGeneSpecificExpressionExperiments() );
+        probeAlignedCoexpressionType.postProcess();
     }
 
     /**
@@ -758,18 +766,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         coExVO.addScore( eeID, score, pvalue, queryProbe, coexpressedProbe );
 
-        // specificity data
+        /*
+         * specificity data. For the coexpressed genes, specificity only has to do with crosshybridization to other
+         * genes which appear in the result set.
+         */
         coexpressions.initializeSpecificityDataStructure( eeID, queryProbe );
-        if ( geneType.equals( CoexpressionCollectionValueObject.GENE_IMPL ) ) {
-            coexpressions.getKnownGeneCoexpression().addSpecificityInfo( eeID, coexpressedProbe, coexpressedGene );
-        } else if ( geneType.equals( CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL ) ) {
-            coexpressions.getPredictedCoexpressionType().addSpecificityInfo( eeID, coexpressedProbe, coexpressedGene );
-        } else if ( geneType.equals( CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL ) ) {
-            coexpressions.getProbeAlignedCoexpressionType()
-                    .addSpecificityInfo( eeID, coexpressedProbe, coexpressedGene );
-        } else {
-            throw new IllegalStateException( "Gene is not one of the recognized types" );
-        }
+//        if ( geneType.equals( CoexpressionCollectionValueObject.GENE_IMPL ) ) {
+//            coexpressions.getKnownGeneCoexpression().addSpecificityInfo( eeID, coexpressedProbe, coexpressedGene );
+//        } else if ( geneType.equals( CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL ) ) {
+//            coexpressions.getPredictedCoexpressionType().addSpecificityInfo( eeID, coexpressedProbe, coexpressedGene );
+//        } else if ( geneType.equals( CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL ) ) {
+//            coexpressions.getProbeAlignedCoexpressionType()
+//                    .addSpecificityInfo( eeID, coexpressedProbe, coexpressedGene );
+//        } else {
+//            throw new IllegalStateException( "Gene is not one of the recognized types" );
+//        }
 
     }
 
