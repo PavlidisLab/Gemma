@@ -319,6 +319,8 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getArrayDesignsUsed=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getQuantitationTypeCountById=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadExpressionExperimentsForUser=user,admin,AFTER_ACL_FILTER_PUBLIC_EXPRESSION_EXPERIMENT_FROM_COLLECTION
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadExpressionExperimentsForAnotherUser=user,admin,AFTER_ACL_FILTER_PUBLIC_EXPRESSION_EXPERIMENT_FROM_COLLECTION
                 ubic.gemma.analysis.report.ExpressionExperimentReportService.generateSummaryObjects=admin
                 ubic.gemma.analysis.report.ExpressionExperimentReportService.generateSummaryObject=admin   
                 ubic.gemma.analysis.report.ExpressionExperimentReportService.retrieveSummaryObjects=user,admin,ROLE_ANONYMOUS
@@ -612,6 +614,7 @@
 				<ref local="afterAclRead" />
 				<ref local="afterAclCollectionRead" />
 				<ref local="afterAclArrayDesignCollectionRead" />
+				<ref local="afterAclFilterPublicExpressionExperimentFromCollection" />
 			</list>
 		</property>
 	</bean>
@@ -664,6 +667,21 @@
 	<!--  Process AFTER_ACL_DATAVECTOR_COLLECTION_READ -->
 	<bean id="afterAclDataVectorCollectionRead"
 		class="ubic.gemma.security.afterInvocation.AclAfterCollectionDataVectorByExpressionExperimentFilter">
+		<property name="aclManager">
+			<ref local="aclManager" />
+		</property>
+		<property name="requirePermission">
+			<list>
+				<ref bean="SimpleAclEntry.ADMINISTRATION" />
+				<ref bean="SimpleAclEntry.READ_WRITE" />
+				<ref bean="SimpleAclEntry.READ" />
+			</list>
+		</property>
+	</bean>
+	
+	<!-- Process AFTER_ACL_FILTER_PUBLIC_EXPRESSION_EXPERIMENT_FROM_COLLECTION -->
+	<bean id="afterAclFilterPublicExpressionExperimentFromCollection"
+		class="ubic.gemma.security.afterInvocation.AclAfterCollectionPublicExpressionExperimentFilter">
 		<property name="aclManager">
 			<ref local="aclManager" />
 		</property>
