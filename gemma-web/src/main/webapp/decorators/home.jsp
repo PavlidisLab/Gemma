@@ -8,7 +8,8 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" />
+		</title>
 
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
@@ -18,6 +19,7 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/FeedReader.js'></script>
 
 		<jwr:style src="/bundles/gemma-all.css" />
 		<jwr:script src="/bundles/include.js" />
@@ -80,13 +82,17 @@
 			</div>
 		</div>
 		<script type="text/javascript">
-var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl."
+			: "http://www.");
+	document
+			.write(unescape("%3Cscript src='"
+					+ gaJsHost
+					+ "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
 </script>
 		<script type="text/javascript">
-var pageTracker = _gat._getTracker('${appConfig["ga.tracker"]}');
-pageTracker._initData();
-pageTracker._trackPageview();
+	var pageTracker = _gat._getTracker('${appConfig["ga.tracker"]}');
+	pageTracker._initData();
+	pageTracker._trackPageview();
 </script>
 	</body>
 </html>

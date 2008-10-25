@@ -131,8 +131,8 @@ h6 {
 /* END HEADINGS */ /* TEXT */
 p {
 	font-size: 1em;
-	margin: 0 0 1.5em 0;
-	padding: 0px 20px 0px 20px;
+	margin: 0 0 0.8em 0;
+	padding: 0px 0px 0px 0px;
 	line-height: 1.4em;
 }
 
@@ -519,6 +519,14 @@ a.tooltip:hover .tooltiptext {
 	position: absolute;
 	left: 0;
 	text-align: center;
+}
+
+.news ul {
+	list-style: disc
+}
+
+.news p {
+		
 }
 
 .upload-icon {

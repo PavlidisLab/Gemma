@@ -70,18 +70,18 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<springdoclet destdir="${project.build.directory}/Gemma/WEB-INF"
-									mergeDir="${basedir}/src/conf/xdoclet-merge" force="false" validating="false">
+								<springdoclet destdir="${project.build.directory}/Gemma/WEB-INF" mergeDir="${basedir}/src/conf/xdoclet-merge"
+									force="false" validating="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java" />
 									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true"
 										destDir="${project.build.directory}/Gemma/WEB-INF" destinationFile="action-servlet.xml" />
 								</springdoclet>
-								<webdoclet destdir="${project.build.directory}/Gemma/WEB-INF"
-									mergeDir="${basedir}/src/conf/xdoclet-merge" force="false">
+								<webdoclet destdir="${project.build.directory}/Gemma/WEB-INF" mergeDir="${basedir}/src/conf/xdoclet-merge"
+									force="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java" />
-									<jsptaglib taglibversion="1.0" xmlencoding="UTF-8" Jspversion="2.0"
-										description="Custom tag library for Gemma" shortname="Gemma" mergeDir="${basedir}/src/conf/xdoclet-merge"
-										filename="Gemma.tld" validateXML="false" destDir="${project.build.directory}/Gemma/WEB-INF" />
+									<jsptaglib taglibversion="1.0" xmlencoding="UTF-8" Jspversion="2.0" description="Custom tag library for Gemma"
+										shortname="Gemma" mergeDir="${basedir}/src/conf/xdoclet-merge" filename="Gemma.tld" validateXML="false"
+										destDir="${project.build.directory}/Gemma/WEB-INF" />
 									<springvalidationxml />
 								</webdoclet>
 							</tasks>
@@ -487,6 +487,21 @@
 		<dependency>
 			<groupId>commons-el</groupId>
 			<artifactId>commons-el</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>rome</groupId>
+			<artifactId>rome</artifactId>
+			<version>0.9</version>
+		</dependency>
+		<dependency>
+			<groupId>rome</groupId>
+			<artifactId>rome-fetcher</artifactId>
+			<version>0.9</version>
+		</dependency>
+		<dependency>
+			<groupId>jdom</groupId>
+			<artifactId>jdom</artifactId>
 			<version>1.0</version>
 		</dependency>
 	</dependencies>

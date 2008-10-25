@@ -6,18 +6,21 @@
 
 	<script type="text/javascript">
 	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
-   	Ext.onReady( function() {
-   	Ext.QuickTips.init();
-	Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
-	
-	// Coexpression form.
-	var searchForm = new Gemma.CoexpressionSearchFormLite ( {
-		renderTo : "coexpression-form"
-	} ); 
-   
-  
-  } );
-	</script>
+	Ext.onReady( function() {
+		Ext.QuickTips.init();
+		Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+
+		// Coexpression form.
+			var searchForm = new Gemma.CoexpressionSearchFormLite( {
+				renderTo :"coexpression-form"
+			});
+
+			var feed = new Gemma.NewsDisplay( {
+				renderTo :"newsfeed"
+			});
+
+		});
+</script>
 
 </head>
 
@@ -44,7 +47,8 @@
 						<tr>
 							<td>
 								&emsp;
-								<a href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />'>
+								<a
+									href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />'>
 									<c:out value="${ taxon.key.scientificName}" /> </a>
 
 							</td>
@@ -110,7 +114,7 @@
 			<div class="roundedcornr_content_777249">
 				<strong> More administrative functions </strong>
 				<ul class="compactList" style="padding-left: 3px;">
-<li>
+					<li>
 						<a href='<c:url value="/static/hibernateStats.html"/>'> System monitoring </a>
 					</li>
 					<li>
@@ -132,8 +136,8 @@
 						<a href='<c:url value="loadSimpleExpressionExperiment.html"/>'> Load expression data from a tabbed file</a>
 					</li>
 					<li>
-						<a href='<c:url value="/arrayDesign/associateSequences.html"/>'> <fmt:message key="menu.arrayDesignSequenceAdd" />
-						</a>
+						<a href='<c:url value="/arrayDesign/associateSequences.html"/>'> <fmt:message
+								key="menu.arrayDesignSequenceAdd" /> </a>
 					</li>
 				</ul>
 				<strong> Inactive, deprecated, or not ready for prime time </strong>
@@ -164,8 +168,8 @@
 				<strong>Contacting us</strong>
 				<p class="emphasized">
 					To get emails about updates to the Gemma software, subscribe to the
-					<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing
-						list</a>. Please send bug reports or feature requests
+					<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce
+						mailing list</a>. Please send bug reports or feature requests
 					<a href="mailto:gemma@bioinformatics.ubc.ca">here</a>.
 				</p>
 			</div>
@@ -196,4 +200,5 @@
 	<a href='<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=708" />'>Mapk3</a>
 </div>
 
-
+<div style="padding: 4px; margin: 3px;" id="newsfeed">
+</div>
