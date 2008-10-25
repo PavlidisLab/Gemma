@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
+import org.springframework.security.userdetails.User;
+
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -634,5 +637,21 @@ public class ExpressionExperimentServiceImpl extends
     public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
         return this.getExpressionExperimentDao().findByQuantitationType( type );
     }
+    
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadExpressionExperimentsForUser(org.springframework.security.userdetails.User)
+     */
+	public Collection<ExpressionExperiment> loadExpressionExperimentsForAnotherUser(User u) {
+		return this.loadAll();
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadExpressionExperimentsForLoggedInUser()
+	 */
+	public Collection<ExpressionExperiment> loadExpressionExperimentsForUser() {
+		return this.loadAll();
+	}
 
 }

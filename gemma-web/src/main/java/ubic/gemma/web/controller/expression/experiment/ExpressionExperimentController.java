@@ -158,6 +158,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.util.concurrent.Callable#call()
          */
         public ModelAndView call() throws Exception {
@@ -657,7 +658,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( ids.isEmpty() ) {
             return new HashSet<ExpressionExperimentValueObject>();
         }
-        Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( ids );
+        Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( ids, false );
         populateAnalyses( ids, result ); // FIXME make this optional.
         return result;
     }
@@ -674,32 +675,26 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // if no IDs are specified, then load all expressionExperiments.
         Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
-        Collection<ExpressionExperimentValueObject> eeValObjectCol;
+        Collection<ExpressionExperimentValueObject> eeValObjectCol = null;
 
-        boolean allowViewingAll = false;
+        boolean filterDataByUser = false;
         if ( SecurityService.isUserLoggedIn() ) {
-            if ( SecurityService.isUserAdmin() ) {
-                allowViewingAll = true;
-            } else {
-                // Anonymous
-                throw new AccessDeniedException( "User does not have access to experiment management" );
-            }
+            filterDataByUser = true;
+        } else {
+            /* Anonymous */
+            throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
-        /*
-         * TODO: if the user is logged in, show only their own experiments. If admin, show them all.
-         */
-
         if ( sId == null ) {
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, filterDataByUser );
         } else { // if ids are specified, then display only those
             // expressionExperiments
             Collection<Long> ids = parseIdParameterString( sId );
 
             if ( ids.size() == 0 ) {
-                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
+                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, filterDataByUser );
             } else {
-                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids );
+                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids, false );
             }
 
         }
@@ -953,7 +948,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             this.saveMessage( request, "Displaying all Datasets" );
             mav.addObject( "showAll", true );
             // if no IDs are specified, then load all expressionExperiments
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, false );
         } else {
             // if ids are specified, then display only those
             // expressionExperiments
@@ -970,7 +965,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 return mav;
             }
             mav.addObject( "showAll", false );
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( eeIdList );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( eeIdList, false );
         }
         expressionExperiments.addAll( eeValObjectCol );
 
@@ -1293,7 +1288,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     @SuppressWarnings("unchecked")
     private Collection<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects(
-            Collection<Long> eeIds ) {
+            Collection<Long> eeIds, boolean filterDataForUser ) {
 
         Collection<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
 
@@ -1301,10 +1296,18 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         timer.start();
 
         /* Filtering for security happens here. */
-        if ( eeIds == null ) {
-            securedEEs = expressionExperimentService.loadAll();
+        if ( filterDataForUser ) {
+            if ( eeIds == null ) {
+                securedEEs = expressionExperimentService.loadExpressionExperimentsForUser();
+            } else {
+                securedEEs = expressionExperimentService.loadMultiple( eeIds );
+            }
         } else {
-            securedEEs = expressionExperimentService.loadMultiple( eeIds );
+            if ( eeIds == null ) {// TODO check this
+                securedEEs = expressionExperimentService.loadAll();
+            } else {
+                securedEEs = expressionExperimentService.loadMultiple( eeIds );
+            }
         }
 
         if ( timer.getTime() > 1000 ) {
