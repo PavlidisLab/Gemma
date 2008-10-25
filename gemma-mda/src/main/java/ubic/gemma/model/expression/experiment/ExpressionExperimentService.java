@@ -390,20 +390,6 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     public ExpressionExperiment findByQuantitationType( QuantitationType type );
 
     /**
-     * Returns the {@link ExpressionExperiment}s for the {@link User} u. This would generally be used by an
-     * administrator to see the {@link ExpressionExperiment}s for a specific {@link User} u.
-     * <p>
-     * This method does not completely abstract away security.
-     * <p>
-     * see AclAfterCollectionPublicExpressionExperimentFilter for processConfigAttribute.
-     * <p>
-     * 
-     * @param u
-     * @return
-     */
-    public Collection<ExpressionExperiment> loadExpressionExperimentsForAnotherUser( User u );
-
-    /**
      * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User}.
      * <p>
      * This method does not completely abstract away security.

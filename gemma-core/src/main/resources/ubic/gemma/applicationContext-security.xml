@@ -320,7 +320,7 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getQuantitationTypeCountById=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadExpressionExperimentsForUser=user,admin,AFTER_ACL_FILTER_PUBLIC_EXPRESSION_EXPERIMENT_FROM_COLLECTION
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadExpressionExperimentsForAnotherUser=user,admin,AFTER_ACL_FILTER_PUBLIC_EXPRESSION_EXPERIMENT_FROM_COLLECTION
+                ubic.gemma.model.expression.experiment.ExpressionExperimentSecureService.loadExpressionExperimentsForAnotherUser=user,admin,AFTER_ACL_FILTER_PUBLIC_EXPRESSION_EXPERIMENT_FROM_COLLECTION
                 ubic.gemma.analysis.report.ExpressionExperimentReportService.generateSummaryObjects=admin
                 ubic.gemma.analysis.report.ExpressionExperimentReportService.generateSummaryObject=admin   
                 ubic.gemma.analysis.report.ExpressionExperimentReportService.retrieveSummaryObjects=user,admin,ROLE_ANONYMOUS
