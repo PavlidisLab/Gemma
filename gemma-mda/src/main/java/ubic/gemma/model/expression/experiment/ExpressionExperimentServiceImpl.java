@@ -650,6 +650,7 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadExpressionExperimentsForUser()
      */
     public Collection<ExpressionExperiment> loadExpressionExperimentsForUser() {
+        // TODO move me into the ExpressionExperimentSecureService.
         return this.loadAll();
     }
 
