@@ -45,7 +45,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  * @see AfterInvocationProvider
  */
-@SuppressWarnings("deprecation")
+
+@SuppressWarnings( { "unchecked", "deprecation" })
 public class AclAfterCollectionPublicExpressionExperimentFilter implements AfterInvocationProvider {
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -55,7 +56,7 @@ public class AclAfterCollectionPublicExpressionExperimentFilter implements After
     private int[] requirePermission = { SimpleAclEntry.READ }; // default.
 
     private static final AclObjectIdentity publicObjectIdentity = new NamedEntityObjectIdentity( "publicControlNode",
-            "2" );// TODO move me
+            "2" );// TODO move me, or maybe fill from database?
 
     public String getProcessConfigAttribute() {
         return "AFTER_ACL_FILTER_PUBLIC_EXPRESSION_EXPERIMENT_FROM_COLLECTION";
@@ -127,8 +128,9 @@ public class AclAfterCollectionPublicExpressionExperimentFilter implements After
                             if ( acls[i] instanceof AbstractBasicAclEntry ) {
                                 AbstractBasicAclEntry processableAcl = ( AbstractBasicAclEntry ) acls[i];
 
-                                /* See if the object identity equals the publicControlNode. */
+                                /* See if the object identity equals the publicControlNode ... */
                                 for ( int y = 0; y < requirePermission.length; y++ ) {
+                                    /* ... but only if we are permitted to do so. */
                                     if ( processableAcl.isPermitted( requirePermission[y] ) ) {
 
                                         AclObjectIdentity processableEntryObjectIdentity = processableAcl
