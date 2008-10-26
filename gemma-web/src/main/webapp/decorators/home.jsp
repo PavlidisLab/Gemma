@@ -40,9 +40,10 @@
 
 				<div id="main" class="home">
 					<%@ include file="/common/messages.jsp"%>
+					<!-- 
 					<h1>
 						<decorator:getProperty property="page.heading" />
-					</h1>
+					</h1>-->
 					<decorator:body />
 				</div>
 

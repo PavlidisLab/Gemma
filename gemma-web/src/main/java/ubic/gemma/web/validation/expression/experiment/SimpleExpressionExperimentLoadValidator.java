@@ -32,12 +32,11 @@ import ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimen
  * @spring.bean id="simpleExpressionExperimentLoadValidator"
  * @deprecated as we aren't using spring mvc really for this (ext + ajax instead)
  */
- @Deprecated
+@Deprecated
 public class SimpleExpressionExperimentLoadValidator implements Validator {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.validation.Validator#supports(java.lang.Class)
      */
     public boolean supports( Class clazz ) {
@@ -46,10 +45,8 @@ public class SimpleExpressionExperimentLoadValidator implements Validator {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.validation.Validator#validate(java.lang.Object, org.springframework.validation.Errors)
      */
-    @SuppressWarnings("unused")
     public void validate( Object obj, Errors errors ) {
         SimpleExpressionExperimentLoadCommand command = ( SimpleExpressionExperimentLoadCommand ) obj;
 

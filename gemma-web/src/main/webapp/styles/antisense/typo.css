@@ -456,7 +456,7 @@ a.tooltip:hover .tooltiptext {
 	position: absolute;
 	right: 0;
 	-moz-opacity: 0;
-	filter: alpha(opacity :               0);
+	filter: alpha(opacity :                 0);
 	opacity: 0;
 	z-index: 2;
 	height: 22px;
@@ -521,12 +521,17 @@ a.tooltip:hover .tooltiptext {
 	text-align: center;
 }
 
+.news {
+	padding-top : 8px;
+}
+
 .news ul {
+	margin-left: 12px;
 	list-style: disc
 }
 
 .news p {
-		
+	
 }
 
 .upload-icon {

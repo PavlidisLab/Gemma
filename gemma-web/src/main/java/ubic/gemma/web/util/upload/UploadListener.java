@@ -71,7 +71,6 @@ public class UploadListener implements OutputStreamListener {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.upload.OutputStreamListener#start()
      */
     public void start() {
@@ -97,7 +96,6 @@ public class UploadListener implements OutputStreamListener {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.upload.OutputStreamListener#bytesRead(int)
      */
     public void bytesRead( int bytesRead ) {
@@ -133,17 +131,14 @@ public class UploadListener implements OutputStreamListener {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.upload.OutputStreamListener#error(java.lang.String)
      */
-    @SuppressWarnings("unused")
     public void error( String message ) {
         log.error( "There was an error in uploading a file in " + this );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.upload.OutputStreamListener#done()
      */
     public void done() {

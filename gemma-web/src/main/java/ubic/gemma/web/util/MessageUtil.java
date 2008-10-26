@@ -84,7 +84,6 @@ public class MessageUtil extends ApplicationObjectSupport {
      * @param request
      * @param msg
      */
-    @SuppressWarnings("unchecked")
     public void saveMessage( HttpServletRequest request, String msg ) {
         this.saveMessage( request.getSession(), msg );
     }

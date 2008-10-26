@@ -51,12 +51,11 @@ public class MockLongJobController extends BackgroundProcessingFormController {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse)
+     * @see
+     * org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest
+     * , javax.servlet.http.HttpServletResponse)
      */
     @Override
-    @SuppressWarnings("unused")
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
 
@@ -68,7 +67,6 @@ public class MockLongJobController extends BackgroundProcessingFormController {
     class WasteOfTime extends BackgroundControllerJob<ModelAndView> {
 
         Object die = null;
- 
 
         public WasteOfTime( String taskId, SecurityContext securityContext, Object command, MessageUtil messenger ) {
             super( taskId, command, messenger );
@@ -87,7 +85,7 @@ public class MockLongJobController extends BackgroundProcessingFormController {
                 Thread.sleep( 500 );
                 log.info( "Doing sumpin', done in " + ( JOB_LENGTH - ( System.currentTimeMillis() - millis ) )
                         + " milliseconds" );
-            //    ProgressManager.updateCurrentThreadsProgressJob( "just sayin' hi" );
+                // ProgressManager.updateCurrentThreadsProgressJob( "just sayin' hi" );
                 if ( this.die != null ) {
                     throw new RuntimeException( "Exception thrown on purpose." );
                 }
@@ -103,6 +101,7 @@ public class MockLongJobController extends BackgroundProcessingFormController {
 
     }
 
+    @Override
     protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
             Object command, MessageUtil messenger ) {
         return new WasteOfTime( taskId, securityContext, command, messenger );

@@ -113,7 +113,7 @@
 			</div>
 			<div class="roundedcornr_content_777249">
 				<strong> More administrative functions </strong>
-				<ul class="compactList" style="padding-left: 3px;">
+				<ul class="compactList" style="padding-left: 4px;">
 					<li>
 						<a href='<c:url value="/static/hibernateStats.html"/>'> System monitoring </a>
 					</li>
@@ -186,19 +186,13 @@
 
 
 
-<div id="coexpression-messages">
-	<h3>
-		Coexpression query
-	</h3>
-</div>
 
-<div id="coexpression-form"></div>
 
-<div id="sampleQueries" style="padding: 4px; width: 250px;">
-	Examples: rat
-	<a href='<c:url value="/searchCoexpression.html?g=938103&amp;a=776" />'>Ddn</a>; mouse
-	<a href='<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=708" />'>Mapk3</a>
-</div>
-
-<div style="padding: 4px; margin: 3px;" id="newsfeed">
+<div id="news-wrapper" style="width:440;margin-top:10px">
+	<span style="font-size:1.3em">
+		Gemma news
+	</span>
+	<div style="padding: 0 4 2 0px; margin: 0px;" id="newsfeed">
+	</div>
+	<a href="http://bioinformatics.ubc.ca/confluence/display/gemma/Gemma+blog">More news</a>
 </div>

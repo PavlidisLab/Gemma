@@ -47,7 +47,6 @@ public class ArrayDesignSeqeunceAddValidator implements Validator {
      * 
      * @see org.springframework.validation.Validator#validate(java.lang.Object, org.springframework.validation.Errors)
      */
-    @SuppressWarnings("unused")
     public void validate( Object obj, Errors errors ) {
         // ValidationUtils.rejectIfEmptyOrWhitespace( errors, "sequenceFile", "errors.required",
         // "Sequence file is required" );
