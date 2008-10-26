@@ -643,15 +643,4 @@ public class ExpressionExperimentServiceImpl extends
     public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
         return this.getExpressionExperimentDao().findByQuantitationType( type );
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadExpressionExperimentsForUser()
-     */
-    public Collection<ExpressionExperiment> loadExpressionExperimentsForUser() {
-        // TODO move me into the ExpressionExperimentSecureService.
-        return this.loadAll();
-    }
-
 }

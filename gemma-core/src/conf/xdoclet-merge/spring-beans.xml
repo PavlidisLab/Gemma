@@ -121,3 +121,42 @@
 		</list>
 	</property>
 </bean>
+
+<!-- When creating new services, make sure you add a line in the transactionAttributeSource for your service. -->
+<bean id="additionalServiceTransactionInterceptor"
+		class="org.springframework.transaction.interceptor.TransactionInterceptor">
+		<property name="transactionManager">
+			<ref bean="transactionManager" />
+		</property>
+		<property name="transactionAttributeSource">
+			<value>
+				ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService.loadExpressionExperimentsForUser=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService.loadExpressionExperimentsForAnotherUser=PROPAGATION_REQUIRED,readOnly
+			</value>
+		</property>
+</bean>
+
+
+<bean id="expressionExperimentSecureService" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="target">
+			<bean class="ubic.gemma.security.expression.experiment.ExpressionExperimentSecureServiceImpl">
+				<property name="expressionExperimentDao">
+					<ref bean="expressionExperimentDao" />
+				</property>
+			</bean>
+		</property>
+		<property name="proxyInterfaces">
+			<value>ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService</value>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>serviceTransactionInterceptor</value>
+				<value>additionalServiceTransactionInterceptor</value>
+				<value>hibernateInterceptor</value>
+				<value>serviceSecurityInterceptor</value>
+				<value>addOrRemoveFromACLInterceptor</value>
+				<value>auditInterceptor</value>
+				<value>monitorInterceptor</value>
+			</list>
+		</property>
+</bean>

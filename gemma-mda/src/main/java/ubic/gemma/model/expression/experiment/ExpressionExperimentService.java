@@ -25,8 +25,6 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.Map;
 
-import org.springframework.security.userdetails.User;
-
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -389,15 +387,4 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
 
     public ExpressionExperiment findByQuantitationType( QuantitationType type );
 
-    /**
-     * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User}.
-     * <p>
-     * This method does not completely abstract away security.
-     * <p>
-     * see AclAfterCollectionPublicExpressionExperimentFilter for processConfigAttribute.
-     * <p>
-     * 
-     * @return
-     */
-    public Collection<ExpressionExperiment> loadExpressionExperimentsForUser();
 }

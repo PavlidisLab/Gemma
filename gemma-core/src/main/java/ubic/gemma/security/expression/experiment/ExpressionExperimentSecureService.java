@@ -20,32 +20,33 @@ package ubic.gemma.security.expression.experiment;
 
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.security.Authentication;
-import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.security.userdetails.User;
 
+import ubic.gemma.model.common.AuditableService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.security.RunAsManager;
 
 /**
- * An service to provide security sepecific actions on {@link ExpressionExperiment}s.
+ * * An service to provide security sepecific actions on {@link ExpressionExperiment}s.
  * <p>
  * The global security provided by Spring Security still applies here, but there are certain security related tasks
  * (such as filtering out public objects for a user) that cannot be done by Spring Security directly so we do it here.
  * 
- * @spring.bean id="expressionExperimentSecureService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentSecureService {
+public interface ExpressionExperimentSecureService extends AuditableService {
 
-    private Log log = LogFactory.getLog( this.getClass() );
-
-    ExpressionExperimentService expressionExperimentService = null;
+    /**
+     * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User}.
+     * <p>
+     * This method does not completely abstract away security.
+     * <p>
+     * see AclAfterCollectionPublicExpressionExperimentFilter for processConfigAttribute.
+     * <p>
+     * 
+     * @return
+     */
+    public Collection<ExpressionExperiment> loadExpressionExperimentsForUser();
 
     /**
      * Returns the {@link ExpressionExperiment}s for the {@link User} u. This would generally be used by an
@@ -59,29 +60,6 @@ public class ExpressionExperimentSecureService {
      * @param u
      * @return
      */
-    public Collection<ExpressionExperiment> loadExpressionExperimentsForAnotherUser( User u ) {
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        RunAsManager r = new RunAsManager();
-
-        Authentication runAs = r.buildRunAs( null, auth, u.getUsername() );
-
-        if ( runAs == null ) {
-            log.debug( "RunAsManager did not change Authentication object" );
-        } else {
-            log.debug( "Switching to RunAs Authentication: " + runAs );
-            SecurityContextHolder.getContext().setAuthentication( runAs );
-        }
-        Collection<ExpressionExperiment> eeCol = expressionExperimentService.loadAll();
-        SecurityContextHolder.getContext().setAuthentication( auth );
-        return eeCol;
-    }
-
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
+    public Collection<ExpressionExperiment> loadExpressionExperimentsForAnotherUser( User u );
 
 }

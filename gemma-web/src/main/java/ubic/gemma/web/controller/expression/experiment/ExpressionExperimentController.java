@@ -73,6 +73,7 @@ import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -86,6 +87,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @version $Id$
  * @spring.bean id="expressionExperimentController"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="expressionExperimentSecureService" ref="expressionExperimentSecureService"
  * @spring.property name="expressionExperimentSubSetService" ref="expressionExperimentSubSetService"
  * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
@@ -359,6 +361,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ExpressionExperimentReportService expressionExperimentReportService = null;
 
     private ExpressionExperimentService expressionExperimentService = null;
+
+    private ExpressionExperimentSecureService expressionExperimentSecureService = null;
 
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
 
@@ -678,7 +682,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection<ExpressionExperimentValueObject> eeValObjectCol = null;
 
         boolean filterDataByUser = false;
-        if ( SecurityService.isUserLoggedIn() ) {
+
+        if ( SecurityService.isUserAdmin() ) {
+            /* do nothing */
+        } else if ( SecurityService.isUserLoggedIn() ) {
             filterDataByUser = true;
         } else {
             /* Anonymous */
@@ -1298,7 +1305,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         /* Filtering for security happens here. */
         if ( filterDataForUser ) {
             if ( eeIds == null ) {
-                securedEEs = expressionExperimentService.loadExpressionExperimentsForUser();
+                securedEEs = expressionExperimentSecureService.loadExpressionExperimentsForUser();
             } else {
                 securedEEs = expressionExperimentService.loadMultiple( eeIds );
             }
@@ -1420,6 +1427,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ModelAndView redirectToList( HttpServletRequest request ) {
         this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+    }
+
+    public void setExpressionExperimentSecureService(
+            ExpressionExperimentSecureService expressionExperimentSecureService ) {
+        this.expressionExperimentSecureService = expressionExperimentSecureService;
     }
 
 }
