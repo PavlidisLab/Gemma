@@ -40,31 +40,10 @@ Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {});
 
 Gemma.PLOT_SIZE = 100;
 Gemma.ZOOM_PLOT_SIZE = 400;
-Gemma.COLD_COLORS = ["#0033FF", "#6699FF", "#3399CC", "#336666", "#66CCCC",
-		"#33FF99", "#339966", "#009900", "#66CC66", "#00CC00"];
-Gemma.HOT_COLORS = ["#FFCC00", "#FF9900", "#FF6600", "#FF3300", "#CC3300",
-		"#660000", "#FF0000", "#990033", "#FF3399", "#990099"];
-Gemma.GRAPH_ZOOM_CONFIG = {
-	xaxis : {
-		noTicks : 0
-	},
-	yaxis : {
-		noTicks : 0
-	},
-	grid : {
-		labelMargin : 0
-	// => margin in pixels
-	// color : "white" //this turns the letters in the legend to white
-	},
-	shadowSize : 0,
-
-	legend : {
-		show : true,
-		position : 'nw'
-	// backgroundOpacity : 0.5
-	}
-
-};
+Gemma.COLD_COLORS = ["#0033FF", "#6699FF", "#3399CC", "#336666", "#66CCCC", "#33FF99", "#339966", "#009900", "#66CC66",
+		"#00CC00"];
+Gemma.HOT_COLORS = ["#FFCC00", "#FF9900", "#FF6600", "#FF3300", "#CC3300", "#660000", "#FF0000", "#990033", "#FF3399",
+		"#990099"];
 
 // Tests if gene is in the array of genes. uses the name of the gene to resolove
 // identity.
@@ -107,14 +86,11 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 			var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
 				tag : 'div',
 				id : shortName + "_vis",
-				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:'
-						+ Gemma.PLOT_SIZE + 'px;'
+				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px;'
 			});
 
 			// Must use prototype extraction here -- putting in newDiv fails.
-			Flotr
-					.draw($(shortName + "_vis"), record.profiles,
-							this.graphConfig);
+			Flotr.draw($(shortName + "_vis"), record.profiles, this.graphConfig);
 		}
 	}
 });
@@ -129,8 +105,7 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 			var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
 				tag : 'div',
 				id : shortName + "_vis",
-				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:'
-						+ Gemma.PLOT_SIZE + 'px;'
+				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px;'
 			});
 
 			Heatmap.draw($(shortName + "_vis"), record.profiles);
@@ -147,7 +122,6 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	title : "Visualization",
 	height : Gemma.ZOOM_PLOT_SIZE + 50,
 	width : Gemma.ZOOM_PLOT_SIZE + Gemma.PLOT_SIZE + 100,
-	
 
 	initComponent : function() {
 		// If there are any compile errors with the template the error will not
@@ -175,7 +149,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						var eevo = record.get("eevo");
 						var profiles = record.get("profiles");
 
-						this.zoomPanel.displayWindow( eevo, profiles);
+						this.zoomPanel.displayWindow(eevo, profiles);
 
 					}.createDelegate(this)
 				}
@@ -208,8 +182,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 					var oneProfile = [];
 
 					for (var j = 0; j < coordinateObject.size(); j++) {
-						var point = [coordinateObject[j].x,
-								coordinateObject[j].y];
+						var point = [coordinateObject[j].x, coordinateObject[j].y];
 						oneProfile.push(point);
 					}
 					var plotConfig = {
@@ -236,7 +209,13 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			margins : '3 0 3 3',
 			cmargins : '3 3 3 3',
 			items : this.dv,
-			autoScroll : true
+			autoScroll : true,
+			html : {
+				id : 'zoomLegend',
+				tag : 'div',
+				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px; float:left;'
+			}
+
 		});
 
 		this.zoomPanel = new Ext.Panel({
@@ -255,8 +234,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			html : {
 				id : 'graphzoompanel',
 				tag : 'div',
-				style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:'
-						+ Gemma.ZOOM_PLOT_SIZE + 'px;'
+				style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px;'
 			},
 
 			displayWindow : function(eevo, profiles) {
@@ -267,6 +245,8 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 				var coldGeneName = profiles[0].genes[0].name;
 				var coldIndex = 0, hotIndex = 0;
 
+				var sortedHotProfile = [];
+				
 				// Add cold colors
 				for (var i = 0; i < profiles.size(); i++) {
 					if (Gemma.geneContained(coldGeneName, profiles[i].genes)) {
@@ -276,19 +256,48 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						profiles[i].color = Gemma.HOT_COLORS[hotIndex];
 						hotIndex++;
 					}
-					profiles[i].lines = {
-						linewidth : 1 / profiles[i].genes.size()
-					}; // Vary line width size on probe specificity?
+//					profiles[i].lines = {
+//						//linewidth : 1 / profiles[i].genes.size()
+//					}; // Vary line width size on probe specificity?
 
 				}
+			
+				//sort array by gene
+				profiles.sort(function(a,b){
+					if ( (a.genes[0].name === b.genes[0].name))
+						return 1;
+					else return 0;
+				});
+				
+				 var GRAPH_ZOOM_CONFIG = {
+					xaxis : {
+						noTicks : 0
+					},
+					yaxis : {
+						noTicks : 0
+					},
+					grid : {
+						labelMargin : 0
+					// => margin in pixels
+					// color : "white" //this turns the letters in the legend to white
+					},
+					shadowSize : 0,
 
-				Flotr.draw($('graphzoompanel'), profiles,
-						Gemma.GRAPH_ZOOM_CONFIG);
+					legend : {
+						show : true,
+						container : 'zoomLegend'
+					// position : 'nw'
+					// backgroundOpacity : 0.5
+					}
+
+				};
+
+				//console.log()
+				Flotr.draw($('graphzoompanel'), profiles, GRAPH_ZOOM_CONFIG);
 
 			}
 
 		});
-
 
 		Ext.apply(this, {
 			items : [this.thumbnailPanel, this.zoomPanel]
@@ -300,12 +309,12 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 	displayWindow : function(eeIds, queryGene, coexpressedGene) {
 
-		this.setTitle("Visualization of query gene: " + queryGene.officialSymbol
-				+ " with coexpressed gene <b> " + coexpressedGene.officialSymbol + "</b>");
-		
-		this.thumbnailPanel.setTitle(queryGene.officialSymbol + " (red) with "
-				+ coexpressedGene.officialSymbol + " (black)");
-		
+		this.setTitle("Visualization of query gene: " + queryGene.officialSymbol + " with coexpressed gene <b> "
+				+ coexpressedGene.officialSymbol + "</b>");
+
+		this.thumbnailPanel.setTitle(queryGene.officialSymbol + " (red) with " + coexpressedGene.officialSymbol
+				+ " (black)");
+
 		var params = [];
 		params.push(eeIds);
 		params.push(queryGene.id);
@@ -382,8 +391,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					var oneProfile = [];
 
 					for (var j = 0; j < coordinateObject.size(); j++) {
-						var point = [coordinateObject[j].x,
-								coordinateObject[j].y];
+						var point = [coordinateObject[j].x, coordinateObject[j].y];
 						oneProfile.push(point);
 					}
 					var plotConfig = {
