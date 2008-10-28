@@ -31,9 +31,11 @@ var Flotr = (function(){
 	 * 		Recursively merged Object.
 	 */
 	function merge(src, dest){
+		//FIXME merge will not sucessfully merge complicated objects. 
 		var result = dest || {};
-		for(var i in src){		  
-			result[i] = (typeof(src[i]) == 'object' && !(src[i].constructor == Array || src[i].constructor == RegExp)) ? merge(src[i], dest[i]) : result[i] = src[i];		
+		
+		for(var i in src){	
+				result[i] = ( typeof(src[i]) == 'object' && !(src[i].constructor == Array || src[i].constructor == RegExp)) ? merge(src[i], dest[i]) : result[i] = src[i];		
 		}
 		return result;	
 	}	
@@ -1458,7 +1460,9 @@ var Flotr = (function(){
 			if(fragments.length > 0){
 				var table = '<table style="font-size:smaller;color:' + options.grid.color + '">' + fragments.join("") + '</table>';
 				if(options.legend.container != null){
-					options.legend.container.append(table);
+					//options.legend.container.appendChild(table);					
+					$(options.legend.container).update(table);  
+
 				}else{
 					var pos = '';
 					var p = options.legend.position, m = options.legend.margin;
