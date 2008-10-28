@@ -51,6 +51,7 @@ import ubic.gemma.util.ReflectionUtil;
  * @spring.property name="securableDao" ref="securableDao"
  * @spring.property name="crudUtils" ref="crudUtils"
  */
+@SuppressWarnings("deprecation")
 public class SecurityService {
 
     private Log log = LogFactory.getLog( SecurityService.class );
