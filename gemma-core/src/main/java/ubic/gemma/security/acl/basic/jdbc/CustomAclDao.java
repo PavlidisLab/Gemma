@@ -52,15 +52,15 @@ public class CustomAclDao {
     private DataSource dataSource = null;
 
     /**
-     * Updates the acl_object_identity of the acl_permission table.
+     * Updates the acl_object_identity parent to parent.
      * 
-     * @param recipient
+     * @param id
+     * @param parent
      */
-    public void updateAclObjectIdentityInAclPermission( String recipient ) {
-        // TODO remove me as this method is unused
+    public void updateAclObjectIdentityParent( Long id, int parent ) {
+        String queryString = "update acl_object_identity set parent_object=" + parent + " where id=" + id;
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
-        jdbcTemplate.execute( "update acl_permission set acl_object_identity=1 where recipient=" + "\'" + recipient
-                + "\'" );
+        jdbcTemplate.execute( queryString );
     }
 
     /**
@@ -71,9 +71,10 @@ public class CustomAclDao {
      * @param mask
      */
     public void insertPublicAccessControlNodeForRecipient( String recipient, int mask ) {
+        String queryString = "insert into acl_permission values(" + null + "," + PUBLIC_CONTROL_NODE_PARENT_ID + ","
+                + "\'" + recipient + "\'" + "," + mask + ")";
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
-        jdbcTemplate.execute( "insert into acl_permission values(" + null + "," + PUBLIC_CONTROL_NODE_PARENT_ID + ","
-                + "\'" + recipient + "\'" + "," + mask + ")" );
+        jdbcTemplate.execute( queryString );
     }
 
     /**

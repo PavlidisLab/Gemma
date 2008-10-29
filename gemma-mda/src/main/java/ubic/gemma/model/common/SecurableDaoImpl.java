@@ -131,6 +131,28 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.SecurableDao#getAclObjectIdentityParent(ubic.gemma.model.common.Securable)
+     */
+    public Integer getAclObjectIdentityParentId( Securable target ) {
+
+        String objectIdentity = createObjectIdentityFromObject( target );
+
+        String queryString = "select parent_object from acl_object_identity where id = ?";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setParameter( 0, objectIdentity );
+            Integer result = ( Integer ) queryObject.uniqueResult();
+
+            return result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
     /**
      * Creates the object_identity to be used in the acl_object_identity table.
      * 

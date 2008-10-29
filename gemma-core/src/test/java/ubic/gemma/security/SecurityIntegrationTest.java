@@ -21,10 +21,9 @@ package ubic.gemma.security;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.springframework.security.AccessDeniedException;
-import org.springframework.security.acl.basic.BasicAclExtendedDao;
-import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.lang.RandomStringUtils;
+import org.springframework.security.AccessDeniedException;
+import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.model.common.SecurableDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -103,7 +102,6 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
         ArrayDesign ad = arrayDesignService.findByName( arrayDesignName );
         SecurityService securityService = new SecurityService();
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.makePrivate( ad );
         /*
          * uncomment so you can see the acl permission has been changed in the database.

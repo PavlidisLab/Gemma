@@ -22,6 +22,7 @@
 //
 package ubic.gemma.model.common;
 
+
 /**
  * @see ubic.gemma.model.common.Securable
  */
@@ -236,5 +237,12 @@ public interface SecurableDao {
      * </p>
      */
     public Object getMasks( int transform, String queryString, java.util.Collection securables );
+
+    /**
+     * Get the acl_object_identity parent id of aclObjectIdentity.
+     * 
+     * @return
+     */
+    public Integer getAclObjectIdentityParentId( Securable securable );
 
 }

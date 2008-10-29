@@ -24,31 +24,29 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.springframework.security.Authentication;
-import org.springframework.security.GrantedAuthority;
-import org.springframework.security.acl.basic.BasicAclExtendedDao;
-import org.springframework.security.acl.basic.NamedEntityObjectIdentity;
-import org.springframework.security.acl.basic.SimpleAclEntry;
-import org.springframework.security.context.SecurityContext;
-import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.security.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.Authentication;
+import org.springframework.security.GrantedAuthority;
+import org.springframework.security.context.SecurityContext;
+import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.userdetails.UserDetails;
 
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.SecurableDao;
 import ubic.gemma.persistence.CrudUtils;
+import ubic.gemma.security.acl.basic.jdbc.CustomAclDao;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
  * @author keshav
  * @version $Id$
  * @spring.bean id="securityService"
- * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  * @spring.property name="securableDao" ref="securableDao"
+ * @spring.property name="customAclDao" ref="customAclDao"
  * @spring.property name="crudUtils" ref="crudUtils"
  */
 @SuppressWarnings("deprecation")
@@ -56,14 +54,12 @@ public class SecurityService {
 
     private Log log = LogFactory.getLog( SecurityService.class );
 
-    private BasicAclExtendedDao basicAclExtendedDao = null;
     private SecurableDao securableDao = null;
+    private CustomAclDao customAclDao = null;
     private CrudUtils crudUtils = null;
 
     public static final String ADMIN_AUTHORITY = "admin";
     public static final String USER_AUTHORITY = "user";
-    public static final int PUBLIC_MASK = SimpleAclEntry.READ_WRITE;
-    public static final int PRIVATE_MASK = SimpleAclEntry.NOTHING;
 
     /**
      * Makes the object private. If the object is a {@link Collection}, makes the all the objects private.
@@ -77,7 +73,8 @@ public class SecurityService {
             return;
         }
         Collection<VisitedEntity> visited = new HashSet<VisitedEntity>();
-        makePrivateOrPublic( object, PRIVATE_MASK, visited );
+        int parent = Integer.parseInt( CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID );
+        makePrivateOrPublic( object, parent, visited );
     }
 
     /**
@@ -92,18 +89,20 @@ public class SecurityService {
             return;
         }
         Collection<VisitedEntity> visited = new HashSet<VisitedEntity>();
-        makePrivateOrPublic( object, PUBLIC_MASK, visited );
+        int parent = Integer.parseInt( CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID );
+        makePrivateOrPublic( object, parent, visited );
     }
 
     /**
-     * Changes the acl_permission of the object to either administrator/PRIVATE (mask=0), or read-write/PUBLIC (mask=6).
+     * Changes the parent object identity to either the {@link CustomAclDao.ADMIN_CONTROL_NODE} or
+     * {@link CustomAclDao.PUBLIC_CONTROL_NODE}.
      * 
      * @param object
-     * @param mask
+     * @param parentObjectIdentity
      * @param visited
      */
     @SuppressWarnings("unchecked")
-    private void makePrivateOrPublic( Object object, int mask, Collection<VisitedEntity> visited ) {
+    private void makePrivateOrPublic( Object object, int parentObjectIdentity, Collection<VisitedEntity> visited ) {
         log.debug( "Changing acl of object " + object + "." );
 
         SecurityContext securityCtx = SecurityContextHolder.getContext();
@@ -115,14 +114,14 @@ public class SecurityService {
             VisitedEntity visitedEntity = new VisitedEntity( secObject );
             if ( !visited.contains( visitedEntity ) ) {
                 visited.add( visitedEntity );
-                processAssociations( object, mask, authentication, principal, visited );
+                processAssociations( object, parentObjectIdentity, authentication, principal, visited );
             } else {
                 log.debug( "Object " + object.getClass() + " already visited." );
             }
         } else if ( object instanceof Collection ) {
             Collection objects = ( Collection ) object;
             for ( Object o : objects ) {
-                makePrivateOrPublic( o, mask, visited );
+                makePrivateOrPublic( o, parentObjectIdentity, visited );
             }
         } else {
             log.error( "Object not Securable.  Cannot change permissions for object of type "
@@ -133,14 +132,14 @@ public class SecurityService {
 
     /**
      * @param targetObject
-     * @param mask
+     * @param parentObjectIdentity
      * @param authentication
      * @param principal
      * @param visited
      */
     @SuppressWarnings("unchecked")
-    private void processAssociations( Object targetObject, int mask, Authentication authentication, Object principal,
-            Collection<VisitedEntity> visited ) {
+    private void processAssociations( Object targetObject, int parentObjectIdentity, Authentication authentication,
+            Object principal, Collection<VisitedEntity> visited ) {
 
         EntityPersister persister = crudUtils.getEntityPersister( targetObject );
         if ( persister == null ) {
@@ -175,7 +174,7 @@ public class SecurityService {
                 // if ( !crudUtils.needCascade( cs ) ) continue;
 
                 if ( log.isDebugEnabled() ) log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs );
-                makePrivateOrPublic( associatedObject, mask, visited );
+                makePrivateOrPublic( associatedObject, parentObjectIdentity, visited );
             } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
 
                 /*
@@ -191,66 +190,26 @@ public class SecurityService {
                             log.debug( "Processing ACL for member " + object2 + " of collection " + propertyNames[j]
                                     + ", Cascade=" + cs );
                         }
-                        makePrivateOrPublic( object2, mask, visited );
+                        makePrivateOrPublic( object2, parentObjectIdentity, visited );
                     }
                 }
             }
         }
-        String recipient = configureWhoToRunAs( targetObject, mask, authentication, principal );
-        if ( recipient != null ) changeMask( targetObject, mask, recipient );
+
+        this.changeParent( targetObject, parentObjectIdentity );
     }
 
     /**
-     * @param object
-     * @param mask
-     * @param recipient
-     */
-    private void changeMask( Object object, int mask, String recipient ) {
-        try {
-            basicAclExtendedDao.changeMask( new NamedEntityObjectIdentity( object ), recipient, mask );
-        } catch ( Exception e ) {
-            throw new RuntimeException( "Problems changing mask of " + object, e );
-        }
-    }
-
-    /**
-     * Runs as the recipient (in acl_permission) if the principal does not match the recipient. Returns null if
-     * principal is not an administrator.
+     * Change the parent acl object identity of obj to aclObjectIdentityParentId.
      * 
-     * @param object
-     * @param mask
-     * @param authentication
-     * @param principal
+     * @param obj
+     * @param aclObjectIdentityParentId
      */
-    private String configureWhoToRunAs( Object object, int mask, Authentication authentication, Object principal ) {
-        assert principal != null;
-        Securable securedObject = ( Securable ) object;
+    private void changeParent( Object obj, int aclObjectIdentityParentId ) {
+        Securable securable = ( Securable ) obj;
+        Long aclObjectIdentityId = securableDao.getAclObjectIdentityId( securable );
 
-        /* id of acl_object_identity */
-        Long objectIdentityId = securableDao.getAclObjectIdentityId( securedObject );
-
-        String recipient = null;
-        if ( objectIdentityId == null ) return recipient;
-
-        recipient = securableDao.getRecipient( objectIdentityId );
-
-        if ( recipient == null ) {
-            throw new IllegalStateException( "No recipient for object " + objectIdentityId + " object=" + securedObject );
-        }
-
-        if ( isUserAdmin() ) {
-            if ( !recipient.equals( principal.toString() ) ) {
-                RunAsManager runAsManager = new RunAsManager();
-                runAsManager.buildRunAs( object, authentication, recipient );
-
-            } else {
-                recipient = principal.toString();
-            }
-        } else {
-            throw new RuntimeException( "User '" + principal
-                    + "' is not authorized to execute this method, you must be an 'administrator'." );
-        }
-        return recipient;
+        customAclDao.updateAclObjectIdentityParent( aclObjectIdentityId, aclObjectIdentityParentId );
     }
 
     /**
@@ -332,17 +291,16 @@ public class SecurityService {
     }
 
     /**
-     * Returns true if the mask on the {@link Securable} is equal to the PRIVATE_MASK or false if it is equal to the
-     * PUBLIC_MASK.
+     * Returns true if the parent is the {@link CustomAclDao.ADMIN_CONTROL_NODE}
      * 
      * @param s
      * @return
      */
     public boolean isPrivate( Securable s ) {
 
-        Integer mask = securableDao.getMask( s );
+        Integer parent = securableDao.getAclObjectIdentityParentId( s );
 
-        if ( mask != null && mask.equals( PRIVATE_MASK ) ) {
+        if ( parent != null && parent.equals( Integer.parseInt( CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID ) ) ) {
             return true;
         }
         return false;
@@ -354,7 +312,7 @@ public class SecurityService {
         Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
         for ( Securable s : masks.keySet() ) {
             Integer mask = masks.get( s );
-            if ( mask.equals( PRIVATE_MASK ) ) {
+            if ( mask.equals( Integer.parseInt( CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID ) ) ) {
                 result.put( s, true );
             } else {
                 result.put( s, false );
@@ -364,17 +322,17 @@ public class SecurityService {
     }
 
     /**
-     * @param aclDao the aclDao to set
-     */
-    public void setBasicAclExtendedDao( BasicAclExtendedDao basicAclExtendedDao ) {
-        this.basicAclExtendedDao = basicAclExtendedDao;
-    }
-
-    /**
      * @param securableDao the securableDao to set
      */
     public void setSecurableDao( SecurableDao securableDao ) {
         this.securableDao = securableDao;
+    }
+
+    /**
+     * @param customAclDao
+     */
+    public void setCustomAclDao( CustomAclDao customAclDao ) {
+        this.customAclDao = customAclDao;
     }
 
     /**
