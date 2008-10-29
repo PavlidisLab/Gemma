@@ -22,8 +22,28 @@
 //
 package ubic.gemma.model.genome;
 
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
+import org.springframework.orm.hibernate3.HibernateTemplate;
+
 /**
  * @see ubic.gemma.model.genome.PhysicalLocation
  */
 public class PhysicalLocationDaoImpl extends ubic.gemma.model.genome.PhysicalLocationDaoBase {
+
+    public void thaw( final PhysicalLocation physicalLocation ) {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( physicalLocation, LockMode.NONE );
+                Hibernate.initialize( physicalLocation );
+                Hibernate.initialize( physicalLocation.getChromosome() );
+                Hibernate.initialize( physicalLocation.getChromosome().getTaxon() );
+
+                return null;
+            }
+        } );
+
+    }
+
 }

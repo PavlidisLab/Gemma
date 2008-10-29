@@ -86,7 +86,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		callParams.push({
 					callback : function(data) {
 						var k = new Gemma.WaitHandler();
-						k.handleWait(data, 'reportUpdated', false);
+						k.handleWait(data, false);
+						k.on('done', function(payload) {
+									this.fireEvent('reportUpdated', payload)
+								});
 					}.createDelegate(this)
 				});
 
@@ -118,7 +121,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push({
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
-											k.handleWait(data, 'deleted', true);
+											k.handleWait(data, true);
+											k.on('done', function(payload) {
+														this.fireEvent('deleted', payload)
+													});
 										}.createDelegate(this)
 									});
 							ExpressionExperimentController.deleteById.apply(this, callParams);
@@ -201,7 +207,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push({
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
-											k.handleWait(data, 'link', true);
+											k.handleWait(data, true);
+											k.on('done', function(payload) {
+														this.fireEvent('link', payload)
+													});
 										}.createDelegate(this)
 									});
 							LinkAnalysisController.run.apply(this, callParams);
@@ -224,7 +233,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push({
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
-											k.handleWait(data, 'missingValue', true);
+											k.handleWait(data, true);
+											k.on('done', function(payload) {
+														this.fireEvent('missingValue', payload)
+													});
 										}.createDelegate(this)
 									});
 							ArrayDesignRepeatScanController.run.apply(this, callParams);
@@ -247,7 +259,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push({
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
-											k.handleWait(data, 'differential', true);
+											k.handleWait(data, true);
+											k.on('done', function(payload) {
+														this.fireEvent('differential', payload)
+													});
 										}.createDelegate(this)
 									});
 							DifferentialExpressionAnalysisController.run.apply(this, callParams);
@@ -270,7 +285,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push({
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
-											k.handleWait(data, 'processedVector', true);
+											k.handleWait(data, true);
+											k.on('done', function(payload) {
+														this.fireEvent('processedVector', payload)
+													});
 										}.createDelegate(this)
 									});
 							ProcessedExpressionDataVectorCreateController.run.apply(this, callParams);
@@ -284,7 +302,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	initComponent : function() {
 
 		Gemma.EEManager.superclass.initComponent.call(this);
-		this.addEvents('tagsUpdated');
+
+		this.addEvents('reportUpdated', 'differential', 'missingValue', 'link', 'processedVector', 'deleted',
+				'tagsUpdated', 'updated', 'pubmedUpdated', 'pubmedRemove');
 
 		this.save = function(id, fields) {
 			/*
@@ -301,19 +321,18 @@ Gemma.WaitHandler = Ext.extend(Ext.Component, {
 
 				Gemma.WaitHandler.superclass.initComponent.call(this);
 
-				this.addEvents('reportUpdated', 'differential', 'missingValue', 'link', 'processedVector', 'deleted',
-						'tagsUpdated', 'updated', 'pubmedUpdated', 'pubmedRemove');
+				this.addEvents('done');
 
 			},
 			/**
 			 * Parameters are passed to ProgressWindow config; eventToFire is fired in the callback.
 			 */
-			handleWait : function(taskId, eventToFire, showAllMessages) {
+			handleWait : function(taskId, showAllMessages) {
 				try {
 					var p = new Gemma.ProgressWindow({
 								taskId : taskId,
 								callback : function(data) {
-									this.fireEvent(eventToFire, data);
+									this.fireEvent('done', data);
 								}.createDelegate(this),
 								showAllMessages : showAllMessages
 							});

@@ -809,9 +809,9 @@ public abstract class ProbeAlignedRegionDaoBase extends ubic.gemma.model.genome.
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.genome.ProbeAlignedRegionDao</code>, please note that the {@link #TRANSFORM_NONE}
-     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
-     * unknown {@link #TRANSFORM_NONE} is assumed.
+     * <code>ubic.gemma.model.genome.ProbeAlignedRegionDao</code>, please note that the {@link #TRANSFORM_NONE} constant
+     * denotes no transformation, so the entity itself will be returned. If the integer argument value is unknown
+     * {@link #TRANSFORM_NONE} is assumed.
      * 
      * @param transform one of the constants declared in {@link ubic.gemma.model.genome.ProbeAlignedRegionDao}
      * @param entity an entity that was found
@@ -836,7 +836,9 @@ public abstract class ProbeAlignedRegionDaoBase extends ubic.gemma.model.genome.
     /**
      * Transforms a collection of entities using the
      * {@link #transformEntity(int,ubic.gemma.model.genome.ProbeAlignedRegion)} method. This method does not instantiate
-     * a new collection. <p/> This method is to be used internally only.
+     * a new collection.
+     * <p/>
+     * This method is to be used internally only.
      * 
      * @param transform one of the constants declared in <code>ubic.gemma.model.genome.ProbeAlignedRegionDao</code>
      * @param entities the collection of entities to transform

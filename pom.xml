@@ -112,15 +112,23 @@
 			<version>3.2.6.ga</version>
 			<type>jar</type>
 		</dependency>
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache</artifactId>
-			<version>1.5.0</version>
-		</dependency>
+	 	<dependency>
+        	<groupId>net.sf.ehcache</groupId>
+        	<artifactId>ehcache</artifactId>
+        	<version>1.6.0-beta1</version>
+     	</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.6</version>
+			<scope>runtime</scope>
+		</dependency>
+		<!-- Optional driver for using replication server -->
+		<dependency>
+			<groupId>continuent</groupId>
+			<artifactId>sequoia-driver</artifactId>
+			<version>2.10.10</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -392,9 +400,9 @@
 		</plugins>
 	</build>			
 	<repositories>
-				<repository>
-					<id>pavlab</id>
-					<name>PavLab</name>
+		<repository>
+		 	<id>pavlab</id>
+			 	<name>PavLab</name>
 					<url>http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2</url>
 					<layout>default</layout>
 					<snapshots>
@@ -406,51 +414,52 @@
 						<updatePolicy>daily</updatePolicy>
 					</releases>
 				</repository>
-			</repositories>
-			<pluginRepositories>
-				<pluginRepository>
-					<id>apache.plugin.snapshots</id>
-					<name>Apache Development Repository</name>
-					<url>
-						http://cvs.apache.org/maven-snapshot-repository
-					</url>
-					<releases>
-						<enabled>false</enabled>
-					</releases>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>daily</updatePolicy>
-					</snapshots>
-				</pluginRepository><pluginRepository>
-					<id>mojo</id>
-					<name>Mojo</name>
-					<url>
-						http://snapshots.maven.codehaus.org/maven2/
-					</url>
-					<layout>default</layout>
-					<releases>
-						<enabled>false</enabled>
-					</releases>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>daily</updatePolicy>
-					</snapshots>
-				</pluginRepository>
-				<pluginRepository>
-					<id>pavlab</id>
-					<name>PavLab</name>
-					<url>http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2</url>
-					<layout>default</layout>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>daily</updatePolicy>
-					</snapshots>
-					<releases>
-						<enabled>true</enabled>
-						<updatePolicy>daily</updatePolicy>
-					</releases>
-				</pluginRepository>
-			</pluginRepositories>
+	</repositories>
+	<pluginRepositories>
+	<pluginRepository>
+		<id>apache.plugin.snapshots</id>
+		<name>Apache Development Repository</name>
+		<url>
+				http://cvs.apache.org/maven-snapshot-repository
+			</url>
+		<releases>
+			<enabled>false</enabled>
+		</releases>
+		<snapshots>
+			<enabled>true</enabled>
+			<updatePolicy>daily</updatePolicy>
+		</snapshots>
+	</pluginRepository>
+	<pluginRepository>
+		<id>mojo</id>
+		<name>Mojo</name>
+		<url>
+				http://snapshots.maven.codehaus.org/maven2/
+			</url>
+		<layout>default</layout>
+		<releases>
+			<enabled>false</enabled>
+		</releases>
+		<snapshots>
+			<enabled>true</enabled>
+			<updatePolicy>daily</updatePolicy>
+		</snapshots>
+	</pluginRepository>
+	<pluginRepository>
+		<id>pavlab</id>
+		<name>PavLab</name>
+		<url>http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2</url>
+		<layout>default</layout>
+		<snapshots>
+			<enabled>true</enabled>
+			<updatePolicy>daily</updatePolicy>
+		</snapshots>
+		<releases>
+			<enabled>true</enabled>
+			<updatePolicy>daily</updatePolicy>
+		</releases>
+	</pluginRepository>
+	</pluginRepositories>
 	<profiles>
 		<profile>
 			<id>assemble-src</id>

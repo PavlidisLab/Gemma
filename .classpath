@@ -65,7 +65,7 @@
 	<classpathentry kind="var" path="M2_REPO/colt/colt/1.2.0/colt-1.2.0.jar" sourcepath="/JAR_SOURCE/colt-1.2.0/src"/>
 	<classpathentry kind="var" path="M2_REPO/commons-digester/commons-digester/1.7/commons-digester-1.7.jar" sourcepath="/JAR_SOURCE/commons-digester-1.7-src/src/java"/>
 	<classpathentry kind="var" path="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar" sourcepath="/JAR_SOURCE/dom4j-1.6.1/src/java"/>
-	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache/1.5.0/ehcache-1.5.0.jar">
+	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache/1.6.0-beta1/ehcache-1.6.0-beta1.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://ehcache.sourceforge.net/javadoc/"/>
 		</attributes>
@@ -222,5 +222,6 @@
 	<classpathentry kind="var" path="M2_REPO/rome/rome/0.9/rome-0.9.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jdom/jdom/1.0/jdom-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/rome/rome-fetcher/0.9/rome-fetcher-0.9.jar"/>
+	<classpathentry kind="var" path="M2_REPO/continuent/sequoia-driver/2.10.10/sequoia-driver-2.10.10.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>

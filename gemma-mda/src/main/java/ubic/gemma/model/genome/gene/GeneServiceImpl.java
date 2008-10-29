@@ -27,7 +27,9 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -35,6 +37,12 @@ import ubic.gemma.model.genome.Taxon;
  * @author keshav
  * @version $Id$
  * @see ubic.gemma.model.genome.gene.GeneService
+ */
+/**
+ * TODO Document Me
+ * 
+ * @author paul
+ * @version $Id$
  */
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
 
@@ -152,14 +160,14 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().getCompositeSequenceCountById( id );
     }
 
-//    /*
-//     * (non-Javadoc)
-//     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequenceMap(java.util.Collection)
-//     */
-//    @Override
-//    protected Map handleGetCompositeSequenceMap( Collection genes ) throws Exception {
-//        return this.getGeneDao().getCompositeSequenceMap( genes );
-//    }
+    // /*
+    // * (non-Javadoc)
+    // * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequenceMap(java.util.Collection)
+    // */
+    // @Override
+    // protected Map handleGetCompositeSequenceMap( Collection genes ) throws Exception {
+    // return this.getGeneDao().getCompositeSequenceMap( genes );
+    // }
 
     /*
      * (non-Javadoc)
@@ -326,6 +334,10 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         }
         return null;
 
+    }
+
+    public Collection<Gene> findNearest( PhysicalLocation physicalLocation ) {
+        return this.getGeneDao().findNearest( physicalLocation );
     }
 
 }

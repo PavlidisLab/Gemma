@@ -22,6 +22,11 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Collection;
+
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Gene;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -270,8 +275,9 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
      *      java.util.Collection, boolean)
      */
-    public java.util.Collection getExpressionExperimentsLinkTestedIn( final ubic.gemma.model.genome.Gene gene,
-            final java.util.Collection expressionExperiments, final boolean filterNonSpecific ) {
+    public java.util.Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn(
+            final ubic.gemma.model.genome.Gene gene, final java.util.Collection<BioAssaySet> expressionExperiments,
+            final boolean filterNonSpecific ) {
         try {
             return this.handleGetExpressionExperimentsLinkTestedIn( gene, expressionExperiments, filterNonSpecific );
         } catch ( Throwable th ) {
@@ -285,16 +291,16 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
      * Performs the core logic for
      * {@link #getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene, java.util.Collection, boolean)}
      */
-    protected abstract java.util.Collection handleGetExpressionExperimentsLinkTestedIn(
-            ubic.gemma.model.genome.Gene gene, java.util.Collection expressionExperiments, boolean filterNonSpecific )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<BioAssaySet> handleGetExpressionExperimentsLinkTestedIn(
+            ubic.gemma.model.genome.Gene gene, java.util.Collection<BioAssaySet> expressionExperiments,
+            boolean filterNonSpecific ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
      *      java.util.Collection, java.util.Collection, boolean)
      */
     public java.util.Map getExpressionExperimentsLinkTestedIn( final ubic.gemma.model.genome.Gene geneA,
-            final java.util.Collection genesB, final java.util.Collection expressionExperiments,
+            final java.util.Collection<Long> genesB, final java.util.Collection<BioAssaySet> expressionExperiments,
             final boolean filterNonSpecific ) {
         try {
             return this.handleGetExpressionExperimentsLinkTestedIn( geneA, genesB, expressionExperiments,
@@ -310,8 +316,9 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
      * Performs the core logic for
      * {@link #getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene, java.util.Collection, java.util.Collection, boolean)}
      */
-    protected abstract java.util.Map handleGetExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene geneA,
-            java.util.Collection genesB, java.util.Collection expressionExperiments, boolean filterNonSpecific )
+    protected abstract java.util.Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsLinkTestedIn(
+            ubic.gemma.model.genome.Gene geneA, java.util.Collection<Long> genesB,
+            java.util.Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific )
             throws java.lang.Exception;
 
     /**
@@ -375,8 +382,8 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
      * Performs the core logic for
      * {@link #getExpressionExperimentsTestedIn(java.util.Collection, java.util.Collection, boolean)}
      */
-    protected abstract java.util.Map handleGetExpressionExperimentsTestedIn( java.util.Collection geneIds,
-            java.util.Collection experiments, boolean filterNonSpecific ) throws java.lang.Exception;
+    protected abstract java.util.Map handleGetExpressionExperimentsTestedIn( java.util.Collection<Long> geneIds,
+            java.util.Collection<BioAssaySet> experiments, boolean filterNonSpecific ) throws java.lang.Exception;
 
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
@@ -407,7 +414,9 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
     /**
      * Transforms a collection of entities using the
      * {@link #transformEntity(int,ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)} method. This
-     * method does not instantiate a new collection. <p/> This method is to be used internally only.
+     * method does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
      * 
      * @param transform one of the constants declared in
      *        <code>ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao</code>

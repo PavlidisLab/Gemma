@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.CompareToBuilder;
  * @version $Id$
  * @see ubic.gemma.model.genome.PhysicalLocation
  */
-public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocation implements Comparable {
+public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocation {
 
     /**
      * 
@@ -46,9 +46,8 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.PhysicalLocation#equals(java.lang.Object) NOTE that this implementation ignores the
-     *      id - it uses only location information to determine equivalence.
+     * id - it uses only location information to determine equivalence.
      */
     @Override
     public boolean equals( Object object ) {

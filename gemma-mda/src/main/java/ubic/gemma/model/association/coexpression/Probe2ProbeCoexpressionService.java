@@ -22,6 +22,10 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Collection;
+
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+
 /**
  * 
  */
@@ -108,8 +112,8 @@ public interface Probe2ProbeCoexpressionService {
      * probes predicted to be non-specific for the gene.
      * </p>
      */
-    public java.util.Collection getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection expressionExperiments, boolean filterNonSpecific );
+    public java.util.Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /**
      * <p>
@@ -120,21 +124,22 @@ public interface Probe2ProbeCoexpressionService {
      * which one or both of the genes were detected by only probes predicted to be non-specific for the gene.
      * </p>
      */
-    public java.util.Map getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene geneA,
-            java.util.Collection genesB, java.util.Collection expressionExperiments, boolean filterNonSpecific );
+    public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsLinkTestedIn(
+            ubic.gemma.model.genome.Gene geneA, java.util.Collection<Long> genesB,
+            java.util.Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /**
      * <p>
      * Retrieve all genes that were included in the link analysis for the experiment.
      * </p>
      */
-    public java.util.Collection getGenesTestedBy(
+    public java.util.Collection<Long> getGenesTestedBy(
             ubic.gemma.model.expression.experiment.BioAssaySet expressionExperiment, boolean filterNonSpecific );
 
     /**
      * 
      */
-    public java.util.Map getExpressionExperimentsTestedIn( java.util.Collection geneIds,
-            java.util.Collection experiments, boolean filterNonSpecific );
+    public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn(
+            java.util.Collection<Long> geneIds, java.util.Collection<BioAssaySet> experiments, boolean filterNonSpecific );
 
 }

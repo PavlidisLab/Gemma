@@ -37,10 +37,8 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDaoBase#find(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<Gene> find( BlatResult blatResult ) {
         Chromosome chrom = blatResult.getTargetChromosome();
@@ -53,8 +51,9 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.ProbeAlignedRegionDaoBase#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
+     * @see
+     * ubic.gemma.model.genome.ProbeAlignedRegionDaoBase#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation
+     * )
      */
     @Override
     public Collection<Gene> findByPhysicalLocation( PhysicalLocation location ) {
@@ -67,11 +66,11 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<Gene> findByPosition( Chromosome chrom, final Long targetStart,
-            final Long targetEnd, final String strand ) {
+    private Collection<Gene> findByPosition( Chromosome chrom, final Long targetStart, final Long targetEnd,
+            final String strand ) {
 
         // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
-        String query = "select par from ProbeAlignedRegionImpl as par inner join fetch par.physicalLocation pl "
+        String query = "select distinct par from ProbeAlignedRegionImpl as par inner join fetch par.physicalLocation pl "
                 + "inner join fetch par.products prod inner join fetch prod.exons inner join fetch pl.chromosome "
                 + "where ((pl.nucleotide >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end) "
                 + "OR (pl.nucleotide <= :start AND (pl.nucleotide + pl.nucleotideLength) >= :end) OR "
@@ -96,7 +95,6 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
      */
     @Override

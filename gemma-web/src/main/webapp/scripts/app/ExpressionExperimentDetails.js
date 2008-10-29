@@ -55,7 +55,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		}
 
 		ExpressionExperimentController.updateBasics(entity, function(data) {
-					this.manager.handleWait(data, 'updated', false);
+					var k = new Gemma.WaitHandler();
+					k.handleWait(data, 'updated', false);
 				}.createDelegate(this))
 	},
 
@@ -63,7 +64,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		var pubmedId = Ext.getCmp('pubmed-id-field').getValue();
 		ExpressionExperimentController.updatePubMed(this.eeId, pubmedId, {
 					callback : function(data) {
-						this.manager.handleWait(data, 'pubmedUpdated', false);
+						var k = new Gemma.WaitHandler();
+						k.handleWait(data, 'pubmedUpdated', false);
 					}.createDelegate(this)
 				});
 
@@ -72,7 +74,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 	removePubMed : function() {
 		ExpressionExperimentController.removePrimaryPublication(this.eeId, {
 					callback : function(data) {
-						this.manager.handleWait(data, 'pubmedRemove', false)
+						var k = new Gemma.WaitHandler();
+						k.handleWait(data, 'pubmedRemove', false)
 					}.createDelegate(this)
 				});
 	},
@@ -320,6 +323,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					id : "eemanager"
 				});
 		this.manager = manager;
+
 		//
 		// /*
 		// * Create a store with one record.
@@ -425,6 +429,27 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					k.setValue(data.description);
 
 				}.createDelegate(this));
+
+		manager.on('reportUpdated', function() {
+					store.reload();
+				});
+
+		manager.on('tagsUpdated', function() {
+					store.reload();
+				});
+
+		manager.on('differential', function() {
+					store.reload();
+				});
+		manager.on('processedVector', function() {
+					store.reload();
+				});
+		manager.on('link', function() {
+					store.reload();
+				});
+		manager.on('missingValue', function() {
+					store.reload();
+				});
 
 		var descriptionArea = new Ext.form.TextArea({
 					id : 'description',

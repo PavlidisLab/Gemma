@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -53,7 +54,7 @@ public class CoexpressionCollectionValueObject {
 
     private double dbQuerySeconds;
 
-    private Collection<ExpressionExperiment> eesQueryTestedIn;
+    private Collection<BioAssaySet> eesQueryTestedIn;
 
     private String errorState;
 
@@ -84,7 +85,7 @@ public class CoexpressionCollectionValueObject {
         predictedCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
         probeAlignedRegionCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
         queryProbes = Collections.synchronizedMap( new HashMap<Long, Map<Long, Collection<Long>>>() );
-        this.eesQueryTestedIn = new HashSet<ExpressionExperiment>();
+        this.eesQueryTestedIn = new HashSet<BioAssaySet>();
     }
 
     public void add( CoexpressionValueObject vo ) {
@@ -178,7 +179,7 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return
      */
-    public Collection<ExpressionExperiment> getEesQueryTestedIn() {
+    public Collection<BioAssaySet> getEesQueryTestedIn() {
         return eesQueryTestedIn;
     }
 
@@ -377,7 +378,7 @@ public class CoexpressionCollectionValueObject {
     /**
      * @param eesQueryTestedIn
      */
-    public void setEesQueryGeneTestedIn( Collection<ExpressionExperiment> eesQueryTestedIn ) {
+    public void setEesQueryGeneTestedIn( Collection<BioAssaySet> eesQueryTestedIn ) {
         this.eesQueryTestedIn = eesQueryTestedIn;
     }
 

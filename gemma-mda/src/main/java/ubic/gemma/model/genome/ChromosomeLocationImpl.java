@@ -29,7 +29,7 @@ package ubic.gemma.model.genome;
  * @version $Id$ *
  * @see ubic.gemma.model.genome.ChromosomeLocation
  */
-public abstract class ChromosomeLocationImpl extends ubic.gemma.model.genome.ChromosomeLocation implements Comparable {
+public abstract class ChromosomeLocationImpl extends ubic.gemma.model.genome.ChromosomeLocation {
 
     /**
      * @see ubic.gemma.model.genome.ChromosomeLocation#compareTo(java.lang.Object)

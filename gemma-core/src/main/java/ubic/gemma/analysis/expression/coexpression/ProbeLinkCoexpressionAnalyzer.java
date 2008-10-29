@@ -39,7 +39,6 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionV
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -63,7 +62,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
     private static final String EES_TESTED_GENES_CACHE_NAME = "EEsTestedGenesCache";
     private static Log log = LogFactory.getLog( ProbeLinkCoexpressionAnalyzer.class.getName() );
     private static final int MAX_GENES_TO_COMPUTE_GOOVERLAP = 100;
-    private static final int MAX_GENES_TO_COMPUTE_EESTESTEDIN = 100;
+    private static final int MAX_GENES_TO_COMPUTE_EESTESTEDIN = 200;
 
     private static final int EETESTEDGENE_CACHE_SIZE = 500; // number of data sets.
 
@@ -91,7 +90,6 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
         }
-
     }
 
     /**
@@ -105,22 +103,21 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject
      * @return Fully initialized CoexpressionCollectionValueObject.
      */
-    @SuppressWarnings("unchecked")
     public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<BioAssaySet> ees, int stringency,
             boolean knownGenesOnly, int limit ) {
 
         if ( stringency <= 0 ) stringency = 1;
 
-        if ( log.isInfoEnabled() )
-            log.info( "Link query for " + gene.getName() + " stringency=" + stringency + " knowngenesonly?="
+        if ( log.isDebugEnabled() )
+            log.debug( "Link query for " + gene.getName() + " stringency=" + stringency + " knowngenesonly?="
                     + knownGenesOnly );
 
         /*
          * Identify data sets the query gene is expressed in - this is fast (?) and provides an upper bound for EEs we
          * need to search in the first place.
          */
-        Collection<ExpressionExperiment> eesQueryTestedIn = probe2ProbeCoexpressionService
-                .getExpressionExperimentsLinkTestedIn( gene, ees, false );
+        Collection<BioAssaySet> eesQueryTestedIn = probe2ProbeCoexpressionService.getExpressionExperimentsLinkTestedIn(
+                gene, ees, false );
 
         if ( eesQueryTestedIn.size() == 0 ) {
             CoexpressionCollectionValueObject r = new CoexpressionCollectionValueObject( gene, stringency );
@@ -307,8 +304,8 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
 
     /**
      * For the genes that the query is coexpressed with; this retrieves the information for all the coexpressionData
-     * passed in (no limit). This method uses a cache to speed repeated calls, so it is very slow at first and then
-     * faster.
+     * passed in (no limit). This method uses a cache to speed repeated calls, so it is very slow at first and then gets
+     * much faster.
      * 
      * @param ees, including ALL experiments that were intially started with, NOT just the ones that the query gene was
      *        tested in.
@@ -331,18 +328,26 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
                 if ( log.isDebugEnabled() ) log.debug( "Cache hit" );
                 genes = ( Collection<Long> ) element.getValue();
             } else {
+                /*
+                 * Create the cache for a specific expression experiment: which genes were tested.
+                 */
                 genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
                 eetestedGeneCache.put( new Element( ee.getId(), genes ) );
                 log.info( "Cached " + genes.size() + " genes assayed by " + ee );
             }
 
-            for ( Long g : genes ) {
-                if ( !gmap.containsKey( g ) ) continue;
-                gmap.get( g ).getDatasetsTestedIn().add( ee.getId() );
+            /*
+             * Both the query gene AND the target gene have to have been tested.
+             */
+            for ( CoexpressionValueObject cvo : coexpressionData ) {
+                if ( genes.contains( cvo.getQueryGene().getId() ) && genes.contains( cvo.getGeneId() ) ) {
+                    cvo.getDatasetsTestedIn().add( ee.getId() );
+                }
             }
+
         }
 
-        // debugging.
+        // sanity check.
         for ( CoexpressionValueObject o : coexpressionData ) {
             assert o.getDatasetsTestedIn().size() > 0;// has to be at least stringency actually.
         }
@@ -355,9 +360,10 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * 
      * @param eesQueryTestedIn, limited to the ees that the query gene is tested in.
      * @param coexpressionData
+     * @see ProbeLinkCoexpressionAnalyzer.computeEesTestedInBatch for the version used when requests are going to be
+     *      done for many genes, so cache is built first time.
      */
-    @SuppressWarnings("unchecked")
-    private void computeEesTestedIn( Collection<ExpressionExperiment> eesQueryTestedIn,
+    private void computeEesTestedIn( Collection<BioAssaySet> eesQueryTestedIn,
             List<CoexpressionValueObject> coexpressionData ) {
         Collection<Long> coexGeneIds = new HashSet<Long>();
 
@@ -372,7 +378,6 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         }
 
         log.debug( "Computing EEs tested in for " + coexGeneIds.size() + " genes." );
-
         Map<Long, Collection<BioAssaySet>> eesTestedIn = probe2ProbeCoexpressionService
                 .getExpressionExperimentsTestedIn( coexGeneIds, eesQueryTestedIn, false );
         for ( Long g : eesTestedIn.keySet() ) {
@@ -382,9 +387,9 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
 
             Collection<Long> ids = new HashSet<Long>();
             for ( BioAssaySet ee : eesTestedIn.get( g ) ) {
-                ids.add( ee.getId() );
+                Long eeid = ee.getId();
+                ids.add( eeid );
             }
-
             cvo.setDatasetsTestedIn( ids );
         }
     }

@@ -415,10 +415,10 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
     public java.util.Collection<CompositeSequence> getCompositeSequences( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
-//    /**
-//     * 
-//     */
-//    public java.util.Map<Long, Collection<Long>> getCompositeSequenceMap( java.util.Collection<Gene> genes );
+    // /**
+    // *
+    // */
+    // public java.util.Map<Long, Collection<Long>> getCompositeSequenceMap( java.util.Collection<Gene> genes );
 
     /**
      * <p>
@@ -463,5 +463,15 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
      */
     public ubic.gemma.model.genome.Gene findByAccession( java.lang.String accession,
             ubic.gemma.model.common.description.ExternalDatabase source );
+
+    /**
+     * Find the Genes closest to the given location. If the location is in a gene(s), they will be returned. Otherwise a
+     * single gene closest to the location will be returned, except in the case of ties in which more than one will be
+     * returned.
+     * 
+     * @param physicalLocation
+     * @return
+     */
+    public Collection findNearest( PhysicalLocation physicalLocation );
 
 }

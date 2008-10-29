@@ -35,9 +35,9 @@ public interface PhysicalLocationDao extends ubic.gemma.model.genome.ChromosomeL
      * <p>
      * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
      * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
      * </p>
      * 
      * @param id the identifier of the entity to load.
@@ -54,9 +54,9 @@ public interface PhysicalLocationDao extends ubic.gemma.model.genome.ChromosomeL
 
     /**
      * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
      * operation which can optionally transform the entity (into a value object for example). By default, transformation
      * does not occur.
      * </p>
@@ -127,5 +127,7 @@ public interface PhysicalLocationDao extends ubic.gemma.model.genome.ChromosomeL
      * Removes all entities in the given <code>entities<code> collection.
      */
     public void remove( java.util.Collection entities );
+
+    public void thaw( PhysicalLocation physicalLocation );
 
 }

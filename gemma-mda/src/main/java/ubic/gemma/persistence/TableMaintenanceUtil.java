@@ -117,7 +117,7 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
                 needToRefresh = true;
             }
 
-            if ( !needToRefresh ) {
+            if ( !needToRefresh && status != null ) {
                 Collection<Auditable> newObj = auditEventService.getNewSinceDate( status.getLastUpdate() );
 
                 for ( Auditable a : newObj ) {
@@ -130,7 +130,7 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
                 }
             }
 
-            if ( !needToRefresh ) {
+            if ( !needToRefresh && status != null ) {
                 Collection<Auditable> updatedObj = auditEventService.getUpdatedSinceDate( status.getLastUpdate() );
                 for ( Auditable a : updatedObj ) {
                     if ( a instanceof ArrayDesign ) {

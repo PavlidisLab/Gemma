@@ -22,6 +22,7 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
@@ -153,7 +154,7 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
      * </p>
      */
     public java.util.Collection getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection expressionExperiments, boolean filterNonSpecific );
+            java.util.Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /**
      * <p>
@@ -165,7 +166,7 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
      * </p>
      */
     public java.util.Map getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene geneA,
-            java.util.Collection<Gene> genesB, java.util.Collection<ExpressionExperiment> expressionExperiments,
+            java.util.Collection<Long> genesB, java.util.Collection<BioAssaySet> expressionExperiments,
             boolean filterNonSpecific );
 
     /**

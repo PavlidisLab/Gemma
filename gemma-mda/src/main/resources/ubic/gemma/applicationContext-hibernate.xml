@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
-	
-	Added by Luke McCarthy to allow certain methods to use a read-only database
-	(i.e.: the slave database in the case of replication)
-	$Id$
--->
+	<!--
+		<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd"> Added by Luke
+		McCarthy to allow certain methods to use a read-only database (i.e.: the slave database in the case of replication)
+		$Id$
+	-->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
 	xsi:schemaLocation="
@@ -29,86 +28,164 @@
 		<property name="mappingLocations">
 			<list>
 				<!-- applicationContext hibernateMappingLocations merge-point -->
-				<value>classpath:ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/gene/GeneAlias.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/gene/CandidateGene.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/gene/MappingCandidateGene.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/gene/BibReferenceCandidateGene.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/gene/CandidateGeneList.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/CytogeneticLocation.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/GeneticLocation.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/PhysicalLocation.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/ChromosomeFeature.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/gene/GeneAlias.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/gene/CandidateGene.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/gene/MappingCandidateGene.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/gene/BibReferenceCandidateGene.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/gene/CandidateGeneList.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/CytogeneticLocation.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/GeneticLocation.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/PhysicalLocation.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/ChromosomeFeature.hbm.xml
+				</value>
 				<value>classpath:ubic/gemma/model/genome/Qtl.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/Chromosome.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/Chromosome.hbm.xml
+				</value>
 				<value>classpath:ubic/gemma/model/genome/Taxon.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/description/DatabaseEntry.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/description/ExternalDatabase.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/description/LocalFile.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/description/FileFormat.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/description/BibliographicReference.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/description/Characteristic.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/description/NotedReference.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/description/NotedReferenceList.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/description/BibRefAnnotation.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/description/PublicationType.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserGroup.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserRole.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserQuery.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/JobInfo.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/measurement/Measurement.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/measurement/Unit.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/Parameterizable.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/Parameter.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/ParameterizableApplication.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/ParameterValue.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/ProtocolApplication.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/Protocol.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/Software.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/Hardware.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/SoftwareApplication.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/HardwareApplication.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/experiment/FactorValue.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/designElement/DesignElement.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/arrayDesign/AlternateName.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDataVector.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDimension.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/bioAssayData/DesignElementDimension.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/biomaterial/Treatment.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/biomaterial/Compound.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/biomaterial/CompoundMeasurement.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterialMeasurement.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/Gene2GOAssociation.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/BioSequence2GeneProduct.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/MouseProbeCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/HumanProbeCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/RatProbeCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/OtherProbeCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/MouseGeneCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/HumanGeneCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/OtherGeneCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/GeneHomology.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/LiteratureAssociation.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/ProteinProteinInteraction.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/Analysis.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/AnalysisResult.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/Investigation.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/description/DatabaseEntry.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/description/ExternalDatabase.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/description/LocalFile.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/description/FileFormat.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/description/BibliographicReference.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/description/Characteristic.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/description/NotedReference.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/description/NotedReferenceList.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/description/BibRefAnnotation.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/description/PublicationType.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserGroup.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserRole.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserQuery.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/JobInfo.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/measurement/Measurement.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/measurement/Unit.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/protocol/Parameterizable.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/protocol/Parameter.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/protocol/ParameterizableApplication.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/protocol/ParameterValue.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/protocol/ProtocolApplication.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/protocol/Protocol.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/protocol/Software.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/protocol/Hardware.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/protocol/SoftwareApplication.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/protocol/HardwareApplication.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/experiment/FactorValue.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/designElement/DesignElement.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/arrayDesign/AlternateName.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDataVector.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDimension.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/DesignElementDimension.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/biomaterial/Treatment.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/biomaterial/Compound.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/biomaterial/CompoundMeasurement.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterialMeasurement.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/Gene2GOAssociation.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/BioSequence2GeneProduct.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/MouseProbeCoExpression.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/HumanProbeCoExpression.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/RatProbeCoExpression.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/OtherProbeCoExpression.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/MouseGeneCoExpression.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/HumanGeneCoExpression.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/OtherGeneCoExpression.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/GeneHomology.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/LiteratureAssociation.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/association/ProteinProteinInteraction.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/analysis/Analysis.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/analysis/AnalysisResult.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/analysis/Investigation.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml
+				</value>
 			</list>
 		</property>
 		<property name="hibernateProperties">
@@ -141,8 +218,7 @@
 	<!-- ======= TRANSACTIONS ======= -->
 
 	<!-- Service Transactional Interceptor -->
-	<bean id="serviceTransactionInterceptor"
-		class="org.springframework.transaction.interceptor.TransactionInterceptor">
+	<bean id="serviceTransactionInterceptor" class="org.springframework.transaction.interceptor.TransactionInterceptor">
 		<property name="transactionManager">
 			<ref bean="transactionManager" />
 		</property>
@@ -197,6 +273,7 @@
 				ubic.gemma.model.genome.gene.GeneService.findByOfficialSymbolInexact=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.gene.GeneService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.genome.gene.GeneService.loadAll=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.genome.gene.GeneService.findNearest=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.gene.GeneService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.genome.gene.GeneService.load=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.gene.GeneService.findByAlias=PROPAGATION_REQUIRED,readOnly
@@ -239,6 +316,7 @@
 				ubic.gemma.model.genome.ChromosomeService.find=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.ChromosomeService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.genome.ProbeAlignedRegionService.findAssociations=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.genome.PhysicalLocationService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.description.BibliographicReferenceService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.description.BibliographicReferenceService.find=PROPAGATION_REQUIRED,readOnly
@@ -299,13 +377,13 @@
 				ubic.gemma.model.common.auditAndSecurity.UserService.update=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserService.loadAllRoles=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.auditAndSecurity.UserQueryService.create=PROPAGATION_REQUIRED
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeAllForUser=PROPAGATION_REQUIRED
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeOldForUser=PROPAGATION_REQUIRED
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.findByUser=PROPAGATION_REQUIRED,readOnly
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.findMostRecentForUser=PROPAGATION_REQUIRED,readOnly
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.load=PROPAGATION_REQUIRED,readOnly
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.loadAll=PROPAGATION_REQUIRED,readOnly
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.remove=PROPAGATION_REQUIRED
+				ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeAllForUser=PROPAGATION_REQUIRED
+				ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeOldForUser=PROPAGATION_REQUIRED
+				ubic.gemma.model.common.auditAndSecurity.UserQueryService.findByUser=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.common.auditAndSecurity.UserQueryService.findMostRecentForUser=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.common.auditAndSecurity.UserQueryService.load=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.common.auditAndSecurity.UserQueryService.loadAll=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.common.auditAndSecurity.UserQueryService.remove=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.ContactService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.ContactService.find=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.auditAndSecurity.ContactService.remove=PROPAGATION_REQUIRED
@@ -520,7 +598,7 @@
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.load=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataArrays=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataVectors=PROPAGATION_REQUIRED,readOnly				
+				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataVectors=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.createProcessedDataVectors=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.create=PROPAGATION_REQUIRED
@@ -613,7 +691,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao</value>
+			<value>ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -631,7 +710,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao</value>
+			<value>ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -649,7 +729,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao</value>
+			<value>ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -667,7 +748,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao</value>
+			<value>ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -685,7 +767,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao</value>
+			<value>ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -775,7 +858,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.gene.MappingCandidateGeneDao</value>
+			<value>ubic.gemma.model.genome.gene.MappingCandidateGeneDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -793,7 +877,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.gene.BibReferenceCandidateGeneDao</value>
+			<value>ubic.gemma.model.genome.gene.BibReferenceCandidateGeneDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1092,6 +1177,7 @@
 			</list>
 		</property>
 	</bean>
+
 	<!-- DatabaseEntry Entity Proxy with inner DatabaseEntry Entity implementation -->
 	<bean id="databaseEntryDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -1102,7 +1188,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.DatabaseEntryDao</value>
+			<value>ubic.gemma.model.common.description.DatabaseEntryDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1120,7 +1207,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.ExternalDatabaseDao</value>
+			<value>ubic.gemma.model.common.description.ExternalDatabaseDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1174,7 +1262,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.BibliographicReferenceDao</value>
+			<value>ubic.gemma.model.common.description.BibliographicReferenceDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1192,7 +1281,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.CharacteristicDao</value>
+			<value>ubic.gemma.model.common.description.CharacteristicDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1210,7 +1300,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.NotedReferenceDao</value>
+			<value>ubic.gemma.model.common.description.NotedReferenceDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1228,7 +1319,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.NotedReferenceListDao</value>
+			<value>ubic.gemma.model.common.description.NotedReferenceListDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1264,7 +1356,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.CharacteristicPropertyDao</value>
+			<value>ubic.gemma.model.common.description.CharacteristicPropertyDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1300,7 +1393,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.VocabCharacteristicDao</value>
+			<value>ubic.gemma.model.common.description.VocabCharacteristicDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1318,7 +1412,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.MedicalSubjectHeadingDao</value>
+			<value>ubic.gemma.model.common.description.MedicalSubjectHeadingDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1336,7 +1431,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.BibRefAnnotationDao</value>
+			<value>ubic.gemma.model.common.description.BibRefAnnotationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1354,7 +1450,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.PublicationTypeDao</value>
+			<value>ubic.gemma.model.common.description.PublicationTypeDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1390,7 +1487,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.OrganizationDao</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.OrganizationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1426,7 +1524,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.UserGroupDao</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.UserGroupDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1462,7 +1561,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.AuditEventDao</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.AuditEventDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1498,7 +1598,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.UserQueryDao</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.UserQueryDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1516,7 +1617,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.AuditTrailDao</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.AuditTrailDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1534,7 +1636,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.UserRoleDao</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.UserRoleDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1644,7 +1747,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.protocol.ParameterizableApplicationDao</value>
+			<value>ubic.gemma.model.common.protocol.ParameterizableApplicationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1680,7 +1784,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.protocol.ProtocolApplicationDao</value>
+			<value>ubic.gemma.model.common.protocol.ProtocolApplicationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1752,7 +1857,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.protocol.SoftwareApplicationDao</value>
+			<value>ubic.gemma.model.common.protocol.SoftwareApplicationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1770,7 +1876,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.protocol.HardwareApplicationDao</value>
+			<value>ubic.gemma.model.common.protocol.HardwareApplicationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1788,7 +1895,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.quantitationtype.QuantitationTypeDao</value>
+			<value>ubic.gemma.model.common.quantitationtype.QuantitationTypeDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1860,7 +1968,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.ExpressionExperimentDao</value>
+			<value>ubic.gemma.model.expression.experiment.ExpressionExperimentDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1878,7 +1987,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.FactorValueDao</value>
+			<value>ubic.gemma.model.expression.experiment.FactorValueDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1896,7 +2006,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.ExperimentalDesignDao</value>
+			<value>ubic.gemma.model.expression.experiment.ExperimentalDesignDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1914,7 +2025,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.ExperimentalFactorDao</value>
+			<value>ubic.gemma.model.expression.experiment.ExperimentalFactorDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1932,7 +2044,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.BioAssaySetDao</value>
+			<value>ubic.gemma.model.expression.experiment.BioAssaySetDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1950,7 +2063,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao</value>
+			<value>ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1968,7 +2082,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.designElement.CompositeSequenceDao</value>
+			<value>ubic.gemma.model.expression.designElement.CompositeSequenceDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -1986,7 +2101,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.designElement.ReporterDao</value>
+			<value>ubic.gemma.model.expression.designElement.ReporterDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2004,7 +2120,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.designElement.DesignElementDao</value>
+			<value>ubic.gemma.model.expression.designElement.DesignElementDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2022,7 +2139,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.arrayDesign.ArrayDesignDao</value>
+			<value>ubic.gemma.model.expression.arrayDesign.ArrayDesignDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2040,7 +2158,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.arrayDesign.AlternateNameDao</value>
+			<value>ubic.gemma.model.expression.arrayDesign.AlternateNameDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2076,7 +2195,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.DataVectorDao</value>
+			<value>ubic.gemma.model.expression.bioAssayData.DataVectorDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2094,7 +2214,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao</value>
+			<value>ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2112,7 +2233,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao</value>
+			<value>ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2131,7 +2253,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao</value>
+			<value>ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2150,7 +2273,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao</value>
+			<value>ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2168,7 +2292,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao</value>
+			<value>ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2186,7 +2311,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.biomaterial.BioMaterialDao</value>
+			<value>ubic.gemma.model.expression.biomaterial.BioMaterialDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2204,7 +2330,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.biomaterial.TreatmentDao</value>
+			<value>ubic.gemma.model.expression.biomaterial.TreatmentDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2240,7 +2367,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao</value>
+			<value>ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2258,7 +2386,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao</value>
+			<value>ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2312,7 +2441,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.BioSequence2GeneProductDao</value>
+			<value>ubic.gemma.model.association.BioSequence2GeneProductDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2330,7 +2460,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.Gene2OntologyEntryAssociationDao</value>
+			<value>ubic.gemma.model.association.Gene2OntologyEntryAssociationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2348,7 +2479,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.Gene2GeneAssociationDao</value>
+			<value>ubic.gemma.model.association.Gene2GeneAssociationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2366,7 +2498,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.ReferenceAssociationDao</value>
+			<value>ubic.gemma.model.association.ReferenceAssociationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2384,7 +2517,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao</value>
+			<value>ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2402,7 +2536,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao</value>
+			<value>ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2420,7 +2555,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.MouseProbeCoExpressionDao</value>
+			<value>ubic.gemma.model.association.coexpression.MouseProbeCoExpressionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2438,7 +2574,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.HumanProbeCoExpressionDao</value>
+			<value>ubic.gemma.model.association.coexpression.HumanProbeCoExpressionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2456,7 +2593,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.RatProbeCoExpressionDao</value>
+			<value>ubic.gemma.model.association.coexpression.RatProbeCoExpressionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2474,7 +2612,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.OtherProbeCoExpressionDao</value>
+			<value>ubic.gemma.model.association.coexpression.OtherProbeCoExpressionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2492,7 +2631,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.MouseGeneCoExpressionDao</value>
+			<value>ubic.gemma.model.association.coexpression.MouseGeneCoExpressionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2510,7 +2650,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.HumanGeneCoExpressionDao</value>
+			<value>ubic.gemma.model.association.coexpression.HumanGeneCoExpressionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2528,7 +2669,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.RatGeneCoExpressionDao</value>
+			<value>ubic.gemma.model.association.coexpression.RatGeneCoExpressionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2546,7 +2688,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.OtherGeneCoExpressionDao</value>
+			<value>ubic.gemma.model.association.coexpression.OtherGeneCoExpressionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2582,7 +2725,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.LiteratureAssociationDao</value>
+			<value>ubic.gemma.model.association.LiteratureAssociationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2600,7 +2744,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.ProteinProteinInteractionDao</value>
+			<value>ubic.gemma.model.association.ProteinProteinInteractionDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2608,7 +2753,9 @@
 			</list>
 		</property>
 	</bean>
-	<!-- GeneProduct2GeneProductAssociation Entity Proxy with inner GeneProduct2GeneProductAssociation Entity implementation -->
+	<!--
+		GeneProduct2GeneProductAssociation Entity Proxy with inner GeneProduct2GeneProductAssociation Entity implementation
+	-->
 	<bean id="geneProduct2GeneProductAssociationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.association.GeneProduct2GeneProductAssociationDaoImpl">
@@ -2618,7 +2765,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.GeneProduct2GeneProductAssociationDao</value>
+			<value>ubic.gemma.model.association.GeneProduct2GeneProductAssociationDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2708,7 +2856,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDao</value>
+			<value>ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2726,7 +2875,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao</value>
+			<value>ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2744,7 +2894,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao</value>
+			<value>ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2752,7 +2903,10 @@
 			</list>
 		</property>
 	</bean>
-	<!-- DifferentialExpressionAnalysisResult Entity Proxy with inner DifferentialExpressionAnalysisResult Entity implementation -->
+	<!--
+		DifferentialExpressionAnalysisResult Entity Proxy with inner DifferentialExpressionAnalysisResult Entity
+		implementation
+	-->
 	<bean id="differentialExpressionAnalysisResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDaoImpl">
@@ -2762,7 +2916,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDao</value>
+			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2780,7 +2935,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao</value>
+			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2798,7 +2954,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao</value>
+			<value>ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2806,7 +2963,9 @@
 			</list>
 		</property>
 	</bean>
-	<!-- FactorAssociatedAnalysisResultSet Entity Proxy with inner FactorAssociatedAnalysisResultSet Entity implementation -->
+	<!--
+		FactorAssociatedAnalysisResultSet Entity Proxy with inner FactorAssociatedAnalysisResultSet Entity implementation
+	-->
 	<bean id="factorAssociatedAnalysisResultSetDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDaoImpl">
@@ -2816,7 +2975,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao</value>
+			<value>ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2834,7 +2994,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.ProbeAnalysisResultDao</value>
+			<value>ubic.gemma.model.analysis.expression.ProbeAnalysisResultDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2852,7 +3013,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao</value>
+			<value>ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2875,7 +3037,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.sequenceAnalysis.BlatResultService</value>
+			<value>ubic.gemma.model.genome.sequenceAnalysis.BlatResultService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2896,7 +3059,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService</value>
+			<value>ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2917,7 +3081,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.sequenceAnalysis.BlastResultService</value>
+			<value>ubic.gemma.model.genome.sequenceAnalysis.BlastResultService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2938,7 +3103,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService</value>
+			<value>ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2959,7 +3125,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.biosequence.BioSequenceService</value>
+			<value>ubic.gemma.model.genome.biosequence.BioSequenceService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -2995,7 +3162,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.genome.gene.CandidateGeneListService</value>
+			<value>ubic.gemma.model.genome.gene.CandidateGeneListService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3118,6 +3286,27 @@
 			</list>
 		</property>
 	</bean>
+	
+	<!-- PhysicalLocation Service Proxy with inner PhysicalLocation Service Implementation -->
+	<bean id="physicalLocationService" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="target">
+			<bean class="ubic.gemma.model.genome.PhysicalLocationServiceImpl">
+				<property name="physicalLocationDao">
+					<ref bean="physicalLocationDao" />
+				</property>
+			</bean>
+		</property>
+		<property name="proxyInterfaces">
+			<value>ubic.gemma.model.genome.PhysicalLocationService</value>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>serviceTransactionInterceptor</value>
+				<value>hibernateInterceptor</value>
+			</list>
+		</property>
+	</bean>
+	
 	<!-- BibliographicReferenceService Service Proxy with inner BibliographicReferenceService Service Implementation -->
 	<bean id="bibliographicReferenceService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -3137,7 +3326,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.BibliographicReferenceService</value>
+			<value>ubic.gemma.model.common.description.BibliographicReferenceService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3162,7 +3352,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.ExternalDatabaseService</value>
+			<value>ubic.gemma.model.common.description.ExternalDatabaseService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3190,7 +3381,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.NotedReferenceListService</value>
+			<value>ubic.gemma.model.common.description.NotedReferenceListService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3212,7 +3404,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.FileFormatService</value>
+			<value>ubic.gemma.model.common.description.FileFormatService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3233,7 +3426,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.LocalFileService</value>
+			<value>ubic.gemma.model.common.description.LocalFileService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3255,7 +3449,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.DatabaseEntryService</value>
+			<value>ubic.gemma.model.common.description.DatabaseEntryService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3275,7 +3470,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.description.CharacteristicService</value>
+			<value>ubic.gemma.model.common.description.CharacteristicService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3294,7 +3490,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.PersonService</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.PersonService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3319,7 +3516,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.UserService</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.UserService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3331,7 +3529,7 @@
 			</list>
 		</property>
 	</bean>
-		<!-- UserQueryService Service Proxy with inner UserQueryService Service Implementation -->
+	<!-- UserQueryService Service Proxy with inner UserQueryService Service Implementation -->
 	<bean id="userQueryService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.common.auditAndSecurity.UserQueryServiceImpl">
@@ -3341,14 +3539,15 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.UserService</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.UserService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
 				<value>serviceTransactionInterceptor</value>
 				<value>hibernateInterceptor</value>
 				<value>serviceSecurityInterceptor</value>
-				<!--   <value>addOrRemoveFromACLInterceptor</value>--> 
+				<!--   <value>addOrRemoveFromACLInterceptor</value>-->
 			</list>
 		</property>
 	</bean>
@@ -3362,7 +3561,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.ContactService</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.ContactService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3393,7 +3593,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.AuditTrailService</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.AuditTrailService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3415,7 +3616,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.UserGroupService</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.UserGroupService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3437,7 +3639,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.auditAndSecurity.AuditEventService</value>
+			<value>ubic.gemma.model.common.auditAndSecurity.AuditEventService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3456,7 +3659,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.measurement.MeasurementService</value>
+			<value>ubic.gemma.model.common.measurement.MeasurementService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3541,7 +3745,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.common.quantitationtype.QuantitationTypeService</value>
+			<value>ubic.gemma.model.common.quantitationtype.QuantitationTypeService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3604,7 +3809,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.ExpressionExperimentService</value>
+			<value>ubic.gemma.model.expression.experiment.ExpressionExperimentService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3630,7 +3836,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.ExperimentalDesignService</value>
+			<value>ubic.gemma.model.expression.experiment.ExperimentalDesignService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3655,7 +3862,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.ExperimentalFactorService</value>
+			<value>ubic.gemma.model.expression.experiment.ExperimentalFactorService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3677,7 +3885,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.FactorValueService</value>
+			<value>ubic.gemma.model.expression.experiment.FactorValueService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3688,7 +3897,9 @@
 			</list>
 		</property>
 	</bean>
-	<!-- ExpressionExperimentSubSetService Service Proxy with inner ExpressionExperimentSubSetService Service Implementation -->
+	<!--
+		ExpressionExperimentSubSetService Service Proxy with inner ExpressionExperimentSubSetService Service Implementation
+	-->
 	<bean id="expressionExperimentSubSetService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceImpl">
@@ -3698,7 +3909,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService</value>
+			<value>ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3720,7 +3932,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.designElement.CompositeSequenceService</value>
+			<value>ubic.gemma.model.expression.designElement.CompositeSequenceService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3740,7 +3953,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.designElement.ReporterService</value>
+			<value>ubic.gemma.model.expression.designElement.ReporterService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3763,7 +3977,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.arrayDesign.ArrayDesignService</value>
+			<value>ubic.gemma.model.expression.arrayDesign.ArrayDesignService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3791,7 +4006,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssay.BioAssayService</value>
+			<value>ubic.gemma.model.expression.bioAssay.BioAssayService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3814,7 +4030,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService</value>
+			<value>ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3835,7 +4052,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService</value>
+			<value>ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3848,7 +4066,9 @@
 		</property>
 	</bean>
 
-	<!-- ProcessedExpressionDataVectorService Proxy with inner ProcessedExpressionDataVectorService Service Implementation -->
+	<!--
+		ProcessedExpressionDataVectorService Proxy with inner ProcessedExpressionDataVectorService Service Implementation
+	-->
 	<bean id="processedExpressionDataVectorService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorServiceImpl">
@@ -3858,7 +4078,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService</value>
+			<value>ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3881,7 +4102,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService</value>
+			<value>ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3903,7 +4125,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService</value>
+			<value>ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3927,7 +4150,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.biomaterial.BioMaterialService</value>
+			<value>ubic.gemma.model.expression.biomaterial.BioMaterialService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3952,7 +4176,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.biomaterial.TreatmentService</value>
+			<value>ubic.gemma.model.expression.biomaterial.TreatmentService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3974,7 +4199,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.biomaterial.CompoundService</value>
+			<value>ubic.gemma.model.expression.biomaterial.CompoundService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -4006,7 +4232,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService</value>
+			<value>ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -4038,7 +4265,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService</value>
+			<value>ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -4061,7 +4289,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.Gene2GOAssociationService</value>
+			<value>ubic.gemma.model.association.Gene2GOAssociationService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -4080,7 +4309,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.association.BioSequence2GeneProductService</value>
+			<value>ubic.gemma.model.association.BioSequence2GeneProductService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -4124,7 +4354,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService</value>
+			<value>ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -4136,7 +4367,9 @@
 			</list>
 		</property>
 	</bean>
-	<!-- ProbeCoexpressionAnalysisService Service Proxy with inner ProbeCoexpressionAnalysisService Service Implementation -->
+	<!--
+		ProbeCoexpressionAnalysisService Service Proxy with inner ProbeCoexpressionAnalysisService Service Implementation
+	-->
 	<bean id="probeCoexpressionAnalysisService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisServiceImpl">
@@ -4149,7 +4382,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService</value>
+			<value>ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -4161,7 +4395,10 @@
 			</list>
 		</property>
 	</bean>
-	<!-- DifferentialExpressionAnalysisResultService Service Proxy with inner DifferentialExpressionAnalysisResultService Service Implementation -->
+	<!--
+		DifferentialExpressionAnalysisResultService Service Proxy with inner DifferentialExpressionAnalysisResultService
+		Service Implementation
+	-->
 	<bean id="differentialExpressionAnalysisResultService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceImpl">
@@ -4174,7 +4411,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService</value>
+			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -4183,7 +4421,10 @@
 			</list>
 		</property>
 	</bean>
-	<!-- DifferentialExpressionAnalysisService Service Proxy with inner DifferentialExpressionAnalysisService Service Implementation -->
+	<!--
+		DifferentialExpressionAnalysisService Service Proxy with inner DifferentialExpressionAnalysisService Service
+		Implementation
+	-->
 	<bean id="differentialExpressionAnalysisService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceImpl">
@@ -4196,7 +4437,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService</value>
+			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -4218,7 +4460,8 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.ExpressionExperimentSetService</value>
+			<value>ubic.gemma.model.analysis.expression.ExpressionExperimentSetService
+			</value>
 		</property>
 		<property name="interceptorNames">
 			<list>

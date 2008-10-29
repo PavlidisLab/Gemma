@@ -22,9 +22,12 @@
 //
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 
@@ -148,10 +151,10 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     public java.util.Collection<CompositeSequence> getCompositeSequences( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
-//    /**
-//     * 
-//     */
-//    public java.util.Map getCompositeSequenceMap( java.util.Collection genes );
+    // /**
+    // *
+    // */
+    // public java.util.Map getCompositeSequenceMap( java.util.Collection genes );
 
     /**
      * 
@@ -216,6 +219,14 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * 
      */
     public void thawLite( java.util.Collection<Gene> genes );
+
+    /**
+     * Find the gene(s) nearest to the location.
+     * 
+     * @param physicalLocation
+     * @return
+     */
+    public Collection<Gene> findNearest( PhysicalLocation physicalLocation );
 
     /**
      * 

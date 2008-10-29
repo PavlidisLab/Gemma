@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.type.LongType;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -119,6 +120,36 @@ public class CommonQueries {
         }
         results.close();
         return cs2gene;
+    }
+
+    /**
+     * @param genes
+     * @return
+     */
+    public static Map<Long, Collection<Long>> getCs2GeneIdMap( Collection<Long> genes, Session session ) {
+
+        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+
+        String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.addScalar( "csid", new LongType() );
+        queryObject.addScalar( "geneId", new LongType() );
+
+        queryObject.setParameterList( "geneIds", genes );
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+            Long csid = results.getLong( 0 );
+            Long geneId = results.getLong( 1 );
+
+            if ( !cs2genes.containsKey( csid ) ) {
+                cs2genes.put( csid, new HashSet<Long>() );
+            }
+            cs2genes.get( csid ).add( geneId );
+        }
+        results.close();
+
+        return cs2genes;
+
     }
 
     /**

@@ -53,8 +53,10 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.SequenceBinUtils;
 import ubic.gemma.util.TaxonUtility;
 
 /**
@@ -62,6 +64,7 @@ import ubic.gemma.util.TaxonUtility;
  * @version $Id$
  * @see ubic.gemma.model.genome.Gene
  */
+
 public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     private static final int MAX_RESULTS = 100;
@@ -477,7 +480,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 Hibernate.initialize( gene.getProducts() );
                 for ( ubic.gemma.model.genome.gene.GeneProduct gp : gene.getProducts() ) {
                     Hibernate.initialize( gp.getAccessions() );
-                    if ( gp.getPhysicalLocation() != null ) gp.getPhysicalLocation().getChromosome().getName();
+                    if ( gp.getPhysicalLocation() != null ) {
+                        Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
+                        Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
+                    }
                 }
                 Hibernate.initialize( gene.getAliases() );
                 Hibernate.initialize( gene.getAccessions() );
@@ -820,4 +826,136 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return null;
 
     }
+
+    private static final int WINDOW_INCREMENT = 500;
+    private static final int MAX_WINDOW = 1000000;
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDao#findNearest(ubic.gemma.model.genome.PhysicalLocation)
+     */
+    public Collection<Gene> findNearest( PhysicalLocation physicalLocation ) {
+
+        if ( physicalLocation.getNucleotide() == null ) {
+            throw new IllegalArgumentException( "Locations must have a nucleotide position" );
+        }
+
+        /*
+         * Strategy: start with a small window, enlarge it until we decide enough is enough.
+         */
+        Chromosome chrom = physicalLocation.getChromosome();
+        Long targetStart = physicalLocation.getNucleotide();
+        Long targetEnd = physicalLocation.getNucleotide()
+                + ( physicalLocation.getNucleotideLength() == null ? 0 : physicalLocation.getNucleotideLength() );
+        final String strand = physicalLocation.getStrand();
+        if ( log.isDebugEnabled() )
+            log.debug( "Start Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
+        /*
+         * Start with the 'exact' location.
+         */
+        Collection<Gene> candidates = findByPosition( chrom, targetStart, targetEnd, strand );
+        if ( !candidates.isEmpty() ) {
+            if ( log.isDebugEnabled() ) log.debug( physicalLocation + ": overlaps " + candidates.size() + " gene(s)" );
+            return candidates;
+        }
+
+        /*
+         * Start enlarging the region. FIXME: find the nearest hit, not just the ones in the window.
+         */
+        int i = 1;
+        while ( targetStart >= 0 && targetEnd - targetStart < MAX_WINDOW ) {
+            targetStart = targetStart - i * WINDOW_INCREMENT;
+
+            if ( targetStart < 0 ) targetStart = 0L;
+
+            targetEnd = targetEnd + i * WINDOW_INCREMENT;
+            if ( log.isDebugEnabled() )
+                log.debug( "Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
+
+            candidates = findByPosition( chrom, targetStart, targetEnd, strand );
+            if ( !candidates.isEmpty() ) {
+                if ( log.isDebugEnabled() )
+                    log.debug( physicalLocation + ": " + candidates.size() + " nearby genes at window size " + i
+                            * WINDOW_INCREMENT );
+
+                Collection<Gene> results = new HashSet<Gene>();
+                Gene closestGene = null;
+                int closestRange = ( int ) 1e10;
+                for ( Gene gene : candidates ) {
+                    this.thaw( gene ); // slow...
+                    for ( GeneProduct gp : gene.getProducts() ) {
+                        PhysicalLocation genelocation = gp.getPhysicalLocation();
+                        assert genelocation.getChromosome().equals( physicalLocation.getChromosome() );
+                        Long start = genelocation.getNucleotide();
+                        Long end = genelocation.getNucleotideLength() + start;
+
+                        /*
+                         * FIXME This is bogus. Need to sort through cases properly. 
+                         */
+                        long r1 = Math.abs( targetStart - start );
+                        long r2 = Math.abs( targetStart - end );
+                        long r3 = Math.abs( targetEnd - start );
+                        long r4 = Math.abs( targetEnd - end );
+
+                        if ( r1 < closestRange || r2 < closestRange || r3 < closestRange || r4 < closestRange ) {
+                            closestGene = gene;
+                        }
+
+                    }
+
+                }
+
+                assert closestGene != null;
+
+                results.add( closestGene );
+
+                return results;
+            }
+            // log.info( "Widening search..." );
+            i++;
+        }
+
+        // nuthin'
+        log.debug( "Nothing found" );
+        return new HashSet<Gene>();
+
+    }
+
+    /**
+     * Returns KNOWN genes in the region.
+     * 
+     * @param chrom
+     * @param targetStart
+     * @param targetEnd
+     * @param strand
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<Gene> findByPosition( Chromosome chrom, final Long targetStart, final Long targetEnd,
+            final String strand ) {
+
+        // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
+        String query = "select distinct g from GeneImpl as g "
+                + "inner join fetch g.products prod  inner join fetch prod.physicalLocation pl inner join fetch pl.chromosome "
+                + "where ((pl.nucleotide >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end) "
+                + "OR (pl.nucleotide <= :start AND (pl.nucleotide + pl.nucleotideLength) >= :end) OR "
+                + "(pl.nucleotide >= :start AND pl.nucleotide <= :end) "
+                + "OR  ((pl.nucleotide + pl.nucleotideLength) >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end )) "
+                + "and pl.chromosome = :chromosome and g.class='GeneImpl' ";
+
+        query = query + " and " + SequenceBinUtils.addBinToQuery( "pl", targetStart, targetEnd );
+
+        String[] params;
+        Object[] vals;
+        if ( strand != null ) {
+            query = query + " and pl.strand = :strand ";
+            params = new String[] { "chromosome", "start", "end", "strand" };
+            vals = new Object[] { chrom, targetStart, targetEnd, strand };
+        } else {
+            params = new String[] { "chromosome", "start", "end" };
+            vals = new Object[] { chrom, targetStart, targetEnd };
+        }
+        return getHibernateTemplate().findByNamedParam( query, params, vals );
+    }
+
 }

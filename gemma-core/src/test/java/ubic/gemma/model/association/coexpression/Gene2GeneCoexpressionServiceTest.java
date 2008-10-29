@@ -23,7 +23,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.common.protocol.Protocol;
@@ -75,6 +74,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         protocol = protocolS.findOrCreate( protocol );
 
         analysis.setProtocol( protocol );
+        analysis.setEnabled( true );
         analysis = analysisS.create( analysis );
 
         Taxon mouseTaxon = taxonS.findByCommonName( "mouse" );
@@ -93,9 +93,16 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         g2gCoexpression.setFirstGene( firstGene );
         g2gCoexpression.setSecondGene( secondGene );
         g2gCoexpression.setNumDataSets( 3 );
+
+        /*
+         * This is just filler
+         */
+        g2gCoexpression.setEffect( 0.9 );
+        g2gCoexpression.setPvalue( 0.0001 );
         g2gCoexpression.setDatasetsSupportingVector( new byte[] { 2, 3, 8 } );
         g2gCoexpression.setDatasetsTestedVector( new byte[] { 2, 9, 8 } );
         g2gCoexpression.setSpecificityVector( new byte[] { 2, 3, 8 } );
+
         g2gCoexpressionS.create( g2gCoexpression );
     }
 
@@ -107,7 +114,8 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
     public void testFindCoexpressionRelationships() {
 
-        Collection results = g2gCoexpressionS.findCoexpressionRelationships( firstGene, 3, 100, null );
+        Collection<Gene2GeneCoexpression> results = g2gCoexpressionS.findCoexpressionRelationships( firstGene, 3, 100,
+                analysis );
         assertEquals( 1, results.size() );
 
     }
@@ -148,14 +156,14 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
     // }
     //    
     //    
-    private boolean validate( Collection g2g, CoexpressionCollectionValueObject p2p ) {
-
-        int actualLinkCount = p2p.getKnownGeneCoexpression().getNegativeStringencyLinkCount()
-                + p2p.getKnownGeneCoexpression().getPositiveStringencyLinkCount();
-
-        if ( g2g.size() == actualLinkCount ) return true;
-
-        return false;
-    }
+    // private boolean validate( Collection g2g, CoexpressionCollectionValueObject p2p ) {
+    //
+    // int actualLinkCount = p2p.getKnownGeneCoexpression().getNegativeStringencyLinkCount()
+    // + p2p.getKnownGeneCoexpression().getPositiveStringencyLinkCount();
+    //
+    // if ( g2g.size() == actualLinkCount ) return true;
+    //
+    // return false;
+    // }
 
 }

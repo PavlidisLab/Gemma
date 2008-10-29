@@ -308,10 +308,12 @@ public class GeneCoexpressionService {
 
         // populate the value objects.
         for ( Gene queryGene : gg2gs.keySet() ) {
+            geneService.thaw( queryGene );
             CountingMap<Long> supportCount = new CountingMap<Long>();
-            Collection<Long> supportingExperimentIds = new HashSet<Long>();
-            Collection<Long> specificProbeExperimentIds = new HashSet<Long>();
-            Collection<Long> datasetsTested = new HashSet<Long>();
+            Collection<Long> allSupportingDatasets = new HashSet<Long>();
+            Collection<Long> allDatasetsWithSpecificProbes = new HashSet<Long>();
+            Collection<Long> allTestedDataSets = new HashSet<Long>();
+
             int linksMetPositiveStringency = 0;
             int linksMetNegativeStringency = 0;
 
@@ -326,7 +328,7 @@ public class GeneCoexpressionService {
 
                 // The thaw needs to be done here because building the value object
                 // calls methods that require the gene's info (setSortKey, hashCode)
-                geneService.thawLite( geneToThaw );
+                geneService.thaw( foundGene );
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
@@ -353,16 +355,20 @@ public class GeneCoexpressionService {
                 /*
                  * Specific probe EEids contains 1 even if the data set wasn't supporting.
                  */
-                specificDatasets.retainAll( supportingExperimentIds );
-
-                assert specificDatasets.size() <= supportingExperimentIds.size();
-                assert testingDatasets.size() >= supportingExperimentIds.size();
-
-                ecvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
-                        filteredEeIds ) );
+                specificDatasets.retainAll( allSupportingDatasets );
 
                 int numTestingDatasets = testingDatasets.size();
                 int numSupportingDatasets = supportingDatasets.size();
+
+                /*
+                 * SANITY CHECKS
+                 */
+                assert specificDatasets.size() <= numSupportingDatasets;
+                assert numTestingDatasets >= numSupportingDatasets;
+                assert numTestingDatasets <= eevos.size();
+
+                ecvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
+                        filteredEeIds ) );
 
                 /*
                  * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in the
@@ -372,7 +378,7 @@ public class GeneCoexpressionService {
                     continue;
                 }
 
-                datasetsTested.addAll( testingDatasets );
+                allTestedDataSets.addAll( testingDatasets );
 
                 int supportFromSpecificProbes = specificDatasets.size();
                 if ( g2g.getEffect() < 0 ) {
@@ -408,15 +414,15 @@ public class GeneCoexpressionService {
 
                 seen.add( g2g );
 
-                supportingExperimentIds.addAll( supportingDatasets );
-                specificProbeExperimentIds.addAll( specificDatasets );
+                allSupportingDatasets.addAll( supportingDatasets );
+                allDatasetsWithSpecificProbes.addAll( specificDatasets );
             }
 
-            CoexpressionSummaryValueObject summary = makeSummary( eevos, datasetsTested, specificProbeExperimentIds,
-                    linksMetPositiveStringency, linksMetNegativeStringency );
+            CoexpressionSummaryValueObject summary = makeSummary( eevos, allTestedDataSets,
+                    allDatasetsWithSpecificProbes, linksMetPositiveStringency, linksMetNegativeStringency );
             result.getSummary().put( queryGene.getOfficialSymbol(), summary );
 
-            generateDatasetSummary( eevos, result, supportCount, supportingExperimentIds, queryGene );
+            generateDatasetSummary( eevos, result, supportCount, allSupportingDatasets, queryGene );
 
             /*
              * FIXME I'm lazy and rushed, so I'm using an existing field for this info; probably better to add another

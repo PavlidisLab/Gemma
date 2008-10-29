@@ -323,7 +323,7 @@ public class CoexpressedGenesDetails {
      *         If an EE has two (or more) probes that hit the same gene, and one probe is specific for the target gene,
      *         even if some of the other(s) are not, the EE is considered specific and will still be included.
      */
-    private Map<Long, Collection<Long>> getExpressionExperimentsWithSpecificProbeForCoexpressedGenes() {
+    public Map<Long, Collection<Long>> getExpressionExperimentsWithSpecificProbeForCoexpressedGenes() {
 
         Map<Long, Collection<Long>> result = new HashMap<Long, Collection<Long>>();
         for ( Long eeID : expressionExperimentProbe2GeneMaps.keySet() ) {

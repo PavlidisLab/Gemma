@@ -252,53 +252,53 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     /**
-     * @return the geneId
+     * @return the geneId of the coexpressed gene
      */
     public Long getGeneId() {
         return geneId;
     }
 
     /**
-     * @return the geneName
+     * @return the geneName of the coexpressed gene
      */
     public String getGeneName() {
         return geneName;
     }
 
     /**
-     * @return the geneOfficialName
+     * @return the geneOfficialName of the coexpressed gene
      */
     public String getGeneOfficialName() {
         return geneOfficialName;
     }
 
     /**
-     * @return the geneType (known gene, predicted, or probe-aligned region)
+     * @return the geneType (known gene, predicted, or probe-aligned region) of the coexpressed gene
      */
     public String getGeneType() {
         return geneType;
     }
 
     /**
-     * @return Gene Ontology similarity with the query gene.
+     * @return Gene Ontology similarity of the coexpressed gene with the query gene.
      */
     public Collection<OntologyTerm> getGoOverlap() {
         return goOverlap;
     }
 
-    /**
-     * @return
-     */
-    public String getImageMapName() {
-        StringBuffer buf = new StringBuffer();
-        buf.append( "map." );
-        buf.append( geneType );
-        buf.append( ".gene" );
-        buf.append( geneId );
-        buf.append( ".taxon" );
-        buf.append( taxonId );
-        return buf.toString();
-    }
+    // /**
+    // * @return
+    // */
+    // public String getImageMapName() {
+    // StringBuffer buf = new StringBuffer();
+    // buf.append( "map." );
+    // buf.append( geneType );
+    // buf.append( ".gene" );
+    // buf.append( geneId );
+    // buf.append( ".taxon" );
+    // buf.append( taxonId );
+    // return buf.toString();
+    // }
 
     /**
      * Function to return the max of the negative and positive link support. This is used for sorting.
@@ -452,10 +452,16 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return result;
     }
 
+    /**
+     * @return the query gene
+     */
     public Gene getQueryGene() {
         return queryGene;
     }
 
+    /**
+     * @return Map of eeId -> probe IDs for the _query_.
+     */
     public Map<Long, Collection<Long>> getQueryProbeInfo() {
         return queryProbeInfo;
     }
