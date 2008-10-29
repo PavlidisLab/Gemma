@@ -145,33 +145,49 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	constrainHeader : true,
 	title : "Visualization",
 	height : Gemma.ZOOM_PLOT_SIZE,
-	width : Gemma.ZOOM_PLOT_SIZE + Gemma.PLOT_SIZE,
+	width : Gemma.PLOT_SIZE,
 	// autoHeight : true,
 
 	listeners : {
 		show : {
-			fn : function(window) {				
+			fn : function(window) {
 				this.onLegendClick = function(event, component) {
 					var probeId = event.getTarget().id;
 					var record = window.dv.getSelectedRecords()[0];
 					var profiles = record.get("profiles");
-					
-					for(var i = 0; i< profiles.size(); i++){
-						
-						if (profiles[i].labelID == probeId){
-							if (profiles[i].lines == null){
-								profiles[i].lines = {lineWidth: 5};
-							}
-							else{
+
+					// FIXME make legend bold so there is a user clue as to the line being bolded.
+					// My attempts failed.
+					// Not a good way to do this cause next time click on legend the <b> element is returned.
+					// component.innerHTML = "<b>" + component.innerHTML + "</b>";
+					// component.update("<b>" + component.innerHTML + "</b>");
+					// component.repaint(); This bombs, no repaint method, but works.
+
+					// Try getting compoent via ext and changing the css class of div
+					// doesn't work dom not getting updated...
+					// var el = Ext.get(probeId);
+					// console.log(el);
+					// el.toggleClass("x-grid3-row-selected");
+					// el.repaint();
+					// console.log(el);
+
+					for (var i = 0; i < profiles.size(); i++) {
+
+						if (profiles[i].labelID == probeId) {
+							if (profiles[i].lines == null) {
+								profiles[i].lines = {
+									lineWidth : 5
+								};
+							} else {
 								profiles[i].lines = null;
 							}
 						}
 					}
-					
+
 					window.zoomPanel.refreshWindow(profiles);
 
 				};
-				
+
 				var zoomLegendDiv = Ext.get("zoomLegend");
 				zoomLegendDiv.on('click', this.onLegendClick.createDelegate(this));
 
@@ -205,6 +221,10 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						var eevo = record.get("eevo");
 						var profiles = record.get("profiles");
 
+						if (!this.zoomPanel.isVisible()){
+							this.setWidth(Gemma.PLOT_SIZE + Gemma.ZOOM_PLOT_SIZE);
+							this.zoomPanel.show();
+						}
 						this.zoomPanel.displayWindow(eevo, profiles);
 
 					}.createDelegate(this)
@@ -288,7 +308,24 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			constrainHeader : true,
 			layout : 'fit',
 			title : "Click thumbnail to zoom in",
+			hidden : true,
+			stateful : false, 			
+			listeners : {
+				resize : {
+					fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
 
+							//Change the div so that it is the size of the panel surrounding it. 
+							zoomPanelDiv = Ext.get('graphzoompanel');
+							zoomPanelDiv.setHeight(rawHeight - 27);
+							zoomPanelDiv.setWidth(rawWidth - 1);
+							zoomPanelDiv.repaint();
+							
+							component.refreshWindow();
+						
+					}.createDelegate(this)
+				}
+			},
+			
 			html : {
 				id : 'graphzoompanel',
 				tag : 'div',
@@ -298,6 +335,15 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 			refreshWindow : function(profiles) {
 				// Should redraw to fit current window width and hight.
 
+				if (profiles == null){					
+					var window = this.findParentByType(Gemma.VisualizationWindow)
+					var record = window.dv.getSelectedRecords()[0];
+					//This gets called because window gets resized at startup. 
+					if (record == null)
+						return;
+					profiles = record.get("profiles");
+				}
+				
 				Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
 			},

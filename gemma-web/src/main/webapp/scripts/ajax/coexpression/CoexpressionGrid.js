@@ -65,6 +65,15 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										},
 										sortable : true
 									}, {
+										id : 'visualize',
+										header : "Visualize",
+										dataIndex : "visualize",
+										renderer : this.visStyler.createDelegate(this),
+										tooltip : "Link for visualizing raw data",
+										sortable : false,
+										width : 30
+									
+									}, {
 										id : 'found',
 										header : "Coexpressed Gene",
 										dataIndex : "foundGene",
@@ -94,13 +103,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										dataIndex : "datasetVector",
 										renderer : this.bitImageStyler.createDelegate(this),
 										tooltip : "Dataset relevence map",
-										sortable : false
-									}, {
-										id : 'visualize',
-										header : "Visualize",
-										dataIndex : "visualize",
-										renderer : this.visStyler.createDelegate(this),
-										tooltip : "Link for visualizing raw data",
 										sortable : false
 									}]
 

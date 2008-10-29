@@ -1452,8 +1452,9 @@ var Flotr = (function(){
 				if(options.legend.labelFormatter != null)
 					label = options.legend.labelFormatter(series[i]);
 				
+				//Added so possible to caputre mouse events on legend and highlight (increase line thickness) of corresponding line. 
 				if (series[i].labelID != null){
-					fragments.push('<td class="flotr-legend-color-box"><div style="border:1px solid ' + options.legend.labelBoxBorderColor + ';padding:1px"><div style="width:14px;height:10px;background-color:' + series[i].color + '"></div></div></td>' +
+					fragments.push('<td class="flotr-legend-color-box"><div style="border:1px solid ' + options.legend.labelBoxBorderColor + ';padding:1px"><div id=' + series[i].labelID + ' style="width:14px;height:10px;background-color:' + series[i].color + '"></div></div></td>' +
 						 '<td class="flotr-legend-label"> <div id=' + series[i].labelID + '>' +  label + '</div> </td>');
 					
 				}else{
