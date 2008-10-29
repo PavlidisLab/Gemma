@@ -45,6 +45,30 @@ Gemma.COLD_COLORS = ["#0033FF", "#6699FF", "#3399CC", "#336666", "#66CCCC", "#33
 Gemma.HOT_COLORS = ["#FFCC00", "#FF9900", "#FF6600", "#FF3300", "#CC3300", "#660000", "#FF0000", "#990033", "#FF3399",
 		"#990099"];
 
+Gemma.GRAPH_ZOOM_CONFIG = {
+	xaxis : {
+		noTicks : 0
+	},
+	yaxis : {
+		noTicks : 0
+	},
+	grid : {
+		labelMargin : 0
+	// => margin in pixels
+	// color : "white" //this turns the letters in the legend to white
+	},
+	shadowSize : 0,
+
+	legend : {
+		show : true,
+		container : 'zoomLegend'
+	// labelFormatter : formatLabel
+
+	// position : 'nw'
+	// backgroundOpacity : 0.5
+	}
+
+};
 // Tests if gene is in the array of genes. uses the name of the gene to resolove
 // identity.
 Gemma.geneContained = function(geneName, arrayOfGenes) {
@@ -120,8 +144,40 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	layout : 'border',
 	constrainHeader : true,
 	title : "Visualization",
-	height : Gemma.ZOOM_PLOT_SIZE + 50,
-	width : Gemma.ZOOM_PLOT_SIZE + Gemma.PLOT_SIZE + 100,
+	height : Gemma.ZOOM_PLOT_SIZE,
+	width : Gemma.ZOOM_PLOT_SIZE + Gemma.PLOT_SIZE,
+	// autoHeight : true,
+
+	listeners : {
+		show : {
+			fn : function(window) {				
+				this.onLegendClick = function(event, component) {
+					var probeId = event.getTarget().id;
+					var record = window.dv.getSelectedRecords()[0];
+					var profiles = record.get("profiles");
+					
+					for(var i = 0; i< profiles.size(); i++){
+						
+						if (profiles[i].labelID == probeId){
+							if (profiles[i].lines == null){
+								profiles[i].lines = {lineWidth: 5};
+							}
+							else{
+								profiles[i].lines = null;
+							}
+						}
+					}
+					
+					window.zoomPanel.refreshWindow(profiles);
+
+				};
+				
+				var zoomLegendDiv = Ext.get("zoomLegend");
+				zoomLegendDiv.on('click', this.onLegendClick.createDelegate(this));
+
+			}.createDelegate(this)
+		}
+	},
 
 	initComponent : function() {
 		// If there are any compile errors with the template the error will not
@@ -170,6 +226,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 				for (var i = 0; i < coordinateProfile.size(); i++) {
 					var coordinateObject = coordinateProfile[i].points;
 
+					var probeId = coordinateProfile[i].probe.id;
 					var probe = coordinateProfile[i].probe.name;
 					var genes = coordinateProfile[i].genes;
 					var color = coordinateProfile[i].color;
@@ -189,7 +246,8 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						data : oneProfile,
 						color : color,
 						genes : genes,
-						label : probe + "=>" + geneNames
+						label : probe + "=>" + geneNames,
+						labelID : probeId
 					};
 
 					flotrData.push(plotConfig);
@@ -237,6 +295,13 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 				style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px;'
 			},
 
+			refreshWindow : function(profiles) {
+				// Should redraw to fit current window width and hight.
+
+				Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+
+			},
+
 			displayWindow : function(eevo, profiles) {
 
 				this.setTitle("Visualization for genes in dataset:  " + eevo.shortName);
@@ -246,7 +311,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 				var coldIndex = 0, hotIndex = 0;
 
 				var sortedHotProfile = [];
-				
+
 				// Add cold colors
 				for (var i = 0; i < profiles.size(); i++) {
 					if (Gemma.geneContained(coldGeneName, profiles[i].genes)) {
@@ -256,44 +321,21 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						profiles[i].color = Gemma.HOT_COLORS[hotIndex];
 						hotIndex++;
 					}
-//					profiles[i].lines = {
-//						//linewidth : 1 / profiles[i].genes.size()
-//					}; // Vary line width size on probe specificity?
+					// profiles[i].lines = {
+					// //linewidth : 1 / profiles[i].genes.size()
+					// }; // Vary line width size on probe specificity?
 
 				}
-			
-				//sort array by gene
-				profiles.sort(function(a,b){
-					if ( (a.genes[0].name === b.genes[0].name))
+
+				// sort array by gene
+				profiles.sort(function(a, b) {
+					if ((a.genes[0].name === b.genes[0].name))
 						return 1;
-					else return 0;
+					else
+						return 0;
 				});
-				
-				 var GRAPH_ZOOM_CONFIG = {
-					xaxis : {
-						noTicks : 0
-					},
-					yaxis : {
-						noTicks : 0
-					},
-					grid : {
-						labelMargin : 0
-					// => margin in pixels
-					// color : "white" //this turns the letters in the legend to white
-					},
-					shadowSize : 0,
 
-					legend : {
-						show : true,
-						container : 'zoomLegend'
-					// position : 'nw'
-					// backgroundOpacity : 0.5
-					}
-
-				};
-
-				//console.log()
-				Flotr.draw($('graphzoompanel'), profiles, GRAPH_ZOOM_CONFIG);
+				Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
 			}
 

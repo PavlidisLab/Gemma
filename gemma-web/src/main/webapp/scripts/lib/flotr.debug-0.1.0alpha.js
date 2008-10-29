@@ -1450,10 +1450,16 @@ var Flotr = (function(){
 	
 				var label = series[i].label;
 				if(options.legend.labelFormatter != null)
-					label = options.legend.labelFormatter(label);
+					label = options.legend.labelFormatter(series[i]);
 				
-				fragments.push('<td class="flotr-legend-color-box"><div style="border:1px solid ' + options.legend.labelBoxBorderColor + ';padding:1px"><div style="width:14px;height:10px;background-color:' + series[i].color + '"></div></div></td>' +
-					'<td class="flotr-legend-label">' + label + '</td>');
+				if (series[i].labelID != null){
+					fragments.push('<td class="flotr-legend-color-box"><div style="border:1px solid ' + options.legend.labelBoxBorderColor + ';padding:1px"><div style="width:14px;height:10px;background-color:' + series[i].color + '"></div></div></td>' +
+						 '<td class="flotr-legend-label"> <div id=' + series[i].labelID + '>' +  label + '</div> </td>');
+					
+				}else{
+					fragments.push('<td class="flotr-legend-color-box"><div style="border:1px solid ' + options.legend.labelBoxBorderColor + ';padding:1px"><div style="width:14px;height:10px;background-color:' + series[i].color + '"></div></div></td>' +
+						'<td class="flotr-legend-label">' + label + '</td>');
+				}
 			}
 			if(rowStarted) fragments.push('</tr>');
 			
