@@ -79,6 +79,14 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		Ext.apply(this, {
 			columns : [this.rowExpander, {
+				id : 'visualize',
+				header : "Visualize",
+				dataIndex : "visualize",
+				renderer : this.visStyler.createDelegate(this),
+				tooltip : "Link for visualizing raw data",
+				sortable : false, 
+				width : 30
+			}, {
 				id : 'gene',
 				dataIndex : "gene",
 				header : "Query Gene",
@@ -116,13 +124,6 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				width : 75,
 				tooltip : "How many datasets met the q-value threshold you selected / # testing gene",
 				renderer : this.metThresholdStyler
-			}, {
-				id : 'visualize',
-				header : "Visualize",
-				dataIndex : "visualize",
-				renderer : this.visStyler.createDelegate(this),
-				tooltip : "Link for visualizing raw data",
-				sortable : false
 			}]
 		});
 
