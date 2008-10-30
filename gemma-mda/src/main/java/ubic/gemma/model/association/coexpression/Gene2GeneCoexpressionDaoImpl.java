@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Session;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Element;
@@ -72,31 +74,8 @@ public class Gene2GeneCoexpressionDaoImpl extends
         this.getCache().remove( object.getSecondGene().getId() );
     }
 
-    /*
-     * Implementation note: we need the sourceAnalysis because although we normally have only one analysis per taxon,
-     * when reanalyses are in progress there can be more than one temporarily. (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindCoexpressionRelationships(java
-     * .util.Collection, ubic.gemma.model.analysis.Analysis, int)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
-            Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
-
-        Collection<Gene> genesNeeded = new HashSet<Gene>();
-        Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
-        for ( Gene g : genes ) {
-            result.put( g, new HashSet<Gene2GeneCoexpression>() );
-            Element e = cache.get( g.getId() );
-            if ( e != null ) {
-                result.put( g, ( Collection<Gene2GeneCoexpression> ) e.getValue() );
-            } else {
-                genesNeeded.add( g );
-            }
-        }
-
-        if ( genesNeeded.size() == 0 ) return result;
+    private Map<Gene, Collection<Gene2GeneCoexpression>> getCoexpressionRelationshipsFromDB( Collection<Gene> genes,
+            int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 
         // WARNING we assume the genes are from the same taxon.
         String g2gClassName = getClassName( genes.iterator().next() );
@@ -123,6 +102,8 @@ public class Gene2GeneCoexpressionDaoImpl extends
         Collections.sort( lr, new SupportComparator() );
 
         int count = 0;
+        Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+
         for ( Gene2GeneCoexpression g2g : r ) {
             if ( maxResults > 0 && count == maxResults ) break;
             Gene firstGene = g2g.getFirstGene();
@@ -135,8 +116,65 @@ public class Gene2GeneCoexpressionDaoImpl extends
             count++;
         }
 
-        for ( Gene g : genesNeeded ) {
+        for ( Gene g : genes ) {
             cache.put( new Element( g.getId(), result.get( g ) ) );
+        }
+
+        return result;
+
+    }
+
+    /*
+     * Implementation note: we need the sourceAnalysis because although we normally have only one analysis per taxon,
+     * when reanalyses are in progress there can be more than one temporarily. (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindCoexpressionRelationships(java
+     *      .util.Collection, ubic.gemma.model.analysis.Analysis, int)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
+            Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
+
+        Collection<Gene> genesNeeded = new HashSet<Gene>();
+        Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        for ( Gene g : genes ) {
+            result.put( g, new HashSet<Gene2GeneCoexpression>() );
+            Element e = cache.get( g.getId() );
+            if ( e != null ) {
+                result.put( g, ( Collection<Gene2GeneCoexpression> ) e.getValue() );
+            } else {
+                genesNeeded.add( g );
+            }
+        }
+        int CHUNK_SIZE = 1000;
+
+        // All genes where in the cache
+        if ( genesNeeded.size() == 0 ) return result;
+
+        // Less than batch size
+        if ( genesNeeded.size() <= CHUNK_SIZE ) {
+            result.putAll( getCoexpressionRelationshipsFromDB( genesNeeded, stringency, maxResults, sourceAnalysis ) );
+            return result;
+        }
+
+        // To many genes to put in one hibernate query.
+        // Batch it up!
+
+        int count = 0;
+        Collection<Gene> batch = new HashSet<Gene>();
+
+        for ( Gene g : genesNeeded ) {
+            batch.add( g );
+            count++;
+            if ( count % CHUNK_SIZE == 0 ) {
+                result.putAll( getCoexpressionRelationshipsFromDB( batch, stringency, maxResults, sourceAnalysis ) );
+                batch.clear();
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            result.putAll( getCoexpressionRelationshipsFromDB( batch, stringency, maxResults, sourceAnalysis ) );
         }
 
         return result;
@@ -201,9 +239,9 @@ public class Gene2GeneCoexpressionDaoImpl extends
     /*
      * Implementation note: we need the sourceAnalysis because although we normally have only one analysis per taxon,
      * when reanalyses are in progress there can be more than one temporarily. (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindInterCoexpressionRelationships
-     * (java.util.Collection, ubic.gemma.model.analysis.Analysis, int)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindInterCoexpressionRelationships
+     *      (java.util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -244,6 +282,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.dao.support.DaoSupport#initDao()
      */
     @Override
