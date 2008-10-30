@@ -53,7 +53,6 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
      */
     @Override
@@ -78,7 +77,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         configureMocks();
 
-        ExpressionAnalysis expressionAnalysis = analyzer.oneWayAnova( expressionExperiment );
+        ExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment );
 
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
@@ -90,7 +89,6 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override

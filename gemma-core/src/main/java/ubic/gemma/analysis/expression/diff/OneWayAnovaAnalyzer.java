@@ -76,20 +76,158 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
+    private Map<Integer, DesignElement> filteredMatrixDesignElementIndexMap = null;
+
     private Log log = LogFactory.getLog( this.getClass() );
 
     private List<String> rFactors = null;
 
-    private Map<Integer, DesignElement> filteredMatrixDesignElementIndexMap = null;
-
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.AbstractDifferentialExpressionAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.analysis.diff.AbstractDifferentialExpressionAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment ) {
-        return oneWayAnova( expressionExperiment );
+
+        Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
+                .getExperimentalFactors();
+
+        return run( expressionExperiment, experimentalFactors );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, java.util.Collection)
+     */
+    @Override
+    public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors ) {
+
+        if ( factors.size() != 1 ) {
+            throw new RuntimeException( "One way anova supports one experimental factor.  Received " + factors.size()
+                    + "." );
+        }
+
+        ExperimentalFactor factor = factors.iterator().next();
+
+        return this.oneWayAnova( expressionExperiment, factor );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     * java.util.ArrayList, int, int, int, double[])
+     */
+    @Override
+    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
+            int numBins, int min, int max, double[] pvalues ) {
+
+        histFileName = StringUtils.removeEnd( histFileName, DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
+
+        String newName = histFileName + "_" + effects.iterator().next().getName()
+                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+
+        Collection<Histogram> hists = new HashSet<Histogram>();
+
+        Histogram hist = new Histogram( newName, numBins, min, max );
+        for ( int i = 0; i < pvalues.length; i++ ) {
+            hist.fill( pvalues[i] );
+        }
+
+        hists.add( hist );
+
+        return hists;
+    }
+
+    /**
+     * @param matrix
+     * @param rFactors
+     * @return
+     */
+    private DoubleMatrix filterDoubleMatrixNamedForValidRows( ExpressionDataDoubleMatrix matrix, List<String> rFactors ) {
+
+        ArrayList<double[]> filteredRows = new ArrayList<double[]>();
+
+        Collection<String> factorLevels = new HashSet<String>( rFactors );
+
+        DoubleMatrix matrixNamed = matrix.getMatrix();
+
+        filteredMatrixDesignElementIndexMap = new HashMap<Integer, DesignElement>();
+
+        for ( int i = 0; i < matrixNamed.rows(); i++ ) {
+
+            DesignElement de = matrix.getDesignElementForRow( i );
+
+            double[] row = matrixNamed.getRow( i );
+
+            Collection<String> seenFactors = new HashSet<String>();
+
+            for ( int j = 0; j < row.length; j++ ) {
+
+                String rFactor = rFactors.get( j );
+
+                if ( Double.isNaN( row[j] ) && !seenFactors.contains( rFactor ) ) {
+
+                    log.debug( "Looking for valid data points in row with factor " + rFactor + "." );
+
+                    /* find all columns with the same factor as row[j] */
+                    boolean skipRow = true;
+                    for ( int k = 0; k < rFactors.size(); k++ ) {
+                        // TODO optimize this loop
+                        if ( k == j ) continue;
+
+                        if ( !Double.isNaN( row[k] ) ) {
+
+                            if ( rFactors.get( k ).equals( rFactor ) ) {
+                                skipRow = false;
+                                log.debug( "Valid data point found for factor " + rFactor + "." );
+                                break;
+                            }
+                        }
+                    }
+                    if ( skipRow ) break;
+
+                }
+                seenFactors.add( rFactor );
+                if ( seenFactors.size() == factorLevels.size() ) {// seen all factors?
+                    filteredRows.add( row );
+                    filteredMatrixDesignElementIndexMap.put( filteredRows.indexOf( row ), de );
+                    break;
+                }
+
+            }
+        }
+
+        double[][] ddata = new double[filteredRows.size()][];
+        for ( int i = 0; i < ddata.length; i++ ) {
+            ddata[i] = filteredRows.get( i );
+        }
+
+        return new FastRowAccessDoubleMatrix2DNamed( ddata );
+    }
+
+    /**
+     * Filters the {@link ExpressionDataDoubleMatrix} and removes rows with too many missing values. This filtering is
+     * based on the R interpretation of too many missing values.
+     * 
+     * @param matrix
+     * @param experimentalFactor
+     * @return
+     */
+    private DoubleMatrix filterMatrix( ExpressionDataDoubleMatrix matrix, ExperimentalFactor experimentalFactor ) {
+        // TODO make this a requirement in the abstract analyzer.
+        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
+                .getBioMaterialsForBioAssays( matrix );
+
+        rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova(
+                experimentalFactor.getFactorValues(), samplesUsed );
+
+        return filterDoubleMatrixNamedForValidRows( matrix, rFactors );
     }
 
     /**
@@ -97,18 +235,10 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @return
      * @throws REXPMismatchException
      */
-    public DifferentialExpressionAnalysis oneWayAnova( ExpressionExperiment expressionExperiment ) {
+    private DifferentialExpressionAnalysis oneWayAnova( ExpressionExperiment expressionExperiment,
+            ExperimentalFactor experimentalFactor ) {
 
         connectToR();
-
-        Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
-                .getExperimentalFactors();
-
-        if ( experimentalFactors.size() != 1 )
-            throw new RuntimeException( "One way anova supports one experimental factor.  Received "
-                    + experimentalFactors.size() + "." );
-
-        ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
 
         Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
 
@@ -199,130 +329,19 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
-        factors.add( experimentalFactor );
+        Collection<ExperimentalFactor> factorsInAnalysis = new HashSet<ExperimentalFactor>();
+        factorsInAnalysis.add( experimentalFactor );
         ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( expressionAnalysis,
-                analysisResults, factors );
+                analysisResults, factorsInAnalysis );
         resultSets.add( resultSet );
 
         expressionAnalysis.setResultSets( resultSets );
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        expressionAnalysis.setDescription( expressionExperiment.getShortName() );
+        expressionAnalysis.setDescription( "One-way ANOVA for " + experimentalFactor );
 
         return expressionAnalysis;
-    }
 
-    /**
-     * Filters the {@link ExpressionDataDoubleMatrix} and removes rows with too many missing values. This filtering is
-     * based on the R interpretation of too many missing values.
-     * 
-     * @param matrix
-     * @param experimentalFactor
-     * @return
-     */
-    private DoubleMatrix filterMatrix( ExpressionDataDoubleMatrix matrix, ExperimentalFactor experimentalFactor ) {
-        // TODO make this a requirement in the abstract analyzer.
-        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService.getBioMaterialsForBioAssays( matrix );
-
-        rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova( experimentalFactor.getFactorValues(),
-                samplesUsed );
-
-        return filterDoubleMatrixNamedForValidRows( matrix, rFactors );
-    }
-
-    /**
-     * @param matrix
-     * @param rFactors
-     * @return
-     */
-    private DoubleMatrix filterDoubleMatrixNamedForValidRows( ExpressionDataDoubleMatrix matrix, List<String> rFactors ) {
-
-        ArrayList<double[]> filteredRows = new ArrayList<double[]>();
-
-        Collection<String> factorLevels = new HashSet<String>( rFactors );
-
-        DoubleMatrix matrixNamed = matrix.getMatrix();
-
-        filteredMatrixDesignElementIndexMap = new HashMap<Integer, DesignElement>();
-
-        for ( int i = 0; i < matrixNamed.rows(); i++ ) {
-
-            DesignElement de = matrix.getDesignElementForRow( i );
-
-            double[] row = matrixNamed.getRow( i );
-
-            Collection<String> seenFactors = new HashSet<String>();
-
-            for ( int j = 0; j < row.length; j++ ) {
-
-                String rFactor = rFactors.get( j );
-
-                if ( Double.isNaN( row[j] ) && !seenFactors.contains( rFactor ) ) {
-
-                    log.debug( "Looking for valid data points in row with factor " + rFactor + "." );
-
-                    /* find all columns with the same factor as row[j] */
-                    boolean skipRow = true;
-                    for ( int k = 0; k < rFactors.size(); k++ ) {
-                        // TODO optimize this loop
-                        if ( k == j ) continue;
-
-                        if ( !Double.isNaN( row[k] ) ) {
-
-                            if ( rFactors.get( k ).equals( rFactor ) ) {
-                                skipRow = false;
-                                log.debug( "Valid data point found for factor " + rFactor + "." );
-                                break;
-                            }
-                        }
-                    }
-                    if ( skipRow ) break;
-
-                }
-                seenFactors.add( rFactor );
-                if ( seenFactors.size() == factorLevels.size() ) {// seen all factors?
-                    filteredRows.add( row );
-                    filteredMatrixDesignElementIndexMap.put( filteredRows.indexOf( row ), de );
-                    break;
-                }
-
-            }
-        }
-
-        double[][] ddata = new double[filteredRows.size()][];
-        for ( int i = 0; i < ddata.length; i++ ) {
-            ddata[i] = filteredRows.get( i );
-        }
-
-        return new FastRowAccessDoubleMatrix2DNamed( ddata );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      java.util.ArrayList, int, int, int, double[])
-     */
-    @Override
-    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
-            int numBins, int min, int max, double[] pvalues ) {
-
-        histFileName = StringUtils.removeEnd( histFileName, DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
-
-        String newName = histFileName + "_" + effects.iterator().next().getName()
-                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-
-        Collection<Histogram> hists = new HashSet<Histogram>();
-
-        Histogram hist = new Histogram( newName, numBins, min, max );
-        for ( int i = 0; i < pvalues.length; i++ ) {
-            hist.fill( pvalues[i] );
-        }
-
-        hists.add( hist );
-
-        return hists;
     }
 
 }

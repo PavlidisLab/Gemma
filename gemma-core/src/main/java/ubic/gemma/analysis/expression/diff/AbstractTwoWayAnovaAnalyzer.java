@@ -68,12 +68,13 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * @param experimentalFactorA
      * @param experimentalFactorB
      * @param quantitationType
+     * @param interactions set to true if interactions were assayed.
      * @return
      */
     protected DifferentialExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
             double[] filteredPvalues, double[] filteredFStatistics, int numResultsFromR,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB,
-            QuantitationType quantitationType ) {
+            QuantitationType quantitationType, boolean interactions ) {
 
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
@@ -154,15 +155,17 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         expressionAnalysis.setResultSets( resultSets );
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        if ( ee != null ) expressionAnalysis.setDescription( ee.getShortName() );
+        if ( ee != null )
+            expressionAnalysis.setDescription( "Two-way ANOVA for " + experimentalFactorA + " and "
+                    + experimentalFactorB + ( interactions ? " with " : " without " ) + "interactions" );
 
         return expressionAnalysis;
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * @seeubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment ) {
@@ -172,16 +175,28 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
 
+        return run( expressionExperiment, experimentalFactors );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, java.util.Collection)
+     */
+    @Override
+    public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors ) {
         if ( experimentalFactors.size() != mainEffectInteractionIndex )
             throw new RuntimeException( "Two way anova supports 2 experimental factors.  Received "
                     + experimentalFactors.size() + "." );
 
-        Iterator iter = experimentalFactors.iterator();
-        ExperimentalFactor experimentalFactorA = ( ExperimentalFactor ) iter.next();
-        ExperimentalFactor experimentalFactorB = ( ExperimentalFactor ) iter.next();
+        Iterator<ExperimentalFactor> iter = experimentalFactors.iterator();
+        ExperimentalFactor experimentalFactorA = iter.next();
+        ExperimentalFactor experimentalFactorB = iter.next();
 
         return twoWayAnova( expressionExperiment, experimentalFactorA, experimentalFactorB );
-
     }
 
     /**
@@ -194,7 +209,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * @param experimentalFactorB
      * @return
      */
-    public abstract DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
+    protected abstract DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB );
 
 }

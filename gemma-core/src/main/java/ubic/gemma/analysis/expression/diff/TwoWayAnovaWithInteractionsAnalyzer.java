@@ -31,8 +31,9 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.common.quantitationtype.QuantitationType; 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -66,15 +67,14 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.AbstractTwoWayAnovaAnalyzer#twoWayAnova(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType,
-     *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension,
-     *      ubic.gemma.model.expression.experiment.ExperimentalFactor,
-     *      ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     * @seeubic.gemma.analysis.diff.AbstractTwoWayAnovaAnalyzer#twoWayAnova(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType,
+     * ubic.gemma.model.expression.bioAssayData.BioAssayDimension,
+     * ubic.gemma.model.expression.experiment.ExperimentalFactor,
+     * ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
-    public DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
+    protected DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
 
         connectToR();
@@ -93,14 +93,15 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
                 .getProcessedExpressionDataMatrix( expressionExperiment );
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
-        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService.getBioMaterialsForBioAssays( dmatrix );
+        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
+                .getBioMaterialsForBioAssays( dmatrix );
 
-        DoubleMatrix namedMatrix = dmatrix.getMatrix();
+        DoubleMatrix<DesignElement, Integer> namedMatrix = dmatrix.getMatrix();
 
-        List<String> rFactorsA = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorA,
-                samplesUsed );
-        List<String> rFactorsB = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorB,
-                samplesUsed );
+        List<String> rFactorsA = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova(
+                experimentalFactorA, samplesUsed );
+        List<String> rFactorsB = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova(
+                experimentalFactorB, samplesUsed );
 
         String factsA = rc.assignStringList( rFactorsA );
         String factsB = rc.assignStringList( rFactorsB );
@@ -167,15 +168,15 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         }
 
         return createExpressionAnalysis( dmatrix, filteredPvalues, filteredFStatistics, ACTUAL_NUM_RESULTS,
-                experimentalFactorA, experimentalFactorB, quantitationType );
+                experimentalFactorA, experimentalFactorB, quantitationType, true );
 
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      java.util.ArrayList, int, int, int, double[])
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     * java.util.ArrayList, int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,

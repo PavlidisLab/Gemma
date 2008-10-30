@@ -49,11 +49,23 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     private Log log = LogFactory.getLog( this.getClass() );
 
     /**
+     * Peform an analysis where the factors are determined (or guessed) automatically. If this cannot be unambiguously
+     * determined, an exception will be thrown.
+     * 
      * @param expressionExperiment
      * @return ExpressionAnalysis
      */
-    public abstract DifferentialExpressionAnalysis run(
-            ExpressionExperiment expressionExperiment );
+    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Perform an analysis using the specified factor(s)
+     * 
+     * @param expressionExperiment
+     * @param factors
+     * @return
+     */
+    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors );
 
     /**
      * @param pvalues

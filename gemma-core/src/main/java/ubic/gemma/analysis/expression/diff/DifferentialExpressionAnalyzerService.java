@@ -132,7 +132,7 @@ public class DifferentialExpressionAnalyzerService {
          * Audit event!
          */
         auditTrailService.addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.Factory
-                .newInstance(), "" );
+                .newInstance(), diffExpressionAnalysis.getDescription() );
 
         return diffExpressionAnalysis;
     }

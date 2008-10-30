@@ -33,6 +33,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -59,20 +60,56 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaAnalyzer {
 
-    private Log log = LogFactory.getLog( this.getClass() );
-
     private static final int ACTUAL_NUM_RESULTS = 2;
+
     private static final int NUM_RESULTS_FROM_R = ACTUAL_NUM_RESULTS + 1;
+    private Log log = LogFactory.getLog( this.getClass() );
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.AbstractTwoWayAnovaAnalyzer#twoWayAnova(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.expression.experiment.ExperimentalFactor,
-     *      ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     * java.util.ArrayList, int, int, int, double[])
      */
     @Override
-    public DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
+    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
+            int numBins, int min, int max, double[] pvalues ) {
+
+        Collection<Histogram> hists = new HashSet<Histogram>();
+
+        histFileName = StringUtils.removeEnd( histFileName, DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
+
+        Iterator<ExperimentalFactor> iter = effects.iterator();
+        String mainA = iter.next().getName();
+        String mainB = iter.next().getName();
+
+        String nameA = histFileName + "_" + mainA + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String nameB = histFileName + "_" + mainB + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+
+        Histogram histA = new Histogram( nameA, numBins, min, max );
+        Histogram histB = new Histogram( nameB, numBins, min, max );
+
+        for ( int i = 0; i < pvalues.length; i++ ) {
+            if ( i % ( maxResults - 1 ) == mainEffectAIndex ) histA.fill( pvalues[i] );
+
+            if ( i % ( maxResults - 1 ) == mainEffectBIndex ) histB.fill( pvalues[i] );
+
+        }
+
+        hists.add( histA );
+        hists.add( histB );
+
+        return hists;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @seeubic.gemma.analysis.diff.AbstractTwoWayAnovaAnalyzer#twoWayAnova(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor,
+     * ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     */
+    @Override
+    protected DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
 
         connectToR();
@@ -92,14 +129,15 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
-        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService.getBioMaterialsForBioAssays( dmatrix );
+        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
+                .getBioMaterialsForBioAssays( dmatrix );
 
-        DoubleMatrix namedMatrix = dmatrix.getMatrix();
+        DoubleMatrix<DesignElement, Integer> namedMatrix = dmatrix.getMatrix();
 
-        List<String> rFactorsA = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorA,
-                samplesUsed );
-        List<String> rFactorsB = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorB,
-                samplesUsed );
+        List<String> rFactorsA = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova(
+                experimentalFactorA, samplesUsed );
+        List<String> rFactorsB = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova(
+                experimentalFactorB, samplesUsed );
 
         String factsA = rc.assignStringList( rFactorsA );
         String factsB = rc.assignStringList( rFactorsB );
@@ -164,44 +202,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         }
 
         return createExpressionAnalysis( dmatrix, filteredPvalues, filteredFStatistics, ACTUAL_NUM_RESULTS,
-                experimentalFactorA, experimentalFactorB, quantitationType );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      java.util.ArrayList, int, int, int, double[])
-     */
-    @Override
-    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
-            int numBins, int min, int max, double[] pvalues ) {
-
-        Collection<Histogram> hists = new HashSet<Histogram>();
-
-        histFileName = StringUtils.removeEnd( histFileName, DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
-
-        Iterator<ExperimentalFactor> iter = effects.iterator();
-        String mainA = iter.next().getName();
-        String mainB = iter.next().getName();
-
-        String nameA = histFileName + "_" + mainA + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        String nameB = histFileName + "_" + mainB + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-
-        Histogram histA = new Histogram( nameA, numBins, min, max );
-        Histogram histB = new Histogram( nameB, numBins, min, max );
-
-        for ( int i = 0; i < pvalues.length; i++ ) {
-            if ( i % ( maxResults - 1 ) == mainEffectAIndex ) histA.fill( pvalues[i] );
-
-            if ( i % ( maxResults - 1 ) == mainEffectBIndex ) histB.fill( pvalues[i] );
-
-        }
-
-        hists.add( histA );
-        hists.add( histB );
-
-        return hists;
+                experimentalFactorA, experimentalFactorB, quantitationType, false );
     }
 
 }

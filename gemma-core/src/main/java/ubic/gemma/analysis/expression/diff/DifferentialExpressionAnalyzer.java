@@ -48,18 +48,18 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class DifferentialExpressionAnalyzer {
 
-    private Log log = LogFactory.getLog( this.getClass() );
+    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = null;
     private int EXPERIMENTAL_FACTOR_ONE = 1;
     private int EXPERIMENTAL_FACTOR_TWO = 2;
+
     private int FACTOR_VALUE_ONE = 1;
-
     private int FACTOR_VALUE_TWO = 2;
-    private TTestAnalyzer studenttTestAnalyzer = null;
+    private Log log = LogFactory.getLog( this.getClass() );
     private OneWayAnovaAnalyzer oneWayAnovaAnalyzer = null;
+    private TTestAnalyzer studenttTestAnalyzer = null;
     private TwoWayAnovaWithInteractionsAnalyzer twoWayAnovaWithInteractionsAnalyzer = null;
-    private TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer = null;
 
-    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = null;
+    private TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer = null;
 
     /**
      * Initiates the differential expression analysis (this is the entry point).

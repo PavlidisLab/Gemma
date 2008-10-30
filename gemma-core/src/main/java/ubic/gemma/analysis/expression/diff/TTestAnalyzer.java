@@ -81,6 +81,19 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
 
+        return run( expressionExperiment, experimentalFactors );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, java.util.Collection)
+     */
+    @Override
+    public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors ) {
         if ( experimentalFactors.size() != 1 )
             throw new RuntimeException( "T-test supports 1 experimental factor.  Received "
                     + experimentalFactors.size() + "." );
@@ -98,7 +111,6 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         FactorValue factorValueB = iter.next();
 
         return tTest( expressionExperiment, factorValueA, factorValueB );
-
     }
 
     /**
@@ -208,7 +220,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         expressionAnalysis.setResultSets( resultSets );
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        expressionAnalysis.setDescription( expressionExperiment.getShortName() );
+        expressionAnalysis.setDescription( "T-test for " + factorValueA + " vs " + factorValueB );
 
         return expressionAnalysis;
     }

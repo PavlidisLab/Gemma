@@ -25,13 +25,10 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -45,7 +42,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
-    private ExpressionExperimentReportService expressionExperimentReportService = null;
+    // private ExpressionExperimentReportService expressionExperimentReportService = null;
 
     private int top = 100;
 
@@ -87,8 +84,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.differentialExpressionAnalyzerService = ( DifferentialExpressionAnalyzerService ) this
                 .getBean( "differentialExpressionAnalyzerService" );
 
-        this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
-                .getBean( "expressionExperimentReportService" );
+        // this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
+        // .getBean( "expressionExperimentReportService" );
 
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( !( ee instanceof ExpressionExperiment ) ) {
@@ -117,7 +114,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             successObjects.add( ee.toString() );
 
-            audit( ee, "", DifferentialExpressionAnalysisEvent.Factory.newInstance() );
         } catch ( Exception e ) {
             e.printStackTrace();
             errorObjects.add( ee + ": " + e.getMessage() );
@@ -193,16 +189,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         + ", score: " + probeResult.getScore() );
             }
             log.debug( "Result set processed with " + results.size() + " results." );
-        }
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
-        if ( useDb ) {
-            expressionExperimentReportService.generateSummaryObject( ee.getId() );
-            auditTrailService.addUpdateEvent( ee, eventType, note );
         }
     }
 
