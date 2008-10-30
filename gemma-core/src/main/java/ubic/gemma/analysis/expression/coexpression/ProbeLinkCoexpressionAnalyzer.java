@@ -47,7 +47,7 @@ import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 
 /**
- * Perform probe-to-probe coexpression link analysis ("TMM-style").
+ * Perform gene-to-gene coexpression link analysis ("TMM-style"), based on stored probe-probe coexpression.
  * 
  * @spring.bean id="probeLinkCoexpressionAnalyzer"
  * @spring.property name="geneService" ref="geneService"

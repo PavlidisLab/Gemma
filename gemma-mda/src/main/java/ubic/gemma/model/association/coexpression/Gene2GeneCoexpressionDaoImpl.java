@@ -103,11 +103,11 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
         final String queryStringFirstVector = "select g2g from "
                 + g2gClassName
-                + " as g2g where  g2g.firstGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
+                + " as g2g where g2g.firstGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
         final String queryStringSecondVector = "select g2g from "
                 + g2gClassName
-                + " as g2g where  g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
+                + " as g2g where g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
         Collection<Gene2GeneCoexpression> r = new HashSet<Gene2GeneCoexpression>();
 

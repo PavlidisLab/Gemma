@@ -126,14 +126,14 @@ public class GeneLinkCoexpressionAnalyzer {
 
     /**
      * @param eePositionToIdMap
-     * @param datasetsSupportingVector
+     * @param bitvector
      * @return
      */
     private static Collection<Long> convertBitVector( Map<Integer, Long> eePositionToIdMap,
-            byte[] datasetsSupportingVector ) {
+            byte[] bitvector ) {
         List<Long> ids = new ArrayList<Long>();
-        for ( int i = 0; i < datasetsSupportingVector.length * Byte.SIZE; i++ ) {
-            if ( BitUtil.get( datasetsSupportingVector, i ) ) {
+        for ( int i = 0; i < eePositionToIdMap.size(); i++ ) {
+            if ( BitUtil.get( bitvector, i ) ) {
                 Long supportingEE = eePositionToIdMap.get( i );
                 ids.add( supportingEE );
             }

@@ -309,6 +309,10 @@ public class GeneCoexpressionService {
         // populate the value objects.
         for ( Gene queryGene : gg2gs.keySet() ) {
             geneService.thaw( queryGene );
+
+            /*
+             * For summary statistics
+             */
             CountingMap<Long> supportCount = new CountingMap<Long>();
             Collection<Long> allSupportingDatasets = new HashSet<Long>();
             Collection<Long> allDatasetsWithSpecificProbes = new HashSet<Long>();
@@ -350,12 +354,11 @@ public class GeneCoexpressionService {
 
                 Collection<Long> specificDatasets = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
                         positionToIDMap );
-                specificDatasets.retainAll( supportingDatasets );
 
                 /*
                  * Specific probe EEids contains 1 even if the data set wasn't supporting.
                  */
-                specificDatasets.retainAll( allSupportingDatasets );
+                specificDatasets.retainAll( supportingDatasets );
 
                 int numTestingDatasets = testingDatasets.size();
                 int numSupportingDatasets = supportingDatasets.size();
@@ -468,7 +471,8 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * convert CoexpressionValueObject into CoexpressionValueObjectExt objects to be passed to the client for display.
+     * Convert CoexpressionValueObject into CoexpressionValueObjectExt objects to be passed to the client for display.
+     * This is used for probe-level queries.
      * 
      * @param queryGene
      * @param eevos
