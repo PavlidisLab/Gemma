@@ -447,7 +447,7 @@
 									<url>${bootstrap.db.url}</url>
 									<autocommit>false</autocommit>
 									<sqlCommand>
-										<![CDATA[drop database if exists gemd]]>
+										<![CDATA[drop database if exists ${gemma.db.name}]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
@@ -460,7 +460,7 @@
 								<configuration>
 									<url>${bootstrap.db.url}</url>
 									<sqlCommand>
-										<![CDATA[create database gemd]]>
+										<![CDATA[create database ${gemma.db.name}]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
