@@ -18,8 +18,6 @@
  */
 package ubic.gemma.grid.javaspaces.diff;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -53,10 +51,10 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
 
         super.initProgressAppender( this.getClass() );
 
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = doAnalysis( command );
+        DifferentialExpressionAnalysis results = doAnalysis( command );
 
         TaskResult result = new TaskResult();
-        result.setAnswer( expressionAnalyses );
+        result.setAnswer( results );
 
         counter++;
         result.setTaskID( counter );
@@ -65,13 +63,11 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
         return result;
     }
 
-    private Collection<DifferentialExpressionAnalysis> doAnalysis(
-            DifferentialExpressionAnalysisTaskCommand jsDiffAnalysisCommand ) {
+    private DifferentialExpressionAnalysis doAnalysis( DifferentialExpressionAnalysisTaskCommand jsDiffAnalysisCommand ) {
         ExpressionExperiment ee = jsDiffAnalysisCommand.getExpressionExperiment();
 
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalyzerService
-                .getDifferentialExpressionAnalyses( ee, jsDiffAnalysisCommand.isForceAnalysis() );
-        return expressionAnalyses;
+        return differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
+
     }
 
     /**

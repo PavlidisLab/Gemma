@@ -61,41 +61,64 @@ import ubic.gemma.persistence.PersisterHelper;
  */
 public class DifferentialExpressionAnalyzerService {
 
-    private Log log = LogFactory.getLog( this.getClass() );
-    private ExpressionExperimentService expressionExperimentService = null;
-    private DifferentialExpressionAnalyzer differentialExpressionAnalyzer = null;
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
-    private PersisterHelper persisterHelper = null;
     private AuditTrailService auditTrailService = null;
+    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+    private DifferentialExpressionAnalyzer differentialExpressionAnalyzer = null;
+    private ExpressionExperimentService expressionExperimentService = null;
+    private Log log = LogFactory.getLog( this.getClass() );
+    private PersisterHelper persisterHelper = null;
 
     /**
-     * Finds the persistent expression experiment. If there are no associated analyses with this experiment, the
-     * differential expression analysis is first run and persisted if forceAnalysis = true and then returned.
+     * Delete the differential expression analysis for the experiment.
      * 
      * @param expressionExperiment
-     * @param forceAnalysis
-     * @return
      */
     @SuppressWarnings("unchecked")
-    public Collection<DifferentialExpressionAnalysis> getDifferentialExpressionAnalyses(
-            ExpressionExperiment expressionExperiment, boolean forceAnalysis ) {
-
-        boolean analysisRun = runDifferentialExpressionAnalysis( expressionExperiment, forceAnalysis );
-        if ( !analysisRun ) {
-            return null;
-        }
-
-        Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
+    public void deleteOldAnalyses( ExpressionExperiment expressionExperiment ) {
+        Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
 
-        DifferentialExpressionAnalysis diffExpressionAnalysis = differentialExpressionAnalyzer
-                .analyze( expressionExperiment );
-
-        if ( diffExpressionAnalysis == null ) {
-            log.error( "No differential expression analyses for " + expressionExperiment.getShortName() );
-            return null;
+        if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
+            log.info( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
+            return;
         }
+
+        for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
+            Long toDelete = de.getId();
+
+            log.info( "Deleting existing differential expression analysis for experiment "
+                    + expressionExperiment.getShortName() );
+            differentialExpressionAnalysisService.delete( toDelete );
+        }
+    }
+
+    /**
+     * Delete the differential expression analysis for the experiment with shortName.
+     * 
+     * @param shortName
+     */
+    public void delete( String shortName ) {
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
+        if ( ee == null ) {
+            log.info( "Experiment with name " + shortName
+                    + " does not exist and therefore has no accociated analyses to remove." );
+            return;
+        }
+        deleteOldAnalyses( ee );
+    }
+
+    /**
+     * Run the differential expression analysis. First deletes the old differential expression analysis, if any.
+     * 
+     * @param expressionExperiment
+     * @return
+     */
+    public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment ) {
+
+        deleteOldAnalyses( expressionExperiment );
+
+        DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment );
 
         ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
         Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
@@ -104,7 +127,6 @@ public class DifferentialExpressionAnalyzerService {
         diffExpressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
 
         diffExpressionAnalysis = ( DifferentialExpressionAnalysis ) persisterHelper.persist( diffExpressionAnalysis );
-        expressionAnalyses.add( diffExpressionAnalysis );
 
         /*
          * Audit event!
@@ -112,81 +134,7 @@ public class DifferentialExpressionAnalyzerService {
         auditTrailService.addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.Factory
                 .newInstance(), "" );
 
-        differentialExpressionAnalysisService.thaw( expressionAnalyses );
-
-        /* return the expression analyses of type differential expression */
-        Collection<DifferentialExpressionAnalysis> differentialExpressionAnalyses = new HashSet<DifferentialExpressionAnalysis>();
-        for ( ExpressionAnalysis ea : expressionAnalyses ) {
-            if ( ea instanceof DifferentialExpressionAnalysis ) {
-                DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) ea;
-                differentialExpressionAnalyses.add( dea );
-            }
-        }
-
-        return differentialExpressionAnalyses;
-    }
-
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    /**
-     * Run differential expression on the {@link ExpressionExperiment} if analyses do not already exist. If forceRun =
-     * true, runs even if analyses exist but first deletes the old differential expression analysis.
-     * 
-     * @param expressionExperiment
-     * @param forceRun
-     * @return boolean Whether analysis was run or not. This will be false if analysis had already been run on this
-     *         experiment and forceRun=false.
-     */
-    @SuppressWarnings("unchecked")
-    public boolean runDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment, boolean forceRun ) {
-
-        boolean anaylysisWasRun = false;
-
-        Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
-                .findByInvestigation( expressionExperiment );
-        if ( forceRun || expressionAnalyses.isEmpty() || !wasDifferentialAnalysisRun( expressionExperiment ) ) {
-
-            String message = "Analyze " + expressionExperiment.getShortName() + ".  ";
-
-            if ( forceRun ) {
-                delete( expressionExperiment );
-                message = message + "Force analysis (re-analyze even if analysis was previously run)? " + forceRun
-                        + ".  ";
-            }
-
-            if ( expressionAnalyses.isEmpty() ) {
-                message = message + "Experiment " + expressionExperiment.getShortName()
-                        + " does not have any associated analyses.  ";
-            }
-
-            if ( !wasDifferentialAnalysisRun( expressionExperiment ) ) {
-                message = message + "Experiment " + expressionExperiment.getShortName()
-                        + " does not have any associated differential expression data.  ";
-            }
-
-            message = message + "Running analysis and persisting results.  This may take some time.";
-
-            log.warn( message );
-
-            differentialExpressionAnalyzer.analyze( expressionExperiment );
-            anaylysisWasRun = true;
-        } else {
-            boolean hasDiffex = false;
-            for ( ExpressionAnalysis expressionAnalysis : expressionAnalyses ) {
-                if ( expressionAnalysis instanceof DifferentialExpressionAnalysis ) {
-                    hasDiffex = true;
-                }
-            }
-            if ( hasDiffex ) {
-                log.warn( "Differential expression analysis already run for experiment "
-                        + expressionExperiment.getShortName()
-                        + ".  Not running again.  To force a re-analysis, set forceRun = true." );
-                anaylysisWasRun = false;
-            }
-        }
-        return anaylysisWasRun;
+        return diffExpressionAnalysis;
     }
 
     /**
@@ -197,6 +145,56 @@ public class DifferentialExpressionAnalyzerService {
     @SuppressWarnings("unchecked")
     public Collection<ExpressionAnalysisResultSet> getResultSets( ExpressionExperiment expressionExperiment ) {
         return differentialExpressionAnalysisService.getResultSets( expressionExperiment );
+    }
+
+    /**
+     * Run differential expression on the {@link ExpressionExperiment} if analyses do not already exist.
+     * 
+     * @param expressionExperiment
+     */
+    public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
+        return differentialExpressionAnalyzer.analyze( expressionExperiment );
+    }
+
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    /**
+     * @param differentialExpressionAnalysisResultService
+     */
+    public void setDifferentialExpressionAnalysisResultService(
+            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
+        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
+    }
+
+    /**
+     * @param differentialExpressionAnalysisService
+     */
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    /**
+     * @param differentialExpressionAnalysis
+     */
+    public void setDifferentialExpressionAnalyzer( DifferentialExpressionAnalyzer differentialExpressionAnalyzer ) {
+        this.differentialExpressionAnalyzer = differentialExpressionAnalyzer;
+    }
+
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param persisterHelper
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 
     /**
@@ -221,81 +219,6 @@ public class DifferentialExpressionAnalyzerService {
         }
 
         return wasRun;
-    }
-
-    /**
-     * Delete the differential expression analysis for the experiment with shortName.
-     * 
-     * @param shortName
-     */
-    public void delete( String shortName ) {
-        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
-        if ( ee == null ) {
-            log.info( "Experiment with name " + shortName
-                    + " does not exist and therefore has no accociated analyses to remove." );
-            return;
-        }
-        delete( ee );
-    }
-
-    /**
-     * Delete the differential expression analysis for the experiment.
-     * 
-     * @param expressionExperiment
-     */
-    @SuppressWarnings("unchecked")
-    public void delete( ExpressionExperiment expressionExperiment ) {
-        Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
-                .findByInvestigation( expressionExperiment );
-
-        if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
-            log.info( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
-            return;
-        }
-
-        for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
-            Long toDelete = de.getId();
-
-            log.info( "Deleting existing differential expression analysis for experiment "
-                    + expressionExperiment.getShortName() );
-            differentialExpressionAnalysisService.delete( toDelete );
-        }
-    }
-
-    /**
-     * @param experiments
-     */
-    public void writePValuesHistogram( ExpressionExperiment ee ) throws IOException {
-
-        String sep = "_";
-
-        Collection<ExpressionAnalysisResultSet> resultSets = this.getResultSets( ee );
-
-        if ( resultSets.size() == 0 ) {
-            log.info( "No result sets for experiment " + ee.getShortName()
-                    + ".  The differential expression analysis may not have been run on this experiment yet." );
-        } else {
-            log.info( "Result sets for " + ee.getShortName() + ": " + resultSets.size() );
-        }
-
-        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-
-            differentialExpressionAnalysisResultService.thaw( resultSet );
-
-            String factorNames = StringUtils.EMPTY;
-            Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
-            if ( factors.size() > 1 ) {
-                for ( ExperimentalFactor f : factors ) {
-                    factorNames += f.getName() + sep;
-                }
-                factorNames = StringUtils.removeEnd( factorNames, sep );
-            } else {
-                factorNames = factors.iterator().next().getName();
-            }
-            Collection<DifferentialExpressionAnalysisResult> results = resultSet.getResults();
-
-            this.writePValuesHistogram( results, ee, factorNames );
-        }
     }
 
     /**
@@ -338,6 +261,42 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
+     * @param experiments
+     */
+    public void writePValuesHistogram( ExpressionExperiment ee ) throws IOException {
+
+        String sep = "_";
+
+        Collection<ExpressionAnalysisResultSet> resultSets = this.getResultSets( ee );
+
+        if ( resultSets.size() == 0 ) {
+            log.info( "No result sets for experiment " + ee.getShortName()
+                    + ".  The differential expression analysis may not have been run on this experiment yet." );
+        } else {
+            log.info( "Result sets for " + ee.getShortName() + ": " + resultSets.size() );
+        }
+
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+
+            differentialExpressionAnalysisResultService.thaw( resultSet );
+
+            String factorNames = StringUtils.EMPTY;
+            Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
+            if ( factors.size() > 1 ) {
+                for ( ExperimentalFactor f : factors ) {
+                    factorNames += f.getName() + sep;
+                }
+                factorNames = StringUtils.removeEnd( factorNames, sep );
+            } else {
+                factorNames = factors.iterator().next().getName();
+            }
+            Collection<DifferentialExpressionAnalysisResult> results = resultSet.getResults();
+
+            this.writePValuesHistogram( results, ee, factorNames );
+        }
+    }
+
+    /**
      * Generates a histogram for the given results.
      * 
      * @param histFileName
@@ -356,42 +315,5 @@ public class DifferentialExpressionAnalyzerService {
         }
 
         return hist;
-    }
-
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param differentialExpressionAnalysis
-     */
-    public void setDifferentialExpressionAnalyzer( DifferentialExpressionAnalyzer differentialExpressionAnalyzer ) {
-        this.differentialExpressionAnalyzer = differentialExpressionAnalyzer;
-    }
-
-    /**
-     * @param differentialExpressionAnalysisService
-     */
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
-
-    /**
-     * @param persisterHelper
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    /**
-     * @param differentialExpressionAnalysisResultService
-     */
-    public void setDifferentialExpressionAnalysisResultService(
-            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
-        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
     }
 }

@@ -74,11 +74,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Exception doWork( String[] args ) {
 
         Exception err = processCommandLine( "Differential Expression Analysis", args );
@@ -108,14 +106,14 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     private void processExperiment( ExpressionExperiment ee ) {
         try {
-            Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
-                    .getDifferentialExpressionAnalyses( ee, forceAnalysis );
+            DifferentialExpressionAnalysis results = this.differentialExpressionAnalyzerService
+                    .runDifferentialExpressionAnalyses( ee );
 
-            if ( expressionAnalyses == null ) {
+            if ( results == null ) {
                 throw new Exception( "Did not process differential expression for experiment " + ee.getShortName() );
             }
 
-            logProcessing( expressionAnalyses );
+            logProcessing( results );
 
             successObjects.add( ee.toString() );
 
@@ -128,7 +126,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -154,7 +151,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
      */
     @Override
@@ -212,7 +208,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override

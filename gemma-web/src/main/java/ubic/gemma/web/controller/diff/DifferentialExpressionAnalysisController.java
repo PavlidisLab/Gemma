@@ -18,13 +18,9 @@
  */
 package ubic.gemma.web.controller.diff;
 
-import java.util.Collection;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.grid.javaspaces.TaskResult;
@@ -49,12 +45,12 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisController extends AbstractSpacesController<ModelAndView> {
+public class DifferentialExpressionAnalysisController extends AbstractSpacesController<DifferentialExpressionAnalysis> {
 
     /**
      * Regular (local) job.
      */
-    private class DiffAnalysisJob extends BaseControllerJob<ModelAndView> {
+    private class DiffAnalysisJob extends BaseControllerJob<DifferentialExpressionAnalysis> {
 
         /**
          * @param taskId
@@ -64,7 +60,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
             super( taskId, commandObj );
         }
 
-        public ModelAndView call() throws Exception {
+        public DifferentialExpressionAnalysis call() throws Exception {
             SecurityContextHolder.setContext( securityContext );
 
             DifferentialExpressionAnalysisTaskCommand diffAnalysisCommand = ( ( DifferentialExpressionAnalysisTaskCommand ) command );
@@ -80,14 +76,14 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
          * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.web.controller.BaseCommand)
          */
         @Override
-        protected ModelAndView processJob( TaskCommand c ) {
+        protected DifferentialExpressionAnalysis processJob( TaskCommand c ) {
             DifferentialExpressionAnalysisTaskCommand dc = ( DifferentialExpressionAnalysisTaskCommand ) c;
 
             ExpressionExperiment ee = dc.getExpressionExperiment();
 
-            Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalyzerService
-                    .getDifferentialExpressionAnalyses( ee, dc.isForceAnalysis() );
-            return new ModelAndView( new RedirectView( "/Gemma" ) );
+            DifferentialExpressionAnalysis results = differentialExpressionAnalyzerService
+                    .runDifferentialExpressionAnalyses( ee );
+            return results;
         }
     }
 
@@ -118,10 +114,10 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
          * .grid.javaspaces.diff.DifferentialExpressionAnalysisCommand)
          */
         @Override
-        protected ModelAndView processJob( TaskCommand baseCommand ) {
+        protected DifferentialExpressionAnalysis processJob( TaskCommand baseCommand ) {
             baseCommand.setTaskId( this.taskId );
-            process( ( DifferentialExpressionAnalysisTaskCommand ) baseCommand );
-            return new ModelAndView( new RedirectView( "/Gemma" ) );
+            return ( DifferentialExpressionAnalysis ) process(
+                    ( DifferentialExpressionAnalysisTaskCommand ) baseCommand ).getAnswer();
         }
 
         /**
@@ -172,7 +168,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, Object command ) {
+    protected BackgroundControllerJob<DifferentialExpressionAnalysis> getRunner( String jobId, Object command ) {
         return new DiffAnalysisJob( jobId, command );
     }
 
@@ -181,7 +177,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, Object command ) {
+    protected BackgroundControllerJob<DifferentialExpressionAnalysis> getSpaceRunner( String jobId, Object command ) {
         return new DiffAnalysisSpaceJob( jobId, command );
 
     }

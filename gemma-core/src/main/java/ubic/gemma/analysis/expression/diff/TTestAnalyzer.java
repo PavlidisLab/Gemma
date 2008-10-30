@@ -72,8 +72,8 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * @seeubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment ) {
@@ -118,13 +118,17 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
                 .getProcessedExpressionDataMatrix( expressionExperiment );
 
-        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService.getBioMaterialsForBioAssays( dmatrix );
+        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
+                .getBioMaterialsForBioAssays( dmatrix );
 
         Collection<FactorValue> factorValues = new ArrayList<FactorValue>();
         factorValues.add( factorValueA );
         factorValues.add( factorValueB );
 
-        List<String> rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
+        List<String> rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova(
+                factorValues, samplesUsed );
+
+        assert !rFactors.isEmpty();
 
         DoubleMatrix namedMatrix = dmatrix.getMatrix();
 
@@ -211,9 +215,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      java.util.ArrayList, int, int, int, double[])
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     * java.util.ArrayList, int, int, int, double[])
      */
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
             int numBins, int min, int max, double[] pvalues ) {
