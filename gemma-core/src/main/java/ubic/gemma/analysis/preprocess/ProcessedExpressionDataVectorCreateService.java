@@ -89,6 +89,9 @@ public class ProcessedExpressionDataVectorCreateService {
         assert processedVectors.size() > 0;
 
         Collection<ProcessedExpressionDataVector> result = updateRanks( ee, processedVectors );
+
+        audit( ee, "" );
+
         return result;
 
     }
