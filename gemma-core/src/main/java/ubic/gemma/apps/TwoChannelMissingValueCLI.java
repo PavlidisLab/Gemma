@@ -28,6 +28,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -36,7 +37,6 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -74,7 +74,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     private DesignElementDataVectorService dedvs;
 
-    private ProcessedExpressionDataVectorService pedvs;
+    private ProcessedExpressionDataVectorCreateService pedvs;
 
     private double s2n = DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
 
@@ -159,7 +159,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         dedvs = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         quantitationTypeService = ( QuantitationTypeService ) this.getBean( "quantitationTypeService" );
-        this.pedvs = ( ProcessedExpressionDataVectorService ) this.getBean( "processedExpressionDataService" );
+        this.pedvs = ( ProcessedExpressionDataVectorCreateService ) this
+                .getBean( "processedExpressionDataVectorCreateService" );
     }
 
     /**
@@ -233,7 +234,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         log.info( "Saving processed data vectors" );
 
-        pedvs.createProcessedDataVectors( ee );
-
+        pedvs.computeProcessedExpressionData( ee );
     }
 }
