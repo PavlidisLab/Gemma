@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
@@ -65,10 +66,8 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
      * @throws Exception
      */
     public String run( Long id ) throws Exception {
-        /* this 'run' method is exported in the spring-beans.xml */
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
-        expressionExperimentService.thaw( ee );
 
         ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
 
@@ -189,10 +188,18 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
             ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateTaskCommand ) command );
 
             ExpressionExperiment ee = vectorCommand.getExpressionExperiment();
+            // expressionExperimentService.thawLite( ee );
 
-            Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService
-                    .computeProcessedExpressionData( ee );
-            return processedVectors.size() > 0;
+            try {
+                Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService
+                        .computeProcessedExpressionData( ee );
+                return processedVectors.size() > 0;
+            } catch ( DataIntegrityViolationException e ) {
+                log.error( e, e );
+                throw new RuntimeException(
+                        "The processed vectors could not be created, probably because analysis results refer to the old ones."
+                                + " Old analyses must be deleted first. Detailed message: " + e.getMessage() );
+            }
         }
     }
 

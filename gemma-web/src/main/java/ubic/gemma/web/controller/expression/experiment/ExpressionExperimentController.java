@@ -160,7 +160,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         /*
          * (non-Javadoc)
-         * 
          * @see java.util.concurrent.Callable#call()
          */
         public ModelAndView call() throws Exception {
@@ -1214,18 +1213,27 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     private String formatCitation( BibliographicReference citation ) {
         StringBuilder buf = new StringBuilder();
-        String[] authors = StringUtils.split( citation.getAuthorList(), ";" );
-        // if there are multiple authors, only display the first author
-        if ( authors.length == 0 ) {
-        } else if ( authors.length == 1 ) {
-            buf.append( authors[0] + " " );
+
+        if ( citation.getAuthorList() != null ) {
+            String[] authors = StringUtils.split( citation.getAuthorList(), ";" );
+            // if there are multiple authors, only display the first author
+            if ( authors.length == 0 ) {
+            } else if ( authors.length == 1 ) {
+                buf.append( authors[0] + " " );
+            } else {
+                buf.append( authors[0] + " et al. " );
+            }
         } else {
-            buf.append( authors[0] + " et al. " );
+            buf.append( "[Unknown authors]" );
         }
         // display the publication year
-        Calendar pubDate = new GregorianCalendar();
-        pubDate.setTime( citation.getPublicationDate() );
-        buf.append( "(" + pubDate.get( Calendar.YEAR ) + ") " );
+        if ( citation.getPublicationDate() != null ) {
+            Calendar pubDate = new GregorianCalendar();
+            pubDate.setTime( citation.getPublicationDate() );
+            buf.append( "(" + pubDate.get( Calendar.YEAR ) + ") " );
+        } else {
+            buf.append( "[Unkonwn date]" );
+        }
 
         buf.append( citation.getTitle() + "; " + citation.getPublication() + ", " + citation.getVolume() + ": "
                 + citation.getPages() );

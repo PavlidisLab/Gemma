@@ -216,9 +216,8 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
     protected BackgroundControllerJob getRunner( String jobId, Object command ) {
         if ( ( ( SimpleExpressionExperimentLoadCommand ) command ).isValidateOnly() ) {
             return new SimpleEEValidateJob( jobId, command, this.simpleExpressionDataLoaderService );
-        } else {
-            return new SimpleEELoadJob( jobId, command, this.simpleExpressionDataLoaderService );
         }
+        return new SimpleEELoadJob( jobId, command, this.simpleExpressionDataLoaderService );
     }
 
     @Override
@@ -232,7 +231,6 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
      * HttpServletRequest)
      */
     @Override
-    @SuppressWarnings("unused")
     protected String getViewNameForRequest( HttpServletRequest request ) {
         return "dataUpload";
     }

@@ -80,7 +80,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
             DifferentialExpressionAnalysisTaskCommand dc = ( DifferentialExpressionAnalysisTaskCommand ) c;
 
             ExpressionExperiment ee = dc.getExpressionExperiment();
-
+            expressionExperimentService.thawLite( ee );
             DifferentialExpressionAnalysis results = differentialExpressionAnalyzerService
                     .runDifferentialExpressionAnalyses( ee );
             return results;
@@ -125,6 +125,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
          * @return
          */
         private TaskResult process( DifferentialExpressionAnalysisTaskCommand diffCommand ) {
+            expressionExperimentService.thawLite( diffCommand.getExpressionExperiment() );
             TaskResult result = taskProxy.execute( diffCommand );
             return result;
         }
@@ -146,7 +147,6 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         /* this 'run' method is exported in the spring-beans.xml */
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
-        expressionExperimentService.thaw( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
 

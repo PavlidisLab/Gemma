@@ -72,7 +72,11 @@ public class LinkAnalysisController extends AbstractSpacesController<ModelAndVie
         /* this 'run' method is exported in the spring-beans.xml */
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
-        expressionExperimentService.thaw( ee );
+
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
+        }
+
         LinkAnalysisConfig lac = new LinkAnalysisConfig();
         FilterConfig fc = new FilterConfig();
         LinkAnalysisTaskCommand cmd = new LinkAnalysisTaskCommand( null, ee, lac, fc );
@@ -136,6 +140,7 @@ public class LinkAnalysisController extends AbstractSpacesController<ModelAndVie
          * @return
          */
         private TaskResult process( LinkAnalysisTaskCommand c ) {
+            expressionExperimentService.thawLite( c.getExpressionExperiment() );
             TaskResult result = taskProxy.execute( c );
             return result;
         }
@@ -177,7 +182,7 @@ public class LinkAnalysisController extends AbstractSpacesController<ModelAndVie
         @Override
         protected ModelAndView processJob( TaskCommand c ) {
             LinkAnalysisTaskCommand lac = ( LinkAnalysisTaskCommand ) c;
-
+            expressionExperimentService.thawLite( lac.getExpressionExperiment() );
             linkAnalysisService.process( lac.getExpressionExperiment(), lac.getFilterConfig(), lac
                     .getLinkAnalysisConfig() );
 
