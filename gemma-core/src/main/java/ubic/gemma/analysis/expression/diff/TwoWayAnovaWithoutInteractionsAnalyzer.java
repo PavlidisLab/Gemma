@@ -158,6 +158,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         command.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "))$Pr}" );
         command.append( ")" );
 
+        log.info( "Starting R analysis ... please wait!" );
         log.debug( command.toString() );
 
         double[] pvalues = rc.doubleArrayEval( command.toString() );
@@ -200,7 +201,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
                 j++;
             }
         }
-
+        log.info( "R analysis done" );
         return createExpressionAnalysis( dmatrix, filteredPvalues, filteredFStatistics, ACTUAL_NUM_RESULTS,
                 experimentalFactorA, experimentalFactorB, quantitationType, false );
     }

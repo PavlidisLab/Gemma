@@ -156,6 +156,8 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         String matrixName = rc.assignMatrix( namedMatrix );
 
+        log.info( "Starting R analysis ... please wait!" );
+
         /* handle the p-values */
         StringBuffer pvalueCommand = new StringBuffer();
         pvalueCommand.append( "apply(" );
@@ -223,6 +225,8 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
         expressionAnalysis.setDescription( "T-test for " + factorValueA + " vs " + factorValueB );
+
+        log.info( "R analysis done" );
 
         return expressionAnalysis;
     }

@@ -114,6 +114,8 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
         String matrixName = rc.assignMatrix( namedMatrix );
 
+        log.info( "Starting R analysis ... please wait!" );
+
         /* p-values */
         StringBuffer pvalueCommand = new StringBuffer();
 
@@ -166,7 +168,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
                 j++;
             }
         }
-
+        log.info( "R analysis done" );
         return createExpressionAnalysis( dmatrix, filteredPvalues, filteredFStatistics, ACTUAL_NUM_RESULTS,
                 experimentalFactorA, experimentalFactorB, quantitationType, true );
 

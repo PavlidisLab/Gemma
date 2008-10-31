@@ -251,6 +251,8 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          * FIXME this runs the analysis twice. Wasteful.
          */
 
+        log.info( "Starting R analysis ... please wait!" );
+
         /* p-values */
         StringBuffer pvalueBuf = new StringBuffer();
 
@@ -327,7 +329,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
         expressionAnalysis.setDescription( "One-way ANOVA for " + experimentalFactor );
-
+        log.info( "R analysis done" );
         return expressionAnalysis;
 
     }
