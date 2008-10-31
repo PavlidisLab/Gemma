@@ -86,7 +86,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		callParams.push({
 					callback : function(data) {
 						var k = new Gemma.WaitHandler();
-						k.handleWait(data, false);
+						k.handleWait(data, true);
 						k.on('done', function(payload) {
 									this.fireEvent('reportUpdated', payload)
 								});
@@ -107,32 +107,6 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				});
 
 		ExpressionExperimentController.updateAllReports.apply(this, callParams);
-	},
-
-	deleteExperiment : function(id) {
-		Ext.Msg.show({
-					title : 'Really delete?',
-					msg : 'Are you sure you want to delete the experiment? This cannot be undone.',
-					buttons : Ext.Msg.YESNO,
-					fn : function(btn, text) {
-						if (btn == 'yes') {
-							var callParams = []
-							callParams.push(id);
-							callParams.push({
-										callback : function(data) {
-											var k = new Gemma.WaitHandler();
-											k.handleWait(data, true);
-											k.on('done', function(payload) {
-														this.fireEvent('deleted', payload)
-													});
-										}.createDelegate(this)
-									});
-							ExpressionExperimentController.deleteById.apply(this, callParams);
-						}
-					},
-					animEl : 'elId',
-					icon : Ext.MessageBox.WARNING
-				});
 	},
 
 	tagger : function(id) {
@@ -195,6 +169,34 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		w.show();
 	},
 
+	deleteExperiment : function(id) {
+		Ext.Msg.show({
+					title : 'Really delete?',
+					msg : 'Are you sure you want to delete the experiment? This cannot be undone.',
+					buttons : Ext.Msg.YESNO,
+					fn : function(btn, text) {
+						if (btn == 'yes') {
+							var callParams = []
+							callParams.push(id);
+							callParams.push({
+										callback : function(data) {
+											var k = new Gemma.WaitHandler();
+											k.handleWait(data, true);
+											this.relayEvents(k, ['done']);
+											k.on('done', function(payload) {
+														this.fireEvent('deleted', payload)
+													});
+										}.createDelegate(this)
+									});
+							ExpressionExperimentController.deleteById.apply(this, callParams);
+						}
+					},
+					scope : this,
+					animEl : 'elId',
+					icon : Ext.MessageBox.WARNING
+				});
+	},
+
 	doLinks : function(id) {
 		Ext.Msg.show({
 					title : 'Link analysis',
@@ -208,6 +210,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
 											k.handleWait(data, true);
+											this.relayEvents(k, ['done']);
 											k.on('done', function(payload) {
 														this.fireEvent('link', payload)
 													});
@@ -216,6 +219,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							LinkAnalysisController.run.apply(this, callParams);
 						}
 					},
+					scope : this,
 					animEl : 'elId',
 					icon : Ext.MessageBox.WARNING
 				});
@@ -224,7 +228,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	doMissingValues : function(id) {
 		Ext.Msg.show({
 					title : 'Missing value analysis',
-					msg : 'Please confirm. Previous analaysis results will be deleted.',
+					msg : 'Please confirm. Previous analysis results will be deleted.',
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						if (btn == 'yes') {
@@ -234,6 +238,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
 											k.handleWait(data, true);
+											this.relayEvents(k, ['done']);
 											k.on('done', function(payload) {
 														this.fireEvent('missingValue', payload)
 													});
@@ -242,6 +247,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							ArrayDesignRepeatScanController.run.apply(this, callParams);
 						}
 					},
+					scope : this,
 					animEl : 'elId',
 					icon : Ext.MessageBox.WARNING
 				});
@@ -260,6 +266,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
 											k.handleWait(data, true);
+											this.relayEvents(k, ['done']);
 											k.on('done', function(payload) {
 														this.fireEvent('differential', payload)
 													});
@@ -268,6 +275,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							DifferentialExpressionAnalysisController.run.apply(this, callParams);
 						}
 					},
+					scope : this,
 					animEl : 'elId',
 					icon : Ext.MessageBox.WARNING
 				});
@@ -286,6 +294,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
 											k.handleWait(data, true);
+											this.relayEvents(k, ['done']);
 											k.on('done', function(payload) {
 														this.fireEvent('processedVector', payload)
 													});
@@ -294,6 +303,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							ProcessedExpressionDataVectorCreateController.run.apply(this, callParams);
 						}
 					},
+					scope : this,
 					animEl : 'elId',
 					icon : Ext.MessageBox.WARNING
 				});
@@ -303,7 +313,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 		Gemma.EEManager.superclass.initComponent.call(this);
 
-		this.addEvents('reportUpdated', 'differential', 'missingValue', 'link', 'processedVector', 'deleted',
+		this.addEvents('done', 'reportUpdated', 'differential', 'missingValue', 'link', 'processedVector', 'deleted',
 				'tagsUpdated', 'updated', 'pubmedUpdated', 'pubmedRemove');
 
 		this.save = function(id, fields) {

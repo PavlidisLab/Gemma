@@ -49,8 +49,21 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 							this.getEl().switchOff({
 										callback : function() {
 											if (this.showAllMessages && this.pBar.allMessages.length > 0) {
-												Ext.Msg.alert("The following messages were generated",
-														this.pBar.allMessages);
+
+												var msgs = new Ext.Window({
+															title : "Job finished. The following messages were generated",
+															layout : 'fit',
+															closeAction : 'close',
+															items : [{
+																		xtype : 'panel',
+																		height : 400,
+																		autoScroll : true,
+																		width : 400,
+																		html : this.pBar.allMessages
+																	}]
+														});
+												msgs.show();
+
 											}
 											this.destroy();
 										},
@@ -62,8 +75,21 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 						}.createDelegate(this));
 
 				this.pBar.on('fail', function(message) {
-							Ext.Msg.alert("Error", message + "<br/>Additional log messages during run:<br/> "
-											+ this.pBar.allMessages);
+							var msgs = new Ext.Window({
+										title : "Error",
+										layout : 'fit',
+										closeAction : 'close',
+										items : [{
+											xtype : 'panel',
+											height : 400,
+											autoScroll : true,
+											width : 400,
+											html : message + "<br/>Additional log messages during run:<br/> "
+													+ this.pBar.allMessages
+										}]
+									});
+							msgs.show();
+
 							this.destroy();
 						}.createDelegate(this));
 			}

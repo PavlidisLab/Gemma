@@ -34,25 +34,10 @@ Ext.onReady(function() {
 				}
 			});
 
-	manager.on('reportUpdated', function() {
+	manager.on('done', function() {
 				store.reload();
 			});
 	manager.on('tagsUpdated', function() {
-				store.reload();
-			});
-	manager.on('deleted', function() {
-				store.reload();
-			});
-	manager.on('differential', function() {
-				store.reload();
-			});
-	manager.on('processedVector', function() {
-				store.reload();
-			});
-	manager.on('link', function() {
-				store.reload();
-			});
-	manager.on('missingValue', function() {
 				store.reload();
 			});
 
