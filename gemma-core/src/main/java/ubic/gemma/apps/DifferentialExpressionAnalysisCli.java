@@ -18,18 +18,25 @@
  */
 package ubic.gemma.apps;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -42,13 +49,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
-    // private ExpressionExperimentReportService expressionExperimentReportService = null;
+    private AnalysisType type = null;
 
-    private int top = 100;
+    private List<Long> factorIds = new ArrayList<Long>();
 
-    private boolean useDb = true;
-
-    private boolean forceAnalysis = false;
+    private List<String> factorNames = new ArrayList<String>();
 
     /**
      * @param args
@@ -102,15 +107,62 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      * @param ee
      */
     private void processExperiment( ExpressionExperiment ee ) {
-        try {
-            DifferentialExpressionAnalysis results = this.differentialExpressionAnalyzerService
-                    .runDifferentialExpressionAnalyses( ee );
 
-            if ( results == null ) {
-                throw new Exception( "Did not process differential expression for experiment " + ee.getShortName() );
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+
+        ExperimentalFactorService efs = ( ExperimentalFactorService ) this.getBean( "experimentalFactorService" );
+
+        try {
+            DifferentialExpressionAnalysis results = null;
+            if ( this.factorNames.size() > 0 ) {
+                if ( this.factorIds.size() > 0 ) {
+                    throw new IllegalArgumentException( "Please provide factor names or ids, not a mixture of each" );
+                }
+                Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign()
+                        .getExperimentalFactors();
+                for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+                    if ( factorNames.contains( experimentalFactor.getName() ) ) {
+                        factors.add( experimentalFactor );
+                    }
+                }
+
+                if ( factors.size() != factorNames.size() ) {
+                    throw new IllegalArgumentException( "Didn't find factors for all the provided factor names" );
+                }
+
+            } else if ( this.factorIds.size() > 0 ) {
+                for ( Long factorId : factorIds ) {
+                    if ( this.factorNames.size() > 0 ) {
+                        throw new IllegalArgumentException( "Please provide factor names or ids, not a mixture of each" );
+                    }
+                    ExperimentalFactor factor = efs.load( factorId );
+                    if ( factor == null ) {
+                        throw new IllegalArgumentException( "No factor for id=" + factorId );
+                    }
+                    if ( !factor.getExperimentalDesign().equals( ee.getExperimentalDesign() ) ) {
+                        throw new IllegalArgumentException( "Factor with id=" + factorId + " does not belong to " + ee );
+                    }
+                    factors.add( factor );
+                }
             }
 
-            logProcessing( results );
+            if ( factors.size() > 0 ) {
+                if ( this.type != null ) {
+                    results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
+                            factors, type );
+                } else {
+                    results = this.differentialExpressionAnalyzerService
+                            .runDifferentialExpressionAnalyses( ee, factors );
+                }
+            } else {
+                results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
+            }
+
+            if ( results == null ) {
+                throw new Exception( "Failed to process differential expression for experiment " + ee.getShortName() );
+            }
+
+            if ( log.isDebugEnabled() ) logProcessing( results );
 
             successObjects.add( ee.toString() );
 
@@ -141,8 +193,23 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 "The top (most significant) results to display." ).create();
         super.addOption( topOpt );
 
-        Option forceAnalysisOpt = OptionBuilder.hasArg( false ).withDescription( "Force the run." ).create( 'r' );
-        super.addOption( forceAnalysisOpt );
+        // Option forceAnalysisOpt = OptionBuilder.hasArg( false ).withDescription( "Force the run." ).create( 'r' );
+        // super.addOption( forceAnalysisOpt );
+
+        Option factors = OptionBuilder.hasArg().withDescription(
+                "ID numbers or names of the factor(s) to use, comma-delimited" ).create( "factors" );
+
+        super.addOption( factors );
+
+        Option analysisType = OptionBuilder
+                .hasArg()
+                .withDescription(
+                        "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
+                                + "Choices are : TWA (two-way anova), TWIA (two-way ANOVA with interactions), OWA (one-way ANOVA), TTEST" )
+                .create( "type" );
+
+        super.addOption( analysisType );
+
     }
 
     /*
@@ -153,20 +220,26 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     protected void processOptions() {
         super.processOptions();
 
-        if ( hasOption( "top" ) ) {
-            this.top = Integer.parseInt( ( getOptionValue( "top" ) ) );
+        if ( hasOption( "type" ) ) {
+            if ( !hasOption( "factors" ) ) {
+                throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
+            }
+            this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
         }
 
-        this.forceAnalysis = hasOption( 'r' );
-
-    }
-
-    /**
-     * @param expressionAnalyses
-     */
-    private void logProcessing( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
-        for ( DifferentialExpressionAnalysis analysis : expressionAnalyses ) {
-            logProcessing( analysis );
+        if ( hasOption( "factors" ) ) {
+            String rawfactors = getOptionValue( "factors" );
+            String[] factorIDst = StringUtils.split( rawfactors, "," );
+            if ( factorIDst != null && factorIDst.length > 0 ) {
+                for ( String string : factorIDst ) {
+                    try {
+                        Long factorId = Long.parseLong( string );
+                        this.factorIds.add( factorId );
+                    } catch ( NumberFormatException e ) {
+                        this.factorNames.add( string );
+                    }
+                }
+            }
         }
     }
 

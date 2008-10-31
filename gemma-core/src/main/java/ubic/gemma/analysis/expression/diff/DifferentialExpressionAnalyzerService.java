@@ -61,6 +61,10 @@ import ubic.gemma.persistence.PersisterHelper;
  */
 public class DifferentialExpressionAnalyzerService {
 
+    public enum AnalysisType {
+        OWA, TWA, TWIA, TTEST
+    }
+
     private AuditTrailService auditTrailService = null;
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
@@ -112,6 +116,39 @@ public class DifferentialExpressionAnalyzerService {
      * Run the differential expression analysis. First deletes the old differential expression analysis, if any.
      * 
      * @param expressionExperiment
+     * @param factors
+     * @return
+     */
+    public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors ) {
+        deleteOldAnalyses( expressionExperiment );
+        DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment,
+                factors );
+
+        return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+    }
+
+    /**
+     * Run the differential expression analysis. First deletes the old differential expression analysis, if any.
+     * 
+     * @param expressionExperiment
+     * @param factors
+     * @param type
+     * @return
+     */
+    public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors, AnalysisType type ) {
+        deleteOldAnalyses( expressionExperiment );
+        DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment,
+                factors, type );
+
+        return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+    }
+
+    /**
+     * Run the differential expression analysis. First deletes the old differential expression analysis, if any.
+     * 
+     * @param expressionExperiment
      * @return
      */
     public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment ) {
@@ -120,6 +157,11 @@ public class DifferentialExpressionAnalyzerService {
 
         DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment );
 
+        return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+    }
+
+    private DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis diffExpressionAnalysis ) {
         ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
         Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
         experimentsAnalyzed.add( expressionExperiment );
@@ -133,7 +175,6 @@ public class DifferentialExpressionAnalyzerService {
          */
         auditTrailService.addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.Factory
                 .newInstance(), diffExpressionAnalysis.getDescription() );
-
         return diffExpressionAnalysis;
     }
 
@@ -148,7 +189,32 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
-     * Run differential expression on the {@link ExpressionExperiment} if analyses do not already exist.
+     * Run differential expression on the {@link ExpressionExperiment} using the given factor(s)
+     * 
+     * @param expressionExperiment
+     * @param factors
+     * @return
+     */
+    public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors ) {
+        return differentialExpressionAnalyzer.analyze( expressionExperiment, factors );
+    }
+
+    /**
+     * Run differential expression on the {@link ExpressionExperiment} using the given factor(s) and analysis type.
+     * 
+     * @param expressionExperiment
+     * @param factors
+     * @param type
+     * @return
+     */
+    public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors, AnalysisType type ) {
+        return differentialExpressionAnalyzer.analyze( expressionExperiment, factors, type );
+    }
+
+    /**
+     * Run differential expression on the {@link ExpressionExperiment}.
      * 
      * @param expressionExperiment
      */

@@ -94,15 +94,17 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
-        if ( experimentalFactors.size() != 1 )
+        if ( experimentalFactors.size() != 1 ) {
             throw new RuntimeException( "T-test supports 1 experimental factor.  Received "
                     + experimentalFactors.size() + "." );
+        }
 
         ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
 
         Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
-        if ( factorValues.size() != 2 )
+        if ( factorValues.size() != 2 ) {
             throw new RuntimeException( "T-test supports 2 factor values.  Received " + factorValues.size() + "." );
+        }
 
         Iterator<FactorValue> iter = factorValues.iterator();
 
@@ -231,6 +233,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
      * java.util.ArrayList, int, int, int, double[])
      */
+    @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
             int numBins, int min, int max, double[] pvalues ) {
 

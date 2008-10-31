@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -100,7 +101,7 @@ public class DifferentialExpressionAnalysisHelperService {
     protected boolean checkBlockDesign( Collection<BioMaterial> biomaterials,
             Collection<ExperimentalFactor> experimentalFactors ) {
 
-        Collection<HashSet> factorValuePairings = generateFactorValuePairings( experimentalFactors );
+        Collection<Set<FactorValue>> factorValuePairings = generateFactorValuePairings( experimentalFactors );
 
         /* check to see if the biomaterial's factor value pairing is one of the possible combinations */
         for ( BioMaterial m : biomaterials ) {
@@ -173,7 +174,8 @@ public class DifferentialExpressionAnalysisHelperService {
      * @param experimentalFactors
      * @return A collection of hashsets, where each hashset is a pairing.
      */
-    protected static Collection<HashSet> generateFactorValuePairings( Collection<ExperimentalFactor> experimentalFactors ) {
+    protected static Collection<Set<FactorValue>> generateFactorValuePairings(
+            Collection<ExperimentalFactor> experimentalFactors ) {
         /* set up the possible pairings */
         Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
         for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
@@ -182,7 +184,7 @@ public class DifferentialExpressionAnalysisHelperService {
 
         Collection<FactorValue> allFactorValuesCopy = allFactorValues;
 
-        Collection<HashSet> factorValuePairings = new HashSet<HashSet>();
+        Collection<Set<FactorValue>> factorValuePairings = new HashSet<Set<FactorValue>>();
 
         for ( FactorValue factorValue : allFactorValues ) {
             for ( FactorValue f : allFactorValuesCopy ) {

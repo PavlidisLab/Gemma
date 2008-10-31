@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -77,6 +78,43 @@ public class DifferentialExpressionAnalyzer {
 
     }
 
+    /**
+     * Initiates the differential expression analysis (this is the entry point).
+     * 
+     * @param expressionExperiment
+     * @return
+     */
+    public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors ) {
+
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment );
+
+        DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, factors );
+
+        return analysis;
+
+    }
+
+    /**
+     * Initiates the differential expression analysis (this is the entry point).
+     * 
+     * @param expressionExperiment
+     * @return
+     */
+    public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors, AnalysisType type ) {
+
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, factors, type );
+
+        /*
+         * FIXME make sure the selected type is compatible with the factors.
+         */
+        DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, factors );
+
+        return analysis;
+
+    }
+
     public void setDifferentialExpressionAnalysisHelperService(
             DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService ) {
         this.differentialExpressionAnalysisHelperService = differentialExpressionAnalysisHelperService;
@@ -98,6 +136,43 @@ public class DifferentialExpressionAnalyzer {
     public void setTwoWayAnovaWithoutInteractionsAnalyzer(
             TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer ) {
         this.twoWayAnovaWithoutInteractionsAnalyzer = twoWayAnovaWithoutInteractionsAnalyzer;
+    }
+
+    private AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors, AnalysisType type ) {
+
+        if ( factors.size() == 0 ) {
+            throw new IllegalArgumentException( "Must provide at least one factor" );
+        }
+
+        switch ( type ) {
+            case OWA:
+                if ( factors.size() != 1 ) {
+                    throw new IllegalArgumentException( "Cannot run One-way ANOVA on more than one factor" );
+                }
+                return this.oneWayAnovaAnalyzer;
+            case TWA:
+                if ( factors.size() != 2 ) {
+                    throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
+                }
+                return this.twoWayAnovaWithoutInteractionsAnalyzer;
+            case TWIA:
+                if ( factors.size() != 2 ) {
+                    throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
+                }
+                if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment ) ) {
+                    throw new IllegalArgumentException(
+                            "Experimental design must be block complete to run Two-way ANOVA with interactions" );
+                }
+                return this.twoWayAnovaWithInteractionsAnalyzer;
+            case TTEST:
+                if ( factors.size() != 1 ) {
+                    throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
+                }
+                return this.studenttTestAnalyzer;
+            default:
+                return null;
+        }
     }
 
     /**

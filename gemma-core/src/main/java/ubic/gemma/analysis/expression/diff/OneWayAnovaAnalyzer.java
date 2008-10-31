@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.rosuda.REngine.REXPMismatchException;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -79,8 +79,6 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     private Map<Integer, DesignElement> filteredMatrixDesignElementIndexMap = null;
 
     private Log log = LogFactory.getLog( this.getClass() );
-
-    private List<String> rFactors = null;
 
     /*
      * (non-Javadoc)
@@ -149,13 +147,13 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param rFactors
      * @return
      */
-    private DoubleMatrix filterDoubleMatrixNamedForValidRows( ExpressionDataDoubleMatrix matrix, List<String> rFactors ) {
+    private DoubleMatrix<DesignElement, Integer> filterMatrix( ExpressionDataDoubleMatrix matrix, List<String> rFactors ) {
 
         ArrayList<double[]> filteredRows = new ArrayList<double[]>();
 
         Collection<String> factorLevels = new HashSet<String>( rFactors );
 
-        DoubleMatrix matrixNamed = matrix.getMatrix();
+        DoubleMatrix<DesignElement, Integer> matrixNamed = matrix.getMatrix();
 
         filteredMatrixDesignElementIndexMap = new HashMap<Integer, DesignElement>();
 
@@ -208,26 +206,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             ddata[i] = filteredRows.get( i );
         }
 
-        return new FastRowAccessDoubleMatrix2DNamed( ddata );
-    }
-
-    /**
-     * Filters the {@link ExpressionDataDoubleMatrix} and removes rows with too many missing values. This filtering is
-     * based on the R interpretation of too many missing values.
-     * 
-     * @param matrix
-     * @param experimentalFactor
-     * @return
-     */
-    private DoubleMatrix filterMatrix( ExpressionDataDoubleMatrix matrix, ExperimentalFactor experimentalFactor ) {
-        // TODO make this a requirement in the abstract analyzer.
-        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
-                .getBioMaterialsForBioAssays( matrix );
-
-        rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova(
-                experimentalFactor.getFactorValues(), samplesUsed );
-
-        return filterDoubleMatrixNamedForValidRows( matrix, rFactors );
+        return new FastRowAccessDoubleMatrix<DesignElement, Integer>( ddata );
     }
 
     /**
@@ -250,7 +229,13 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
                 .getProcessedExpressionDataMatrix( expressionExperiment );
 
-        DoubleMatrix filteredNamedMatrix = this.filterMatrix( dmatrix, experimentalFactor );
+        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
+                .getBioMaterialsForBioAssays( dmatrix );
+
+        List<String> rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova(
+                experimentalFactor.getFactorValues(), samplesUsed );
+
+        DoubleMatrix<DesignElement, Integer> filteredNamedMatrix = this.filterMatrix( dmatrix, rFactors );
 
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
@@ -262,6 +247,10 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         String matrixName = rc.assignMatrix( filteredNamedMatrix );
 
+        /*
+         * FIXME this runs the analysis twice. Wasteful.
+         */
+
         /* p-values */
         StringBuffer pvalueBuf = new StringBuffer();
 
@@ -271,7 +260,6 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         pvalueBuf.append( ")" );
 
         String pvalueCmd = pvalueBuf.toString() + "[1,]";
-        log.info( pvalueCmd );
 
         double[] pvalues = rc.doubleArrayEval( pvalueCmd );
 
@@ -291,7 +279,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         fStatisticBuf.append( ")" );
 
         String fStatisticCmd = fStatisticBuf.toString() + "[1,]";
-        log.info( fStatisticCmd.toString() );
+        log.debug( fStatisticCmd.toString() );
 
         double[] fstatistics = rc.doubleArrayEval( fStatisticCmd );
 
