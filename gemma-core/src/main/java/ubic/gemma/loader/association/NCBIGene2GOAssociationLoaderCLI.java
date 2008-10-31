@@ -46,7 +46,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -77,7 +76,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -102,7 +100,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
             files = new HashSet<LocalFile>();
             LocalFile lf = LocalFile.Factory.newInstance();
             try {
-                lf.setLocalURL( f.toURL() );
+                lf.setLocalURL( f.toURI().toURL() );
             } catch ( MalformedURLException e1 ) {
                 return e1;
             }
