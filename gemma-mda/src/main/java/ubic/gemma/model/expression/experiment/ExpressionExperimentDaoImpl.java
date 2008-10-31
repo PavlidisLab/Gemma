@@ -1418,11 +1418,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
                 if ( experimentalDesign != null ) {
-                    // try {
                     session.lock( experimentalDesign, LockMode.NONE );
-                    // } catch ( NonUniqueObjectException e ) {
-
-                    // }
                     Hibernate.initialize( experimentalDesign );
                     Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
                     experimentalDesign.getTypes().size();
@@ -1433,7 +1429,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         }
                         session.evict( factor );
                     }
-                    // session.evict( experimentalDesign );
                 }
 
                 if ( ee.getAccession() != null ) ee.getAccession().getExternalDatabase();
