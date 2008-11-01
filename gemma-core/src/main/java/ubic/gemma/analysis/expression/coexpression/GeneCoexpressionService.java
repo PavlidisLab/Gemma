@@ -323,6 +323,8 @@ public class GeneCoexpressionService {
 
             Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
 
+            assert g2gs != null;
+
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();

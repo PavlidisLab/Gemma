@@ -15,7 +15,7 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 			stateId : "Gemma.CoexpressionSearch",
 			labelAlign : "top",
 
-			width : 230,
+			width : 200,
 
 			initComponent : function() {
 
@@ -44,7 +44,7 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 
 				this.eeSetCombo.on("select", function(combo, eeSet) {
 							this.clearMessages();
-							this.selected = eeSet;
+							this.selectedEESet = eeSet;
 							if (eeSet && eeSet.store.getSelected().get("taxonId")) {
 								var taxon = {
 									id : eeSet.store.getSelected().get("taxonId"),
@@ -60,11 +60,11 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 								var msg = this.validateSearch(this.geneCombo.getValue());
 								if (msg.length === 0) {
 
-									var eeSetId = this.selected.get("id");
+									var eeSetId = this.selectedEESet.get("id");
 									var eeIds = "";
 
 									if (!eeSetId || eeSetId < 0) {
-										eeIds = this.selected.get("expressionExperimentIds").join(",");
+										eeIds = this.selectedEESet.get("expressionExperimentIds").join(",");
 									}
 
 									if (typeof pageTracker != 'undefined') {
@@ -132,11 +132,9 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 				if (!gene || gene.length === 0) {
 					return "Please select a valid query gene";
 				}
-				// else if (!analysis) {
-				// return "Please select an analysis";
-				// } else {
-				// return "";
-				// }
+				if (!this.selectedEESet) {
+					return "Please select a query scope";
+				}
 				return "";
 			},
 

@@ -15,23 +15,25 @@ Gemma.QuantitationTypePanel = Ext.extend(Ext.form.FieldSet, {
 
 				Ext.apply(this, {
 
-							items : [{
-										xtype : 'textfield',
-										id : 'qtype-name',
-										allowBlank : false,
-										value : 'Value',
-										width : 200,
-										name : "Name",
-										fieldLabel : "Name",
-										emptyText : "Examples: RMA, MAS5, log2 ratio"
-									}, {
-										xtype : 'textfield',
-										id : 'qtype-description',
-										width : 300,
-										name : "Description",
-										fieldLabel : "Description",
-										emptyText : 'Enter a brief description of the measurement'
-									}, {
+							items : [
+									// {
+									// xtype : 'textfield',
+									// id : 'qtype-name',
+									// allowBlank : false,
+									// value : 'Value',
+									// width : 200,
+									// name : "Name",
+									// fieldLabel : "Name",
+									// emptyText : "Examples: RMA, MAS5, log2 ratio"
+									// }, {
+									// xtype : 'textfield',
+									// id : 'qtype-description',
+									// width : 300,
+									// name : "Description",
+									//										fieldLabel : "Description",
+									//										emptyText : 'Enter a brief description of the measurement'
+									//									},
+									{
 										xtype : 'checkbox',
 										id : 'qtype-isratio',
 										name : 'Ratio',

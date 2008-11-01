@@ -22,20 +22,41 @@
 	</p>
 </div>
 
-<div id="coexpression-area">
-	<div id="coexpression-messages" style="font-size: smaller; width: 250px;">
-		<h3>
-			Coexpression query
-		</h3>
+
+<c:if test="${whatsNew != null}">
+	<div class="roundedcornr_box_777249" style="margin-bottom: 15px;">
+		<div class="roundedcornr_top_777249">
+			<div></div>
+		</div>
+		<div class="roundedcornr_content_777249">
+			<div id="whatsNew">
+				<Gemma:whatsNew whatsNew="${whatsNew}" />
+			</div>
+		</div>
+		<div class="roundedcornr_bottom_777249">
+			<div></div>
+		</div>
 	</div>
+</c:if>
 
-	<div id="coexpression-form"></div>
 
-	<div id="sampleQueries" style="padding: 4px; width: 250px;">
-		Examples: rat
-		<a href='<c:url value="/searchCoexpression.html?g=938103&amp;a=776" />'>Ddn</a>; mouse
-		<a href='<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=708" />'>Mapk3</a>
+<div class="roundedcornr_box_777249" style="margin-bottom: 10px;">
+	<div class="roundedcornr_top_777249">
+		<div></div>
+	</div>
+	<div class="roundedcornr_content_777249" id="contact">
+		<div>
+			<strong>Contacting us</strong>
+			<p class="emphasized" style="font-size: 0.90em">
+				To get emails about updates to the Gemma software, subscribe to the
+				<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing
+					list</a>. Please send bug reports or feature requests
+				<a href="mailto:gemma@bioinformatics.ubc.ca">here</a>.
+			</p>
+		</div>
+	</div>
+	<div class="roundedcornr_bottom_777249">
+		<div></div>
 	</div>
 </div>
-
 

@@ -51,8 +51,8 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
 					}
 
 					this.commandObject.taxonId = Ext.getCmp('taxon-combo').getTaxon().data.id;
-					this.commandObject.quantitationTypeName = Ext.getCmp('qtype-name').getValue();
-					this.commandObject.quantitationTypeDescription = Ext.getCmp('qtype-description').getValue();
+					this.commandObject.quantitationTypeName = "Value"; // Ext.getCmp('qtype-name').getValue();
+					this.commandObject.quantitationTypeDescription = ""; // Ext.getCmp('qtype-description').getValue();
 
 					/*
 					 * Send the data to the server, but don't load it. If everything looks okay, show it to the user for

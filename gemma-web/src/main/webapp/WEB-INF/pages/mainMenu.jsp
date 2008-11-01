@@ -1,7 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="mainMenu.title" />
-	</title>
+	<title><fmt:message key="mainMenu.title" /></title>
 
 
 	<script type="text/javascript">
@@ -82,28 +81,21 @@
 	</div>
 
 
-
-
-	<c:if test="${whatsNew != null}">
-
-		<div class="roundedcornr_box_777249" style="margin-bottom: 15px;">
-			<div class="roundedcornr_top_777249">
-				<div></div>
-			</div>
-			<div class="roundedcornr_content_777249">
-				<div id="whatsNew">
-					<Gemma:whatsNew whatsNew="${whatsNew}" />
-				</div>
-			</div>
-			<div class="roundedcornr_bottom_777249">
-				<div></div>
-			</div>
+	<div id="coexpression-area">
+		<div id="coexpression-messages" style="font-size: smaller; width: 200px;">
+			<h3>
+				Coexpression query
+			</h3>
 		</div>
 
+		<div id="coexpression-form"></div>
 
-
-	</c:if>
-
+		<div id="sampleQueries" style="padding: 4px; width: 200px; margin-bottom: 6px;">
+			Examples: rat
+			<a href='<c:url value="/searchCoexpression.html?g=938103&amp;a=776" />'>Ddn</a>; mouse
+			<a href='<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=708" />'>Mapk3</a>
+		</div>
+	</div>
 
 
 	<authz:authorize ifAnyGranted="admin">
@@ -133,9 +125,6 @@
 						<a href='<c:url value="/whatsnew/generateCache.html" />'>Regenerate What's New Cache</a>
 					</li>
 					<li>
-						<a href='<c:url value="loadSimpleExpressionExperiment.html"/>'> Load expression data from a tabbed file</a>
-					</li>
-					<li>
 						<a href='<c:url value="/arrayDesign/associateSequences.html"/>'> <fmt:message
 								key="menu.arrayDesignSequenceAdd" /> </a>
 					</li>
@@ -159,40 +148,12 @@
 
 	</authz:authorize>
 
-	<div class="roundedcornr_box_777249" style="margin-bottom: 10px;">
-		<div class="roundedcornr_top_777249">
-			<div></div>
-		</div>
-		<div class="roundedcornr_content_777249" id="contact">
-			<div>
-				<strong>Contacting us</strong>
-				<p class="emphasized">
-					To get emails about updates to the Gemma software, subscribe to the
-					<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce
-						mailing list</a>. Please send bug reports or feature requests
-					<a href="mailto:gemma@bioinformatics.ubc.ca">here</a>.
-				</p>
-			</div>
-		</div>
-		<div class="roundedcornr_bottom_777249">
-			<div></div>
-		</div>
-	</div>
-
-
-
-
 </div>
 
 
-
-
-
-<div id="news-wrapper" style="width:440;margin-top:10px">
-	<span style="font-size:1.3em">
-		Gemma news
-	</span>
+<div id="news-wrapper" style="width: 440; margin-top: 10px">
+	<span style="font-size: 1.3em">News</span>
 	<div style="padding: 0 4 2 0px; margin: 0px;" id="newsfeed">
 	</div>
-	<a href="http://bioinformatics.ubc.ca/confluence/display/gemma/Gemma+blog">More news</a>
+	<a style="font-size: 0.90em" href="http://bioinformatics.ubc.ca/confluence/display/gemma/Gemma+blog">More news</a>
 </div>

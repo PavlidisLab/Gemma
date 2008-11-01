@@ -6,21 +6,26 @@
 			&nbsp;
 		</li>
 		<menu:displayMenu name="MainMenu" />
-		<menu:displayMenu name="ResourcesMenu" />
 		<menu:displayMenu name="UserMenu" />
+		<menu:displayMenu name="ResourcesMenu" />
 		<menu:displayMenu name="AdminMenu" />
 	</ul>
 </menu:useMenuDisplayer>
 
 <script type="text/javascript">
-/*<![CDATA[*/
-var navItems = document.getElementById("primary-nav").getElementsByTagName("li");
+	/*<![CDATA[*/
+	var navItems = document.getElementById("primary-nav").getElementsByTagName(
+			"li");
 
-for (var i=0; i<navItems.length; i++) {
-    if(navItems[i].className == "menubar") {
-        navItems[i].onmouseover=function() { this.className += " over"; }
-        navItems[i].onmouseout=function() { this.className = "menubar"; }
-    }
-}
-/*]]>*/
+	for ( var i = 0; i < navItems.length; i++) {
+		if (navItems[i].className == "menubar") {
+			navItems[i].onmouseover = function() {
+				this.className += " over";
+			}
+			navItems[i].onmouseout = function() {
+				this.className = "menubar";
+			}
+		}
+	}
+	/*]]>*/
 </script>
