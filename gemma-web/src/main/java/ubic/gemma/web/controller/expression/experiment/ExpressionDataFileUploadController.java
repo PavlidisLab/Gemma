@@ -215,9 +215,9 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
     @Override
     protected BackgroundControllerJob getRunner( String jobId, Object command ) {
         if ( ( ( SimpleExpressionExperimentLoadCommand ) command ).isValidateOnly() ) {
-            return new SimpleEEValidateJob( jobId, command, this.simpleExpressionDataLoaderService );
+            return new SimpleEEValidateJob( jobId, command );
         }
-        return new SimpleEELoadJob( jobId, command, this.simpleExpressionDataLoaderService );
+        return new SimpleEELoadJob( jobId, command );
     }
 
     @Override
@@ -236,12 +236,9 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
     }
 
     class SimpleEELoadJob extends BackgroundControllerJob<Long> {
-        SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
-        public SimpleEELoadJob( String taskId, Object commandObj,
-                SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
+        public SimpleEELoadJob( String taskId, Object commandObj ) {
             super( taskId, commandObj );
-            this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
         }
 
         @SuppressWarnings("synthetic-access")
@@ -315,12 +312,8 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
      */
     class SimpleEEValidateJob extends BackgroundControllerJob<SimpleExpressionExperimentCommandValidation> {
 
-        SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-
-        public SimpleEEValidateJob( String taskId, Object commandObj,
-                SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
+        public SimpleEEValidateJob( String taskId, Object commandObj ) {
             super( taskId, commandObj );
-            this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
         }
 
         /*

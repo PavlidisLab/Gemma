@@ -244,6 +244,7 @@
 					</property>
 					<property name="includes">
 						<list>
+							<value>createDesignFromFile</value>
 							<value>getExperimentalFactors</value>
 							<value>createExperimentalFactor</value>
 							<value>deleteExperimentalFactors</value>

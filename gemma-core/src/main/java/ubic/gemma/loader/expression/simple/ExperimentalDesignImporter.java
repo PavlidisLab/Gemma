@@ -71,7 +71,7 @@ import ubic.gemma.ontology.OntologyTerm;
  *    f-ab     50  Bipolar     60  Heavy in present 
  *    f-ac     55  Schizophrenia   26  Little or none 
  *    f-ad     35  Bipolar     28  Unknown 
- *    f-af     60  Bipolar     70  Little or none 
+ *    f-af     60  Bipolar     70  Little or none
  * </pre>
  * 
  * @spring.bean id="experimentalDesignImporter"
@@ -84,6 +84,8 @@ import ubic.gemma.ontology.OntologyTerm;
  * @version $Id$
  */
 public class ExperimentalDesignImporter {
+
+    public static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "$";
 
     private static Log log = LogFactory.getLog( ExperimentalDesignImporter.class.getName() );
 
@@ -132,9 +134,8 @@ public class ExperimentalDesignImporter {
         Map<Integer, String> index2Column = new HashMap<Integer, String>();
         boolean readHeader = false;
         while ( ( line = r.readLine() ) != null ) {
-            if ( line.startsWith( "#" ) ) {
+            if ( line.startsWith( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) ) {
                 buildExperimentalFactor( line, ed, column2Factor, factorTypes, terms, dryRun );
-
             } else if ( !readHeader ) {
                 String[] headerFields = StringUtils.splitPreserveAllTokens( line, "\t" );
 
@@ -287,8 +288,8 @@ public class ExperimentalDesignImporter {
                     // if ( temp.getId() != null ) {
                     // // don't throw away old factors, but it won't be replaced either.
                     // values.add( temp );
-                    //                        continue factor;
-                    //                    }
+                    // continue factor;
+                    // }
 
                     if ( !temp.getExperimentalFactor().getName().equals( factor.getName() ) ) {
                         continue;
@@ -365,10 +366,15 @@ public class ExperimentalDesignImporter {
             throw new IOException( "EF description must have two fields with a single ':' in between (" + line + ")" );
         }
 
-        String columnHeader = StringUtils.strip( fields[0].replaceFirst( "#\\s+", "" ) );
+        String columnHeader = StringUtils.strip( fields[0].replaceFirst( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR
+                + "\\s+", "" ) );
         String factorString = StringUtils.strip( fields[1] );
 
         String[] descriptions = StringUtils.split( factorString );
+
+        if ( descriptions.length != 2 ) {
+            throw new IOException( "EF must be described by two values: an MGED category and a name" );
+        }
 
         String categoryS = descriptions[0];
 
@@ -382,10 +388,6 @@ public class ExperimentalDesignImporter {
 
         FactorType ftype = FactorType.valueOf( type.toUpperCase() );
         factorTypes.put( columnHeader, ftype );
-
-        if ( descriptions.length != 2 ) {
-            throw new IOException( "EF must be described by two values" );
-        }
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance( ed );
         ef.setCategory( vc );

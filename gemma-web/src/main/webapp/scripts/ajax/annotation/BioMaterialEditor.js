@@ -429,7 +429,7 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 			}, this);
 
 			this.factorValueCombo = new Gemma.FactorValueCombo({
-				emptyText : "select a factor value",
+				emptyText : "Select a factor value",
 				disabled : false,
 				width : 200
 			});

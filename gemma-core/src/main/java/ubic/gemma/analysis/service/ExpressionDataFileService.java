@@ -149,7 +149,6 @@ public class ExpressionDataFileService {
      * @param forceWrite
      * @return
      */
-    @SuppressWarnings("unchecked")
     public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) {
 
         try {
@@ -213,7 +212,6 @@ public class ExpressionDataFileService {
      * @param forceWrite
      * @return
      */
-    @SuppressWarnings("unchecked")
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) {
 
         expressionExperimentService.thawLite( ee );
@@ -243,7 +241,6 @@ public class ExpressionDataFileService {
      * @see ExpressionDataMatrixService.getFilteredMatrix
      * @return
      */
-    @SuppressWarnings("unchecked")
     public File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) {
 
         try {

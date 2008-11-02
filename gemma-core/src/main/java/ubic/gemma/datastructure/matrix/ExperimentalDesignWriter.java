@@ -30,6 +30,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -127,6 +128,13 @@ public class ExperimentalDesignWriter {
             Collection<ExperimentalFactor> factors, boolean writeHeader, StringBuffer buf ) {
 
         ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, buf );
+
+        for ( ExperimentalFactor ef : factors ) {
+            buf.append( ExperimentalDesignImporter.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR + " " );
+            buf.append( ef.getCategory().getValue() + ":" + ef.getName() );
+            buf.append( "\n" );
+        }
+
         buf.append( "Bioassay" );
 
         for ( ExperimentalFactor ef : factors ) {

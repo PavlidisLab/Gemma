@@ -18,6 +18,10 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -59,15 +64,50 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name = "experimentalFactorService" ref="experimentalFactorService"
  * @spring.property name = "factorValueService" ref="factorValueService"
  * @spring.property name = "characteristicService" ref="characteristicService"
+ * @spring.property name="experimentalDesignImporter" ref="experimentalDesignImporter"
  */
 public class ExperimentalDesignController extends BaseMultiActionController {
 
-    private ExperimentalDesignService experimentalDesignService = null;
-    private ExpressionExperimentService expressionExperimentService = null;
     private BioMaterialService bioMaterialService = null;
-    private ExperimentalFactorService experimentalFactorService = null;
-    private FactorValueService factorValueService = null;
     private CharacteristicService characteristicService = null;
+    private ExperimentalDesignImporter experimentalDesignImporter = null;
+    private ExperimentalDesignService experimentalDesignService = null;
+    private ExperimentalFactorService experimentalFactorService = null;
+    private ExpressionExperimentService expressionExperimentService = null;
+    private FactorValueService factorValueService = null;
+
+    /**
+     * @param eeid
+     * @param filePath
+     */
+    public void createDesignFromFile( Long eeid, String filePath ) {
+        ExpressionExperiment ee = expressionExperimentService.load( eeid );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Could not access experiment with id=" + eeid );
+        }
+
+        File f = new File( filePath );
+
+        if ( !f.canRead() ) {
+            throw new IllegalArgumentException( "Cannot read from file:" + f );
+        }
+
+        try {
+            // Dry run. Try to avoid importing bad data.
+            InputStream is = new FileInputStream( f );
+            experimentalDesignImporter.importDesign( ee, is, true );
+        } catch ( IOException e ) {
+            throw new RuntimeException( "Failed to import the design: " + e.getMessage() );
+        }
+
+        try {
+            InputStream is = new FileInputStream( f );
+            experimentalDesignImporter.importDesign( ee, is );
+        } catch ( IOException e ) {
+            throw new RuntimeException( "Failed to import the design: " + e.getMessage() );
+        }
+
+    }
 
     /**
      * Creates a new ExperimentalFactor and adds it to the ExperimentalDesign specified by the EntityDelegator.
@@ -344,6 +384,10 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         this.characteristicService = characteristicService;
     }
 
+    public void setExperimentalDesignImporter( ExperimentalDesignImporter experimentalDesignImporter ) {
+        this.experimentalDesignImporter = experimentalDesignImporter;
+    }
+
     /**
      * @param experimentalDesignService
      */
@@ -451,6 +495,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         request.setAttribute( "id", id );
 
         ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
+        mnv.addObject( "hasPopulatedDesign", experimentalDesign.getExperimentalFactors().size() > 0 );
         mnv.addObject( "experimentalDesign", experimentalDesign );
         mnv.addObject( "expressionExperiment", ee );
         mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee.getId() ) );

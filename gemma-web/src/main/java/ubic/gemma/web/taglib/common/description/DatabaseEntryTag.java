@@ -55,7 +55,6 @@ public class DatabaseEntryTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
@@ -68,7 +67,6 @@ public class DatabaseEntryTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
@@ -85,7 +83,7 @@ public class DatabaseEntryTag extends TagSupport {
                     String name = databaseEntry.getAccession();
                     buf.append( name + "&nbsp;<a title='NCBI page for this entry'"
                             + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc="
-                            + databaseEntry.getAccession() + "'><img src='/Gemma/images/logo/ncbi.gif' /></a>" );
+                            + databaseEntry.getAccession() + "'><img src='/Gemma/images/logo/geoTiny.png' /></a>" );
                 } else {
                     buf.append( databaseEntry.getAccession() + "(" + databaseEntry.getExternalDatabase().getName()
                             + ":" + ")" );

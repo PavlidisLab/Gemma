@@ -233,7 +233,6 @@ public class GeoConverter implements Converter {
      * @param channel
      * @return
      */
-    @SuppressWarnings("unchecked")
     private BioMaterial convertChannel( GeoSample sample, GeoChannel channel, BioMaterial bioMaterial ) {
         if ( bioMaterial == null ) return null;
         log.debug( "Sample: " + sample.getGeoAccession() + " - Converting channel " + channel.getSourceName() );
@@ -382,7 +381,6 @@ public class GeoConverter implements Converter {
      * @param series
      * @param expExp
      */
-    @SuppressWarnings("unchecked")
     private void convertContacts( GeoSeries series, ExpressionExperiment expExp ) {
         expExp.getInvestigators().add( convertContact( series.getContact() ) );
         if ( series.getContributers().size() > 0 ) {
@@ -1206,7 +1204,6 @@ public class GeoConverter implements Converter {
      * @param variable
      * @param factor
      */
-    @SuppressWarnings("unchecked")
     private void convertReplicationToFactorValue( GeoReplication replication, ExperimentalFactor factor ) {
         FactorValue factorValue = convertReplicationToFactorValue( replication );
         factor.getFactorValues().add( factorValue );
@@ -1217,7 +1214,6 @@ public class GeoConverter implements Converter {
      * 
      * @param sample
      */
-    @SuppressWarnings("unchecked")
     private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial, ExperimentalDesign experimentalDesign ) {
         if ( sample == null ) {
             log.warn( "Null sample" );
@@ -2015,7 +2011,6 @@ public class GeoConverter implements Converter {
      * @param result
      * @param geoDataset
      */
-    @SuppressWarnings("unchecked")
     private void convertSubsetAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
         for ( GeoSubset subset : geoDataset.getSubsets() ) {
             if ( log.isDebugEnabled() ) log.debug( "Converting subset to experimentalFactor" + subset.getType() );
@@ -2067,7 +2062,6 @@ public class GeoConverter implements Converter {
      * @param variable
      * @param factor
      */
-    @SuppressWarnings("unchecked")
     private void convertVariableToFactorValue( GeoVariable variable, ExperimentalFactor factor ) {
         FactorValue factorValue = convertVariableToFactorValue( variable );
         factor.getFactorValues().add( factorValue );
@@ -2085,7 +2079,7 @@ public class GeoConverter implements Converter {
         if ( varType.equals( VariableType.age ) ) {
             mgedTerm = "Age";
         } else if ( varType.equals( VariableType.agent ) ) {
-            mgedTerm = "Agent";
+            mgedTerm = "Compound"; // THERE IS no such term as 'Agent' in MGED.
         } else if ( varType.equals( VariableType.cellLine ) ) {
             mgedTerm = "CellLine";
         } else if ( varType.equals( VariableType.cellType ) ) {
