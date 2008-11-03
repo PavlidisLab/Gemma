@@ -54,18 +54,18 @@
 <pre># This is a comment
 $ agent : Category=Compound Type=categorical
 Bioassay	agent
-GSE2111_Biomat_4.V4	vanadium
-GSE2111_Biomat_3.V3	vanadium
-GSE2111_Biomat_2.V2	vanadium
-GSE2111_Biomat_1.V1	vanadium
-GSE2111_Biomat_12.Zn2	zinc
-GSE2111_Biomat_11.Zn1	zinc
-GSE2111_Biomat_9.Zn4	zinc
-GSE2111_Biomat_10.Zn3	zinc
-GSE2111_Biomat_6.Control3	control
-GSE2111_Biomat_7.Control1	control
-GSE2111_Biomat_8.Control4	control
-GSE2111_Biomat_5.Control2	control</pre>
+GSE2111_Biomat_4	vanadium
+GSE2111_Biomat_3	vanadium
+GSE2111_Biomat_2	vanadium
+GSE2111_Biomat_1	vanadium
+GSE2111_Biomat_12	zinc
+GSE2111_Biomat_11	zinc
+GSE2111_Biomat_9	zinc
+GSE2111_Biomat_10	zinc
+GSE2111_Biomat_6	control
+GSE2111_Biomat_7	control
+GSE2111_Biomat_8	control
+GSE2111_Biomat_5	control</pre>
 
 <p>
 	There are two main sections you have to attend to:
@@ -87,6 +87,9 @@ GSE2111_Biomat_5.Control2	control</pre>
 		template file provided by Gemma. The remaining columns give the "factor values" for the factor(s). These are
 		relatively self-explanatory to set up. Note that the column headings must match the factor names you provided in the
 		header section.
+		<strong>Missing values</strong> are allowed, but should be represented by empty cells in the file, not by "NA" or
+		similar. Note that 'sample names' in files created by Gemma may look different, with a '___' separator. This is not
+		necessary for file import, and any text following a '___' in the sample name will be ignored.
 	</li>
 </ul>
 

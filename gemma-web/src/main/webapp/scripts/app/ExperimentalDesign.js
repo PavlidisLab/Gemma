@@ -29,6 +29,7 @@ var showDesignUploadForm = function() {
 	var w = new Ext.Window({
 				title : "Experimental design upload",
 				closeAction : 'close',
+				id : 'experimental-design-upload-form-window',
 				width : 450,
 				items : [{
 					xtype : 'panel',
@@ -65,10 +66,11 @@ var showDesignUploadForm = function() {
 var submitDesign = function() {
 	ExperimentalDesignController.createDesignFromFile(dwr.util.getValue("expressionExperimentID"), serverFilePath, {
 				callback : function() {
-					Ext.Msg("Success", "Design imported.");
-					Ext.getCmp('experimental-factor-grid').store.refresh();
-					Ext.getCmp('factor-value-grid').store.refresh();
-					Ext.getCmp('bioMaterialsPanel').store.refresh();
+					Ext.getCmp('experimental-design-upload-form-window').close();
+					Ext.Msg.alert("Success", "Design imported.");
+					Ext.getCmp('experimental-factor-grid').getStore().reload();
+					// Ext.getCmp('factor-value-grid').getStore().reload(); // should have started out empty anyway.
+					Ext.getCmp('biomaterial-grid-panel').init();
 				}
 			});
 };
@@ -94,6 +96,7 @@ Ext.onReady(function() {
 
 			var bioMaterialEditor = new Gemma.BioMaterialEditor({
 						renderTo : "bioMaterialsPanel",
+						id : 'biomaterial-grid-panel',
 						eeId : eeId,
 						edId : edId,
 						height : 700,

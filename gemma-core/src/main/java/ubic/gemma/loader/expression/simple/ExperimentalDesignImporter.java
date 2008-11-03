@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -90,10 +91,10 @@ public class ExperimentalDesignImporter {
 
     private static Log log = LogFactory.getLog( ExperimentalDesignImporter.class.getName() );
 
-    ExpressionExperimentService eeService;
-    BioMaterialService bioMaterialService;
-    FactorValueService factorValueService;
-    ExperimentalDesignService experimentalDesignService;
+    private ExpressionExperimentService eeService;
+    private BioMaterialService bioMaterialService;
+    private FactorValueService factorValueService;
+    private ExperimentalDesignService experimentalDesignService;
     private MgedOntologyService mgedOntologyService;
 
     /**
@@ -117,7 +118,7 @@ public class ExperimentalDesignImporter {
             throw new IllegalStateException( "Please set the MGED OntologyService, thanks." );
         }
 
-        eeService.thawLite( experiment );
+        // eeService.thawLite( experiment );
         Map<String, BioMaterial> name2BioMaterial = buildBmMap( experiment );
 
         Map<String, FactorType> factorTypes = new HashMap<String, FactorType>();
@@ -135,9 +136,14 @@ public class ExperimentalDesignImporter {
         Map<Integer, String> index2Column = new HashMap<Integer, String>();
         boolean readHeader = false;
         while ( ( line = r.readLine() ) != null ) {
-            if ( line.startsWith( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) ) {
+            if ( line.startsWith( "#" ) ) {
+                continue;
+            } else if ( line.startsWith( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) ) {
                 buildExperimentalFactor( line, ed, column2Factor, factorTypes, terms, dryRun );
             } else if ( !readHeader ) {
+                /*
+                 * The simple header line before the table starts.
+                 */
                 String[] headerFields = StringUtils.splitPreserveAllTokens( line, "\t" );
 
                 if ( headerFields.length != column2Factor.size() + 1 ) {
@@ -148,6 +154,9 @@ public class ExperimentalDesignImporter {
                 indexHeader( column2Factor, index2Column, headerFields );
                 readHeader = true;
             } else {
+                /*
+                 * Regular data line.
+                 */
                 String[] fields = StringUtils.splitPreserveAllTokens( line, "\t" );
                 if ( fields.length != column2Factor.size() + 1 ) {
                     throw new IOException( "Expected " + ( column2Factor.size() + 1 )
@@ -221,6 +230,8 @@ public class ExperimentalDesignImporter {
     }
 
     /**
+     * Try to interpret the first field of a row as a biomaterial, and apply the factor values to it.
+     * 
      * @param column2Factor
      * @param index2Column
      * @param fields
@@ -232,8 +243,13 @@ public class ExperimentalDesignImporter {
 
         BioMaterial bm = getBioMaterial( sampleId, name2BioMaterial );
         if ( bm == null ) {
-            log.warn( "Data file has information about sample not used in this study: " + sampleId );
-            return;
+            /*
+             * It is arguable whether this should be an exception. I think it has to be to make sure that simple errors
+             * in the format are caught. But it's inconvenient for cases where a single 'design' file is to be used for
+             * multiple microarray studies.
+             */
+            throw new IllegalArgumentException(
+                    "The uploaded file has a biomaterial name that does not match the study: " + sampleId );
         }
 
         for ( int i = 1; i < fields.length; i++ ) {
@@ -241,6 +257,9 @@ public class ExperimentalDesignImporter {
             String value = StringUtils.strip( fields[i] );
 
             if ( StringUtils.isBlank( value ) ) {
+                /*
+                 * Missing value. Note that catching 'NA' etc. is hard, because they could be valid strings.
+                 */
                 continue;
             }
 
@@ -343,10 +362,10 @@ public class ExperimentalDesignImporter {
     private Map<String, BioMaterial> buildBmMap( ExpressionExperiment experiment ) {
         Map<String, BioMaterial> name2BioMaterial = new HashMap<String, BioMaterial>();
         for ( BioAssay ba : experiment.getBioAssays() ) {
-            String name = ba.getName();
+            // String name = ba.getName();
             BioMaterial bm = ba.getSamplesUsed().iterator().next();// FIXME handle the case of a collection;
-            log.debug( name + " " + bm );
-            name2BioMaterial.put( name, bm );
+            // name2BioMaterial.put( name, bm );
+            name2BioMaterial.put( bm.getName(), bm );
         }
         return name2BioMaterial;
 
@@ -431,6 +450,12 @@ public class ExperimentalDesignImporter {
      */
     private BioMaterial getBioMaterial( String sampleId, Map<String, BioMaterial> name2BioMaterial ) {
         if ( !name2BioMaterial.containsKey( sampleId ) ) {
+            String[] fields = StringUtils.splitByWholeSeparator( sampleId,
+                    ExpressionDataWriterUtils.DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS );
+            if ( fields.length > 1 && name2BioMaterial.containsKey( fields[0] ) ) {
+                return name2BioMaterial.get( fields[0] );
+            }
+
             return null;
         }
         return name2BioMaterial.get( sampleId );
@@ -514,6 +539,8 @@ public class ExperimentalDesignImporter {
     }
 
     /**
+     * Check to make sure we don't try to put two factorValues for the same factor on a given biomaterial.
+     * 
      * @param ef
      * @param value
      * @param bm
@@ -547,11 +574,12 @@ public class ExperimentalDesignImporter {
     }
 
     /**
+     * make sure the biomaterial doesn't already have a factorvalue for the given factor.
+     * 
      * @param ef
      * @param bm
      */
     private void checkForDuplicateValueForFactorOnBiomaterial( ExperimentalFactor ef, BioMaterial bm ) {
-        // make sure the biomaterial doesn't already have a factorvalue for this factor.
         for ( FactorValue existingfv : bm.getFactorValues() ) {
             assert existingfv.getExperimentalFactor() != null;
             if ( existingfv.getExperimentalFactor().equals( ef ) ) {

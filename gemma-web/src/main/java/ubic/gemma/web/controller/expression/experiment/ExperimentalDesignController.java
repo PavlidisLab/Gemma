@@ -82,8 +82,14 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      */
     public void createDesignFromFile( Long eeid, String filePath ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeid );
+
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not access experiment with id=" + eeid );
+        }
+
+        if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 0 ) {
+            throw new IllegalArgumentException(
+                    "Cannot import an experimental design for an experiment that already has design data populated." );
         }
 
         File f = new File( filePath );
@@ -102,6 +108,13 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 
         try {
             InputStream is = new FileInputStream( f );
+            // Reset everything
+            ee.getExperimentalDesign().getExperimentalFactors().clear();
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                    bm.getFactorValues().clear();
+                }
+            }
             experimentalDesignImporter.importDesign( ee, is );
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to import the design: " + e.getMessage() );

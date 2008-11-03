@@ -37,6 +37,7 @@ import ubic.gemma.util.DateUtil;
  */
 public class ExpressionDataWriterUtils {
 
+    public static final String DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS = "___";
     private static final String WEBSITE = "http://bioinformatics.ubc.ca/Gemma";
 
     /**
@@ -89,7 +90,7 @@ public class ExpressionDataWriterUtils {
      */
     public static String constructBioAssayName( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
         StringBuffer colBuf = new StringBuffer();
-        colBuf.append( bioMaterial.getName() + ":" );
+        colBuf.append( bioMaterial.getName() + DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS );
 
         for ( Iterator<BioAssay> it = bioAssays.iterator(); it.hasNext(); ) {
             BioAssay ba = it.next();
