@@ -20,12 +20,12 @@
 <h1>
 	General search tool for Gemma
 </h1>
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
-</authz:authorize>
-<authz:authorize ifNotGranted="admin">
+</security:authorize>
+<security:authorize ifNotGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
-</authz:authorize>
+</security:authorize>
 
 <div id="messages"></div>
 <div style="height: 1em; margin-bottom: " id="validation-messages"></div>

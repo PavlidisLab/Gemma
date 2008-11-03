@@ -24,12 +24,12 @@
 	</c:if>
 </spring:bind>
 
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<p class="left">
 		Go to the
 		<a href="<c:url value="/activeUsers.html" />">User list</a>
 	</p>
-</authz:authorize>
+</security:authorize>
 
 <form method="post" action="<c:url value="/editUser.html"/>"
 	id="userForm" onsubmit="return onFormSubmit(this)">

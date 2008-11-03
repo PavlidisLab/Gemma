@@ -25,20 +25,21 @@
 	'factor' for short. The values a factor takes in an experiment are the 'factor values'.
 </p>
 <p>
-	Clearly to analyze an expression study the experimental design must be encoded in a way the software can understand.
-	This page explains how this is done in Gemm.
+	To analyze an expression study, the experimental design must be encoded in a way the software can understand. This page
+	explains how this is done in Gemma.
 </p>
 
 
 <h3>
-	From a text file import
+	Import from a text file
 </h3>
 
 <p>
-	For complex experiments, or if you are moving data into Gemma from another database, it may be easier to populate the
-	design using a text file. The catch is you have to create a file in the right format. The design editor (described
-	below) is more forgiving in some ways, by dint of its interactive nature. However, we consider the design editor a
-	'curator-level' tool and some casual users may find it fiddly or idiosyncratic (improvements are in the works).
+	For large, complex experiments, or if you are moving data into Gemma from another database, it may be easier to
+	populate the design using a text file. The catch is you have to create a file in the right format. The design editor
+	(described below) is more forgiving in some ways, by dint of its interactive nature. However, we consider the design
+	editor a 'curator-level' tool and some casual users may find it fiddly, idiosyncratic or buggy (improvements are in the
+	works).
 </p>
 
 <p>
@@ -51,7 +52,7 @@
 	Here is a real example as you might set it up. In this study two metal exposures were used, plus a control group.
 </p>
 <pre># This is a comment
-$ Compound:metal treatment
+$ agent : Category=Compound Type=categorical
 Bioassay	agent
 GSE2111_Biomat_4.V4	vanadium
 GSE2111_Biomat_3.V3	vanadium
@@ -73,22 +74,21 @@ GSE2111_Biomat_5.Control2	control</pre>
 <ul class='plainList'>
 	<li>
 		A header which provides details about the factors (lines starting with '$'). There will be one of these lines for each
-		factor. Each line has two parts, separated by a colon (':'). The text before the colon must be a valid MGED category
-		term from a short list Gemma supports (list provided below). The text after the colon can be any text describing the
-		factor (briefly).
+		factor. Each line has two parts, separated by a colon (':'). The text before the colon is the "factor name", and must
+		match the text in the column for the factor in the second part. After the colon you must supply a 'Category', which
+		must be a valid MGED category term from a short list Gemma supports (list provided below), and a "Type" of factor,
+		which can have the values "categorical" or "continuous", using equal signs ('=') as shown above. Extra white space
+		before and after these fields is ignored, but there should be no spaces around the equal signs. The header can also
+		contain comments on lines starting with '#'. Such lines are ignored by the parser.
 	</li>
 	<li>
-		A tabular section which shows the factor values for each sample. The first column contains the names of the samples.
-		These must exactly match the names in the actual experiment, so we strongly recommend starting with a template file
-		provided by Gemma. The remaining columns give the "factor values" for the factor(s). These are relatively
-		self-explanatory to set up. Note that the column headings must match the factor names you provided in the header
-		section.
+		A tab-delimited section which shows the factor values for each sample. The first column contains the names of the
+		samples. These must exactly match the names in the actual experiment, so we strongly recommend starting with a
+		template file provided by Gemma. The remaining columns give the "factor values" for the factor(s). These are
+		relatively self-explanatory to set up. Note that the column headings must match the factor names you provided in the
+		header section.
 	</li>
 </ul>
-
-<p>
-	The file can also contain comments on lines starting with '#'. Such lines are ignored by the parser.
-</p>
 
 <h3>
 	Manually, using the experimental design editor

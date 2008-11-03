@@ -92,7 +92,7 @@
 	    </td>
 	</tr>	
 	
-	<authz:authorize ifAllGranted="admin">
+	<security:authorize ifAllGranted="admin">
 		<tr>
 			<td class="label">
 				<fmt:message key="auditTrail.date" />
@@ -107,7 +107,7 @@
 			%>
 			</td>
 		</tr>
-	</authz:authorize>	
+	</security:authorize>	
 		
 </table>
 		<h3>

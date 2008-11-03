@@ -5,25 +5,25 @@
 
 	<jwr:script src='/scripts/ajax/util/FileUploadForm.js' useRandomParam="false" />
 
-	<authz:authorize ifAnyGranted="user,admin">
+	<security:authorize ifAnyGranted="user,admin">
 		<jwr:script src='/scripts/app/UserExpressionDataUpload.js' useRandomParam="false" />
-	</authz:authorize>
+	</security:authorize>
 </head>
 
 <body>
 
-	<authz:authorize ifAnyGranted="user,admin">
+	<security:authorize ifAnyGranted="user,admin">
 		<div id="messages"></div>
 		<div id="form"></div>
 		<div id="progress-area" style="margin: 20px; padding: 5px;"></div>
-	</authz:authorize>
+	</security:authorize>
 
-	<authz:authorize ifNotGranted="user,admin">
+	<security:authorize ifNotGranted="user,admin">
 		<p>
 			Sorry, to upload data you must
 			<a href="/Gemma/login.jsp">login</a> or
 			<a href="<c:url value="/Gemma/register.html" />">register</a>.
 		</p>
-	</authz:authorize>
+	</security:authorize>
 
 </body>

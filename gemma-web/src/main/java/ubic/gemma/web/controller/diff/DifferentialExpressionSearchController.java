@@ -572,9 +572,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             mav.addObject( "text", output.length() > 0 ? output : "no results" );
             return mav;
-        } else {
-            return new ModelAndView( this.getFormView() );
         }
+        return new ModelAndView( this.getFormView() );
+
     }
 
     /**

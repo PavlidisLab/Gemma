@@ -15,7 +15,7 @@
 		Choose the indexing options that are appropriate and then click index.
 	</p>
 
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 
 		<div id="index-form"></div>
 		<div id="messages" style="margin: 10px; width: 400px"></div>
@@ -24,7 +24,7 @@
 		<br />
 
 
-	</authz:authorize>
+	</security:authorize>
 </body>
 
 

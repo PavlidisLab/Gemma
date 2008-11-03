@@ -184,7 +184,7 @@
 
 	</table>
 
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<h3>
 			<fmt:message key="experimentalDesign.title" />
 			:
@@ -211,7 +211,7 @@
 		</p>
 
 
-	</authz:authorize>
+	</security:authorize>
 
 	<h3>
 		Quantitation Types
@@ -381,13 +381,13 @@
 	</table>
 
 
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<h3>
 			Biomaterials and Assays
 		</h3>
 		<Gemma:assayView expressionExperiment="${expressionExperiment}"
 			edit="true"></Gemma:assayView>
-	</authz:authorize>
+	</security:authorize>
 	<script type="text/javascript" src="<c:url value="/scripts/json.js"/>"></script>
 	<script language="JavaScript" type="text/javascript">
 	var dragItems = document.getElementsByClassName('dragItem');

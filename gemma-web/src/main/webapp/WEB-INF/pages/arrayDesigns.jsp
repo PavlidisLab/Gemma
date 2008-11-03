@@ -7,14 +7,14 @@
 
 <!--  Summary of array design associations -->
 <%-- Admin only --%>
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<c:if test="${summary != null }">
 		<table class='datasummary'>
 			<tr>
 				<td colspan=2 align=center>
 				</td>
 			</tr>
-			<authz:authorize ifAnyGranted="admin">
+			<security:authorize ifAnyGranted="admin">
 				<tr>
 					<td>
 						Probes with sequences
@@ -31,7 +31,7 @@
 						${summary.numProbeAlignments}
 					</td>
 				</tr>
-			</authz:authorize>
+			</security:authorize>
 			<tr>
 				<td>
 					Probes with mapping
@@ -55,7 +55,7 @@
 			</tr>
 		</table>
 	</c:if>
-</authz:authorize>
+</security:authorize>
 
 <h1>
 	Platforms
@@ -92,10 +92,10 @@
 	</c:choose>
 </p>
 
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>"
 		onclick="return confirm('Regenerate report for all platforms?');"> Regenerate this report</a>
-</authz:authorize>
+</security:authorize>
 
 <script type='text/javascript' src='/Gemma/scripts/prototype.js'></script>
 <script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
@@ -104,18 +104,18 @@
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
 	<display:column property="name" sortable="true" comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 		href="showArrayDesign.html" paramId="id" paramProperty="id" titleKey="arrayDesign.name" />
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<display:column property="status" sortable="true" titleKey="arrayDesign.status"
 			style="text-align:center; vertical-align:middle;" comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 			defaultorder="descending" />
-	</authz:authorize>
+	</security:authorize>
 	<display:column property="shortName" sortable="true" titleKey="arrayDesign.shortName"
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 	<display:column property="taxon" sortable="true" titleKey="arrayDesign.taxon" />
 	<display:column property="expressionExperimentCountLink" sortable="true" title="Expts"
 		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 	<display:column property="summaryTable" title="Probe Summary" />
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<display:column property="lastSequenceUpdateDate" sortable="true"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" title="Seq. Update" defaultorder="descending" />
 		<display:column property="lastRepeatMaskDate" sortable="true"
@@ -127,7 +127,7 @@
 		<display:column property="color" sortable="true" titleKey="arrayDesign.technologyType" />
 		<display:column property="refreshReport" title="Refresh" />
 		<display:column property="delete" sortable="false" titleKey="arrayDesign.delete" />
-	</authz:authorize>
+	</security:authorize>
 
 	<display:setProperty name="basic.empty.showtable" value="true" />
 

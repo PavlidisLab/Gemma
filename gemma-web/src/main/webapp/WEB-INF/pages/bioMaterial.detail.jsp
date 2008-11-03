@@ -35,12 +35,12 @@
 
 </head>
 
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
-</authz:authorize>
-<authz:authorize ifNotGranted="admin">
+</security:authorize>
+<security:authorize ifNotGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
-</authz:authorize>
+</security:authorize>
 
 <h2>
 	<fmt:message key="bioMaterial.details" />
@@ -147,13 +147,13 @@
 				<input type="button" onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'" value="Back">
 			</DIV>
 		</TD>
-		<authz:acl domainObject="${bioMaterial}" hasPermission="1,6">
+		<security:acl domainObject="${bioMaterial}" hasPermission="1,6">
 			<TD COLSPAN="2">
 				<DIV align="left">
 					<input type="button" onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=<%=bioMaterial.getId()%>'"
 						value="Edit">
 				</DIV>
 			</td>
-		</authz:acl>
+		</security:acl>
 	</tr>
 </table>

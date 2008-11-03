@@ -45,18 +45,18 @@ $Id$
 	<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name"
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<display:column property="status" sortable="true" titleKey="expressionExperiment.status"
 			style="text-align:center; vertical-align:middle;" comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 			defaultorder="descending" />
-	</authz:authorize>
+	</security:authorize>
 
 	<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
 
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<display:column property="arrayDesignLink" sortable="true" defaultorder="descending" title="Arrays"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
-	</authz:authorize>
+	</security:authorize>
 
 
 	<display:column property="assaysLink" sortable="true" sortProperty="bioAssayCount" titleKey="bioAssays.title"
@@ -64,11 +64,11 @@ $Id$
 
 	<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<display:column property="dateCreatedNoTime" sortable="true" defaultorder="descending" title="Created" />
 		<display:column property="edit" sortable="false" title="Edit" />
 		<display:column property="delete" sortable="false" titleKey="expressionExperiment.delete" />
-	</authz:authorize>
+	</security:authorize>
 
 	<display:setProperty name="basic.empty.showtable" value="true" />
 </display:table>

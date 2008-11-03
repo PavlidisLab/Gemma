@@ -54,7 +54,7 @@
 		<Gemma:expressionQC ee="${expressionExperiment.id}" />
 	</div>
 
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<div id="history" style="padding: 5px;">
 		</div>
 		<c:if test="${ lastArrayDesignUpdate != null}">
@@ -62,17 +62,17 @@
 				The last time an array design associated with this experiment was updated: ${lastArrayDesignUpdate.date}
 			</p>
 		</c:if>
-	</authz:authorize>
+	</security:authorize>
 
 
 </div>
 
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<%-- fixme: let 'users' edit their own datasets --%>
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
-</authz:authorize>
-<authz:authorize ifNotGranted="admin">
+</security:authorize>
+<security:authorize ifNotGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
-</authz:authorize>
+</security:authorize>
 
 

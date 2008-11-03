@@ -7,7 +7,7 @@
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/gene.detail.js' />
 
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<script type="text/javascript">
 	Ext.namespace('Gemma');
 	Ext.onReady(function() {
@@ -25,7 +25,7 @@
 	});
 });
 </script>
-</authz:authorize>
+</security:authorize>
 
 <title><fmt:message key="gene.details" /></title>
 
@@ -176,8 +176,8 @@
 	style="border: 1px solid #c3daf9; overflow: hidden; width: 430px; height: 250px;"></div>
 
 
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<div id="auditTrail"></div>
 	<input type="hidden" name="auditableId" id="auditableId" value="${gene.id}" />
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${gene.class.name}" />
-</authz:authorize>
+</security:authorize>

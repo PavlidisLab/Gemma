@@ -13,7 +13,7 @@
 	<jwr:script src='/scripts/app/arrayDesign.js' />
 
 
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<script type="text/javascript">
 	Ext.namespace('Gemma');
 	Ext.onReady(function() {
@@ -30,7 +30,7 @@
 	});
 });
 </script>
-	</authz:authorize>
+	</security:authorize>
 
 </head>
 
@@ -143,9 +143,9 @@
 		</tr>
 		<tr>
 			<td colspan="2">
-				<authz:authorize ifAnyGranted="admin">
+				<security:authorize ifAnyGranted="admin">
 					<input type="button" value="Refresh report" onClick="updateReport(${arrayDesign.id })" />
-				</authz:authorize>
+				</security:authorize>
 			</td>
 		</tr>
 		<tr>
@@ -178,10 +178,10 @@
 		</td>
 		<td>
 			<span id="alternate-names">${alternateNames}</span>
-			<authz:authorize ifAnyGranted="admin">&nbsp;
+			<security:authorize ifAnyGranted="admin">&nbsp;
 			<a href="#" title="Add a new alternate name for this design" onClick="getAlternateName(${arrayDesign.id })"><img
 						src="/Gemma/images/icons/add.png" /> </a>
-			</authz:authorize>
+			</security:authorize>
 		</td>
 	</tr>
 
@@ -361,11 +361,11 @@
 	</tr>
 </table>
 
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<div id="auditTrail"></div>
 	<input type="hidden" name="auditableId" id="auditableId" value="${arrayDesign.id}" />
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${arrayDesign.class.name}" />
-</authz:authorize>
+</security:authorize>
 
 
 <div style="padding-top: 20px;">
@@ -381,14 +381,14 @@
 					<input type="button" onclick="location.href='showAllArrayDesigns.html'" value="Show all array designs">
 				</div>
 			</td>
-			<authz:authorize ifAnyGranted="admin">
+			<security:authorize ifAnyGranted="admin">
 				<td COLSPAN="2">
 					<div align="left">
 						<input type="button"
 							onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=<%=request.getAttribute( "id" )%>'" value="Edit">
 					</div>
 				</td>
-			</authz:authorize>
+			</security:authorize>
 		</tr>
 	</table>
 </div>

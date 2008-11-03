@@ -7,7 +7,7 @@
 	<jwr:script src='/scripts/app/geoBrowse.js' />
 </head>
 <body>
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 
 		<div id="messages" style="margin: 10px; width: 400px"></div>
 		<div id="taskId" style="display: none;"></div>
@@ -48,5 +48,5 @@
 
 			<display:setProperty name="basic.empty.showtable" value="true" />
 		</display:table>
-	</authz:authorize>
+	</security:authorize>
 </body>

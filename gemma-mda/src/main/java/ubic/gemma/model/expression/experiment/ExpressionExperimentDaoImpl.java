@@ -1445,6 +1445,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     Hibernate.initialize( ba.getArrayDesignUsed() );
                     session.evict( ba );
                 }
+                session.clear(); // FIXME this could cause problems??
                 return null;
             }
         } );

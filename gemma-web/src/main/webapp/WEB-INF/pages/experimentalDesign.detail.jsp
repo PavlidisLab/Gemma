@@ -11,12 +11,12 @@
 	<jwr:script src='/scripts/app/ExperimentalDesign.js' />
 </head>
 
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
-</authz:authorize>
-<authz:authorize ifNotGranted="admin">
+</security:authorize>
+<security:authorize ifNotGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
-</authz:authorize>
+</security:authorize>
 
 <input type="hidden" name="expressionExperimentID" value="${expressionExperiment.id}" />
 <input type="hidden" name="experimentalDesignID" value="${experimentalDesign.id}" />
@@ -34,10 +34,7 @@
 	<c:choose>
 		<c:when test="${!hasPopulatedDesign}">
 			<p>
-				<strong>This experiment does not have any experimental design details filled in.</strong> You can get a blank
-				<a href="#"
-					onClick="fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">template
-					file</a>.
+				<strong>This experiment does not have any experimental design details filled in.</strong>
 		</c:when>
 		<c:otherwise>
 			<p>
@@ -80,7 +77,7 @@
 				<%
 				    if (expressionExperiment.getDescription() != null) {
 				%>
-				<div class="clob" style="width: 40%;">
+				<div class="clob" style="width: 60%;">
 					<jsp:getProperty name="expressionExperiment" property="description" />
 				</div>
 
@@ -117,21 +114,28 @@
 		</tr>
 	</table>
 </div>
-<%--<authz:accesscontrollist  domainObject="${expressionExperiment}" hasPermission="8,16">
+<security:acl domainObject="${expressionExperiment}" hasPermission="1,6">
 	<c:if test="${!hasPopulatedDesign}">
-		--%>
-<p>
-	Use the form below to populate the experimental design details. Alternatively you can
-	<a href="#" onClick="showDesignUploadForm()">upload</a> a design description file. Instructions are
-	<a target="_blank" href="<c:url value='/static/experimentalDesign/uploadDesign_help.html' />">here</a>.
-</p>
-<%--
-</c:if></authz:accesscontrollist>
+		<div style="width: 600px; background-color: #EEEEEE; margin: 7px; padding: 7px;">
+			<p>
+				Use the form below to populate the experimental design details. Alternatively you can
+				<a href="#" onClick="showDesignUploadForm()">upload</a> a design description file. Instructions are
+				<a target="_blank" href="<c:url value='/static/experimentalDesign/uploadDesign_help.html' />">here</a>. If you want
+				to use the upload method, you can get a blank
+				<a href="#"
+					onClick="fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">template
+					file</a> to get started.
+			</p>
+		</div>
+	</c:if>
+</security:acl>
 
---%>
 <!-- Experimental Factors -->
-<div id="experimentalDesignPanel"></div>
 
+<%-- This form element is needed for the checkboxes in the factor value panel --%>
+<form name="factorValueForm">
+	<div id="experimentalDesignPanel"></div>
+</form>
 <div id="experimentalFactorPanel" style="margin-bottom: 1em;"></div>
 
 <div id="factorValuePanel" class="x-hide-display" style="margin-bottom: 1em;"></div>

@@ -98,7 +98,7 @@
 	</div>
 
 
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<div id="adminFunctions" class="roundedcornr_box_777249" style="margin-bottom: 15px;">
 			<div class="roundedcornr_top_777249">
 				<div></div>
@@ -146,7 +146,7 @@
 
 
 
-	</authz:authorize>
+	</security:authorize>
 
 </div>
 

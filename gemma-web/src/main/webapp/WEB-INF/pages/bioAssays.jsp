@@ -21,9 +21,9 @@
 	<display:column property="nameLink" sortable="true" titleKey="bioAssay.name" maxWords="20" />
 	<display:column property="description" sortable="true" titleKey="bioAssay.description" maxWords="100" />
 
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<display:column property="delete" sortable="false" title="QC" />
-	</authz:authorize>
+	</security:authorize>
 
 	<display:setProperty name="basic.empty.showtable" value="true" />
 </display:table>

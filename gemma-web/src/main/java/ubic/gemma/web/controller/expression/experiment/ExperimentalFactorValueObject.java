@@ -39,6 +39,16 @@ public class ExperimentalFactorValueObject {
     private String category;
     private String categoryUri;
     private String factorValues;
+    private String type = "Categorical"; // continuous or categorical.
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType( String type ) {
+        this.type = type;
+    }
+
     private Collection<FactorValueValueObject> values;
 
     public Collection<FactorValueValueObject> getValues() {
@@ -64,6 +74,13 @@ public class ExperimentalFactorValueObject {
          */
         Collection<FactorValueValueObject> vals = new HashSet<FactorValueValueObject>();
         for ( FactorValue value : factor.getFactorValues() ) {
+
+            if ( value.getMeasurement() != null ) {
+                this.type = "Continuous";
+            } else {
+                this.type = "Categorical";
+            }
+
             Characteristic category = value.getExperimentalFactor().getCategory();
             if ( category == null ) {
                 category = Characteristic.Factory.newInstance();

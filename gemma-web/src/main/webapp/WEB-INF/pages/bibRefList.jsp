@@ -45,9 +45,9 @@ if ( request.getAttribute( "bibliographicReferences" ) != null ) {
 		<%="<img src='/Gemma/images/pubmed.gif' />"%>
 	</display:column>
 	<display:column title="Experiments" property="experiments" />
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<display:column property="update" sortable="false" title="Update from NCBI" />
-	</authz:authorize>
+	</security:authorize>
 </display:table>
 
 <div align="right">

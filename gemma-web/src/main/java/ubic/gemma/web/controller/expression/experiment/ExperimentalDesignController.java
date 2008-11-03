@@ -156,7 +156,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
                         "You cannot create new factor values on a experimental factor that is not defined by a formal Category" );
             }
             chars.add( createTemplateCharacteristic( ef.getCategory() ) );
-
         }
 
         FactorValue fv = FactorValue.Factory.newInstance();

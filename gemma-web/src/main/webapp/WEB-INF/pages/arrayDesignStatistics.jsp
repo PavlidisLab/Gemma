@@ -3,11 +3,11 @@
 <script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 <!--  Summary of array design associations -->
 <%-- Admin only --%>
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<c:if test="${summaryString != null }">
 ${summaryString}
 </c:if>
-</authz:authorize>
+</security:authorize>
 
 <h1>
 	Platforms
@@ -21,11 +21,11 @@ ${summaryString}
 	Platforms
 </h3>
 
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 	<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>"
 		onclick="return confirm('Regenerate report for all platforms?');">
 		Regenerate this report</a>
-</authz:authorize>
+</security:authorize>
 
 
 <display:table name="arrayDesigns" sort="list" class="list"
@@ -41,7 +41,7 @@ ${summaryString}
 	<display:column property="expressionExperimentCountLink"
 		sortable="true" title="Expts" />
 	<display:column property="summaryTable" title="Probe Summary" />
-	<authz:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="admin">
 		<display:column property="lastSequenceUpdate" sortable="true"
 			title="Seq. Update" defaultorder="descending"/>
 		<display:column property="lastSequenceAnalysis" sortable="true"
@@ -51,7 +51,7 @@ ${summaryString}
 		<display:column property="color" sortable="true"
 			titleKey="arrayDesign.technologyType" />
 		<display:column property="refreshReport" title="Refresh" />
-	</authz:authorize>
+	</security:authorize>
 
 	<display:setProperty name="basic.empty.showtable" value="true" />
 

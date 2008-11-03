@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 
-<authz:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="admin">
 
 	<p>
 		Maintenance mode simply puts a notice on every page that
@@ -16,9 +16,9 @@
 		onclick="location.href='maintenanceMode.html?stop=1'"
 		value="Exit Maintenance Mode">
 		
-</authz:authorize>
-<authz:authorize ifNotGranted="admin">
+</security:authorize>
+<security:authorize ifNotGranted="admin">
 	<p>
 		Permission denied.
 	</p>
-</authz:authorize>
+</security:authorize>

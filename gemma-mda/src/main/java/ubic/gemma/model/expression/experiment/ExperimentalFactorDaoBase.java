@@ -58,17 +58,17 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#loadAll()
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+    public java.util.Collection<ExperimentalFactor> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#loadAll(int)
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<ExperimentalFactor> loadAll( final int transform ) {
+        final java.util.Collection<ExperimentalFactor> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -107,19 +107,22 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<ExperimentalFactor> create( final int transform,
+            final java.util.Collection<ExperimentalFactor> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExperimentalFactor.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) entityIterator
-                            .next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<ExperimentalFactor> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -141,14 +144,17 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExperimentalFactor.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<ExperimentalFactor> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**
@@ -200,7 +206,6 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#find(java.lang.String,
      *      ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.experiment.ExperimentalFactor find( final java.lang.String queryString,
             final ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
         return ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) this.find( TRANSFORM_NONE, queryString,
@@ -211,7 +216,6 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#find(int,
      *      ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
-    @SuppressWarnings( { "unchecked" })
     public Object find( final int transform,
             final ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
         return this
@@ -235,15 +239,14 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.experiment.ExperimentalFactor"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.experiment.ExperimentalFactor"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) result );
         return result;
     }
@@ -261,7 +264,6 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.experiment.ExperimentalFactor findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
         return ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) this.findOrCreate( TRANSFORM_NONE,
@@ -272,7 +274,6 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#findOrCreate(int,
      *      ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
-    @SuppressWarnings( { "unchecked" })
     public Object findOrCreate( final int transform,
             final ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
         return this
@@ -296,15 +297,15 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.experiment.ExperimentalFactor"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.experiment.ExperimentalFactor"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) result );
         return result;
     }
@@ -321,7 +322,6 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#getRecipient(java.lang.String, java.lang.Long)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
         return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
     }
@@ -330,7 +330,6 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#getRecipient(int, java.lang.Long)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
     public Object getRecipient( final int transform, final java.lang.Long id ) {
         return this
                 .getRecipient(
@@ -353,15 +352,14 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
+                            + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) result );
         return result;
     }
@@ -379,7 +377,6 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      *      ubic.gemma.model.common.Securable)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
         return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
@@ -390,7 +387,6 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      *      ubic.gemma.model.common.Securable)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
     public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
         return this
                 .getAclObjectIdentityId(
@@ -414,15 +410,15 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
+                            + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) result );
         return result;
     }
@@ -440,7 +436,6 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      *      ubic.gemma.model.common.Securable)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.lang.Integer getMask( final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
         return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
@@ -450,7 +445,6 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDao#getMask(int, ubic.gemma.model.common.Securable)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
     public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
         return this
                 .getMask(
@@ -474,15 +468,15 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
+                            + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) result );
         return result;
     }
@@ -533,15 +527,15 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.util.Map" + "' was found when executing query --> '" + queryString
+                            + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExperimentalFactor ) result );
         return result;
     }
@@ -575,7 +569,9 @@ public abstract class ExperimentalFactorDaoBase extends ubic.gemma.model.common.
     /**
      * Transforms a collection of entities using the
      * {@link #transformEntity(int,ubic.gemma.model.expression.experiment.ExperimentalFactor)} method. This method does
-     * not instantiate a new collection. <p/> This method is to be used internally only.
+     * not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
      * 
      * @param transform one of the constants declared in
      *        <code>ubic.gemma.model.expression.experiment.ExperimentalFactorDao</code>

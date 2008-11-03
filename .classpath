@@ -223,5 +223,6 @@
 	<classpathentry kind="var" path="M2_REPO/jdom/jdom/1.0/jdom-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/rome/rome-fetcher/0.9/rome-fetcher-0.9.jar"/>
 	<classpathentry kind="var" path="M2_REPO/continuent/sequoia-driver/2.10.10/sequoia-driver-2.10.10.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-taglibs/2.0.3/spring-security-taglibs-2.0.3.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
