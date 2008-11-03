@@ -38,7 +38,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.MgedOntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -53,7 +52,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     ExpressionExperimentService eeService;
 
     /**
-     * Test method for {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#parse(java.io.InputStream)}.
+     * Test method for {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#parse(java.io.InputStream)}
+     * .
      */
     public final void testParse() throws Exception {
 
@@ -136,7 +136,6 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
                 .getBean( "simpleExpressionDataLoaderService" );
 
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/experimentalDesignTestData.txt" );

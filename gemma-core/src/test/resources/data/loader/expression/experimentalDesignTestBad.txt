@@ -1,7 +1,7 @@
-# Age : Category=Age Type=Measurement				
-# Profile : Category=DiseaseState Type=Categorical				
-# PMI (h) : Category=EnvironmentalHistory Type=Measurement				
-# Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical
+$ Age : Category=Age Type=Continuous				
+$ Profile : Category=DiseaseState Type=Categorical				
+$ PMI (h) : Category=EnvironmentalHistory Type=Continuous				
+$ Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical
 ID	Mistake	Profile	PMI (h)	Lifetime Alcohol
 A-1	30	Bipolar	48	Moderate present
 A-2	30	Bipolar	60	Heavy in present

@@ -131,7 +131,16 @@ public class ExperimentalDesignWriter {
 
         for ( ExperimentalFactor ef : factors ) {
             buf.append( ExperimentalDesignImporter.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR + " " );
-            buf.append( ef.getCategory().getValue() + ":" + ef.getName() );
+            buf.append( ef.getName() + " : " );
+            buf.append( "Category=" + ef.getCategory().getValue() );
+            buf.append( " Type=" );
+
+            if ( ef.getFactorValues().iterator().next().getMeasurement() == null ) {
+                buf.append( "Categorical" );
+            } else {
+                buf.append( "Continuous" );
+            }
+
             buf.append( "\n" );
         }
 
@@ -139,7 +148,7 @@ public class ExperimentalDesignWriter {
 
         for ( ExperimentalFactor ef : factors ) {
             String efName = ef.getName();
-            efName = efName.replaceAll( "\\s", "_" );
+            // efName = efName.replaceAll( "\\s", "_" );
             buf.append( "\t" + efName );
         }
 

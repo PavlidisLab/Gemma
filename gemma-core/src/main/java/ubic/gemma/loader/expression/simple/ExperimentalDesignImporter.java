@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -56,16 +57,16 @@ import ubic.gemma.ontology.OntologyTerm;
  * Parse a description of ExperimentalFactors from a file, and associate it with a given ExpressionExperiment.
  * </p>
  * <p>
- * Example of format, where 'Category' is an MGED term and 'Type' is either "Numeric' or 'Measurement' with no extra
+ * Example of format, where 'Category' is an MGED term and 'Type' is either "Categorical' or 'Continuous' with no extra
  * white space around the '='s. The ID column MUST match the names on the BioAssays the design will be attached to. Main
  * section is tab-delmited. Column headings in the main table must match the identifiers given in the header.
  * </p>
  * 
  * <pre>
- *   # Age : Category=Age Type=Measurement                
- *    # Profile : Category=DiseaseState Type=Categorical              
- *    # PMI (h) : Category=EnvironmentalHistory Type=Measurement              
- *    # Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical             
+ *   $ Age : Category=Age Type=Continuous                
+ *    $ Profile : Category=DiseaseState Type=Categorical              
+ *    $ PMI (h) : Category=EnvironmentalHistory Type=Continuous              
+ *    $ Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical             
  *    ID  Age     Profile     PMI (h)     Lifetime Alcohol    
  *    f-aa     50  Bipolar     48  Moderate present 
  *    f-ab     50  Bipolar     60  Heavy in present 
@@ -251,7 +252,7 @@ public class ExperimentalDesignImporter {
 
             assert ft != null;
 
-            if ( ft.equals( FactorType.MEASUREMENT ) ) {
+            if ( ft.equals( FactorType.CONTINUOUS ) ) {
                 addNewMeasurement( ef, value, bm, dryRun );
             } else {
 
@@ -352,6 +353,9 @@ public class ExperimentalDesignImporter {
     }
 
     /**
+     * Format: NAME : Category=CATEGORY Type=TYPE CATEGORY: Any MGED term supported by Gemma TYPE :
+     * {continuous|categorical}.
+     * 
      * @param line
      * @param ed
      * @param column2Factor
@@ -366,14 +370,15 @@ public class ExperimentalDesignImporter {
             throw new IOException( "EF description must have two fields with a single ':' in between (" + line + ")" );
         }
 
-        String columnHeader = StringUtils.strip( fields[0].replaceFirst( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR
-                + "\\s+", "" ) );
+        String columnHeader = StringUtils.strip( fields[0].replaceFirst( Pattern
+                .quote( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR )
+                + "\\s*", "" ) );
         String factorString = StringUtils.strip( fields[1] );
 
         String[] descriptions = StringUtils.split( factorString );
 
         if ( descriptions.length != 2 ) {
-            throw new IOException( "EF must be described by two values: an MGED category and a name" );
+            throw new IOException( "EF details should have the format 'Category=CATEGORY Type=TYPE'" );
         }
 
         String categoryS = descriptions[0];
@@ -559,7 +564,7 @@ public class ExperimentalDesignImporter {
     }
 
     enum FactorType {
-        CATEGORICAL, MEASUREMENT
+        CATEGORICAL, CONTINUOUS
     }
 
     public void setEeService( ExpressionExperimentService eeService ) {
