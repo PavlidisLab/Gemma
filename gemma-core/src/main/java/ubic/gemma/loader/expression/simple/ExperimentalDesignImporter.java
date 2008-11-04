@@ -136,7 +136,7 @@ public class ExperimentalDesignImporter {
         Map<Integer, String> index2Column = new HashMap<Integer, String>();
         boolean readHeader = false;
         while ( ( line = r.readLine() ) != null ) {
-            if ( line.startsWith( "#" ) ) {
+            if ( line.startsWith( "#" ) || StringUtils.isBlank( line ) ) {
                 continue;
             } else if ( line.startsWith( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) ) {
                 buildExperimentalFactor( line, ed, column2Factor, factorTypes, terms, dryRun );
