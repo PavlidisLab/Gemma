@@ -140,7 +140,7 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
 
         String objectIdentity = createObjectIdentityFromObject( target );
 
-        String queryString = "select parent_object from acl_object_identity where id = ?";
+        String queryString = "select parent_object from acl_object_identity where object_identity = ?";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );

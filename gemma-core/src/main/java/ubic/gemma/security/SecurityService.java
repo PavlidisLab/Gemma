@@ -291,7 +291,7 @@ public class SecurityService {
     }
 
     /**
-     * Returns true if the parent is the {@link CustomAclDao.ADMIN_CONTROL_NODE}
+     * Returns true if the parent object identity is the {@link CustomAclDao.ADMIN_CONTROL_NODE}
      * 
      * @param s
      * @return
@@ -308,15 +308,13 @@ public class SecurityService {
 
     @SuppressWarnings("unchecked")
     public java.util.Map<Securable, Boolean> arePrivate( Collection securables ) {
-        Map<Securable, Integer> masks = securableDao.getMasks( securables );
         Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
-        for ( Securable s : masks.keySet() ) {
-            Integer mask = masks.get( s );
-            if ( mask.equals( Integer.parseInt( CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID ) ) ) {
-                result.put( s, true );
-            } else {
-                result.put( s, false );
-            }
+        for ( Object o : securables ) {
+            if ( !( o instanceof Securable ) ) throw new RuntimeException( "Object not securable found." );
+
+            Securable s = ( Securable ) o;
+            boolean p = this.isPrivate( s );
+            result.put( s, p );
         }
         return result;
     }
