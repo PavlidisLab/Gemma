@@ -20,7 +20,6 @@ package ubic.gemma.model.association.coexpression;
 
 import java.math.BigInteger;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,6 +48,7 @@ import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.coexpression.Link;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -77,6 +77,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     /*
      * (non-Javadoc) This should be faster than doing it one at a time; uses the "DML-style" syntax. This implementation
      * assumes all the links in the collection are of the same class!F
+     * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression#remove(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -130,9 +131,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCountLinks(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCountLinks(ubic.gemma.model.expression
+     *      .experiment.ExpressionExperiment)
      */
     @Override
     protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
@@ -229,9 +230,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
-     * (ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
+     *      (ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -265,9 +266,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model
-     * .expression.experiment.ExpressionExperiment, boolean)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model
+     *      .expression.experiment.ExpressionExperiment, boolean)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -297,9 +298,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
-     * (ubic.gemma.model.genome.Gene, ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
+     *      (ubic.gemma.model.genome.Gene, ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
      */
     @Override
     protected Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsLinkTestedIn( Gene geneA,
@@ -326,9 +327,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsTestedIn
-     * (java.util.Collection, java.util.Collection, boolean)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsTestedIn
+     *      (java.util.Collection, java.util.Collection, boolean)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -396,9 +397,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetProbeCoExpression(ubic.gemma
-     * .model.expression.experiment.ExpressionExperiment, java.lang.String, boolean)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetProbeCoExpression(ubic.gemma
+     *      .model.expression.experiment.ExpressionExperiment, java.lang.String, boolean)
      */
     @Override
     protected Collection<ProbeLink> handleGetProbeCoExpression( ExpressionExperiment expressionExperiment,
@@ -465,9 +466,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(ubic.gemma.
-     * model.genome.Gene, java.util.Collection)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(ubic.gemma.
+     *      model.genome.Gene, java.util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -506,9 +507,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handlePrepareForShuffling(java.util.
-     * Collection, java.lang.String, boolean)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handlePrepareForShuffling(java.util.
+     *      Collection, java.lang.String, boolean)
      */
     @Override
     protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )
@@ -676,6 +677,160 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
         session.close();
         return cs2genes;
+    }
+
+    /**
+     * @param genes
+     * @return map of CS ids to Gene ids.
+     */
+    private Map<Long, Collection<Long>> getCs2GenesMapFromGenes( Collection<Long> genes ) {
+        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+
+        Session session = getSessionFactory().openSession();
+        String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.addScalar( "csid", new LongType() );
+        queryObject.addScalar( "geneId", new LongType() );
+
+        queryObject.setParameterList( "geneIds", genes );
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( scroll.next() ) {
+            Long csid = scroll.getLong( 0 );
+            Long geneId = scroll.getLong( 1 );
+            if ( !cs2genes.containsKey( csid ) ) {
+                cs2genes.put( csid, new HashSet<Long>() );
+            }
+            cs2genes.get( csid ).add( geneId );
+        }
+
+        session.close();
+        return cs2genes;
+    }
+
+    /**
+     * @param gene
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<DesignElement> getCsForGene( Gene gene ) {
+        Long id = gene.getId();
+        String queryString = "SELECT CS as id from GENE2CS WHERE GENE = " + id;
+        Collection<Long> results = new HashSet<Long>();
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.addScalar( "id", new LongType() );
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( scroll.next() ) {
+            Long cid = scroll.getLong( 0 );
+            results.add( cid );
+        }
+        session.close();
+        if ( results.size() == 0 ) {
+            return new HashSet<DesignElement>();
+        }
+
+        return this.getHibernateTemplate().findByNamedParam( "from DesignElementImpl d where d.id in (:ids)", "ids",
+                results );
+    }
+
+    /**
+     * Given a list of probeIds and a taxon tests to see if the given list of probeIds were invloved in any coexpression analysis's. 
+     * That is to say:  which of the given probes could have been involved in any coexpression results
+     * @param probeIds
+     * @param taxon
+     * @param cleaned
+     * @return
+     * @throws Exception
+     */
+    public HashMap<Long, Boolean> validateProbesInCoexpression( Collection<Long> probeIds, String taxon ) throws Exception {
+        String tableName = getTableName( taxon, false );
+        Collection<ProbeLink> links = getLinks( probeIds, tableName );
+
+        // Create and initlize hashmap with negative results
+        HashMap<Long, Boolean> results = new HashMap<Long, Boolean>();
+        for ( Long probeId : probeIds ) {
+            results.put( probeId, false );
+        }
+
+        for ( ProbeLink probeLink : links ) {
+            if ( probeIds.contains( probeLink.getFirstDesignElementId() ) ) {
+                results.put( probeLink.getFirstDesignElementId(), true );
+            } else if ( probeIds.contains( probeLink.getSecondDesignElementId() ) ) {
+                results.put( probeLink.getSecondDesignElementId(), true );
+            }
+
+        }
+
+        return results;
+    }
+
+    /**
+     * @param probeIds
+     * @param tableName
+     * @return
+     * @throws Exception
+     */
+    private Collection<ProbeLink> getLinks( Collection<Long> probeIds, String tableName ) throws Exception {
+
+        StringBuffer probeIdString = new StringBuffer();
+        probeIdString.append( '(' );
+        
+        for(Long id : probeIds){
+            probeIdString.append( id );
+            probeIdString.append( ',' );
+        }
+        probeIdString.deleteCharAt( probeIdString.length() - 1 );// remove trailing ,
+        probeIdString.append( ')' );
+        
+        log.info( probeIdString );
+        final String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM "
+                + tableName + " WHERE FIRST_DESIGN_ELEMENT_FK IN " + probeIdString.toString() +  "OR SECOND_DESIGN_ELEMENT_FK IN " 
+                + probeIdString.toString() + " limit ";
+
+        final int chunkSize = 1000000;
+        final Collection<ProbeLink> links = new ArrayList<ProbeLink>();
+        getHibernateTemplate().execute( new HibernateCallback() {
+
+            public Object doInHibernate( Session session ) throws HibernateException {
+                long start = 0;
+
+                while ( true ) {
+                    String queryString = baseQueryString + start + "," + chunkSize + ";";
+
+                    org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+                    queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
+                    queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
+                    queryObject.addScalar( "SCORE", new DoubleType() );
+
+                    ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+                    int count = 0;
+                    int iterations = 0;
+                    while ( scroll.next() ) {
+                        Long first_design_element_fk = scroll.getLong( 0 );
+                        Long second_design_element_fk = scroll.getLong( 1 );
+                        Double score = scroll.getDouble( 2 );
+
+                        ProbeLink oneLink = new ProbeLink();
+                        oneLink.setFirstDesignElementId( first_design_element_fk );
+                        oneLink.setSecondDesignElementId( second_design_element_fk );
+                        oneLink.setScore( score );
+                        links.add( oneLink );
+                        count++;
+                        if ( count == chunkSize ) {
+                            start = start + chunkSize;
+                            System.err.print( "." );
+                            iterations++;
+                            if ( iterations % 10 == 0 ) System.err.println();
+                        }
+                    }
+                    if ( count < chunkSize ) break;
+                }
+                log.info( "Load " + links.size() );
+                return null;
+            }
+        } );
+
+        return links;
     }
 
     /**

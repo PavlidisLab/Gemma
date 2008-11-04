@@ -21,6 +21,10 @@ package ubic.gemma.model.association.coexpression;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -37,6 +41,8 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
+
+    private static Log log = LogFactory.getLog( Probe2ProbeCoexpressionDaoImplTest.class.getName() );
 
     ExpressionExperiment ee;
     ExpressionExperimentService ees;
@@ -122,6 +128,23 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
         ppcs.deleteLinks( ee );
         Integer countLinks = ppcs.countLinks( ee );
         assertEquals( 0, countLinks.intValue() );
+    }
+    
+    public void testValidateProbesInCoexpression(){
+        Collection<Long> probeIds = new ArrayList<Long>();
+        probeIds.add( new Long( 1 ));
+        probeIds.add( new Long( 3));
+        probeIds.add( new Long( 100 ));
+        
+        
+        Map<Long, Boolean> results = null;
+        try{
+           results = ppcs.validateProbesInCoexpression( probeIds, "mouse" );
+        }catch(Exception e){
+            log.info( "Boom!  " + e );
+        }
+        
+        assertFalse( results.get( new Long(100) ));
     }
 
 }

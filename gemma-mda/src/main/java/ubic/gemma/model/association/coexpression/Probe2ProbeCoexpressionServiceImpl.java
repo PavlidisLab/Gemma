@@ -20,6 +20,7 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -203,6 +204,10 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     @Override
     protected Collection handleGetGenesTestedBy( BioAssaySet bioAssaySet, boolean filterNonSpecific ) throws Exception {
         return this.getProbe2ProbeCoexpressionDao().getGenesTestedBy( bioAssaySet, filterNonSpecific );
+    }
+    
+    public HashMap<Long, Boolean> validateProbesInCoexpression( Collection<Long> probeIds, String taxon ) throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().validateProbesInCoexpression(probeIds, taxon);
     }
 
 }

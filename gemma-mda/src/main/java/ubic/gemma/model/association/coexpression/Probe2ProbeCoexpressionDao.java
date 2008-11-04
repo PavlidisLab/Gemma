@@ -22,6 +22,9 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Collection;
+import java.util.HashMap;
+
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -187,5 +190,8 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
      */
     public java.util.Map getExpressionExperimentsTestedIn( java.util.Collection<Long> geneIds,
             java.util.Collection<Long> experiments, boolean filterNonSpecific );
+
+    
+    public HashMap<Long, Boolean> validateProbesInCoexpression( Collection<Long> probeIds, String taxon ) throws Exception;
 
 }
