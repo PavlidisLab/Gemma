@@ -67,9 +67,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     @Override
     protected void buildStandardOptions() {
         super.buildStandardOptions();
-        addUserNameAndPasswordOptions(); // FIXME this should be optional, for tools that don't need real
-        // authentication.
-
+        addUserNameAndPasswordOptions();
         addSpecialServiceOptions();
     }
 
@@ -207,9 +205,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                 log.info( "Logged in as " + username );
             }
         } else {
-            log.info( "Logging in as anonymous guest" );
+            log.info( "Logging in as anonymous guest with limited privileges" );
             manAuthentication.anonymousAuthentication();
-            bail( ErrorCode.AUTHENTICATION_ERROR );
         }
 
     }

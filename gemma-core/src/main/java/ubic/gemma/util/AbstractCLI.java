@@ -357,11 +357,11 @@ public abstract class AbstractCLI {
 
     @SuppressWarnings("static-access")
     protected void addAutoOption() {
-        Option autoSeek = OptionBuilder.withArgName( AUTO_OPTION_NAME ).withDescription(
+        Option autoSeekOption = OptionBuilder.withArgName( AUTO_OPTION_NAME ).withDescription(
                 "Attempt to run all entities that need processing based on workflow criteria." ).create(
                 AUTO_OPTION_NAME );
 
-        addOption( autoSeek );
+        addOption( autoSeekOption );
     }
 
     /**
@@ -393,12 +393,12 @@ public abstract class AbstractCLI {
     @SuppressWarnings("static-access")
     protected void addUserNameAndPasswordOptions( boolean required ) {
         Option usernameOpt = OptionBuilder.withArgName( "user" ).withLongOpt( "user" ).hasArg().withDescription(
-                "User name for accessing the system" ).create( USERNAME_OPTION );
+                "User name for accessing the system (optional for some tools)" ).create( USERNAME_OPTION );
 
         usernameOpt.setRequired( required );
 
         Option passwordOpt = OptionBuilder.withArgName( "passwd" ).withLongOpt( "password" ).hasArg().withDescription(
-                "Password for accessing the system" ).create( PASSWORD_CONSTANT );
+                "Password for accessing the system (optional for some tools)" ).create( PASSWORD_CONSTANT );
         passwordOpt.setRequired( required );
 
         options.addOption( usernameOpt );
@@ -409,7 +409,10 @@ public abstract class AbstractCLI {
      * Add required user name and password options.
      */
     protected void addUserNameAndPasswordOptions() {
-        this.addUserNameAndPasswordOptions( true );
+        /*
+         * Changed to make it so password is not required.
+         */
+        this.addUserNameAndPasswordOptions( false );
     }
 
     /**
