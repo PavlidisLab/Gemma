@@ -23,6 +23,7 @@ import java.util.concurrent.FutureTask;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.util.SecurityUtil;
 import ubic.gemma.util.progress.TaskRunningService;
 
 /**
@@ -55,6 +56,9 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
      *         allowing one controller to create more than 1 job
      */
     protected synchronized ModelAndView startJob( BackgroundControllerJob job ) {
+
+        SecurityUtil.passAuthenticationToChildThreads();
+
         String taskId = run( job );
         ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskId=" + taskId ) );
         mnv.addObject( "taskId", taskId );
