@@ -338,7 +338,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		});
 
 Gemma.CoexpressionGrid.bitImageBarHeight = 15;
-Gemma.CoexpressionGrid.bitImageBarWidth = 2;
+Gemma.CoexpressionGrid.bitImageBarWidth = 1;
 
 Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 	if (Gemma.CoexpressionGrid.bitImageMapTemplate === undefined) {
@@ -352,47 +352,3 @@ Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 	}
 	return Gemma.CoexpressionGrid.bitImageMapTemplate;
 };
-
-// Left over cruft i believe - klc
-Gemma.CoexpressionGrid.visualize = function(experimentIds, geneIds) {
-
-	var loadVisData = function(data) {
-
-		for (var k = 0; k < data.size(); k++) {
-
-			var flotrData = [];
-			var coordinateProfile = data[k].profiles;
-			var ee = data[k].ee;
-
-			if (!coordinateProfile) {
-				// console.log(coordinateProfile);
-				return;
-			}
-
-			for (var i = 0; i < coordinateProfile.size(); i++) {
-				var coordinateObject = coordinateProfile[i].points;
-				var coordinateSimple = [];
-
-				for (var j = 0; j < coordinateObject.size(); j++) {
-					coordinateSimple.push([coordinateObject[j].x, coordinateObject[j].y]);
-				}
-				flotrData.push(coordinateSimple);
-			}
-
-			// Create a DIV for data.
-			var dh = Ext.DomHelper;
-			var newDivName = "visualization4EE" + ee.shortName;
-			var newDiv = dh.append('coexpression-visualization', {
-						tag : 'div',
-						id : newDivName,
-						style : 'width:300px;height:300px;'
-					});
-			var f = Flotr.draw(newDiv, flotrData);
-
-		}
-
-	};
-
-	DEDVController.getDEDVForVisualization(experimentIds, geneIds, loadVisData);
-
-}
