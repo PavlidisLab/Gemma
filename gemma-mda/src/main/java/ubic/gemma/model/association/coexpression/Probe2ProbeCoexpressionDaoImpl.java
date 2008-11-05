@@ -751,7 +751,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         Collection<ProbeLink> links = getLinks( queryProbeIds, coexpressedProbeIds, ee.getId(), tableName );
 
         Collection<Long> results = new HashSet<Long>();
-
+        if (links == null || links.isEmpty())
+            return results;
+           
         for ( ProbeLink probeLink : links ) {
             results.add( probeLink.getFirstDesignElementId());
             results.add( probeLink.getSecondDesignElementId());
