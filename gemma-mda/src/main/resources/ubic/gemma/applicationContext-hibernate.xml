@@ -632,6 +632,7 @@
 				ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService.getExpressionExperimentsLinkTestedIn=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService.getGenesTestedBy=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService.getExpressionExperimentsTestedIn=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService.validateProbesInCoexpression=PROPAGATION_REQUIRED,readOnly				
 				ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.delete=PROPAGATION_REQUIRED
 				ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.findCoexpressionRelationships=PROPAGATION_REQUIRED,readOnly
