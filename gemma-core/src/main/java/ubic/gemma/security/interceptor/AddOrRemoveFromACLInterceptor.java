@@ -114,75 +114,70 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 	 * @param object
 	 *            The domain object.
 	 */
-	public void addPermission(Securable object) {
+	public void addPermission( Securable object ) {
 
-		/*
-		 * When adding a new user to the system, make sure they can see the
-		 * public data by adding a control node for that user and set the
-		 * acl_object_identity of this to
-		 * CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID
-		 */
-		if (object instanceof UserImpl) {
-			User u = (User) object;
-			String recipient = u.getUserName();
-			customAclDao.insertPublicAccessControlNodeForRecipient(recipient,
-					SimpleAclEntry.READ);
-		}
+        /*
+         * When adding a new user to the system, make sure they can see the public data by adding a control node for
+         * that user and set the acl_object_identity of this to CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID
+         */
+        if ( object instanceof UserImpl ) {
+            User u = ( User ) object;
+            String recipient = u.getUserName();
+            customAclDao.insertPublicAccessControlNodeForRecipient( recipient, SimpleAclEntry.READ );
+        }
 
-		/*
-		 * Set up the SimpleAclEntry, which includes both acl_permission and
-		 * acl_object_identity stuff.
-		 */
-		// When persisting to the database, the acl_permission may not be
-		// persisted.
-		// Create acl_permission entry in database only if:
-		// 1. creating a new user
-		// 2. adding Securable(s) and not logged in as an admin. If user is
-		// logged in
-		// as an admin, the data they load will be public because their
-		// corresponding
-		// acl_object_identity.parent_object will be set to
-		// CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID.
-		/*                                                                                              */
-		simpleAclEntry = this.createNonPersistentAclEntry(object);
+        /*
+         * Set up the SimpleAclEntry, which includes both acl_permission and acl_object_identity stuff.
+         */
+        // When persisting to the database, the acl_permission may not be
+        // persisted.
+        // Create acl_permission entry in database only if:
+        // 1. creating a new user
+        // 2. adding Securable(s) and not logged in as an admin. If user is
+        // logged in
+        // as an admin, the data they load will be public because their
+        // corresponding
+        // acl_object_identity.parent_object will be set to
+        // CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID.
+        /*                                                                                              */
+        simpleAclEntry = this.createNonPersistentAclEntry( object );
 
-		try {
-			boolean isAdmin = SecurityService.isUserAdmin();
+        try {
+            boolean isAdmin = SecurityService.isUserAdmin();
 
-			boolean createAclPermission = false;// default case for admin
+            boolean createAclPermission = false;// default case for admin
 
-			if (object instanceof UserImpl)
-				createAclPermission = true;
+            if ( object instanceof UserImpl ) createAclPermission = true;
 
-			if (!isAdmin && !(object instanceof UserRoleImpl))
-				createAclPermission = true;
+            if ( object instanceof UserRoleImpl ) createAclPermission = true;
 
-			((CustomJdbcExtendedDaoImpl) basicAclExtendedDao).create(
-					simpleAclEntry, createAclPermission);
+            if ( !isAdmin ) createAclPermission = true;
 
-		} catch (DataIntegrityViolationException ignored) {
+            ( ( CustomJdbcExtendedDaoImpl ) basicAclExtendedDao ).create( simpleAclEntry, createAclPermission );
 
-			// This happens in two situations:
-			// 1. When a 'findOrCreate' resulted in just a 'find'.
-			// 2. When a create was called, but some associated object was
-			// already in the system.
-			//              
-			// Either way, we can ignore it.
-			//              
-			//
-			// if ( method.getName().equals( "findOrCreate" ) ) {
-			// do nothing. This happens when the object already exists and has
-			// permissions assigned (for example,
-			// findOrCreate resulted in a 'find')
-			// } else {
-			// something else must be wrong
-			// log.fatal( method.getName() + " on " + getAuthority() + " for
-			// recipient " + getUsername() + " on " +
-			// object, ignored );
-			// throw ( ignored );
-			// }
-		}
-	}
+        } catch ( DataIntegrityViolationException ignored ) {
+
+            // This happens in two situations:
+            // 1. When a 'findOrCreate' resulted in just a 'find'.
+            // 2. When a create was called, but some associated object was
+            // already in the system.
+            //              
+            // Either way, we can ignore it.
+            //              
+            //
+            // if ( method.getName().equals( "findOrCreate" ) ) {
+            // do nothing. This happens when the object already exists and has
+            // permissions assigned (for example,
+            // findOrCreate resulted in a 'find')
+            // } else {
+            // something else must be wrong
+            // log.fatal( method.getName() + " on " + getAuthority() + " for
+            // recipient " + getUsername() + " on " +
+            // object, ignored );
+            // throw ( ignored );
+            // }
+        }
+    }
 
 	/*
 	 * (non-Javadoc)
@@ -412,45 +407,52 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
-	public AbstractBasicAclEntry createNonPersistentAclEntry(Securable object) {
-		SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
-		simpleAclEntry.setAclObjectIdentity(makeObjectIdentity(object));
-		simpleAclEntry.setMask(getMaskByAuthority());
-		simpleAclEntry
-				.setRecipient(UserDetailsServiceImpl.getCurrentUsername());
-		simpleAclEntry
-				.setAclObjectParentIdentity(new NamedEntityObjectIdentity(
-						CustomAclDao.PUBLIC_CONTROL_NODE,
-						CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID));
+	public AbstractBasicAclEntry createNonPersistentAclEntry( Securable object ) {
+        SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
+        simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
+        simpleAclEntry.setMask( getMaskByAuthority() );
+        simpleAclEntry.setRecipient( UserDetailsServiceImpl.getCurrentUsername() );
+        simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( CustomAclDao.PUBLIC_CONTROL_NODE,
+                CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID ) );
 
-		/* If we are logged in, then we are adding private data. */
-		if (SecurityService.isUserLoggedIn()) {
-			simpleAclEntry
-					.setAclObjectParentIdentity(new NamedEntityObjectIdentity(
-							CustomAclDao.ADMIN_CONTROL_NODE,
-							CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID));
-		}
-		/*
-		 * Now check to see if the data we are adding is a new user (UserImpl).
-		 * If so, decide what mask to use depending on the type of user (i.e.
-		 * based on role: user, admin).
-		 */
-		if (object instanceof UserImpl) {
-			simpleAclEntry.setMask(SimpleAclEntry.READ_WRITE);
+        /* If we are logged in, then we are adding private data. */
+        if ( SecurityService.isUserLoggedIn() ) {
+            simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( CustomAclDao.ADMIN_CONTROL_NODE,
+                    CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID ) );
+        }
+        /*
+         * Now check to see if the data we are adding is a new user (UserImpl). If so, decide what mask to use depending
+         * on the type of user (i.e. based on role: user, admin).
+         */
+        if ( object instanceof UserImpl ) {
+            simpleAclEntry.setMask( SimpleAclEntry.READ_WRITE );
 
-			UserImpl newUser = (UserImpl) object;
+            UserImpl newUser = ( UserImpl ) object;
 
-			simpleAclEntry.setRecipient(newUser.getUserName());
+            simpleAclEntry.setRecipient( newUser.getUserName() );
 
-			if (SecurityService.isUserAdmin()) {
-				simpleAclEntry.setMask(SimpleAclEntry.ADMINISTRATION);
-				// FIXME - do we need to add a parent other than the global if
-				// we are adding another admin to the
-				// system.
-			}
-		}
-		return simpleAclEntry;
-	}
+            if ( SecurityService.isUserAdmin() ) {
+                simpleAclEntry.setMask( SimpleAclEntry.ADMINISTRATION );
+                // FIXME - do we need to add a parent other than the global if
+                // we are adding another admin to the
+                // system.
+            }
+        }
+
+        /*
+         * Check if we are adding a role (UserRoleImpl). If so, set the mask to SimpleAclEntry.READ so the user cannot
+         * change their role.
+         */
+        if ( object instanceof UserRoleImpl ) {
+            simpleAclEntry.setMask( SimpleAclEntry.READ );
+
+            UserRoleImpl role = ( UserRoleImpl ) object;
+
+            simpleAclEntry.setRecipient( role.getUserName() );
+        }
+
+        return simpleAclEntry;
+    }
 
 	/**
 	 * @param object
