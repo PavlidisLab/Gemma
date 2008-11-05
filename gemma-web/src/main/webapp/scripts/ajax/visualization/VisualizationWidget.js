@@ -397,7 +397,6 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						return -1;
 				});
 
-				console.log(profiles);
 				Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
 			}
