@@ -46,6 +46,8 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
 
     ExpressionExperiment ee;
     ExpressionExperimentService ees;
+    Long firstProbeId;
+    Long secondProbeId;
 
     Probe2ProbeCoexpressionService ppcs;
 
@@ -88,6 +90,9 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
 
         analysis = ( ProbeCoexpressionAnalysis ) this.persisterHelper.persist( analysis );
 
+        this.firstProbeId = dvl.get( 0 ).getDesignElement().getId();
+        this.secondProbeId = dvl.get( 1 ).getDesignElement().getId();
+        
         for ( int i = 0; i < j - 1; i += 2 ) {
             Probe2ProbeCoexpression ppc = MouseProbeCoExpression.Factory.newInstance();
             ppc.setFirstVector( dvl.get( i ) );
@@ -131,20 +136,27 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
     }
     
     public void testValidateProbesInCoexpression(){
-        Collection<Long> probeIds = new ArrayList<Long>();
-        probeIds.add( new Long( 1 ));
-        probeIds.add( new Long( 3));
-        probeIds.add( new Long( 100 ));
+        Collection<Long> queryProbeIds = new ArrayList<Long>();
+        queryProbeIds.add( new Long( this.firstProbeId) );
+        queryProbeIds.add( new Long( 3));
+        queryProbeIds.add( new Long( 100 ));
         
+        Collection<Long> coexpressedProbeIds = new ArrayList<Long>();
+        coexpressedProbeIds.add( new Long( this.secondProbeId));
+        coexpressedProbeIds.add( new Long( 4));
+        coexpressedProbeIds.add( new Long( 101 ));
         
-        Map<Long, Boolean> results = null;
+        Collection<Long> results = null;
         try{
-           results = ppcs.validateProbesInCoexpression( probeIds, "mouse" );
+           results = ppcs.validateProbesInCoexpression(queryProbeIds,coexpressedProbeIds, ee,"mouse" );
         }catch(Exception e){
             log.info( "Boom!  " + e );
         }
         
-        assertFalse( results.get( new Long(100) ));
+        log.info( "ee id: " + ee.getId() );
+        
+        assertFalse( results.contains(  new Long(100) ));
+        assertTrue( results.contains( new Long(this.firstProbeId) ));
     }
 
 }

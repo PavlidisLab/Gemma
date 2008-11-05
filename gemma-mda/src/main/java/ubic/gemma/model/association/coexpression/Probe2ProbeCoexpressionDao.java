@@ -192,6 +192,7 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
             java.util.Collection<Long> experiments, boolean filterNonSpecific );
 
     
-    public HashMap<Long, Boolean> validateProbesInCoexpression( Collection<Long> probeIds, String taxon ) throws Exception;
+    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
+            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon );
 
 }

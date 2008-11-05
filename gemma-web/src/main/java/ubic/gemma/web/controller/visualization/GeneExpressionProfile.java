@@ -39,14 +39,17 @@ public class GeneExpressionProfile {
     Collection<Gene> genes;
     List<DoublePoint> points;
     DesignElement probe;
+    int factor;
     private String color = "black";
+    
 
-    public GeneExpressionProfile( DoubleVectorValueObject vector, String color ) {
+    public GeneExpressionProfile( DoubleVectorValueObject vector, String color, int factor ) {
         this.genes = vector.getGenes();
         this.probe = vector.getDesignElement();
         this.probe.setArrayDesign( null );
         this.points = new ArrayList<DoublePoint>();
-
+        this.factor = factor;
+        
         if ( color != null ) {
             this.color = color;
         }
@@ -84,7 +87,7 @@ public class GeneExpressionProfile {
         return this.points;
     }
 
-    public void setPoint( List<DoublePoint> points ) {
+    public void setPoints( List<DoublePoint> points ) {
         this.points = points;
     }
 
@@ -94,6 +97,14 @@ public class GeneExpressionProfile {
 
     public void setProbe( DesignElement probe ) {
         this.probe = probe;
+    }
+
+    public int getFactor() {
+        return factor;
+    }
+
+    public void setFactor( int factor ) {
+        this.factor = factor;
     }
 
 }

@@ -53,6 +53,63 @@ public class VisualizationValueObject {
      *        black, coexpressed is always red.
      * @throws IllegalArgumentException if vectors are mixed between EEs.
      */
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes, Collection<Long> validatedProbeList ) {
+        this();
+
+        int i = 0;
+        if ( genes.size() > colors.length ) {
+            // / FIXME
+        }
+        for ( Gene g : genes ) {
+            log.debug( "Gene: " + g.getName() + " color=" + colors[i] );
+            colorMap.put( g.getId(), colors[i] );
+            i++;
+        }
+
+        for ( DoubleVectorValueObject vector : vectors ) {
+            if ( this.eevo == null ) {
+                setEE( vector.getExpressionExperiment() );
+            } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
+                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "
+                        + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
+            }
+
+            String color = null;
+            // log.info( vector + " GENES=" + StringUtils.join( vector.getGenes(), ',' ) );
+            for ( Gene g : genes ) {
+                if ( vector.getGenes().contains( g ) ) {
+                    if ( color != null ) {
+                        /*
+                         * Special color to denote probes that hyb to both genes.
+                         */
+                        color = "#CCCCCC";
+                        if ( log.isDebugEnabled() )
+                            log.debug( "EE: " + eevo.getId() + "; Probe: " + vector.getDesignElement().getName()
+                                    + " (id=" + vector.getDesignElement().getId()
+                                    + ") matches more than one of the genes" );
+                    } else {
+                        color = colorMap.get( g.getId() );
+                    }
+                }
+            }
+
+            int valid = 1; 
+            if (validatedProbeList.contains( vector.getDesignElement().getId()))
+                valid = 2;
+            
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid );
+            profiles.add( profile );
+
+        }
+    }
+    
+    
+    /**
+     * @param vectors from a single expression experiment.
+     * @param genes Is list so that order is gauranteed. Need this so that color's are consistent. Query gene is always
+     *        black, coexpressed is always red.
+     * @throws IllegalArgumentException if vectors are mixed between EEs.
+     */
     public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes ) {
         this();
 
@@ -92,8 +149,8 @@ public class VisualizationValueObject {
                     }
                 }
             }
-            // log.info( vector + " -> " + color );
-            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color );
+            
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, 1 );
             profiles.add( profile );
 
         }
@@ -105,7 +162,7 @@ public class VisualizationValueObject {
     public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
         this();
         setEE( dvvo.getExpressionExperiment() );
-        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo, null );
+        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo, null, 0 );
         profiles.add( profile );
     }
 

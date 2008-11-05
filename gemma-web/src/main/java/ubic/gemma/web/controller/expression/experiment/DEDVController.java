@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -51,6 +52,7 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "processedExpressionDataVectorService" ref="processedExpressionDataVectorService"
  * @spring.property name = "geneService" ref="geneService"
+ * @spring.property name = "probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @author kelsey
  * @version $Id$
  */
@@ -63,6 +65,7 @@ public class DEDVController extends BaseFormController {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     private GeneService geneService;
     private ExpressionExperimentService expressionExperimentService;
+    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
 
     // -----------------------
     // Exposed Ajax Methods
@@ -129,7 +132,11 @@ public class DEDVController extends BaseFormController {
         log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
                 + " genes in " + time + " ms." );
 
-        return makeVisCollection( dedvs, new ArrayList<Gene>( genes ) );
+                  
+        
+        
+        
+        return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), null );
 
     }
 
@@ -158,7 +165,8 @@ public class DEDVController extends BaseFormController {
         List<Gene> genes = new ArrayList<Gene>();
         genes.add( queryGene );
         genes.add( coexpressedGene );
-
+        geneService.thawLite( genes );
+        
         if ( genes.isEmpty() ) return null;
 
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
@@ -172,10 +180,94 @@ public class DEDVController extends BaseFormController {
                     + " genes in " + time + " ms." );
         }
 
-        return makeVisCollection( dedvs, genes );
+        watch = new StopWatch();
+        watch.start();
+        Map<Long, Collection<Long>> coexpressedEE2ProbeIds = new HashMap<Long, Collection<Long>>();
+        Map<Long, Collection<Long>> queryEE2ProbeIds = new HashMap<Long, Collection<Long>>();
+
+        for ( DoubleVectorValueObject dedv : dedvs ) {
+            if ( dedv.getGenes().contains( queryGene ) ) {
+                if ( queryEE2ProbeIds.containsKey( dedv.getExpressionExperiment().getId() ) )
+                    queryEE2ProbeIds.get( dedv.getExpressionExperiment().getId() )
+                            .add( dedv.getDesignElement().getId() );
+                else {
+                    Collection qProbeIds = new ArrayList<Long>();
+                    qProbeIds.add( dedv.getDesignElement().getId() );
+                    queryEE2ProbeIds.put( dedv.getExpressionExperiment().getId(), qProbeIds );
+                }
+            } else if ( dedv.getGenes().contains( coexpressedGene ) ) {
+                if ( coexpressedEE2ProbeIds.containsKey( dedv.getExpressionExperiment().getId() ) )
+                    coexpressedEE2ProbeIds.get( dedv.getExpressionExperiment().getId() ).add(
+                            dedv.getDesignElement().getId() );
+                else {
+                    Collection cProbeIds = new ArrayList<Long>();
+                    cProbeIds.add( dedv.getDesignElement().getId() );
+                    coexpressedEE2ProbeIds.put( dedv.getExpressionExperiment().getId(), cProbeIds );
+                }
+            } else {
+                log.error( "Impossible! Dedv doesn't belong to coexpressed or query gene. QueryGene= "
+                        + queryGene.getOfficialSymbol() + "CoexprssedGene= " + coexpressedGene.getOfficialSymbol()
+                        + "DEDV " + dedv.getId() + " has genes: " + dedv.getGenes() );
+            }
+        }
+
+        Map<Long, Collection<Long>> validatedProbes = new HashMap<Long, Collection<Long>>();
+        for ( ExpressionExperiment ee : ees ) {
+            validatedProbes.put( ee.getId(), this.probe2ProbeCoexpressionService.validateProbesInCoexpression(
+                    queryEE2ProbeIds.get( ee.getId() ), coexpressedEE2ProbeIds.get( ee.getId() ), ee, queryGene
+                            .getTaxon().getCommonName() ) );
+
+        }
+
+        watch.stop();
+        time = watch.getTime();
+
+        if ( time > 1000 ) {
+            log.info( "Validation of probes for " + ees.size() + " experiments in " + time + " ms." );
+        }
+
+        return makeVisCollection( dedvs, genes, validatedProbes );
 
     }
 
+    /**
+     * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
+     * Currently removes multiple hits for same gene. Tries to pick best DEDV.
+     * 
+     * @param dedvs
+     * @param genes
+     * @return
+     */
+    private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs, List<Gene> genes,
+            Map<Long, Collection<Long>> validatedProbes ) {
+
+        Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
+
+        // Organize by expression experiment
+        for ( DoubleVectorValueObject dvvo : dedvs ) {
+            ExpressionExperiment ee = dvvo.getExpressionExperiment();
+            if ( !vvoMap.containsKey( ee ) ) {
+                vvoMap.put( ee, new HashSet<DoubleVectorValueObject>() );
+            }
+            vvoMap.get( ee ).add( dvvo );
+        }
+
+        VisualizationValueObject[] result = new VisualizationValueObject[vvoMap.keySet().size()];
+
+        // Create collection of visualizationValueObject for flotr on js side
+        int i = 0;
+        for ( ExpressionExperiment ee : vvoMap.keySet() ) {
+            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ), genes, validatedProbes
+                    .get( ee.getId() ) );
+            result[i] = vvo;
+            i++;
+        }
+
+        return result;
+
+    }
+
+    
     /**
      * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
      * Currently removes multiple hits for same gene. Tries to pick best DEDV.
@@ -202,7 +294,7 @@ public class DEDVController extends BaseFormController {
         // Create collection of visualizationValueObject for flotr on js side
         int i = 0;
         for ( ExpressionExperiment ee : vvoMap.keySet() ) {
-            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ), genes );
+            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ), genes) ;
             result[i] = vvo;
             i++;
         }
@@ -210,7 +302,6 @@ public class DEDVController extends BaseFormController {
         return result;
 
     }
-
     /**
      * @param newResults
      * @return
@@ -334,6 +425,10 @@ public class DEDVController extends BaseFormController {
     public void setProcessedExpressionDataVectorService(
             ProcessedExpressionDataVectorService processedExpressionDataVectorService ) {
         this.processedExpressionDataVectorService = processedExpressionDataVectorService;
+    }
+
+    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
+        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
     }
 
 }

@@ -734,31 +734,27 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     }
 
     /**
-     * Given a list of probeIds and a taxon tests to see if the given list of probeIds were invloved in any coexpression analysis's. 
-     * That is to say:  which of the given probes could have been involved in any coexpression results
+     * Given a list of probeIds and a taxon tests to see if the given list of probeIds were invloved in any coexpression
+     * analysis's. That is to say: which of the given probes could have been involved in any coexpression results
+     * 
      * @param probeIds
      * @param taxon
      * @param cleaned
      * @return
      * @throws Exception
      */
-    public HashMap<Long, Boolean> validateProbesInCoexpression( Collection<Long> probeIds, String taxon ) throws Exception {
-        String tableName = getTableName( taxon, false );
-        Collection<ProbeLink> links = getLinks( probeIds, tableName );
+    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
+            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon ) {
 
-        // Create and initlize hashmap with negative results
-        HashMap<Long, Boolean> results = new HashMap<Long, Boolean>();
-        for ( Long probeId : probeIds ) {
-            results.put( probeId, false );
-        }
+        String tableName = getTableName( taxon, false );
+
+        Collection<ProbeLink> links = getLinks( queryProbeIds, coexpressedProbeIds, ee.getId(), tableName );
+
+        Collection<Long> results = new HashSet<Long>();
 
         for ( ProbeLink probeLink : links ) {
-            if ( probeIds.contains( probeLink.getFirstDesignElementId() ) ) {
-                results.put( probeLink.getFirstDesignElementId(), true );
-            } else if ( probeIds.contains( probeLink.getSecondDesignElementId() ) ) {
-                results.put( probeLink.getSecondDesignElementId(), true );
-            }
-
+            results.add( probeLink.getFirstDesignElementId());
+            results.add( probeLink.getSecondDesignElementId());
         }
 
         return results;
@@ -770,22 +766,17 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @return
      * @throws Exception
      */
-    private Collection<ProbeLink> getLinks( Collection<Long> probeIds, String tableName ) throws Exception {
+    private Collection<ProbeLink> getLinks( Collection<Long> probeIds, String tableName ) {
 
-        StringBuffer probeIdString = new StringBuffer();
+        StringBuilder probeIdString = new StringBuilder();
         probeIdString.append( '(' );
-        
-        for(Long id : probeIds){
-            probeIdString.append( id );
-            probeIdString.append( ',' );
-        }
-        probeIdString.deleteCharAt( probeIdString.length() - 1 );// remove trailing ,
+
+        probeIdString.append( StringUtils.join( probeIds, "," ) );
         probeIdString.append( ')' );
-        
-        log.info( probeIdString );
+
         final String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM "
-                + tableName + " WHERE FIRST_DESIGN_ELEMENT_FK IN " + probeIdString.toString() +  "OR SECOND_DESIGN_ELEMENT_FK IN " 
-                + probeIdString.toString() + " limit ";
+                + tableName + " WHERE FIRST_DESIGN_ELEMENT_FK IN " + probeIdString.toString()
+                + "OR SECOND_DESIGN_ELEMENT_FK IN " + probeIdString.toString() + " limit ";
 
         final int chunkSize = 1000000;
         final Collection<ProbeLink> links = new ArrayList<ProbeLink>();
@@ -834,13 +825,85 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     }
 
     /**
+     * @param probeIds
+     * @param tableName
+     * @return
+     * @throws Exception
+     */
+    private Collection<ProbeLink> getLinks( Collection<Long> probeSetAIds, Collection<Long> probeSetBIds, Long eeId,
+            String tableName ) {
+
+        if (probeSetAIds == null || probeSetBIds == null || probeSetAIds.isEmpty() || probeSetBIds.isEmpty()){
+            log.info( "Called get links with null or empty collection a: " + probeSetAIds + "  b: " + probeSetBIds );
+                return null;
+        }
+        
+        StringBuilder probeSetAIdsString = new StringBuilder();
+        probeSetAIdsString.append( '(' );
+        probeSetAIdsString.append( StringUtils.join( probeSetAIds, "," ) );
+        probeSetAIdsString.append( ')' );
+
+        StringBuilder probeSetBIdsString = new StringBuilder();
+        probeSetBIdsString.append( '(' );
+        probeSetBIdsString.append( StringUtils.join( probeSetBIds, "," ) );
+        probeSetBIdsString.append( ')' );
+
+        final String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK FROM " + tableName
+                + " WHERE EXPRESSION_EXPERIMENT_FK = " + eeId + " AND FIRST_DESIGN_ELEMENT_FK IN "
+                + probeSetAIdsString.toString() + " AND SECOND_DESIGN_ELEMENT_FK IN " + probeSetBIdsString.toString()
+                + " limit ";
+
+        final int chunkSize = 1000000;
+        final Collection<ProbeLink> links = new ArrayList<ProbeLink>();
+        getHibernateTemplate().execute( new HibernateCallback() {
+
+            public Object doInHibernate( Session session ) throws HibernateException {
+                long start = 0;
+
+                while ( true ) {
+                    String queryString = baseQueryString + start + "," + chunkSize + ";";
+
+                    org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+                    queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
+                    queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
+
+                    ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+                    int count = 0;
+                    int iterations = 0;
+                    while ( scroll.next() ) {
+                        Long first_design_element_fk = scroll.getLong( 0 );
+                        Long second_design_element_fk = scroll.getLong( 1 );
+
+                        ProbeLink oneLink = new ProbeLink();
+                        oneLink.setFirstDesignElementId( first_design_element_fk );
+                        oneLink.setSecondDesignElementId( second_design_element_fk );
+
+                        links.add( oneLink );
+                        count++;
+                        if ( count == chunkSize ) {
+                            start = start + chunkSize;
+                            System.err.print( "." );
+                            iterations++;
+                            if ( iterations % 10 == 0 ) System.err.println();
+                        }
+                    }
+                    if ( count < chunkSize ) break;
+                }
+                log.info( "Load " + links.size() );
+                return null;
+            }
+        } );
+
+        return links;
+    }
+
+    /**
      * @param expressionExperiment
      * @param tableName
      * @return
      * @throws Exception
      */
-    private Collection<ProbeLink> getLinks( ExpressionExperiment expressionExperiment, String tableName )
-            throws Exception {
+    private Collection<ProbeLink> getLinks( ExpressionExperiment expressionExperiment, String tableName ) {
         final String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM "
                 + tableName + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
         final int chunkSize = 1000000;

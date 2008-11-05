@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * 
@@ -143,7 +144,8 @@ public interface Probe2ProbeCoexpressionService {
     public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn(
             java.util.Collection<Long> geneIds, java.util.Collection<BioAssaySet> experiments, boolean filterNonSpecific );
     
-    public HashMap<Long, Boolean> validateProbesInCoexpression( Collection<Long> probeIds, String taxon ) throws Exception;
+    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
+            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon );
 
 
 }

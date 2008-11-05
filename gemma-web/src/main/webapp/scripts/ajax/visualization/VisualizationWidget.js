@@ -38,12 +38,14 @@ Gemma.VisualizationStore = function(config) {
 
 Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {});
 
+Gemma.SELECTED = 2;  //Multiply the line thickness by this factor when it is selected in the legend
+Gemma.LINE_THICKNESS = 2; //Basic line thinkness (multipled by factor to get actual thickness)
 Gemma.PLOT_SIZE = 100;
 Gemma.ZOOM_PLOT_SIZE = 400;
 Gemma.COLD_COLORS = ["#0033FF", "#6699FF", "#3399CC", "#336666", "#66CCCC", "#33FF99", "#339966", "#009900", "#66CC66",
 		"#00CC00"];
-Gemma.HOT_COLORS = ["#FFCC00", "#FF9900", "#FF6600", "#FF3300", "#CC3300", "#660000", "#FF0000", "#990033", "#FF3399",
-		"#990099"];
+Gemma.HOT_COLORS = ["#990000", "#CC0000", "#FF0000", "#FF3366", "#FF0033", "#660000", "#FF6600", "#FF3300", "#FF6633",
+		"#990033"];
 
 Gemma.GRAPH_ZOOM_CONFIG = {
 	xaxis : {
@@ -174,12 +176,13 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 					for (var i = 0; i < profiles.size(); i++) {
 
 						if (profiles[i].labelID == probeId) {
-							if (profiles[i].lines == null) {
-								profiles[i].lines = {
-									lineWidth : 5
-								};
+							if (profiles[i].selected) {
+								profiles[i].lines.lineWidth = profiles[i].lines.lineWidth / Gemma.SELECTED;							
+								profiles[i].selected = false;								
 							} else {
-								profiles[i].lines = null;
+								profiles[i].selected = true;
+								profiles[i].lines.lineWidth = profiles[i].lines.lineWidth * Gemma.SELECTED; 							
+
 							}
 						}
 					}
@@ -251,12 +254,15 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 					var probe = coordinateProfile[i].probe.name;
 					var genes = coordinateProfile[i].genes;
 					var color = coordinateProfile[i].color;
+					var factor = coordinateProfile[i].factor;
 
 					var geneNames = genes[0].name;
 					for (var k = 1; k < genes.size(); k++) {
 						geneNames = geneNames + "," + genes[k].name;
 					}
-
+					if (factor == 2)
+						geneNames = geneNames + "*";
+					
 					var oneProfile = [];
 
 					for (var j = 0; j < coordinateObject.size(); j++) {
@@ -268,7 +274,9 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						color : color,
 						genes : genes,
 						label : probe + "=>" + geneNames,
-						labelID : probeId
+						labelID : probeId,
+						factor : factor
+						
 					};
 
 					flotrData.push(plotConfig);
@@ -373,20 +381,23 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						profiles[i].color = Gemma.HOT_COLORS[hotIndex];
 						hotIndex++;
 					}
-					// profiles[i].lines = {
-					// //linewidth : 1 / profiles[i].genes.size()
-					// }; // Vary line width size on probe specificity?
+					 profiles[i].lines = {
+					   lineWidth : Gemma.LINE_THICKNESS*profiles[i].factor
+					}; 
 
 				}
 
 				// sort array by gene
 				profiles.sort(function(a, b) {
 					if ((a.genes[0].name === b.genes[0].name))
-						return 1;
-					else
 						return 0;
+					else if (((a.genes[0].name > b.genes[0].name)))
+						return 1;
+					else 
+						return -1;
 				});
 
+				console.log(profiles);
 				Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
 			}

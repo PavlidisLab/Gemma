@@ -206,8 +206,9 @@ public class Probe2ProbeCoexpressionServiceImpl extends
         return this.getProbe2ProbeCoexpressionDao().getGenesTestedBy( bioAssaySet, filterNonSpecific );
     }
     
-    public HashMap<Long, Boolean> validateProbesInCoexpression( Collection<Long> probeIds, String taxon ) throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().validateProbesInCoexpression(probeIds, taxon);
+    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
+            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon ) {
+        return this.getProbe2ProbeCoexpressionDao().validateProbesInCoexpression(queryProbeIds,coexpressedProbeIds,ee, taxon);
     }
 
 }
