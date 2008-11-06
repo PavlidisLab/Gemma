@@ -1,5 +1,10 @@
 package ubic.gemma.security.interceptor.method.aopalliance;
 
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.Authentication;
 import org.springframework.security.GrantedAuthority;
 import org.springframework.security.context.SecurityContextHolder;
@@ -10,9 +15,6 @@ import org.springframework.security.intercept.method.MethodDefinitionSource;
 import org.springframework.security.providers.UsernamePasswordAuthenticationToken;
 import org.springframework.security.userdetails.UserDetails;
 import org.springframework.security.userdetails.UserDetailsService;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.util.SecurityUtil;
@@ -40,9 +42,10 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
     private static final String ADMINISTRATOR = "administrator"; // this isn't such a good idea to hardcode like
                                                                     // this.
 
-    private static final String DEFAULT_QUARTZ_SCHEDULER = "DefaultQuartzScheduler";
+    private static final String DEFAULT_QUARTZ_SCHEDULER = "QuartzScheduler";
 
     private UserDetailsService userDetailsService = null;
+    protected static Log log = LogFactory.getLog(CustomMethodSecurityInterceptor.class.getName());
 
     // ~ Instance fields
     // ================================================================================================
@@ -71,7 +74,7 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
     public Object invoke( MethodInvocation mi ) throws Throwable {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+        
         if ( authentication == null ) {
 
             /*
@@ -88,9 +91,12 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
             }
         }
 
+        SecurityUtil.passAuthenticationToChildThreads(); //Tested w/o and works but believe it should be called anyway
+
         Object result = null;
         InterceptorStatusToken token = super.beforeInvocation( mi );
 
+        
         try {
             result = mi.proceed();
         } finally {
