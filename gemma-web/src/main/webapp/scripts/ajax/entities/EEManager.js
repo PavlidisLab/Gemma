@@ -272,59 +272,40 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			var factors = analysisInfo.factors;
 			var proposedAnalysis = analysisInfo.type;
 
-			var canDoInteractions = false;
-			if (proposedAnalysis || factors.length > 2) {
-				canDoInteractions = proposedAnalysis == 'TWIA';
-			}
+			var canDoInteractions = (proposedAnalysis == 'TWIA') || factors.length > 2;
 
 			/*
 			 * DifferentialExpressionAnalysisSetupWindow - to be refactored.
 			 */
 			var deasw = new Ext.Window({
 						modal : true,
+						stateful : false,
+						resizable : false,
+						autoHeight : true,
 						plain : true,
-						title : "Select the factor(s) to use",
+						title : "Differential analysis settings",
 						items : [{
 									xtype : 'form',
-									id : 'diff-ex-analysis-customize-factors'
-
-								}, {
-									xtype : 'checkbox',
-									id : 'diff-ex-analysis-customize-include-interactions-checkbox',
-									hidden : !canDoInteractions,
-									boxLabel : 'Include interactions'
+									autoHeight : true,
+									items : [{
+												xtype : 'fieldset',
+												title : "Select the factor(s) to use",
+												autoHeight : true,
+												labelWidth : 200,
+												id : 'diff-ex-analysis-customize-factors'
+											}, {
+												xtype : 'fieldset',
+												labelWidth : 200,
+												autoHeight : true,
+												hidden : !canDoInteractions,
+												items : [{
+															xtype : 'checkbox',
+															id : 'diff-ex-analysis-customize-include-interactions-checkbox',
+															fieldLabel : 'Include interactions'
+														}]
+											}]
 								}],
-						buttons : [
-								// {
-								// text : 'Validate',
-								// handler : function(btn, text) {
-								// var callParams = [];
-								// /*
-								// * TODO Need to pass back the factors chosen and the interaction setting. May
-								// * need to create a new method. Maybe we don't need validation?
-								// */
-								// callParams.push(id);
-								// callParams.push({
-								// /*
-								// * Update the type of analysis to be conducted.
-								// */
-								// callback : function(analysisInfo) {
-								// alert("Post-validation");
-								// Ext.getCmp('diff-ex-customize-proceed-button').enable();
-								// /*
-								// * TODO
-								// */
-								// }.createDelegate(this),
-								// errorHandler : function(error) {
-								// Ext.Msg.alert("Invalid settings", error);
-								// }.createDelegate(this)
-								// });
-								//
-								// DifferentialExpressionAnalysisController.determineAnalysisType.apply(this,
-								// callParams);
-								// }
-								// },
-								{
+						buttons : [{
 							text : 'Proceed',
 							id : 'diff-ex-customize-proceed-button',
 							disabled : false,
@@ -334,6 +315,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 								var includeInteractions = Ext
 										.getCmp('diff-ex-analysis-customize-include-interactions-checkbox').getValue();
 
+								/*
+								 * Get the factors the user checked. See checkbox creation code below.
+								 */
 								var factorsToUseIds = [];
 								if (factors) {
 									for (var i = 0; i < factors.length; i++) {
@@ -348,17 +332,17 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 									}
 								}
 
+								/*
+								 * Pass back the factors to be used, and the choice of whether interactions are to be
+								 * used.
+								 */
 								var callParams = [];
-
 								callParams.push(id);
 								callParams.push(factorsToUseIds);
 								callParams.push(includeInteractions);
 
 								callParams.push({
-											/*
-											 * FIXME pass back the factors to be used, and the choice of whether
-											 * interactions are to be used.
-											 */
+
 											callback : function(data) {
 												var k = new Gemma.WaitHandler();
 												k.handleWait(data, true);
@@ -384,6 +368,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					});
 
 			deasw.doLayout();
+
+			/*
+			 * Create the checkboxes for user choice of factors.
+			 */
 			if (factors) {
 				for (var i = 0; i < factors.length; i++) {
 					var f = factors[i];
@@ -392,6 +380,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					}
 					Ext.getCmp('diff-ex-analysis-customize-factors').add(new Ext.form.Checkbox({
 								fieldLabel : f.name,
+								labelWidth : 180,
 								id : f.id + '-factor-checkbox',
 								tooltip : f.name
 							}));
