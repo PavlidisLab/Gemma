@@ -24,11 +24,27 @@
 	'Experimental Factors'. Because Gemma was heavily influenced by MAGE-OM, we use the term 'experimental factor' or
 	'factor' for short. The values a factor takes in an experiment are the 'factor values'.
 </p>
+
 <p>
 	To analyze an expression study, the experimental design must be encoded in a way the software can understand. This page
 	explains how this is done in Gemma.
 </p>
 
+<h3>
+	Note!
+</h3>
+
+<p>
+	Gemma currently has a limitation in the types of experimental designs it can handle for differential expression
+	analysis. The key issue is dealing with two-channel array designs without a constant reference sample. An example is a
+	'loop' design, or designs where experimental samples are paired with controls on each array. The reason for this
+	limitation is partly because of GEO, which does not have the concept of a 'BioMaterial' (representing the RNA), only of
+	a "Sample" (representing one microarray, which might have combined multiple samples). Thus when we import studies from
+	GEO we cannot detect such designs automatically. Internally, Gemma can handle more complex designs, but we decided that
+	1) they are uncommon and 2) analyzing them would often be too complex to expose through a web interface in a
+	sufficiently general way. Therefore the web interface currently can only handle studies that can be treated as
+	factorial designs as outlined below. If this is an issue for you, we'd like to know about it.
+</p>
 
 <h3>
 	Import from a text file
@@ -53,7 +69,7 @@
 </p>
 <pre># This is a comment
 $ agent : Category=Compound Type=categorical
-Bioassay	agent
+Sample	agent
 GSE2111_Biomat_4	vanadium
 GSE2111_Biomat_3	vanadium
 GSE2111_Biomat_2	vanadium
