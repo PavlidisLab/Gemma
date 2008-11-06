@@ -546,7 +546,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
                 }
             }
             bioMaterialService.update( bm );
-            log.info( bm );
+            log.debug( bm );
         }
     }
 

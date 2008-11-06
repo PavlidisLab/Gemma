@@ -120,7 +120,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @Override
@@ -452,9 +451,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             for ( FactorValue fv : fvs ) {
                 if ( fv.getExperimentalFactor().getName() != experimentalFactorB.getName() ) {
                     continue;
-                } else {
-                    updatedFactorValues.add( fv );
                 }
+                updatedFactorValues.add( fv );
+
                 m.setFactorValues( updatedFactorValues );
                 updatedBiomaterials.add( m );
             }

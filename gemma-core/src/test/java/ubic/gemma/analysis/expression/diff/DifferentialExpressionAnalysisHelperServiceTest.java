@@ -30,7 +30,6 @@ public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyze
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
      */
     @Override
@@ -50,7 +49,8 @@ public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyze
      * Expected result: null exception
      */
     public void testCheckBiologicalReplicates() throws Exception {
-        boolean result = differentialExpressionAnalysisHelperService.checkBiologicalReplicates( expressionExperiment );
+        boolean result = differentialExpressionAnalysisHelperService.checkBiologicalReplicates( expressionExperiment,
+                expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
 
     }
 
@@ -65,15 +65,12 @@ public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyze
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override
     public void configureMocks() throws Exception {
 
         configureMockAnalysisServiceHelper( 1 );
-
-        differentialExpressionAnalysisHelperService.setExpressionDataMatrixService( expressionDataMatrixService );
 
     }
 

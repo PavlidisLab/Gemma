@@ -18,22 +18,34 @@
  */
 package ubic.gemma.web.controller.diff;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.security.context.SecurityContextHolder;
 
+import ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.analysis.expression.diff.OneWayAnovaAnalyzer;
+import ubic.gemma.analysis.expression.diff.TTestAnalyzer;
+import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithInteractionsAnalyzer;
+import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithoutInteractionsAnalyzer;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask;
 import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
+import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
 
 /**
@@ -42,6 +54,7 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @spring.bean id="differentialExpressionAnalysisController"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="differentialExpressionAnalyzerService" ref="differentialExpressionAnalyzerService"
+ * @spring.property name="differentialExpressionAnalyzer" ref="differentialExpressionAnalyzer"
  * @author keshav
  * @version $Id$
  */
@@ -79,10 +92,17 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         protected DifferentialExpressionAnalysis processJob( TaskCommand c ) {
             DifferentialExpressionAnalysisTaskCommand dc = ( DifferentialExpressionAnalysisTaskCommand ) c;
 
+            AnalysisType analysisType = dc.getAnalysisType();
             ExpressionExperiment ee = dc.getExpressionExperiment();
             expressionExperimentService.thawLite( ee );
-            DifferentialExpressionAnalysis results = differentialExpressionAnalyzerService
-                    .runDifferentialExpressionAnalyses( ee );
+            DifferentialExpressionAnalysis results;
+            if ( analysisType != null ) {
+                assert dc.getFactors() != null;
+                results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, dc.getFactors(),
+                        analysisType );
+            } else {
+                results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
+            }
             return results;
         }
     }
@@ -132,9 +152,165 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
 
     }
 
+    private DifferentialExpressionAnalyzer differentialExpressionAnalyzer;
+
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
 
     private ExpressionExperimentService expressionExperimentService = null;
+
+    /**
+     * FIXME: used?
+     * 
+     * @param id
+     * @param factorids
+     * @param type
+     * @return
+     */
+    public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id, Collection<Long> factorids,
+            AnalysisType type ) {
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
+        }
+
+        /*
+         * Get the factors matching the factorids
+         */
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( factorids.contains( ef.getId() ) ) {
+                factors.add( ef );
+            }
+        }
+
+        AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
+                factors, type );
+
+        DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
+
+        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            result.getFactors().add( new ExperimentalFactorValueObject( factor ) );
+        }
+
+        if ( analyzer == null ) {
+            /*
+             * Either there are no viable automatic choices, or there are no factors...
+             */
+
+        } else if ( analyzer instanceof TTestAnalyzer ) {
+            result.setType( AnalysisType.TTEST );
+        } else if ( analyzer instanceof OneWayAnovaAnalyzer ) {
+            result.setType( AnalysisType.OWA );
+        } else if ( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer ) {
+            result.setType( AnalysisType.TWIA );
+        } else if ( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer ) {
+            result.setType( AnalysisType.TWA );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to handle analyzer of class: "
+                    + analyzer.getClass().getSimpleName() );
+        }
+        return result;
+    }
+
+    /**
+     * @param id
+     * @return
+     */
+    public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
+        }
+        AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee );
+
+        DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
+
+        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            result.getFactors().add( new ExperimentalFactorValueObject( factor ) );
+        }
+
+        if ( analyzer == null ) {
+            /*
+             * Either there are no viable automatic choices, or there are no factors...
+             */
+
+        } else if ( analyzer instanceof TTestAnalyzer ) {
+            result.setType( AnalysisType.TTEST );
+        } else if ( analyzer instanceof OneWayAnovaAnalyzer ) {
+            result.setType( AnalysisType.OWA );
+        } else if ( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer ) {
+            result.setType( AnalysisType.TWIA );
+        } else if ( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer ) {
+            result.setType( AnalysisType.TWA );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to handle analyzer of class: "
+                    + analyzer.getClass().getSimpleName() );
+        }
+        return result;
+    }
+
+    /**
+     * AJAX entry point for 'customized' analysis.
+     * 
+     * @param cmd
+     * @return
+     * @throws Exception
+     */
+    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions ) throws Exception {
+        /* this 'run' method is exported in the spring-beans.xml */
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
+        }
+
+        /*
+         * Get the factors matching the factorids
+         */
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( factorids.contains( ef.getId() ) ) {
+                factors.add( ef );
+            }
+        }
+
+        AnalysisType type = null;
+        if ( factors.size() == 2 ) {
+            if ( includeInteractions ) {
+                type = AnalysisType.TWIA;
+            } else {
+                type = AnalysisType.TWA;
+            }
+        } else if ( factors.size() == 1 ) {
+
+            int numValues = factors.iterator().next().getFactorValues().size();
+            if ( numValues < 2 ) {
+                throw new IllegalArgumentException( "There must be at least two factor values" );
+            }
+            if ( numValues == 2 ) {
+                type = AnalysisType.TTEST;
+            } else if ( numValues > 2 ) {
+                type = AnalysisType.OWA;
+            }
+        } else {
+            throw new IllegalArgumentException( "You must choose at most 2 factors" );
+        }
+
+        AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
+                factors, type );
+
+        if ( analyzer == null ) {
+            throw new IllegalArgumentException( "Your settings were not valid. Please check them and try again." );
+        }
+
+        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
+        cmd.setAnalysisType( type );
+        cmd.setFactors( factors );
+
+        return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
+                .getName(), true );
+    }
 
     /**
      * AJAX entry point.
@@ -147,11 +323,18 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         /* this 'run' method is exported in the spring-beans.xml */
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
+        }
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
 
         return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
                 .getName(), true );
+    }
+
+    public void setDifferentialExpressionAnalyzer( DifferentialExpressionAnalyzer differentialExpressionAnalyzer ) {
+        this.differentialExpressionAnalyzer = differentialExpressionAnalyzer;
     }
 
     public void setDifferentialExpressionAnalyzerService(

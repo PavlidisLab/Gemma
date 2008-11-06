@@ -28,8 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
@@ -71,8 +69,6 @@ import cern.colt.list.DoubleArrayList;
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
-    private Log log = LogFactory.getLog( this.getClass() );
-
     private static final double DEFAULT_THRESHOLD = 0.01;
 
     private static final String FV_SEP = ", ";
@@ -93,31 +89,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
          */
         setSessionForm( true );
     }
-
-    //
-    // /**
-    // * AJAX entry.
-    // * <p>
-    // * Returns a metadata diff expression value object, which is useful for printing the results to a text view.
-    // *
-    // * @param geneIds
-    // * @param threshold
-    // * @return
-    // */
-    // public DifferentialExpressionMetaValueObject getDifferentialExpressionMeta( Collection<Long> geneIds,
-    // double threshold ) {
-    //
-    // List<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
-    //
-    // for ( Long geneId : geneIds ) {
-    // DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, null,
-    // threshold );
-    // devos.addAll( mavo.getProbeResults() );
-    // }
-    //
-    // DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
-    // return meta;
-    // }
 
     /**
      * When n probes map to the same gene, penalize by multiplying each pval by n and then take the 'best' value.

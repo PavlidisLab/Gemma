@@ -30,7 +30,6 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
      */
     @Override
@@ -82,7 +81,6 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override
@@ -92,7 +90,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
 
         DifferentialExpressionAnalysisHelperService analyzerHelper = ( DifferentialExpressionAnalysisHelperService ) this
                 .getBean( "differentialExpressionAnalysisHelperService" );
-        analyzerHelper.setExpressionDataMatrixService( expressionDataMatrixService );
+
         analysis.setDifferentialExpressionAnalysisHelperService( analyzerHelper );
 
     }

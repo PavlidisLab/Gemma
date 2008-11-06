@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -65,9 +66,16 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
 
     private DifferentialExpressionAnalysis doAnalysis( DifferentialExpressionAnalysisTaskCommand jsDiffAnalysisCommand ) {
         ExpressionExperiment ee = jsDiffAnalysisCommand.getExpressionExperiment();
-
-        return differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
-
+        DifferentialExpressionAnalysis results;
+        AnalysisType analysisType = jsDiffAnalysisCommand.getAnalysisType();
+        if ( analysisType != null ) {
+            assert jsDiffAnalysisCommand.getFactors() != null;
+            results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
+                    jsDiffAnalysisCommand.getFactors(), analysisType );
+        } else {
+            results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
+        }
+        return results;
     }
 
     /**

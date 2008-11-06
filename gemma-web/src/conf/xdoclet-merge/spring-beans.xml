@@ -135,6 +135,7 @@
 			<entry key="classConverter" value="ubic.gemma.web.remote.ClassConverter"></entry>
 			<entry key="goEvidenceCodeConverter" value="ubic.gemma.web.remote.GOEvidenceCodeConverter"></entry>
 			<entry key="doublePointConverter" value="ubic.gemma.web.remote.DoublePointConverter"></entry>
+			<entry key="diffAnalysisTypeConverter" value="ubic.gemma.web.remote.DiffAnalysisTypeConverter"></entry>
 
 		</map>
 	</property>
@@ -428,6 +429,8 @@
 					<property name="includes">
 						<list>
 							<value>run</value>
+							<value>runCustom</value>
+							<value>determineAnalysisType</value>
 						</list>
 					</property>
 				</bean>
@@ -1203,9 +1206,14 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.diff.DifferentialExpressionMetaAnalysisValueObject">
+			<entry key="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService$AnalysisType">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="diffAnalysisTypeConverter" />
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.model.common.description.BibliographicReference">

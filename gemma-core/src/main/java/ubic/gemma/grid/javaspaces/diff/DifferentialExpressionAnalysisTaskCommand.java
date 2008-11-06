@@ -18,7 +18,11 @@
  */
 package ubic.gemma.grid.javaspaces.diff;
 
+import java.util.Collection;
+
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -31,16 +35,31 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
 
-    private boolean forceAnalysis = false;
+    /**
+     * Proposed analysis type. If null the system tries to figure it out.
+     */
+    private AnalysisType analysisType;
 
     private ExpressionExperiment expressionExperiment = null;
 
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
+    /**
+     * The factors to actually use in the analysis. If null the system tries to figure it out.
+     */
+    private Collection<ExperimentalFactor> factors;
+
+    public Collection<ExperimentalFactor> getFactors() {
+        return factors;
     }
 
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
+    public void setFactors( Collection<ExperimentalFactor> factors ) {
+        this.factors = factors;
+    }
+
+    private boolean forceAnalysis = false;
+
+    public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee ) {
+        super();
+        this.expressionExperiment = ee;
     }
 
     /**
@@ -56,13 +75,24 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.expressionExperiment = expressionExperiment;
     }
 
-    public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee ) {
-        super();
-        this.expressionExperiment = ee;
+    public AnalysisType getAnalysisType() {
+        return analysisType;
+    }
+
+    public ExpressionExperiment getExpressionExperiment() {
+        return expressionExperiment;
     }
 
     public boolean isForceAnalysis() {
         return forceAnalysis;
+    }
+
+    public void setAnalysisType( AnalysisType analysisType ) {
+        this.analysisType = analysisType;
+    }
+
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     public void setForceAnalysis( boolean forceAnalysis ) {

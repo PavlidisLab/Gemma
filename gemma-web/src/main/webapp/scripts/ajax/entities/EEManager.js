@@ -186,6 +186,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											k.on('done', function(payload) {
 														this.fireEvent('deleted', payload)
 													});
+										}.createDelegate(this),
+										errorHandler : function(error) {
+											Ext.Msg.alert("Deletion failed", error);
 										}.createDelegate(this)
 									});
 							ExpressionExperimentController.deleteById.apply(this, callParams);
@@ -214,6 +217,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											k.on('done', function(payload) {
 														this.fireEvent('link', payload)
 													});
+										}.createDelegate(this),
+										errorHandler : function(error) {
+											Ext.Msg.alert("Link analysis failed", error);
 										}.createDelegate(this)
 									});
 							LinkAnalysisController.run.apply(this, callParams);
@@ -242,6 +248,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											k.on('done', function(payload) {
 														this.fireEvent('missingValue', payload)
 													});
+										}.createDelegate(this),
+										errorHandler : function(error) {
+											Ext.Msg.alert("Missing value analysis failed", error);
 										}.createDelegate(this)
 									});
 							ArrayDesignRepeatScanController.run.apply(this, callParams);
@@ -254,31 +263,248 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	},
 
 	doDifferential : function(id) {
-		Ext.Msg.show({
-					title : 'Differential expression analysis',
-					msg : 'Please confirm. Previous analaysis results will be deleted.',
-					buttons : Ext.Msg.YESNO,
-					fn : function(btn, text) {
-						if (btn == 'yes') {
-							var callParams = []
-							callParams.push(id);
-							callParams.push({
-										callback : function(data) {
-											var k = new Gemma.WaitHandler();
-											k.handleWait(data, true);
-											this.relayEvents(k, ['done']);
-											k.on('done', function(payload) {
-														this.fireEvent('differential', payload)
+
+		/*
+		 * Do an analysis interactively.
+		 */
+		var customize = function(analysisInfo) {
+
+			var factors = analysisInfo.factors;
+			var proposedAnalysis = analysisInfo.type;
+
+			var canDoInteractions = false;
+			if (proposedAnalysis || factors.length > 2) {
+				canDoInteractions = proposedAnalysis == 'TWIA';
+			}
+
+			/*
+			 * DifferentialExpressionAnalysisSetupWindow - to be refactored.
+			 */
+			var deasw = new Ext.Window({
+						modal : true,
+						plain : true,
+						title : "Select the factor(s) to use",
+						items : [{
+									xtype : 'form',
+									id : 'diff-ex-analysis-customize-factors'
+
+								}, {
+									xtype : 'checkbox',
+									id : 'diff-ex-analysis-customize-include-interactions-checkbox',
+									hidden : !canDoInteractions,
+									boxLabel : 'Include interactions'
+								}],
+						buttons : [
+								// {
+								// text : 'Validate',
+								// handler : function(btn, text) {
+								// var callParams = [];
+								// /*
+								// * TODO Need to pass back the factors chosen and the interaction setting. May
+								// * need to create a new method. Maybe we don't need validation?
+								// */
+								// callParams.push(id);
+								// callParams.push({
+								// /*
+								// * Update the type of analysis to be conducted.
+								// */
+								// callback : function(analysisInfo) {
+								// alert("Post-validation");
+								// Ext.getCmp('diff-ex-customize-proceed-button').enable();
+								// /*
+								// * TODO
+								// */
+								// }.createDelegate(this),
+								// errorHandler : function(error) {
+								// Ext.Msg.alert("Invalid settings", error);
+								// }.createDelegate(this)
+								// });
+								//
+								// DifferentialExpressionAnalysisController.determineAnalysisType.apply(this,
+								// callParams);
+								// }
+								// },
+								{
+							text : 'Proceed',
+							id : 'diff-ex-customize-proceed-button',
+							disabled : false,
+							scope : this,
+							handler : function(btn, text) {
+
+								var includeInteractions = Ext
+										.getCmp('diff-ex-analysis-customize-include-interactions-checkbox').getValue();
+
+								var factorsToUseIds = [];
+								if (factors) {
+									for (var i = 0; i < factors.length; i++) {
+										var f = factors[i];
+										if (!f.name) {
+											continue;
+										}
+										var checked = Ext.getCmp(f.id + '-factor-checkbox').getValue();
+										if (checked) {
+											factorsToUseIds.push(f.id);
+										}
+									}
+								}
+
+								var callParams = [];
+
+								callParams.push(id);
+								callParams.push(factorsToUseIds);
+								callParams.push(includeInteractions);
+
+								callParams.push({
+											/*
+											 * FIXME pass back the factors to be used, and the choice of whether
+											 * interactions are to be used.
+											 */
+											callback : function(data) {
+												var k = new Gemma.WaitHandler();
+												k.handleWait(data, true);
+												this.relayEvents(k, ['done']);
+												k.on('done', function(payload) {
+															this.fireEvent('differential', payload)
+														});
+											}.createDelegate(this),
+											errorHandler : function(error) {
+												Ext.Msg.alert("Diff. Analysis failed", error);
+											}.createDelegate(this)
+										});
+
+								DifferentialExpressionAnalysisController.runCustom.apply(this, callParams);
+								deasw.close();
+							}
+						}, {
+							text : 'Cancel',
+							handler : function() {
+								deasw.close();
+							}
+						}]
+					});
+
+			deasw.doLayout();
+			if (factors) {
+				for (var i = 0; i < factors.length; i++) {
+					var f = factors[i];
+					if (!f.name) {
+						continue;
+					}
+					Ext.getCmp('diff-ex-analysis-customize-factors').add(new Ext.form.Checkbox({
+								fieldLabel : f.name,
+								id : f.id + '-factor-checkbox',
+								tooltip : f.name
+							}));
+				}
+			}
+			deasw.doLayout();
+			deasw.show();
+
+		};
+
+		/*
+		 * Callback for analysis type determination. This gets the type of analysis, if it can be determined. If the
+		 * type is non-null, then just ask the user for confirmation. If they say no, or the type is null, show them the
+		 * DifferentialExpressionAnalysisSetupWindow.
+		 */
+		var cb = function(analysisInfo) {
+			if (analysisInfo.type) {
+				var customizable = false;
+				var analysisType = '';
+				if (analysisInfo.type === 'TWIA') {
+					analysisType = 'Two-way ANOVA with interactions';
+					customizable = true;
+				} else if (analysisInfo.type === 'TWA') {
+					analysisType = 'Two-way ANOVA without interactions';
+					customizable = true;
+				} else if (analysisInfo.type === 'TTEST') {
+					analysisType = 'T-test';
+				} else if (analysisInfo.type === 'OWA') {
+					analysisType = 'One-way ANOVA';
+				}
+
+				// ask for confirmation.
+				var w = new Ext.Window({
+							autoCreate : true,
+							resizable : false,
+							constrain : true,
+							constrainHeader : true,
+							minimizable : false,
+							maximizable : false,
+							stateful : false,
+							modal : true,
+							shim : true,
+							buttonAlign : "center",
+							width : 400,
+							height : 100,
+							minHeight : 80,
+							plain : true,
+							footer : true,
+							closable : true,
+							title : 'Differential expression analysis',
+							html : 'Please confirm. The analysis performed will be a ' + analysisType
+									+ '. Previous analysis results for this experiment will be deleted.',
+							buttons : [{
+										text : 'Proceed',
+										scope : this,
+										handler : function(btn, text) {
+											var callParams = []
+											callParams.push(id);
+											callParams.push({
+														callback : function(data) {
+															var k = new Gemma.WaitHandler();
+															k.handleWait(data, true);
+															this.relayEvents(k, ['done']);
+															k.on('done', function(payload) {
+																		this.fireEvent('differential', payload)
+																	});
+														}.createDelegate(this),
+														errorHandler : function(error) {
+															Ext.Msg.alert("Diff. Analysis failed", error);
+														}.createDelegate(this)
 													});
-										}.createDelegate(this)
-									});
-							DifferentialExpressionAnalysisController.run.apply(this, callParams);
-						}
-					},
-					scope : this,
-					animEl : 'elId',
-					icon : Ext.MessageBox.WARNING
+
+											DifferentialExpressionAnalysisController.run.apply(this, callParams);
+											w.close();
+										}
+									}, {
+										text : 'Cancel',
+										handler : function() {
+											w.close();
+										}
+									}, {
+										disabled : !customizable,
+										hidden : !customizable,
+										text : 'Customize',
+										handler : function() {
+											w.close();
+											customize(analysisInfo);
+										}
+									}],
+							iconCls : Ext.MessageBox.QUESTION
+						});
+
+				w.show();
+
+			} else {
+				/*
+				 * System couldn't guess the analysis type, so force user to customize.
+				 */
+				customize(analysisInfo);
+			}
+		};
+
+		/*
+		 * Get the analysis type.
+		 */
+		var eh = function(error) {
+			Ext.Msg.alert("There was an error", error);
+		};
+		DifferentialExpressionAnalysisController.determineAnalysisType(id, {
+					callback : cb,
+					errorhandler : eh
 				});
+
 	},
 
 	doProcessedVectors : function(id) {

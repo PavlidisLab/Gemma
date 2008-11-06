@@ -29,6 +29,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.ehcache.Cache;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -70,6 +72,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     private static final int MAX_RESULTS = 100;
     private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
 
+    private Cache coexpressionCache;
+
+    /**
+     * Clear the cache of gene2gene objects. This should be run when gene2gene is updated. FIXME externalize this and
+     * set it up so it can be done in a taxon-specific way?
+     */
+    protected void clearCache() {
+        this.coexpressionCache.removeAll();
+    }
+    
     /*
      * (non-Javadoc)
      * @see ubic.gemma.model.genome.GeneDaoBase#find(ubic.gemma.model.genome.Gene)

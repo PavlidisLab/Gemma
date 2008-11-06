@@ -71,7 +71,9 @@ public class DifferentialExpressionAnalyzer {
     public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment ) {
 
         AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment );
-
+        if ( analyzer == null ) {
+            throw new RuntimeException( "Could not locate an appropriate analyzer" );
+        }
         DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment );
 
         return analysis;
@@ -88,6 +90,10 @@ public class DifferentialExpressionAnalyzer {
             Collection<ExperimentalFactor> factors ) {
 
         AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment );
+
+        if ( analyzer == null ) {
+            throw new RuntimeException( "Could not locate an appropriate analyzer" );
+        }
 
         DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, factors );
 
@@ -138,7 +144,7 @@ public class DifferentialExpressionAnalyzer {
         this.twoWayAnovaWithoutInteractionsAnalyzer = twoWayAnovaWithoutInteractionsAnalyzer;
     }
 
-    private AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
+    public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
 
         if ( factors.size() == 0 ) {
@@ -181,7 +187,7 @@ public class DifferentialExpressionAnalyzer {
      * @param expressionExperiment
      * @return
      */
-    protected AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment ) {
+    public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
@@ -192,8 +198,6 @@ public class DifferentialExpressionAnalyzer {
         }
 
         if ( experimentalFactors.size() == EXPERIMENTAL_FACTOR_ONE ) {
-
-            log.info( "1 experimental factor found." );
 
             ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
             Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
@@ -211,15 +215,13 @@ public class DifferentialExpressionAnalyzer {
                  * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
                  * clarity.
                  */
-                log.info( "Running t test." );
                 return studenttTestAnalyzer;
             }
 
             else {
-                log.info( factorValues.size() + " factor values.  Running one way anova." );
                 /*
-                 * Return one way anova analyzer. This can take care of the t-test as well, since a one-way anova with
-                 * two groups is just a t-test
+                 * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a one-way anova
+                 * with two groups is just a t-test
                  */
                 return oneWayAnovaAnalyzer;
             }
@@ -227,8 +229,6 @@ public class DifferentialExpressionAnalyzer {
         }
 
         else if ( experimentalFactors.size() == EXPERIMENTAL_FACTOR_TWO ) {
-
-            log.info( "2 experimental factors found." );
 
             for ( ExperimentalFactor f : experimentalFactors ) {
                 Collection<FactorValue> factorValues = f.getFactorValues();
@@ -240,16 +240,14 @@ public class DifferentialExpressionAnalyzer {
             }
             /* Check for block design and execute two way anova (with or without interactions). */
             if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment ) ) {
-                log.info( "Running two way anova without interactions." );
                 return twoWayAnovaWithoutInteractionsAnalyzer;
             }
-            log.info( "Running two way anova with interactions." );
             return twoWayAnovaWithInteractionsAnalyzer;
 
         }
 
-        throw new RuntimeException(
-                "Differential expression analysis supports a maximum of 2 experimental factors at this time." );
+        log.warn( "Differential expression analysis supports a maximum of 2 experimental factors at this time." );
+        return null;
 
     }
 

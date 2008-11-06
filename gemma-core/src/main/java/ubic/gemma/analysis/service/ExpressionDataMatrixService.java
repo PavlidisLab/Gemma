@@ -66,7 +66,6 @@ public class ExpressionDataMatrixService {
      * @param dataVectors
      * @return
      */
-    @SuppressWarnings("unchecked")
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
@@ -82,7 +81,6 @@ public class ExpressionDataMatrixService {
      * @param filterConfig
      * @return
      */
-    @SuppressWarnings("unchecked")
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) {
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
