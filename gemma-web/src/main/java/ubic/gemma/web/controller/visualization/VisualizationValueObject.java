@@ -33,6 +33,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 
+/**
+ * Stores expression profile data for plotting.
+ * 
+ * @author kelsey, paul
+ * @version $Id$
+ */
 public class VisualizationValueObject {
 
     private Collection<GeneExpressionProfile> profiles;
@@ -51,9 +57,13 @@ public class VisualizationValueObject {
      * @param vectors from a single expression experiment.
      * @param genes Is list so that order is gauranteed. Need this so that color's are consistent. Query gene is always
      *        black, coexpressed is always red.
+     * @param validatedProbeList Probes which are flagged as 'valid' in some sense. For example, in coexpression plots
+     *        these are probes that provided the coexpression evidence, to differentiate them from the ones which are
+     *        just being displayed because they assay the same gene.
      * @throws IllegalArgumentException if vectors are mixed between EEs.
      */
-    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes, Collection<Long> validatedProbeList ) {
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes,
+            Collection<Long> validatedProbeList ) {
         this();
 
         int i = 0;
@@ -93,17 +103,15 @@ public class VisualizationValueObject {
                 }
             }
 
-            int valid = 1; 
-            if (validatedProbeList.contains( vector.getDesignElement().getId()))
-                valid = 2;
-            
+            int valid = 1;
+            if ( validatedProbeList.contains( vector.getDesignElement().getId() ) ) valid = 2;
+
             GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid );
             profiles.add( profile );
 
         }
     }
-    
-    
+
     /**
      * @param vectors from a single expression experiment.
      * @param genes Is list so that order is gauranteed. Need this so that color's are consistent. Query gene is always
@@ -149,7 +157,7 @@ public class VisualizationValueObject {
                     }
                 }
             }
-            
+
             GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, 1 );
             profiles.add( profile );
 

@@ -7,13 +7,13 @@ Ext.namespace('Gemma');
 Gemma.VisualizationStore = function(config) {
 
 	this.record = Ext.data.Record.create([{
-		name : "id",
-		type : "int"
-	}, {
-		name : "eevo"
-	}, {
-		name : "profiles"
-	}]);
+				name : "id",
+				type : "int"
+			}, {
+				name : "eevo"
+			}, {
+				name : "profiles"
+			}]);
 
 	if (config && config.readMethod)
 		this.readMethod = config.readMethod;
@@ -23,8 +23,8 @@ Gemma.VisualizationStore = function(config) {
 	this.proxy = new Ext.data.DWRProxy(this.readMethod);
 
 	this.reader = new Ext.data.ListRangeReader({
-		id : "id"
-	}, this.record);
+				id : "id"
+			}, this.record);
 
 	Gemma.VisualizationStore.superclass.constructor.call(this, config);
 
@@ -38,12 +38,13 @@ Gemma.VisualizationStore = function(config) {
 
 Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {});
 
-Gemma.SELECTED = 2;  //Multiply the line thickness by this factor when it is selected in the legend
-Gemma.LINE_THICKNESS = 2; //Basic line thinkness (multipled by factor to get actual thickness)
+Gemma.SELECTED = 2; // Multiply the line thickness by this factor when it is selected in the legend
+Gemma.LINE_THICKNESS = 2; // Basic line thinkness (multipled by factor to get actual thickness)
 Gemma.PLOT_SIZE = 100;
 Gemma.ZOOM_PLOT_SIZE = 400;
 Gemma.COLD_COLORS = ["#0033FF", "#6699FF", "#3399CC", "#336666", "#66CCCC", "#33FF99", "#339966", "#009900", "#66CC66",
 		"#00CC00"];
+
 Gemma.HOT_COLORS = ["#990000", "#CC0000", "#FF0000", "#FF3366", "#FF0033", "#660000", "#FF6600", "#FF3300", "#FF6633",
 		"#990033"];
 
@@ -56,18 +57,18 @@ Gemma.GRAPH_ZOOM_CONFIG = {
 	},
 	grid : {
 		labelMargin : 0
-	// => margin in pixels
-	// color : "white" //this turns the letters in the legend to white
+		// => margin in pixels
+		// color : "white" //this turns the letters in the legend to white
 	},
 	shadowSize : 0,
 
 	legend : {
 		show : true,
 		container : 'zoomLegend'
-	// labelFormatter : formatLabel
+		// labelFormatter : formatLabel
 
-	// position : 'nw'
-	// backgroundOpacity : 0.5
+		// position : 'nw'
+		// backgroundOpacity : 0.5
 	}
 
 };
@@ -84,60 +85,60 @@ Gemma.geneContained = function(geneName, arrayOfGenes) {
 
 Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 
-	graphConfig : {
-		lines : {
-			lineWidth : 1
-		},
-		xaxis : {
-			noTicks : 0
-		},
-		yaxis : {
-			noTicks : 0
-		},
-		grid : {
-			color : "white"
-		},
-		shadowSize : 0,
+			graphConfig : {
+				lines : {
+					lineWidth : 1
+				},
+				xaxis : {
+					noTicks : 0
+				},
+				yaxis : {
+					noTicks : 0
+				},
+				grid : {
+					color : "white"
+				},
+				shadowSize : 0,
 
-		legend : {
-			show : false
-		}
-	},
+				legend : {
+					show : false
+				}
+			},
 
-	overwrite : function(el, values, ret) {
-		Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
-		for (var i = 0; i < values.length; i++) {
-			var record = values[i];
-			var shortName = record.eevo.shortName;
-			var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
-				tag : 'div',
-				id : shortName + "_vis",
-				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px;'
-			});
+			overwrite : function(el, values, ret) {
+				Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
+				for (var i = 0; i < values.length; i++) {
+					var record = values[i];
+					var shortName = record.eevo.shortName;
+					var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
+								tag : 'div',
+								id : shortName + "_vis",
+								style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px;'
+							});
 
-			// Must use prototype extraction here -- putting in newDiv fails.
-			Flotr.draw($(shortName + "_vis"), record.profiles, this.graphConfig);
-		}
-	}
-});
+					// Must use prototype extraction here -- putting in newDiv fails.
+					Flotr.draw($(shortName + "_vis"), record.profiles, this.graphConfig);
+				}
+			}
+		});
 
 Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 
-	overwrite : function(el, values, ret) {
-		Gemma.HeatmapTemplate.superclass.overwrite.call(this, el, values, ret);
-		for (var i = 0; i < values.length; i++) {
-			var record = values[i];
-			var shortName = record.eevo.shortName;
-			var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
-				tag : 'div',
-				id : shortName + "_vis",
-				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px;'
-			});
+			overwrite : function(el, values, ret) {
+				Gemma.HeatmapTemplate.superclass.overwrite.call(this, el, values, ret);
+				for (var i = 0; i < values.length; i++) {
+					var record = values[i];
+					var shortName = record.eevo.shortName;
+					var newDiv = Ext.DomHelper.append(shortName + '_vizwrap', {
+								tag : 'div',
+								id : shortName + "_vis",
+								style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px;'
+							});
 
-			Heatmap.draw($(shortName + "_vis"), record.profiles);
-		}
-	}
-});
+					Heatmap.draw($(shortName + "_vis"), record.profiles);
+				}
+			}
+		});
 
 Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	id : 'VisualizationWindow',
@@ -177,11 +178,11 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 						if (profiles[i].labelID == probeId) {
 							if (profiles[i].selected) {
-								profiles[i].lines.lineWidth = profiles[i].lines.lineWidth / Gemma.SELECTED;							
-								profiles[i].selected = false;								
+								profiles[i].lines.lineWidth = profiles[i].lines.lineWidth / Gemma.SELECTED;
+								profiles[i].selected = false;
 							} else {
 								profiles[i].selected = true;
-								profiles[i].lines.lineWidth = profiles[i].lines.lineWidth * Gemma.SELECTED; 							
+								profiles[i].lines.lineWidth = profiles[i].lines.lineWidth * Gemma.SELECTED;
 
 							}
 						}
@@ -262,7 +263,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 					}
 					if (factor == 2)
 						geneNames = geneNames + "*";
-					
+
 					var oneProfile = [];
 
 					for (var j = 0; j < coordinateObject.size(); j++) {
@@ -276,7 +277,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						label : probe + "=>" + geneNames,
 						labelID : probeId,
 						factor : factor
-						
+
 					};
 
 					flotrData.push(plotConfig);
@@ -288,124 +289,137 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 		});
 
 		this.thumbnailPanel = new Ext.Panel({
-			title : 'query gene (red) with coexpressed gene (black)',
-			region : 'west',
-			split : true,
-			width : Gemma.PLOT_SIZE + 50,
-			collapsible : true,
-			margins : '3 0 3 3',
-			cmargins : '3 3 3 3',
-			items : this.dv,
-			autoScroll : true,
-			html : {
-				id : 'zoomLegend',
-				tag : 'div',
-				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px; float:left;'
-			}
+					title : 'query gene (red) with coexpressed gene (black)',
+					region : 'west',
+					split : true,
+					width : Gemma.PLOT_SIZE + 50,
+					collapsible : true,
+					margins : '3 0 3 3',
+					cmargins : '3 3 3 3',
+					items : this.dv,
+					autoScroll : true,
+					html : {
+						id : 'zoomLegend',
+						tag : 'div',
+						style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px; float:left;'
+					}
 
-		});
+				});
 
 		this.zoomPanel = new Ext.Panel({
 
-			region : 'center',
-			split : true,
-			width : Gemma.ZOOM_PLOT_SIZE,
-			hight : Gemma.ZOOM_PLOT_SIZE,
-			id : 'visualization-zoom-window',
-			closeAction : 'destroy',
-			bodyStyle : "background:white",
-			constrainHeader : true,
-			layout : 'fit',
-			title : "Click thumbnail to zoom in",
-			// hidden : true,
-			// stateful : false,
-			listeners : {
-				resize : {
-					fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
+					region : 'center',
+					split : true,
+					width : Gemma.ZOOM_PLOT_SIZE,
+					hight : Gemma.ZOOM_PLOT_SIZE,
+					id : 'visualization-zoom-window',
+					closeAction : 'destroy',
+					bodyStyle : "background:white",
+					constrainHeader : true,
+					layout : 'fit',
+					title : "Click thumbnail to zoom in",
+					// hidden : true,
+					// stateful : false,
+					listeners : {
+						resize : {
+							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
 
-						// Change the div so that it is the size of the panel surrounding it.
-						zoomPanelDiv = Ext.get('graphzoompanel');
-						zoomPanelDiv.setHeight(rawHeight - 27);
-						zoomPanelDiv.setWidth(rawWidth - 1);
-						zoomPanelDiv.repaint();
+								// Change the div so that it is the size of the panel surrounding it.
+								zoomPanelDiv = Ext.get('graphzoompanel');
+								zoomPanelDiv.setHeight(rawHeight - 27);
+								zoomPanelDiv.setWidth(rawWidth - 1);
+								zoomPanelDiv.repaint();
 
-						component.refreshWindow();
+								component.refreshWindow();
 
-					}.createDelegate(this)
-				}
-			},
+							}.createDelegate(this)
+						}
+					},
 
-			html : {
-				id : 'graphzoompanel',
-				tag : 'div',
-				style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px;'
-			},
+					html : {
+						id : 'graphzoompanel',
+						tag : 'div',
+						style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px;'
+					},
 
-			refreshWindow : function(profiles) {
-				// Should redraw to fit current window width and hight.
+					refreshWindow : function(profiles) {
+						// Should redraw to fit current window width and hight.
 
-				if (profiles == null) {
-					var window = this.findParentByType(Gemma.VisualizationWindow)
-					var record = window.dv.getSelectedRecords()[0];
-					// This gets called because window gets resized at startup.
-					if (record == null)
-						return;
-					profiles = record.get("profiles");
-				}
+						if (profiles == null) {
+							var window = this.findParentByType(Gemma.VisualizationWindow)
+							var record = window.dv.getSelectedRecords()[0];
+							// This gets called because window gets resized at startup.
+							if (record == null)
+								return;
+							profiles = record.get("profiles");
+						}
 
-				Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
-			},
+					},
 
-			displayWindow : function(eevo, profiles) {
+					displayWindow : function(eevo, profiles) {
 
-				this.setTitle("Visualization of probes in dataset:  " + eevo.shortName);
+						this.setTitle("Visualization of probes in dataset:  " + eevo.shortName);
 
-				if (!this.isVisible()) {
-					this.setVisible(true);
-					this.show();
-				}
+						if (!this.isVisible()) {
+							this.setVisible(true);
+							this.show();
+						}
 
-				// Change color to hot and cold variety
-				var coldGeneName = profiles[0].genes[0].name;
-				var coldIndex = 0, hotIndex = 0;
+						// Change color to hot and cold variety
+						var coldGeneName = profiles[0].genes[0].name;
+						var coldIndex = 0, hotIndex = 0;
 
-				var sortedHotProfile = [];
+						var sortedHotProfile = [];
 
-				// Add cold colors
-				for (var i = 0; i < profiles.size(); i++) {
-					if (Gemma.geneContained(coldGeneName, profiles[i].genes)) {
-						profiles[i].color = Gemma.COLD_COLORS[coldIndex];
-						coldIndex++;
-					} else {
-						profiles[i].color = Gemma.HOT_COLORS[hotIndex];
-						hotIndex++;
+						// Add cold colors
+						for (var i = 0; i < profiles.size(); i++) {
+							var fade = profiles[i].factor < 2;
+							if (Gemma.geneContained(coldGeneName, profiles[i].genes)) {
+								if (fade) {
+									profiles[i].color = "#DDDDDD";
+								} else {
+								//	profiles[i].color = Gemma.COLD_COLORS[coldIndex];
+									profiles[i].color = "#000000";
+								}
+
+								coldIndex++;
+							} else {
+								if (fade) {
+									profiles[i].color = "#FFDDDD";
+								} else {
+								//	profiles[i].color = Gemma.HOT_COLORS[hotIndex];
+									profiles[i].color = "#FF0000";
+								}
+								hotIndex++;
+							}
+							profiles[i].lines = {
+								// lineWidth : Gemma.LINE_THICKNESS*profiles[i].factor
+								lineWidth : Gemma.LINE_THICKNESS
+							};
+
+						}
+
+						// sort array by gene
+						profiles.sort(function(a, b) {
+									if ((a.genes[0].name === b.genes[0].name))
+										return 0;
+									else if (((a.genes[0].name > b.genes[0].name)))
+										return 1;
+									else
+										return -1;
+								});
+
+						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+
 					}
-					 profiles[i].lines = {
-					   lineWidth : Gemma.LINE_THICKNESS*profiles[i].factor
-					}; 
 
-				}
-
-				// sort array by gene
-				profiles.sort(function(a, b) {
-					if ((a.genes[0].name === b.genes[0].name))
-						return 0;
-					else if (((a.genes[0].name > b.genes[0].name)))
-						return 1;
-					else 
-						return -1;
 				});
 
-				Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
-
-			}
-
-		});
-
 		Ext.apply(this, {
-			items : [this.thumbnailPanel, this.zoomPanel]
-		});
+					items : [this.thumbnailPanel, this.zoomPanel]
+				});
 
 		Gemma.VisualizationWindow.superclass.initComponent.call(this);
 
@@ -425,8 +439,8 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 		params.push(coexpressedGene.id);
 		this.show();
 		this.dv.store.load({
-			params : params
-		});
+					params : params
+				});
 
 	}
 
@@ -434,10 +448,11 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 // -----------------------------------------------------
 // FIXME: this could be abstracted out better resolving differences with a config object on creation
-//Differences are:  Read method (dwr method is different) calls getDEDVForVisualization not getDEDVForCoexpressionVisualization
-//Calling load takes different paramaters (an array of genes ids not just two gene ids)
-//Titles of thumbnail panel is different (only 1 gene not 2 in title)
-//Don't need hot and cold colors differentiaion (just remove color and let flotr decide) 
+// Differences are: Read method (dwr method is different) calls getDEDVForVisualization not
+// getDEDVForCoexpressionVisualization
+// Calling load takes different paramaters (an array of genes ids not just two gene ids)
+// Titles of thumbnail panel is different (only 1 gene not 2 in title)
+// Don't need hot and cold colors differentiaion (just remove color and let flotr decide)
 // -----------------------------------------------------
 
 Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
@@ -510,8 +525,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 			emptyText : 'No images to display',
 			loadingText : 'Loading data ...',
 			store : new Gemma.VisualizationStore({
-				readMethod : DEDVController.getDEDVForVisualization
-			}),
+						readMethod : DEDVController.getDEDVForVisualization
+					}),
 
 			tpl : new Gemma.ProfileTemplate(
 					'<tpl for="."><tpl for="eevo">',
@@ -585,98 +600,98 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 		});
 
 		this.thumbnailPanel = new Ext.Panel({
-			title : 'query gene (red) with coexpressed gene (black)',
-			region : 'west',
-			split : true,
-			width : Gemma.PLOT_SIZE + 50,
-			collapsible : true,
-			margins : '3 0 3 3',
-			cmargins : '3 3 3 3',
-			items : this.dv,
-			autoScroll : true,
-			html : {
-				id : 'zoomLegend',
-				tag : 'div',
-				style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px; float:left;'
-			}
+					title : 'query gene (red) with coexpressed gene (black)',
+					region : 'west',
+					split : true,
+					width : Gemma.PLOT_SIZE + 50,
+					collapsible : true,
+					margins : '3 0 3 3',
+					cmargins : '3 3 3 3',
+					items : this.dv,
+					autoScroll : true,
+					html : {
+						id : 'zoomLegend',
+						tag : 'div',
+						style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px; float:left;'
+					}
 
-		});
+				});
 
 		this.zoomPanel = new Ext.Panel({
 
-			region : 'center',
-			split : true,
-			width : Gemma.ZOOM_PLOT_SIZE,
-			hight : Gemma.ZOOM_PLOT_SIZE,
-			id : 'visualization-zoom-window',
-			closeAction : 'destroy',
-			bodyStyle : "background:white",
-			constrainHeader : true,
-			layout : 'fit',
-			title : "Click thumbnail to zoom in",
-			// hidden : true,
-			// stateful : false,
-			listeners : {
-				resize : {
-					fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
+					region : 'center',
+					split : true,
+					width : Gemma.ZOOM_PLOT_SIZE,
+					hight : Gemma.ZOOM_PLOT_SIZE,
+					id : 'visualization-zoom-window',
+					closeAction : 'destroy',
+					bodyStyle : "background:white",
+					constrainHeader : true,
+					layout : 'fit',
+					title : "Click thumbnail to zoom in",
+					// hidden : true,
+					// stateful : false,
+					listeners : {
+						resize : {
+							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
 
-						// Change the div so that it is the size of the panel surrounding it.
-						zoomPanelDiv = Ext.get('graphzoompanel');
-						zoomPanelDiv.setHeight(rawHeight - 27);
-						zoomPanelDiv.setWidth(rawWidth - 1);
-						zoomPanelDiv.repaint();
+								// Change the div so that it is the size of the panel surrounding it.
+								zoomPanelDiv = Ext.get('graphzoompanel');
+								zoomPanelDiv.setHeight(rawHeight - 27);
+								zoomPanelDiv.setWidth(rawWidth - 1);
+								zoomPanelDiv.repaint();
 
-						component.refreshWindow();
+								component.refreshWindow();
 
-					}.createDelegate(this)
-				}
-			},
+							}.createDelegate(this)
+						}
+					},
 
-			html : {
-				id : 'graphzoompanel',
-				tag : 'div',
-				style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px;'
-			},
+					html : {
+						id : 'graphzoompanel',
+						tag : 'div',
+						style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px;'
+					},
 
-			refreshWindow : function(profiles) {
-				// Should redraw to fit current window width and hight.
+					refreshWindow : function(profiles) {
+						// Should redraw to fit current window width and hight.
 
-				if (profiles == null) {
-					var window = this.findParentByType(Gemma.VisualizationDifferentialWindow)
-					var record = window.dv.getSelectedRecords()[0];
-					// This gets called because window gets resized at startup.
-					if (record == null)
-						return;
-					profiles = record.get("profiles");
-				}
+						if (profiles == null) {
+							var window = this.findParentByType(Gemma.VisualizationDifferentialWindow)
+							var record = window.dv.getSelectedRecords()[0];
+							// This gets called because window gets resized at startup.
+							if (record == null)
+								return;
+							profiles = record.get("profiles");
+						}
 
-				Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
-			},
+					},
 
-			displayWindow : function(eevo, profiles) {
+					displayWindow : function(eevo, profiles) {
 
-				this.setTitle("Visualization of probes in dataset:  " + eevo.shortName);
+						this.setTitle("Visualization of probes in dataset:  " + eevo.shortName);
 
-				if (!this.isVisible()) {
-					this.setVisible(true);
-					this.show();
-				}
+						if (!this.isVisible()) {
+							this.setVisible(true);
+							this.show();
+						}
 
-				// remove red color
-				for (var i = 0; i < profiles.size(); i++) {
-					profiles[i].color = null;
-				}
+						// remove red color
+						for (var i = 0; i < profiles.size(); i++) {
+							profiles[i].color = null;
+						}
 
-				Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
-			}
+					}
 
-		});
+				});
 
 		Ext.apply(this, {
-			items : [this.thumbnailPanel, this.zoomPanel]
-		});
+					items : [this.thumbnailPanel, this.zoomPanel]
+				});
 
 		Gemma.VisualizationDifferentialWindow.superclass.initComponent.call(this);
 
@@ -693,8 +708,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 		params.push([gene.id]);
 		this.show();
 		this.dv.store.load({
-			params : params
-		});
+					params : params
+				});
 
 	}
 
