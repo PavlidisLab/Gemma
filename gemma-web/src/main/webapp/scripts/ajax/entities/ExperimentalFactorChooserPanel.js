@@ -7,9 +7,11 @@ Ext.namespace('Gemma');
  * @extends Ext.Window
  * 
  * @author keshav
- * @version $Id: ExperimentalFactorChooserPanel.js,v 1.2 2008/06/17 21:36:04
- *          keshav Exp $
+ * @version $Id$
  */
+Gemma.SHOW_ALL_FACTORS = "Show all datasets";
+Gemma.HIDE_FACTORS = "Hide datasets with only 1 factor";
+
 Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	id : 'factor-chooser',
 	layout : 'fit',
@@ -23,7 +25,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 	reset : function(eeSet) {
 		if (this.currentEEset != null && eeSet != this.currentEEset) {
-			//console.log("reset " + eeSet);
+			// console.log("reset " + eeSet);
 			this.eeFactorsMap = null;
 		}
 		this.currentEEset = eeSet;
@@ -91,17 +93,28 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		this.hide();
 	},
 
-	onHelp : function(){
-		window.open('http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser#FactorChooser','DataSetChooserHelp');
+	onHelp : function() {
+		window.open('http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser#FactorChooser',
+				'DataSetChooserHelp');
 	},
-	
+
 	/*
-	 * initialize this panel by adding 'things' to it, like the data-store,
-	 * columns, buttons (and events for buttons), etc.
+	 * initialize this panel by adding 'things' to it, like the data-store, columns, buttons (and events for buttons),
+	 * etc.
 	 */
 	initComponent : function() {
 
 		Ext.apply(this, {
+			tbar : new Ext.Toolbar({
+				items : [{
+					pressed : true,
+					enableToggle : true,
+					text : Gemma.SHOW_ALL_FACTORS,
+					tooltip : "Click to show/hide all factors",
+					cls : 'x-btn-text-icon details',
+					toggleHandler : this.toggleFactors.createDelegate(this)
+				}]
+			}),
 			buttons : [{
 				id : 'done-selecting-button',
 				text : "Done",
@@ -115,11 +128,9 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 			}]
 		});
 
-		Gemma.ExperimentalFactorChooserPanel.superclass.initComponent
-				.call(this);
+		Gemma.ExperimentalFactorChooserPanel.superclass.initComponent.call(this);
 
 		this.addEvents("factors-chosen");
-
 	},
 
 	/**
@@ -131,6 +142,34 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	show : function(eeIds) {
 		Gemma.ExperimentalFactorChooserPanel.superclass.show.call(this);
 		this.populateFactors(eeIds);
+	},
+
+	toggleFactors : function(btn, pressed) {
+
+		var buttonText = btn.getText();
+		if (buttonText == Gemma.SHOW_ALL_FACTORS) {
+			this.efGrid.getStore().clearFilter();
+			btn.setText(Gemma.HIDE_FACTORS);
+		} else {
+
+			this.efGrid.getStore().filterBy(this.filter, this, 0);
+			btn.setText(Gemma.SHOW_ALL_FACTORS);
+		}
+	},
+
+	filter : function(r, id) {
+
+		editor = this.efGrid.customEditors[id]; 
+
+		/*
+		 * IF there are multiple factors, show it.
+		 */
+		if (editor.field.store.getTotalCount() > 1) {
+			return true;
+		}
+
+		return false;
+
 	},
 
 	/**
@@ -175,6 +214,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 			this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid(dataFromServer);
 			this.add(this.efGrid);
 			this.doLayout();
+			this.efGrid.getStore().filterBy(this.filter, this, 0);
+
 		}
 	}
 
