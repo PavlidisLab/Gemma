@@ -90,9 +90,7 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
                 SecurityContextHolder.getContext().setAuthentication( authentication );
             }
         }
-
-        SecurityUtil.passAuthenticationToChildThreads(); //Tested w/o and works but believe it should be called anyway
-
+    
         Object result = null;
         InterceptorStatusToken token = super.beforeInvocation( mi );
 
