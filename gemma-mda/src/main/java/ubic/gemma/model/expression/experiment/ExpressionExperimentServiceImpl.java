@@ -87,9 +87,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleCreate(ubic.gemma.model.expression
-     *      .experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleCreate(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     protected ExpressionExperiment handleCreate( ExpressionExperiment expressionExperiment ) throws Exception {
@@ -98,9 +98,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleDelete(ubic.gemma.model.expression
-     *      .experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleDelete(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -154,9 +154,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFind(ubic.gemma.model.expression
-     *      .experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFind(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     protected ExpressionExperiment handleFind( ExpressionExperiment expressionExperiment ) throws Exception {
@@ -165,9 +165,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByAccession(ubic.gemma.model
-     *      .common.description.DatabaseEntry)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByAccession(ubic.gemma.model
+     * .common.description.DatabaseEntry)
      */
     @Override
     protected ExpressionExperiment handleFindByAccession( DatabaseEntry accession ) throws Exception {
@@ -176,9 +176,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic
-     *      .gemma.model.common.description.BibliographicReference)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic
+     * .gemma.model.common.description.BibliographicReference)
      */
     @Override
     protected Collection<ExpressionExperiment> handleFindByBibliographicReference( BibliographicReference bibRef )
@@ -193,9 +193,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByExpressedGene(ubic.gemma.model
-     *      .genome.Gene, double)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByExpressedGene(ubic.gemma.model
+     * .genome.Gene, double)
      */
     @Override
     protected Collection<ExpressionExperiment> handleFindByExpressedGene( Gene gene, double rank ) throws Exception {
@@ -209,9 +209,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByGene(ubic.gemma.model.genome
-     *      .Gene)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByGene(ubic.gemma.model.genome
+     * .Gene)
      */
     @Override
     protected Collection<ExpressionExperiment> handleFindByGene( Gene gene ) throws Exception {
@@ -220,9 +220,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByInvestigator(ubic.gemma.model
-     *      .common.auditAndSecurity.Contact)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByInvestigator(ubic.gemma.model
+     * .common.auditAndSecurity.Contact)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -232,7 +232,6 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByName(java.lang.String)
      */
     @Override
@@ -247,9 +246,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByTaxon(ubic.gemma.model.genome
-     *      .Taxon)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByTaxon(ubic.gemma.model.genome
+     * .Taxon)
      */
     @Override
     protected Collection<ExpressionExperiment> handleFindByTaxon( Taxon taxon ) throws Exception {
@@ -258,9 +257,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindOrCreate(ubic.gemma.model.expression
-     *      .experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindOrCreate(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     protected ExpressionExperiment handleFindOrCreate( ExpressionExperiment expressionExperiment ) throws Exception {
@@ -269,17 +268,13 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetArrayDesignsUsed(ubic.gemma.model
-     *      .expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetArrayDesignsUsed(ubic.gemma.model
+     * .expression.experiment.ExpressionExperiment)
      */
     @Override
     protected Collection<ArrayDesign> handleGetArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
-        Collection<ArrayDesign> result = new HashSet<ArrayDesign>();
-        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-            result.add( ba.getArrayDesignUsed() );
-        }
-        return result;
+        return this.getExpressionExperimentDao().getArrayDesignsUsed( expressionExperiment );
     }
 
     @Override
@@ -295,9 +290,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetBioMaterialCount(ubic.gemma.model
-     *      .expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetBioMaterialCount(ubic.gemma.model
+     * .expression.experiment.ExpressionExperiment)
      */
     @Override
     protected long handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
@@ -316,9 +311,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetDesignElementDataVectors(ubic
-     *      .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetDesignElementDataVectors(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
      */
     @Override
     protected Collection handleGetDesignElementDataVectors( Collection quantitationTypes ) throws Exception {
@@ -344,8 +339,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastLinkAnalysis(java.util.Collection )
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastLinkAnalysis(java.util.Collection
+     * )
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -357,9 +353,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastMissingValueAnalysis(java
-     *      .util.Collection)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastMissingValueAnalysis(java
+     * .util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -369,9 +365,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastRankComputation(java.util
-     *      .Collection)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastRankComputation(java.util
+     * .Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -381,8 +377,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastTroubleEvent(java.util.Collection )
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastTroubleEvent(java.util.Collection
+     * )
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -431,9 +428,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastValidationEvent(java.util
-     *      .Collection)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastValidationEvent(java.util
+     * .Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -443,7 +440,6 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPerTaxonCount()
      */
     @Override
@@ -453,9 +449,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPreferredDesignElementDataVectorCount
-     *      (ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPreferredDesignElementDataVectorCount
+     * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     protected long handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
@@ -465,9 +461,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic
-     *      .gemma.model.common.description.BibliographicReference)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic
+     * .gemma.model.common.description.BibliographicReference)
      */
     @Override
     protected Collection<QuantitationType> handleGetPreferredQuantitationType( ExpressionExperiment ee )
@@ -490,9 +486,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetQuantitationTypeCountById(ubic
-     *      .gemma.model.expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetQuantitationTypeCountById(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     protected Map handleGetQuantitationTypeCountById( Long Id ) throws Exception {
@@ -523,7 +519,6 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoad(java.lang.Long)
      */
     @Override
@@ -533,7 +528,6 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAll()
      */
     @Override
@@ -544,7 +538,6 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAllValueObjects()
      */
     @Override
@@ -554,8 +547,8 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadMultiple(java.util.Collection)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
     protected Collection<ExpressionExperiment> handleLoadMultiple( Collection ids ) throws Exception {
@@ -565,8 +558,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadValueObjects(java.util.Collection )
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadValueObjects(java.util.Collection
+     * )
      */
     @Override
     protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection ids ) throws Exception {
@@ -585,9 +579,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleUpdate(ubic.gemma.model.expression
-     *      .experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleUpdate(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     protected void handleUpdate( ExpressionExperiment expressionExperiment ) throws Exception {
@@ -612,9 +606,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetSubSets(ubic.gemma.model.expression
-     *      .experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetSubSets(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     protected Collection handleGetSubSets( ExpressionExperiment expressionExperiment ) throws Exception {

@@ -33,6 +33,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -202,8 +203,15 @@ public class ProcessedExpressionDataVectorCreateService {
 
         ExpressionDataDoubleMatrix intensities;
         if ( !arrayDesignsUsed.iterator().next().getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
+
+            /*
+             * Get vectors needed to compute intensities.
+             */
+            Collection quantitationTypes = eeService.getQuantitationTypes( ee );
+            Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
+                    .getUsefulQuantitationTypes( quantitationTypes );
             Collection<DesignElementDataVector> vectors = eeService
-                    .getDesignElementDataVectors( ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee ) );
+                    .getDesignElementDataVectors( usefulQuantitationTypes );
 
             designElementDataVectorService.thaw( vectors );
             ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );

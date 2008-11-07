@@ -25,6 +25,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -625,5 +626,7 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     public java.util.Collection<ExpressionExperiment> findByBioMaterials( java.util.Collection bioMaterials );
 
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
+
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment );
 
 }

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -209,7 +210,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         final String queryString = "select quantType,count(*) as count "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
                 + "inner join ee.rawExpressionDataVectors as vectors "
-                + "inner join  vectors.quantitationType as quantType " + "where ee.id = :id GROUP BY quantType.name";
+                + "inner join vectors.quantitationType as quantType " + "where ee.id = :id GROUP BY quantType.name";
 
         List list = getHibernateTemplate().findByNamedParam( queryString, "id", Id );
 
@@ -223,12 +224,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<QuantitationType> handleGetQuantitationTypes( ExpressionExperiment expressionExperiment ) {
+    public Collection<QuantitationType> handleGetQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         final String queryString = "select distinct quantType "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
-                + "inner join ee.quantitationTypes as quantType " + "where ee  = :ee ";
+                + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
 
-        return getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
+        List qtypes = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
+       // Hibernate.initialize( qtypes );
+        return qtypes;
 
     }
 
@@ -242,7 +245,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         final String queryString = "select distinct quantType "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
-                + "inner join ee.quantitationTypes as quantType " + "inner join ee.bioAssays as ba "
+                + "inner join  ee.quantitationTypes as quantType " + "inner join ee.bioAssays as ba "
                 + "inner join ba.arrayDesignUsed ad " + "where ee = :ee and ad = :ad";
 
         return getHibernateTemplate().findByNamedParam( queryString, new String[] { "ee", "ad" },
@@ -1530,6 +1533,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
         final String queryString = "from ProcessedExpressionDataVector where expressionExperiment = :ee";
         return this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getArrayDesignsUsed(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
+     */
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
+        return CommonQueries.getArrayDesignsUsed( expressionExperiment, this.getSession() );
     }
 
 }

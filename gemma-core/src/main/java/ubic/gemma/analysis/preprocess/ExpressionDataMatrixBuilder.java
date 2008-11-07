@@ -150,15 +150,8 @@ public class ExpressionDataMatrixBuilder {
      * 
      * @return
      */
-    public static Collection<QuantitationType> getUsefulQuantitationTypes( ExpressionExperiment expressionExperiment ) {
+    public static Collection<QuantitationType> getUsefulQuantitationTypes( Collection<QuantitationType> eeQtTypes ) {
         Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
-
-        Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
-
-        if ( eeQtTypes.size() == 0 )
-            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
-
-        log.info( "Experiment has " + eeQtTypes.size() + " quantitation types" );
 
         for ( QuantitationType qType : eeQtTypes ) {
 
@@ -189,15 +182,35 @@ public class ExpressionDataMatrixBuilder {
                 neededQtTypes.add( qType );
             }
         }
+        return neededQtTypes;
+    }
+
+    /**
+     * Get just the quantitation types that are likely to be 'useful': Preferred, present/absent, signals and background
+     * from both channels (if present).
+     * 
+     * @return
+     */
+    public static Collection<QuantitationType> getUsefulQuantitationTypes( ExpressionExperiment expressionExperiment ) {
+
+        Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
+
+        if ( eeQtTypes.size() == 0 ) {
+            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
+        }
+
+        log.debug( "Experiment has " + eeQtTypes.size() + " quantitation types" );
+
+        Collection<QuantitationType> neededQtTypes = getUsefulQuantitationTypes( eeQtTypes );
 
         return neededQtTypes;
     }
 
     Collection<DesignElementDataVector> vectors;
 
-    private ExpressionExperiment expressionExperiment;
-
     private Map<ArrayDesign, BioAssayDimension> dimMap = new HashMap<ArrayDesign, BioAssayDimension>();
+
+    private ExpressionExperiment expressionExperiment;
 
     private Collection<ProcessedExpressionDataVector> processedDataVectors = null;
 
@@ -771,14 +784,15 @@ public class ExpressionDataMatrixBuilder {
 /*
  * Helper class
  */
+@SuppressWarnings("hiding")
 class QuantitationTypeData {
 
-    Map<BioAssayDimension, QuantitationType> signalChannelA = new HashMap<BioAssayDimension, QuantitationType>();
-    Map<BioAssayDimension, QuantitationType> signalChannelB = new HashMap<BioAssayDimension, QuantitationType>();
     Map<BioAssayDimension, QuantitationType> backgroundChannelA = new HashMap<BioAssayDimension, QuantitationType>();
     Map<BioAssayDimension, QuantitationType> backgroundChannelB = new HashMap<BioAssayDimension, QuantitationType>();
     Map<BioAssayDimension, QuantitationType> bkgSubChannelA = new HashMap<BioAssayDimension, QuantitationType>();
     Map<BioAssayDimension, QuantitationType> preferred = new HashMap<BioAssayDimension, QuantitationType>();
+    Map<BioAssayDimension, QuantitationType> signalChannelA = new HashMap<BioAssayDimension, QuantitationType>();
+    Map<BioAssayDimension, QuantitationType> signalChannelB = new HashMap<BioAssayDimension, QuantitationType>();
 
     public void addBackgroundChannelA( BioAssayDimension dim, QuantitationType backgroundChannelA ) {
         this.backgroundChannelA.put( dim, backgroundChannelA );
