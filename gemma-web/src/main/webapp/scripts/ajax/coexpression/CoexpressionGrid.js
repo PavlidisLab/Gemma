@@ -12,6 +12,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			editable : false,
 			autoHeight : true,
 			style : "margin-bottom: 1em;",
+			stateful : false,
 
 			viewConfig : {
 				forceFit : true
@@ -72,7 +73,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										tooltip : "Link for visualizing raw data",
 										sortable : false,
 										width : 30
-									
+
 									}, {
 										id : 'found',
 										header : "Coexpressed Gene",

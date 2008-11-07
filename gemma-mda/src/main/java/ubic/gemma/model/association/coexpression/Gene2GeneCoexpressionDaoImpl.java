@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Element;
 
@@ -53,14 +52,12 @@ public class Gene2GeneCoexpressionDaoImpl extends
         }
     }
 
-    private Cache cache;
-
     /**
      * Clear the cache of gene2gene objects. This should be run when gene2gene is updated. FIXME externalize this and
      * set it up so it can be done in a taxon-specific way?
      */
     protected void clearCache() {
-        this.cache.removeAll();
+        Gene2GeneCoexpressionCache.getCache().removeAll();
     }
 
     /*
@@ -82,7 +79,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
         Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
         for ( Gene g : genes ) {
             result.put( g, new HashSet<Gene2GeneCoexpression>() );
-            Element e = cache.get( g.getId() );
+            Element e = Gene2GeneCoexpressionCache.getCache().get( g.getId() );
             if ( e != null ) {
                 result.put( g, ( Collection<Gene2GeneCoexpression> ) e.getValue() );
             } else {
@@ -135,7 +132,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
     protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
             int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 
-        Element element = cache.get( gene.getId() );
+        Element element = Gene2GeneCoexpressionCache.getCache().get( gene.getId() );
         if ( element != null ) {
             return ( Collection<Gene2GeneCoexpression> ) element.getValue();
         }
@@ -164,7 +161,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
         List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( results );
         Collections.sort( lr, new SupportComparator() );
 
-        cache.put( new Element( gene.getId(), lr ) );
+        Gene2GeneCoexpressionCache.getCache().put( new Element( gene.getId(), lr ) );
 
         int count = 0;
         for ( Iterator<Gene2GeneCoexpression> it = lr.iterator(); it.hasNext(); ) {
@@ -230,7 +227,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
     protected void initDao() throws Exception {
         super.initDao();
         try {
-            this.cache = Gene2GeneCoexpressionCache.initializeCache();
+            Gene2GeneCoexpressionCache.initializeCache();
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
         }
@@ -240,15 +237,8 @@ public class Gene2GeneCoexpressionDaoImpl extends
      * @param object
      */
     protected void removeFromCache( Gene2GeneCoexpression object ) {
-        this.getCache().remove( object.getFirstGene().getId() );
-        this.getCache().remove( object.getSecondGene().getId() );
-    }
-
-    /**
-     * @return The gene2gene cache. The cache is keyed by the query gene used to find the links from the database.
-     */
-    private Cache getCache() {
-        return cache;
+        Gene2GeneCoexpressionCache.getCache().remove( object.getFirstGene().getId() );
+        Gene2GeneCoexpressionCache.getCache().remove( object.getSecondGene().getId() );
     }
 
     /**
@@ -321,7 +311,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
         }
 
         for ( Gene g : genes ) {
-            cache.put( new Element( g.getId(), result.get( g ) ) );
+            Gene2GeneCoexpressionCache.getCache().put( new Element( g.getId(), result.get( g ) ) );
         }
 
         return result;

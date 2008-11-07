@@ -18,32 +18,33 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	autoExpandColumn : 'name',
 
 	editable : true,
+	stateful : false,
 
 	record : Ext.data.Record.create([{
-		name : "id",
-		type : "int"
-	}, {
-		name : "shortName",
-		type : "string"
-	}, {
-		name : "name",
-		type : "string"
-	}, {
-		name : "arrayDesignCount",
-		type : "int"
-	}, {
-		name : "bioAssayCount",
-		type : "int"
-	}, {
-		name : "externalUri",
-		type : "string"
-	}, {
-		name : "description",
-		type : "string"
-	}, {
-		name : "differentialExpressionAnalysisId",
-		type : "string"
-	}]),
+				name : "id",
+				type : "int"
+			}, {
+				name : "shortName",
+				type : "string"
+			}, {
+				name : "name",
+				type : "string"
+			}, {
+				name : "arrayDesignCount",
+				type : "int"
+			}, {
+				name : "bioAssayCount",
+				type : "int"
+			}, {
+				name : "externalUri",
+				type : "string"
+			}, {
+				name : "description",
+				type : "string"
+			}, {
+				name : "differentialExpressionAnalysisId",
+				type : "string"
+			}]),
 
 	searchForText : function(button, keyev) {
 		var text = this.searchInGridField.getValue();
@@ -68,82 +69,82 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	initComponent : function() {
 		this.searchInGridField = new Ext.form.TextField({
-			enableKeyEvents : true,
-			emptyText : 'Filter',
-			tooltip : "Text typed here will ",
-			listeners : {
-				"keyup" : {
-					fn : this.searchForText.createDelegate(this),
-					scope : this,
-					options : {
-						delay : 100
+					enableKeyEvents : true,
+					emptyText : 'Filter',
+					tooltip : "Text typed here will ",
+					listeners : {
+						"keyup" : {
+							fn : this.searchForText.createDelegate(this),
+							scope : this,
+							options : {
+								delay : 100
+							}
+						}
 					}
-				}
-			}
-		});
+				});
 
 		if (this.pageSize) {
 			if (this.records) {
 				Ext.apply(this, {
-					store : new Ext.data.Store({
-						proxy : new Ext.ux.data.PagingMemoryProxy(this.records),
-						reader : new Ext.data.ListRangeReader({}, this.record),
-						pageSize : this.pageSize
-					})
-				});
+							store : new Ext.data.Store({
+										proxy : new Ext.ux.data.PagingMemoryProxy(this.records),
+										reader : new Ext.data.ListRangeReader({}, this.record),
+										pageSize : this.pageSize
+									})
+						});
 			} else {
 				Ext.apply(this, {
-					store : new Gemma.PagingDataStore({
-						proxy : new Ext.data.DWRProxy(this.readMethod),
-						reader : new Ext.data.ListRangeReader({
-							id : "id"
-						}, this.record),
-						pageSize : this.pageSize
-					})
-				});
+							store : new Gemma.PagingDataStore({
+										proxy : new Ext.data.DWRProxy(this.readMethod),
+										reader : new Ext.data.ListRangeReader({
+													id : "id"
+												}, this.record),
+										pageSize : this.pageSize
+									})
+						});
 			}
 			Ext.apply(this, {
-				bbar : new Gemma.PagingToolbar({
-					pageSize : this.pageSize,
-					store : this.store,
-					items : ['->', {
-						xtype : 'button',
-						handler : this.clearFilter.createDelegate(this),
-						scope : this,
-						cls : 'x-btn-text',
-						text : 'Reset filter'
-					}, ' ', this.searchInGridField]
-				})
-			});
+						bbar : new Gemma.PagingToolbar({
+									pageSize : this.pageSize,
+									store : this.store,
+									items : ['->', {
+												xtype : 'button',
+												handler : this.clearFilter.createDelegate(this),
+												scope : this,
+												cls : 'x-btn-text',
+												text : 'Reset filter'
+											}, ' ', this.searchInGridField]
+								})
+					});
 		} else {
 			if (!this.records) {
 				Ext.apply(this, {
-					store : new Ext.data.Store({
-						proxy : new Ext.data.DWRProxy(this.readMethod),
-						reader : new Ext.data.ListRangeReader({
-							id : "id"
-						}, this.record)
-					})
-				});
+							store : new Ext.data.Store({
+										proxy : new Ext.data.DWRProxy(this.readMethod),
+										reader : new Ext.data.ListRangeReader({
+													id : "id"
+												}, this.record)
+									})
+						});
 			} else {
 				Ext.apply(this, {
-					store : new Ext.data.Store({
-						proxy : new Ext.data.MemoryProxy(this.records),
-						reader : new Ext.data.ListRangeReader({}, this.record)
-					})
-				});
+							store : new Ext.data.Store({
+										proxy : new Ext.data.MemoryProxy(this.records),
+										reader : new Ext.data.ListRangeReader({}, this.record)
+									})
+						});
 			}
 			Ext.apply(this, {
-				bbar : new Ext.Toolbar({
-					items : ['->', {
-						xtype : 'button',
-						handler : this.clearFilter.createDelegate(this),
-						scope : this,
-						cls : 'x-btn-text',
-						text : 'Reset filter'
-					}, ' ', this.searchInGridField]
-				})
-			});
+						bbar : new Ext.Toolbar({
+									items : ['->', {
+												xtype : 'button',
+												handler : this.clearFilter.createDelegate(this),
+												scope : this,
+												cls : 'x-btn-text',
+												text : 'Reset filter'
+											}, ' ', this.searchInGridField]
+								})
+					});
 		}
 
 		Ext.apply(this, {
@@ -183,41 +184,41 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		if (this.showAnalysisInfo) {
 			this.columns.push({
-				id : 'analyses',
-				header : "Analysis",
-				dataIndex : "differentialExpressionAnalysisId",
-				tooltip : "Indicates whether differential expression data is available for the study",
-				renderer : this.formatAnalysisInfo,
-				sortable : true
-			});
+						id : 'analyses',
+						header : "Analysis",
+						dataIndex : "differentialExpressionAnalysisId",
+						tooltip : "Indicates whether differential expression data is available for the study",
+						renderer : this.formatAnalysisInfo,
+						sortable : true
+					});
 		}
 
 		if (this.rowExpander) {
 			Ext.apply(this, {
-				rowExpander : new Gemma.EEGridRowExpander({
-					tpl : ""
-				})
-			});
+						rowExpander : new Gemma.EEGridRowExpander({
+									tpl : ""
+								})
+					});
 			this.columns.unshift(this.rowExpander);
 			Ext.apply(this, {
-				plugins : this.rowExpander
-			});
+						plugins : this.rowExpander
+					});
 		}
 
 		Gemma.ExpressionExperimentGrid.superclass.initComponent.call(this);
 
 		this.on("keypress", function(e) {
-			if (e.getCharCode() == Ext.EventObject.DELETE) {
-				this.removeSelected();
-			}
-		}, this);
+					if (e.getCharCode() == Ext.EventObject.DELETE) {
+						this.removeSelected();
+					}
+				}, this);
 
 		this.getStore().on("load", function(store, records, options) {
-			// if (this.title) {
-			// this.setTitle(this.title + " - " + records.length + " items");
-			// }
-			this.doLayout();
-		}, this);
+					// if (this.title) {
+					// this.setTitle(this.title + " - " + records.length + " items");
+					// }
+					this.doLayout();
+				}, this);
 
 	},
 
@@ -269,8 +270,8 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	getEEIds : function() {
 		var result = [];
 		this.store.each(function(rec) {
-			result.push(rec.get("id"));
-		});
+					result.push(rec.get("id"));
+				});
 		return result;
 	},
 
@@ -296,18 +297,18 @@ Gemma.ExpressionExperimentGrid.updateDatasetInfo = function(datasets, eeMap) {
 
 Gemma.EEGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
-	fillExpander : function(data, body, rowIndex) {
-		Ext.DomHelper.overwrite(body, {
-			tag : 'p',
-			html : data
-		});
-	},
+			fillExpander : function(data, body, rowIndex) {
+				Ext.DomHelper.overwrite(body, {
+							tag : 'p',
+							html : data
+						});
+			},
 
-	beforeExpand : function(record, body, rowIndex) {
-		ExpressionExperimentController.getDescription(record.id, {
-			callback : this.fillExpander.createDelegate(this, [body, rowIndex], true)
-		});
-		return true;
-	}
+			beforeExpand : function(record, body, rowIndex) {
+				ExpressionExperimentController.getDescription(record.id, {
+							callback : this.fillExpander.createDelegate(this, [body, rowIndex], true)
+						});
+				return true;
+			}
 
-});
+		});

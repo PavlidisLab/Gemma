@@ -85,7 +85,6 @@ public class TaxonLoader {
      * @param inputStream
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     public int load( final InputStream inputStream ) throws IOException {
         TaxonParser parser = new TaxonParser();
         parser.parse( inputStream );

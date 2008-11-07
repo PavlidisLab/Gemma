@@ -16,16 +16,19 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.expression.bioAssayData;
+package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.CoexpressionCacheValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.ConfigUtils;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 
 /**
  * Configures the cache for data vectors.
@@ -38,23 +41,23 @@ import net.sf.ehcache.CacheManager;
  * @author paul
  * @version $Id$
  */
-public class ProcessedDataVectorCache {
+public class Probe2ProbeCoexpressionCache {
 
-    private static final String PROBE2PROBE_COEXPRESSION_CACHE_NAME = "Probe2ProbeCache";
-    private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
-    private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
-    private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
-    private static final boolean PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_ETERNAL = true;
-    private static final boolean PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
+    private static final String PROCESSED_DATA_VECTOR_CACHE_NAME = "Probe2ProbeCache";
+    private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
+    private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
+    private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
+    private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL = true;
+    private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
 
     /**
      * We retain references to the caches separately from the CacheManager. This _could_ create leaks of caches if the
      * cache manager needs to recreate a cache for some reason. Something to keep in mind.
      */
-    private static final Map<ExpressionExperiment, Cache> caches = new HashMap<ExpressionExperiment, Cache>();
+    private static final Map<Long, Cache> caches = new HashMap<Long, Cache>();
 
-    private static String getCacheName( ExpressionExperiment e ) {
-        return PROBE2PROBE_COEXPRESSION_CACHE_NAME + "_" + e.getShortName() + "_" + e.getId();
+    private static String getCacheName( Long id ) {
+        return PROCESSED_DATA_VECTOR_CACHE_NAME + "_" + id;
     }
 
     /**
@@ -62,7 +65,7 @@ public class ProcessedDataVectorCache {
      * 
      * @param e the expression experiment - specific cache to be cleared.
      */
-    public static void clearCache( ExpressionExperiment e ) {
+    public static void clearCache( Long e ) {
         CacheManager manager = CacheManager.getInstance();
         Cache cache = manager.getCache( getCacheName( e ) );
         if ( cache != null ) cache.removeAll();
@@ -72,7 +75,7 @@ public class ProcessedDataVectorCache {
      * 
      */
     public static void clearAllCaches() {
-        for ( ExpressionExperiment e : caches.keySet() ) {
+        for ( Long e : caches.keySet() ) {
             clearCache( e );
         }
     }
@@ -85,12 +88,33 @@ public class ProcessedDataVectorCache {
     }
 
     /**
-     * Get the coexpression cache for a particular experiment
+     * @param eeID
+     * @param coExVOForCache
+     */
+    public static void addToCache( Long eeID, CoexpressionCacheValueObject coExVOForCache ) {
+
+        Cache c = getCache( eeID );
+
+        Gene queryGene = coExVOForCache.getQueryGene();
+
+        Element element = c.get( queryGene );
+        if ( element != null ) {
+            ( ( Collection<CoexpressionCacheValueObject> ) element.getObjectValue() ).add( coExVOForCache );
+        } else {
+            Collection<CoexpressionCacheValueObject> cachedValues = new HashSet<CoexpressionCacheValueObject>();
+            cachedValues.add( coExVOForCache );
+            c.put( new Element( queryGene, cachedValues ) );
+        }
+
+    }
+
+    /**
+     * Get the vector cache for a particular experiment
      * 
      * @param e
      * @return
      */
-    public static Cache getCache( ExpressionExperiment e ) {
+    public static Cache getCache( Long e ) {
         if ( !caches.containsKey( e ) ) {
             initializeCache( e );
         }
@@ -102,24 +126,24 @@ public class ProcessedDataVectorCache {
      * 
      * @return
      */
-    private static void initializeCache( ExpressionExperiment e ) {
+    private static void initializeCache( Long e ) {
 
         if ( caches.containsKey( e ) ) {
             return;
         }
 
-        int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements",
-                PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = ConfigUtils.getInt( "gemma.cache.probe2probe.timetolive",
-                PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = ConfigUtils.getInt( "gemma.cache.probe2probe.timetoidle",
-                PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE );
+        int maxElements = ConfigUtils.getInt( "gemma.cache.vectors.maxelements",
+                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
+        int timeToLive = ConfigUtils.getInt( "gemma.cache.vectors.timetolive",
+                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_LIVE );
+        int timeToIdle = ConfigUtils.getInt( "gemma.cache.vectors.timetoidle",
+                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
 
-        boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.probe2probe.usedisk",
-                PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK );
+        boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.vectors.usedisk",
+                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK );
 
-        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal",
-                PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_ETERNAL );
+        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.vectors.eternal",
+                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL );
 
         String cacheName = getCacheName( e );
 
@@ -132,7 +156,6 @@ public class ProcessedDataVectorCache {
 
             manager.addCache( new Cache( cacheName, maxElements, overFlowToDisk, eternal, timeToLive, timeToIdle ) );
         }
-
         caches.put( e, manager.getCache( cacheName ) );
 
     }

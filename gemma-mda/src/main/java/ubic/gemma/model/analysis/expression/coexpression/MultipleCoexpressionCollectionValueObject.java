@@ -41,9 +41,9 @@ public class MultipleCoexpressionCollectionValueObject {
             geneCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
                     coexpressionCollection.getKnownGeneCoexpression() );
             predictedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
-                    coexpressionCollection.getPredictedCoexpressionType() );
+                    coexpressionCollection.getPredictedGeneCoexpression() );
             alignedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
-                    coexpressionCollection.getProbeAlignedCoexpressionType() );
+                    coexpressionCollection.getProbeAlignedRegionCoexpression() );
         }
     }
 

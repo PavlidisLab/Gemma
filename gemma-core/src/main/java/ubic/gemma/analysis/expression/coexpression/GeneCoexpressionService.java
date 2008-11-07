@@ -231,10 +231,10 @@ public class GeneCoexpressionService {
 
             // FIXME only do this part if the user is logged in?
             addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions
-                    .getPredictedCoexpressionType(), stringency, queryGenesOnly, geneIds, result
+                    .getPredictedGeneCoexpression(), stringency, queryGenesOnly, geneIds, result
                     .getPredictedGeneResults(), result.getPredictedGeneDatasets() );
             addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions
-                    .getProbeAlignedCoexpressionType(), stringency, queryGenesOnly, geneIds, result
+                    .getProbeAlignedRegionCoexpression(), stringency, queryGenesOnly, geneIds, result
                     .getProbeAlignedRegionResults(), result.getProbeAlignedRegionDatasets() );
 
             CoexpressionSummaryValueObject summary = new CoexpressionSummaryValueObject();

@@ -1,6 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="mainMenu.title" /></title>
+	<title><fmt:message key="mainMenu.title" />
+	</title>
 
 
 	<script type="text/javascript">
@@ -107,7 +108,7 @@
 				<strong> More administrative functions </strong>
 				<ul class="compactList" style="padding-left: 4px;">
 					<li>
-						<a href='<c:url value="/static/hibernateStats.html"/>'> System monitoring </a>
+						<a href='<c:url value="/systemStats.html"/>'> System monitoring </a>
 					</li>
 					<li>
 						<a href='<c:url value="/indexer.html"/>'> <fmt:message key="menu.compassIndexer" /> </a>
@@ -116,7 +117,7 @@
 						<a href='<c:url value="/securityManager.html"/>'> <fmt:message key="menu.securityManager" /> </a>
 					</li>
 					<li>
-						<a href='<c:url value="/expressionExperimentSetManager.html" />'>Manage gene link analyses</a> ("Canned" analyses)
+						<a href='<c:url value="/expressionExperimentSetManager.html" />'>Manage gene sets</a>
 					</li>
 					<li>
 						<a href='<c:url value="/maintenanceMode.html" />'>Manage maintenance mode</a>

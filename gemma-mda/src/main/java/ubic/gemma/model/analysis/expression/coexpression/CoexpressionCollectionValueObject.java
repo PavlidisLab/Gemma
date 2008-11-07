@@ -26,11 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneImpl;
@@ -50,8 +46,7 @@ public class CoexpressionCollectionValueObject {
     public static final String PREDICTED_GENE_IMPL = PredictedGeneImpl.class.getSimpleName();
     public static final String PROBE_ALIGNED_REGION_IMPL = ProbeAlignedRegionImpl.class.getSimpleName();
 
-    private static Log log = LogFactory.getLog( CoexpressionCollectionValueObject.class.getName() );
-
+    private double postProcessSeconds;
     private double dbQuerySeconds;
 
     private Collection<BioAssaySet> eesQueryTestedIn;
@@ -60,7 +55,6 @@ public class CoexpressionCollectionValueObject {
 
     private CoexpressedGenesDetails knownGeneCoexpressionData;
 
-    private double postProcessSeconds;
     private CoexpressedGenesDetails predictedCoexpressionData;
 
     private CoexpressedGenesDetails probeAlignedRegionCoexpressionData;
@@ -215,7 +209,7 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * @return the CoexpressonTypeValueObject for standard genes
+     * @return the CoexpressedGenesDetails for standard genes
      */
     public CoexpressedGenesDetails getKnownGeneCoexpression() {
         return this.knownGeneCoexpressionData;
@@ -284,9 +278,9 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * @return the CoexpressionTypeValueObject for predicted Genes
+     * @return the CoexpressedGenesDetails for predicted Genes
      */
-    public CoexpressedGenesDetails getPredictedCoexpressionType() {
+    public CoexpressedGenesDetails getPredictedGeneCoexpression() {
         return this.predictedCoexpressionData;
     }
 
@@ -299,9 +293,9 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * @return the CoexpressonTypeValueObject for probe aligned regions
+     * @return the CoexpressedGenesDetails for probe aligned regions
      */
-    public CoexpressedGenesDetails getProbeAlignedCoexpressionType() {
+    public CoexpressedGenesDetails getProbeAlignedRegionCoexpression() {
         return this.probeAlignedRegionCoexpressionData;
     }
 
@@ -322,8 +316,9 @@ public class CoexpressionCollectionValueObject {
     public Collection<Long> getQueryGeneProbes() {
         Collection<Long> results = new HashSet<Long>();
         synchronized ( queryProbes ) {
-            for ( Long eeID : queryProbes.keySet() )
+            for ( Long eeID : queryProbes.keySet() ) {
                 results.addAll( queryProbes.get( eeID ).keySet() );
+            }
         }
 
         return results;

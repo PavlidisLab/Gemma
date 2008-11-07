@@ -11,6 +11,7 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	title : 'wow',
 	style : "margin-top: 1em; margin-bottom: .5em;",
 	autoHeight : true,
+	stateful : false,
 
 	record : Ext.data.Record.create([{
 				name : "id",

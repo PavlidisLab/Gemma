@@ -37,7 +37,10 @@ public class Gene2GeneCoexpressionCache {
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL = true;
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
 
-    private Gene2GeneCoexpressionCache() {
+    private static Cache cache;
+
+    public static Cache getCache() {
+        return cache;
     }
 
     /**
@@ -77,8 +80,7 @@ public class Gene2GeneCoexpressionCache {
             return manager.getCache( GENE_COEXPRESSION_CACHE_NAME );
         }
 
-        Cache cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, overFlowToDisk, eternal, timeToLive,
-                timeToIdle );
+        cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, overFlowToDisk, eternal, timeToLive, timeToIdle );
 
         manager.addCache( cache );
         return manager.getCache( GENE_COEXPRESSION_CACHE_NAME );

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.sf.ehcache.Cache;
+import net.sf.ehcache.Element;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -50,6 +51,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -69,19 +71,13 @@ import ubic.gemma.util.TaxonUtility;
 
 public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
-    private static final int MAX_RESULTS = 100;
     private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
+    private static final int MAX_RESULTS = 100;
 
-    private Cache coexpressionCache;
+    private static final int MAX_WINDOW = 1000000;
 
-    /**
-     * Clear the cache of gene2gene objects. This should be run when gene2gene is updated. FIXME externalize this and
-     * set it up so it can be done in a taxon-specific way?
-     */
-    protected void clearCache() {
-        this.coexpressionCache.removeAll();
-    }
-    
+    private static final int WINDOW_INCREMENT = 500;
+
     /*
      * (non-Javadoc)
      * @see ubic.gemma.model.genome.GeneDaoBase#find(ubic.gemma.model.genome.Gene)
@@ -127,6 +123,110 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
     }
 
+    /**
+     * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(int, java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    @Override
+    public java.util.Collection findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
+        final String query = "from GeneImpl g where g.officialSymbol like :officialSymbol order by g.officialSymbol";
+        org.hibernate.Query queryObject = this.getSession( false ).createQuery( query );
+        queryObject.setParameter( "officialSymbol", officialSymbol );
+        queryObject.setMaxResults( MAX_RESULTS );
+        return queryObject.list();
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDao#findNearest(ubic.gemma.model.genome.PhysicalLocation)
+     */
+    public Collection<Gene> findNearest( PhysicalLocation physicalLocation ) {
+
+        if ( physicalLocation.getNucleotide() == null ) {
+            throw new IllegalArgumentException( "Locations must have a nucleotide position" );
+        }
+
+        /*
+         * Strategy: start with a small window, enlarge it until we decide enough is enough.
+         */
+        Chromosome chrom = physicalLocation.getChromosome();
+        Long targetStart = physicalLocation.getNucleotide();
+        Long targetEnd = physicalLocation.getNucleotide()
+                + ( physicalLocation.getNucleotideLength() == null ? 0 : physicalLocation.getNucleotideLength() );
+        final String strand = physicalLocation.getStrand();
+        if ( log.isDebugEnabled() )
+            log.debug( "Start Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
+        /*
+         * Start with the 'exact' location.
+         */
+        Collection<Gene> candidates = findByPosition( chrom, targetStart, targetEnd, strand );
+        if ( !candidates.isEmpty() ) {
+            if ( log.isDebugEnabled() ) log.debug( physicalLocation + ": overlaps " + candidates.size() + " gene(s)" );
+            return candidates;
+        }
+
+        /*
+         * Start enlarging the region. FIXME: find the nearest hit, not just the ones in the window.
+         */
+        int i = 1;
+        while ( targetStart >= 0 && targetEnd - targetStart < MAX_WINDOW ) {
+            targetStart = targetStart - i * WINDOW_INCREMENT;
+
+            if ( targetStart < 0 ) targetStart = 0L;
+
+            targetEnd = targetEnd + i * WINDOW_INCREMENT;
+            if ( log.isDebugEnabled() )
+                log.debug( "Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
+
+            candidates = findByPosition( chrom, targetStart, targetEnd, strand );
+            if ( !candidates.isEmpty() ) {
+                if ( log.isDebugEnabled() )
+                    log.debug( physicalLocation + ": " + candidates.size() + " nearby genes at window size " + i
+                            * WINDOW_INCREMENT );
+
+                Collection<Gene> results = new HashSet<Gene>();
+                Gene closestGene = null;
+                int closestRange = ( int ) 1e10;
+                for ( Gene gene : candidates ) {
+                    this.thaw( gene ); // slow...
+                    for ( GeneProduct gp : gene.getProducts() ) {
+                        PhysicalLocation genelocation = gp.getPhysicalLocation();
+                        assert genelocation.getChromosome().equals( physicalLocation.getChromosome() );
+                        Long start = genelocation.getNucleotide();
+                        Long end = genelocation.getNucleotideLength() + start;
+
+                        /*
+                         * FIXME This is bogus. Need to sort through cases properly.
+                         */
+                        long r1 = Math.abs( targetStart - start );
+                        long r2 = Math.abs( targetStart - end );
+                        long r3 = Math.abs( targetEnd - start );
+                        long r4 = Math.abs( targetEnd - end );
+
+                        if ( r1 < closestRange || r2 < closestRange || r3 < closestRange || r4 < closestRange ) {
+                            closestGene = gene;
+                        }
+
+                    }
+
+                }
+
+                assert closestGene != null;
+
+                results.add( closestGene );
+
+                return results;
+            }
+            // log.info( "Widening search..." );
+            i++;
+        }
+
+        // nuthin'
+        log.debug( "Nothing found" );
+        return new HashSet<Gene>();
+
+    }
+
     /*
      * (non-Javadoc)
      * @see ubic.gemma.model.genome.GeneDaoBase#findOrCreate(ubic.gemma.model.genome.Gene)
@@ -158,17 +258,31 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return ( Integer ) r.iterator().next();
     }
 
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(int, java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
+    @SuppressWarnings( { "unchecked", "cast" })
     @Override
-    public java.util.Collection findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
-        final String query = "from GeneImpl g where g.officialSymbol like :officialSymbol order by g.officialSymbol";
-        org.hibernate.Query queryObject = this.getSession( false ).createQuery( query );
-        queryObject.setParameter( "officialSymbol", officialSymbol );
-        queryObject.setMaxResults( MAX_RESULTS );
-        return queryObject.list();
+    protected Gene handleFindByAccession( String accession, ExternalDatabase source ) throws Exception {
+        Collection<Gene> genes;
+        final String accessionQuery = "select g from GeneImpl g inner join g.accessions a where a.accession = :accession";
+        final String externalDbquery = accessionQuery + " and a.externalDatabase = :source";
+
+        if ( source == null ) {
+            genes = this.getHibernateTemplate().findByNamedParam( accessionQuery, "accession", "accession" );
+            if ( genes.size() == 0 ) {
+                genes = this.findByNcbiId( accession );
+            }
+        } else {
+            if ( source.getName().equalsIgnoreCase( "NCBI" ) ) {
+                genes = this.findByNcbiId( accession );
+            } else {
+                genes = this.getHibernateTemplate().findByNamedParam( externalDbquery,
+                        new String[] { "accession", "source" }, new Object[] { accession, source } );
+            }
+        }
+        if ( genes.size() > 0 ) {
+            return ( Gene ) genes.iterator().next();
+        }
+        return null;
+
     }
 
     /**
@@ -211,8 +325,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Object handleGetCoexpressedGenes( final Gene gene, Collection ees, Integer stringency,
-            boolean knownGenesOnly ) throws Exception {
+    protected Object handleGetCoexpressedGenes( final Gene gene, Collection<ExpressionExperiment> ees,
+            Integer stringency, boolean knownGenesOnly ) throws Exception {
+
         Gene givenG = gene;
         final long id = givenG.getId();
         log.debug( "Gene: " + gene.getName() );
@@ -230,16 +345,42 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
 
-        final Collection<Long> eeIds = getEEIds( ees );
+        /*
+         * Check cache first.
+         */
+        Collection<ExpressionExperiment> eesToSearch = new HashSet<ExpressionExperiment>();
+        Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults = new HashMap<Long, Collection<CoexpressionCacheValueObject>>();
+        for ( ExpressionExperiment ee : ees ) {
+            Cache c = Probe2ProbeCoexpressionCache.getCache( ee.getId() );
+            Element element = c.get( gene );
+            if ( element != null ) {
+                Collection<CoexpressionCacheValueObject> eeResults = ( Collection<CoexpressionCacheValueObject> ) element
+                        .getObjectValue();
+                cachedResults.put( ee.getId(), eeResults );
+                log.debug( "Cache hit!" );
+            } else {
+                eesToSearch.add( ee );
+            }
 
-        String queryString = "";
-        queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds, knownGenesOnly );
+        }
 
-        Session session = this.getSession( false );
-        org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
+        if ( eesToSearch.size() > 0 ) {
 
-        // This is the actual business of querying the database.
-        processCoexpQuery( gene, queryObject, coexpressions );
+            final Collection<Long> eeIds = getEEIds( eesToSearch );
+
+            String queryString = "";
+            queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds, knownGenesOnly );
+
+            Session session = this.getSession( false );
+            org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
+
+            // This is the actual business of querying the database.
+            processCoexpQuery( gene, queryObject, coexpressions );
+        }
+
+        if ( cachedResults.size() > 0 ) {
+            mergeCachedCoexpressionResults( coexpressions, cachedResults );
+        }
 
         if ( coexpressions.getQueryGeneProbes().size() == 0 ) {
             if ( log.isDebugEnabled() ) log.debug( "Coexpression query gene " + gene + " has no probes" );
@@ -323,62 +464,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " as bs2gp , CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
                 + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
-    }
-
-    /**
-     * @param css
-     * @return
-     * @throws Exception
-     */
-    private Map<Long, Collection<Long>> getCS2GeneMap( Collection<Long> css ) throws Exception {
-        Map<Long, Collection<Long>> csId2geneIds = new HashMap<Long, Collection<Long>>();
-        if ( css == null || css.size() == 0 ) {
-            return csId2geneIds;
-        }
-
-        int count = 0;
-        int CHUNK_SIZE = 1000;
-        Collection<Long> batch = new HashSet<Long>();
-        Session session = this.getSession();
-
-        for ( Long csId : css ) {
-            batch.add( csId );
-            count++;
-            if ( count % CHUNK_SIZE == 0 ) {
-                processCS2GeneChunk( csId2geneIds, batch, session );
-                batch.clear();
-            }
-        }
-
-        if ( batch.size() > 0 ) {
-            processCS2GeneChunk( csId2geneIds, batch, session );
-        }
-
-        return csId2geneIds;
-
-    }
-
-    private void processCS2GeneChunk( Map<Long, Collection<Long>> csId2geneIds, Collection<Long> csIdChunk,
-            Session session ) {
-        String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS WHERE CS in ("
-                + StringUtils.join( csIdChunk.iterator(), "," ) + ")";
-
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "id", new LongType() );
-        queryObject.addScalar( "geneId", new LongType() );
-
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
-        while ( scroll.next() ) {
-            Long id = scroll.getLong( 0 );
-            Long geneId = scroll.getLong( 1 );
-            Collection<Long> geneIds = csId2geneIds.get( id );
-            if ( geneIds == null ) {
-                geneIds = new HashSet<Long>();
-                csId2geneIds.put( id, geneIds );
-            }
-            geneIds.add( geneId );
-        }
     }
 
     /*
@@ -536,6 +621,64 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
+     * @param coexpressions
+     * @param eeID
+     * @param geneType
+     * @return
+     */
+    private ExpressionExperimentValueObject addExpressionExperimentToCoexpressions(
+            CoexpressionCollectionValueObject coexpressions, Long eeID, String geneType ) {
+        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( geneType, eeID );
+        if ( eeVo == null ) {
+            eeVo = new ExpressionExperimentValueObject();
+            eeVo.setId( eeID );
+            coexpressions.addExpressionExperiment( geneType, eeVo ); // unorganized.
+        }
+        return eeVo;
+    }
+
+    /**
+     * Generically add a coexpression record to the results set.
+     * 
+     * @param coexpressions
+     * @param eeID
+     * @param queryGene
+     * @param queryProbe
+     * @param pvalue
+     * @param score
+     * @param coexpressedGene
+     * @param geneType
+     * @param coexpressedProbe
+     */
+    private void addResult( CoexpressionCollectionValueObject coexpressions, Long eeID, Gene queryGene,
+            Long queryProbe, Double pvalue, Double score, Long coexpressedGene, String geneType, Long coexpressedProbe ) {
+        CoexpressionValueObject coExVO;
+
+        // add the gene (if not already seen)
+        if ( coexpressions.contains( coexpressedGene ) ) {
+            coExVO = coexpressions.get( coexpressedGene );
+        } else {
+            coExVO = new CoexpressionValueObject();
+            coExVO.setQueryGene( queryGene );
+            coExVO.setGeneId( coexpressedGene );
+            coExVO.setGeneType( geneType );
+            coexpressions.add( coExVO );
+        }
+
+        // log.info( "EE=" + eeID + " in Probe=" + queryProbe + " out Probe=" + coexpressedProbe + " gene="
+        // + coexpressedGene + " score=" + String.format( "%.3f", score ) );
+        // add the expression experiment.
+        ExpressionExperimentValueObject eeVo = addExpressionExperimentToCoexpressions( coexpressions, eeID, geneType );
+
+        // add the ee here so we know it is associated with this specific gene.
+        coExVO.addSupportingExperiment( eeVo );
+
+        coExVO.addScore( eeID, score, pvalue, queryProbe, coexpressedProbe );
+
+        coexpressions.initializeSpecificityDataStructure( eeID, queryProbe );
+    }
+
+    /**
      * @param results
      */
     private void debug( List<Gene> results ) {
@@ -546,6 +689,77 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             buf.append( g + "\n" );
         }
         log.error( buf );
+
+    }
+
+    /**
+     * Returns KNOWN genes in the region.
+     * 
+     * @param chrom
+     * @param targetStart
+     * @param targetEnd
+     * @param strand
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<Gene> findByPosition( Chromosome chrom, final Long targetStart, final Long targetEnd,
+            final String strand ) {
+
+        // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
+        String query = "select distinct g from GeneImpl as g "
+                + "inner join fetch g.products prod  inner join fetch prod.physicalLocation pl inner join fetch pl.chromosome "
+                + "where ((pl.nucleotide >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end) "
+                + "OR (pl.nucleotide <= :start AND (pl.nucleotide + pl.nucleotideLength) >= :end) OR "
+                + "(pl.nucleotide >= :start AND pl.nucleotide <= :end) "
+                + "OR  ((pl.nucleotide + pl.nucleotideLength) >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end )) "
+                + "and pl.chromosome = :chromosome and g.class='GeneImpl' ";
+
+        query = query + " and " + SequenceBinUtils.addBinToQuery( "pl", targetStart, targetEnd );
+
+        String[] params;
+        Object[] vals;
+        if ( strand != null ) {
+            query = query + " and pl.strand = :strand ";
+            params = new String[] { "chromosome", "start", "end", "strand" };
+            vals = new Object[] { chrom, targetStart, targetEnd, strand };
+        } else {
+            params = new String[] { "chromosome", "start", "end" };
+            vals = new Object[] { chrom, targetStart, targetEnd };
+        }
+        return getHibernateTemplate().findByNamedParam( query, params, vals );
+    }
+
+    /**
+     * @param css
+     * @return
+     * @throws Exception
+     */
+    private Map<Long, Collection<Long>> getCS2GeneMap( Collection<Long> css ) throws Exception {
+        Map<Long, Collection<Long>> csId2geneIds = new HashMap<Long, Collection<Long>>();
+        if ( css == null || css.size() == 0 ) {
+            return csId2geneIds;
+        }
+
+        int count = 0;
+        int CHUNK_SIZE = 1000;
+        Collection<Long> batch = new HashSet<Long>();
+        Session session = this.getSession();
+
+        for ( Long csId : css ) {
+            assert csId != null;
+            batch.add( csId );
+            count++;
+            if ( count % CHUNK_SIZE == 0 ) {
+                processCS2GeneChunk( csId2geneIds, batch, session );
+                batch.clear();
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            processCS2GeneChunk( csId2geneIds, batch, session );
+        }
+
+        return csId2geneIds;
 
     }
 
@@ -677,6 +891,24 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
+     * Merge in the cached results. The CVOs that are cached only contain results for a single expression experiment.
+     */
+    private void mergeCachedCoexpressionResults( CoexpressionCollectionValueObject coexpressions,
+            Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults ) {
+        for ( Long eeid : cachedResults.keySet() ) {
+            Collection<CoexpressionCacheValueObject> cache = cachedResults.get( eeid );
+            for ( CoexpressionCacheValueObject cachedCVO : cache ) {
+                assert cachedCVO.getQueryProbe() != null;
+                assert cachedCVO.getCoexpressedProbe() != null;
+                addResult( coexpressions, eeid, cachedCVO.getQueryGene(), cachedCVO.getQueryProbe(), cachedCVO
+                        .getPvalue(), cachedCVO.getScore(), cachedCVO.getCoexpressedGene(), cachedCVO.getGeneType(),
+                        cachedCVO.getCoexpressedProbe() );
+            }
+        }
+
+    }
+
+    /**
      * @param coexpressions
      * @param knownGenesOnly this probably doesn't matter much, as results are already determined, but defensive
      *        programming.
@@ -695,6 +927,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         watch.stop();
         Long elapsed = watch.getTime();
         coexpressions.setPostProcessTime( elapsed );
+
         if ( elapsed > 1000 ) log.info( "Done postprocessing in " + elapsed + "ms." );
     }
 
@@ -710,7 +943,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param coexpressions
      */
     private void postProcessPredictedGenes( CoexpressionCollectionValueObject coexpressions ) {
-        CoexpressedGenesDetails predictedCoexpressionType = coexpressions.getPredictedCoexpressionType();
+        CoexpressedGenesDetails predictedCoexpressionType = coexpressions.getPredictedGeneCoexpression();
         predictedCoexpressionType.postProcess();
     }
 
@@ -718,7 +951,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param coexpressions
      */
     private void postProcessProbeAlignedRegions( CoexpressionCollectionValueObject coexpressions ) {
-        CoexpressedGenesDetails probeAlignedCoexpressionType = coexpressions.getProbeAlignedCoexpressionType();
+        CoexpressedGenesDetails probeAlignedCoexpressionType = coexpressions.getProbeAlignedRegionCoexpression();
         probeAlignedCoexpressionType.postProcess();
     }
 
@@ -755,37 +988,47 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Long coexpressedProbe = resultSet.getLong( 5 );
         String geneType = resultSet.getString( 6 );
 
-        CoexpressionValueObject coExVO;
-        // add the gene (if not already seen)
-        if ( coexpressions.contains( coexpressedGene ) ) {
-            coExVO = coexpressions.get( coexpressedGene );
-        } else {
-            coExVO = new CoexpressionValueObject();
-            coExVO.setQueryGene( queryGene );
-            coExVO.setGeneId( coexpressedGene );
-            coExVO.setGeneType( geneType );
-            coexpressions.add( coExVO );
+        addResult( coexpressions, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, geneType,
+                coexpressedProbe );
+
+        /*
+         * Cache the result.
+         */
+        CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
+        coExVOForCache.setQueryGene( queryGene );
+        coExVOForCache.setCoexpressedGene( coexpressedGene );
+        coExVOForCache.setGeneType( geneType );
+        coExVOForCache.setExpressionExperiment( eeID );
+        coExVOForCache.setScore( score );
+        coExVOForCache.setPvalue( pvalue );
+        coExVOForCache.setQueryProbe( queryProbe );
+        coExVOForCache.setCoexpressedProbe( coexpressedProbe );
+        Probe2ProbeCoexpressionCache.addToCache( eeID, coExVOForCache );
+
+    }
+
+    private void processCS2GeneChunk( Map<Long, Collection<Long>> csId2geneIds, Collection<Long> csIdChunk,
+            Session session ) {
+        assert csIdChunk.size() > 0;
+        String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS WHERE CS in ("
+                + StringUtils.join( csIdChunk, "," ) + ")";
+
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.addScalar( "id", new LongType() );
+        queryObject.addScalar( "geneId", new LongType() );
+
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+
+        while ( scroll.next() ) {
+            Long id = scroll.getLong( 0 );
+            Long geneId = scroll.getLong( 1 );
+            Collection<Long> geneIds = csId2geneIds.get( id );
+            if ( geneIds == null ) {
+                geneIds = new HashSet<Long>();
+                csId2geneIds.put( id, geneIds );
+            }
+            geneIds.add( geneId );
         }
-
-        // log.info( "EE=" + eeID + " in Probe=" + queryProbe + " out Probe=" + coexpressedProbe + " gene="
-        // + coexpressedGene + " score=" + String.format( "%.3f", score ) );
-
-        // add the expression experiment.
-
-        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( geneType, eeID );
-        if ( eeVo == null ) {
-            eeVo = new ExpressionExperimentValueObject();
-            eeVo.setId( eeID );
-            coexpressions.addExpressionExperiment( geneType, eeVo ); // unorganized.
-        }
-
-        // add the ee here so we know it is associated with this specific gene.
-        coExVO.addSupportingExperiment( eeVo );
-
-        coExVO.addScore( eeID, score, pvalue, queryProbe, coexpressedProbe );
-
-        coexpressions.initializeSpecificityDataStructure( eeID, queryProbe );
-
     }
 
     /**
@@ -810,164 +1053,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.setLong( "id", id );
 
         return queryObject;
-    }
-
-    @SuppressWarnings( { "unchecked", "cast" })
-    @Override
-    protected Gene handleFindByAccession( String accession, ExternalDatabase source ) throws Exception {
-        Collection<Gene> genes;
-        final String accessionQuery = "select g from GeneImpl g inner join g.accessions a where a.accession = :accession";
-        final String externalDbquery = accessionQuery + " and a.externalDatabase = :source";
-
-        if ( source == null ) {
-            genes = this.getHibernateTemplate().findByNamedParam( accessionQuery, "accession", "accession" );
-            if ( genes.size() == 0 ) {
-                genes = this.findByNcbiId( accession );
-            }
-        } else {
-            if ( source.getName().equalsIgnoreCase( "NCBI" ) ) {
-                genes = this.findByNcbiId( accession );
-            } else {
-                genes = this.getHibernateTemplate().findByNamedParam( externalDbquery,
-                        new String[] { "accession", "source" }, new Object[] { accession, source } );
-            }
-        }
-        if ( genes.size() > 0 ) {
-            return ( Gene ) genes.iterator().next();
-        }
-        return null;
-
-    }
-
-    private static final int WINDOW_INCREMENT = 500;
-    private static final int MAX_WINDOW = 1000000;
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.model.genome.GeneDao#findNearest(ubic.gemma.model.genome.PhysicalLocation)
-     */
-    public Collection<Gene> findNearest( PhysicalLocation physicalLocation ) {
-
-        if ( physicalLocation.getNucleotide() == null ) {
-            throw new IllegalArgumentException( "Locations must have a nucleotide position" );
-        }
-
-        /*
-         * Strategy: start with a small window, enlarge it until we decide enough is enough.
-         */
-        Chromosome chrom = physicalLocation.getChromosome();
-        Long targetStart = physicalLocation.getNucleotide();
-        Long targetEnd = physicalLocation.getNucleotide()
-                + ( physicalLocation.getNucleotideLength() == null ? 0 : physicalLocation.getNucleotideLength() );
-        final String strand = physicalLocation.getStrand();
-        if ( log.isDebugEnabled() )
-            log.debug( "Start Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
-        /*
-         * Start with the 'exact' location.
-         */
-        Collection<Gene> candidates = findByPosition( chrom, targetStart, targetEnd, strand );
-        if ( !candidates.isEmpty() ) {
-            if ( log.isDebugEnabled() ) log.debug( physicalLocation + ": overlaps " + candidates.size() + " gene(s)" );
-            return candidates;
-        }
-
-        /*
-         * Start enlarging the region. FIXME: find the nearest hit, not just the ones in the window.
-         */
-        int i = 1;
-        while ( targetStart >= 0 && targetEnd - targetStart < MAX_WINDOW ) {
-            targetStart = targetStart - i * WINDOW_INCREMENT;
-
-            if ( targetStart < 0 ) targetStart = 0L;
-
-            targetEnd = targetEnd + i * WINDOW_INCREMENT;
-            if ( log.isDebugEnabled() )
-                log.debug( "Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
-
-            candidates = findByPosition( chrom, targetStart, targetEnd, strand );
-            if ( !candidates.isEmpty() ) {
-                if ( log.isDebugEnabled() )
-                    log.debug( physicalLocation + ": " + candidates.size() + " nearby genes at window size " + i
-                            * WINDOW_INCREMENT );
-
-                Collection<Gene> results = new HashSet<Gene>();
-                Gene closestGene = null;
-                int closestRange = ( int ) 1e10;
-                for ( Gene gene : candidates ) {
-                    this.thaw( gene ); // slow...
-                    for ( GeneProduct gp : gene.getProducts() ) {
-                        PhysicalLocation genelocation = gp.getPhysicalLocation();
-                        assert genelocation.getChromosome().equals( physicalLocation.getChromosome() );
-                        Long start = genelocation.getNucleotide();
-                        Long end = genelocation.getNucleotideLength() + start;
-
-                        /*
-                         * FIXME This is bogus. Need to sort through cases properly. 
-                         */
-                        long r1 = Math.abs( targetStart - start );
-                        long r2 = Math.abs( targetStart - end );
-                        long r3 = Math.abs( targetEnd - start );
-                        long r4 = Math.abs( targetEnd - end );
-
-                        if ( r1 < closestRange || r2 < closestRange || r3 < closestRange || r4 < closestRange ) {
-                            closestGene = gene;
-                        }
-
-                    }
-
-                }
-
-                assert closestGene != null;
-
-                results.add( closestGene );
-
-                return results;
-            }
-            // log.info( "Widening search..." );
-            i++;
-        }
-
-        // nuthin'
-        log.debug( "Nothing found" );
-        return new HashSet<Gene>();
-
-    }
-
-    /**
-     * Returns KNOWN genes in the region.
-     * 
-     * @param chrom
-     * @param targetStart
-     * @param targetEnd
-     * @param strand
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<Gene> findByPosition( Chromosome chrom, final Long targetStart, final Long targetEnd,
-            final String strand ) {
-
-        // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
-        String query = "select distinct g from GeneImpl as g "
-                + "inner join fetch g.products prod  inner join fetch prod.physicalLocation pl inner join fetch pl.chromosome "
-                + "where ((pl.nucleotide >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end) "
-                + "OR (pl.nucleotide <= :start AND (pl.nucleotide + pl.nucleotideLength) >= :end) OR "
-                + "(pl.nucleotide >= :start AND pl.nucleotide <= :end) "
-                + "OR  ((pl.nucleotide + pl.nucleotideLength) >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end )) "
-                + "and pl.chromosome = :chromosome and g.class='GeneImpl' ";
-
-        query = query + " and " + SequenceBinUtils.addBinToQuery( "pl", targetStart, targetEnd );
-
-        String[] params;
-        Object[] vals;
-        if ( strand != null ) {
-            query = query + " and pl.strand = :strand ";
-            params = new String[] { "chromosome", "start", "end", "strand" };
-            vals = new Object[] { chrom, targetStart, targetEnd, strand };
-        } else {
-            params = new String[] { "chromosome", "start", "end" };
-            vals = new Object[] { chrom, targetStart, targetEnd };
-        }
-        return getHibernateTemplate().findByNamedParam( query, params, vals );
     }
 
 }

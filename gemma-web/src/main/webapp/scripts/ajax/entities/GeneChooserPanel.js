@@ -16,7 +16,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			collapsible : true,
 			autoWidth : true,
-			// title : "Gene table",
+			stateful : false,
 			frame : true,
 			layout : 'fit',
 			viewConfig : {

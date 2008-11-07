@@ -162,10 +162,10 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
         coexps.filter( limit );
 
-        coexps = coexpressions.getPredictedCoexpressionType();
+        coexps = coexpressions.getPredictedGeneCoexpression();
         coexps.filter( limit );
 
-        coexps = coexpressions.getProbeAlignedCoexpressionType();
+        coexps = coexpressions.getProbeAlignedRegionCoexpression();
         coexps.filter( limit );
     }
 
@@ -179,10 +179,10 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
         fillInEEInfo( coexpressions, eeIds, coexps );
 
-        coexps = coexpressions.getPredictedCoexpressionType();
+        coexps = coexpressions.getPredictedGeneCoexpression();
         fillInEEInfo( coexpressions, eeIds, coexps );
 
-        coexps = coexpressions.getProbeAlignedCoexpressionType();
+        coexps = coexpressions.getProbeAlignedRegionCoexpression();
         fillInEEInfo( coexpressions, eeIds, coexps );
 
     }
@@ -229,10 +229,10 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         CoexpressedGenesDetails coexp = coexpressions.getKnownGeneCoexpression();
         fillInGeneInfo( stringency, coexpressions, coexp );
 
-        coexp = coexpressions.getPredictedCoexpressionType();
+        coexp = coexpressions.getPredictedGeneCoexpression();
         fillInGeneInfo( stringency, coexpressions, coexp );
 
-        coexp = coexpressions.getProbeAlignedCoexpressionType();
+        coexp = coexpressions.getProbeAlignedRegionCoexpression();
         fillInGeneInfo( stringency, coexpressions, coexp );
 
     }
