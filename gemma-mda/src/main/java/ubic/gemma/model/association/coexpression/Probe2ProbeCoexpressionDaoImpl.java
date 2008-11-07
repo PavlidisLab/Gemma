@@ -72,12 +72,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     private static final String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl",
             "MouseProbeCoExpressionImpl", "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
 
-    private long eeId = 0L;
-
     /*
      * (non-Javadoc) This should be faster than doing it one at a time; uses the "DML-style" syntax. This implementation
      * assumes all the links in the collection are of the same class!F
-     * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression#remove(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -131,9 +128,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCountLinks(ubic.gemma.model.expression
-     *      .experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCountLinks(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
@@ -230,9 +227,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
-     *      (ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
+     * (ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -266,9 +263,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model
-     *      .expression.experiment.ExpressionExperiment, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model
+     * .expression.experiment.ExpressionExperiment, boolean)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -298,9 +295,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
-     *      (ubic.gemma.model.genome.Gene, ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
+     * (ubic.gemma.model.genome.Gene, ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
      */
     @Override
     protected Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsLinkTestedIn( Gene geneA,
@@ -327,9 +324,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsTestedIn
-     *      (java.util.Collection, java.util.Collection, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsTestedIn
+     * (java.util.Collection, java.util.Collection, boolean)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -397,9 +394,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetProbeCoExpression(ubic.gemma
-     *      .model.expression.experiment.ExpressionExperiment, java.lang.String, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetProbeCoExpression(ubic.gemma
+     * .model.expression.experiment.ExpressionExperiment, java.lang.String, boolean)
      */
     @Override
     protected Collection<ProbeLink> handleGetProbeCoExpression( ExpressionExperiment expressionExperiment,
@@ -466,9 +463,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(ubic.gemma.
-     *      model.genome.Gene, java.util.Collection)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(ubic.gemma.
+     * model.genome.Gene, java.util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -507,9 +504,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handlePrepareForShuffling(java.util.
-     *      Collection, java.lang.String, boolean)
+     * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handlePrepareForShuffling(java.util.
+     * Collection, java.lang.String, boolean)
      */
     @Override
     protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )
@@ -751,12 +748,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         Collection<ProbeLink> links = getLinks( queryProbeIds, coexpressedProbeIds, ee.getId(), tableName );
 
         Collection<Long> results = new HashSet<Long>();
-        if (links == null || links.isEmpty())
-            return results;
-           
+        if ( links == null || links.isEmpty() ) return results;
+
         for ( ProbeLink probeLink : links ) {
-            results.add( probeLink.getFirstDesignElementId());
-            results.add( probeLink.getSecondDesignElementId());
+            results.add( probeLink.getFirstDesignElementId() );
+            results.add( probeLink.getSecondDesignElementId() );
         }
 
         return results;
@@ -835,11 +831,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     private Collection<ProbeLink> getLinks( Collection<Long> probeSetAIds, Collection<Long> probeSetBIds, Long eeId,
             String tableName ) {
 
-        if (probeSetAIds == null || probeSetBIds == null || probeSetAIds.isEmpty() || probeSetBIds.isEmpty()){
+        if ( probeSetAIds == null || probeSetBIds == null || probeSetAIds.isEmpty() || probeSetBIds.isEmpty() ) {
             log.info( "Called get links with null or empty collection a: " + probeSetAIds + "  b: " + probeSetBIds );
-                return null;
+            return null;
         }
-        
+
         StringBuilder probeSetAIdsString = new StringBuilder();
         probeSetAIdsString.append( '(' );
         probeSetAIdsString.append( StringUtils.join( probeSetAIds, "," ) );
@@ -891,7 +887,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                     }
                     if ( count < chunkSize ) break;
                 }
-                log.info( "Load " + links.size() );
                 return null;
             }
         } );
@@ -1024,7 +1019,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         Connection conn = session.connection();
         Statement s = conn.createStatement();
 
-        this.eeId = ee.getId();
         int count = 0;
         int CHUNK_LIMIT = 10000;
         int total = links.size();
@@ -1032,6 +1026,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         log.info( ee + ": Writing " + links.size() + " links into tables" );
         int chunkNum = 0;
         for ( ProbeLink link : links ) {
+            link.setEeId( ee.getId() );
             linksInOneChunk.add( link.toSqlString() );
             count++;
             total--;
@@ -1061,12 +1056,21 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         private Long firstDesignElementId = 0L;
         private Long secondDesignElementId = 0L;
         private Double score = 0.0;
+        private Long eeId = null;
 
         public ProbeLink() {
         }
 
         public Long getFirstDesignElementId() {
             return firstDesignElementId;
+        }
+
+        public Long getEeId() {
+            return eeId;
+        }
+
+        public void setEeId( Long eeId ) {
+            this.eeId = eeId;
         }
 
         public Double getScore() {
@@ -1093,6 +1097,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             return "(" + firstDesignElementId + ", " + secondDesignElementId + ",  " + score + ", " + eeId + ")";
         }
 
+        @Override
         public String toString() {
             return "DE1=" + firstDesignElementId + ", DE2=" + secondDesignElementId + ", SCORE=s" + score + ", EE="
                     + eeId;
