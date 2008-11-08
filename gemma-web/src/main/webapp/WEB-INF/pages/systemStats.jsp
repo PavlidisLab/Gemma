@@ -1,10 +1,10 @@
+<%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title>Hibernate stats</title>
+	<title>System stats</title>
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 
-	<script type='text/javascript' src='/Gemma/scripts/ajax/ext/data/DwrProxy.js'></script>
 
-
-	<script type='text/javascript' src='/Gemma/scripts/app/monitoring.js'></script>
+	<jwr:script src='/scripts/app/monitoring.js' />
 
 
 </head>
