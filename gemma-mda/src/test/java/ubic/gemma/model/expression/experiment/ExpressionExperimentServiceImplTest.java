@@ -95,14 +95,6 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
     }
 
-    @SuppressWarnings("unchecked")
-    public void testGetArrayDesignsUsed() throws Exception {
-        assert ee != null;
-        // this is a method implemented by the service using just a thaw.
-        Collection<ArrayDesign> ads = svc.getArrayDesignsUsed( ee );
-        assertEquals( 2, ads.size() );
-    }
-
     public void testExpressionExperimentFindByInvestigator() {
         reset( eeDao );
         eeDao.findByInvestigator( nobody );
