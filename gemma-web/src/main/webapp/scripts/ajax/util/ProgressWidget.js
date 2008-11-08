@@ -16,7 +16,7 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 
 			modal : true,
 			closable : false,
-
+			stateful : false,
 			showAllMessages : false,
 
 			resizable : false,
@@ -112,6 +112,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 			waiting : false,
 			layout : 'fit',
 			bodyBorder : false,
+			stateful : false,
 			// width : 600,
 
 			initComponent : function() {
