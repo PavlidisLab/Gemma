@@ -1464,6 +1464,11 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
+			<entry key="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
 		</map>
 	</property>
 </bean>
