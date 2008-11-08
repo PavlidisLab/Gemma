@@ -356,7 +356,7 @@ public class DesignElementDataVectorDaoImpl extends
     @SuppressWarnings("unchecked")
     protected Collection<DesignElementDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
         final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
-                + " where q.type.isPreferred = true  and dedv.expressionExperiment = :ee ";
+                + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
     }
 
