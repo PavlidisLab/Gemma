@@ -56,7 +56,6 @@ function submitForm() {
 };
 
 function handleFailure(data, e) {
-	console.log(data);
 	Ext.DomHelper.overwrite("messages", {
 				tag : 'img',
 				src : '/Gemma/images/icons/warning.png'
@@ -99,7 +98,6 @@ function handleSuccess(taskId) {
 					w.hide('upload-button');
 					w.destroy();
 					p.destroy();
-					console.log(payload);
 					window.location = payload;
 				}.createDelegate(this));
 
