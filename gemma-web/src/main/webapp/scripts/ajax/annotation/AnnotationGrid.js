@@ -38,7 +38,7 @@ Ext.namespace('Gemma');
 Gemma.AnnotationDataView = Ext.extend(Ext.DataView, {
 
 			readMethod : ExpressionExperimentController.getAnnotation,
-
+			
 			record : Ext.data.Record.create([{
 						name : "id",
 						type : "int"
@@ -97,6 +97,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			// autoHeight : true,
 			width : 500,
 			height : 200,
+			stateful : false,
 			loadMask : true,
 			viewConfig : {
 				enableRowBody : true,

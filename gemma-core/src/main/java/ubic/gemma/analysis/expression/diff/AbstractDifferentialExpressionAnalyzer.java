@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -69,9 +70,13 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
     /**
      * @param pvalues
-     * @return returns the qvalues for the pvalues
+     * @return returns the qvalues (false discovery rates) for the pvalues using the method of Storey and Tibshirani.
      */
     protected double[] getQValues( double[] pvalues ) {
+
+        if ( pvalues == null || pvalues.length == 0 ) {
+            throw new IllegalArgumentException( "No pvalues provided" );
+        }
 
         if ( rc == null ) {
             connectToR();
@@ -82,7 +87,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         }
 
         StringBuffer qvalueCommand = new StringBuffer();
-        String pvalsName = "pvals";
+        String pvalsName = "pvals_" + RandomStringUtils.randomAlphabetic( 10 );
         rc.assign( pvalsName, pvalues );
         qvalueCommand.append( "qvalue(" + pvalsName + ")$qvalues" );
         double[] qvalues = rc.doubleArrayEval( qvalueCommand.toString() );

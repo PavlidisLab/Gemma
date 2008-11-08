@@ -115,6 +115,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					id : 'annotator-wrap',
 					title : "Tags",
 					collapsible : false,
+					stateful : false,
 					bodyBorder : false,
 					width : 600,
 					height : 200,
@@ -139,6 +140,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				}.createDelegate(this));
 		var w = new Ext.Window({
 					modal : true,
+					stateful : false,
 					layout : 'fit',
 					items : [annotator],
 					buttons : [{
@@ -345,7 +347,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 											callback : function(data) {
 												var k = new Gemma.WaitHandler();
-												k.handleWait(data, true);
+												k.handleWait(data, true); 
 												this.relayEvents(k, ['done']);
 												k.on('done', function(payload) {
 															this.fireEvent('differential', payload)
@@ -443,7 +445,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 														callback : function(data) {
 															var k = new Gemma.WaitHandler();
 															k.handleWait(data, true);
-															this.relayEvents(k, ['done']);
+														//	this.relayEvents(k, ['done']);
 															k.on('done', function(payload) {
 																		this.fireEvent('differential', payload)
 																	});

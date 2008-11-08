@@ -44,7 +44,7 @@ public class OntologySearch {
 
     private static Log log = LogFactory.getLog( OntologySearch.class.getName() );
 
-    // Jena cannot properly parse these characters... gives a query parse error.
+    // Lucene cannot properly parse these characters... gives a query parse error.
     // OntologyTerms don't contain them anyway
     private final static char[] INVALID_CHARS = { ':', '(', ')', '?', '^', '[', ']', '{', '}', '!', '~' };
 
@@ -56,10 +56,15 @@ public class OntologySearch {
      * @return
      */
     public static String stripInvalidCharacters( String toStrip ) {
-        String result = toStrip;
+        String result = StringUtils.strip( toStrip );
         for ( char badChar : INVALID_CHARS ) {
             result = StringUtils.remove( result, badChar );
         }
+        /*
+         * Queries cannot start with '*' or ?
+         */
+        result = result.replaceAll( "^\\**", "" );
+        result = result.replaceAll( "^\\?*", "" );
 
         return StringEscapeUtils.escapeJava( result ).trim();
     }
