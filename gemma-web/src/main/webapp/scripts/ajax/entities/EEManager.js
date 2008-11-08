@@ -86,7 +86,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		callParams.push({
 					callback : function(data) {
 						var k = new Gemma.WaitHandler();
-						k.handleWait(data, true);
+						k.handleWait(data, false);
 						k.on('done', function(payload) {
 									this.fireEvent('reportUpdated', payload)
 								});
@@ -98,11 +98,14 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 	updateAllEEReports : function() {
 		var callParams = [];
-		callParams.push([]);
 		callParams.push({
 					callback : function(data) {
 						var k = new Gemma.WaitHandler();
-						k.handleWait(data, 'reportUpdated', false);
+						k.handleWait(data, true);
+						this.relayEvents(k, ['done']);
+						k.on('done', function(payload) {
+									this.fireEvent('reportUpdated', payload)
+								});
 					}.createDelegate(this)
 				});
 
@@ -347,8 +350,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 											callback : function(data) {
 												var k = new Gemma.WaitHandler();
-												k.handleWait(data, true); 
-												this.relayEvents(k, ['done']);
+												k.handleWait(data, true);
+												// this.relayEvents(k, ['done']);
 												k.on('done', function(payload) {
 															this.fireEvent('differential', payload)
 														});
@@ -445,7 +448,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 														callback : function(data) {
 															var k = new Gemma.WaitHandler();
 															k.handleWait(data, true);
-														//	this.relayEvents(k, ['done']);
+															// this.relayEvents(k, ['done']);
 															k.on('done', function(payload) {
 																		this.fireEvent('differential', payload)
 																	});
