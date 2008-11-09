@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -180,10 +181,12 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         responseWrapper.appendChild( responseElement );
 
         for ( Gene gene : geneCol ) {
-            for ( ExpressionExperiment ee : eeCol ) {
+            Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionAnalysisService
+                    .findResultsForGeneInExperimentsMetThreshold( gene, eeCol, Double.parseDouble( threshold ) );
+
+            for ( ExpressionExperiment ee : results.keySet() ) {
                 // main call to the DifferentialExpressionAnalysisService to retrieve ProbeAnalysisResultSet collection
-                Collection<ProbeAnalysisResult> parCol = null;
-                parCol = differentialExpressionAnalysisService.find( gene, ee, Double.parseDouble( threshold ) );
+                Collection<ProbeAnalysisResult> parCol = results.get( ee );
 
                 // check that a ProbeAnalysisResult is not null
                 if ( parCol == null || parCol.isEmpty() ) {

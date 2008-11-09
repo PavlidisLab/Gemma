@@ -162,13 +162,18 @@ public interface DifferentialExpressionAnalysisDao extends ubic.gemma.model.anal
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed );
 
     /**
-     * <p>
-     * Find differential expression for a gene in a data set, exceeding a given significance level (using the corrected
-     * pvalue field)
-     * </p>
+     * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
+     * corrected pvalue field)
+     * 
+     * @param gene
+     * @param experimentsAnalyzed
+     * @param threshold
+     * @return
      */
-    public java.util.Collection find( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, double threshold );
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperimentsMetThreshold(
+            ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
+            double threshold );
 
     /**
      * 

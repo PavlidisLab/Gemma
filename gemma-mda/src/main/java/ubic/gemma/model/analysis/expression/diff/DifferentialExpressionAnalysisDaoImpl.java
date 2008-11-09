@@ -111,6 +111,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -125,9 +126,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindExperimentsWithAnalyses
-     * (ubic.gemma.model.genome.Gene)
+     * 
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindExperimentsWithAnalyses
+     *      (ubic.gemma.model.genome.Gene)
      */
     @Override
     protected Collection handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
@@ -157,21 +158,22 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " inner join a.resultSets rs inner join rs.results r where r.probe=cs and g=:gene and e=:experimentAnalyzed";
 
+    final String queryString = "select distinct e, r from DifferentialExpressionAnalysisImpl a"
+            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
+            + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
+            + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
+            + " inner join a.resultSets rs inner join rs.results r where g=:gene and e in (:experimentsAnalyzed)";
+
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
-     * .gemma.model.genome.Gene, java.util.Collection)
+     * 
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
+     *      .gemma.model.genome.Gene, java.util.Collection)
      */
     public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> findResultsForGeneInExperiments( Gene gene,
             Collection<ExpressionExperiment> experimentsAnalyzed ) {
-        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
-        final String queryString = "select distinct e, r from DifferentialExpressionAnalysisImpl a"
-                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
-                + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
-                + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
-                + " inner join a.resultSets rs inner join rs.results r where g=:gene and e in (:experimentsAnalyzed)";
+        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
         String[] paramNames = { "gene", "experimentsAnalyzed" };
         Object[] objectValues = { gene, experimentsAnalyzed };
@@ -195,14 +197,41 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return results;
     }
 
-    @Override
-    protected Collection handleFind( Gene gene, ExpressionExperiment expressionExperiment, double threshold ) {
-        final String queryString = fetchResultsByGeneAndExperimentQuery + " and r.correctedPvalue < :threshold";
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene,
+     *      java.util.Collection, double)
+     */
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperimentsMetThreshold(
+            ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
+            double threshold ) {
 
-        String[] paramNames = { "gene", "experimentAnalyzed", "threshold" };
-        Object[] objectValues = { gene, expressionExperiment, threshold };
+        final String qs = queryString + " and r.correctedPvalue < :threshold";
 
-        return this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
+        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
+
+        String[] paramNames = { "gene", "experimentsAnalyzed" };
+        Object[] objectValues = { gene, experimentsAnalyzed };
+
+        List qresult = this.getHibernateTemplate().findByNamedParam( qs, paramNames, objectValues );
+
+        for ( Object o : qresult ) {
+
+            Object[] oa = ( Object[] ) o;
+            ExpressionExperiment ee = ( ExpressionExperiment ) oa[0];
+            ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
+
+            if ( !results.containsKey( ee ) ) {
+                results.put( ee, new HashSet<ProbeAnalysisResult>() );
+            }
+
+            results.get( ee ).add( probeResult );
+        }
+        log.info( "Num experiments with probe analysis results: " + results.size() );
+
+        return results;
     }
 
     @Override

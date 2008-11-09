@@ -127,12 +127,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected Collection handleFind( Gene gene, ExpressionExperiment expressionExperiment, double threshold )
-            throws Exception {
-        return this.getDifferentialExpressionAnalysisDao().find( gene, expressionExperiment, threshold );
-    }
-
-    @Override
     protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) throws Exception {
         this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
     }
@@ -156,11 +150,20 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#find(ubic.gemma.model.genome.Gene,
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#findResultsForGeneInExperiments(ubic.gemma.model.genome.Gene,
      *      java.util.Collection)
      */
     public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperiments(
             Gene gene, Collection<ExpressionExperiment> experimentsAnalyzed ) {
         return this.getDifferentialExpressionAnalysisDao().findResultsForGeneInExperiments( gene, experimentsAnalyzed );
+    }
+
+    /*
+     * 
+     */
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperimentsMetThreshold(
+            Gene gene, Collection<ExpressionExperiment> experimentsAnalyzed, double threshold ) {
+        return this.getDifferentialExpressionAnalysisDao().findResultsForGeneInExperimentsMetThreshold( gene,
+                experimentsAnalyzed, threshold );
     }
 }

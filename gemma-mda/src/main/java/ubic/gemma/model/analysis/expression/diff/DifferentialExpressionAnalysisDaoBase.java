@@ -528,30 +528,6 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
             throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#find(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.expression.experiment.ExpressionExperiment, double)
-     */
-    public java.util.Collection find( final ubic.gemma.model.genome.Gene gene,
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            final double threshold ) {
-        try {
-            return this.handleFind( gene, expressionExperiment, threshold );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.find(ubic.gemma.model.genome.Gene gene, ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, double threshold)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #find(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.experiment.ExpressionExperiment, double)}
-     */
-    protected abstract java.util.Collection handleFind( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, double threshold )
-            throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
     public void thaw(

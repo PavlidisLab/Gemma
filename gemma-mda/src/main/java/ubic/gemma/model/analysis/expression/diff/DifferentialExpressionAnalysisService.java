@@ -60,18 +60,23 @@ public interface DifferentialExpressionAnalysisService extends ubic.gemma.model.
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed );
 
     /**
+     * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
+     * corrected pvalue field)
+     * 
+     * @param gene
+     * @param experimentsAnalyzed
+     * @param threshold
+     * @return
+     */
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperimentsMetThreshold(
+            ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
+            double threshold );
+
+    /**
      * 
      */
     public void delete( java.lang.Long idToDelete );
-
-    /**
-     * <p>
-     * Find differential expression for a gene in a data set, exceeding a given significance level (using the corrected
-     * pvalue field)
-     * </p>
-     */
-    public java.util.Collection find( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, double threshold );
 
     /**
      * 

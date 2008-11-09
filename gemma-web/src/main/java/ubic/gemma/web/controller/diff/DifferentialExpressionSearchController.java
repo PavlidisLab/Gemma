@@ -330,22 +330,24 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
-        // FIXME rewrite this (since differentialExpressionAnalysisService.find( g, ee, threshold ) is called
-        // for each ee in loop)
+
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
         Gene g = geneService.load( geneId );
         if ( g == null ) return devos;
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( g );
-        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+
+        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionAnalysisService
+                .findResultsForGeneInExperimentsMetThreshold( g, experimentsAnalyzed, threshold );
+
+        for ( ExpressionExperiment ee : results.keySet() ) {
             ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
 
-            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee, threshold );
-
+            Collection<ProbeAnalysisResult> probeResults = results.get( ee );
             Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
-                    .getExperimentalFactors( results );
+                    .getExperimentalFactors( probeResults );
 
-            for ( ProbeAnalysisResult r : results ) {
+            for ( ProbeAnalysisResult r : probeResults ) {
                 DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
                 devo.setGene( g );
                 devo.setExpressionExperiment( eevo );
