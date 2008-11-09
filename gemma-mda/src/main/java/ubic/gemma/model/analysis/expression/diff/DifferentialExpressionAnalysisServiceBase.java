@@ -111,28 +111,6 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends ubic.gem
             throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#find(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    public java.util.Collection find( final ubic.gemma.model.genome.Gene gene,
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment experimentAnalyzed ) {
-        try {
-            return this.handleFind( gene, experimentAnalyzed );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.find(ubic.gemma.model.genome.Gene gene, ubic.gemma.model.expression.experiment.ExpressionExperiment experimentAnalyzed)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #find(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.experiment.ExpressionExperiment)}
-     */
-    protected abstract java.util.Collection handleFind( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.experiment.ExpressionExperiment experimentAnalyzed ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#delete(java.lang.Long)
      */
     @Override

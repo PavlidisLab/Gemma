@@ -22,6 +22,9 @@
 //
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * 
  */
@@ -46,10 +49,15 @@ public interface DifferentialExpressionAnalysisService extends ubic.gemma.model.
     public java.util.Collection findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
 
     /**
+     * Returns a map of a collection of {@link ProbeAnalysisResult}s keyed by {@link ExpressionExperiment}.
      * 
+     * @param gene
+     * @param experimentsAnalyzed
+     * @return Map<ExpressionExperiment, Collection<ProbeAnalysisResult>>
      */
-    public java.util.Collection find( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.experiment.ExpressionExperiment experimentAnalyzed );
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperiments(
+            ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed );
 
     /**
      * 

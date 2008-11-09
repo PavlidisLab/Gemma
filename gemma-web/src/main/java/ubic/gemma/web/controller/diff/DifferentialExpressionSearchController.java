@@ -207,6 +207,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             }
         }
 
+        /*
+         * Get results for each active experiment on given gene. Handling the threshold check below since we ignore this
+         * for the meta analysis. The results returned are for all factors, not just the factors we are seeking.
+         */
+        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> resultsMap = differentialExpressionAnalysisService
+                .findResultsForGeneInExperiments( g, activeExperiments );
+
+        log.debug( resultsMap.size() + " results for " + g + " in " + activeExperiments );
+
         DifferentialExpressionMetaAnalysisValueObject mavo = new DifferentialExpressionMetaAnalysisValueObject();
 
         DoubleArrayList pvaluesToCombine = new DoubleArrayList();
@@ -216,24 +225,17 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         int numMetThreshold = 0;
         /* each gene will have a row, and each row will have a row expander with supporting datasets */
-        for ( ExpressionExperiment ee : activeExperiments ) {
+        for ( ExpressionExperiment ee : resultsMap.keySet() ) {
 
             ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
 
-            /*
-             * Get results for experiment on given gene. Handling the threshold check below since we ignore this for the
-             * meta analysis. The results returned are for all factors, not just the factors we are seeking.
-             */
-            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );
-
-            log.debug( results.size() + " results for " + g + " in " + ee );
-
+            Collection<ProbeAnalysisResult> probes = resultsMap.get( ee );
             /* filter results for duplicate probes (those from experiments that had 2 way anova) */
             Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
-                    .getExperimentalFactors( results );
+                    .getExperimentalFactors( probes );
 
             Collection<ProbeAnalysisResult> filteredResults = new HashSet<ProbeAnalysisResult>();
-            for ( ProbeAnalysisResult r : results ) {
+            for ( ProbeAnalysisResult r : probes ) {
                 Collection<ExperimentalFactor> efs = dearToEf.get( r );
                 assert efs.size() > 0;
                 if ( efs.size() > 1 ) {

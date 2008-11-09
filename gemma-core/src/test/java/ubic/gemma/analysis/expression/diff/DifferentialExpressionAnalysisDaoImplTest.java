@@ -19,9 +19,10 @@
 package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.Map;
 
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
@@ -79,18 +80,22 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
         for ( Gene g : genes ) {
             Collection<ExpressionExperiment> experiments = differentialExpressionAnalysisDao
                     .findExperimentsWithAnalyses( g );
+
             log.info( "num experiments for " + g.getOfficialSymbol() + ": " + experiments.size() );
-            for ( ExpressionExperiment e : experiments ) {
-                Collection<DifferentialExpressionAnalysisResult> results = differentialExpressionAnalysisDao
-                        .find( g, e );
-                log.info( "num results for gene " + g.getOfficialSymbol() + " and experiment " + e.getName() + ": "
+
+            Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionAnalysisDao
+                    .findResultsForGeneInExperiments( g, experiments );
+
+            for ( ExpressionExperiment e : results.keySet() ) {
+
+                log.debug( "num results for gene " + g.getOfficialSymbol() + " and experiment " + e.getName() + ": "
                         + results.size() );
 
                 assertNotNull( results );
 
-                for ( DifferentialExpressionAnalysisResult r : results ) {
+                for ( ProbeAnalysisResult r : results.get( e ) ) {
                     double pval = r.getPvalue();
-                    log.info( "pval: " + pval );
+                    log.debug( "pval: " + pval );
                 }
             }
         }

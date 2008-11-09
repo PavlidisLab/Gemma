@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -45,6 +47,8 @@ import ubic.gemma.util.CommonQueries;
  */
 public class DifferentialExpressionAnalysisDaoImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase {
+
+    private Log log = LogFactory.getLog( this.getClass() );
 
     @Override
     protected Collection handleFindByTaxon( Taxon taxon ) {
@@ -123,7 +127,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome.Gene)
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)
      */
     @Override
     protected Collection handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
@@ -142,7 +146,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a "
                 + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba"
                 + " inner join ba.samplesUsed sa inner join ba.arrayDesignUsed ad"
-                + " inner join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon.id = " + gene.getTaxon().getId();
+                + " inner join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon.id = "
+                + gene.getTaxon().getId();
         return this.getHibernateTemplate().findByNamedParam( queryString, "probes", probes );
     }
 
@@ -155,17 +160,41 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic.gemma.model.genome.Gene,
+     *      java.util.Collection)
      */
-    @Override
-    protected Collection handleFind( Gene gene, ExpressionExperiment experimentAnalyzed ) throws Exception {
+    public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> findResultsForGeneInExperiments( Gene gene,
+            Collection<ExpressionExperiment> experimentsAnalyzed ) {
+        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
-        String[] paramNames = { "gene", "experimentAnalyzed" };
-        Object[] objectValues = { gene, experimentAnalyzed };
+        final String queryString = "select distinct e, r from DifferentialExpressionAnalysisImpl a"
+                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
+                + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
+                + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
+                + " inner join a.resultSets rs inner join rs.results r where g=:gene and e in (:experimentsAnalyzed)";
 
-        return this.getHibernateTemplate().findByNamedParam( fetchResultsByGeneAndExperimentQuery, paramNames,
-                objectValues );
+        String[] paramNames = { "gene", "experimentsAnalyzed" };
+        Object[] objectValues = { gene, experimentsAnalyzed };
+
+        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
+
+        for ( Object o : qresult ) {
+
+            Object[] oa = ( Object[] ) o;
+            ExpressionExperiment ee = ( ExpressionExperiment ) oa[0];
+            ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
+
+            Collection<ProbeAnalysisResult> probeResults = results.get( ee );
+            if ( probeResults == null ) {
+                probeResults = new HashSet<ProbeAnalysisResult>();
+            }
+            probeResults.add( probeResult );
+
+            results.put( ee, probeResults );
+        }
+        log.info( "Num experiments with probe analysis results: " + results.size() );
+
+        return results;
     }
 
     @Override

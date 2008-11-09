@@ -27,6 +27,7 @@ import java.util.Map;
 
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -108,23 +109,11 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleFind(ubic.gemma.model
-     *      .genome.Gene)
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleFindExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)
      */
     @Override
     protected Collection handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
         return this.getDifferentialExpressionAnalysisDao().findExperimentsWithAnalyses( gene );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleFind(ubic.gemma.model
-     *      .genome.Gene, ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    @Override
-    protected Collection handleFind( Gene gene, ExpressionExperiment experimentAnalyzed ) throws Exception {
-        return this.getDifferentialExpressionAnalysisDao().find( gene, experimentAnalyzed );
     }
 
     /*
@@ -162,5 +151,16 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     @Override
     protected Map handleFindByInvestigationIds( Collection investigationIds ) throws Exception {
         return this.getDifferentialExpressionAnalysisDao().findByInvestigationIds( investigationIds );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#find(ubic.gemma.model.genome.Gene,
+     *      java.util.Collection)
+     */
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperiments(
+            Gene gene, Collection<ExpressionExperiment> experimentsAnalyzed ) {
+        return this.getDifferentialExpressionAnalysisDao().findResultsForGeneInExperiments( gene, experimentsAnalyzed );
     }
 }
