@@ -669,7 +669,8 @@
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.delete=PROPAGATION_REQUIRED
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.getResultSets=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findByInvestigationIds=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperiments=PROPAGATION_REQUIRED,readOnly				
+				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperiments=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperimentsMetThreshold=PROPAGATION_REQUIRED,readOnly				
 				ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.delete=PROPAGATION_REQUIRED
 				ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.update=PROPAGATION_REQUIRED
