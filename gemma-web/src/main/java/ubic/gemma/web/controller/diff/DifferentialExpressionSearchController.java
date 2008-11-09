@@ -330,6 +330,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
+        // FIXME rewrite this (since differentialExpressionAnalysisService.find( g, ee, threshold ) is called
+        // for each ee in loop)
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
         Gene g = geneService.load( geneId );
         if ( g == null ) return devos;
