@@ -111,7 +111,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -126,8 +125,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindExperimentsWithAnalyses
+     * (ubic.gemma.model.genome.Gene)
      */
     @Override
     protected Collection handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
@@ -159,9 +159,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic.gemma.model.genome.Gene,
-     *      java.util.Collection)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
+     * .gemma.model.genome.Gene, java.util.Collection)
      */
     public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> findResultsForGeneInExperiments( Gene gene,
             Collection<ExpressionExperiment> experimentsAnalyzed ) {
@@ -184,13 +184,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             ExpressionExperiment ee = ( ExpressionExperiment ) oa[0];
             ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
 
-            Collection<ProbeAnalysisResult> probeResults = results.get( ee );
-            if ( probeResults == null ) {
-                probeResults = new HashSet<ProbeAnalysisResult>();
+            if ( !results.containsKey( ee ) ) {
+                results.put( ee, new HashSet<ProbeAnalysisResult>() );
             }
-            probeResults.add( probeResult );
 
-            results.put( ee, probeResults );
+            results.get( ee ).add( probeResult );
         }
         log.info( "Num experiments with probe analysis results: " + results.size() );
 
