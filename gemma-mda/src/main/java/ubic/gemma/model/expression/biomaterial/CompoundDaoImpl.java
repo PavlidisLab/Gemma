@@ -34,8 +34,8 @@ public class CompoundDaoImpl extends ubic.gemma.model.expression.biomaterial.Com
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDaoBase#find(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see
+     * ubic.gemma.model.expression.biomaterial.CompoundDaoBase#find(ubic.gemma.model.expression.biomaterial.Compound)
      */
     @Override
     public Compound find( Compound compound ) {
@@ -63,8 +63,9 @@ public class CompoundDaoImpl extends ubic.gemma.model.expression.biomaterial.Com
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDaoBase#findOrCreate(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see
+     * ubic.gemma.model.expression.biomaterial.CompoundDaoBase#findOrCreate(ubic.gemma.model.expression.biomaterial.
+     * Compound)
      */
     @Override
     public Compound findOrCreate( Compound compound ) {

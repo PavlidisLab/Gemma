@@ -27,9 +27,77 @@ package ubic.gemma.model.genome;
  */
 public interface ChromosomeFeatureDao extends ubic.gemma.model.common.AuditableDao {
     /**
-     * Loads an instance of ubic.gemma.model.genome.ChromosomeFeature from the persistent store.
+     * <p>
+     * Does the same thing as {@link #findByNcbiId(java.lang.String)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
      */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+    public java.util.Collection findByNcbiId( int transform, java.lang.String ncbiId );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByNcbiId(boolean, java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByNcbiId(int, java.lang.String ncbiId)}.
+     * </p>
+     */
+    public java.util.Collection findByNcbiId( int transform, String queryString, java.lang.String ncbiId );
+
+    /**
+     * 
+     */
+    public java.util.Collection findByNcbiId( java.lang.String ncbiId );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByNcbiId(java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByNcbiId(java.lang.String)}.
+     * </p>
+     */
+    public java.util.Collection findByNcbiId( String queryString, java.lang.String ncbiId );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByPhysicalLocation(boolean, ubic.gemma.model.genome.PhysicalLocation)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findByPhysicalLocation(int, ubic.gemma.model.genome.PhysicalLocation
+     * location)}.
+     * </p>
+     */
+    public java.util.Collection findByPhysicalLocation( int transform, String queryString,
+            ubic.gemma.model.genome.PhysicalLocation location );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)} with an
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public java.util.Collection findByPhysicalLocation( int transform, ubic.gemma.model.genome.PhysicalLocation location );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)}.
+     * </p>
+     */
+    public java.util.Collection findByPhysicalLocation( String queryString,
+            ubic.gemma.model.genome.PhysicalLocation location );
+
+    /**
+     * <p>
+     * Find chromosome features that fall within the physical location.
+     * </p>
+     */
+    public java.util.Collection findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location );
 
     /**
      * <p>
@@ -44,6 +112,11 @@ public interface ChromosomeFeatureDao extends ubic.gemma.model.common.AuditableD
      * @return either the entity or the object transformed from the entity.
      */
     public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.genome.ChromosomeFeature from the persistent store.
+     */
+    public ubic.gemma.model.common.Securable load( java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.genome.ChromosomeFeature}.
@@ -67,21 +140,6 @@ public interface ChromosomeFeatureDao extends ubic.gemma.model.common.AuditableD
     public java.util.Collection loadAll( final int transform );
 
     /**
-     * Updates the <code>chromosomeFeature</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.genome.ChromosomeFeature chromosomeFeature );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.ChromosomeFeature from the persistent store.
-     */
-    public void remove( ubic.gemma.model.genome.ChromosomeFeature chromosomeFeature );
-
-    /**
      * Removes the instance of ubic.gemma.model.genome.ChromosomeFeature having the given <code>identifier</code> from
      * the persistent store.
      */
@@ -93,76 +151,18 @@ public interface ChromosomeFeatureDao extends ubic.gemma.model.common.AuditableD
     public void remove( java.util.Collection entities );
 
     /**
-     * <p>
-     * Find chromosome features that fall within the physical location.
-     * </p>
+     * Removes the instance of ubic.gemma.model.genome.ChromosomeFeature from the persistent store.
      */
-    public java.util.Collection findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location );
+    public void remove( ubic.gemma.model.genome.ChromosomeFeature chromosomeFeature );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)}.
-     * </p>
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public java.util.Collection findByPhysicalLocation( String queryString,
-            ubic.gemma.model.genome.PhysicalLocation location );
+    public void update( java.util.Collection entities );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
-     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
-     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
-     * transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
+     * Updates the <code>chromosomeFeature</code> instance in the persistent store.
      */
-    public java.util.Collection findByPhysicalLocation( int transform, ubic.gemma.model.genome.PhysicalLocation location );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByPhysicalLocation(boolean, ubic.gemma.model.genome.PhysicalLocation)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findByPhysicalLocation(int, ubic.gemma.model.genome.PhysicalLocation
-     * location)}.
-     * </p>
-     */
-    public java.util.Collection findByPhysicalLocation( int transform, String queryString,
-            ubic.gemma.model.genome.PhysicalLocation location );
-
-    /**
-     * 
-     */
-    public java.util.Collection findByNcbiId( java.lang.String ncbiId );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByNcbiId(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByNcbiId(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection findByNcbiId( String queryString, java.lang.String ncbiId );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByNcbiId(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection findByNcbiId( int transform, java.lang.String ncbiId );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByNcbiId(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByNcbiId(int, java.lang.String ncbiId)}.
-     * </p>
-     */
-    public java.util.Collection findByNcbiId( int transform, String queryString, java.lang.String ncbiId );
+    public void update( ubic.gemma.model.genome.ChromosomeFeature chromosomeFeature );
 
 }

@@ -34,17 +34,6 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.DescribableImpl#toString()
-     */
-    @Override
-    public String toString() {
-        return super.toString() + " (" + this.getShortName() + ")";
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperiment#equals(java.lang.Object)
      */
     @Override
@@ -63,7 +52,6 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperiment#hashCode()
      */
     @Override
@@ -76,6 +64,15 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
         }
         return result;
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.DescribableImpl#toString()
+     */
+    @Override
+    public String toString() {
+        return super.toString() + " (" + this.getShortName() + ")";
     }
 
 }

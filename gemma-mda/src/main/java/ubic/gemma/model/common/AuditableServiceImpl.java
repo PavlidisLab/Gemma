@@ -38,27 +38,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent
 public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServiceBase {
 
     /**
-     * @see ubic.gemma.model.common.AuditableService#getEvents(ubic.gemma.model.common.Auditable)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected java.util.Collection<AuditEvent> handleGetEvents( ubic.gemma.model.common.Auditable auditable )
-            throws java.lang.Exception {
-        Collection<AuditEvent> auditEvents = this.getAuditableDao().getAuditEvents( auditable );
-        return auditEvents;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableService#getLastAuditEvent(ubic.gemma.model.common.Auditable,
-     *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
-     */
-    @Override
-    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable,
-            AuditEventType type ) throws java.lang.Exception {
-        return this.getAuditableDao().getLastAuditEvent( auditable, type );
-    }
-
-    /**
      * @param events
      * @param lastEvent
      * @return
@@ -88,6 +67,48 @@ public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServi
     }
 
     /**
+     * @see ubic.gemma.model.common.AuditableService#getEvents(ubic.gemma.model.common.Auditable)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected java.util.Collection<AuditEvent> handleGetEvents( ubic.gemma.model.common.Auditable auditable )
+            throws java.lang.Exception {
+        Collection<AuditEvent> auditEvents = this.getAuditableDao().getAuditEvents( auditable );
+        return auditEvents;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.AuditableService#getLastAuditEvent(ubic.gemma.model.common.Auditable,
+     *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
+     */
+    @Override
+    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable,
+            AuditEventType type ) throws java.lang.Exception {
+        return this.getAuditableDao().getLastAuditEvent( auditable, type );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.AuditableServiceBase#handleGetLastAuditEvent(java.util.Collection,
+     * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
+     */
+    @Override
+    protected Map handleGetLastAuditEvent( Collection auditables, AuditEventType type ) throws Exception {
+        return this.getAuditableDao().getLastAuditEvent( auditables, type );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.AuditableServiceBase#handleGetLastTypedAuditEvents(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map<Class, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents( Collection auditables )
+            throws Exception {
+        return this.getAuditableDao().getLastTypedAuditEvents( auditables );
+    }
+
+    /**
      * @param events
      * @return
      */
@@ -108,28 +129,5 @@ public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServi
             if ( lastOKEvent == null || lastOKEvent.getDate().before( lastTroubleEvent.getDate() ) )
                 return lastTroubleEvent;
         return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.AuditableServiceBase#handleGetLastAuditEvent(java.util.Collection,
-     *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
-     */
-    @Override
-    protected Map handleGetLastAuditEvent( Collection auditables, AuditEventType type ) throws Exception {
-        return this.getAuditableDao().getLastAuditEvent( auditables, type );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.AuditableServiceBase#handleGetLastTypedAuditEvents(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Map<Class, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents( Collection auditables )
-            throws Exception {
-        return this.getAuditableDao().getLastTypedAuditEvents( auditables );
     }
 }

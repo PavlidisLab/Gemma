@@ -26,22 +26,25 @@ package ubic.gemma.model.expression.experiment;
  */
 public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase {
 
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#getExperimentalDesigns()
-     */
-    @Override
-    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
-        return this.getExperimentalDesignDao().loadAll();
-    }
-
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase#handleCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase#handleCreate(ubic.gemma.model.expression
+     * .experiment.ExperimentalDesign)
      */
     @Override
     protected ExperimentalDesign handleCreate( ExperimentalDesign experimentalDesign ) throws Exception {
         return ( ExperimentalDesign ) this.getExperimentalDesignDao().create( experimentalDesign );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @seeubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase#handleFind(ubic.gemma.model.expression.
+     * experiment.ExperimentalDesign)
+     */
+    @Override
+    protected ExperimentalDesign handleFind( ExperimentalDesign experimentalDesign ) throws Exception {
+        return this.getExperimentalDesignDao().find( experimentalDesign );
     }
 
     @Override
@@ -50,34 +53,32 @@ public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.e
     }
 
     @Override
-    protected ExperimentalDesign handleLoad( Long id ) throws Exception {
-        return ( ExperimentalDesign ) this.getExperimentalDesignDao().load( id );
-    }
-
-    @Override
     protected ExperimentalDesign handleFindOrCreate( ExperimentalDesign experimentalDesign ) throws Exception {
         return this.getExperimentalDesignDao().findOrCreate( experimentalDesign );
-    }
-
-    @Override
-    protected void handleUpdate( ExperimentalDesign experimentalDesign ) throws Exception {
-        this.getExperimentalDesignDao().update( experimentalDesign );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase#handleFind(ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-    @Override
-    protected ExperimentalDesign handleFind( ExperimentalDesign experimentalDesign ) throws Exception {
-        return this.getExperimentalDesignDao().find( experimentalDesign );
     }
 
     @Override
     protected ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign experimentalDesign )
             throws Exception {
         return this.getExperimentalDesignDao().getExpressionExperiment( experimentalDesign );
+    }
+
+    @Override
+    protected ExperimentalDesign handleLoad( Long id ) throws Exception {
+        return ( ExperimentalDesign ) this.getExperimentalDesignDao().load( id );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#getExperimentalDesigns()
+     */
+    @Override
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+        return this.getExperimentalDesignDao().loadAll();
+    }
+
+    @Override
+    protected void handleUpdate( ExperimentalDesign experimentalDesign ) throws Exception {
+        this.getExperimentalDesignDao().update( experimentalDesign );
     }
 
 }

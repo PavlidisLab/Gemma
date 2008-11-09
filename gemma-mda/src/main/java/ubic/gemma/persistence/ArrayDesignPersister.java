@@ -79,7 +79,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
@@ -98,7 +97,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
     @Override

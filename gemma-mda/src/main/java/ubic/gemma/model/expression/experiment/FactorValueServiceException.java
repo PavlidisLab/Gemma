@@ -35,40 +35,6 @@ public class FactorValueServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 9073851748858957316L;
 
     /**
-     * The default constructor for <code>FactorValueServiceException</code>.
-     */
-    public FactorValueServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>FactorValueServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public FactorValueServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>FactorValueServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public FactorValueServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>FactorValueServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public FactorValueServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class FactorValueServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>FactorValueServiceException</code>.
+     */
+    public FactorValueServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>FactorValueServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public FactorValueServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>FactorValueServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public FactorValueServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>FactorValueServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public FactorValueServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

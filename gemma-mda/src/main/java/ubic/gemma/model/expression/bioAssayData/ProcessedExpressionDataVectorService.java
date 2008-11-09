@@ -33,6 +33,15 @@ import ubic.gemma.model.genome.Gene;
 public interface ProcessedExpressionDataVectorService {
 
     /**
+     * Populate the processed data for the given experiment. For two-channel studies, the missing value information
+     * should already have been computed.
+     * 
+     * @param expressionExperiment
+     */
+    public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
+            ExpressionExperiment expressionExperiment );
+
+    /**
      * @param expressionExperiments
      * @return
      */
@@ -55,17 +64,20 @@ public interface ProcessedExpressionDataVectorService {
 
     /**
      * @param expressionExperiment
-     * @return
-     */
-    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
-
-    /**
-     * @param expressionExperiment
      * @param genes
      * @return
      */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
             Collection<Gene> genes );
+
+    /**
+     * @param expressionExperiment
+     * @return
+     */
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
+
+    public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );
 
     /**
      * @param expressionExperiment
@@ -82,18 +94,6 @@ public interface ProcessedExpressionDataVectorService {
      * @return
      */
     public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
-
-    public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );
-
-    /**
-     * Populate the processed data for the given experiment. For two-channel studies, the missing value information
-     * should already have been computed.
-     * 
-     * @param expressionExperiment
-     */
-    public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
-            ExpressionExperiment expressionExperiment );
 
     /**
      * @param vectors

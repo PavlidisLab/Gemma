@@ -34,125 +34,182 @@ public abstract class DesignElementDaoBase extends ubic.gemma.model.common.Descr
         ubic.gemma.model.expression.designElement.DesignElementDao {
 
     /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#load(int, java.lang.Long)
-     */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "DesignElement.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.expression.designElement.DesignElementImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.expression.designElement.DesignElement ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.expression.designElement.DesignElement ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#loadAll()
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getAclObjectIdentityId(int, java.lang.String,
+     *      ubic.gemma.model.common.Securable)
      */
     @Override
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.expression.designElement.DesignElementImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#update(ubic.gemma.model.expression.designElement.DesignElement)
-     */
-    public void update( ubic.gemma.model.expression.designElement.DesignElement designElement ) {
-        if ( designElement == null ) {
-            throw new IllegalArgumentException( "DesignElement.update - 'designElement' can not be null" );
-        }
-        this.getHibernateTemplate().update( designElement );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DesignElement.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.designElement.DesignElement ) entityIterator.next() );
-                }
-                return null;
+    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#remove(ubic.gemma.model.expression.designElement.DesignElement)
-     */
-    public void remove( ubic.gemma.model.expression.designElement.DesignElement designElement ) {
-        if ( designElement == null ) {
-            throw new IllegalArgumentException( "DesignElement.remove - 'designElement' can not be null" );
         }
-        this.getHibernateTemplate().delete( designElement );
+        result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.DesignElement ) result );
+        return result;
     }
 
     /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "DesignElement.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.expression.designElement.DesignElement entity = ( ubic.gemma.model.expression.designElement.DesignElement ) this
-                .load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DesignElement.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getRecipient(java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getRecipient(java.lang.String, java.lang.Long)
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getAclObjectIdentityId(int,
+     *      ubic.gemma.model.common.Securable)
      */
     @Override
     @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
+    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
+        return this
+                .getAclObjectIdentityId(
+                        transform,
+                        "from ubic.gemma.model.expression.designElement.DesignElement as designElement where designElement.securable = :securable",
+                        securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getAclObjectIdentityId(java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     */
+    @Override
+    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMask(int, java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMask( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.DesignElement ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMask(int, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
+        return this
+                .getMask(
+                        transform,
+                        "from ubic.gemma.model.expression.designElement.DesignElement as designElement where designElement.securable = :securable",
+                        securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMask(java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.Integer getMask( final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMask(ubic.gemma.model.common.Securable)
+     */
+    @Override
+    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMasks(int, java.lang.String,
+     *      java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMasks( final int transform, final java.lang.String queryString,
+            final java.util.Collection securables ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securables );
+        argNames.add( "securables" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.DesignElement ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMasks(int, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMasks( final int transform, final java.util.Collection securables ) {
+        return this
+                .getMasks(
+                        transform,
+                        "from ubic.gemma.model.expression.designElement.DesignElement as designElement where designElement.securables = :securables",
+                        securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMasks(java.lang.String, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
+        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMasks(java.util.Collection)
+     */
+    @Override
+    public java.util.Map getMasks( java.util.Collection securables ) {
+        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
     }
 
     /**
@@ -196,182 +253,147 @@ public abstract class DesignElementDaoBase extends ubic.gemma.model.common.Descr
     }
 
     /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getRecipient(java.lang.Long)
      */
     @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
+    public java.lang.String getRecipient( java.lang.Long id ) {
+        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
     }
 
     /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getRecipient(java.lang.String, java.lang.Long)
      */
     @Override
     @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
+        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
     }
 
     /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#load(int, java.lang.Long)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.expression.designElement.DesignElement as designElement where designElement.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public Object load( final int transform, final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "DesignElement.load - 'id' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.DesignElement ) result );
-        return result;
+        final Object entity = this.getHibernateTemplate().get(
+                ubic.gemma.model.expression.designElement.DesignElementImpl.class, id );
+        return transformEntity( transform, ( ubic.gemma.model.expression.designElement.DesignElement ) entity );
     }
 
     /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMask(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#load(java.lang.Long)
      */
     @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
+    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
+        return ( ubic.gemma.model.expression.designElement.DesignElement ) this.load( TRANSFORM_NONE, id );
     }
 
     /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMask(int, ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#loadAll()
      */
     @Override
     @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.expression.designElement.DesignElement as designElement where designElement.securable = :securable",
-                        securable );
+    public java.util.Collection loadAll() {
+        return this.loadAll( TRANSFORM_NONE );
     }
 
     /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#loadAll(int)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public java.util.Collection loadAll( final int transform ) {
+        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.expression.designElement.DesignElementImpl.class );
+        this.transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#remove(java.lang.Long)
+     */
+    @Override
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "DesignElement.remove - 'id' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.DesignElement ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.expression.designElement.DesignElement as designElement where designElement.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.DesignElementDao#getMasks(int, java.lang.String,
-     *      java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        ubic.gemma.model.expression.designElement.DesignElement entity = ( ubic.gemma.model.expression.designElement.DesignElement ) this
+                .load( id );
+        if ( entity != null ) {
+            this.remove( entity );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.DesignElement ) result );
-        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     */
+    @Override
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "DesignElement.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#remove(ubic.gemma.model.expression.designElement.DesignElement)
+     */
+    public void remove( ubic.gemma.model.expression.designElement.DesignElement designElement ) {
+        if ( designElement == null ) {
+            throw new IllegalArgumentException( "DesignElement.remove - 'designElement' can not be null" );
+        }
+        this.getHibernateTemplate().delete( designElement );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "DesignElement.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.expression.designElement.DesignElement ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.designElement.DesignElementDao#update(ubic.gemma.model.expression.designElement.DesignElement)
+     */
+    public void update( ubic.gemma.model.expression.designElement.DesignElement designElement ) {
+        if ( designElement == null ) {
+            throw new IllegalArgumentException( "DesignElement.update - 'designElement' can not be null" );
+        }
+        this.getHibernateTemplate().update( designElement );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.expression.designElement.DesignElement)} method. This method does
+     * not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.expression.designElement.DesignElementDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.expression.designElement.DesignElement)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -398,26 +420,6 @@ public abstract class DesignElementDaoBase extends ubic.gemma.model.common.Descr
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.expression.designElement.DesignElement)} method. This method does
-     * not instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.expression.designElement.DesignElementDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.expression.designElement.DesignElement)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

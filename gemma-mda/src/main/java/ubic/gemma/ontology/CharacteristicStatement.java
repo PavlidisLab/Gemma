@@ -26,14 +26,6 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
  */
 public abstract interface CharacteristicStatement<T extends Object> {
 
-    public OntologyTerm getSubject();
-
-    public OntologyProperty getProperty();
-
-    public T getObject();
-
-    public VocabCharacteristic toCharacteristic();
-
     /**
      * Add this statement to the given characteristic. The subject of the characteristic must be the same as that of
      * this.
@@ -42,5 +34,13 @@ public abstract interface CharacteristicStatement<T extends Object> {
      * @throws IllegalArgumentException if the subject of v is not the same as the subject of this.
      */
     public void addToCharacteristic( VocabCharacteristic v );
+
+    public T getObject();
+
+    public OntologyProperty getProperty();
+
+    public OntologyTerm getSubject();
+
+    public VocabCharacteristic toCharacteristic();
 
 }

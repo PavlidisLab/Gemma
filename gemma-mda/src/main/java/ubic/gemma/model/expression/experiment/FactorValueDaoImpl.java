@@ -40,8 +40,59 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.FactorValueDaoBase#remove(ubic.gemma.model.expression.experiment.FactorValue)
+     * @see
+     * ubic.gemma.model.expression.experiment.FactorValueDaoBase#find(ubic.gemma.model.expression.experiment.FactorValue
+     * )
+     */
+    @Override
+    public FactorValue find( FactorValue factorValue ) {
+        try {
+            Criteria queryObject = super.getSession( false ).createCriteria( FactorValue.class );
+
+            BusinessKey.checkKey( factorValue );
+
+            BusinessKey.createQueryObject( queryObject, factorValue );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    this.debug( results );
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size()
+                            + " instances of '" + FactorValue.class.getName() + "' was found when executing query for "
+                            + factorValue );
+
+                } else if ( results.size() == 1 ) {
+                    result = results.iterator().next();
+                }
+            }
+            return ( FactorValue ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.FactorValueDaoBase#findOrCreate(ubic.gemma.model.expression.experiment
+     * .FactorValue)
+     */
+    @Override
+    public FactorValue findOrCreate( FactorValue factorValue ) {
+        FactorValue existingFactorValue = this.find( factorValue );
+        if ( existingFactorValue != null ) {
+            return existingFactorValue;
+        }
+        if ( log.isDebugEnabled() ) log.debug( "Creating new factorValue" );
+        return create( factorValue );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.FactorValueDaoBase#remove(ubic.gemma.model.expression.experiment.FactorValue
+     * )
      */
     @Override
     public void remove( FactorValue factorValue ) {
@@ -78,39 +129,6 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         } );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.FactorValueDaoBase#find(ubic.gemma.model.expression.experiment.FactorValue)
-     */
-    @Override
-    public FactorValue find( FactorValue factorValue ) {
-        try {
-            Criteria queryObject = super.getSession( false ).createCriteria( FactorValue.class );
-
-            BusinessKey.checkKey( factorValue );
-
-            BusinessKey.createQueryObject( queryObject, factorValue );
-
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    this.debug( results );
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size()
-                            + " instances of '" + FactorValue.class.getName() + "' was found when executing query for "
-                            + factorValue );
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
-            }
-            return ( FactorValue ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-    }
-
     /**
      * @param results
      */
@@ -121,20 +139,5 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
             sb.append( object + "\n" );
         }
         log.error( sb.toString() );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.FactorValueDaoBase#findOrCreate(ubic.gemma.model.expression.experiment.FactorValue)
-     */
-    @Override
-    public FactorValue findOrCreate( FactorValue factorValue ) {
-        FactorValue existingFactorValue = this.find( factorValue );
-        if ( existingFactorValue != null ) {
-            return existingFactorValue;
-        }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new factorValue" );
-        return create( factorValue );
     }
 }

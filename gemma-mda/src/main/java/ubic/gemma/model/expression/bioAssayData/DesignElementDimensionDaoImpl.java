@@ -30,8 +30,9 @@ public class DesignElementDimensionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDaoBase#find(ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDaoBase#find(ubic.gemma.model.expression.bioAssayData
+     * .DesignElementDimension)
      */
     @Override
     public DesignElementDimension find( DesignElementDimension designElementDimension ) {
@@ -41,8 +42,9 @@ public class DesignElementDimensionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDaoBase#findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDaoBase#findOrCreate(ubic.gemma.model.expression
+     * .bioAssayData.DesignElementDimension)
      */
     @Override
     public DesignElementDimension findOrCreate( DesignElementDimension designElementDimension ) {

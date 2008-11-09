@@ -35,40 +35,6 @@ public class TreatmentServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 5101258641925791093L;
 
     /**
-     * The default constructor for <code>TreatmentServiceException</code>.
-     */
-    public TreatmentServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>TreatmentServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public TreatmentServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>TreatmentServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public TreatmentServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>TreatmentServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public TreatmentServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class TreatmentServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>TreatmentServiceException</code>.
+     */
+    public TreatmentServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>TreatmentServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public TreatmentServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>TreatmentServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public TreatmentServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>TreatmentServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public TreatmentServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

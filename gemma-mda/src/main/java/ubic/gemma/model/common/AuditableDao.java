@@ -27,23 +27,53 @@ package ubic.gemma.model.common;
  */
 public interface AuditableDao extends ubic.gemma.model.common.DescribableDao {
     /**
-     * Loads an instance of ubic.gemma.model.common.Auditable from the persistent store.
+     * 
      */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+    public java.util.Collection getAuditEvents( ubic.gemma.model.common.Auditable auditable );
+
+    /**
+     * <p>
+     * Return a map of Auditables to AuditEvents for the given AuditEventType
+     * </p>
+     */
+    public java.util.Map getLastAuditEvent( java.util.Collection auditables,
+            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type );
+
+    /**
+     * <p>
+     * Returns the most recent AuditEvent of the specified type.
+     * </p>
+     */
+    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastAuditEvent(
+            ubic.gemma.model.common.Auditable auditable,
+            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type );
+
+    /**
+     * <p>
+     * Get all of the most recent AuditEvents for the given auditables, where the events have types. Return value is a
+     * map of AuditEventType.classes -> Auditable -> AuditEven
+     * </p>
+     */
+    public java.util.Map getLastTypedAuditEvents( java.util.Collection auditables );
 
     /**
      * <p>
      * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
      * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
      * </p>
      * 
      * @param id the identifier of the entity to load.
      * @return either the entity or the object transformed from the entity.
      */
     public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.common.Auditable from the persistent store.
+     */
+    public ubic.gemma.model.common.Securable load( java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.common.Auditable}.
@@ -54,9 +84,9 @@ public interface AuditableDao extends ubic.gemma.model.common.DescribableDao {
 
     /**
      * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
      * operation which can optionally transform the entity (into a value object for example). By default, transformation
      * does not occur.
      * </p>
@@ -65,21 +95,6 @@ public interface AuditableDao extends ubic.gemma.model.common.DescribableDao {
      * @return the loaded entities.
      */
     public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Updates the <code>auditable</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.common.Auditable auditable );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.Auditable from the persistent store.
-     */
-    public void remove( ubic.gemma.model.common.Auditable auditable );
 
     /**
      * Removes the instance of ubic.gemma.model.common.Auditable having the given <code>identifier</code> from the
@@ -93,33 +108,18 @@ public interface AuditableDao extends ubic.gemma.model.common.DescribableDao {
     public void remove( java.util.Collection entities );
 
     /**
-     * 
+     * Removes the instance of ubic.gemma.model.common.Auditable from the persistent store.
      */
-    public java.util.Collection getAuditEvents( ubic.gemma.model.common.Auditable auditable );
+    public void remove( ubic.gemma.model.common.Auditable auditable );
 
     /**
-     * <p>
-     * Returns the most recent AuditEvent of the specified type.
-     * </p>
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastAuditEvent(
-            ubic.gemma.model.common.Auditable auditable,
-            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type );
+    public void update( java.util.Collection entities );
 
     /**
-     * <p>
-     * Return a map of Auditables to AuditEvents for the given AuditEventType
-     * </p>
+     * Updates the <code>auditable</code> instance in the persistent store.
      */
-    public java.util.Map getLastAuditEvent( java.util.Collection auditables,
-            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type );
-
-    /**
-     * <p>
-     * Get all of the most recent AuditEvents for the given auditables, where the events have types. Return value is a
-     * map of AuditEventType.classes -> Auditable -> AuditEven
-     * </p>
-     */
-    public java.util.Map getLastTypedAuditEvents( java.util.Collection auditables );
+    public void update( ubic.gemma.model.common.Auditable auditable );
 
 }

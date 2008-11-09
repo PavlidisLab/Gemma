@@ -25,47 +25,14 @@ package ubic.gemma.model.genome;
 import org.apache.commons.beanutils.PropertyUtils;
 
 /**
- * The default exception thrown for unexpected errors occurring within {@link ubic.gemma.model.genome.ChromosomeService}.
+ * The default exception thrown for unexpected errors occurring within {@link ubic.gemma.model.genome.ChromosomeService}
+ * .
  */
 public class ChromosomeServiceException extends java.lang.RuntimeException {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -7121863876923692446L;
-
-    /**
-     * The default constructor for <code>ChromosomeServiceException</code>.
-     */
-    public ChromosomeServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>ChromosomeServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public ChromosomeServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>ChromosomeServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public ChromosomeServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>ChromosomeServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public ChromosomeServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
 
     /**
      * Finds the root cause of the parent exception by traveling up the exception tree
@@ -101,5 +68,39 @@ public class ChromosomeServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>ChromosomeServiceException</code>.
+     */
+    public ChromosomeServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>ChromosomeServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public ChromosomeServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>ChromosomeServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public ChromosomeServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>ChromosomeServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public ChromosomeServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

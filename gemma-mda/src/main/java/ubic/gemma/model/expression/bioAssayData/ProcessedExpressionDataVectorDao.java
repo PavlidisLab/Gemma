@@ -36,6 +36,15 @@ public interface ProcessedExpressionDataVectorDao {
         mean, max
     }
 
+    /**
+     * Populate the processed data for the given experiment. For two-channel studies, the missing value information
+     * should already have been computed. If the values already exist, they will be re-written.
+     * 
+     * @param expressionExperiment
+     */
+    public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
+            ExpressionExperiment expressionExperiment );
+
     public Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments );
 
@@ -47,22 +56,19 @@ public interface ProcessedExpressionDataVectorDao {
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
             Collection<Gene> genes );
 
-    public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
-            RankMethod method );
-
-    public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
+    /**
+     * @param expressionExperiment
+     * @return Processed data for the given experiment. NOTE the vectors are thawed before returning.
+     */
+    public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment );
 
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );
 
-    /**
-     * Populate the processed data for the given experiment. For two-channel studies, the missing value information
-     * should already have been computed. If the values already exist, they will be re-written.
-     * 
-     * @param expressionExperiment
-     */
-    public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
-            ExpressionExperiment expressionExperiment );
+    public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
+            RankMethod method );
+
+    public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
 
     /**
      * 
@@ -73,11 +79,5 @@ public interface ProcessedExpressionDataVectorDao {
      * 
      */
     public void update( java.util.Collection designElementDataVectors );
-
-    /**
-     * @param expressionExperiment
-     * @return Processed data for the given experiment. NOTE the vectors are thawed before returning.
-     */
-    public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment );
 
 }

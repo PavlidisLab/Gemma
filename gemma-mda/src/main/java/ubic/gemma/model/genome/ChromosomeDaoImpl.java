@@ -36,7 +36,6 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.ChromosomeDaoBase#find(ubic.gemma.model.genome.Chromosome)
      */
     @Override
@@ -65,14 +64,6 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         }
     }
 
-    private String debug( List results ) {
-        StringBuilder buf = new StringBuilder();
-        for ( Object object : results ) {
-            buf.append( object + "\n" );
-        }
-        return buf.toString();
-    }
-
     @Override
     public Chromosome findOrCreate( Chromosome chromosome ) {
         Chromosome existing = this.find( chromosome );
@@ -81,6 +72,14 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
             return existing;
         }
         return create( chromosome );
+    }
+
+    private String debug( List results ) {
+        StringBuilder buf = new StringBuilder();
+        for ( Object object : results ) {
+            buf.append( object + "\n" );
+        }
+        return buf.toString();
     }
 
 }

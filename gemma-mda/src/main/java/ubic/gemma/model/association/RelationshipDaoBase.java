@@ -70,43 +70,6 @@ public abstract class RelationshipDaoBase extends org.springframework.orm.hibern
     }
 
     /**
-     * @see ubic.gemma.model.association.RelationshipDao#update(ubic.gemma.model.association.Relationship)
-     */
-    public void update( ubic.gemma.model.association.Relationship relationship ) {
-        if ( relationship == null ) {
-            throw new IllegalArgumentException( "Relationship.update - 'relationship' can not be null" );
-        }
-        this.getHibernateTemplate().update( relationship );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Relationship.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.association.Relationship ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.RelationshipDao#remove(ubic.gemma.model.association.Relationship)
-     */
-    public void remove( ubic.gemma.model.association.Relationship relationship ) {
-        if ( relationship == null ) {
-            throw new IllegalArgumentException( "Relationship.remove - 'relationship' can not be null" );
-        }
-        this.getHibernateTemplate().delete( relationship );
-    }
-
-    /**
      * @see ubic.gemma.model.association.RelationshipDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -130,11 +93,68 @@ public abstract class RelationshipDaoBase extends org.springframework.orm.hibern
     }
 
     /**
+     * @see ubic.gemma.model.association.RelationshipDao#remove(ubic.gemma.model.association.Relationship)
+     */
+    public void remove( ubic.gemma.model.association.Relationship relationship ) {
+        if ( relationship == null ) {
+            throw new IllegalArgumentException( "Relationship.remove - 'relationship' can not be null" );
+        }
+        this.getHibernateTemplate().delete( relationship );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Relationship.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.association.Relationship ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.RelationshipDao#update(ubic.gemma.model.association.Relationship)
+     */
+    public void update( ubic.gemma.model.association.Relationship relationship ) {
+        if ( relationship == null ) {
+            throw new IllegalArgumentException( "Relationship.update - 'relationship' can not be null" );
+        }
+        this.getHibernateTemplate().update( relationship );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.association.Relationship)} method. This method does not instantiate
+     * a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.association.RelationshipDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.association.Relationship)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.association.RelationshipDao</code>, please note that the {@link #TRANSFORM_NONE}
-     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
-     * unknown {@link #TRANSFORM_NONE} is assumed.
+     * <code>ubic.gemma.model.association.RelationshipDao</code>, please note that the {@link #TRANSFORM_NONE} constant
+     * denotes no transformation, so the entity itself will be returned. If the integer argument value is unknown
+     * {@link #TRANSFORM_NONE} is assumed.
      * 
      * @param transform one of the constants declared in {@link ubic.gemma.model.association.RelationshipDao}
      * @param entity an entity that was found
@@ -151,24 +171,6 @@ public abstract class RelationshipDaoBase extends org.springframework.orm.hibern
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.association.Relationship)} method. This method does not instantiate
-     * a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.association.RelationshipDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.association.Relationship)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

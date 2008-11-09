@@ -35,40 +35,6 @@ public class ProbeAlignedRegionServiceException extends java.lang.RuntimeExcepti
     private static final long serialVersionUID = 4204006311768456089L;
 
     /**
-     * The default constructor for <code>ProbeAlignedRegionServiceException</code>.
-     */
-    public ProbeAlignedRegionServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>ProbeAlignedRegionServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public ProbeAlignedRegionServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>ProbeAlignedRegionServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public ProbeAlignedRegionServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>ProbeAlignedRegionServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public ProbeAlignedRegionServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class ProbeAlignedRegionServiceException extends java.lang.RuntimeExcepti
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>ProbeAlignedRegionServiceException</code>.
+     */
+    public ProbeAlignedRegionServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>ProbeAlignedRegionServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public ProbeAlignedRegionServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>ProbeAlignedRegionServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public ProbeAlignedRegionServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>ProbeAlignedRegionServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public ProbeAlignedRegionServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

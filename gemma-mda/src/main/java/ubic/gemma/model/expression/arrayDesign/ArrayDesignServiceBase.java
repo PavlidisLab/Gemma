@@ -36,690 +36,6 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     private ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao;
 
     /**
-     * Sets the reference to <code>arrayDesign</code>'s DAO.
-     */
-    public void setArrayDesignDao( ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
-    }
-
-    /**
-     * Gets the reference to <code>arrayDesign</code>'s DAO.
-     */
-    protected ubic.gemma.model.expression.arrayDesign.ArrayDesignDao getArrayDesignDao() {
-        return this.arrayDesignDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadAll()
-     */
-    public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadAll()' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findOrCreate(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleFindOrCreate( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFindOrCreate(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#remove(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public void remove( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            this.handleRemove( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.remove(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByName(java.lang.String)
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByName( final java.lang.String name ) {
-        try {
-            return this.handleFindByName( name );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findByName(java.lang.String name)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByName(java.lang.String)}
-     */
-    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFindByName( java.lang.String name )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#update(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public void update( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            this.handleUpdate( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.update(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign find(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleFind( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.find(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFind(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public java.lang.Integer getCompositeSequenceCount(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleGetCompositeSequenceCount( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract java.lang.Integer handleGetCompositeSequenceCount(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getReporterCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public java.lang.Integer getReporterCount( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleGetReporterCount( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getReporterCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getReporterCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract java.lang.Integer handleGetReporterCount(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#create(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign create(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleCreate( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.create(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleCreate(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public java.util.Collection loadCompositeSequences(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleLoadCompositeSequences( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract java.util.Collection handleLoadCompositeSequences(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#load(long)
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign load( final long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.load(long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #load(long)}
-     */
-    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleLoad( long id )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxon(java.lang.Long)
-     */
-    public ubic.gemma.model.genome.Taxon getTaxon( final java.lang.Long id ) {
-        try {
-            return this.handleGetTaxon( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getTaxon(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getTaxon(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.genome.Taxon handleGetTaxon( java.lang.Long id ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllAssociatedBioAssays(java.lang.Long)
-     */
-    public java.util.Collection getAllAssociatedBioAssays( final java.lang.Long id ) {
-        try {
-            return this.handleGetAllAssociatedBioAssays( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getAllAssociatedBioAssays(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getAllAssociatedBioAssays(java.lang.Long)}
-     */
-    protected abstract java.util.Collection handleGetAllAssociatedBioAssays( java.lang.Long id )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByShortName(java.lang.String)
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByShortName( final java.lang.String shortName ) {
-        try {
-            return this.handleFindByShortName( shortName );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findByShortName(java.lang.String shortName)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByShortName(java.lang.String)}
-     */
-    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFindByShortName(
-            java.lang.String shortName ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public void thaw( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            this.handleThaw( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#countAll()
-     */
-    public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.countAll()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public long numBioSequences( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleNumBioSequences( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract long handleNumBioSequences( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public long numBlatResults( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleNumBlatResults( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract long handleNumBlatResults( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public long numGenes( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleNumGenes( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract long handleNumGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public java.util.Collection getExpressionExperiments(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleGetExpressionExperiments( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract java.util.Collection handleGetExpressionExperiments(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public long numCompositeSequenceWithBioSequences(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleNumCompositeSequenceWithBioSequences( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numCompositeSequenceWithBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #numCompositeSequenceWithBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract long handleNumCompositeSequenceWithBioSequences(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public long numCompositeSequenceWithBlatResults(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleNumCompositeSequenceWithBlatResults( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numCompositeSequenceWithBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #numCompositeSequenceWithBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract long handleNumCompositeSequenceWithBlatResults(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public long numCompositeSequenceWithGenes( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleNumCompositeSequenceWithGenes( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #numCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract long handleNumCompositeSequenceWithGenes(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#deleteGeneProductAssociations(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public void deleteGeneProductAssociations( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            this.handleDeleteGeneProductAssociations( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.deleteGeneProductAssociations(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #deleteGeneProductAssociations(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract void handleDeleteGeneProductAssociations(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public void deleteAlignmentData( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            this.handleDeleteAlignmentData( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract void handleDeleteAlignmentData( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadValueObjects(java.util.Collection)
-     */
-    public java.util.Collection loadValueObjects( final java.util.Collection ids ) {
-        try {
-            return this.handleLoadValueObjects( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadValueObjects(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadValueObjects(java.util.Collection)}
-     */
-    protected abstract java.util.Collection handleLoadValueObjects( java.util.Collection ids )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadAllValueObjects()
-     */
-    public java.util.Collection loadAllValueObjects() {
-        try {
-            return this.handleLoadAllValueObjects();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadAllValueObjects()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadAllValueObjects()}
-     */
-    protected abstract java.util.Collection handleLoadAllValueObjects() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBioSequences()
-     */
-    public long numAllCompositeSequenceWithBioSequences() {
-        try {
-            return this.handleNumAllCompositeSequenceWithBioSequences();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithBioSequences()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numAllCompositeSequenceWithBioSequences()}
-     */
-    protected abstract long handleNumAllCompositeSequenceWithBioSequences() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBlatResults()
-     */
-    public long numAllCompositeSequenceWithBlatResults() {
-        try {
-            return this.handleNumAllCompositeSequenceWithBlatResults();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithBlatResults()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numAllCompositeSequenceWithBlatResults()}
-     */
-    protected abstract long handleNumAllCompositeSequenceWithBlatResults() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithGenes()
-     */
-    public long numAllCompositeSequenceWithGenes() {
-        try {
-            return this.handleNumAllCompositeSequenceWithGenes();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithGenes()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numAllCompositeSequenceWithGenes()}
-     */
-    protected abstract long handleNumAllCompositeSequenceWithGenes() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllGenes()
-     */
-    public long numAllGenes() {
-        try {
-            return this.handleNumAllGenes();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllGenes()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numAllGenes()}
-     */
-    protected abstract long handleNumAllGenes() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBioSequences(java.util.Collection)
-     */
-    public long numAllCompositeSequenceWithBioSequences( final java.util.Collection ids ) {
-        try {
-            return this.handleNumAllCompositeSequenceWithBioSequences( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithBioSequences(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numAllCompositeSequenceWithBioSequences(java.util.Collection)}
-     */
-    protected abstract long handleNumAllCompositeSequenceWithBioSequences( java.util.Collection ids )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBlatResults(java.util.Collection)
-     */
-    public long numAllCompositeSequenceWithBlatResults( final java.util.Collection ids ) {
-        try {
-            return this.handleNumAllCompositeSequenceWithBlatResults( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithBlatResults(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numAllCompositeSequenceWithBlatResults(java.util.Collection)}
-     */
-    protected abstract long handleNumAllCompositeSequenceWithBlatResults( java.util.Collection ids )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithGenes(java.util.Collection)
-     */
-    public long numAllCompositeSequenceWithGenes( final java.util.Collection ids ) {
-        try {
-            return this.handleNumAllCompositeSequenceWithGenes( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithGenes(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numAllCompositeSequenceWithGenes(java.util.Collection)}
-     */
-    protected abstract long handleNumAllCompositeSequenceWithGenes( java.util.Collection ids )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllGenes(java.util.Collection)
-     */
-    public long numAllGenes( final java.util.Collection ids ) {
-        try {
-            return this.handleNumAllGenes( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllGenes(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #numAllGenes(java.util.Collection)}
-     */
-    protected abstract long handleNumAllGenes( java.util.Collection ids ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     public java.util.Collection compositeSequenceWithoutBioSequences(
@@ -732,13 +48,6 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for
-     * {@link #compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract java.util.Collection handleCompositeSequenceWithoutBioSequences(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
@@ -755,13 +64,6 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * Performs the core logic for
-     * {@link #compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract java.util.Collection handleCompositeSequenceWithoutBlatResults(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     public java.util.Collection compositeSequenceWithoutGenes(
@@ -776,32 +78,597 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * Performs the core logic for
-     * {@link #compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#countAll()
      */
-    protected abstract java.util.Collection handleCompositeSequenceWithoutGenes(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public long numCompositeSequenceWithProbeAlignedRegion(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    public java.lang.Integer countAll() {
         try {
-            return this.handleNumCompositeSequenceWithProbeAlignedRegion( arrayDesign );
+            return this.handleCountAll();
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.countAll()' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for
-     * {@link #numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#create(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    protected abstract long handleNumCompositeSequenceWithProbeAlignedRegion(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign create(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleCreate( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.create(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public void deleteAlignmentData( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            this.handleDeleteAlignmentData( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#deleteGeneProductAssociations(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public void deleteGeneProductAssociations( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            this.handleDeleteGeneProductAssociations( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.deleteGeneProductAssociations(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign find(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleFind( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.find(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByAlternateName(java.lang.String)
+     */
+    public java.util.Collection findByAlternateName( final java.lang.String queryString ) {
+        try {
+            return this.handleFindByAlternateName( queryString );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findByAlternateName(java.lang.String queryString)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByName(java.lang.String)
+     */
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByName( final java.lang.String name ) {
+        try {
+            return this.handleFindByName( name );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findByName(java.lang.String name)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByShortName(java.lang.String)
+     */
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByShortName( final java.lang.String shortName ) {
+        try {
+            return this.handleFindByShortName( shortName );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findByShortName(java.lang.String shortName)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findOrCreate(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleFindOrCreate( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllAssociatedBioAssays(java.lang.Long)
+     */
+    public java.util.Collection getAllAssociatedBioAssays( final java.lang.Long id ) {
+        try {
+            return this.handleGetAllAssociatedBioAssays( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getAllAssociatedBioAssays(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public java.lang.Integer getCompositeSequenceCount(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleGetCompositeSequenceCount( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public java.util.Collection getExpressionExperiments(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleGetExpressionExperiments( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastAnnotationFile(java.util.Collection)
+     */
+    public java.util.Map getLastAnnotationFile( final java.util.Collection ids ) {
+        try {
+            return this.handleGetLastAnnotationFile( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastAnnotationFile(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastGeneMapping(java.util.Collection)
+     */
+    public java.util.Map getLastGeneMapping( final java.util.Collection ids ) {
+        try {
+            return this.handleGetLastGeneMapping( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastGeneMapping(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastRepeatAnalysis(java.util.Collection)
+     */
+    public java.util.Map getLastRepeatAnalysis( final java.util.Collection ids ) {
+        try {
+            return this.handleGetLastRepeatAnalysis( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastRepeatAnalysis(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastSequenceAnalysis(java.util.Collection)
+     */
+    public java.util.Map getLastSequenceAnalysis( final java.util.Collection ids ) {
+        try {
+            return this.handleGetLastSequenceAnalysis( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastSequenceAnalysis(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastSequenceUpdate(java.util.Collection)
+     */
+    public java.util.Map getLastSequenceUpdate( final java.util.Collection ids ) {
+        try {
+            return this.handleGetLastSequenceUpdate( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastSequenceUpdate(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastTroubleEvent(java.util.Collection)
+     */
+    public java.util.Map getLastTroubleEvent( final java.util.Collection ids ) {
+        try {
+            return this.handleGetLastTroubleEvent( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastTroubleEvent(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastValidationEvent(java.util.Collection)
+     */
+    public java.util.Map getLastValidationEvent( final java.util.Collection ids ) {
+        try {
+            return this.handleGetLastValidationEvent( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastValidationEvent(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getReporterCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public java.lang.Integer getReporterCount( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleGetReporterCount( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getReporterCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxon(java.lang.Long)
+     */
+    public ubic.gemma.model.genome.Taxon getTaxon( final java.lang.Long id ) {
+        try {
+            return this.handleGetTaxon( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getTaxon(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isMerged(java.util.Collection)
+     */
+    public java.util.Map isMerged( final java.util.Collection ids ) {
+        try {
+            return this.handleIsMerged( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.isMerged(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isMergee(java.util.Collection)
+     */
+    public java.util.Map isMergee( final java.util.Collection ids ) {
+        try {
+            return this.handleIsMergee( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.isMergee(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isSubsumed(java.util.Collection)
+     */
+    public java.util.Map isSubsumed( final java.util.Collection ids ) {
+        try {
+            return this.handleIsSubsumed( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.isSubsumed(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isSubsumer(java.util.Collection)
+     */
+    public java.util.Map isSubsumer( final java.util.Collection ids ) {
+        try {
+            return this.handleIsSubsumer( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.isSubsumer(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#load(long)
+     */
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign load( final long id ) {
+        try {
+            return this.handleLoad( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.load(long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadAll()
+     */
+    public java.util.Collection loadAll() {
+        try {
+            return this.handleLoadAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadAll()' --> " + th,
+                    th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadAllValueObjects()
+     */
+    public java.util.Collection loadAllValueObjects() {
+        try {
+            return this.handleLoadAllValueObjects();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadAllValueObjects()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public java.util.Collection loadCompositeSequences(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleLoadCompositeSequences( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadFully(java.lang.Long)
+     */
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign loadFully( final java.lang.Long id ) {
+        try {
+            return this.handleLoadFully( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadFully(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadMultiple(java.util.Collection)
+     */
+    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+        try {
+            return this.handleLoadMultiple( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadMultiple(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadValueObjects(java.util.Collection)
+     */
+    public java.util.Collection loadValueObjects( final java.util.Collection ids ) {
+        try {
+            return this.handleLoadValueObjects( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadValueObjects(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBioSequences()
+     */
+    public long numAllCompositeSequenceWithBioSequences() {
+        try {
+            return this.handleNumAllCompositeSequenceWithBioSequences();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithBioSequences()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBioSequences(java.util.Collection)
+     */
+    public long numAllCompositeSequenceWithBioSequences( final java.util.Collection ids ) {
+        try {
+            return this.handleNumAllCompositeSequenceWithBioSequences( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithBioSequences(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBlatResults()
+     */
+    public long numAllCompositeSequenceWithBlatResults() {
+        try {
+            return this.handleNumAllCompositeSequenceWithBlatResults();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithBlatResults()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBlatResults(java.util.Collection)
+     */
+    public long numAllCompositeSequenceWithBlatResults( final java.util.Collection ids ) {
+        try {
+            return this.handleNumAllCompositeSequenceWithBlatResults( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithBlatResults(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithGenes()
+     */
+    public long numAllCompositeSequenceWithGenes() {
+        try {
+            return this.handleNumAllCompositeSequenceWithGenes();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithGenes()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithGenes(java.util.Collection)
+     */
+    public long numAllCompositeSequenceWithGenes( final java.util.Collection ids ) {
+        try {
+            return this.handleNumAllCompositeSequenceWithGenes( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllCompositeSequenceWithGenes(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllGenes()
+     */
+    public long numAllGenes() {
+        try {
+            return this.handleNumAllGenes();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllGenes()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllGenes(java.util.Collection)
+     */
+    public long numAllGenes( final java.util.Collection ids ) {
+        try {
+            return this.handleNumAllGenes( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numAllGenes(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numBioSequences( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumBioSequences( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numBlatResults( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumBlatResults( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numCompositeSequenceWithBioSequences(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumCompositeSequenceWithBioSequences( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numCompositeSequenceWithBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numCompositeSequenceWithBlatResults(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumCompositeSequenceWithBlatResults( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numCompositeSequenceWithBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public long numCompositeSequenceWithGenes( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            return this.handleNumCompositeSequenceWithGenes( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithPredictedGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
@@ -818,84 +685,103 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * Performs the core logic for
-     * {@link #numCompositeSequenceWithPredictedGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    protected abstract long handleNumCompositeSequenceWithPredictedGenes(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastSequenceAnalysis(java.util.Collection)
-     */
-    public java.util.Map getLastSequenceAnalysis( final java.util.Collection ids ) {
+    public long numCompositeSequenceWithProbeAlignedRegion(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
-            return this.handleGetLastSequenceAnalysis( ids );
+            return this.handleNumCompositeSequenceWithProbeAlignedRegion( arrayDesign );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastSequenceAnalysis(java.util.Collection ids)' --> "
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #getLastSequenceAnalysis(java.util.Collection)}
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    protected abstract java.util.Map handleGetLastSequenceAnalysis( java.util.Collection ids )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastGeneMapping(java.util.Collection)
-     */
-    public java.util.Map getLastGeneMapping( final java.util.Collection ids ) {
+    public long numGenes( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
-            return this.handleGetLastGeneMapping( ids );
+            return this.handleNumGenes( arrayDesign );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastGeneMapping(java.util.Collection ids)' --> "
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.numGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #getLastGeneMapping(java.util.Collection)}
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#remove(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    protected abstract java.util.Map handleGetLastGeneMapping( java.util.Collection ids ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastAnnotationFile(java.util.Collection)
-     */
-    public java.util.Map getLastAnnotationFile( final java.util.Collection ids ) {
+    public void remove( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
-            return this.handleGetLastAnnotationFile( ids );
+            this.handleRemove( arrayDesign );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastAnnotationFile(java.util.Collection ids)' --> "
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.remove(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #getLastAnnotationFile(java.util.Collection)}
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#removeBiologicalCharacteristics(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    protected abstract java.util.Map handleGetLastAnnotationFile( java.util.Collection ids ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastSequenceUpdate(java.util.Collection)
-     */
-    public java.util.Map getLastSequenceUpdate( final java.util.Collection ids ) {
+    public void removeBiologicalCharacteristics( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
-            return this.handleGetLastSequenceUpdate( ids );
+            this.handleRemoveBiologicalCharacteristics( arrayDesign );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastSequenceUpdate(java.util.Collection ids)' --> "
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.removeBiologicalCharacteristics(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #getLastSequenceUpdate(java.util.Collection)}
+     * Sets the reference to <code>arrayDesign</code>'s DAO.
      */
-    protected abstract java.util.Map handleGetLastSequenceUpdate( java.util.Collection ids ) throws java.lang.Exception;
+    public void setArrayDesignDao( ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao ) {
+        this.arrayDesignDao = arrayDesignDao;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public void thaw( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            this.handleThaw( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public void thawLite( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            this.handleThawLite( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#update(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    public void update( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        try {
+            this.handleUpdate( arrayDesign );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.update(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#updateSubsumingStatus(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
@@ -914,43 +800,164 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
+     * Gets the reference to <code>arrayDesign</code>'s DAO.
+     */
+    protected ubic.gemma.model.expression.arrayDesign.ArrayDesignDao getArrayDesignDao() {
+        return this.arrayDesignDao;
+    }
+
+    /**
      * Performs the core logic for
-     * {@link #updateSubsumingStatus(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     * {@link #compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.lang.Boolean handleUpdateSubsumingStatus(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumer,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumee ) throws java.lang.Exception;
+    protected abstract java.util.Collection handleCompositeSequenceWithoutBioSequences(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isSubsumer(java.util.Collection)
+     * Performs the core logic for
+     * {@link #compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    public java.util.Map isSubsumer( final java.util.Collection ids ) {
-        try {
-            return this.handleIsSubsumer( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.isSubsumer(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
+    protected abstract java.util.Collection handleCompositeSequenceWithoutBlatResults(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #isSubsumer(java.util.Collection)}
+     * Performs the core logic for
+     * {@link #compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Map handleIsSubsumer( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection handleCompositeSequenceWithoutGenes(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isSubsumed(java.util.Collection)
+     * Performs the core logic for {@link #countAll()}
      */
-    public java.util.Map isSubsumed( final java.util.Collection ids ) {
-        try {
-            return this.handleIsSubsumed( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.isSubsumed(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
+    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleCreate(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract void handleDeleteAlignmentData( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #deleteGeneProductAssociations(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract void handleDeleteGeneProductAssociations(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFind(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByAlternateName(java.lang.String)}
+     */
+    protected abstract java.util.Collection handleFindByAlternateName( java.lang.String queryString )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByName(java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFindByName( java.lang.String name )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByShortName(java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFindByShortName(
+            java.lang.String shortName ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFindOrCreate(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getAllAssociatedBioAssays(java.lang.Long)}
+     */
+    protected abstract java.util.Collection handleGetAllAssociatedBioAssays( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract java.lang.Integer handleGetCompositeSequenceCount(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract java.util.Collection handleGetExpressionExperiments(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getLastAnnotationFile(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetLastAnnotationFile( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getLastGeneMapping(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetLastGeneMapping( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getLastRepeatAnalysis(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetLastRepeatAnalysis( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getLastSequenceAnalysis(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetLastSequenceAnalysis( java.util.Collection ids )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getLastSequenceUpdate(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetLastSequenceUpdate( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getLastTroubleEvent(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetLastTroubleEvent( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getLastValidationEvent(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetLastValidationEvent( java.util.Collection ids )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getReporterCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract java.lang.Integer handleGetReporterCount(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getTaxon(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.genome.Taxon handleGetTaxon( java.lang.Long id ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #isMerged(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleIsMerged( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #isMergee(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleIsMergee( java.util.Collection ids ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #isSubsumed(java.util.Collection)}
@@ -958,17 +965,31 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     protected abstract java.util.Map handleIsSubsumed( java.util.Collection ids ) throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadFully(java.lang.Long)
+     * Performs the core logic for {@link #isSubsumer(java.util.Collection)}
      */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign loadFully( final java.lang.Long id ) {
-        try {
-            return this.handleLoadFully( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadFully(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
+    protected abstract java.util.Map handleIsSubsumer( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(long)}
+     */
+    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleLoad( long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAll()}
+     */
+    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAllValueObjects()}
+     */
+    protected abstract java.util.Collection handleLoadAllValueObjects() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract java.util.Collection handleLoadCompositeSequences(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadFully(java.lang.Long)}
@@ -977,90 +998,117 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
             throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
-    public void thawLite( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            this.handleThawLite( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
+    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     * Performs the core logic for {@link #loadValueObjects(java.util.Collection)}
      */
-    protected abstract void handleThawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+    protected abstract java.util.Collection handleLoadValueObjects( java.util.Collection ids )
             throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isMergee(java.util.Collection)
+     * Performs the core logic for {@link #numAllCompositeSequenceWithBioSequences()}
      */
-    public java.util.Map isMergee( final java.util.Collection ids ) {
-        try {
-            return this.handleIsMergee( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.isMergee(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
+    protected abstract long handleNumAllCompositeSequenceWithBioSequences() throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #isMergee(java.util.Collection)}
+     * Performs the core logic for {@link #numAllCompositeSequenceWithBioSequences(java.util.Collection)}
      */
-    protected abstract java.util.Map handleIsMergee( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract long handleNumAllCompositeSequenceWithBioSequences( java.util.Collection ids )
+            throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isMerged(java.util.Collection)
+     * Performs the core logic for {@link #numAllCompositeSequenceWithBlatResults()}
      */
-    public java.util.Map isMerged( final java.util.Collection ids ) {
-        try {
-            return this.handleIsMerged( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.isMerged(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
+    protected abstract long handleNumAllCompositeSequenceWithBlatResults() throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #isMerged(java.util.Collection)}
+     * Performs the core logic for {@link #numAllCompositeSequenceWithBlatResults(java.util.Collection)}
      */
-    protected abstract java.util.Map handleIsMerged( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract long handleNumAllCompositeSequenceWithBlatResults( java.util.Collection ids )
+            throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastRepeatAnalysis(java.util.Collection)
+     * Performs the core logic for {@link #numAllCompositeSequenceWithGenes()}
      */
-    public java.util.Map getLastRepeatAnalysis( final java.util.Collection ids ) {
-        try {
-            return this.handleGetLastRepeatAnalysis( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastRepeatAnalysis(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
+    protected abstract long handleNumAllCompositeSequenceWithGenes() throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #getLastRepeatAnalysis(java.util.Collection)}
+     * Performs the core logic for {@link #numAllCompositeSequenceWithGenes(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetLastRepeatAnalysis( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract long handleNumAllCompositeSequenceWithGenes( java.util.Collection ids )
+            throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#removeBiologicalCharacteristics(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * Performs the core logic for {@link #numAllGenes()}
      */
-    public void removeBiologicalCharacteristics( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            this.handleRemoveBiologicalCharacteristics( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.removeBiologicalCharacteristics(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
+    protected abstract long handleNumAllGenes() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #numAllGenes(java.util.Collection)}
+     */
+    protected abstract long handleNumAllGenes( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract long handleNumBioSequences( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #numBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract long handleNumBlatResults( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #numCompositeSequenceWithBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract long handleNumCompositeSequenceWithBioSequences(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #numCompositeSequenceWithBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract long handleNumCompositeSequenceWithBlatResults(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #numCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract long handleNumCompositeSequenceWithGenes(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #numCompositeSequenceWithPredictedGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract long handleNumCompositeSequenceWithPredictedGenes(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #numCompositeSequenceWithProbeAlignedRegion(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract long handleNumCompositeSequenceWithProbeAlignedRegion(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #numGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract long handleNumGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for
@@ -1070,77 +1118,29 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastTroubleEvent(java.util.Collection)
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    public java.util.Map getLastTroubleEvent( final java.util.Collection ids ) {
-        try {
-            return this.handleGetLastTroubleEvent( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastTroubleEvent(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getLastTroubleEvent(java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetLastTroubleEvent( java.util.Collection ids ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastValidationEvent(java.util.Collection)
-     */
-    public java.util.Map getLastValidationEvent( final java.util.Collection ids ) {
-        try {
-            return this.handleGetLastValidationEvent( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getLastValidationEvent(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getLastValidationEvent(java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetLastValidationEvent( java.util.Collection ids )
+    protected abstract void handleThaw( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadMultiple(java.util.Collection)
+     * Performs the core logic for {@link #thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
-        try {
-            return this.handleLoadMultiple( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadMultiple(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
-     */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByAlternateName(java.lang.String)
-     */
-    public java.util.Collection findByAlternateName( final java.lang.String queryString ) {
-        try {
-            return this.handleFindByAlternateName( queryString );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findByAlternateName(java.lang.String queryString)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByAlternateName(java.lang.String)}
-     */
-    protected abstract java.util.Collection handleFindByAlternateName( java.lang.String queryString )
+    protected abstract void handleThawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #updateSubsumingStatus(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     */
+    protected abstract java.lang.Boolean handleUpdateSubsumingStatus(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumer,
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumee ) throws java.lang.Exception;
 
 }

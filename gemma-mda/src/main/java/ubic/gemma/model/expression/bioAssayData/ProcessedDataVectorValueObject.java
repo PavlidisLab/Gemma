@@ -36,12 +36,12 @@ public class ProcessedDataVectorValueObject extends DataVectorValueObject {
         this.rankByMax = dedv.getRankByMax();
     }
 
-    public Double getRankByMean() {
-        return rankByMean;
-    }
-
     public Double getRankByMax() {
         return rankByMax;
+    }
+
+    public Double getRankByMean() {
+        return rankByMean;
     }
 
 }

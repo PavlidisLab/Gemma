@@ -35,40 +35,6 @@ public class BioMaterialServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 6705392898097260694L;
 
     /**
-     * The default constructor for <code>BioMaterialServiceException</code>.
-     */
-    public BioMaterialServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>BioMaterialServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public BioMaterialServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>BioMaterialServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public BioMaterialServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>BioMaterialServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public BioMaterialServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class BioMaterialServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>BioMaterialServiceException</code>.
+     */
+    public BioMaterialServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>BioMaterialServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public BioMaterialServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>BioMaterialServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public BioMaterialServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>BioMaterialServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public BioMaterialServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

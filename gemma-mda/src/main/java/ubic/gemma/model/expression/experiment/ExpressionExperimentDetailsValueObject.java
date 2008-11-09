@@ -45,22 +45,6 @@ public class ExpressionExperimentDetailsValueObject extends
 
     private Collection<ArrayDesignValueObject> arrayDesigns;
 
-    public Collection<ArrayDesignValueObject> getArrayDesigns() {
-        return arrayDesigns;
-    }
-
-    public void setArrayDesigns( Collection<ArrayDesignValueObject> arrayDesigns ) {
-        this.arrayDesigns = arrayDesigns;
-    }
-
-    public String getPrimaryCitation() {
-        return primaryCitation;
-    }
-
-    public void setPrimaryCitation( String primaryCitation ) {
-        this.primaryCitation = primaryCitation;
-    }
-
     public ExpressionExperimentDetailsValueObject() {
         super();
     }
@@ -69,11 +53,19 @@ public class ExpressionExperimentDetailsValueObject extends
         super( otherBean );
     }
 
+    public Collection<ArrayDesignValueObject> getArrayDesigns() {
+        return arrayDesigns;
+    }
+
     /**
      * 
      */
     public java.lang.String getDescription() {
         return this.description;
+    }
+
+    public String getPrimaryCitation() {
+        return primaryCitation;
     }
 
     /**
@@ -100,8 +92,16 @@ public class ExpressionExperimentDetailsValueObject extends
         return this.secondaryExternalUri;
     }
 
+    public void setArrayDesigns( Collection<ArrayDesignValueObject> arrayDesigns ) {
+        this.arrayDesigns = arrayDesigns;
+    }
+
     public void setDescription( java.lang.String description ) {
         this.description = description;
+    }
+
+    public void setPrimaryCitation( String primaryCitation ) {
+        this.primaryCitation = primaryCitation;
     }
 
     public void setSecondaryAccession( java.lang.String secondaryAccession ) {

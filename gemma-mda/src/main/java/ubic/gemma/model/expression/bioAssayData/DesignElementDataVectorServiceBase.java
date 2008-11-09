@@ -36,101 +36,6 @@ public abstract class DesignElementDataVectorServiceBase implements
     private ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao designElementDataVectorDao;
 
     /**
-     * Sets the reference to <code>designElementDataVector</code>'s DAO.
-     */
-    public void setDesignElementDataVectorDao(
-            ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao designElementDataVectorDao ) {
-        this.designElementDataVectorDao = designElementDataVectorDao;
-    }
-
-    /**
-     * Gets the reference to <code>designElementDataVector</code>'s DAO.
-     */
-    protected ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao getDesignElementDataVectorDao() {
-        return this.designElementDataVectorDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
-     */
-    public ubic.gemma.model.expression.bioAssayData.DesignElementDataVector findOrCreate(
-            final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector ) {
-        try {
-            return this.handleFindOrCreate( designElementDataVector );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
-     */
-    protected abstract ubic.gemma.model.expression.bioAssayData.DesignElementDataVector handleFindOrCreate(
-            ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#remove(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
-     */
-    public void remove( final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector ) {
-        try {
-            this.handleRemove( designElementDataVector );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
-     */
-    protected abstract void handleRemove(
-            ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
-     */
-    public void thaw( final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector ) {
-        try {
-            this.handleThaw( designElementDataVector );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
-     */
-    protected abstract void handleThaw(
-            ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#thaw(java.util.Collection)
-     */
-    public void thaw( final java.util.Collection designElementDataVectors ) {
-        try {
-            this.handleThaw( designElementDataVectors );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.thaw(java.util.Collection designElementDataVectors)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #thaw(java.util.Collection)}
-     */
-    protected abstract void handleThaw( java.util.Collection designElementDataVectors ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#countAll()
      */
     public java.lang.Integer countAll() {
@@ -142,129 +47,6 @@ public abstract class DesignElementDataVectorServiceBase implements
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#removeDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
-     */
-    public void removeDataForCompositeSequence(
-            final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
-        try {
-            this.handleRemoveDataForCompositeSequence( compositeSequence );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.removeDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #removeDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)}
-     */
-    protected abstract void handleRemoveDataForCompositeSequence(
-            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#removeDataForQuantitationType(ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    public void removeDataForQuantitationType(
-            final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
-        try {
-            this.handleRemoveDataForQuantitationType( quantitationType );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.removeDataForQuantitationType(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #removeDataForQuantitationType(ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract void handleRemoveDataForQuantitationType(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#getPreferredVectors(java.util.Collection,
-     *      java.util.Collection)
-     */
-    public java.util.Map getPreferredVectors( final java.util.Collection ees, final java.util.Collection genes ) {
-        try {
-            return this.handleGetPreferredVectors( ees, genes );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getPreferredVectors(java.util.Collection ees, java.util.Collection genes)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getPreferredVectors(java.util.Collection, java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetPreferredVectors( java.util.Collection ees, java.util.Collection genes )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#update(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
-     */
-    public void update( final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv ) {
-        try {
-            this.handleUpdate( dedv );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.update(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection dedvs ) {
-        try {
-            this.handleUpdate( dedvs );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.update(java.util.Collection dedvs)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #update(java.util.Collection)}
-     */
-    protected abstract void handleUpdate( java.util.Collection dedvs ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#find(java.util.Collection)
-     */
-    public java.util.Collection find( final java.util.Collection quantitationTypes ) {
-        try {
-            return this.handleFind( quantitationTypes );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.find(java.util.Collection quantitationTypes)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #find(java.util.Collection)}
-     */
-    protected abstract java.util.Collection handleFind( java.util.Collection quantitationTypes )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#create(java.util.Collection)
@@ -280,27 +62,17 @@ public abstract class DesignElementDataVectorServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #create(java.util.Collection)}
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#find(java.util.Collection)
      */
-    protected abstract java.util.Collection handleCreate( java.util.Collection vectors ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#remove(java.util.Collection)
-     */
-    public void remove( final java.util.Collection vectors ) {
+    public java.util.Collection find( final java.util.Collection quantitationTypes ) {
         try {
-            this.handleRemove( vectors );
+            return this.handleFind( quantitationTypes );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove(java.util.Collection vectors)' --> "
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.find(java.util.Collection quantitationTypes)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #remove(java.util.Collection)}
-     */
-    protected abstract void handleRemove( java.util.Collection vectors ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#find(ubic.gemma.model.common.quantitationtype.QuantitationType)
@@ -314,12 +86,6 @@ public abstract class DesignElementDataVectorServiceBase implements
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract java.util.Collection handleFind(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
@@ -337,12 +103,32 @@ public abstract class DesignElementDataVectorServiceBase implements
     }
 
     /**
-     * Performs the core logic for
-     * {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
      */
-    protected abstract java.util.Collection handleFind(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
+    public ubic.gemma.model.expression.bioAssayData.DesignElementDataVector findOrCreate(
+            final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector ) {
+        try {
+            return this.handleFindOrCreate( designElementDataVector );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#getPreferredVectors(java.util.Collection,
+     *      java.util.Collection)
+     */
+    public java.util.Map getPreferredVectors( final java.util.Collection ees, final java.util.Collection genes ) {
+        try {
+            return this.handleGetPreferredVectors( ees, genes );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getPreferredVectors(java.util.Collection ees, java.util.Collection genes)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#load(java.lang.Long)
@@ -358,46 +144,124 @@ public abstract class DesignElementDataVectorServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#remove(java.util.Collection)
      */
-    protected abstract ubic.gemma.model.expression.bioAssayData.DesignElementDataVector handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public void remove( final java.util.Collection vectors ) {
+        try {
+            this.handleRemove( vectors );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove(java.util.Collection vectors)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message source available to this service.
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#remove(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    public void remove( final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector ) {
+        try {
+            this.handleRemove( designElementDataVector );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#removeDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
+    public void removeDataForCompositeSequence(
+            final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
+        try {
+            this.handleRemoveDataForCompositeSequence( compositeSequence );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.removeDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#removeDataForQuantitationType(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    public void removeDataForQuantitationType(
+            final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
+        try {
+            this.handleRemoveDataForQuantitationType( quantitationType );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.removeDataForQuantitationType(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>designElementDataVector</code>'s DAO.
+     */
+    public void setDesignElementDataVectorDao(
+            ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao designElementDataVectorDao ) {
+        this.designElementDataVectorDao = designElementDataVectorDao;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#thaw(java.util.Collection)
+     */
+    public void thaw( final java.util.Collection designElementDataVectors ) {
+        try {
+            this.handleThaw( designElementDataVectors );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.thaw(java.util.Collection designElementDataVectors)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
+     */
+    public void thaw( final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector ) {
+        try {
+            this.handleThaw( designElementDataVector );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection dedvs ) {
+        try {
+            this.handleUpdate( dedvs );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.update(java.util.Collection dedvs)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#update(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
+     */
+    public void update( final ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv ) {
+        try {
+            this.handleUpdate( dedv );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.update(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Gets the reference to <code>designElementDataVector</code>'s DAO.
+     */
+    protected ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao getDesignElementDataVectorDao() {
+        return this.designElementDataVectorDao;
     }
 
     /**
@@ -412,5 +276,140 @@ public abstract class DesignElementDataVectorServiceBase implements
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #countAll()}
+     */
+    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #create(java.util.Collection)}
+     */
+    protected abstract java.util.Collection handleCreate( java.util.Collection vectors ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(java.util.Collection)}
+     */
+    protected abstract java.util.Collection handleFind( java.util.Collection quantitationTypes )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     */
+    protected abstract java.util.Collection handleFind(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     */
+    protected abstract java.util.Collection handleFind(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
+     */
+    protected abstract ubic.gemma.model.expression.bioAssayData.DesignElementDataVector handleFindOrCreate(
+            ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getPreferredVectors(java.util.Collection, java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetPreferredVectors( java.util.Collection ees, java.util.Collection genes )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.expression.bioAssayData.DesignElementDataVector handleLoad( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(java.util.Collection)}
+     */
+    protected abstract void handleRemove( java.util.Collection vectors ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
+     */
+    protected abstract void handleRemove(
+            ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #removeDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)}
+     */
+    protected abstract void handleRemoveDataForCompositeSequence(
+            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #removeDataForQuantitationType(ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     */
+    protected abstract void handleRemoveDataForQuantitationType(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(java.util.Collection)}
+     */
+    protected abstract void handleThaw( java.util.Collection designElementDataVectors ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
+     */
+    protected abstract void handleThaw(
+            ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(java.util.Collection)}
+     */
+    protected abstract void handleUpdate( java.util.Collection dedvs ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv )
+            throws java.lang.Exception;
 
 }

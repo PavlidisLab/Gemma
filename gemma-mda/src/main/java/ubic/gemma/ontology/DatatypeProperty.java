@@ -23,5 +23,5 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 public interface DatatypeProperty extends OntologyProperty {
 
     public PrimitiveType getType();
-    
+
 }

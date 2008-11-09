@@ -42,89 +42,20 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
     public final static int TRANSFORM_GENEVALUEOBJECT = 1;
 
     /**
-     * Copies the fields of the specified entity to the target value object. This method is similar to
-     * toGeneValueObject(), but it does not handle any attributes in the target value object that are "read-only" (as
-     * those do not have setter methods exposed).
-     */
-    public void toGeneValueObject( ubic.gemma.model.genome.Gene sourceEntity,
-            ubic.gemma.model.genome.gene.GeneValueObject targetVO );
-
-    /**
-     * Converts this DAO's entity to an object of type {@link ubic.gemma.model.genome.gene.GeneValueObject}.
-     */
-    public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject( ubic.gemma.model.genome.Gene entity );
-
-    /**
-     * Converts this DAO's entity to a Collection of instances of type
-     * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
-     */
-    public void toGeneValueObjectCollection( java.util.Collection<Gene> entities );
-
-    /**
-     * Copies the fields of {@link ubic.gemma.model.genome.gene.GeneValueObject} to the specified entity.
      * 
-     * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
-     *        TRUE, it will be copied regardless of its value.
      */
-    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject sourceVO,
-            ubic.gemma.model.genome.Gene targetEntity, boolean copyIfNull );
-
-    /**
-     * Converts an instance of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's entity.
-     */
-    public ubic.gemma.model.genome.Gene geneValueObjectToEntity(
-            ubic.gemma.model.genome.gene.GeneValueObject geneValueObject );
-
-    /**
-     * Converts a Collection of instances of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's
-     * entity.
-     */
-    public void geneValueObjectToEntityCollection( java.util.Collection<Gene> instances );
-
-    /**
-     * Loads an instance of ubic.gemma.model.genome.Gene from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+    public java.lang.Integer countAll();
 
     /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
+     * Does the same thing as {@link #create(ubic.gemma.model.genome.Gene)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
+     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
+     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
+     * objects for example). By default, transformation does not occur.
      * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
      */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.genome.Gene}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection<Gene> loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection<Gene> loadAll( final int transform );
-
-    /**
-     * Creates an instance of ubic.gemma.model.genome.Gene and adds it to the persistent store.
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<Gene> create( int transform, java.util.Collection<Gene> entities );
 
     /**
      * <p>
@@ -147,57 +78,56 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
     public java.util.Collection<Gene> create( java.util.Collection<Gene> entities );
 
     /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.Gene)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
-     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
-     * objects for example). By default, transformation does not occur.
-     * </p>
+     * Creates an instance of ubic.gemma.model.genome.Gene and adds it to the persistent store.
      */
-    public java.util.Collection<Gene> create( int transform, java.util.Collection<Gene> entities );
-
-    /**
-     * Updates the <code>gene</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection<Gene> entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.Gene from the persistent store.
-     */
-    public void remove( ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.Gene having the given <code>identifier</code> from the persistent
-     * store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection<Gene> entities );
+    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
-     * Finder based on the official name.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficalSymbol( java.lang.String officialSymbol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficalSymbol(java.lang.String)} with an additional argument called
+     * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.Gene)} with an additional argument called
      * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByOfficalSymbol(java.lang.String)}.
+     * in {@link #find(int, ubic.gemma.model.genome.Gene gene)}.
      * </p>
      */
-    public java.util.Collection<Gene> findByOfficalSymbol( String queryString, java.lang.String officialSymbol );
+    public Object find( int transform, String queryString, ubic.gemma.model.genome.Gene gene );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #find(ubic.gemma.model.genome.Gene)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object find( int transform, ubic.gemma.model.genome.Gene gene );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #find(ubic.gemma.model.genome.Gene)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #find(ubic.gemma.model.genome.Gene)}.
+     * </p>
+     */
+    public ubic.gemma.model.genome.Gene find( String queryString, ubic.gemma.model.genome.Gene gene );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Gene find( ubic.gemma.model.genome.Gene gene );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Gene findByAccession( java.lang.String accession,
+            ubic.gemma.model.common.description.ExternalDatabase source );
+
+    /**
+     * <p>
+     * Locate genes that match the given alias string
+     * </p>
+     */
+    public java.util.Collection<Gene> findByAlias( java.lang.String search );
 
     /**
      * <p>
@@ -221,53 +151,20 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
             java.lang.String officialSymbol );
 
     /**
-     * 
+     * <p>
+     * Finder based on the official name.
+     * </p>
      */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( java.lang.String officialSymbol );
+    public java.util.Collection<Gene> findByOfficalSymbol( java.lang.String officialSymbol );
 
     /**
      * <p>
-     * Does the same thing as {@link #findByOfficialSymbolInexact(java.lang.String)} with an additional argument called
+     * Does the same thing as {@link #findByOfficalSymbol(java.lang.String)} with an additional argument called
      * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByOfficialSymbolInexact(java.lang.String)}.
+     * in {@link #findByOfficalSymbol(java.lang.String)}.
      * </p>
      */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( String queryString, java.lang.String officialSymbol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficialSymbolInexact(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( int transform, java.lang.String officialSymbol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficialSymbolInexact(boolean, java.lang.String)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findByOfficialSymbolInexact(int, java.lang.String officialSymbol)}.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( int transform, String queryString,
-            java.lang.String officialSymbol );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> findByOfficialName( java.lang.String officialName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficialName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByOfficialName(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficialName( String queryString, java.lang.String officialName );
+    public java.util.Collection<Gene> findByOfficalSymbol( String queryString, java.lang.String officialSymbol );
 
     /**
      * <p>
@@ -293,50 +190,76 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
     /**
      * 
      */
-    public ubic.gemma.model.genome.Gene find( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<Gene> findByOfficialName( java.lang.String officialName );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.Gene)} with an additional argument called
+     * Does the same thing as {@link #findByOfficialName(java.lang.String)} with an additional argument called
      * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #find(ubic.gemma.model.genome.Gene)}.
+     * in {@link #findByOfficialName(java.lang.String)}.
      * </p>
      */
-    public ubic.gemma.model.genome.Gene find( String queryString, ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<Gene> findByOfficialName( String queryString, java.lang.String officialName );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Gene findByOfficialSymbol( java.lang.String symbol,
+            ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.Gene)} with an additional flag called
+     * Does the same thing as {@link #findByOfficialSymbolInexact(java.lang.String)} with an additional flag called
      * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
      * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
      * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object find( int transform, ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<Gene> findByOfficialSymbolInexact( int transform, java.lang.String officialSymbol );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.Gene)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #find(int, ubic.gemma.model.genome.Gene gene)}.
+     * Does the same thing as {@link #findByOfficialSymbolInexact(boolean, java.lang.String)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #findByOfficialSymbolInexact(int, java.lang.String officialSymbol)}.
      * </p>
      */
-    public Object find( int transform, String queryString, ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<Gene> findByOfficialSymbolInexact( int transform, String queryString,
+            java.lang.String officialSymbol );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<Gene> findByOfficialSymbolInexact( java.lang.String officialSymbol );
 
     /**
      * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.Gene)} with an additional argument called
+     * Does the same thing as {@link #findByOfficialSymbolInexact(java.lang.String)} with an additional argument called
      * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findOrCreate(ubic.gemma.model.genome.Gene)}.
+     * in {@link #findByOfficialSymbolInexact(java.lang.String)}.
      * </p>
      */
-    public ubic.gemma.model.genome.Gene findOrCreate( String queryString, ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<Gene> findByOfficialSymbolInexact( String queryString, java.lang.String officialSymbol );
+
+    /**
+     * Find the Genes closest to the given location. If the location is in a gene(s), they will be returned. Otherwise a
+     * single gene closest to the location will be returned, except in the case of ties in which more than one will be
+     * returned.
+     * 
+     * @param physicalLocation
+     * @return
+     */
+    public Collection findNearest( PhysicalLocation physicalLocation );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.Gene)} with an additional argument
+     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
+     * defined in {@link #findOrCreate(int, ubic.gemma.model.genome.Gene gene)}.
+     * </p>
+     */
+    public Object findOrCreate( int transform, String queryString, ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
@@ -351,29 +274,38 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
 
     /**
      * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.Gene)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findOrCreate(int, ubic.gemma.model.genome.Gene gene)}.
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.Gene)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findOrCreate(ubic.gemma.model.genome.Gene)}.
      * </p>
      */
-    public Object findOrCreate( int transform, String queryString, ubic.gemma.model.genome.Gene gene );
+    public ubic.gemma.model.genome.Gene findOrCreate( String queryString, ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
      */
-    public long getCompositeSequenceCountById( long id );
+    public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
 
     /**
+     * Converts an instance of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's entity.
+     */
+    public ubic.gemma.model.genome.Gene geneValueObjectToEntity(
+            ubic.gemma.model.genome.gene.GeneValueObject geneValueObject );
+
+    /**
+     * Copies the fields of {@link ubic.gemma.model.genome.gene.GeneValueObject} to the specified entity.
      * 
+     * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
+     *        TRUE, it will be copied regardless of its value.
      */
-    public java.util.Collection<CompositeSequence> getCompositeSequencesById( long id );
+    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject sourceVO,
+            ubic.gemma.model.genome.Gene targetEntity, boolean copyIfNull );
 
     /**
-     * <p>
-     * Locate genes that match the given alias string
-     * </p>
+     * Converts a Collection of instances of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's
+     * entity.
      */
-    public java.util.Collection<Gene> findByAlias( java.lang.String search );
+    public void geneValueObjectToEntityCollection( java.util.Collection<Gene> instances );
 
     /**
      * <p>
@@ -388,7 +320,18 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
     /**
      * 
      */
-    public java.lang.Integer countAll();
+    public long getCompositeSequenceCountById( long id );
+
+    /**
+     * 
+     */
+    public java.util.Collection<CompositeSequence> getCompositeSequences( ubic.gemma.model.genome.Gene gene,
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * 
+     */
+    public java.util.Collection<CompositeSequence> getCompositeSequencesById( long id );
 
     /**
      * <p>
@@ -398,11 +341,6 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
     public java.util.Collection<Gene> getGenesByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
-     * 
-     */
-    public java.util.Collection<Gene> loadMultiple( java.util.Collection<Long> ids );
-
-    /**
      * <p>
      * Returns a collection of genes that are actually MicroRNA for a given taxon
      * </p>
@@ -410,22 +348,44 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
     public java.util.Collection<Gene> getMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
+     * <p>
+     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
+     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
+     * </p>
      * 
+     * @param id the identifier of the entity to load.
+     * @return either the entity or the object transformed from the entity.
      */
-    public java.util.Collection<CompositeSequence> getCompositeSequences( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public Object load( int transform, java.lang.Long id );
 
-    // /**
-    // *
-    // */
-    // public java.util.Map<Long, Collection<Long>> getCompositeSequenceMap( java.util.Collection<Gene> genes );
+    /**
+     * Loads an instance of ubic.gemma.model.genome.Gene from the persistent store.
+     */
+    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+
+    /**
+     * Loads all entities of type {@link ubic.gemma.model.genome.Gene}.
+     * 
+     * @return the loaded entities.
+     */
+    public java.util.Collection<Gene> loadAll();
 
     /**
      * <p>
-     * Returns a collection of probe aligned regions for the specified taxon
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * operation which can optionally transform the entity (into a value object for example). By default, transformation
+     * does not occur.
      * </p>
+     * 
+     * @param transform the flag indicating what transformation to use.
+     * @return the loaded entities.
      */
-    public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection<Gene> loadAll( final int transform );
 
     /**
      * <p>
@@ -436,11 +396,44 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
     public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
 
     /**
+     * 
+     */
+    public java.util.Collection<Gene> loadMultiple( java.util.Collection<Long> ids );
+
+    /**
      * <p>
      * Returns a collection of predicted genes for the specified taxon.
      * </p>
      */
     public java.util.Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * <p>
+     * Returns a collection of probe aligned regions for the specified taxon
+     * </p>
+     */
+    public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * Removes the instance of ubic.gemma.model.genome.Gene having the given <code>identifier</code> from the persistent
+     * store.
+     */
+    public void remove( java.lang.Long id );
+
+    /**
+     * Removes all entities in the given <code>entities<code> collection.
+     */
+    public void remove( java.util.Collection<Gene> entities );
+
+    // /**
+    // *
+    // */
+    // public java.util.Map<Long, Collection<Long>> getCompositeSequenceMap( java.util.Collection<Gene> genes );
+
+    /**
+     * Removes the instance of ubic.gemma.model.genome.Gene from the persistent store.
+     */
+    public void remove( ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
@@ -450,28 +443,35 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
     /**
      * 
      */
-    public ubic.gemma.model.genome.Gene findByOfficialSymbol( java.lang.String symbol,
-            ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * 
-     */
     public void thawLite( java.util.Collection<Gene> genes );
 
     /**
-     * 
+     * Converts this DAO's entity to an object of type {@link ubic.gemma.model.genome.gene.GeneValueObject}.
      */
-    public ubic.gemma.model.genome.Gene findByAccession( java.lang.String accession,
-            ubic.gemma.model.common.description.ExternalDatabase source );
+    public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject( ubic.gemma.model.genome.Gene entity );
 
     /**
-     * Find the Genes closest to the given location. If the location is in a gene(s), they will be returned. Otherwise a
-     * single gene closest to the location will be returned, except in the case of ties in which more than one will be
-     * returned.
-     * 
-     * @param physicalLocation
-     * @return
+     * Copies the fields of the specified entity to the target value object. This method is similar to
+     * toGeneValueObject(), but it does not handle any attributes in the target value object that are "read-only" (as
+     * those do not have setter methods exposed).
      */
-    public Collection findNearest( PhysicalLocation physicalLocation );
+    public void toGeneValueObject( ubic.gemma.model.genome.Gene sourceEntity,
+            ubic.gemma.model.genome.gene.GeneValueObject targetVO );
+
+    /**
+     * Converts this DAO's entity to a Collection of instances of type
+     * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
+     */
+    public void toGeneValueObjectCollection( java.util.Collection<Gene> entities );
+
+    /**
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     */
+    public void update( java.util.Collection<Gene> entities );
+
+    /**
+     * Updates the <code>gene</code> instance in the persistent store.
+     */
+    public void update( ubic.gemma.model.genome.Gene gene );
 
 }

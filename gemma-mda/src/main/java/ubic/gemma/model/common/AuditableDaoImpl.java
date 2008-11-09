@@ -60,8 +60,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
                         session.lock( auditable, LockMode.NONE );
                         Hibernate.initialize( auditable );
                         Hibernate.initialize( auditable.getAuditTrail() );
-                        Collection<AuditEvent> events = ( Collection<AuditEvent> ) auditable.getAuditTrail()
-                                .getEvents();
+                        Collection<AuditEvent> events = auditable.getAuditTrail().getEvents();
                         Hibernate.initialize( events );
                         for ( AuditEvent auditEvent : events ) {
                             Hibernate.initialize( auditEvent );
@@ -71,6 +70,33 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
                     }
                 } );
 
+    }
+
+    /**
+     * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given class)
+     * 
+     * @param type Class
+     * @return A List of class names, including the given type.
+     */
+    protected List<String> getClassHierarchy( Class<? extends AuditEventType> type ) {
+        List<String> classes = new ArrayList<String>();
+        classes.add( type.getCanonicalName() );
+
+        // how to determine subclasses? There is no way to do this but the hibernate way.
+        SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) this.getSessionFactory()
+                .getClassMetadata( type );
+        if ( classMetadata == null ) return classes;
+
+        if ( classMetadata.hasSubclasses() ) {
+            String[] subclasses = classMetadata.getSubclassClosure(); // this includes the superclass, fully qualified
+            // names.
+            classes.clear();
+            for ( String string : subclasses ) {
+                string = string.replaceFirst( ".+\\.", "" );
+                classes.add( string );
+            }
+        }
+        return classes;
     }
 
     @Override
@@ -116,39 +142,12 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
 
             if ( results == null || results.isEmpty() ) return null;
 
-            return ( AuditEvent ) results.iterator().next();
+            return results.iterator().next();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
 
-    }
-
-    /**
-     * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given class)
-     * 
-     * @param type Class
-     * @return A List of class names, including the given type.
-     */
-    protected List<String> getClassHierarchy( Class<? extends AuditEventType> type ) {
-        List<String> classes = new ArrayList<String>();
-        classes.add( type.getCanonicalName() );
-
-        // how to determine subclasses? There is no way to do this but the hibernate way.
-        SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) this.getSessionFactory()
-                .getClassMetadata( type );
-        if ( classMetadata == null ) return classes;
-
-        if ( classMetadata.hasSubclasses() ) {
-            String[] subclasses = classMetadata.getSubclassClosure(); // this includes the superclass, fully qualified
-            // names.
-            classes.clear();
-            for ( String string : subclasses ) {
-                string = string.replaceFirst( ".+\\.", "" );
-                classes.add( string );
-            }
-        }
-        return classes;
     }
 
     /*
@@ -214,42 +213,6 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
         return result;
     }
 
-    /**
-     * Essential thaw the auditables to the point we get the AuditTrail proxies for them.
-     * 
-     * @param auditables
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Map<AuditTrail, Auditable> getAuditTrailMap( final Collection auditables ) {
-        /*
-         * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because Auditable
-         * is not mapped, we have to query for each class separately ... just in case the user has passed a
-         * heterogeneous collection.
-         */
-        final Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
-        Map<String, Collection<Auditable>> clazzmap = new HashMap<String, Collection<Auditable>>();
-        for ( Auditable a : ( Collection<Auditable> ) auditables ) {
-            if ( !clazzmap.containsKey( a.getClass().getSimpleName() ) ) {
-                clazzmap.put( a.getClass().getSimpleName(), new HashSet<Auditable>() );
-            }
-            clazzmap.get( a.getClass().getSimpleName() ).add( a );
-        }
-
-        // this is the actual thaw, done in one select.
-        for ( String clazz : clazzmap.keySet() ) {
-            final String trailQuery = "select a, a.auditTrail from " + clazz + " a where a in (:auditables) ";
-            List res = this.getHibernateTemplate().findByNamedParam( trailQuery, "auditables", clazzmap.get( clazz ) );
-            for ( Object o : res ) {
-                Object[] ar = ( Object[] ) o;
-                AuditTrail t = ( AuditTrail ) ar[1];
-                Auditable a = ( Auditable ) ar[0];
-                atmap.put( t, a );
-            }
-        }
-        return atmap;
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     protected Map<Class, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents( Collection auditables )
@@ -299,5 +262,41 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
         }
 
         return result;
+    }
+
+    /**
+     * Essential thaw the auditables to the point we get the AuditTrail proxies for them.
+     * 
+     * @param auditables
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Map<AuditTrail, Auditable> getAuditTrailMap( final Collection auditables ) {
+        /*
+         * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because Auditable
+         * is not mapped, we have to query for each class separately ... just in case the user has passed a
+         * heterogeneous collection.
+         */
+        final Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
+        Map<String, Collection<Auditable>> clazzmap = new HashMap<String, Collection<Auditable>>();
+        for ( Auditable a : ( Collection<Auditable> ) auditables ) {
+            if ( !clazzmap.containsKey( a.getClass().getSimpleName() ) ) {
+                clazzmap.put( a.getClass().getSimpleName(), new HashSet<Auditable>() );
+            }
+            clazzmap.get( a.getClass().getSimpleName() ).add( a );
+        }
+
+        // this is the actual thaw, done in one select.
+        for ( String clazz : clazzmap.keySet() ) {
+            final String trailQuery = "select a, a.auditTrail from " + clazz + " a where a in (:auditables) ";
+            List res = this.getHibernateTemplate().findByNamedParam( trailQuery, "auditables", clazzmap.get( clazz ) );
+            for ( Object o : res ) {
+                Object[] ar = ( Object[] ) o;
+                AuditTrail t = ( AuditTrail ) ar[1];
+                Auditable a = ( Auditable ) ar[0];
+                atmap.put( t, a );
+            }
+        }
+        return atmap;
     }
 }

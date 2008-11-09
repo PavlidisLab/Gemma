@@ -24,8 +24,8 @@ package ubic.gemma.model.expression.experiment;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.expression.experiment.FactorValueService</code>, provides
- * access to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.expression.experiment.FactorValueService</code>, provides access
+ * to all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.expression.experiment.FactorValueService
@@ -33,77 +33,6 @@ package ubic.gemma.model.expression.experiment;
 public abstract class FactorValueServiceBase implements ubic.gemma.model.expression.experiment.FactorValueService {
 
     private ubic.gemma.model.expression.experiment.FactorValueDao factorValueDao;
-
-    /**
-     * Sets the reference to <code>factorValue</code>'s DAO.
-     */
-    public void setFactorValueDao( ubic.gemma.model.expression.experiment.FactorValueDao factorValueDao ) {
-        this.factorValueDao = factorValueDao;
-    }
-
-    /**
-     * Gets the reference to <code>factorValue</code>'s DAO.
-     */
-    protected ubic.gemma.model.expression.experiment.FactorValueDao getFactorValueDao() {
-        return this.factorValueDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.FactorValueService#loadAll()
-     */
-    public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.loadAll()' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.FactorValueService#findOrCreate(ubic.gemma.model.expression.experiment.FactorValue)
-     */
-    public ubic.gemma.model.expression.experiment.FactorValue findOrCreate(
-            final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
-        try {
-            return this.handleFindOrCreate( factorValue );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.findOrCreate(ubic.gemma.model.expression.experiment.FactorValue factorValue)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.experiment.FactorValue)}
-     */
-    protected abstract ubic.gemma.model.expression.experiment.FactorValue handleFindOrCreate(
-            ubic.gemma.model.expression.experiment.FactorValue factorValue ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.FactorValueService#delete(ubic.gemma.model.expression.experiment.FactorValue)
-     */
-    public void delete( final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
-        try {
-            this.handleDelete( factorValue );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.delete(ubic.gemma.model.expression.experiment.FactorValue factorValue)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #delete(ubic.gemma.model.expression.experiment.FactorValue)}
-     */
-    protected abstract void handleDelete( ubic.gemma.model.expression.experiment.FactorValue factorValue )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueService#create(ubic.gemma.model.expression.experiment.FactorValue)
@@ -120,10 +49,31 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.FactorValue)}
+     * @see ubic.gemma.model.expression.experiment.FactorValueService#delete(ubic.gemma.model.expression.experiment.FactorValue)
      */
-    protected abstract ubic.gemma.model.expression.experiment.FactorValue handleCreate(
-            ubic.gemma.model.expression.experiment.FactorValue factorValue ) throws java.lang.Exception;
+    public void delete( final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
+        try {
+            this.handleDelete( factorValue );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.delete(ubic.gemma.model.expression.experiment.FactorValue factorValue)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.experiment.FactorValueService#findOrCreate(ubic.gemma.model.expression.experiment.FactorValue)
+     */
+    public ubic.gemma.model.expression.experiment.FactorValue findOrCreate(
+            final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
+        try {
+            return this.handleFindOrCreate( factorValue );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.findOrCreate(ubic.gemma.model.expression.experiment.FactorValue factorValue)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueService#load(java.lang.Long)
@@ -139,29 +89,24 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
     }
 
     /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
+     * @see ubic.gemma.model.expression.experiment.FactorValueService#loadAll()
      */
-    protected abstract ubic.gemma.model.expression.experiment.FactorValue handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.FactorValueService#update(ubic.gemma.model.expression.experiment.FactorValue)
-     */
-    public void update( final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
+    public java.util.Collection loadAll() {
         try {
-            this.handleUpdate( factorValue );
+            return this.handleLoadAll();
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.update(ubic.gemma.model.expression.experiment.FactorValue factorValue)' --> "
-                            + th, th );
+                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.loadAll()' --> " + th,
+                    th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.expression.experiment.FactorValue)}
+     * Sets the reference to <code>factorValue</code>'s DAO.
      */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.experiment.FactorValue factorValue )
-            throws java.lang.Exception;
+    public void setFactorValueDao( ubic.gemma.model.expression.experiment.FactorValueDao factorValueDao ) {
+        this.factorValueDao = factorValueDao;
+    }
 
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueService#update(java.util.Collection)
@@ -177,45 +122,23 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
     }
 
     /**
-     * Performs the core logic for {@link #update(java.util.Collection)}
+     * @see ubic.gemma.model.expression.experiment.FactorValueService#update(ubic.gemma.model.expression.experiment.FactorValue)
      */
-    protected abstract void handleUpdate( java.util.Collection factorValues ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public void update( final ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
+        try {
+            this.handleUpdate( factorValue );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.update(ubic.gemma.model.expression.experiment.FactorValue factorValue)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message source available to this service.
+     * Gets the reference to <code>factorValue</code>'s DAO.
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.expression.experiment.FactorValueDao getFactorValueDao() {
+        return this.factorValueDao;
     }
 
     /**
@@ -230,5 +153,81 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.FactorValue)}
+     */
+    protected abstract ubic.gemma.model.expression.experiment.FactorValue handleCreate(
+            ubic.gemma.model.expression.experiment.FactorValue factorValue ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #delete(ubic.gemma.model.expression.experiment.FactorValue)}
+     */
+    protected abstract void handleDelete( ubic.gemma.model.expression.experiment.FactorValue factorValue )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.experiment.FactorValue)}
+     */
+    protected abstract ubic.gemma.model.expression.experiment.FactorValue handleFindOrCreate(
+            ubic.gemma.model.expression.experiment.FactorValue factorValue ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.expression.experiment.FactorValue handleLoad( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAll()}
+     */
+    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(java.util.Collection)}
+     */
+    protected abstract void handleUpdate( java.util.Collection factorValues ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.expression.experiment.FactorValue)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.expression.experiment.FactorValue factorValue )
+            throws java.lang.Exception;
 
 }

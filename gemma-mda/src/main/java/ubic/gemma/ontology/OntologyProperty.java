@@ -28,7 +28,5 @@ public interface OntologyProperty extends OntologyResource {
      * @return true if this is a FunctionalProperty
      */
     public boolean isFunctional();
-    
-    
 
 }

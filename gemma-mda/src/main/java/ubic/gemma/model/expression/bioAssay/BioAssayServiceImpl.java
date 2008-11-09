@@ -35,79 +35,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
  */
 public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.BioAssayServiceBase {
 
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#saveBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay)
-     */
-    protected void handleSaveBioAssay( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay )
-            throws java.lang.Exception {
-        this.getBioAssayDao().create( bioAssay );
-    }
-
-    @Override
-    protected Integer handleCountAll() throws Exception {
-        return this.getBioAssayDao().countAll();
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#getAllBioAssays()
-     */
-    @Override
-    protected java.util.Collection handleGetAllBioAssays() throws java.lang.Exception {
-        return this.getBioAssayDao().loadAll();
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findOrCreate(edu.columbia.gemma.expression.bioAssay.BioAssay)
-     */
-    @Override
-    protected BioAssay handleFindOrCreate( BioAssay bioAssay ) throws Exception {
-        return this.getBioAssayDao().findOrCreate( bioAssay );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#markAsMissing(edu.columbia.gemma.expression.bioAssay.BioAssay)
-     */
-    @Override
-    protected void handleRemove( BioAssay bioAssay ) throws Exception {
-        this.getBioAssayDao().remove( bioAssay );
-
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findById(Long)
-     */
-    @Override
-    protected BioAssay handleLoad( Long id ) throws Exception {
-        return ( BioAssay ) this.getBioAssayDao().load( id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadAll()
-     */
-    @Override
-    protected Collection handleLoadAll() throws Exception {
-        return this.getBioAssayDao().loadAll();
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#update(BioAssay)
-     */
-    @Override
-    protected void handleUpdate( BioAssay bioAssay ) throws Exception {
-        this.getBioAssayDao().update( bioAssay );
-    }
-
-    @Override
-    protected Collection handleFindBioAssayDimensions( BioAssay bioAssay ) throws Exception {
-        if ( bioAssay.getId() == null ) throw new IllegalArgumentException( "BioAssay must be persistent" );
-        return this.getBioAssayDao().findBioAssayDimensions( bioAssay );
-    }
-
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleAssociateBioMaterial(ubic.gemma.model.expression.bioAssay.BioAssay,
-     *      ubic.gemma.model.expression.biomaterial.BioMaterial)
+     * @see
+     * ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleAssociateBioMaterial(ubic.gemma.model.expression
+     * .bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
     protected void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) throws Exception {
@@ -137,11 +69,63 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         this.getBioMaterialService().update( bioMaterial );
     }
 
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        return this.getBioAssayDao().countAll();
+    }
+
+    @Override
+    protected Collection handleFindBioAssayDimensions( BioAssay bioAssay ) throws Exception {
+        if ( bioAssay.getId() == null ) throw new IllegalArgumentException( "BioAssay must be persistent" );
+        return this.getBioAssayDao().findBioAssayDimensions( bioAssay );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findOrCreate(edu.columbia.gemma.expression.bioAssay.BioAssay)
+     */
+    @Override
+    protected BioAssay handleFindOrCreate( BioAssay bioAssay ) throws Exception {
+        return this.getBioAssayDao().findOrCreate( bioAssay );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#getAllBioAssays()
+     */
+    @Override
+    protected java.util.Collection handleGetAllBioAssays() throws java.lang.Exception {
+        return this.getBioAssayDao().loadAll();
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findById(Long)
+     */
+    @Override
+    protected BioAssay handleLoad( Long id ) throws Exception {
+        return ( BioAssay ) this.getBioAssayDao().load( id );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadAll()
+     */
+    @Override
+    protected Collection handleLoadAll() throws Exception {
+        return this.getBioAssayDao().loadAll();
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#markAsMissing(edu.columbia.gemma.expression.bioAssay.BioAssay)
+     */
+    @Override
+    protected void handleRemove( BioAssay bioAssay ) throws Exception {
+        this.getBioAssayDao().remove( bioAssay );
+
+    }
+
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleRemoveBioMaterial(ubic.gemma.model.expression.bioAssay.BioAssay,
-     *      ubic.gemma.model.expression.biomaterial.BioMaterial)
+     * @see
+     * ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleRemoveBioMaterial(ubic.gemma.model.expression.
+     * bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
     protected void handleRemoveBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) throws Exception {
@@ -169,9 +153,25 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
 
     }
 
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#saveBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay)
+     */
+    protected void handleSaveBioAssay( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay )
+            throws java.lang.Exception {
+        this.getBioAssayDao().create( bioAssay );
+    }
+
     @Override
     protected void handleThaw( BioAssay bioAssay ) throws Exception {
         this.getBioAssayDao().thaw( bioAssay );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#update(BioAssay)
+     */
+    @Override
+    protected void handleUpdate( BioAssay bioAssay ) throws Exception {
+        this.getBioAssayDao().update( bioAssay );
     }
 
 }

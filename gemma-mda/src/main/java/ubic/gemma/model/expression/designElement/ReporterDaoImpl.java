@@ -34,8 +34,9 @@ public class ReporterDaoImpl extends ubic.gemma.model.expression.designElement.R
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.ReporterDaoBase#find(ubic.gemma.model.expression.designElement.Reporter)
+     * @see
+     * ubic.gemma.model.expression.designElement.ReporterDaoBase#find(ubic.gemma.model.expression.designElement.Reporter
+     * )
      */
     @Override
     public Reporter find( Reporter reporter ) {
@@ -75,8 +76,9 @@ public class ReporterDaoImpl extends ubic.gemma.model.expression.designElement.R
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.ReporterDaoBase#findOrCreate(ubic.gemma.model.expression.designElement.Reporter)
+     * @see
+     * ubic.gemma.model.expression.designElement.ReporterDaoBase#findOrCreate(ubic.gemma.model.expression.designElement
+     * .Reporter)
      */
     @Override
     public Reporter findOrCreate( Reporter reporter ) {

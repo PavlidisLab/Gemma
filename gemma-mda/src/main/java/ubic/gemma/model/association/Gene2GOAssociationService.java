@@ -30,20 +30,21 @@ public interface Gene2GOAssociationService {
     /**
      * 
      */
-    public ubic.gemma.model.association.Gene2GOAssociation find(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
-
-    /**
-     * 
-     */
     public ubic.gemma.model.association.Gene2GOAssociation create(
             ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
 
     /**
      * 
      */
-    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
+    public ubic.gemma.model.association.Gene2GOAssociation find(
             ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
+
+    /**
+     * <p>
+     * Returns all the Gene2GoAssociation's for the given Gene
+     * </p>
+     */
+    public java.util.Collection findAssociationByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
@@ -58,11 +59,10 @@ public interface Gene2GOAssociationService {
     public java.util.Collection findByGOTerm( java.lang.String goID, ubic.gemma.model.genome.Taxon taxon );
 
     /**
-     * <p>
-     * Returns all the Gene2GoAssociation's for the given Gene
-     * </p>
+     * 
      */
-    public java.util.Collection findAssociationByGene( ubic.gemma.model.genome.Gene gene );
+    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
+            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
 
     /**
      * <p>

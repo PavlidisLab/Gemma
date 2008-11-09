@@ -34,6 +34,52 @@ public abstract class AlternateNameDaoBase extends org.springframework.orm.hiber
         implements ubic.gemma.model.expression.arrayDesign.AlternateNameDao {
 
     /**
+     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "AlternateName.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.expression.arrayDesign.AlternateName ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#create(int transform,
+     *      ubic.gemma.model.expression.arrayDesign.AlternateName)
+     */
+    public Object create( final int transform, final ubic.gemma.model.expression.arrayDesign.AlternateName alternateName ) {
+        if ( alternateName == null ) {
+            throw new IllegalArgumentException( "AlternateName.create - 'alternateName' can not be null" );
+        }
+        this.getHibernateTemplate().save( alternateName );
+        return this.transformEntity( transform, alternateName );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#create(ubic.gemma.model.expression.arrayDesign.AlternateName)
+     */
+    public ubic.gemma.model.expression.arrayDesign.AlternateName create(
+            ubic.gemma.model.expression.arrayDesign.AlternateName alternateName ) {
+        return ( ubic.gemma.model.expression.arrayDesign.AlternateName ) this.create( TRANSFORM_NONE, alternateName );
+    }
+
+    /**
      * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#load(int, java.lang.Long)
      */
     public Object load( final int transform, final java.lang.Long id ) {
@@ -71,89 +117,6 @@ public abstract class AlternateNameDaoBase extends org.springframework.orm.hiber
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#create(ubic.gemma.model.expression.arrayDesign.AlternateName)
-     */
-    public ubic.gemma.model.expression.arrayDesign.AlternateName create(
-            ubic.gemma.model.expression.arrayDesign.AlternateName alternateName ) {
-        return ( ubic.gemma.model.expression.arrayDesign.AlternateName ) this.create( TRANSFORM_NONE, alternateName );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#create(int transform,
-     *      ubic.gemma.model.expression.arrayDesign.AlternateName)
-     */
-    public Object create( final int transform, final ubic.gemma.model.expression.arrayDesign.AlternateName alternateName ) {
-        if ( alternateName == null ) {
-            throw new IllegalArgumentException( "AlternateName.create - 'alternateName' can not be null" );
-        }
-        this.getHibernateTemplate().save( alternateName );
-        return this.transformEntity( transform, alternateName );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AlternateName.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.expression.arrayDesign.AlternateName ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#update(ubic.gemma.model.expression.arrayDesign.AlternateName)
-     */
-    public void update( ubic.gemma.model.expression.arrayDesign.AlternateName alternateName ) {
-        if ( alternateName == null ) {
-            throw new IllegalArgumentException( "AlternateName.update - 'alternateName' can not be null" );
-        }
-        this.getHibernateTemplate().update( alternateName );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AlternateName.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.arrayDesign.AlternateName ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#remove(ubic.gemma.model.expression.arrayDesign.AlternateName)
-     */
-    public void remove( ubic.gemma.model.expression.arrayDesign.AlternateName alternateName ) {
-        if ( alternateName == null ) {
-            throw new IllegalArgumentException( "AlternateName.remove - 'alternateName' can not be null" );
-        }
-        this.getHibernateTemplate().delete( alternateName );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -174,6 +137,64 @@ public abstract class AlternateNameDaoBase extends org.springframework.orm.hiber
             throw new IllegalArgumentException( "AlternateName.remove - 'entities' can not be null" );
         }
         this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#remove(ubic.gemma.model.expression.arrayDesign.AlternateName)
+     */
+    public void remove( ubic.gemma.model.expression.arrayDesign.AlternateName alternateName ) {
+        if ( alternateName == null ) {
+            throw new IllegalArgumentException( "AlternateName.remove - 'alternateName' can not be null" );
+        }
+        this.getHibernateTemplate().delete( alternateName );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "AlternateName.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.expression.arrayDesign.AlternateName ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#update(ubic.gemma.model.expression.arrayDesign.AlternateName)
+     */
+    public void update( ubic.gemma.model.expression.arrayDesign.AlternateName alternateName ) {
+        if ( alternateName == null ) {
+            throw new IllegalArgumentException( "AlternateName.update - 'alternateName' can not be null" );
+        }
+        this.getHibernateTemplate().update( alternateName );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.expression.arrayDesign.AlternateName)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.expression.arrayDesign.AlternateNameDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.expression.arrayDesign.AlternateName)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -200,25 +221,6 @@ public abstract class AlternateNameDaoBase extends org.springframework.orm.hiber
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.expression.arrayDesign.AlternateName)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.expression.arrayDesign.AlternateNameDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.expression.arrayDesign.AlternateName)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

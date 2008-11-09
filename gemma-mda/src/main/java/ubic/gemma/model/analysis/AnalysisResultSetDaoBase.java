@@ -71,43 +71,6 @@ public abstract class AnalysisResultSetDaoBase extends org.springframework.orm.h
     }
 
     /**
-     * @see ubic.gemma.model.analysis.AnalysisResultSetDao#update(ubic.gemma.model.analysis.AnalysisResultSet)
-     */
-    public void update( ubic.gemma.model.analysis.AnalysisResultSet analysisResultSet ) {
-        if ( analysisResultSet == null ) {
-            throw new IllegalArgumentException( "AnalysisResultSet.update - 'analysisResultSet' can not be null" );
-        }
-        this.getHibernateTemplate().update( analysisResultSet );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisResultSetDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AnalysisResultSet.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.analysis.AnalysisResultSet ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisResultSetDao#remove(ubic.gemma.model.analysis.AnalysisResultSet)
-     */
-    public void remove( ubic.gemma.model.analysis.AnalysisResultSet analysisResultSet ) {
-        if ( analysisResultSet == null ) {
-            throw new IllegalArgumentException( "AnalysisResultSet.remove - 'analysisResultSet' can not be null" );
-        }
-        this.getHibernateTemplate().delete( analysisResultSet );
-    }
-
-    /**
      * @see ubic.gemma.model.analysis.AnalysisResultSetDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -128,6 +91,63 @@ public abstract class AnalysisResultSetDaoBase extends org.springframework.orm.h
             throw new IllegalArgumentException( "AnalysisResultSet.remove - 'entities' can not be null" );
         }
         this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisResultSetDao#remove(ubic.gemma.model.analysis.AnalysisResultSet)
+     */
+    public void remove( ubic.gemma.model.analysis.AnalysisResultSet analysisResultSet ) {
+        if ( analysisResultSet == null ) {
+            throw new IllegalArgumentException( "AnalysisResultSet.remove - 'analysisResultSet' can not be null" );
+        }
+        this.getHibernateTemplate().delete( analysisResultSet );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisResultSetDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "AnalysisResultSet.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.analysis.AnalysisResultSet ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisResultSetDao#update(ubic.gemma.model.analysis.AnalysisResultSet)
+     */
+    public void update( ubic.gemma.model.analysis.AnalysisResultSet analysisResultSet ) {
+        if ( analysisResultSet == null ) {
+            throw new IllegalArgumentException( "AnalysisResultSet.update - 'analysisResultSet' can not be null" );
+        }
+        this.getHibernateTemplate().update( analysisResultSet );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.analysis.AnalysisResultSet)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.analysis.AnalysisResultSetDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.analysis.AnalysisResultSet)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -152,24 +172,6 @@ public abstract class AnalysisResultSetDaoBase extends org.springframework.orm.h
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.analysis.AnalysisResultSet)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.analysis.AnalysisResultSetDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.analysis.AnalysisResultSet)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

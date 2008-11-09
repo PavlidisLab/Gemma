@@ -75,46 +75,6 @@ public abstract class Gene2OntologyEntryAssociationDaoBase extends ubic.gemma.mo
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2OntologyEntryAssociationDao#update(ubic.gemma.model.association.Gene2OntologyEntryAssociation)
-     */
-    public void update( ubic.gemma.model.association.Gene2OntologyEntryAssociation gene2OntologyEntryAssociation ) {
-        if ( gene2OntologyEntryAssociation == null ) {
-            throw new IllegalArgumentException(
-                    "Gene2OntologyEntryAssociation.update - 'gene2OntologyEntryAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().update( gene2OntologyEntryAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Gene2OntologyEntryAssociation.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.association.Gene2OntologyEntryAssociation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2OntologyEntryAssociationDao#remove(ubic.gemma.model.association.Gene2OntologyEntryAssociation)
-     */
-    public void remove( ubic.gemma.model.association.Gene2OntologyEntryAssociation gene2OntologyEntryAssociation ) {
-        if ( gene2OntologyEntryAssociation == null ) {
-            throw new IllegalArgumentException(
-                    "Gene2OntologyEntryAssociation.remove - 'gene2OntologyEntryAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().delete( gene2OntologyEntryAssociation );
-    }
-
-    /**
      * @see ubic.gemma.model.association.Gene2OntologyEntryAssociationDao#remove(java.lang.Long)
      */
     @Override
@@ -141,6 +101,68 @@ public abstract class Gene2OntologyEntryAssociationDaoBase extends ubic.gemma.mo
     }
 
     /**
+     * @see ubic.gemma.model.association.Gene2OntologyEntryAssociationDao#remove(ubic.gemma.model.association.Gene2OntologyEntryAssociation)
+     */
+    public void remove( ubic.gemma.model.association.Gene2OntologyEntryAssociation gene2OntologyEntryAssociation ) {
+        if ( gene2OntologyEntryAssociation == null ) {
+            throw new IllegalArgumentException(
+                    "Gene2OntologyEntryAssociation.remove - 'gene2OntologyEntryAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().delete( gene2OntologyEntryAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Gene2OntologyEntryAssociation.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.association.Gene2OntologyEntryAssociation ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2OntologyEntryAssociationDao#update(ubic.gemma.model.association.Gene2OntologyEntryAssociation)
+     */
+    public void update( ubic.gemma.model.association.Gene2OntologyEntryAssociation gene2OntologyEntryAssociation ) {
+        if ( gene2OntologyEntryAssociation == null ) {
+            throw new IllegalArgumentException(
+                    "Gene2OntologyEntryAssociation.update - 'gene2OntologyEntryAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().update( gene2OntologyEntryAssociation );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.association.Gene2OntologyEntryAssociation)} method. This method does
+     * not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.association.Gene2OntologyEntryAssociationDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.association.Gene2OntologyEntryAssociation)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.association.Gene2OntologyEntryAssociationDao</code>, please note that the
@@ -164,26 +186,6 @@ public abstract class Gene2OntologyEntryAssociationDaoBase extends ubic.gemma.mo
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.association.Gene2OntologyEntryAssociation)} method. This method does
-     * not instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.association.Gene2OntologyEntryAssociationDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.association.Gene2OntologyEntryAssociation)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

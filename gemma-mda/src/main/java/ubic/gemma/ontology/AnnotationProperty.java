@@ -26,9 +26,9 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  */
 public interface AnnotationProperty {
 
-    public ExternalDatabase getSourceOntology();
+    public String getContents();
 
     public String getProperty();
-    
-    public String getContents();
+
+    public ExternalDatabase getSourceOntology();
 }

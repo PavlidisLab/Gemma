@@ -34,40 +34,6 @@ public class TaxonServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 2093387665684821728L;
 
     /**
-     * The default constructor for <code>TaxonServiceException</code>.
-     */
-    public TaxonServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>TaxonServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public TaxonServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>TaxonServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public TaxonServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>TaxonServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public TaxonServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -101,5 +67,39 @@ public class TaxonServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>TaxonServiceException</code>.
+     */
+    public TaxonServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>TaxonServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public TaxonServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>TaxonServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public TaxonServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>TaxonServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public TaxonServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

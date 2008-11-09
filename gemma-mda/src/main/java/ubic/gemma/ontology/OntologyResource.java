@@ -28,9 +28,9 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  */
 public interface OntologyResource extends Serializable, Comparable {
 
+    public String getLabel();
+
     public ExternalDatabase getSourceOntology();
 
     public String getUri();
-
-    public String getLabel();
 }

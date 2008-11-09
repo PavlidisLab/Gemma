@@ -20,12 +20,12 @@ package ubic.gemma.persistence;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 
@@ -54,7 +54,6 @@ public class RelationshipPersister extends ExpressionPersister {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
@@ -78,7 +77,6 @@ public class RelationshipPersister extends ExpressionPersister {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
     @Override
@@ -87,45 +85,28 @@ public class RelationshipPersister extends ExpressionPersister {
         return super.persistOrUpdate( entity );
     }
 
-    /**
-     * @param association
-     * @return
-     */
-    protected Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
-        if ( association == null ) return null;
-        if ( !isTransient( association ) ) return association;
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
 
-        association.setGene( persistGene( association.getGene() ) );
-        return gene2GOAssociationService.findOrCreate( association );
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
     }
 
     /**
-     * @param entity
-     * @return
+     * @param gene2GOAssociationService the gene2GOAssociationService to set
      */
-    protected ProbeCoexpressionAnalysis persistProbeCoexpressionAnalysis( ProbeCoexpressionAnalysis entity ) {
-        if ( entity == null ) return null;
-        if ( !isTransient( entity ) ) return entity;
-        entity.setProtocol( persistProtocol( entity.getProtocol() ) );
-
-        entity.setExpressionExperimentSetAnalyzed( persistExpressionExperimentSet( entity
-                .getExpressionExperimentSetAnalyzed() ) );
-
-        return probeCoexpressionAnalysisService.create( entity );
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
     }
 
-    /**
-     * @param entity
-     * @return
-     */
-    protected GeneCoexpressionAnalysis persistGeneCoexpressionAnalysis( GeneCoexpressionAnalysis entity ) {
-        if ( entity == null ) return null;
-        if ( !isTransient( entity ) ) return entity;
-        entity.setProtocol( persistProtocol( entity.getProtocol() ) );
-        entity.setExpressionExperimentSetAnalyzed( persistExpressionExperimentSet( entity
-                .getExpressionExperimentSetAnalyzed() ) );
+    public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
+        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
+    }
 
-        return geneCoexpressionAnalysisService.create( entity );
+    public void setProbeCoexpressionAnalysisService( ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService ) {
+        this.probeCoexpressionAnalysisService = probeCoexpressionAnalysisService;
     }
 
     /**
@@ -151,27 +132,44 @@ public class RelationshipPersister extends ExpressionPersister {
     }
 
     /**
-     * @param gene2GOAssociationService the gene2GOAssociationService to set
+     * @param association
+     * @return
      */
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
+    protected Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
+        if ( association == null ) return null;
+        if ( !isTransient( association ) ) return association;
+
+        association.setGene( persistGene( association.getGene() ) );
+        return gene2GOAssociationService.findOrCreate( association );
     }
 
-    public void setProbeCoexpressionAnalysisService( ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService ) {
-        this.probeCoexpressionAnalysisService = probeCoexpressionAnalysisService;
+    /**
+     * @param entity
+     * @return
+     */
+    protected GeneCoexpressionAnalysis persistGeneCoexpressionAnalysis( GeneCoexpressionAnalysis entity ) {
+        if ( entity == null ) return null;
+        if ( !isTransient( entity ) ) return entity;
+        entity.setProtocol( persistProtocol( entity.getProtocol() ) );
+        entity.setExpressionExperimentSetAnalyzed( persistExpressionExperimentSet( entity
+                .getExpressionExperimentSetAnalyzed() ) );
+
+        return geneCoexpressionAnalysisService.create( entity );
     }
 
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
+    /**
+     * @param entity
+     * @return
+     */
+    protected ProbeCoexpressionAnalysis persistProbeCoexpressionAnalysis( ProbeCoexpressionAnalysis entity ) {
+        if ( entity == null ) return null;
+        if ( !isTransient( entity ) ) return entity;
+        entity.setProtocol( persistProtocol( entity.getProtocol() ) );
 
-    public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
-        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
-    }
+        entity.setExpressionExperimentSetAnalyzed( persistExpressionExperimentSet( entity
+                .getExpressionExperimentSetAnalyzed() ) );
 
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
-        this.expressionExperimentSetService = expressionExperimentSetService;
+        return probeCoexpressionAnalysisService.create( entity );
     }
 
 }

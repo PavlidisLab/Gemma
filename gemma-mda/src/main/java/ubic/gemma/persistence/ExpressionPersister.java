@@ -90,6 +90,106 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
     Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
+     */
+    @Override
+    public Object persist( Object entity ) {
+        if ( entity == null ) return null;
+
+        Object result;
+
+        if ( entity instanceof ExpressionExperiment ) {
+            clearCache();
+            result = persistExpressionExperiment( ( ExpressionExperiment ) entity );
+            return result;
+        } else if ( entity instanceof BioAssayDimension ) {
+            return persistBioAssayDimension( ( BioAssayDimension ) entity );
+        } else if ( entity instanceof BioMaterial ) {
+            return persistBioMaterial( ( BioMaterial ) entity );
+        } else if ( entity instanceof BioAssay ) {
+            return persistBioAssay( ( BioAssay ) entity );
+        } else if ( entity instanceof Compound ) {
+            return persistCompound( ( Compound ) entity );
+        } else if ( entity instanceof DesignElementDataVector ) {
+            return persistDesignElementDataVector( ( DesignElementDataVector ) entity );
+        }
+
+        return super.persist( entity );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
+     */
+    @Override
+    public Object persistOrUpdate( Object entity ) {
+        if ( entity == null ) return null;
+        return super.persistOrUpdate( entity );
+    }
+
+    /**
+     * @param bioAssayDimensionService The bioAssayDimensionService to set.
+     */
+    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
+        this.bioAssayDimensionService = bioAssayDimensionService;
+    }
+
+    /**
+     * @param bioAssayService The bioAssayService to set.
+     */
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
+    }
+
+    /**
+     * @param bioMaterialService The bioMaterialService to set.
+     */
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
+
+    /**
+     * @param compoundService The compoundService to set.
+     */
+    public void setCompoundService( CompoundService compoundService ) {
+        this.compoundService = compoundService;
+    }
+
+    /**
+     * @param designElementDataVectorService The designElementDataVectorService to set.
+     */
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
+
+    /**
+     * @param experimentalDesignService the experimentalDesignService to set
+     */
+    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
+        this.experimentalDesignService = experimentalDesignService;
+    }
+
+    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
+        this.experimentalFactorService = experimentalFactorService;
+    }
+
+    /**
+     * @param expressionExperimentService The expressionExperimentService to set.
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param factorValueService The factorValueService to set.
+     */
+    public void setFactorValueService( FactorValueService factorValueService ) {
+        this.factorValueService = factorValueService;
+    }
+
     /**
      * @param bioAssayDimensionCache
      * @param vect
@@ -106,6 +206,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             vect.setBioAssayDimension( bAd );
         }
         return bioAssayDimensionCache.get( dimensionName );
+    }
+
+    private void clearCache() {
+        bioAssayDimensionCache.clear();
+        clearArrayDesignCache();
+        clearCommonCache();
     }
 
     /**
@@ -258,43 +364,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
-     */
-    @Override
-    public Object persist( Object entity ) {
-        if ( entity == null ) return null;
-
-        Object result;
-
-        if ( entity instanceof ExpressionExperiment ) {
-            clearCache();
-            result = persistExpressionExperiment( ( ExpressionExperiment ) entity );
-            return result;
-        } else if ( entity instanceof BioAssayDimension ) {
-            return persistBioAssayDimension( ( BioAssayDimension ) entity );
-        } else if ( entity instanceof BioMaterial ) {
-            return persistBioMaterial( ( BioMaterial ) entity );
-        } else if ( entity instanceof BioAssay ) {
-            return persistBioAssay( ( BioAssay ) entity );
-        } else if ( entity instanceof Compound ) {
-            return persistCompound( ( Compound ) entity );
-        } else if ( entity instanceof DesignElementDataVector ) {
-            return persistDesignElementDataVector( ( DesignElementDataVector ) entity );
-        }
-
-        return super.persist( entity );
-
-    }
-
-    private void clearCache() {
-        bioAssayDimensionCache.clear();
-        clearArrayDesignCache();
-        clearCommonCache();
     }
 
     /**
@@ -466,17 +535,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
-     */
-    @Override
-    public Object persistOrUpdate( Object entity ) {
-        if ( entity == null ) return null;
-        return super.persistOrUpdate( entity );
-    }
-
     /**
      * Handle persisting of the bioassays on the way to persisting the expression experiment.
      * 
@@ -573,66 +631,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             experimentalFactor.setFactorValues( factorValues );
             experimentalFactorService.update( experimentalFactor );
         }
-    }
-
-    /**
-     * @param bioAssayDimensionService The bioAssayDimensionService to set.
-     */
-    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
-        this.bioAssayDimensionService = bioAssayDimensionService;
-    }
-
-    /**
-     * @param bioAssayService The bioAssayService to set.
-     */
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
-    /**
-     * @param bioMaterialService The bioMaterialService to set.
-     */
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    /**
-     * @param compoundService The compoundService to set.
-     */
-    public void setCompoundService( CompoundService compoundService ) {
-        this.compoundService = compoundService;
-    }
-
-    /**
-     * @param designElementDataVectorService The designElementDataVectorService to set.
-     */
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
-    }
-
-    /**
-     * @param experimentalDesignService the experimentalDesignService to set
-     */
-    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
-        this.experimentalDesignService = experimentalDesignService;
-    }
-
-    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
-        this.experimentalFactorService = experimentalFactorService;
-    }
-
-    /**
-     * @param expressionExperimentService The expressionExperimentService to set.
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param factorValueService The factorValueService to set.
-     */
-    public void setFactorValueService( FactorValueService factorValueService ) {
-        this.factorValueService = factorValueService;
     }
 
 }

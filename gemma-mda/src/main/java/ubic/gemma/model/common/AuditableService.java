@@ -34,19 +34,19 @@ public interface AuditableService {
 
     /**
      * <p>
+     * Return a map of Auditables to AuditEvents for the given AuditEventType.
+     * </p>
+     */
+    public java.util.Map getLastAuditEvent( java.util.Collection auditables,
+            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type );
+
+    /**
+     * <p>
      * Returns the last AuditEvent of the specified type.
      * </p>
      */
     public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastAuditEvent(
             ubic.gemma.model.common.Auditable auditable,
-            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type );
-
-    /**
-     * <p>
-     * Return a map of Auditables to AuditEvents for the given AuditEventType.
-     * </p>
-     */
-    public java.util.Map getLastAuditEvent( java.util.Collection auditables,
             ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type );
 
     /**

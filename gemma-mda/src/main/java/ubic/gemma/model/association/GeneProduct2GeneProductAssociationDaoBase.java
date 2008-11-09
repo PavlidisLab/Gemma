@@ -76,49 +76,6 @@ public abstract class GeneProduct2GeneProductAssociationDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.association.GeneProduct2GeneProductAssociationDao#update(ubic.gemma.model.association.GeneProduct2GeneProductAssociation)
-     */
-    public void update(
-            ubic.gemma.model.association.GeneProduct2GeneProductAssociation geneProduct2GeneProductAssociation ) {
-        if ( geneProduct2GeneProductAssociation == null ) {
-            throw new IllegalArgumentException(
-                    "GeneProduct2GeneProductAssociation.update - 'geneProduct2GeneProductAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().update( geneProduct2GeneProductAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException(
-                    "GeneProduct2GeneProductAssociation.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.association.GeneProduct2GeneProductAssociation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.GeneProduct2GeneProductAssociationDao#remove(ubic.gemma.model.association.GeneProduct2GeneProductAssociation)
-     */
-    public void remove(
-            ubic.gemma.model.association.GeneProduct2GeneProductAssociation geneProduct2GeneProductAssociation ) {
-        if ( geneProduct2GeneProductAssociation == null ) {
-            throw new IllegalArgumentException(
-                    "GeneProduct2GeneProductAssociation.remove - 'geneProduct2GeneProductAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().delete( geneProduct2GeneProductAssociation );
-    }
-
-    /**
      * @see ubic.gemma.model.association.GeneProduct2GeneProductAssociationDao#remove(java.lang.Long)
      */
     @Override
@@ -146,6 +103,71 @@ public abstract class GeneProduct2GeneProductAssociationDaoBase extends
     }
 
     /**
+     * @see ubic.gemma.model.association.GeneProduct2GeneProductAssociationDao#remove(ubic.gemma.model.association.GeneProduct2GeneProductAssociation)
+     */
+    public void remove(
+            ubic.gemma.model.association.GeneProduct2GeneProductAssociation geneProduct2GeneProductAssociation ) {
+        if ( geneProduct2GeneProductAssociation == null ) {
+            throw new IllegalArgumentException(
+                    "GeneProduct2GeneProductAssociation.remove - 'geneProduct2GeneProductAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().delete( geneProduct2GeneProductAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException(
+                    "GeneProduct2GeneProductAssociation.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.association.GeneProduct2GeneProductAssociation ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.GeneProduct2GeneProductAssociationDao#update(ubic.gemma.model.association.GeneProduct2GeneProductAssociation)
+     */
+    public void update(
+            ubic.gemma.model.association.GeneProduct2GeneProductAssociation geneProduct2GeneProductAssociation ) {
+        if ( geneProduct2GeneProductAssociation == null ) {
+            throw new IllegalArgumentException(
+                    "GeneProduct2GeneProductAssociation.update - 'geneProduct2GeneProductAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().update( geneProduct2GeneProductAssociation );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.association.GeneProduct2GeneProductAssociation)} method. This method
+     * does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.association.GeneProduct2GeneProductAssociationDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.association.GeneProduct2GeneProductAssociation)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.association.GeneProduct2GeneProductAssociationDao</code>, please note that the
@@ -169,26 +191,6 @@ public abstract class GeneProduct2GeneProductAssociationDaoBase extends
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.association.GeneProduct2GeneProductAssociation)} method. This method
-     * does not instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.association.GeneProduct2GeneProductAssociationDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.association.GeneProduct2GeneProductAssociation)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

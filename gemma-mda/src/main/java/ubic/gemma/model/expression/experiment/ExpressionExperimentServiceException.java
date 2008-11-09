@@ -35,40 +35,6 @@ public class ExpressionExperimentServiceException extends java.lang.RuntimeExcep
     private static final long serialVersionUID = -5233628783939332140L;
 
     /**
-     * The default constructor for <code>ExpressionExperimentServiceException</code>.
-     */
-    public ExpressionExperimentServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>ExpressionExperimentServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public ExpressionExperimentServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>ExpressionExperimentServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public ExpressionExperimentServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>ExpressionExperimentServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public ExpressionExperimentServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class ExpressionExperimentServiceException extends java.lang.RuntimeExcep
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>ExpressionExperimentServiceException</code>.
+     */
+    public ExpressionExperimentServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>ExpressionExperimentServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public ExpressionExperimentServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>ExpressionExperimentServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public ExpressionExperimentServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>ExpressionExperimentServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public ExpressionExperimentServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

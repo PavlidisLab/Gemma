@@ -35,40 +35,6 @@ public class ReporterServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 3013735540238462736L;
 
     /**
-     * The default constructor for <code>ReporterServiceException</code>.
-     */
-    public ReporterServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>ReporterServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public ReporterServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>ReporterServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public ReporterServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>ReporterServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public ReporterServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class ReporterServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>ReporterServiceException</code>.
+     */
+    public ReporterServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>ReporterServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public ReporterServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>ReporterServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public ReporterServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>ReporterServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public ReporterServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

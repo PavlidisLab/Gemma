@@ -35,22 +35,7 @@ public interface TaxonService {
     /**
      * 
      */
-    public void update( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * 
-     */
-    public void remove( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Taxon findOrCreate( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * 
-     */
-    public java.util.Collection loadAll();
+    public ubic.gemma.model.genome.Taxon findByCommonName( java.lang.String commonName );
 
     /**
      * 
@@ -60,11 +45,26 @@ public interface TaxonService {
     /**
      * 
      */
-    public ubic.gemma.model.genome.Taxon findByCommonName( java.lang.String commonName );
+    public ubic.gemma.model.genome.Taxon findOrCreate( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * 
      */
     public ubic.gemma.model.genome.Taxon load( java.lang.Long id );
+
+    /**
+     * 
+     */
+    public java.util.Collection loadAll();
+
+    /**
+     * 
+     */
+    public void remove( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * 
+     */
+    public void update( ubic.gemma.model.genome.Taxon taxon );
 
 }

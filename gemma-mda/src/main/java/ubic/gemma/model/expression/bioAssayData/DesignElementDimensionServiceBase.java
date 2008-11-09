@@ -36,6 +36,20 @@ public abstract class DesignElementDimensionServiceBase implements
     private ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao designElementDimensionDao;
 
     /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService#findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
+     */
+    public ubic.gemma.model.expression.bioAssayData.DesignElementDimension findOrCreate(
+            final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
+        try {
+            return this.handleFindOrCreate( designElementDimension );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDimensionServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService.findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * Sets the reference to <code>designElementDimension</code>'s DAO.
      */
     public void setDesignElementDimensionDao(
@@ -51,42 +65,16 @@ public abstract class DesignElementDimensionServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService#findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
-     */
-    public ubic.gemma.model.expression.bioAssayData.DesignElementDimension findOrCreate(
-            final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
-        try {
-            return this.handleFindOrCreate( designElementDimension );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.DesignElementDimensionServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService.findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDimension)}
-     */
-    protected abstract ubic.gemma.model.expression.bioAssayData.DesignElementDimension handleFindOrCreate(
-            ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
+     * <code>locale</code>.
      * 
-     * @return the current principal
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     * @param locale the locale of the messages to retrieve.
      */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
+            final java.util.Locale locale ) {
+        return this.getMessages().getMessage( key, arguments, locale );
     }
 
     /**
@@ -99,8 +87,7 @@ public abstract class DesignElementDimensionServiceBase implements
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
      * 
      * @param key the key of the message in the messages.properties message bundle.
      * @param arguments any arguments to substitute when resolving the message.
@@ -110,16 +97,28 @@ public abstract class DesignElementDimensionServiceBase implements
     }
 
     /**
-     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
-     * <code>locale</code>.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     * @param locale the locale of the messages to retrieve.
+     * Gets the message source available to this service.
      */
-    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
-            final java.util.Locale locale ) {
-        return this.getMessages().getMessage( key, arguments, locale );
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
     }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for
+     * {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.DesignElementDimension)}
+     */
+    protected abstract ubic.gemma.model.expression.bioAssayData.DesignElementDimension handleFindOrCreate(
+            ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension )
+            throws java.lang.Exception;
 
 }

@@ -24,8 +24,8 @@ package ubic.gemma.model.expression.designElement;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.expression.designElement.ReporterService</code>, provides
- * access to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.expression.designElement.ReporterService</code>, provides access
+ * to all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.expression.designElement.ReporterService
@@ -35,17 +35,30 @@ public abstract class ReporterServiceBase implements ubic.gemma.model.expression
     private ubic.gemma.model.expression.designElement.ReporterDao reporterDao;
 
     /**
-     * Sets the reference to <code>reporter</code>'s DAO.
+     * @see ubic.gemma.model.expression.designElement.ReporterService#create(java.util.Collection)
      */
-    public void setReporterDao( ubic.gemma.model.expression.designElement.ReporterDao reporterDao ) {
-        this.reporterDao = reporterDao;
+    public java.util.Collection create( final java.util.Collection reporters ) {
+        try {
+            return this.handleCreate( reporters );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.designElement.ReporterServiceException(
+                    "Error performing 'ubic.gemma.model.expression.designElement.ReporterService.create(java.util.Collection reporters)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the reference to <code>reporter</code>'s DAO.
+     * @see ubic.gemma.model.expression.designElement.ReporterService#create(ubic.gemma.model.expression.designElement.Reporter)
      */
-    protected ubic.gemma.model.expression.designElement.ReporterDao getReporterDao() {
-        return this.reporterDao;
+    public ubic.gemma.model.expression.designElement.Reporter create(
+            final ubic.gemma.model.expression.designElement.Reporter reporter ) {
+        try {
+            return this.handleCreate( reporter );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.designElement.ReporterServiceException(
+                    "Error performing 'ubic.gemma.model.expression.designElement.ReporterService.create(ubic.gemma.model.expression.designElement.Reporter reporter)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -63,12 +76,6 @@ public abstract class ReporterServiceBase implements ubic.gemma.model.expression
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.expression.designElement.Reporter)}
-     */
-    protected abstract ubic.gemma.model.expression.designElement.Reporter handleFind(
-            ubic.gemma.model.expression.designElement.Reporter reporter ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.expression.designElement.ReporterService#findOrCreate(ubic.gemma.model.expression.designElement.Reporter)
      */
     public ubic.gemma.model.expression.designElement.Reporter findOrCreate(
@@ -81,12 +88,6 @@ public abstract class ReporterServiceBase implements ubic.gemma.model.expression
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.designElement.Reporter)}
-     */
-    protected abstract ubic.gemma.model.expression.designElement.Reporter handleFindOrCreate(
-            ubic.gemma.model.expression.designElement.Reporter reporter ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.designElement.ReporterService#remove(ubic.gemma.model.expression.designElement.Reporter)
@@ -102,84 +103,10 @@ public abstract class ReporterServiceBase implements ubic.gemma.model.expression
     }
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.designElement.Reporter)}
+     * Sets the reference to <code>reporter</code>'s DAO.
      */
-    protected abstract void handleRemove( ubic.gemma.model.expression.designElement.Reporter reporter )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.ReporterService#create(ubic.gemma.model.expression.designElement.Reporter)
-     */
-    public ubic.gemma.model.expression.designElement.Reporter create(
-            final ubic.gemma.model.expression.designElement.Reporter reporter ) {
-        try {
-            return this.handleCreate( reporter );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.designElement.ReporterServiceException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.ReporterService.create(ubic.gemma.model.expression.designElement.Reporter reporter)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.designElement.Reporter)}
-     */
-    protected abstract ubic.gemma.model.expression.designElement.Reporter handleCreate(
-            ubic.gemma.model.expression.designElement.Reporter reporter ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.ReporterService#create(java.util.Collection)
-     */
-    public java.util.Collection create( final java.util.Collection reporters ) {
-        try {
-            return this.handleCreate( reporters );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.designElement.ReporterServiceException(
-                    "Error performing 'ubic.gemma.model.expression.designElement.ReporterService.create(java.util.Collection reporters)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #create(java.util.Collection)}
-     */
-    protected abstract java.util.Collection handleCreate( java.util.Collection reporters ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    public void setReporterDao( ubic.gemma.model.expression.designElement.ReporterDao reporterDao ) {
+        this.reporterDao = reporterDao;
     }
 
     /**
@@ -194,5 +121,77 @@ public abstract class ReporterServiceBase implements ubic.gemma.model.expression
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Gets the reference to <code>reporter</code>'s DAO.
+     */
+    protected ubic.gemma.model.expression.designElement.ReporterDao getReporterDao() {
+        return this.reporterDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #create(java.util.Collection)}
+     */
+    protected abstract java.util.Collection handleCreate( java.util.Collection reporters ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.expression.designElement.Reporter)}
+     */
+    protected abstract ubic.gemma.model.expression.designElement.Reporter handleCreate(
+            ubic.gemma.model.expression.designElement.Reporter reporter ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.expression.designElement.Reporter)}
+     */
+    protected abstract ubic.gemma.model.expression.designElement.Reporter handleFind(
+            ubic.gemma.model.expression.designElement.Reporter reporter ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.designElement.Reporter)}
+     */
+    protected abstract ubic.gemma.model.expression.designElement.Reporter handleFindOrCreate(
+            ubic.gemma.model.expression.designElement.Reporter reporter ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.designElement.Reporter)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.expression.designElement.Reporter reporter )
+            throws java.lang.Exception;
 
 }

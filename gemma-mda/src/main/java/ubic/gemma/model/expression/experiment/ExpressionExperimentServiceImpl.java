@@ -41,7 +41,6 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -61,23 +60,17 @@ public class ExpressionExperimentServiceImpl extends
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    /**
-     * @param ids
-     * @param type
-     * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
-     *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
-     * @see AuditableDao.getLastAuditEvent and getLastTypedAuditEvents for faster methods.
-     */
-    private Map<Long, AuditEvent> getLastEvent( Collection<Long> ids, AuditEventType type ) {
+    public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
+        return this.getExpressionExperimentDao().findByQuantitationType( type );
+    }
 
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
-        AuditEvent last;
-        for ( ExpressionExperiment experiment : ees ) {
-            last = getLastAuditEvent( experiment, type );
-            lastEventMap.put( experiment.getId(), last );
-        }
-        return lastEventMap;
+    /*
+     * (non-Javadoc)
+     * @seeubic.gemma.model.expression.experiment.ExpressionExperimentService#getProcessedDataVectors(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment)
+     */
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
+        return this.getExpressionExperimentDao().getProcessedDataVectors( ee );
     }
 
     @Override
@@ -191,6 +184,11 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByBioMaterial( bm );
     }
 
+    @Override
+    protected Collection<ExpressionExperiment> handleFindByBioMaterials( Collection bioMaterials ) throws Exception {
+        return this.getExpressionExperimentDao().findByBioMaterials( bioMaterials );
+    }
+
     /*
      * (non-Javadoc)
      * @see
@@ -205,6 +203,11 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected ExpressionExperiment handleFindByFactorValue( FactorValue factorValue ) throws Exception {
         return this.getExpressionExperimentDao().findByFactorValue( factorValue );
+    }
+
+    @Override
+    protected Collection<ExpressionExperiment> handleFindByFactorValues( Collection factorValues ) throws Exception {
+        return this.getExpressionExperimentDao().findByFactorValues( factorValues );
     }
 
     /*
@@ -266,6 +269,11 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findOrCreate( expressionExperiment );
     }
 
+    @Override
+    protected Map handleGetAnnotationCounts( Collection ids ) throws Exception {
+        return this.getExpressionExperimentDao().getAnnotationCounts( ids );
+    }
+
     /*
      * (non-Javadoc)
      * @see
@@ -276,6 +284,11 @@ public class ExpressionExperimentServiceImpl extends
     protected Collection<ArrayDesign> handleGetArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
         return this.getExpressionExperimentDao().getArrayDesignsUsed( expressionExperiment );
     }
+
+    /*
+     * (non-Javadoc) This only returns 1 taxon, the 1st taxon as decided by the join which ever that is. The good news
+     * is as a buisness rule we only allow 1 taxon per EE.
+     */
 
     @Override
     protected Collection<Gene> handleGetAssayedGenes( ExpressionExperiment ee, Double rankThreshold ) throws Exception {
@@ -303,11 +316,6 @@ public class ExpressionExperimentServiceImpl extends
     protected long handleGetDesignElementDataVectorCountById( long id ) throws Exception {
         return this.getExpressionExperimentDao().getDesignElementDataVectorCountById( id );
     }
-
-    /*
-     * (non-Javadoc) This only returns 1 taxon, the 1st taxon as decided by the join which ever that is. The good news
-     * is as a buisness rule we only allow 1 taxon per EE.
-     */
 
     /*
      * (non-Javadoc)
@@ -426,6 +434,12 @@ public class ExpressionExperimentServiceImpl extends
         return troubleMap;
     }
 
+    //
+    // @Override
+    // protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
+    // return this.getExpressionExperimentDao().getMaskedPreferredQuantitationType( ee );
+    // }
+
     /*
      * (non-Javadoc)
      * @see
@@ -447,16 +461,9 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getPerTaxonCount();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPreferredDesignElementDataVectorCount
-     * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
     @Override
-    protected long handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
-            throws Exception {
-        return this.getExpressionExperimentDao().getProcessedExpressionVectorCount( expressionExperiment );
+    protected Map handleGetPopulatedFactorCounts( Collection ids ) throws Exception {
+        return this.getExpressionExperimentDao().getPopulatedFactorCounts( ids );
     }
 
     /*
@@ -478,11 +485,17 @@ public class ExpressionExperimentServiceImpl extends
         return preferredQuantitationTypes;
     }
 
-    //
-    // @Override
-    // protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
-    // return this.getExpressionExperimentDao().getMaskedPreferredQuantitationType( ee );
-    // }
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPreferredDesignElementDataVectorCount
+     * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected long handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
+            throws Exception {
+        return this.getExpressionExperimentDao().getProcessedExpressionVectorCount( expressionExperiment );
+    }
 
     /*
      * (non-Javadoc)
@@ -507,9 +520,26 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
+    protected Map /* <ExpressionExperiment, Collection<AuditEvent>> */handleGetSampleRemovalEvents(
+            Collection expressionExperiments ) throws Exception {
+        return this.getExpressionExperimentDao().getSampleRemovalEvents( expressionExperiments );
+    }
+
+    @Override
     protected Collection<DesignElementDataVector> handleGetSamplingOfVectors( QuantitationType quantitationType,
             Integer limit ) throws Exception {
         return this.getExpressionExperimentDao().getSamplingOfVectors( quantitationType, limit );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetSubSets(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
+     */
+    @Override
+    protected Collection handleGetSubSets( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getExpressionExperimentDao().getSubSets( expressionExperiment );
     }
 
     @Override
@@ -588,53 +618,22 @@ public class ExpressionExperimentServiceImpl extends
         this.getExpressionExperimentDao().update( expressionExperiment );
     }
 
-    @Override
-    protected Map handleGetAnnotationCounts( Collection ids ) throws Exception {
-        return this.getExpressionExperimentDao().getAnnotationCounts( ids );
-    }
-
-    @Override
-    protected Map handleGetPopulatedFactorCounts( Collection ids ) throws Exception {
-        return this.getExpressionExperimentDao().getPopulatedFactorCounts( ids );
-    }
-
-    @Override
-    protected Map /* <ExpressionExperiment, Collection<AuditEvent>> */handleGetSampleRemovalEvents(
-            Collection expressionExperiments ) throws Exception {
-        return this.getExpressionExperimentDao().getSampleRemovalEvents( expressionExperiments );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetSubSets(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
+    /**
+     * @param ids
+     * @param type
+     * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
+     *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     * @see AuditableDao.getLastAuditEvent and getLastTypedAuditEvents for faster methods.
      */
-    @Override
-    protected Collection handleGetSubSets( ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getExpressionExperimentDao().getSubSets( expressionExperiment );
-    }
+    private Map<Long, AuditEvent> getLastEvent( Collection<Long> ids, AuditEventType type ) {
 
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByBioMaterials( Collection bioMaterials ) throws Exception {
-        return this.getExpressionExperimentDao().findByBioMaterials( bioMaterials );
-    }
-
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByFactorValues( Collection factorValues ) throws Exception {
-        return this.getExpressionExperimentDao().findByFactorValues( factorValues );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @seeubic.gemma.model.expression.experiment.ExpressionExperimentService#getProcessedDataVectors(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment)
-     */
-    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
-        return this.getExpressionExperimentDao().getProcessedDataVectors( ee );
-    }
-
-    public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
-        return this.getExpressionExperimentDao().findByQuantitationType( type );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
+        AuditEvent last;
+        for ( ExpressionExperiment experiment : ees ) {
+            last = getLastAuditEvent( experiment, type );
+            lastEventMap.put( experiment.getId(), last );
+        }
+        return lastEventMap;
     }
 }

@@ -27,59 +27,23 @@ package ubic.gemma.model.expression.bioAssayData;
  */
 public interface BioAssayDataVectorDao extends ubic.gemma.model.expression.bioAssayData.DataVectorDao {
     /**
-     * Loads an instance of ubic.gemma.model.expression.bioAssayData.BioAssayDataVector from the persistent store.
-     */
-    public ubic.gemma.model.expression.bioAssayData.DataVector load( java.lang.Long id );
-
-    /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * Does the same thing as {@link #create(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
+     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
+     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities
+     * (into value objects for example). By default, transformation does not occur.
      * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
      */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.expression.bioAssayData.BioAssayDataVector}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Creates an instance of ubic.gemma.model.expression.bioAssayData.BioAssayDataVector and adds it to the persistent
-     * store.
-     */
-    public ubic.gemma.model.expression.bioAssayData.DataVector create(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
+    public java.util.Collection create( int transform, java.util.Collection entities );
 
     /**
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an
      * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined
-     * here then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entity (into a value object for example). By default, transformation does not occur.
+     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
+     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity
+     * (into a value object for example). By default, transformation does not occur.
      * </p>
      */
     public Object create( int transform, ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
@@ -95,46 +59,72 @@ public interface BioAssayDataVectorDao extends ubic.gemma.model.expression.bioAs
     public java.util.Collection create( java.util.Collection entities );
 
     /**
+     * Creates an instance of ubic.gemma.model.expression.bioAssayData.BioAssayDataVector and adds it to the persistent
+     * store.
+     */
+    public ubic.gemma.model.expression.bioAssayData.DataVector create(
+            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
+
+    /**
      * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined
-     * here then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
+     * Does the same thing as {@link #find(boolean, ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with
+     * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #find(int,
+     * ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector)}.
      * </p>
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
+    public Object find( int transform, String queryString,
+            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
 
     /**
-     * Updates the <code>bioAssayDataVector</code> instance in the persistent store.
+     * <p>
+     * Does the same thing as {@link #find(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
+     * </p>
      */
-    public void update( ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
+    public Object find( int transform, ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
 
     /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     * <p>
+     * Does the same thing as {@link #find(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #find(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)}.
+     * </p>
      */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.expression.bioAssayData.BioAssayDataVector from the persistent store.
-     */
-    public void remove( ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
-
-    /**
-     * Removes the instance of ubic.gemma.model.expression.bioAssayData.BioAssayDataVector having the given
-     * <code>identifier</code> from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
+    public ubic.gemma.model.expression.bioAssayData.BioAssayDataVector find( String queryString,
+            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDataVector findOrCreate(
+    public ubic.gemma.model.expression.bioAssayData.BioAssayDataVector find(
+            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
+
+    /**
+     * <p>
+     * Does the same thing as
+     * {@link #findOrCreate(boolean, ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #findOrCreate(int, ubic.gemma.model.expression.bioAssayData.BioAssayDataVector
+     * bioAssayDataVector)}.
+     * </p>
+     */
+    public Object findOrCreate( int transform, String queryString,
+            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object findOrCreate( int transform,
             ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
 
     /**
@@ -149,65 +139,75 @@ public interface BioAssayDataVectorDao extends ubic.gemma.model.expression.bioAs
             ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform,
-            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
-
-    /**
-     * <p>
-     * Does the same thing as
-     * {@link #findOrCreate(boolean, ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in
-     * {@link #findOrCreate(int, ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector)}.
-     * </p>
-     */
-    public Object findOrCreate( int transform, String queryString,
-            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
-
-    /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDataVector find(
+    public ubic.gemma.model.expression.bioAssayData.BioAssayDataVector findOrCreate(
             ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #find(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)}.
+     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
+     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
      * </p>
+     * 
+     * @param id the identifier of the entity to load.
+     * @return either the entity or the object transformed from the entity.
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDataVector find( String queryString,
-            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
+    public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.expression.bioAssayData.BioAssayDataVector from the persistent store.
+     */
+    public ubic.gemma.model.expression.bioAssayData.DataVector load( java.lang.Long id );
+
+    /**
+     * Loads all entities of type {@link ubic.gemma.model.expression.bioAssayData.BioAssayDataVector}.
+     * 
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll();
 
     /**
      * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * operation which can optionally transform the entity (into a value object for example). By default, transformation
+     * does not occur.
      * </p>
+     * 
+     * @param transform the flag indicating what transformation to use.
+     * @return the loaded entities.
      */
-    public Object find( int transform, ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
+    public java.util.Collection loadAll( final int transform );
 
     /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with
-     * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #find(int, ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector)}.
-     * </p>
+     * Removes the instance of ubic.gemma.model.expression.bioAssayData.BioAssayDataVector having the given
+     * <code>identifier</code> from the persistent store.
      */
-    public Object find( int transform, String queryString,
-            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
+    public void remove( java.lang.Long id );
+
+    /**
+     * Removes all entities in the given <code>entities<code> collection.
+     */
+    public void remove( java.util.Collection entities );
+
+    /**
+     * Removes the instance of ubic.gemma.model.expression.bioAssayData.BioAssayDataVector from the persistent store.
+     */
+    public void remove( ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
+
+    /**
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     */
+    public void update( java.util.Collection entities );
+
+    /**
+     * Updates the <code>bioAssayDataVector</code> instance in the persistent store.
+     */
+    public void update( ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
 
 }

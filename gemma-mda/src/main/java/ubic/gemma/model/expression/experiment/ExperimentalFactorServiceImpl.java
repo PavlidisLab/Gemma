@@ -27,38 +27,38 @@ package ubic.gemma.model.expression.experiment;
  */
 public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase {
 
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#getAllExperimentalFactors()
-     */
-    @Override
-    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
-        return this.getExperimentalFactorDao().loadAll();
-    }
-
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleCreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleCreate(ubic.gemma.model.expression
+     * .experiment.ExperimentalFactor)
      */
     @Override
     protected ExperimentalFactor handleCreate( ExperimentalFactor experimentalFactor ) throws Exception {
         return ( ExperimentalFactor ) this.getExperimentalFactorDao().create( experimentalFactor );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindByName(java.lang.String)
-     */
     @Override
-    protected ExperimentalFactor handleLoad( Long id ) throws Exception {
-        return ( ExperimentalFactor ) this.getExperimentalFactorDao().load( id );
+    protected void handleDelete( ExperimentalFactor experimentalFactor ) throws Exception {
+        this.getExperimentalFactorDao().remove( experimentalFactor );
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindOrcreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindOrcreate(ubic.gemma.model.expression
+     * .experiment.ExperimentalFactor)
+     */
+    @Override
+    protected ExperimentalFactor handleFind( ExperimentalFactor experimentalFactor ) throws Exception {
+        return this.getExperimentalFactorDao().find( experimentalFactor );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindOrcreate(ubic.gemma.model.expression
+     * .experiment.ExperimentalFactor)
      */
     @Override
     protected ExperimentalFactor handleFindOrCreate( ExperimentalFactor experimentalFactor ) throws Exception {
@@ -67,17 +67,19 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindOrcreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindByName(java.lang.String)
      */
     @Override
-    protected ExperimentalFactor handleFind( ExperimentalFactor experimentalFactor ) throws Exception {
-        return this.getExperimentalFactorDao().find( experimentalFactor );
+    protected ExperimentalFactor handleLoad( Long id ) throws Exception {
+        return ( ExperimentalFactor ) this.getExperimentalFactorDao().load( id );
     }
 
+    /**
+     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#getAllExperimentalFactors()
+     */
     @Override
-    protected void handleDelete( ExperimentalFactor experimentalFactor ) throws Exception {
-        this.getExperimentalFactorDao().remove( experimentalFactor );
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+        return this.getExperimentalFactorDao().loadAll();
     }
 
     @Override

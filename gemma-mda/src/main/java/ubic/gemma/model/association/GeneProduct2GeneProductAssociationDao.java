@@ -27,23 +27,23 @@ package ubic.gemma.model.association;
  */
 public interface GeneProduct2GeneProductAssociationDao extends ubic.gemma.model.association.RelationshipDao {
     /**
-     * Loads an instance of ubic.gemma.model.association.GeneProduct2GeneProductAssociation from the persistent store.
-     */
-    public ubic.gemma.model.association.Relationship load( java.lang.Long id );
-
-    /**
      * <p>
      * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
      * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
      * </p>
      * 
      * @param id the identifier of the entity to load.
      * @return either the entity or the object transformed from the entity.
      */
     public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.association.GeneProduct2GeneProductAssociation from the persistent store.
+     */
+    public ubic.gemma.model.association.Relationship load( java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.association.GeneProduct2GeneProductAssociation}.
@@ -54,9 +54,9 @@ public interface GeneProduct2GeneProductAssociationDao extends ubic.gemma.model.
 
     /**
      * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
      * operation which can optionally transform the entity (into a value object for example). By default, transformation
      * does not occur.
      * </p>
@@ -65,24 +65,6 @@ public interface GeneProduct2GeneProductAssociationDao extends ubic.gemma.model.
      * @return the loaded entities.
      */
     public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Updates the <code>geneProduct2GeneProductAssociation</code> instance in the persistent store.
-     */
-    public void update(
-            ubic.gemma.model.association.GeneProduct2GeneProductAssociation geneProduct2GeneProductAssociation );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.association.GeneProduct2GeneProductAssociation from the persistent
-     * store.
-     */
-    public void remove(
-            ubic.gemma.model.association.GeneProduct2GeneProductAssociation geneProduct2GeneProductAssociation );
 
     /**
      * Removes the instance of ubic.gemma.model.association.GeneProduct2GeneProductAssociation having the given
@@ -94,5 +76,23 @@ public interface GeneProduct2GeneProductAssociationDao extends ubic.gemma.model.
      * Removes all entities in the given <code>entities<code> collection.
      */
     public void remove( java.util.Collection entities );
+
+    /**
+     * Removes the instance of ubic.gemma.model.association.GeneProduct2GeneProductAssociation from the persistent
+     * store.
+     */
+    public void remove(
+            ubic.gemma.model.association.GeneProduct2GeneProductAssociation geneProduct2GeneProductAssociation );
+
+    /**
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     */
+    public void update( java.util.Collection entities );
+
+    /**
+     * Updates the <code>geneProduct2GeneProductAssociation</code> instance in the persistent store.
+     */
+    public void update(
+            ubic.gemma.model.association.GeneProduct2GeneProductAssociation geneProduct2GeneProductAssociation );
 
 }

@@ -28,6 +28,26 @@ package ubic.gemma.model.expression.bioAssay;
 public interface BioAssayService extends ubic.gemma.model.common.AuditableService {
 
     /**
+     * <p>
+     * Associates a bioMaterial with a specified bioAssay.
+     * </p>
+     */
+    public void addBioMaterialAssociation( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
+            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+
+    /**
+     * 
+     */
+    public java.lang.Integer countAll();
+
+    /**
+     * <p>
+     * Locate all BioAssayDimensions in which the selected BioAssay occurs
+     * </p>
+     */
+    public java.util.Collection findBioAssayDimensions( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+
+    /**
      * 
      */
     public ubic.gemma.model.expression.bioAssay.BioAssay findOrCreate(
@@ -41,7 +61,7 @@ public interface BioAssayService extends ubic.gemma.model.common.AuditableServic
     /**
      * 
      */
-    public void remove( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    public ubic.gemma.model.expression.bioAssay.BioAssay load( java.lang.Long id );
 
     /**
      * 
@@ -51,27 +71,7 @@ public interface BioAssayService extends ubic.gemma.model.common.AuditableServic
     /**
      * 
      */
-    public void update( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
-
-    /**
-     * <p>
-     * Locate all BioAssayDimensions in which the selected BioAssay occurs
-     * </p>
-     */
-    public java.util.Collection findBioAssayDimensions( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
-
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
-
-    /**
-     * <p>
-     * Associates a bioMaterial with a specified bioAssay.
-     * </p>
-     */
-    public void addBioMaterialAssociation( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+    public void remove( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
      * <p>
@@ -84,11 +84,11 @@ public interface BioAssayService extends ubic.gemma.model.common.AuditableServic
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssay.BioAssay load( java.lang.Long id );
+    public void thaw( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
      * 
      */
-    public void thaw( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    public void update( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
 }

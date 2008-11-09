@@ -24,8 +24,8 @@ package ubic.gemma.model.expression.experiment;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalFactorService</code>,
- * provides access to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalFactorService</code>, provides
+ * access to all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService
@@ -34,39 +34,6 @@ public abstract class ExperimentalFactorServiceBase extends ubic.gemma.model.com
         ubic.gemma.model.expression.experiment.ExperimentalFactorService {
 
     private ubic.gemma.model.expression.experiment.ExperimentalFactorDao experimentalFactorDao;
-
-    /**
-     * Sets the reference to <code>experimentalFactor</code>'s DAO.
-     */
-    public void setExperimentalFactorDao(
-            ubic.gemma.model.expression.experiment.ExperimentalFactorDao experimentalFactorDao ) {
-        this.experimentalFactorDao = experimentalFactorDao;
-    }
-
-    /**
-     * Gets the reference to <code>experimentalFactor</code>'s DAO.
-     */
-    protected ubic.gemma.model.expression.experiment.ExperimentalFactorDao getExperimentalFactorDao() {
-        return this.experimentalFactorDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#loadAll()
-     */
-    public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExperimentalFactorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalFactorService.loadAll()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#create(ubic.gemma.model.expression.experiment.ExperimentalFactor)
@@ -83,30 +50,17 @@ public abstract class ExperimentalFactorServiceBase extends ubic.gemma.model.com
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.ExperimentalFactor)}
+     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#delete(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalFactor handleCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)
-     */
-    public ubic.gemma.model.expression.experiment.ExperimentalFactor findOrCreate(
-            final ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
+    public void delete( final ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
         try {
-            return this.handleFindOrCreate( experimentalFactor );
+            this.handleDelete( experimentalFactor );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.experiment.ExperimentalFactorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalFactorService.findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor)' --> "
+                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalFactorService.delete(ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)}
-     */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalFactor handleFindOrCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#find(ubic.gemma.model.expression.experiment.ExperimentalFactor)
@@ -123,10 +77,18 @@ public abstract class ExperimentalFactorServiceBase extends ubic.gemma.model.com
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.expression.experiment.ExperimentalFactor)}
+     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalFactor handleFind(
-            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) throws java.lang.Exception;
+    public ubic.gemma.model.expression.experiment.ExperimentalFactor findOrCreate(
+            final ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
+        try {
+            return this.handleFindOrCreate( experimentalFactor );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.experiment.ExperimentalFactorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalFactorService.findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#load(java.lang.Long)
@@ -142,10 +104,25 @@ public abstract class ExperimentalFactorServiceBase extends ubic.gemma.model.com
     }
 
     /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
+     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#loadAll()
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalFactor handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
+    public java.util.Collection loadAll() {
+        try {
+            return this.handleLoadAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.experiment.ExperimentalFactorServiceException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalFactorService.loadAll()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>experimentalFactor</code>'s DAO.
+     */
+    public void setExperimentalFactorDao(
+            ubic.gemma.model.expression.experiment.ExperimentalFactorDao experimentalFactorDao ) {
+        this.experimentalFactorDao = experimentalFactorDao;
+    }
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#update(ubic.gemma.model.expression.experiment.ExperimentalFactor)
@@ -161,28 +138,51 @@ public abstract class ExperimentalFactorServiceBase extends ubic.gemma.model.com
     }
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.expression.experiment.ExperimentalFactor)}
+     * Gets the reference to <code>experimentalFactor</code>'s DAO.
      */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor )
-            throws java.lang.Exception;
+    protected ubic.gemma.model.expression.experiment.ExperimentalFactorDao getExperimentalFactorDao() {
+        return this.experimentalFactorDao;
+    }
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#delete(ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.ExperimentalFactor)}
      */
-    public void delete( final ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) {
-        try {
-            this.handleDelete( experimentalFactor );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExperimentalFactorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExperimentalFactorService.delete(ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor)' --> "
-                            + th, th );
-        }
-    }
+    protected abstract ubic.gemma.model.expression.experiment.ExperimentalFactor handleCreate(
+            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #delete(ubic.gemma.model.expression.experiment.ExperimentalFactor)}
      */
     protected abstract void handleDelete( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.expression.experiment.ExperimentalFactor)}
+     */
+    protected abstract ubic.gemma.model.expression.experiment.ExperimentalFactor handleFind(
+            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)}
+     */
+    protected abstract ubic.gemma.model.expression.experiment.ExperimentalFactor handleFindOrCreate(
+            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.expression.experiment.ExperimentalFactor handleLoad( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAll()}
+     */
+    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.expression.experiment.ExperimentalFactor)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor )
             throws java.lang.Exception;
 
 }

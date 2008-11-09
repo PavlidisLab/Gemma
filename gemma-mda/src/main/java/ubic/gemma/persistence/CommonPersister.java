@@ -117,7 +117,6 @@ abstract public class CommonPersister extends AbstractPersister {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
@@ -164,6 +163,13 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
         this.auditTrailService = auditTrailService;
+    }
+
+    /**
+     * @param bibliographicReferenceService the bibliographicReferenceService to set
+     */
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
     /**
@@ -251,14 +257,24 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param affiliation
-     * @return
+     * For clearing the cache.
      */
-    private Organization persistOrganization( Organization affiliation ) {
-        if ( affiliation == null ) return null;
-        if ( !isTransient( affiliation ) ) return affiliation;
-        affiliation.setParent( persistOrganization( affiliation.getParent() ) );
-        return ( Organization ) persistContact( affiliation );
+    protected void clearCommonCache() {
+        this.quantitationTypeCache.clear();
+    }
+
+    /**
+     * @param databaseEntry
+     */
+    protected void fillInDatabaseEntry( DatabaseEntry databaseEntry ) {
+        if ( !isTransient( databaseEntry ) ) return;
+        if ( databaseEntry == null ) return;
+        ExternalDatabase tempExternalDb = databaseEntry.getExternalDatabase();
+        databaseEntry.setExternalDatabase( null );
+        ExternalDatabase persistedDb = persistExternalDatabase( tempExternalDb );
+        databaseEntry.setExternalDatabase( persistedDb );
+
+        assert databaseEntry.getExternalDatabase().getId() != null;
     }
 
     /**
@@ -278,12 +294,6 @@ abstract public class CommonPersister extends AbstractPersister {
         for ( Hardware hardware : protocol.getHardwares() ) {
             hardware = persistHardware( hardware );
         }
-    }
-
-    protected Protocol persistProtocol( Protocol protocol ) {
-        if ( protocol == null ) return protocol;
-        fillInProtocol( protocol );
-        return protocolService.findOrCreate( protocol );
     }
 
     /**
@@ -386,20 +396,6 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param databaseEntry
-     */
-    protected void fillInDatabaseEntry( DatabaseEntry databaseEntry ) {
-        if ( !isTransient( databaseEntry ) ) return;
-        if ( databaseEntry == null ) return;
-        ExternalDatabase tempExternalDb = databaseEntry.getExternalDatabase();
-        databaseEntry.setExternalDatabase( null );
-        ExternalDatabase persistedDb = persistExternalDatabase( tempExternalDb );
-        databaseEntry.setExternalDatabase( persistedDb );
-
-        assert databaseEntry.getExternalDatabase().getId() != null;
-    }
-
-    /**
      * @param database
      */
     protected ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
@@ -470,6 +466,12 @@ abstract public class CommonPersister extends AbstractPersister {
             affiliation = persistOrganization( affiliation );
         }
         return this.personService.findOrCreate( person );
+    }
+
+    protected Protocol persistProtocol( Protocol protocol ) {
+        if ( protocol == null ) return protocol;
+        fillInProtocol( protocol );
+        return protocolService.findOrCreate( protocol );
     }
 
     /**
@@ -553,17 +555,14 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param bibliographicReferenceService the bibliographicReferenceService to set
+     * @param affiliation
+     * @return
      */
-    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
-    }
-
-    /**
-     * For clearing the cache.
-     */
-    protected void clearCommonCache() {
-        this.quantitationTypeCache.clear();
+    private Organization persistOrganization( Organization affiliation ) {
+        if ( affiliation == null ) return null;
+        if ( !isTransient( affiliation ) ) return affiliation;
+        affiliation.setParent( persistOrganization( affiliation.getParent() ) );
+        return ( Organization ) persistContact( affiliation );
     }
 
 }

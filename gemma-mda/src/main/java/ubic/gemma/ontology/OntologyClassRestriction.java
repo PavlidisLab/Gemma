@@ -27,5 +27,5 @@ public interface OntologyClassRestriction extends OntologyRestriction {
     public OntologyTerm getRestrictedTo();
 
     // FIXME make separate subclass use this.
-  //  public Object getRestrictedToValue();
+    // public Object getRestrictedToValue();
 }

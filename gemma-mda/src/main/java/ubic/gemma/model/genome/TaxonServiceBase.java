@@ -24,8 +24,8 @@ package ubic.gemma.model.genome;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.genome.TaxonService</code>, provides access to all services
- * and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.genome.TaxonService</code>, provides access to all services and
+ * entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.genome.TaxonService
@@ -33,20 +33,6 @@ package ubic.gemma.model.genome;
 public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonService {
 
     private ubic.gemma.model.genome.TaxonDao taxonDao;
-
-    /**
-     * Sets the reference to <code>taxon</code>'s DAO.
-     */
-    public void setTaxonDao( ubic.gemma.model.genome.TaxonDao taxonDao ) {
-        this.taxonDao = taxonDao;
-    }
-
-    /**
-     * Gets the reference to <code>taxon</code>'s DAO.
-     */
-    protected ubic.gemma.model.genome.TaxonDao getTaxonDao() {
-        return this.taxonDao;
-    }
 
     /**
      * @see ubic.gemma.model.genome.TaxonService#find(ubic.gemma.model.genome.Taxon)
@@ -62,82 +48,17 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.Taxon)}
+     * @see ubic.gemma.model.genome.TaxonService#findByCommonName(java.lang.String)
      */
-    protected abstract ubic.gemma.model.genome.Taxon handleFind( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonService#update(ubic.gemma.model.genome.Taxon)
-     */
-    public void update( final ubic.gemma.model.genome.Taxon taxon ) {
+    public ubic.gemma.model.genome.Taxon findByCommonName( final java.lang.String commonName ) {
         try {
-            this.handleUpdate( taxon );
+            return this.handleFindByCommonName( commonName );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.TaxonServiceException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonService.update(ubic.gemma.model.genome.Taxon taxon)' --> "
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findByCommonName(java.lang.String commonName)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonService#remove(ubic.gemma.model.genome.Taxon)
-     */
-    public void remove( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            this.handleRemove( taxon );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.TaxonServiceException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonService.remove(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonService#findOrCreate(ubic.gemma.model.genome.Taxon)
-     */
-    public ubic.gemma.model.genome.Taxon findOrCreate( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleFindOrCreate( taxon );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.TaxonServiceException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonService.findOrCreate(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract ubic.gemma.model.genome.Taxon handleFindOrCreate( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonService#loadAll()
-     */
-    public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.TaxonServiceException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonService.loadAll()' --> " + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.TaxonService#findByScientificName(java.lang.String)
@@ -153,29 +74,17 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
     }
 
     /**
-     * Performs the core logic for {@link #findByScientificName(java.lang.String)}
+     * @see ubic.gemma.model.genome.TaxonService#findOrCreate(ubic.gemma.model.genome.Taxon)
      */
-    protected abstract ubic.gemma.model.genome.Taxon handleFindByScientificName( java.lang.String scientificName )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonService#findByCommonName(java.lang.String)
-     */
-    public ubic.gemma.model.genome.Taxon findByCommonName( final java.lang.String commonName ) {
+    public ubic.gemma.model.genome.Taxon findOrCreate( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
-            return this.handleFindByCommonName( commonName );
+            return this.handleFindOrCreate( taxon );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.TaxonServiceException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonService.findByCommonName(java.lang.String commonName)' --> "
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findOrCreate(ubic.gemma.model.genome.Taxon taxon)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #findByCommonName(java.lang.String)}
-     */
-    protected abstract ubic.gemma.model.genome.Taxon handleFindByCommonName( java.lang.String commonName )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.TaxonService#load(java.lang.Long)
@@ -190,45 +99,48 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
     }
 
     /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
+     * @see ubic.gemma.model.genome.TaxonService#loadAll()
      */
-    protected abstract ubic.gemma.model.genome.Taxon handleLoad( java.lang.Long id ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public java.util.Collection loadAll() {
+        try {
+            return this.handleLoadAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.loadAll()' --> " + th, th );
+        }
     }
 
     /**
-     * Gets the message source available to this service.
+     * @see ubic.gemma.model.genome.TaxonService#remove(ubic.gemma.model.genome.Taxon)
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    public void remove( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            this.handleRemove( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.remove(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
+     * Sets the reference to <code>taxon</code>'s DAO.
      */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
+    public void setTaxonDao( ubic.gemma.model.genome.TaxonDao taxonDao ) {
+        this.taxonDao = taxonDao;
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
+     * @see ubic.gemma.model.genome.TaxonService#update(ubic.gemma.model.genome.Taxon)
      */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    public void update( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            this.handleUpdate( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.update(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -243,5 +155,92 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Gets the reference to <code>taxon</code>'s DAO.
+     */
+    protected ubic.gemma.model.genome.TaxonDao getTaxonDao() {
+        return this.taxonDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract ubic.gemma.model.genome.Taxon handleFind( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByCommonName(java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.genome.Taxon handleFindByCommonName( java.lang.String commonName )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByScientificName(java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.genome.Taxon handleFindByScientificName( java.lang.String scientificName )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract ubic.gemma.model.genome.Taxon handleFindOrCreate( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.genome.Taxon handleLoad( java.lang.Long id ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAll()}
+     */
+    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
 }

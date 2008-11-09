@@ -35,40 +35,6 @@ public class CompoundServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = -5336599441357935657L;
 
     /**
-     * The default constructor for <code>CompoundServiceException</code>.
-     */
-    public CompoundServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>CompoundServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public CompoundServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>CompoundServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public CompoundServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>CompoundServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public CompoundServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class CompoundServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>CompoundServiceException</code>.
+     */
+    public CompoundServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>CompoundServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public CompoundServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>CompoundServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public CompoundServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>CompoundServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public CompoundServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

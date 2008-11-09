@@ -26,7 +26,6 @@ import java.util.Map;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * @author pavlidis
@@ -37,24 +36,35 @@ public class DesignElementDataVectorServiceImpl extends
         ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase {
 
     @Override
-    protected void handleUpdate( DesignElementDataVector dedv ) throws Exception {
-        this.getDesignElementDataVectorDao().update( dedv );
+    protected Integer handleCountAll() throws Exception {
+        return this.getDesignElementDataVectorDao().countAll();
     }
 
     @Override
-    protected void handleUpdate( Collection dedvs ) throws Exception {
-        this.getDesignElementDataVectorDao().update( dedvs );
+    protected Collection handleCreate( Collection vectors ) throws Exception {
+        return this.getDesignElementDataVectorDao().create( vectors );
+    }
+
+    @Override
+    protected Collection handleFind( ArrayDesign arrayDesign, QuantitationType quantitationType ) throws Exception {
+        return this.getDesignElementDataVectorDao().find( arrayDesign, quantitationType );
+    }
+
+    @Override
+    protected Collection handleFind( Collection quantitationTypes ) throws Exception {
+        return this.getDesignElementDataVectorDao().find( quantitationTypes );
     }
 
     /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetPreferredVectors(java.util.Collection,
-     *      java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
+     * (non-Javadoc)R
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleFindAllForMatrix(ubic.gemma
+     * .model.expression.experiment.ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType,
+     * ubic.gemma.model.expression.designElement.DesignElement)
      */
     @Override
-    protected Map handleGetPreferredVectors( Collection ees, Collection genes ) throws Exception {
-        return this.getDesignElementDataVectorDao().getPreferredVectors( ees, genes );
+    protected Collection handleFind( QuantitationType quantitationType ) throws Exception {
+        return this.getDesignElementDataVectorDao().find( quantitationType );
     }
 
     @Override
@@ -64,63 +74,15 @@ public class DesignElementDataVectorServiceImpl extends
         return this.getDesignElementDataVectorDao().findOrCreate( designElementDataVector );
     }
 
-    @Override
-    protected void handleRemove( DesignElementDataVector designElementDataVector ) throws Exception {
-        this.getDesignElementDataVectorDao().remove( designElementDataVector );
-
-    }
-
-    @Override
-    protected Integer handleCountAll() throws Exception {
-        return this.getDesignElementDataVectorDao().countAll();
-    }
-
-    /*
-     * (non-Javadoc)R
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleFindAllForMatrix(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType,
-     *      ubic.gemma.model.expression.designElement.DesignElement)
-     */
-    @Override
-    protected Collection handleFind( QuantitationType quantitationType ) throws Exception {
-        return this.getDesignElementDataVectorDao().find( quantitationType );
-    }
-
-    @Override
-    protected void handleThaw( DesignElementDataVector designElementDataVector ) throws Exception {
-        this.getDesignElementDataVectorDao().thaw( designElementDataVector );
-    }
-
-    @Override
-    protected void handleThaw( Collection designElementDataVectors ) throws Exception {
-        this.getDesignElementDataVectorDao().thaw( designElementDataVectors );
-    }
-
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleRemoveDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetPreferredVectors(java.util
+     * .Collection, java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
-    protected void handleRemoveDataForCompositeSequence( CompositeSequence compositeSequence ) throws Exception {
-        this.getDesignElementDataVectorDao().removeDataForCompositeSequence( compositeSequence );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleRemoveDataForQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    @Override
-    protected void handleRemoveDataForQuantitationType( QuantitationType quantitationType ) throws Exception {
-        this.getDesignElementDataVectorDao().removeDataForQuantitationType( quantitationType );
-    }
-
-    @Override
-    protected Collection handleFind( Collection quantitationTypes ) throws Exception {
-        return this.getDesignElementDataVectorDao().find( quantitationTypes );
+    protected Map handleGetPreferredVectors( Collection ees, Collection genes ) throws Exception {
+        return this.getDesignElementDataVectorDao().getPreferredVectors( ees, genes );
     }
 
     @Override
@@ -129,18 +91,57 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected Collection handleCreate( Collection vectors ) throws Exception {
-        return this.getDesignElementDataVectorDao().create( vectors );
-    }
-
-    @Override
     protected void handleRemove( Collection vectors ) throws Exception {
         this.getDesignElementDataVectorDao().remove( vectors );
     }
 
     @Override
-    protected Collection handleFind( ArrayDesign arrayDesign, QuantitationType quantitationType ) throws Exception {
-        return this.getDesignElementDataVectorDao().find( arrayDesign, quantitationType );
+    protected void handleRemove( DesignElementDataVector designElementDataVector ) throws Exception {
+        this.getDesignElementDataVectorDao().remove( designElementDataVector );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleRemoveDataForCompositeSequence
+     * (ubic.gemma.model.expression.designElement.CompositeSequence)
+     */
+    @Override
+    protected void handleRemoveDataForCompositeSequence( CompositeSequence compositeSequence ) throws Exception {
+        this.getDesignElementDataVectorDao().removeDataForCompositeSequence( compositeSequence );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleRemoveDataForQuantitationType
+     * (ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     * ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
+    @Override
+    protected void handleRemoveDataForQuantitationType( QuantitationType quantitationType ) throws Exception {
+        this.getDesignElementDataVectorDao().removeDataForQuantitationType( quantitationType );
+    }
+
+    @Override
+    protected void handleThaw( Collection designElementDataVectors ) throws Exception {
+        this.getDesignElementDataVectorDao().thaw( designElementDataVectors );
+    }
+
+    @Override
+    protected void handleThaw( DesignElementDataVector designElementDataVector ) throws Exception {
+        this.getDesignElementDataVectorDao().thaw( designElementDataVector );
+    }
+
+    @Override
+    protected void handleUpdate( Collection dedvs ) throws Exception {
+        this.getDesignElementDataVectorDao().update( dedvs );
+    }
+
+    @Override
+    protected void handleUpdate( DesignElementDataVector dedv ) throws Exception {
+        this.getDesignElementDataVectorDao().update( dedv );
     }
 
 }

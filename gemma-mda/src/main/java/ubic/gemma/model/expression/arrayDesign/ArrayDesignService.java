@@ -32,216 +32,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface ArrayDesignService extends ubic.gemma.model.common.AuditableService {
 
     /**
-     * 
-     */
-    public java.util.Collection<ArrayDesign> loadAll();
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findOrCreate(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public void remove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByName( java.lang.String name );
-
-    /**
-     * 
-     */
-    public void update( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign find(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public java.lang.Integer getCompositeSequenceCount( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public java.lang.Integer getReporterCount( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign create(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public java.util.Collection<CompositeSequence> loadCompositeSequences(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign load( long id );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long id );
-
-    /**
-     * 
-     */
-    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( java.lang.Long id );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByShortName( java.lang.String shortName );
-
-    /**
-     * 
-     */
-    public void thaw( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
-
-    /**
-     * <p>
-     * returns the number of bioSequences associated with this ArrayDesign id
-     * </p>
-     */
-    public long numBioSequences( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * returns the number of BlatResults (BioSequence2GeneProduct) entries associated with this ArrayDesign id.
-     * </p>
-     */
-    public long numBlatResults( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * Returns the number of unique Genes associated with this ArrayDesign id
-     * </p>
-     */
-    public long numGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public java.util.Collection<ExpressionExperiment> getExpressionExperiments(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public long numCompositeSequenceWithBioSequences( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public long numCompositeSequenceWithBlatResults( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * 
-     */
-    public long numCompositeSequenceWithGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * deletes the gene product associations on the specified array design
-     * </p>
-     */
-    public void deleteGeneProductAssociations( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * delete sequence alignment results associated with the bioSequences for this array design.
-     * </p>
-     */
-    public void deleteAlignmentData( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * loads the Value Objects for the Array Designs specified by the input ids.
-     * </p>
-     */
-    public java.util.Collection<ArrayDesignValueObject> loadValueObjects( java.util.Collection<Long> ids );
-
-    /**
-     * <p>
-     * loads all Array designs as value objects.
-     * </p>
-     */
-    public java.util.Collection<ArrayDesignValueObject> loadAllValueObjects();
-
-    /**
-     * <p>
-     * Function to return a count of all compositeSequences with bioSequence associations
-     * </p>
-     */
-    public long numAllCompositeSequenceWithBioSequences();
-
-    /**
-     * <p>
-     * Function to return all composite sequences with blat results
-     * </p>
-     */
-    public long numAllCompositeSequenceWithBlatResults();
-
-    /**
-     * <p>
-     * Function to return a count of all composite sequences with associated genes.
-     * </p>
-     */
-    public long numAllCompositeSequenceWithGenes();
-
-    /**
-     * <p>
-     * Returns a count of the number of genes associated with all arrayDesigns
-     * </p>
-     */
-    public long numAllGenes();
-
-    /**
-     * <p>
-     * Function to return the count of all composite sequences with biosequences, given a list of array design Ids
-     * </p>
-     */
-    public long numAllCompositeSequenceWithBioSequences( java.util.Collection<Long> ids );
-
-    /**
-     * <p>
-     * Function to return the count of all composite sequences with blat results, given a list of array design Ids
-     * </p>
-     */
-    public long numAllCompositeSequenceWithBlatResults( java.util.Collection<Long> ids );
-
-    /**
-     * <p>
-     * Function to return the count of all composite sequences with genes, given a list of array design Ids
-     * </p>
-     */
-    public long numAllCompositeSequenceWithGenes( java.util.Collection<Long> ids );
-
-    /**
-     * <p>
-     * Returns the number of unique Genes associated with the collection of ArrayDesign ids.
-     * </p>
-     */
-    public long numAllGenes( java.util.Collection<Long> ids );
-
-    /**
      * <p>
      * returns all compositeSequences for the given arrayDesign that do not have any bioSequence associations.
      * </p>
@@ -266,35 +56,72 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
-     * <p>
-     * function to get the number of composite sequences that are aligned to a probe-mapped region.
-     * </p>
+     * 
      */
-    public long numCompositeSequenceWithProbeAlignedRegion(
+    public java.lang.Integer countAll();
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign create(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * <p>
-     * function to get the number of composite sequences that are aligned to a predicted gene
+     * delete sequence alignment results associated with the bioSequences for this array design.
      * </p>
      */
-    public long numCompositeSequenceWithPredictedGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public void deleteAlignmentData( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * <p>
-     * Gets the AuditEvents of the latest sequence analyses for the specified array design ids. This returns a map of id
-     * -> AuditEvent. If the events do not exist, the map entry will point to null.
+     * deletes the gene product associations on the specified array design
      * </p>
      */
-    public java.util.Map getLastSequenceAnalysis( java.util.Collection<Long> ids );
+    public void deleteGeneProductAssociations( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
-     * <p>
-     * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id ->
-     * AuditEvent. If the events do not exist, the map entry will point to null.
-     * </p>
+     * 
      */
-    public java.util.Map getLastGeneMapping( java.util.Collection<Long> ids );
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign find(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * 
+     */
+    public java.util.Collection<ArrayDesign> findByAlternateName( java.lang.String queryString );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByName( java.lang.String name );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByShortName( java.lang.String shortName );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findOrCreate(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * 
+     */
+    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( java.lang.Long id );
+
+    /**
+     * 
+     */
+    public java.lang.Integer getCompositeSequenceCount( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * 
+     */
+    public java.util.Collection<ExpressionExperiment> getExpressionExperiments(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -306,6 +133,27 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
 
     /**
      * <p>
+     * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id ->
+     * AuditEvent. If the events do not exist, the map entry will point to null.
+     * </p>
+     */
+    public java.util.Map getLastGeneMapping( java.util.Collection<Long> ids );
+
+    /**
+     * 
+     */
+    public java.util.Map getLastRepeatAnalysis( java.util.Collection<Long> ids );
+
+    /**
+     * <p>
+     * Gets the AuditEvents of the latest sequence analyses for the specified array design ids. This returns a map of id
+     * -> AuditEvent. If the events do not exist, the map entry will point to null.
+     * </p>
+     */
+    public java.util.Map getLastSequenceAnalysis( java.util.Collection<Long> ids );
+
+    /**
+     * <p>
      * Gets the AuditEvents of the latest sequence update for the specified array design ids. This returns a map of id
      * -> AuditEvent. If the events do not exist, the map entry will point to null.
      * </p>
@@ -313,14 +161,39 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     public java.util.Map getLastSequenceUpdate( java.util.Collection<Long> ids );
 
     /**
-     * <p>
-     * Test whether the candidateSubsumer subsumes the candidateSubsumee. If so, the array designs are updated to
-     * reflect this fact. The boolean value returned indicates whether there was indeed a subsuming relationship found.
-     * </p>
+     * 
      */
-    public java.lang.Boolean updateSubsumingStatus(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumer,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumee );
+    public java.util.Map getLastTroubleEvent( java.util.Collection<Long> ids );
+
+    /**
+     * 
+     */
+    public java.util.Map getLastValidationEvent( java.util.Collection<Long> ids );
+
+    /**
+     * 
+     */
+    public java.lang.Integer getReporterCount( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long id );
+
+    /**
+     * 
+     */
+    public java.util.Map isMerged( java.util.Collection<Long> ids );
+
+    /**
+     * 
+     */
+    public java.util.Map isMergee( java.util.Collection<Long> ids );
+
+    /**
+     * 
+     */
+    public java.util.Map isSubsumed( java.util.Collection<Long> ids );
 
     /**
      * 
@@ -330,7 +203,25 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.util.Map isSubsumed( java.util.Collection<Long> ids );
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign load( long id );
+
+    /**
+     * 
+     */
+    public java.util.Collection<ArrayDesign> loadAll();
+
+    /**
+     * <p>
+     * loads all Array designs as value objects.
+     * </p>
+     */
+    public java.util.Collection<ArrayDesignValueObject> loadAllValueObjects();
+
+    /**
+     * 
+     */
+    public java.util.Collection<CompositeSequence> loadCompositeSequences(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -341,25 +232,129 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
 
     /**
      * <p>
-     * Perform a less intensive thaw of an array design.
+     * Given a collection of ID (longs) will return a collection of ArrayDesigns
      * </p>
      */
-    public void thawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public java.util.Collection<ArrayDesign> loadMultiple( java.util.Collection<Long> ids );
+
+    /**
+     * <p>
+     * loads the Value Objects for the Array Designs specified by the input ids.
+     * </p>
+     */
+    public java.util.Collection<ArrayDesignValueObject> loadValueObjects( java.util.Collection<Long> ids );
+
+    /**
+     * <p>
+     * Function to return a count of all compositeSequences with bioSequence associations
+     * </p>
+     */
+    public long numAllCompositeSequenceWithBioSequences();
+
+    /**
+     * <p>
+     * Function to return the count of all composite sequences with biosequences, given a list of array design Ids
+     * </p>
+     */
+    public long numAllCompositeSequenceWithBioSequences( java.util.Collection<Long> ids );
+
+    /**
+     * <p>
+     * Function to return all composite sequences with blat results
+     * </p>
+     */
+    public long numAllCompositeSequenceWithBlatResults();
+
+    /**
+     * <p>
+     * Function to return the count of all composite sequences with blat results, given a list of array design Ids
+     * </p>
+     */
+    public long numAllCompositeSequenceWithBlatResults( java.util.Collection<Long> ids );
+
+    /**
+     * <p>
+     * Function to return a count of all composite sequences with associated genes.
+     * </p>
+     */
+    public long numAllCompositeSequenceWithGenes();
+
+    /**
+     * <p>
+     * Function to return the count of all composite sequences with genes, given a list of array design Ids
+     * </p>
+     */
+    public long numAllCompositeSequenceWithGenes( java.util.Collection<Long> ids );
+
+    /**
+     * <p>
+     * Returns a count of the number of genes associated with all arrayDesigns
+     * </p>
+     */
+    public long numAllGenes();
+
+    /**
+     * <p>
+     * Returns the number of unique Genes associated with the collection of ArrayDesign ids.
+     * </p>
+     */
+    public long numAllGenes( java.util.Collection<Long> ids );
+
+    /**
+     * <p>
+     * returns the number of bioSequences associated with this ArrayDesign id
+     * </p>
+     */
+    public long numBioSequences( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * <p>
+     * returns the number of BlatResults (BioSequence2GeneProduct) entries associated with this ArrayDesign id.
+     * </p>
+     */
+    public long numBlatResults( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    public java.util.Map isMergee( java.util.Collection<Long> ids );
+    public long numCompositeSequenceWithBioSequences( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    public java.util.Map isMerged( java.util.Collection<Long> ids );
+    public long numCompositeSequenceWithBlatResults( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    public java.util.Map getLastRepeatAnalysis( java.util.Collection<Long> ids );
+    public long numCompositeSequenceWithGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * <p>
+     * function to get the number of composite sequences that are aligned to a predicted gene
+     * </p>
+     */
+    public long numCompositeSequenceWithPredictedGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * <p>
+     * function to get the number of composite sequences that are aligned to a probe-mapped region.
+     * </p>
+     */
+    public long numCompositeSequenceWithProbeAlignedRegion(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * <p>
+     * Returns the number of unique Genes associated with this ArrayDesign id
+     * </p>
+     */
+    public long numGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * 
+     */
+    public void remove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -375,23 +370,28 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.util.Map getLastTroubleEvent( java.util.Collection<Long> ids );
-
-    /**
-     * 
-     */
-    public java.util.Map getLastValidationEvent( java.util.Collection<Long> ids );
+    public void thaw( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * <p>
-     * Given a collection of ID (longs) will return a collection of ArrayDesigns
+     * Perform a less intensive thaw of an array design.
      * </p>
      */
-    public java.util.Collection<ArrayDesign> loadMultiple( java.util.Collection<Long> ids );
+    public void thawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    public java.util.Collection<ArrayDesign> findByAlternateName( java.lang.String queryString );
+    public void update( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * <p>
+     * Test whether the candidateSubsumer subsumes the candidateSubsumee. If so, the array designs are updated to
+     * reflect this fact. The boolean value returned indicates whether there was indeed a subsuming relationship found.
+     * </p>
+     */
+    public java.lang.Boolean updateSubsumingStatus(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumer,
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumee );
 
 }

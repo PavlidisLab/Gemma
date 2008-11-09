@@ -34,172 +34,6 @@ public abstract class ChromosomeFeatureDaoBase extends ubic.gemma.model.common.A
         ubic.gemma.model.genome.ChromosomeFeatureDao {
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#load(int, java.lang.Long)
-     */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ChromosomeFeature.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.genome.ChromosomeFeatureImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.genome.ChromosomeFeature ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.genome.ChromosomeFeature ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.genome.ChromosomeFeatureImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#update(ubic.gemma.model.genome.ChromosomeFeature)
-     */
-    public void update( ubic.gemma.model.genome.ChromosomeFeature chromosomeFeature ) {
-        if ( chromosomeFeature == null ) {
-            throw new IllegalArgumentException( "ChromosomeFeature.update - 'chromosomeFeature' can not be null" );
-        }
-        this.getHibernateTemplate().update( chromosomeFeature );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ChromosomeFeature.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.ChromosomeFeature ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#remove(ubic.gemma.model.genome.ChromosomeFeature)
-     */
-    public void remove( ubic.gemma.model.genome.ChromosomeFeature chromosomeFeature ) {
-        if ( chromosomeFeature == null ) {
-            throw new IllegalArgumentException( "ChromosomeFeature.remove - 'chromosomeFeature' can not be null" );
-        }
-        this.getHibernateTemplate().delete( chromosomeFeature );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ChromosomeFeature.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.genome.ChromosomeFeature entity = ( ubic.gemma.model.genome.ChromosomeFeature ) this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ChromosomeFeature.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
-     */
-    public java.util.Collection findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location ) {
-        return this.findByPhysicalLocation( TRANSFORM_NONE, location );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(java.lang.String,
-     *      ubic.gemma.model.genome.PhysicalLocation)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByPhysicalLocation( final java.lang.String queryString,
-            final ubic.gemma.model.genome.PhysicalLocation location ) {
-        return this.findByPhysicalLocation( TRANSFORM_NONE, queryString, location );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(int,
-     *      ubic.gemma.model.genome.PhysicalLocation)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByPhysicalLocation( final int transform,
-            final ubic.gemma.model.genome.PhysicalLocation location ) {
-        return this
-                .findByPhysicalLocation(
-                        transform,
-                        "from ubic.gemma.model.genome.ChromosomeFeature as chromosomeFeature where chromosomeFeature.location = :location",
-                        location );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(int, java.lang.String,
-     *      ubic.gemma.model.genome.PhysicalLocation)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByPhysicalLocation( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.genome.PhysicalLocation location ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( location );
-        argNames.add( "location" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByNcbiId(java.lang.String)
-     */
-    public java.util.Collection findByNcbiId( java.lang.String ncbiId ) {
-        return this.findByNcbiId( TRANSFORM_NONE, ncbiId );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByNcbiId(java.lang.String, java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
-        return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByNcbiId(int, java.lang.String)
      */
     @SuppressWarnings( { "unchecked" })
@@ -224,20 +58,242 @@ public abstract class ChromosomeFeatureDaoBase extends ubic.gemma.model.common.A
     }
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getRecipient(java.lang.Long)
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByNcbiId(java.lang.String)
      */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
+    public java.util.Collection findByNcbiId( java.lang.String ncbiId ) {
+        return this.findByNcbiId( TRANSFORM_NONE, ncbiId );
     }
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getRecipient(java.lang.String, java.lang.Long)
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByNcbiId(java.lang.String, java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
+        return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(int, java.lang.String,
+     *      ubic.gemma.model.genome.PhysicalLocation)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByPhysicalLocation( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.genome.PhysicalLocation location ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( location );
+        argNames.add( "location" );
+        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() );
+        transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(int,
+     *      ubic.gemma.model.genome.PhysicalLocation)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByPhysicalLocation( final int transform,
+            final ubic.gemma.model.genome.PhysicalLocation location ) {
+        return this
+                .findByPhysicalLocation(
+                        transform,
+                        "from ubic.gemma.model.genome.ChromosomeFeature as chromosomeFeature where chromosomeFeature.location = :location",
+                        location );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(java.lang.String,
+     *      ubic.gemma.model.genome.PhysicalLocation)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByPhysicalLocation( final java.lang.String queryString,
+            final ubic.gemma.model.genome.PhysicalLocation location ) {
+        return this.findByPhysicalLocation( TRANSFORM_NONE, queryString, location );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
+     */
+    public java.util.Collection findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location ) {
+        return this.findByPhysicalLocation( TRANSFORM_NONE, location );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getAclObjectIdentityId(int, java.lang.String,
+     *      ubic.gemma.model.common.Securable)
      */
     @Override
     @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
+    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.genome.ChromosomeFeature ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getAclObjectIdentityId(int, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
+        return this
+                .getAclObjectIdentityId(
+                        transform,
+                        "from ubic.gemma.model.genome.ChromosomeFeature as chromosomeFeature where chromosomeFeature.securable = :securable",
+                        securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getAclObjectIdentityId(java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     */
+    @Override
+    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMask(int, java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMask( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.genome.ChromosomeFeature ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMask(int, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
+        return this
+                .getMask(
+                        transform,
+                        "from ubic.gemma.model.genome.ChromosomeFeature as chromosomeFeature where chromosomeFeature.securable = :securable",
+                        securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMask(java.lang.String, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.Integer getMask( final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMask(ubic.gemma.model.common.Securable)
+     */
+    @Override
+    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMasks(int, java.lang.String, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMasks( final int transform, final java.lang.String queryString,
+            final java.util.Collection securables ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securables );
+        argNames.add( "securables" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.genome.ChromosomeFeature ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMasks(int, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMasks( final int transform, final java.util.Collection securables ) {
+        return this
+                .getMasks(
+                        transform,
+                        "from ubic.gemma.model.genome.ChromosomeFeature as chromosomeFeature where chromosomeFeature.securables = :securables",
+                        securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMasks(java.lang.String, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
+        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMasks(java.util.Collection)
+     */
+    @Override
+    public java.util.Map getMasks( java.util.Collection securables ) {
+        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
     }
 
     /**
@@ -278,187 +334,152 @@ public abstract class ChromosomeFeatureDaoBase extends ubic.gemma.model.common.A
     }
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getRecipient(java.lang.Long)
      */
     @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
+    public java.lang.String getRecipient( java.lang.Long id ) {
+        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
     }
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getRecipient(java.lang.String, java.lang.Long)
      */
     @Override
     @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
+        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
     }
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getAclObjectIdentityId(int, ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#load(int, java.lang.Long)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.genome.ChromosomeFeature as chromosomeFeature where chromosomeFeature.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public Object load( final int transform, final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ChromosomeFeature.load - 'id' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.ChromosomeFeature ) result );
-        return result;
+        final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.genome.ChromosomeFeatureImpl.class, id );
+        return transformEntity( transform, ( ubic.gemma.model.genome.ChromosomeFeature ) entity );
     }
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMask(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#load(java.lang.Long)
      */
     @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
+    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
+        return ( ubic.gemma.model.genome.ChromosomeFeature ) this.load( TRANSFORM_NONE, id );
     }
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMask(java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMask(int, ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#loadAll()
      */
     @Override
     @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.genome.ChromosomeFeature as chromosomeFeature where chromosomeFeature.securable = :securable",
-                        securable );
+    public java.util.Collection loadAll() {
+        return this.loadAll( TRANSFORM_NONE );
     }
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#loadAll(int)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public java.util.Collection loadAll( final int transform ) {
+        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.genome.ChromosomeFeatureImpl.class );
+        this.transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#remove(java.lang.Long)
+     */
+    @Override
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ChromosomeFeature.remove - 'id' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.ChromosomeFeature ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.genome.ChromosomeFeature as chromosomeFeature where chromosomeFeature.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        ubic.gemma.model.genome.ChromosomeFeature entity = ( ubic.gemma.model.genome.ChromosomeFeature ) this.load( id );
+        if ( entity != null ) {
+            this.remove( entity );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.ChromosomeFeature ) result );
-        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     */
+    @Override
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ChromosomeFeature.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#remove(ubic.gemma.model.genome.ChromosomeFeature)
+     */
+    public void remove( ubic.gemma.model.genome.ChromosomeFeature chromosomeFeature ) {
+        if ( chromosomeFeature == null ) {
+            throw new IllegalArgumentException( "ChromosomeFeature.remove - 'chromosomeFeature' can not be null" );
+        }
+        this.getHibernateTemplate().delete( chromosomeFeature );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ChromosomeFeature.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.genome.ChromosomeFeature ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeFeatureDao#update(ubic.gemma.model.genome.ChromosomeFeature)
+     */
+    public void update( ubic.gemma.model.genome.ChromosomeFeature chromosomeFeature ) {
+        if ( chromosomeFeature == null ) {
+            throw new IllegalArgumentException( "ChromosomeFeature.update - 'chromosomeFeature' can not be null" );
+        }
+        this.getHibernateTemplate().update( chromosomeFeature );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.genome.ChromosomeFeature)} method. This method does not instantiate
+     * a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.ChromosomeFeatureDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.ChromosomeFeature)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.genome.ChromosomeFeatureDao</code>, please note that the {@link #TRANSFORM_NONE}
-     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
-     * unknown {@link #TRANSFORM_NONE} is assumed.
+     * <code>ubic.gemma.model.genome.ChromosomeFeatureDao</code>, please note that the {@link #TRANSFORM_NONE} constant
+     * denotes no transformation, so the entity itself will be returned. If the integer argument value is unknown
+     * {@link #TRANSFORM_NONE} is assumed.
      * 
      * @param transform one of the constants declared in {@link ubic.gemma.model.genome.ChromosomeFeatureDao}
      * @param entity an entity that was found
@@ -475,25 +496,6 @@ public abstract class ChromosomeFeatureDaoBase extends ubic.gemma.model.common.A
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.genome.ChromosomeFeature)} method. This method does not instantiate
-     * a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.ChromosomeFeatureDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.ChromosomeFeature)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

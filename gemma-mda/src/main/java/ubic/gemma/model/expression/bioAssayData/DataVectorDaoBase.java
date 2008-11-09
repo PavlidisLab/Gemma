@@ -71,43 +71,6 @@ public abstract class DataVectorDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#update(ubic.gemma.model.expression.bioAssayData.DataVector)
-     */
-    public void update( ubic.gemma.model.expression.bioAssayData.DataVector dataVector ) {
-        if ( dataVector == null ) {
-            throw new IllegalArgumentException( "DataVector.update - 'dataVector' can not be null" );
-        }
-        this.getHibernateTemplate().update( dataVector );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DataVector.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.bioAssayData.DataVector ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#remove(ubic.gemma.model.expression.bioAssayData.DataVector)
-     */
-    public void remove( ubic.gemma.model.expression.bioAssayData.DataVector dataVector ) {
-        if ( dataVector == null ) {
-            throw new IllegalArgumentException( "DataVector.remove - 'dataVector' can not be null" );
-        }
-        this.getHibernateTemplate().delete( dataVector );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -131,11 +94,69 @@ public abstract class DataVectorDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
+     * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#remove(ubic.gemma.model.expression.bioAssayData.DataVector)
+     */
+    public void remove( ubic.gemma.model.expression.bioAssayData.DataVector dataVector ) {
+        if ( dataVector == null ) {
+            throw new IllegalArgumentException( "DataVector.remove - 'dataVector' can not be null" );
+        }
+        this.getHibernateTemplate().delete( dataVector );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "DataVector.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.expression.bioAssayData.DataVector ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#update(ubic.gemma.model.expression.bioAssayData.DataVector)
+     */
+    public void update( ubic.gemma.model.expression.bioAssayData.DataVector dataVector ) {
+        if ( dataVector == null ) {
+            throw new IllegalArgumentException( "DataVector.update - 'dataVector' can not be null" );
+        }
+        this.getHibernateTemplate().update( dataVector );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.expression.bioAssayData.DataVector)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.expression.bioAssayData.DataVectorDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.expression.bioAssayData.DataVector)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.expression.bioAssayData.DataVectorDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
-     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
+     * <code>ubic.gemma.model.expression.bioAssayData.DataVectorDao</code>, please note that the {@link #TRANSFORM_NONE}
+     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
+     * unknown {@link #TRANSFORM_NONE} is assumed.
      * 
      * @param transform one of the constants declared in {@link ubic.gemma.model.expression.bioAssayData.DataVectorDao}
      * @param entity an entity that was found
@@ -153,25 +174,6 @@ public abstract class DataVectorDaoBase extends org.springframework.orm.hibernat
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.expression.bioAssayData.DataVector)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.expression.bioAssayData.DataVectorDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.expression.bioAssayData.DataVector)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

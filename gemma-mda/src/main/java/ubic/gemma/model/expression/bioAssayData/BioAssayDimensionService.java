@@ -31,24 +31,24 @@ public interface BioAssayDimensionService {
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension findOrCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
-
-    /**
-     * 
-     */
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension create(
             ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
     /**
      * 
      */
-    public void remove( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
+    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension findOrCreate(
+            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
     /**
      * 
      */
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension load( java.lang.Long id );
+
+    /**
+     * 
+     */
+    public void remove( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
     /**
      * 

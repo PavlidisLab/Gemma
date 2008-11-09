@@ -29,14 +29,6 @@ package ubic.gemma.model.expression.bioAssayData;
 public class BioAssayDataVectorServiceImpl extends
         ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorServiceBase {
 
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService#saveBioAssayDataVector(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
-     */
-    protected void handleSaveBioAssayDataVector(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) throws java.lang.Exception {
-        this.getBioAssayDataVectorDao().create( bioAssayDataVector );
-    }
-
     @Override
     protected BioAssayDataVector handleFindOrCreate( BioAssayDataVector bioAssayDataVector ) throws Exception {
         return this.getBioAssayDataVectorDao().findOrCreate( bioAssayDataVector );
@@ -45,6 +37,14 @@ public class BioAssayDataVectorServiceImpl extends
     @Override
     protected void handleRemove( BioAssayDataVector bioAssayDataVector ) throws Exception {
         this.getBioAssayDataVectorDao().remove( bioAssayDataVector );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService#saveBioAssayDataVector(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
+     */
+    protected void handleSaveBioAssayDataVector(
+            ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) throws java.lang.Exception {
+        this.getBioAssayDataVectorDao().create( bioAssayDataVector );
     }
 
 }

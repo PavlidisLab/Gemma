@@ -27,6 +27,11 @@ package ubic.gemma.model.expression.designElement;
  */
 public abstract class DesignElementImpl extends ubic.gemma.model.expression.designElement.DesignElement {
 
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -3705432443805719171L;
+
     @Override
     public boolean equals( Object object ) {
 
@@ -63,10 +68,5 @@ public abstract class DesignElementImpl extends ubic.gemma.model.expression.desi
         }
         return hashCode;
     }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3705432443805719171L;
 
 }

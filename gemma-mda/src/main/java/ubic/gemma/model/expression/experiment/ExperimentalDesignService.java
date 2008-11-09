@@ -30,29 +30,8 @@ public interface ExperimentalDesignService extends ubic.gemma.model.common.Audit
     /**
      * 
      */
-    public java.util.Collection loadAll();
-
-    /**
-     * 
-     */
     public ubic.gemma.model.expression.experiment.ExperimentalDesign create(
             ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign findOrCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign findByName( java.lang.String name );
-
-    /**
-     * 
-     */
-    public void update( ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
 
     /**
      * 
@@ -63,7 +42,13 @@ public interface ExperimentalDesignService extends ubic.gemma.model.common.Audit
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign load( java.lang.Long id );
+    public ubic.gemma.model.expression.experiment.ExperimentalDesign findByName( java.lang.String name );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.expression.experiment.ExperimentalDesign findOrCreate(
+            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
 
     /**
      * <p>
@@ -72,5 +57,20 @@ public interface ExperimentalDesignService extends ubic.gemma.model.common.Audit
      */
     public ubic.gemma.model.expression.experiment.ExpressionExperiment getExpressionExperiment(
             ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.expression.experiment.ExperimentalDesign load( java.lang.Long id );
+
+    /**
+     * 
+     */
+    public java.util.Collection loadAll();
+
+    /**
+     * 
+     */
+    public void update( ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
 
 }

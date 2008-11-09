@@ -29,11 +29,14 @@ public class ExpressionExperimentSubSetServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceBase {
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#getAllExpressionExperimentSubSets()
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#saveExpressionExperimentSubSet(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
      */
     @Override
-    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
-        return this.getExpressionExperimentSubSetDao().loadAll();
+    protected ExpressionExperimentSubSet handleCreate(
+            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet )
+            throws java.lang.Exception {
+        return ( ExpressionExperimentSubSet ) this.getExpressionExperimentSubSetDao().create(
+                expressionExperimentSubSet );
     }
 
     /**
@@ -47,14 +50,11 @@ public class ExpressionExperimentSubSetServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#saveExpressionExperimentSubSet(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#getAllExpressionExperimentSubSets()
      */
     @Override
-    protected ExpressionExperimentSubSet handleCreate(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet )
-            throws java.lang.Exception {
-        return ( ExpressionExperimentSubSet ) this.getExpressionExperimentSubSetDao().create(
-                expressionExperimentSubSet );
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+        return this.getExpressionExperimentSubSetDao().loadAll();
     }
 
 }

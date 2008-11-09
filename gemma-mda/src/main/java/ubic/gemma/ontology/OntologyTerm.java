@@ -28,13 +28,19 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  */
 public interface OntologyTerm extends OntologyResource {
 
-    public String getTerm();
+    public Collection<String> getAlternativeIds();
 
-    public String getUri();
+    public Collection<AnnotationProperty> getAnnotations();
+
+    public Collection<OntologyTerm> getChildren( boolean direct );
+
+    public String getComment();
+
+    public Collection<OntologyIndividual> getIndividuals();
+
+    public Collection<OntologyIndividual> getIndividuals( boolean direct );
 
     public Object getModel();
-
-    public ExternalDatabase getSourceOntology();
 
     /**
      * Note that any restriction superclasses are not returned.
@@ -44,19 +50,13 @@ public interface OntologyTerm extends OntologyResource {
      */
     public Collection<OntologyTerm> getParents( boolean direct );
 
-    public Collection<OntologyTerm> getChildren( boolean direct );
-
-    public Collection<OntologyIndividual> getIndividuals( boolean direct );
-
     public Collection<OntologyRestriction> getRestrictions();
 
-    public Collection<AnnotationProperty> getAnnotations();
+    public ExternalDatabase getSourceOntology();
 
-    public Collection<OntologyIndividual> getIndividuals();
-    
-    public Collection<String> getAlternativeIds();
-    
-    public String getComment();
+    public String getTerm();
+
+    public String getUri();
 
     public boolean isRoot();
 }

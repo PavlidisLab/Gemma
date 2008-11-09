@@ -27,8 +27,9 @@ public class BioAssayDataVectorDaoImpl extends ubic.gemma.model.expression.bioAs
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDaoBase#find(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDaoBase#find(ubic.gemma.model.expression.bioAssayData
+     * .BioAssayDataVector)
      */
     @Override
     public BioAssayDataVector find( BioAssayDataVector bioAssayDataVector ) {
@@ -37,8 +38,8 @@ public class BioAssayDataVectorDaoImpl extends ubic.gemma.model.expression.bioAs
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDaoBase#findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
+     * @seeubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDaoBase#findOrCreate(ubic.gemma.model.expression.
+     * bioAssayData.BioAssayDataVector)
      */
     @Override
     public BioAssayDataVector findOrCreate( BioAssayDataVector bioAssayDataVector ) {

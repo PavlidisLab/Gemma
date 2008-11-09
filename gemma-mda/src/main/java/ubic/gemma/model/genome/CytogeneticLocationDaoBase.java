@@ -34,6 +34,52 @@ public abstract class CytogeneticLocationDaoBase extends ubic.gemma.model.genome
         ubic.gemma.model.genome.CytogeneticLocationDao {
 
     /**
+     * @see ubic.gemma.model.genome.CytogeneticLocationDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "CytogeneticLocation.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.genome.CytogeneticLocation ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.CytogeneticLocationDao#create(int transform,
+     *      ubic.gemma.model.genome.CytogeneticLocation)
+     */
+    public Object create( final int transform, final ubic.gemma.model.genome.CytogeneticLocation cytogeneticLocation ) {
+        if ( cytogeneticLocation == null ) {
+            throw new IllegalArgumentException( "CytogeneticLocation.create - 'cytogeneticLocation' can not be null" );
+        }
+        this.getHibernateTemplate().save( cytogeneticLocation );
+        return this.transformEntity( transform, cytogeneticLocation );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.CytogeneticLocationDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.CytogeneticLocationDao#create(ubic.gemma.model.genome.CytogeneticLocation)
+     */
+    public ubic.gemma.model.genome.ChromosomeLocation create(
+            ubic.gemma.model.genome.CytogeneticLocation cytogeneticLocation ) {
+        return ( ubic.gemma.model.genome.CytogeneticLocation ) this.create( TRANSFORM_NONE, cytogeneticLocation );
+    }
+
+    /**
      * @see ubic.gemma.model.genome.CytogeneticLocationDao#load(int, java.lang.Long)
      */
     @Override
@@ -75,90 +121,6 @@ public abstract class CytogeneticLocationDaoBase extends ubic.gemma.model.genome
     }
 
     /**
-     * @see ubic.gemma.model.genome.CytogeneticLocationDao#create(ubic.gemma.model.genome.CytogeneticLocation)
-     */
-    public ubic.gemma.model.genome.ChromosomeLocation create(
-            ubic.gemma.model.genome.CytogeneticLocation cytogeneticLocation ) {
-        return ( ubic.gemma.model.genome.CytogeneticLocation ) this.create( TRANSFORM_NONE, cytogeneticLocation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.CytogeneticLocationDao#create(int transform,
-     *      ubic.gemma.model.genome.CytogeneticLocation)
-     */
-    public Object create( final int transform, final ubic.gemma.model.genome.CytogeneticLocation cytogeneticLocation ) {
-        if ( cytogeneticLocation == null ) {
-            throw new IllegalArgumentException( "CytogeneticLocation.create - 'cytogeneticLocation' can not be null" );
-        }
-        this.getHibernateTemplate().save( cytogeneticLocation );
-        return this.transformEntity( transform, cytogeneticLocation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.CytogeneticLocationDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.CytogeneticLocationDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "CytogeneticLocation.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.genome.CytogeneticLocation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.CytogeneticLocationDao#update(ubic.gemma.model.genome.CytogeneticLocation)
-     */
-    public void update( ubic.gemma.model.genome.CytogeneticLocation cytogeneticLocation ) {
-        if ( cytogeneticLocation == null ) {
-            throw new IllegalArgumentException( "CytogeneticLocation.update - 'cytogeneticLocation' can not be null" );
-        }
-        this.getHibernateTemplate().update( cytogeneticLocation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeLocationDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "CytogeneticLocation.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.CytogeneticLocation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.CytogeneticLocationDao#remove(ubic.gemma.model.genome.CytogeneticLocation)
-     */
-    public void remove( ubic.gemma.model.genome.CytogeneticLocation cytogeneticLocation ) {
-        if ( cytogeneticLocation == null ) {
-            throw new IllegalArgumentException( "CytogeneticLocation.remove - 'cytogeneticLocation' can not be null" );
-        }
-        this.getHibernateTemplate().delete( cytogeneticLocation );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.CytogeneticLocationDao#remove(java.lang.Long)
      */
     @Override
@@ -185,6 +147,65 @@ public abstract class CytogeneticLocationDaoBase extends ubic.gemma.model.genome
     }
 
     /**
+     * @see ubic.gemma.model.genome.CytogeneticLocationDao#remove(ubic.gemma.model.genome.CytogeneticLocation)
+     */
+    public void remove( ubic.gemma.model.genome.CytogeneticLocation cytogeneticLocation ) {
+        if ( cytogeneticLocation == null ) {
+            throw new IllegalArgumentException( "CytogeneticLocation.remove - 'cytogeneticLocation' can not be null" );
+        }
+        this.getHibernateTemplate().delete( cytogeneticLocation );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeLocationDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "CytogeneticLocation.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.genome.CytogeneticLocation ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.CytogeneticLocationDao#update(ubic.gemma.model.genome.CytogeneticLocation)
+     */
+    public void update( ubic.gemma.model.genome.CytogeneticLocation cytogeneticLocation ) {
+        if ( cytogeneticLocation == null ) {
+            throw new IllegalArgumentException( "CytogeneticLocation.update - 'cytogeneticLocation' can not be null" );
+        }
+        this.getHibernateTemplate().update( cytogeneticLocation );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.genome.CytogeneticLocation)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.CytogeneticLocationDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.CytogeneticLocation)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.genome.CytogeneticLocationDao</code>, please note that the {@link #TRANSFORM_NONE}
@@ -206,25 +227,6 @@ public abstract class CytogeneticLocationDaoBase extends ubic.gemma.model.genome
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.genome.CytogeneticLocation)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.CytogeneticLocationDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.CytogeneticLocation)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

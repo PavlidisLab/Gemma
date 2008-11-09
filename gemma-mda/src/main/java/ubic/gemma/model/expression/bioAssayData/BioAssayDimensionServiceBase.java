@@ -36,18 +36,17 @@ public abstract class BioAssayDimensionServiceBase implements
     private ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao bioAssayDimensionDao;
 
     /**
-     * Sets the reference to <code>bioAssayDimension</code>'s DAO.
+     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
-    public void setBioAssayDimensionDao(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao bioAssayDimensionDao ) {
-        this.bioAssayDimensionDao = bioAssayDimensionDao;
-    }
-
-    /**
-     * Gets the reference to <code>bioAssayDimension</code>'s DAO.
-     */
-    protected ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao getBioAssayDimensionDao() {
-        return this.bioAssayDimensionDao;
+    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension create(
+            final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
+        try {
+            return this.handleCreate( bioAssayDimension );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -65,30 +64,17 @@ public abstract class BioAssayDimensionServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#load(java.lang.Long)
      */
-    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleFindOrCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
-     */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension create(
-            final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
+    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension load( final java.lang.Long id ) {
         try {
-            return this.handleCreate( bioAssayDimension );
+            return this.handleLoad( id );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension)' --> "
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.load(java.lang.Long id)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
-     */
-    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#remove(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
@@ -104,29 +90,12 @@ public abstract class BioAssayDimensionServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     * Sets the reference to <code>bioAssayDimension</code>'s DAO.
      */
-    protected abstract void handleRemove( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#load(java.lang.Long)
-     */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
+    public void setBioAssayDimensionDao(
+            ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao bioAssayDimensionDao ) {
+        this.bioAssayDimensionDao = bioAssayDimensionDao;
     }
-
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#update(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
@@ -142,46 +111,10 @@ public abstract class BioAssayDimensionServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     * Gets the reference to <code>bioAssayDimension</code>'s DAO.
      */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao getBioAssayDimensionDao() {
+        return this.bioAssayDimensionDao;
     }
 
     /**
@@ -196,5 +129,71 @@ public abstract class BioAssayDimensionServiceBase implements
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     */
+    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleCreate(
+            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     */
+    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleFindOrCreate(
+            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleLoad( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension )
+            throws java.lang.Exception;
 
 }

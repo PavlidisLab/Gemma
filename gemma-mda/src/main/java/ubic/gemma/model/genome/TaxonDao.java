@@ -29,55 +29,22 @@ public interface TaxonDao {
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or
      * other types, different methods in a class implementing this interface support this feature: look for an
-     * <code>int</code> parameter called <code>transform</code>. <p/> This specific flag denotes no transformation
-     * will occur.
+     * <code>int</code> parameter called <code>transform</code>.
+     * <p/>
+     * This specific flag denotes no transformation will occur.
      */
     public final static int TRANSFORM_NONE = 0;
 
     /**
-     * Loads an instance of ubic.gemma.model.genome.Taxon from the persistent store.
-     */
-    public ubic.gemma.model.genome.Taxon load( java.lang.Long id );
-
-    /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * Does the same thing as {@link #create(ubic.gemma.model.genome.Taxon)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
+     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
+     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
+     * objects for example). By default, transformation does not occur.
      * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
      */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.genome.Taxon}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Creates an instance of ubic.gemma.model.genome.Taxon and adds it to the persistent store.
-     */
-    public ubic.gemma.model.genome.Taxon create( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection create( int transform, java.util.Collection entities );
 
     /**
      * <p>
@@ -100,89 +67,43 @@ public interface TaxonDao {
     public java.util.Collection create( java.util.Collection entities );
 
     /**
+     * Creates an instance of ubic.gemma.model.genome.Taxon and adds it to the persistent store.
+     */
+    public ubic.gemma.model.genome.Taxon create( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
      * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.Taxon)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
-     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
-     * objects for example). By default, transformation does not occur.
+     * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.Taxon)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #find(int, ubic.gemma.model.genome.Taxon taxon)}.
      * </p>
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * Updates the <code>taxon</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.Taxon from the persistent store.
-     */
-    public void remove( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.Taxon having the given <code>identifier</code> from the
-     * persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Taxon findByScientificName( java.lang.String scientificName );
+    public Object find( int transform, String queryString, ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
-     * Does the same thing as {@link #findByScientificName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByScientificName(java.lang.String)}.
-     * </p>
-     */
-    public ubic.gemma.model.genome.Taxon findByScientificName( String queryString, java.lang.String scientificName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByScientificName(java.lang.String)} with an additional flag called
+     * Does the same thing as {@link #find(ubic.gemma.model.genome.Taxon)} with an additional flag called
      * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
      * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
      * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findByScientificName( int transform, java.lang.String scientificName );
+    public Object find( int transform, ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
-     * Does the same thing as {@link #findByScientificName(boolean, java.lang.String)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findByScientificName(int, java.lang.String scientificName)}.
+     * Does the same thing as {@link #find(ubic.gemma.model.genome.Taxon)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #find(ubic.gemma.model.genome.Taxon)}.
      * </p>
      */
-    public Object findByScientificName( int transform, String queryString, java.lang.String scientificName );
+    public ubic.gemma.model.genome.Taxon find( String queryString, ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.Taxon findByCommonName( java.lang.String commonName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByCommonName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByCommonName(java.lang.String)}.
-     * </p>
-     */
-    public ubic.gemma.model.genome.Taxon findByCommonName( String queryString, java.lang.String commonName );
+    public ubic.gemma.model.genome.Taxon find( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -198,8 +119,8 @@ public interface TaxonDao {
     /**
      * <p>
      * Does the same thing as {@link #findByCommonName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByCommonName(int, java.lang.String commonName)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByCommonName(int, java.lang.String commonName)}.
      * </p>
      */
     public Object findByCommonName( int transform, String queryString, java.lang.String commonName );
@@ -207,50 +128,59 @@ public interface TaxonDao {
     /**
      * 
      */
-    public ubic.gemma.model.genome.Taxon find( ubic.gemma.model.genome.Taxon taxon );
+    public ubic.gemma.model.genome.Taxon findByCommonName( java.lang.String commonName );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.Taxon)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #find(ubic.gemma.model.genome.Taxon)}.
+     * Does the same thing as {@link #findByCommonName(java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByCommonName(java.lang.String)}.
      * </p>
      */
-    public ubic.gemma.model.genome.Taxon find( String queryString, ubic.gemma.model.genome.Taxon taxon );
+    public ubic.gemma.model.genome.Taxon findByCommonName( String queryString, java.lang.String commonName );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.Taxon)} with an additional flag called
+     * Does the same thing as {@link #findByScientificName(java.lang.String)} with an additional flag called
      * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
      * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
      * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object find( int transform, ubic.gemma.model.genome.Taxon taxon );
+    public Object findByScientificName( int transform, java.lang.String scientificName );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.Taxon)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #find(int, ubic.gemma.model.genome.Taxon taxon)}.
+     * Does the same thing as {@link #findByScientificName(boolean, java.lang.String)} with an additional argument
+     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
+     * defined in {@link #findByScientificName(int, java.lang.String scientificName)}.
      * </p>
      */
-    public Object find( int transform, String queryString, ubic.gemma.model.genome.Taxon taxon );
+    public Object findByScientificName( int transform, String queryString, java.lang.String scientificName );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.Taxon findOrCreate( ubic.gemma.model.genome.Taxon taxon );
+    public ubic.gemma.model.genome.Taxon findByScientificName( java.lang.String scientificName );
 
     /**
      * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.Taxon)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findOrCreate(ubic.gemma.model.genome.Taxon)}.
+     * Does the same thing as {@link #findByScientificName(java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByScientificName(java.lang.String)}.
      * </p>
      */
-    public ubic.gemma.model.genome.Taxon findOrCreate( String queryString, ubic.gemma.model.genome.Taxon taxon );
+    public ubic.gemma.model.genome.Taxon findByScientificName( String queryString, java.lang.String scientificName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.Taxon)} with an additional argument
+     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
+     * defined in {@link #findOrCreate(int, ubic.gemma.model.genome.Taxon taxon)}.
+     * </p>
+     */
+    public Object findOrCreate( int transform, String queryString, ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -265,11 +195,82 @@ public interface TaxonDao {
 
     /**
      * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.Taxon)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findOrCreate(int, ubic.gemma.model.genome.Taxon taxon)}.
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.Taxon)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findOrCreate(ubic.gemma.model.genome.Taxon)}.
      * </p>
      */
-    public Object findOrCreate( int transform, String queryString, ubic.gemma.model.genome.Taxon taxon );
+    public ubic.gemma.model.genome.Taxon findOrCreate( String queryString, ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Taxon findOrCreate( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
+     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
+     * </p>
+     * 
+     * @param id the identifier of the entity to load.
+     * @return either the entity or the object transformed from the entity.
+     */
+    public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.genome.Taxon from the persistent store.
+     */
+    public ubic.gemma.model.genome.Taxon load( java.lang.Long id );
+
+    /**
+     * Loads all entities of type {@link ubic.gemma.model.genome.Taxon}.
+     * 
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll();
+
+    /**
+     * <p>
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * operation which can optionally transform the entity (into a value object for example). By default, transformation
+     * does not occur.
+     * </p>
+     * 
+     * @param transform the flag indicating what transformation to use.
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll( final int transform );
+
+    /**
+     * Removes the instance of ubic.gemma.model.genome.Taxon having the given <code>identifier</code> from the
+     * persistent store.
+     */
+    public void remove( java.lang.Long id );
+
+    /**
+     * Removes all entities in the given <code>entities<code> collection.
+     */
+    public void remove( java.util.Collection entities );
+
+    /**
+     * Removes the instance of ubic.gemma.model.genome.Taxon from the persistent store.
+     */
+    public void remove( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     */
+    public void update( java.util.Collection entities );
+
+    /**
+     * Updates the <code>taxon</code> instance in the persistent store.
+     */
+    public void update( ubic.gemma.model.genome.Taxon taxon );
 
 }

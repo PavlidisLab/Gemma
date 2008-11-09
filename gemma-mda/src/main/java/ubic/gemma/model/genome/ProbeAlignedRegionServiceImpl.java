@@ -31,6 +31,12 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  */
 public class ProbeAlignedRegionServiceImpl extends ubic.gemma.model.genome.ProbeAlignedRegionServiceBase {
 
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<ProbeAlignedRegion> handleFindAssociations( BlatResult blatResult ) throws Exception {
+        return this.getProbeAlignedRegionDao().find( blatResult );
+    }
+
     /**
      * @see ubic.gemma.model.genome.ProbeAlignedRegionService#findAssociations(ubic.gemma.model.genome.PhysicalLocation)
      */
@@ -39,12 +45,6 @@ public class ProbeAlignedRegionServiceImpl extends ubic.gemma.model.genome.Probe
     protected java.util.Collection<ProbeAlignedRegion> handleFindAssociations(
             ubic.gemma.model.genome.PhysicalLocation physicalLocation ) throws java.lang.Exception {
         return this.getProbeAlignedRegionDao().findByPhysicalLocation( physicalLocation );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<ProbeAlignedRegion> handleFindAssociations( BlatResult blatResult ) throws Exception {
-        return this.getProbeAlignedRegionDao().find( blatResult );
     }
 
 }

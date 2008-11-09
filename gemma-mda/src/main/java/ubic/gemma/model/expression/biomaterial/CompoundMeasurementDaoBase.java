@@ -34,6 +34,55 @@ public abstract class CompoundMeasurementDaoBase extends org.springframework.orm
         implements ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao {
 
     /**
+     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "CompoundMeasurement.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.expression.biomaterial.CompoundMeasurement ) entityIterator
+                            .next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#create(int transform,
+     *      ubic.gemma.model.expression.biomaterial.CompoundMeasurement)
+     */
+    public Object create( final int transform,
+            final ubic.gemma.model.expression.biomaterial.CompoundMeasurement compoundMeasurement ) {
+        if ( compoundMeasurement == null ) {
+            throw new IllegalArgumentException( "CompoundMeasurement.create - 'compoundMeasurement' can not be null" );
+        }
+        this.getHibernateTemplate().save( compoundMeasurement );
+        return this.transformEntity( transform, compoundMeasurement );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#create(ubic.gemma.model.expression.biomaterial.CompoundMeasurement)
+     */
+    public ubic.gemma.model.expression.biomaterial.CompoundMeasurement create(
+            ubic.gemma.model.expression.biomaterial.CompoundMeasurement compoundMeasurement ) {
+        return ( ubic.gemma.model.expression.biomaterial.CompoundMeasurement ) this.create( TRANSFORM_NONE,
+                compoundMeasurement );
+    }
+
+    /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#load(int, java.lang.Long)
      */
     public Object load( final int transform, final java.lang.Long id ) {
@@ -71,92 +120,6 @@ public abstract class CompoundMeasurementDaoBase extends org.springframework.orm
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#create(ubic.gemma.model.expression.biomaterial.CompoundMeasurement)
-     */
-    public ubic.gemma.model.expression.biomaterial.CompoundMeasurement create(
-            ubic.gemma.model.expression.biomaterial.CompoundMeasurement compoundMeasurement ) {
-        return ( ubic.gemma.model.expression.biomaterial.CompoundMeasurement ) this.create( TRANSFORM_NONE,
-                compoundMeasurement );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#create(int transform,
-     *      ubic.gemma.model.expression.biomaterial.CompoundMeasurement)
-     */
-    public Object create( final int transform,
-            final ubic.gemma.model.expression.biomaterial.CompoundMeasurement compoundMeasurement ) {
-        if ( compoundMeasurement == null ) {
-            throw new IllegalArgumentException( "CompoundMeasurement.create - 'compoundMeasurement' can not be null" );
-        }
-        this.getHibernateTemplate().save( compoundMeasurement );
-        return this.transformEntity( transform, compoundMeasurement );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "CompoundMeasurement.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.expression.biomaterial.CompoundMeasurement ) entityIterator
-                            .next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#update(ubic.gemma.model.expression.biomaterial.CompoundMeasurement)
-     */
-    public void update( ubic.gemma.model.expression.biomaterial.CompoundMeasurement compoundMeasurement ) {
-        if ( compoundMeasurement == null ) {
-            throw new IllegalArgumentException( "CompoundMeasurement.update - 'compoundMeasurement' can not be null" );
-        }
-        this.getHibernateTemplate().update( compoundMeasurement );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "CompoundMeasurement.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.biomaterial.CompoundMeasurement ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#remove(ubic.gemma.model.expression.biomaterial.CompoundMeasurement)
-     */
-    public void remove( ubic.gemma.model.expression.biomaterial.CompoundMeasurement compoundMeasurement ) {
-        if ( compoundMeasurement == null ) {
-            throw new IllegalArgumentException( "CompoundMeasurement.remove - 'compoundMeasurement' can not be null" );
-        }
-        this.getHibernateTemplate().delete( compoundMeasurement );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -177,6 +140,64 @@ public abstract class CompoundMeasurementDaoBase extends org.springframework.orm
             throw new IllegalArgumentException( "CompoundMeasurement.remove - 'entities' can not be null" );
         }
         this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#remove(ubic.gemma.model.expression.biomaterial.CompoundMeasurement)
+     */
+    public void remove( ubic.gemma.model.expression.biomaterial.CompoundMeasurement compoundMeasurement ) {
+        if ( compoundMeasurement == null ) {
+            throw new IllegalArgumentException( "CompoundMeasurement.remove - 'compoundMeasurement' can not be null" );
+        }
+        this.getHibernateTemplate().delete( compoundMeasurement );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "CompoundMeasurement.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.expression.biomaterial.CompoundMeasurement ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#update(ubic.gemma.model.expression.biomaterial.CompoundMeasurement)
+     */
+    public void update( ubic.gemma.model.expression.biomaterial.CompoundMeasurement compoundMeasurement ) {
+        if ( compoundMeasurement == null ) {
+            throw new IllegalArgumentException( "CompoundMeasurement.update - 'compoundMeasurement' can not be null" );
+        }
+        this.getHibernateTemplate().update( compoundMeasurement );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.expression.biomaterial.CompoundMeasurement)} method. This method
+     * does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.expression.biomaterial.CompoundMeasurement)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -203,25 +224,6 @@ public abstract class CompoundMeasurementDaoBase extends org.springframework.orm
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.expression.biomaterial.CompoundMeasurement)} method. This method
-     * does not instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.expression.biomaterial.CompoundMeasurement)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

@@ -26,10 +26,6 @@ package ubic.gemma.spring;
  * Provides lookup for Spring beans
  */
 public class BeanLocator {
-    private BeanLocator() {
-        // shouldn't be instantiated
-    }
-
     /**
      * The prefix used for all bean ids.
      */
@@ -65,9 +61,44 @@ public class BeanLocator {
     private String beanRefFactoryReferenceId;
 
     /**
+     * The default bean reference factory location.
+     */
+    private final String DEFAULT_BEAN_REFERENCE_LOCATION = "beanRefFactory.xml";
+
+    /**
+     * The default bean reference factory ID.
+     */
+    private final String DEFAULT_BEAN_REFERENCE_ID = "beanRefFactory";
+
+    private BeanLocator() {
+        // shouldn't be instantiated
+    }
+
+    /**
+     * Retrieve the bean with the given <code>name</code>.
+     */
+    public Object getBean( final String name ) {
+        return this.getContext().getBean( BEAN_PREFIX + name );
+    }
+
+    /**
      * Initializes the Spring application context from the default settings.
      */
     public synchronized void init() {
+        this.getContext();
+    }
+
+    /**
+     * Initializes the Spring application context from the given <code>beanFactoryReferenceLocation</code>. If
+     * <code>null</code> is specified for the <code>beanFactoryReferenceLocation</code> then the default application
+     * context will be used.
+     * 
+     * @param beanFactoryReferenceLocation the location of the beanRefFactory reference.
+     */
+    public synchronized void init( final String beanFactoryReferenceLocation ) {
+        this.beanFactoryReferenceLocation = beanFactoryReferenceLocation;
+        this.beanFactoryReference = null;
+        // - initialize the context
         this.getContext();
     }
 
@@ -87,28 +118,15 @@ public class BeanLocator {
     }
 
     /**
-     * Initializes the Spring application context from the given <code>beanFactoryReferenceLocation</code>. If
-     * <code>null</code> is specified for the <code>beanFactoryReferenceLocation</code> then the default application
-     * context will be used.
-     * 
-     * @param beanFactoryReferenceLocation the location of the beanRefFactory reference.
+     * Shuts down the BeanLocator and releases any used resources.
      */
-    public synchronized void init( final String beanFactoryReferenceLocation ) {
-        this.beanFactoryReferenceLocation = beanFactoryReferenceLocation;
-        this.beanFactoryReference = null;
-        // - initialize the context
-        this.getContext();
+    public synchronized void shutdown() {
+        ( ( org.springframework.context.support.AbstractApplicationContext ) this.getContext() ).close();
+        if ( this.beanFactoryReference != null ) {
+            this.beanFactoryReference.release();
+            this.beanFactoryReference = null;
+        }
     }
-
-    /**
-     * The default bean reference factory location.
-     */
-    private final String DEFAULT_BEAN_REFERENCE_LOCATION = "beanRefFactory.xml";
-
-    /**
-     * The default bean reference factory ID.
-     */
-    private final String DEFAULT_BEAN_REFERENCE_ID = "beanRefFactory";
 
     /**
      * Gets the Spring ApplicationContext.
@@ -126,23 +144,5 @@ public class BeanLocator {
             this.beanFactoryReference = beanFactoryLocator.useBeanFactory( this.beanRefFactoryReferenceId );
         }
         return ( org.springframework.context.ApplicationContext ) this.beanFactoryReference.getFactory();
-    }
-
-    /**
-     * Shuts down the BeanLocator and releases any used resources.
-     */
-    public synchronized void shutdown() {
-        ( ( org.springframework.context.support.AbstractApplicationContext ) this.getContext() ).close();
-        if ( this.beanFactoryReference != null ) {
-            this.beanFactoryReference.release();
-            this.beanFactoryReference = null;
-        }
-    }
-
-    /**
-     * Retrieve the bean with the given <code>name</code>.
-     */
-    public Object getBean( final String name ) {
-        return this.getContext().getBean( BEAN_PREFIX + name );
     }
 }

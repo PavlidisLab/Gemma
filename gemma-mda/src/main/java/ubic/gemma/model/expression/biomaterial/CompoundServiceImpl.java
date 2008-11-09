@@ -29,15 +29,6 @@ package ubic.gemma.model.expression.biomaterial;
 public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial.CompoundServiceBase {
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#find(ubic.gemma.model.expression.biomaterial.Compound)
-     */
-    @Override
-    protected ubic.gemma.model.expression.biomaterial.Compound handleFind(
-            ubic.gemma.model.expression.biomaterial.Compound compound ) throws java.lang.Exception {
-        return this.getCompoundDao().find( compound );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundService#create(ubic.gemma.model.expression.biomaterial.Compound)
      */
     protected ubic.gemma.model.expression.biomaterial.Compound handleCreate(
@@ -46,11 +37,17 @@ public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#update(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see ubic.gemma.model.expression.biomaterial.CompoundService#find(ubic.gemma.model.expression.biomaterial.Compound)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.expression.biomaterial.Compound compound ) throws java.lang.Exception {
-        this.getCompoundDao().update( compound );
+    protected ubic.gemma.model.expression.biomaterial.Compound handleFind(
+            ubic.gemma.model.expression.biomaterial.Compound compound ) throws java.lang.Exception {
+        return this.getCompoundDao().find( compound );
+    }
+
+    @Override
+    protected Compound handleFindOrCreate( Compound compound ) throws Exception {
+        return this.getCompoundDao().findOrCreate( compound );
     }
 
     /**
@@ -61,9 +58,12 @@ public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial
         this.getCompoundDao().remove( compound );
     }
 
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.CompoundService#update(ubic.gemma.model.expression.biomaterial.Compound)
+     */
     @Override
-    protected Compound handleFindOrCreate( Compound compound ) throws Exception {
-        return this.getCompoundDao().findOrCreate( compound );
+    protected void handleUpdate( ubic.gemma.model.expression.biomaterial.Compound compound ) throws java.lang.Exception {
+        this.getCompoundDao().update( compound );
     }
 
 }

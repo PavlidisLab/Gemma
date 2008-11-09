@@ -67,8 +67,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     public ArrayDesign find( ArrayDesign arrayDesign ) {
@@ -98,8 +98,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @seeubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(ubic.gemma.model.expression.arrayDesign.
+     * ArrayDesign)
      */
     @Override
     public ArrayDesign findOrCreate( ArrayDesign arrayDesign ) {
@@ -132,8 +132,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutBioSequences(ubic.gemma
+     * .model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     protected Collection handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) throws Exception {
@@ -144,8 +145,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutBlatResults(ubic.gemma
+     * .model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     protected Collection handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) throws Exception {
@@ -166,8 +168,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutGenes(ubic.gemma.model
+     * .expression.arrayDesign.ArrayDesign)
      */
     @Override
     protected Collection handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign ) throws Exception {
@@ -218,9 +221,14 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         log.info( "Done deleting BlatAssociations for " + arrayDesign );
     }
 
+    @Override
+    protected Collection handleFindByAlternateName( String queryString ) throws Exception {
+        return this.getHibernateTemplate().findByNamedParam(
+                "from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q", "q", queryString );
+    }
+
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
     @Override
@@ -231,7 +239,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetAuditEvents(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -269,7 +276,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetExpressionExperimentsById(long)
      */
     @Override
@@ -282,7 +288,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
      */
     @Override
@@ -439,42 +444,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return result;
     }
 
-    /**
-     * @return Map of ArrayDesign id to Taxon string for ValueObjects.
-     */
-    @SuppressWarnings("unchecked")
-    private Map<Long, String> getArrayToTaxonMap() {
-        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
-        Collection<ArrayDesign> arrayDesigns = this.loadAll();
-        for ( ArrayDesign ad : arrayDesigns ) {
-            final String csString = "select taxon from ArrayDesignImpl "
-                    + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
-                    + " where ad = :ad";
-            org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
-            csQueryObject.setParameter( "ad", ad );
-            csQueryObject.setCacheable( true );
-            csQueryObject.setMaxResults( 1 );
-            // the name of the cache region is configured in ehcache.xml.vsl
-            csQueryObject.setCacheRegion( null );
-
-            List csList = csQueryObject.list();
-
-            if ( csList.size() == 0 ) {
-                continue;
-            }
-
-            for ( Object object : csList ) {
-                Taxon t = ( Taxon ) object;
-                arrayToTaxon.put( ad.getId(), t.getCommonName() );
-            }
-        }
-
-        return arrayToTaxon;
-    }
-
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
     @Override
@@ -485,7 +456,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadFully(java.lang.Long)
      */
     @Override
@@ -568,7 +538,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences()
      */
     @Override
@@ -580,8 +549,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences(java.util.Collection)
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences(java
+     * .util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -593,7 +563,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults()
      */
     @Override
@@ -605,8 +574,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults(java.util.Collection)
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults(java.
+     * util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -621,7 +591,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes()
      */
     @Override
@@ -634,8 +603,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes(java.util.Collection)
+     * @seeubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes(java.util.
+     * Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -652,7 +621,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllGenes()
      */
     @Override
@@ -665,7 +633,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllGenes(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -683,7 +650,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumBioSequencesById(long)
      */
     @Override
@@ -695,7 +661,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumBlatResultsById(long)
      */
     @Override
@@ -708,7 +673,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequences(java.lang.Long)
      */
     @Override
@@ -720,8 +684,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithBioSequence(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithBioSequence(ubic.gemma
+     * .model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     protected long handleNumCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) throws Exception {
@@ -732,7 +697,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithBlatResults()
      */
     @Override
@@ -744,8 +708,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithGenes(ubic.gemma.model
+     * .expression.arrayDesign.ArrayDesign)
      */
     @Override
     protected long handleNumCompositeSequenceWithGenes( ArrayDesign arrayDesign ) throws Exception {
@@ -773,7 +738,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumGeneProductsById(long)
      */
     @Override
@@ -786,7 +750,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumReporters(java.lang.Long)
      */
     @Override
@@ -908,6 +871,39 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             log.error( ad );
         }
 
+    }
+
+    /**
+     * @return Map of ArrayDesign id to Taxon string for ValueObjects.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<Long, String> getArrayToTaxonMap() {
+        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
+        Collection<ArrayDesign> arrayDesigns = this.loadAll();
+        for ( ArrayDesign ad : arrayDesigns ) {
+            final String csString = "select taxon from ArrayDesignImpl "
+                    + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
+                    + " where ad = :ad";
+            org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
+            csQueryObject.setParameter( "ad", ad );
+            csQueryObject.setCacheable( true );
+            csQueryObject.setMaxResults( 1 );
+            // the name of the cache region is configured in ehcache.xml.vsl
+            csQueryObject.setCacheRegion( null );
+
+            List csList = csQueryObject.list();
+
+            if ( csList.size() == 0 ) {
+                continue;
+            }
+
+            for ( Object object : csList ) {
+                Taxon t = ( Taxon ) object;
+                arrayToTaxon.put( ad.getId(), t.getCommonName() );
+            }
+        }
+
+        return arrayToTaxon;
     }
 
     /**
@@ -1034,11 +1030,5 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             }
         }, true );
 
-    }
-
-    @Override
-    protected Collection handleFindByAlternateName( String queryString ) throws Exception {
-        return this.getHibernateTemplate().findByNamedParam(
-                "from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q", "q", queryString );
     }
 }

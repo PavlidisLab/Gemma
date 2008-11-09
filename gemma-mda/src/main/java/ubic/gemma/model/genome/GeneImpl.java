@@ -93,6 +93,22 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
         return hashCode;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append( this.getClass().getSimpleName() );
+        buf.append( this.getId() == null ? " " : " Id:" + this.getId() + " " );
+        buf.append( this.getOfficialSymbol() + " " );
+        buf.append( this.getOfficialName() == null ? "" : this.getOfficialName() + " " );
+
+        // This causes too many lazy load problems.
+        // buf.append( this.getOfficialName() == null && this.getPhysicalLocation() != null ? "["
+        // + this.getPhysicalLocation() + "] " : "" );
+
+        buf.append( this.getNcbiId() == null ? "" : " (NCBI " + this.getNcbiId() + ")" );
+        return buf.toString();
+    }
+
     private int computeHashCode() {
         int hashCode = 29;
 
@@ -121,21 +137,5 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
         hashCode += super.hashCode();
 
         return hashCode;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append( this.getClass().getSimpleName() );
-        buf.append( this.getId() == null ? " " : " Id:" + this.getId() + " " );
-        buf.append( this.getOfficialSymbol() + " " );
-        buf.append( this.getOfficialName() == null ? "" : this.getOfficialName() + " " );
-
-        // This causes too many lazy load problems.
-        // buf.append( this.getOfficialName() == null && this.getPhysicalLocation() != null ? "["
-        // + this.getPhysicalLocation() + "] " : "" );
-
-        buf.append( this.getNcbiId() == null ? "" : " (NCBI " + this.getNcbiId() + ")" );
-        return buf.toString();
     }
 }

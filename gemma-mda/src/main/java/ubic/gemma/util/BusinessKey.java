@@ -67,14 +67,6 @@ public class BusinessKey {
 
     /**
      * @param queryObject
-     * @param describable
-     */
-    private static void addNameRestriction( Criteria queryObject, Describable describable ) {
-        if ( describable.getName() != null ) queryObject.add( Restrictions.eq( "name", describable.getName() ) );
-    }
-
-    /**
-     * @param queryObject
      * @param arrayDesign
      */
     public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
@@ -115,16 +107,6 @@ public class BusinessKey {
     }
 
     /**
-     * @param queryObject
-     * @param databaseEntry
-     * @param attributeName
-     */
-    public static void attachCriteria( DetachedCriteria queryObject, DatabaseEntry databaseEntry, String attributeName ) {
-        DetachedCriteria externalRef = queryObject.createCriteria( attributeName );
-        addRestrictions( externalRef, databaseEntry );
-    }
-
-    /**
      * Note: The finder has to do the additional checking for equality of sequence and/or database entry - we don't know
      * until we get the sequences. Due to the following issues:
      * <ul>
@@ -149,6 +131,23 @@ public class BusinessKey {
         }
 
         attachCriteria( queryObject, bioSequence.getTaxon(), "taxon" );
+
+    }
+
+    /**
+     * @param queryObject
+     * @param characteristic
+     */
+    public static void addRestrictions( Criteria queryObject, Characteristic characteristic ) {
+        if ( characteristic instanceof VocabCharacteristic ) {
+            addRestrictions( queryObject, ( VocabCharacteristic ) characteristic );
+        } else {
+            if ( characteristic.getCategory() != null ) {
+                queryObject.add( Restrictions.eq( "category", characteristic.getCategory() ) );
+            }
+            assert characteristic.getValue() != null;
+            queryObject.add( Restrictions.eq( "value", characteristic.getValue() ) );
+        }
 
     }
 
@@ -250,12 +249,44 @@ public class BusinessKey {
 
     /**
      * @param queryObject
-     * @param ontologyEntry
-     * @param propertyName
+     * @param quantitationType
      */
-    private static void attachCriteria( Criteria queryObject, VocabCharacteristic ontologyEntry, String propertyName ) {
-        Criteria innerQuery = queryObject.createCriteria( propertyName );
-        addRestrictions( innerQuery, ontologyEntry );
+    public static void addRestrictions( Criteria queryObject, QuantitationType quantitationType ) {
+        queryObject.add( Restrictions.eq( "name", quantitationType.getName() ) );
+
+        queryObject.add( Restrictions.eq( "description", quantitationType.getDescription() ) );
+
+        queryObject.add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) );
+
+        queryObject.add( Restrictions.eq( "type", quantitationType.getType() ) );
+
+        if ( quantitationType.getIsBackground() != null )
+            queryObject.add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) );
+
+        if ( quantitationType.getRepresentation() != null )
+            queryObject.add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) );
+
+        if ( quantitationType.getScale() != null )
+            queryObject.add( Restrictions.eq( "scale", quantitationType.getScale() ) );
+
+        if ( quantitationType.getIsBackgroundSubtracted() != null )
+            queryObject.add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) );
+
+        if ( quantitationType.getIsPreferred() != null )
+            queryObject.add( Restrictions.eq( "isPreferred", quantitationType.getIsPreferred() ) );
+
+        if ( quantitationType.getIsNormalized() != null )
+            queryObject.add( Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ) );
+
+    }
+
+    /**
+     * @param queryObject
+     * @param taxon
+     */
+    public static void addRestrictions( Criteria queryObject, Taxon taxon ) {
+        checkValidKey( taxon );
+        attachCriteria( queryObject, taxon );
     }
 
     /**
@@ -280,28 +311,11 @@ public class BusinessKey {
 
     /**
      * @param queryObject
-     * @param characteristic
+     * @param databaseEntry
      */
-    public static void addRestrictions( Criteria queryObject, Characteristic characteristic ) {
-        if ( characteristic instanceof VocabCharacteristic ) {
-            addRestrictions( queryObject, ( VocabCharacteristic ) characteristic );
-        } else {
-            if ( characteristic.getCategory() != null ) {
-                queryObject.add( Restrictions.eq( "category", characteristic.getCategory() ) );
-            }
-            assert characteristic.getValue() != null;
-            queryObject.add( Restrictions.eq( "value", characteristic.getValue() ) );
-        }
-
-    }
-
-    /**
-     * @param queryObject
-     * @param taxon
-     */
-    public static void addRestrictions( Criteria queryObject, Taxon taxon ) {
-        checkValidKey( taxon );
-        attachCriteria( queryObject, taxon );
+    public static void addRestrictions( DetachedCriteria queryObject, DatabaseEntry databaseEntry ) {
+        queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
+                "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
     }
 
     /**
@@ -317,18 +331,6 @@ public class BusinessKey {
     }
 
     /**
-     * Restricts the query to the provided Gene.
-     * 
-     * @param queryObject
-     * @param gene
-     * @param propertyName
-     */
-    public static void attachCriteria( Criteria queryObject, Gene gene, String propertyName ) {
-        Criteria innerQuery = queryObject.createCriteria( propertyName );
-        addRestrictions( innerQuery, gene );
-    }
-
-    /**
      * Restricts the query to the provided OntologyEntry.
      * 
      * @param queryObject
@@ -338,6 +340,18 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, Characteristic ontologyEntry, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, ontologyEntry );
+    }
+
+    /**
+     * Restricts the query to the provided Gene.
+     * 
+     * @param queryObject
+     * @param gene
+     * @param propertyName
+     */
+    public static void attachCriteria( Criteria queryObject, Gene gene, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
+        addRestrictions( innerQuery, gene );
     }
 
     /**
@@ -370,23 +384,6 @@ public class BusinessKey {
     }
 
     /**
-     * @param queryObject
-     * @param taxon
-     */
-    private static void attachCriteria( Criteria queryObject, Taxon taxon ) {
-        if ( taxon == null ) throw new IllegalArgumentException( "Taxon was null" );
-        if ( taxon.getId() != null ) {
-            queryObject.add( Restrictions.eq( "id", taxon.getId() ) );
-        } else if ( taxon.getNcbiId() != null ) {
-            queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
-        } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
-            queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
-        } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
-            queryObject.add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
-        }
-    }
-
-    /**
      * Restricts query to the given Taxon.
      * 
      * @param queryObject
@@ -396,6 +393,16 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, Taxon taxon, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         attachCriteria( innerQuery, taxon );
+    }
+
+    /**
+     * @param queryObject
+     * @param databaseEntry
+     * @param attributeName
+     */
+    public static void attachCriteria( DetachedCriteria queryObject, DatabaseEntry databaseEntry, String attributeName ) {
+        DetachedCriteria externalRef = queryObject.createCriteria( attributeName );
+        addRestrictions( externalRef, databaseEntry );
     }
 
     /**
@@ -410,6 +417,20 @@ public class BusinessKey {
     }
 
     /**
+     * @param ontologyEntry
+     */
+    public static void checkKey( Characteristic ontologyEntry ) {
+
+        if ( ontologyEntry instanceof VocabCharacteristic ) {
+            if ( ( ( VocabCharacteristic ) ontologyEntry ).getValueUri() == null )
+                throw new IllegalArgumentException();
+        } else {
+            if ( ontologyEntry.getValue() == null ) throw new IllegalArgumentException();
+        }
+
+    }
+
+    /**
      * @param contact
      */
     public static void checkKey( Contact contact ) {
@@ -420,11 +441,32 @@ public class BusinessKey {
         }
     }
 
+    /**
+     * @param accession
+     */
+    public static void checkKey( DatabaseEntry accession ) {
+        if ( accession.getId() != null ) return;
+        if ( StringUtils.isBlank( accession.getAccession() ) ) {
+            throw new IllegalArgumentException( accession + " did not have an accession" );
+        }
+        checkKey( accession.getExternalDatabase() );
+    }
+
     public static void checkKey( DesignElementDataVector designElementDataVector ) {
         if ( designElementDataVector == null || designElementDataVector.getDesignElement() == null
                 || designElementDataVector.getExpressionExperiment() == null ) {
             throw new IllegalArgumentException( "DesignElementDataVector did not have complete business key "
                     + designElementDataVector );
+        }
+    }
+
+    /**
+     * @param externalDatabase
+     */
+    public static void checkKey( ExternalDatabase externalDatabase ) {
+        if ( externalDatabase.getId() != null ) return;
+        if ( StringUtils.isBlank( externalDatabase.getName() ) ) {
+            throw new IllegalArgumentException( externalDatabase + " did not have a name" );
         }
     }
 
@@ -451,20 +493,6 @@ public class BusinessKey {
                             + gene
                             + ": Gene must have official symbol and name with taxon + physical location or gene products, or ncbiId" );
         }
-    }
-
-    /**
-     * @param ontologyEntry
-     */
-    public static void checkKey( Characteristic ontologyEntry ) {
-
-        if ( ontologyEntry instanceof VocabCharacteristic ) {
-            if ( ( ( VocabCharacteristic ) ontologyEntry ).getValueUri() == null )
-                throw new IllegalArgumentException();
-        } else {
-            if ( ontologyEntry.getValue() == null ) throw new IllegalArgumentException();
-        }
-
     }
 
     /**
@@ -543,14 +571,6 @@ public class BusinessKey {
     public static void checkValidKey( Gene2GOAssociation gene2GOAssociation ) {
         checkValidKey( gene2GOAssociation.getGene() );
         checkValidKey( gene2GOAssociation.getOntologyEntry() );
-    }
-
-    /**
-     * @param ontologyEntry
-     */
-    private static void checkValidKey( VocabCharacteristic ontologyEntry ) {
-        // TODO Auto-generated method stub
-
     }
 
     /**
@@ -743,65 +763,45 @@ public class BusinessKey {
     }
 
     /**
-     * @param accession
+     * @param queryObject
+     * @param describable
      */
-    public static void checkKey( DatabaseEntry accession ) {
-        if ( accession.getId() != null ) return;
-        if ( StringUtils.isBlank( accession.getAccession() ) ) {
-            throw new IllegalArgumentException( accession + " did not have an accession" );
-        }
-        checkKey( accession.getExternalDatabase() );
+    private static void addNameRestriction( Criteria queryObject, Describable describable ) {
+        if ( describable.getName() != null ) queryObject.add( Restrictions.eq( "name", describable.getName() ) );
     }
 
     /**
-     * @param externalDatabase
+     * @param queryObject
+     * @param taxon
      */
-    public static void checkKey( ExternalDatabase externalDatabase ) {
-        if ( externalDatabase.getId() != null ) return;
-        if ( StringUtils.isBlank( externalDatabase.getName() ) ) {
-            throw new IllegalArgumentException( externalDatabase + " did not have a name" );
+    private static void attachCriteria( Criteria queryObject, Taxon taxon ) {
+        if ( taxon == null ) throw new IllegalArgumentException( "Taxon was null" );
+        if ( taxon.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", taxon.getId() ) );
+        } else if ( taxon.getNcbiId() != null ) {
+            queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
+        } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
+            queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
+        } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
+            queryObject.add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
         }
     }
 
     /**
      * @param queryObject
-     * @param databaseEntry
+     * @param ontologyEntry
+     * @param propertyName
      */
-    public static void addRestrictions( DetachedCriteria queryObject, DatabaseEntry databaseEntry ) {
-        queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
-                "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
+    private static void attachCriteria( Criteria queryObject, VocabCharacteristic ontologyEntry, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
+        addRestrictions( innerQuery, ontologyEntry );
     }
 
     /**
-     * @param queryObject
-     * @param quantitationType
+     * @param ontologyEntry
      */
-    public static void addRestrictions( Criteria queryObject, QuantitationType quantitationType ) {
-        queryObject.add( Restrictions.eq( "name", quantitationType.getName() ) );
-
-        queryObject.add( Restrictions.eq( "description", quantitationType.getDescription() ) );
-
-        queryObject.add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) );
-
-        queryObject.add( Restrictions.eq( "type", quantitationType.getType() ) );
-
-        if ( quantitationType.getIsBackground() != null )
-            queryObject.add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) );
-
-        if ( quantitationType.getRepresentation() != null )
-            queryObject.add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) );
-
-        if ( quantitationType.getScale() != null )
-            queryObject.add( Restrictions.eq( "scale", quantitationType.getScale() ) );
-
-        if ( quantitationType.getIsBackgroundSubtracted() != null )
-            queryObject.add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) );
-
-        if ( quantitationType.getIsPreferred() != null )
-            queryObject.add( Restrictions.eq( "isPreferred", quantitationType.getIsPreferred() ) );
-
-        if ( quantitationType.getIsNormalized() != null )
-            queryObject.add( Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ) );
+    private static void checkValidKey( VocabCharacteristic ontologyEntry ) {
+        // TODO Auto-generated method stub
 
     }
 

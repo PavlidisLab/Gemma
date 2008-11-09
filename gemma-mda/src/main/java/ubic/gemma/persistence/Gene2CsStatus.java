@@ -30,16 +30,15 @@ import java.util.Date;
  */
 public class Gene2CsStatus implements Serializable {
 
-    @Override
-    public String toString() {
-        return lastUpdate.toString() + " " + ( error == null );
-    }
-
     Date lastUpdate;
 
     Exception error;
 
     private String annotation;
+
+    public String getAnnotation() {
+        return annotation;
+    }
 
     public Exception getError() {
         return error;
@@ -47,6 +46,10 @@ public class Gene2CsStatus implements Serializable {
 
     public Date getLastUpdate() {
         return lastUpdate;
+    }
+
+    public void setAnnotation( String annotation ) {
+        this.annotation = annotation;
     }
 
     public void setError( Exception error ) {
@@ -57,12 +60,9 @@ public class Gene2CsStatus implements Serializable {
         this.lastUpdate = lastUpdate;
     }
 
-    public void setAnnotation( String annotation ) {
-        this.annotation = annotation;
-    }
-
-    public String getAnnotation() {
-        return annotation;
+    @Override
+    public String toString() {
+        return lastUpdate.toString() + " " + ( error == null );
     }
 
 }

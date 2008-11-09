@@ -34,6 +34,304 @@ public abstract class AnalysisDaoBase extends ubic.gemma.model.common.AuditableD
         ubic.gemma.model.analysis.AnalysisDao {
 
     /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#findByInvestigation(ubic.gemma.model.analysis.Investigation)
+     */
+    public java.util.Collection findByInvestigation( final ubic.gemma.model.analysis.Investigation investigation ) {
+        try {
+            return this.handleFindByInvestigation( investigation );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByInvestigation(ubic.gemma.model.analysis.Investigation investigation)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#findByInvestigations(java.util.Collection)
+     */
+    public java.util.Map findByInvestigations( final java.util.Collection investigators ) {
+        try {
+            return this.handleFindByInvestigations( investigators );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByInvestigations(java.util.Collection investigators)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByName( final int transform, final java.lang.String name ) {
+        return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String, java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByName( final int transform, final java.lang.String queryString,
+            final java.lang.String name ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( name );
+        argNames.add( "name" );
+        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() );
+        transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String)
+     */
+    public java.util.Collection findByName( java.lang.String name ) {
+        return this.findByName( TRANSFORM_NONE, name );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String, java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
+        return this.findByName( TRANSFORM_NONE, queryString, name );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    public java.util.Collection findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.handleFindByTaxon( taxon );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getAclObjectIdentityId(int, java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.analysis.Analysis ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getAclObjectIdentityId(int, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
+        return this.getAclObjectIdentityId( transform,
+                "from ubic.gemma.model.analysis.Analysis as analysis where analysis.securable = :securable", securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getAclObjectIdentityId(java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     */
+    @Override
+    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getMask(int, java.lang.String, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMask( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.analysis.Analysis ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getMask(int, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
+        return this.getMask( transform,
+                "from ubic.gemma.model.analysis.Analysis as analysis where analysis.securable = :securable", securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getMask(java.lang.String, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.Integer getMask( final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getMask(ubic.gemma.model.common.Securable)
+     */
+    @Override
+    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getMasks(int, java.lang.String, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMasks( final int transform, final java.lang.String queryString,
+            final java.util.Collection securables ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securables );
+        argNames.add( "securables" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.analysis.Analysis ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getMasks(int, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMasks( final int transform, final java.util.Collection securables ) {
+        return this.getMasks( transform,
+                "from ubic.gemma.model.analysis.Analysis as analysis where analysis.securables = :securables",
+                securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getMasks(java.lang.String, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
+        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getMasks(java.util.Collection)
+     */
+    @Override
+    public java.util.Map getMasks( java.util.Collection securables ) {
+        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getRecipient(int, java.lang.Long)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getRecipient( final int transform, final java.lang.Long id ) {
+        return this.getRecipient( transform,
+                "from ubic.gemma.model.analysis.Analysis as analysis where analysis.id = :id", id );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getRecipient(int, java.lang.String, java.lang.Long)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( id );
+        argNames.add( "id" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.analysis.Analysis ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getRecipient(java.lang.Long)
+     */
+    @Override
+    public java.lang.String getRecipient( java.lang.Long id ) {
+        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#getRecipient(java.lang.String, java.lang.Long)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
+        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
+    }
+
+    /**
      * @see ubic.gemma.model.analysis.AnalysisDao#load(int, java.lang.Long)
      */
     @Override
@@ -74,44 +372,6 @@ public abstract class AnalysisDaoBase extends ubic.gemma.model.common.AuditableD
     }
 
     /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#update(ubic.gemma.model.analysis.Analysis)
-     */
-    public void update( ubic.gemma.model.analysis.Analysis analysis ) {
-        if ( analysis == null ) {
-            throw new IllegalArgumentException( "Analysis.update - 'analysis' can not be null" );
-        }
-        this.getHibernateTemplate().update( analysis );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Analysis.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.analysis.Analysis ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#remove(ubic.gemma.model.analysis.Analysis)
-     */
-    public void remove( ubic.gemma.model.analysis.Analysis analysis ) {
-        if ( analysis == null ) {
-            throw new IllegalArgumentException( "Analysis.remove - 'analysis' can not be null" );
-        }
-        this.getHibernateTemplate().delete( analysis );
-    }
-
-    /**
      * @see ubic.gemma.model.analysis.AnalysisDao#remove(java.lang.Long)
      */
     @Override
@@ -137,275 +397,41 @@ public abstract class AnalysisDaoBase extends ubic.gemma.model.common.AuditableD
     }
 
     /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String)
+     * @see ubic.gemma.model.analysis.AnalysisDao#remove(ubic.gemma.model.analysis.Analysis)
      */
-    public java.util.Collection findByName( java.lang.String name ) {
-        return this.findByName( TRANSFORM_NONE, name );
+    public void remove( ubic.gemma.model.analysis.Analysis analysis ) {
+        if ( analysis == null ) {
+            throw new IllegalArgumentException( "Analysis.remove - 'analysis' can not be null" );
+        }
+        this.getHibernateTemplate().delete( analysis );
     }
 
     /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String, java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
-        return this.findByName( TRANSFORM_NONE, queryString, name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByName( final int transform, final java.lang.String name ) {
-        return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String, java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByName( final int transform, final java.lang.String queryString,
-            final java.lang.String name ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( name );
-        argNames.add( "name" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getRecipient(java.lang.Long)
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
     @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this.getRecipient( transform,
-                "from ubic.gemma.model.analysis.Analysis as analysis where analysis.id = :id", id );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getRecipient(int, java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Analysis.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.analysis.Analysis ) entityIterator.next() );
+                }
+                return null;
             }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#update(ubic.gemma.model.analysis.Analysis)
+     */
+    public void update( ubic.gemma.model.analysis.Analysis analysis ) {
+        if ( analysis == null ) {
+            throw new IllegalArgumentException( "Analysis.update - 'analysis' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.analysis.Analysis ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getAclObjectIdentityId(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this.getAclObjectIdentityId( transform,
-                "from ubic.gemma.model.analysis.Analysis as analysis where analysis.securable = :securable", securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.analysis.Analysis ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getMask(java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this.getMask( transform,
-                "from ubic.gemma.model.analysis.Analysis as analysis where analysis.securable = :securable", securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getMask(int, java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.analysis.Analysis ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this.getMasks( transform,
-                "from ubic.gemma.model.analysis.Analysis as analysis where analysis.securables = :securables",
-                securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.analysis.Analysis ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByInvestigation(ubic.gemma.model.analysis.Investigation)
-     */
-    public java.util.Collection findByInvestigation( final ubic.gemma.model.analysis.Investigation investigation ) {
-        try {
-            return this.handleFindByInvestigation( investigation );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByInvestigation(ubic.gemma.model.analysis.Investigation investigation)' --> "
-                            + th, th );
-        }
+        this.getHibernateTemplate().update( analysis );
     }
 
     /**
@@ -415,36 +441,10 @@ public abstract class AnalysisDaoBase extends ubic.gemma.model.common.AuditableD
             ubic.gemma.model.analysis.Investigation investigation ) throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByInvestigations(java.util.Collection)
-     */
-    public java.util.Map findByInvestigations( final java.util.Collection investigators ) {
-        try {
-            return this.handleFindByInvestigations( investigators );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByInvestigations(java.util.Collection investigators)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * Performs the core logic for {@link #findByInvestigations(java.util.Collection)}
      */
     protected abstract java.util.Map handleFindByInvestigations( java.util.Collection investigators )
             throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
-     */
-    public java.util.Collection findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleFindByTaxon( taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
 
     /**
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
@@ -453,10 +453,30 @@ public abstract class AnalysisDaoBase extends ubic.gemma.model.common.AuditableD
             throws java.lang.Exception;
 
     /**
+     * Transforms a collection of entities using the {@link #transformEntity(int,ubic.gemma.model.analysis.Analysis)}
+     * method. This method does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.analysis.AnalysisDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.analysis.Analysis)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.analysis.AnalysisDao</code>, please note that the {@link #TRANSFORM_NONE} constant
-     * denotes no transformation, so the entity itself will be returned. If the integer argument value is unknown
+     * <code>ubic.gemma.model.analysis.AnalysisDao</code>, please note that the {@link #TRANSFORM_NONE} constant denotes
+     * no transformation, so the entity itself will be returned. If the integer argument value is unknown
      * {@link #TRANSFORM_NONE} is assumed.
      * 
      * @param transform one of the constants declared in {@link ubic.gemma.model.analysis.AnalysisDao}
@@ -474,24 +494,6 @@ public abstract class AnalysisDaoBase extends ubic.gemma.model.common.AuditableD
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the {@link #transformEntity(int,ubic.gemma.model.analysis.Analysis)}
-     * method. This method does not instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.analysis.AnalysisDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.analysis.Analysis)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

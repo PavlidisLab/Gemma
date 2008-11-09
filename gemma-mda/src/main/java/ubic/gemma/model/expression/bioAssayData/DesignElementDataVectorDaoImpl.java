@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
- 
+
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -127,6 +127,94 @@ public class DesignElementDataVectorDaoImpl extends
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new designElementDataVector: " + designElementDataVector );
         return ( DesignElementDataVector ) create( designElementDataVector );
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    protected Collection<DesignElementDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
+                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
+                + " and dedv.expressionExperiment  = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    protected Collection<DesignElementDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
+                + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    }
+
+    /**
+     * @param ees
+     * @param cs2gene
+     * @return
+     */
+    protected Map<DesignElementDataVector, Collection<Gene>> getPreferredVectorsForProbes(
+            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene ) {
+
+        final String queryString;
+        if ( ees == null || ees.size() == 0 ) {
+            queryString = "select distinct dedv, dedv.designElement from RawExpressionDataVectorImpl dedv "
+                    + " inner join fetch dedv.bioAssayDimension bd "
+                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
+                    + " where dedv.designElement in ( :cs ) and dedv.quantitationType.isPreferred = true";
+        } else {
+            queryString = "select distinct dedv, dedv.designElement from RawExpressionDataVectorImpl dedv"
+                    + " inner join fetch dedv.bioAssayDimension bd "
+                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
+                    + " where dedv.designElement in (:cs ) and dedv.quantitationType.isPreferred = true"
+                    + " and dedv.expressionExperiment in ( :ees )";
+        }
+        return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
+    }
+
+    /**
+     * @param ees
+     * @param cs2gene
+     * @param queryString
+     * @return
+     */
+    protected Map<DesignElementDataVector, Collection<Gene>> getVectorsForProbesInExperiments(
+            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene,
+            final String queryString ) {
+        Session session = super.getSession( false );
+        org.hibernate.Query queryObject = session.createQuery( queryString );
+        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
+        try {
+
+            if ( ees != null && ees.size() > 0 ) {
+                queryObject.setParameterList( "ees", ees );
+            }
+            queryObject.setParameterList( "cs", cs2gene.keySet() );
+
+            ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+
+            while ( results.next() ) {
+                DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
+                CompositeSequence cs = ( CompositeSequence ) results.get( 1 );
+                Collection<Gene> associatedGenes = cs2gene.get( cs );
+                if ( !dedv2genes.containsKey( dedv ) ) {
+                    dedv2genes.put( dedv, associatedGenes );
+                } else {
+                    Collection<Gene> mappedGenes = dedv2genes.get( dedv );
+                    mappedGenes.addAll( associatedGenes );
+                }
+            }
+            results.close();
+            session.clear();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        this.thaw( dedv2genes.keySet() );
+        return dedv2genes;
     }
 
     @Override
@@ -323,94 +411,6 @@ public class DesignElementDataVectorDaoImpl extends
             }
         } );
 
-    }
-
-    /**
-     * @param ees
-     * @param cs2gene
-     * @return
-     */
-    protected Map<DesignElementDataVector, Collection<Gene>> getPreferredVectorsForProbes(
-            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene ) {
-
-        final String queryString;
-        if ( ees == null || ees.size() == 0 ) {
-            queryString = "select distinct dedv, dedv.designElement from RawExpressionDataVectorImpl dedv "
-                    + " inner join fetch dedv.bioAssayDimension bd "
-                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
-                    + " where dedv.designElement in ( :cs ) and dedv.quantitationType.isPreferred = true";
-        } else {
-            queryString = "select distinct dedv, dedv.designElement from RawExpressionDataVectorImpl dedv"
-                    + " inner join fetch dedv.bioAssayDimension bd "
-                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
-                    + " where dedv.designElement in (:cs ) and dedv.quantitationType.isPreferred = true"
-                    + " and dedv.expressionExperiment in ( :ees )";
-        }
-        return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    protected Collection<DesignElementDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
-        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
-                + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    protected Collection<DesignElementDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
-        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
-                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
-                + " and dedv.expressionExperiment  = :ee ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
-    }
-
-    /**
-     * @param ees
-     * @param cs2gene
-     * @param queryString
-     * @return
-     */
-    protected Map<DesignElementDataVector, Collection<Gene>> getVectorsForProbesInExperiments(
-            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene,
-            final String queryString ) {
-        Session session = super.getSession( false );
-        org.hibernate.Query queryObject = session.createQuery( queryString );
-        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
-        try {
-
-            if ( ees != null && ees.size() > 0 ) {
-                queryObject.setParameterList( "ees", ees );
-            }
-            queryObject.setParameterList( "cs", cs2gene.keySet() );
-
-            ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
-            while ( results.next() ) {
-                DesignElementDataVector dedv = ( DesignElementDataVector ) results.get( 0 );
-                CompositeSequence cs = ( CompositeSequence ) results.get( 1 );
-                Collection<Gene> associatedGenes = cs2gene.get( cs );
-                if ( !dedv2genes.containsKey( dedv ) ) {
-                    dedv2genes.put( dedv, associatedGenes );
-                } else {
-                    Collection<Gene> mappedGenes = dedv2genes.get( dedv );
-                    mappedGenes.addAll( associatedGenes );
-                }
-            }
-            results.close();
-            session.clear();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        this.thaw( dedv2genes.keySet() );
-        return dedv2genes;
     }
 
     /**

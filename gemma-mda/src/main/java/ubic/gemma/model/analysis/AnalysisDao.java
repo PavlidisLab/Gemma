@@ -27,108 +27,6 @@ package ubic.gemma.model.analysis;
  */
 public interface AnalysisDao extends ubic.gemma.model.common.AuditableDao {
     /**
-     * Loads an instance of ubic.gemma.model.analysis.Analysis from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.analysis.Analysis}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Updates the <code>analysis</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.analysis.Analysis analysis );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.analysis.Analysis from the persistent store.
-     */
-    public void remove( ubic.gemma.model.analysis.Analysis analysis );
-
-    /**
-     * Removes the instance of ubic.gemma.model.analysis.Analysis having the given <code>identifier</code> from the
-     * persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * <p>
-     * Returns a collection of anaylsis that have a name that starts with the given name
-     * </p>
-     */
-    public java.util.Collection findByName( java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByName(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection findByName( String queryString, java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection findByName( int transform, java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByName(int, java.lang.String name)}.
-     * </p>
-     */
-    public java.util.Collection findByName( int transform, String queryString, java.lang.String name );
-
-    /**
      * 
      */
     public java.util.Collection findByInvestigation( ubic.gemma.model.analysis.Investigation investigation );
@@ -145,8 +43,110 @@ public interface AnalysisDao extends ubic.gemma.model.common.AuditableDao {
     public java.util.Map findByInvestigations( java.util.Collection investigators );
 
     /**
+     * <p>
+     * Does the same thing as {@link #findByName(java.lang.String)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public java.util.Collection findByName( int transform, java.lang.String name );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByName(boolean, java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByName(int, java.lang.String name)}.
+     * </p>
+     */
+    public java.util.Collection findByName( int transform, String queryString, java.lang.String name );
+
+    /**
+     * <p>
+     * Returns a collection of anaylsis that have a name that starts with the given name
+     * </p>
+     */
+    public java.util.Collection findByName( java.lang.String name );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByName(java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByName(java.lang.String)}.
+     * </p>
+     */
+    public java.util.Collection findByName( String queryString, java.lang.String name );
+
+    /**
      * 
      */
     public java.util.Collection findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
+     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
+     * </p>
+     * 
+     * @param id the identifier of the entity to load.
+     * @return either the entity or the object transformed from the entity.
+     */
+    public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.analysis.Analysis from the persistent store.
+     */
+    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+
+    /**
+     * Loads all entities of type {@link ubic.gemma.model.analysis.Analysis}.
+     * 
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll();
+
+    /**
+     * <p>
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * operation which can optionally transform the entity (into a value object for example). By default, transformation
+     * does not occur.
+     * </p>
+     * 
+     * @param transform the flag indicating what transformation to use.
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll( final int transform );
+
+    /**
+     * Removes the instance of ubic.gemma.model.analysis.Analysis having the given <code>identifier</code> from the
+     * persistent store.
+     */
+    public void remove( java.lang.Long id );
+
+    /**
+     * Removes all entities in the given <code>entities<code> collection.
+     */
+    public void remove( java.util.Collection entities );
+
+    /**
+     * Removes the instance of ubic.gemma.model.analysis.Analysis from the persistent store.
+     */
+    public void remove( ubic.gemma.model.analysis.Analysis analysis );
+
+    /**
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     */
+    public void update( java.util.Collection entities );
+
+    /**
+     * Updates the <code>analysis</code> instance in the persistent store.
+     */
+    public void update( ubic.gemma.model.analysis.Analysis analysis );
 
 }

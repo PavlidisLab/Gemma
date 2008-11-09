@@ -90,16 +90,16 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
     //
     private MailEngine mailEngine;
 
-    public void setMailEngine( MailEngine mailEngine ) {
-        this.mailEngine = mailEngine;
-    }
-
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
     }
 
     public void setAuditEventService( AuditEventService auditEventService ) {
         this.auditEventService = auditEventService;
+    }
+
+    public void setMailEngine( MailEngine mailEngine ) {
+        this.mailEngine = mailEngine;
     }
 
     /**
@@ -236,6 +236,22 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
     }
 
     /**
+     * @param results
+     */
+    private void sendEmail( Gene2CsStatus results ) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        String adminEmailAddress = ConfigUtils.getAdminEmailAddress();
+        if ( StringUtils.isBlank( adminEmailAddress ) ) {
+            log.warn( "No administrator email address could be found, so gene2cs status email will not be sent." );
+            return;
+        }
+        msg.setTo( adminEmailAddress );
+        msg.setSubject( "Gene2Cs update status." );
+        msg.setText( "Gene2Cs updating was run.\n" + results.getAnnotation() );
+        mailEngine.send( msg );
+    }
+
+    /**
      * @param annotation extra text that describes the status
      * @param e
      * @throws IOException
@@ -255,22 +271,6 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
         oos.flush();
         oos.close();
         return status;
-    }
-
-    /**
-     * @param results
-     */
-    private void sendEmail( Gene2CsStatus results ) {
-        SimpleMailMessage msg = new SimpleMailMessage();
-        String adminEmailAddress = ConfigUtils.getAdminEmailAddress();
-        if ( StringUtils.isBlank( adminEmailAddress ) ) {
-            log.warn( "No administrator email address could be found, so gene2cs status email will not be sent." );
-            return;
-        }
-        msg.setTo( adminEmailAddress );
-        msg.setSubject( "Gene2Cs update status." );
-        msg.setText( "Gene2Cs updating was run.\n" + results.getAnnotation() );
-        mailEngine.send( msg );
     }
 
 }

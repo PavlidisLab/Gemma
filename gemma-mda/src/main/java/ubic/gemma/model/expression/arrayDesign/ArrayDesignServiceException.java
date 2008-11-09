@@ -35,40 +35,6 @@ public class ArrayDesignServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 2091181022355769631L;
 
     /**
-     * The default constructor for <code>ArrayDesignServiceException</code>.
-     */
-    public ArrayDesignServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>ArrayDesignServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public ArrayDesignServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>ArrayDesignServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public ArrayDesignServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>ArrayDesignServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public ArrayDesignServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class ArrayDesignServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>ArrayDesignServiceException</code>.
+     */
+    public ArrayDesignServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>ArrayDesignServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public ArrayDesignServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>ArrayDesignServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public ArrayDesignServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>ArrayDesignServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public ArrayDesignServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

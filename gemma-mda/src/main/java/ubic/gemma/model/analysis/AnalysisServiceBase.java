@@ -24,8 +24,8 @@ package ubic.gemma.model.analysis;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.analysis.AnalysisService</code>, provides access to all
- * services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.analysis.AnalysisService</code>, provides access to all services
+ * and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.analysis.AnalysisService
@@ -35,17 +35,94 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
     private ubic.gemma.model.analysis.AnalysisDao analysisDao;
 
     /**
-     * Sets the reference to <code>analysis</code>'s DAO.
+     * @see ubic.gemma.model.analysis.AnalysisService#delete(java.lang.Long)
      */
-    public void setAnalysisDao( ubic.gemma.model.analysis.AnalysisDao analysisDao ) {
-        this.analysisDao = analysisDao;
+    public void delete( final java.lang.Long idToDelete ) {
+        try {
+            this.handleDelete( idToDelete );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.AnalysisServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.delete(java.lang.Long idToDelete)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the reference to <code>analysis</code>'s DAO.
+     * @see ubic.gemma.model.analysis.AnalysisService#delete(ubic.gemma.model.analysis.Analysis)
      */
-    protected ubic.gemma.model.analysis.AnalysisDao getAnalysisDao() {
-        return this.analysisDao;
+    public void delete( final ubic.gemma.model.analysis.Analysis toDelete ) {
+        try {
+            this.handleDelete( toDelete );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.AnalysisServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.delete(ubic.gemma.model.analysis.Analysis toDelete)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#findByInvestigation(ubic.gemma.model.analysis.Investigation)
+     */
+    public java.util.Collection findByInvestigation( final ubic.gemma.model.analysis.Investigation investigation ) {
+        try {
+            return this.handleFindByInvestigation( investigation );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.AnalysisServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByInvestigation(ubic.gemma.model.analysis.Investigation investigation)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#findByInvestigations(java.util.Collection)
+     */
+    public java.util.Map findByInvestigations( final java.util.Collection investigations ) {
+        try {
+            return this.handleFindByInvestigations( investigations );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.AnalysisServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByInvestigations(java.util.Collection investigations)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#findByName(java.lang.String)
+     */
+    public ubic.gemma.model.analysis.Analysis findByName( final java.lang.String name ) {
+        try {
+            return this.handleFindByName( name );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.AnalysisServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByName(java.lang.String name)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#findByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    public java.util.Collection findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.handleFindByTaxon( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.AnalysisServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#findByUniqueInvestigations(java.util.Collection)
+     */
+    public ubic.gemma.model.analysis.Analysis findByUniqueInvestigations( final java.util.Collection investigations ) {
+        try {
+            return this.handleFindByUniqueInvestigations( investigations );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.AnalysisServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByUniqueInvestigations(java.util.Collection investigations)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -62,11 +139,6 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
     }
 
     /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.analysis.Analysis handleLoad( java.lang.Long id ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
      */
     public java.util.Collection loadAll() {
@@ -79,176 +151,17 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
     }
 
     /**
-     * Performs the core logic for {@link #loadAll()}
+     * Sets the reference to <code>analysis</code>'s DAO.
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#delete(ubic.gemma.model.analysis.Analysis)
-     */
-    public void delete( final ubic.gemma.model.analysis.Analysis toDelete ) {
-        try {
-            this.handleDelete( toDelete );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.AnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.delete(ubic.gemma.model.analysis.Analysis toDelete)' --> "
-                            + th, th );
-        }
+    public void setAnalysisDao( ubic.gemma.model.analysis.AnalysisDao analysisDao ) {
+        this.analysisDao = analysisDao;
     }
 
     /**
-     * Performs the core logic for {@link #delete(ubic.gemma.model.analysis.Analysis)}
+     * Gets the reference to <code>analysis</code>'s DAO.
      */
-    protected abstract void handleDelete( ubic.gemma.model.analysis.Analysis toDelete ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#delete(java.lang.Long)
-     */
-    public void delete( final java.lang.Long idToDelete ) {
-        try {
-            this.handleDelete( idToDelete );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.AnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.delete(java.lang.Long idToDelete)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #delete(java.lang.Long)}
-     */
-    protected abstract void handleDelete( java.lang.Long idToDelete ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#findByInvestigation(ubic.gemma.model.analysis.Investigation)
-     */
-    public java.util.Collection findByInvestigation( final ubic.gemma.model.analysis.Investigation investigation ) {
-        try {
-            return this.handleFindByInvestigation( investigation );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.AnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByInvestigation(ubic.gemma.model.analysis.Investigation investigation)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByInvestigation(ubic.gemma.model.analysis.Investigation)}
-     */
-    protected abstract java.util.Collection handleFindByInvestigation(
-            ubic.gemma.model.analysis.Investigation investigation ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#findByInvestigations(java.util.Collection)
-     */
-    public java.util.Map findByInvestigations( final java.util.Collection investigations ) {
-        try {
-            return this.handleFindByInvestigations( investigations );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.AnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByInvestigations(java.util.Collection investigations)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByInvestigations(java.util.Collection)}
-     */
-    protected abstract java.util.Map handleFindByInvestigations( java.util.Collection investigations )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#findByUniqueInvestigations(java.util.Collection)
-     */
-    public ubic.gemma.model.analysis.Analysis findByUniqueInvestigations( final java.util.Collection investigations ) {
-        try {
-            return this.handleFindByUniqueInvestigations( investigations );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.AnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByUniqueInvestigations(java.util.Collection investigations)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByUniqueInvestigations(java.util.Collection)}
-     */
-    protected abstract ubic.gemma.model.analysis.Analysis handleFindByUniqueInvestigations(
-            java.util.Collection investigations ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#findByName(java.lang.String)
-     */
-    public ubic.gemma.model.analysis.Analysis findByName( final java.lang.String name ) {
-        try {
-            return this.handleFindByName( name );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.AnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByName(java.lang.String name)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByName(java.lang.String)}
-     */
-    protected abstract ubic.gemma.model.analysis.Analysis handleFindByName( java.lang.String name )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#findByTaxon(ubic.gemma.model.genome.Taxon)
-     */
-    public java.util.Collection findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleFindByTaxon( taxon );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.AnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract java.util.Collection handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.analysis.AnalysisDao getAnalysisDao() {
+        return this.analysisDao;
     }
 
     /**
@@ -263,5 +176,91 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #delete(java.lang.Long)}
+     */
+    protected abstract void handleDelete( java.lang.Long idToDelete ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #delete(ubic.gemma.model.analysis.Analysis)}
+     */
+    protected abstract void handleDelete( ubic.gemma.model.analysis.Analysis toDelete ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByInvestigation(ubic.gemma.model.analysis.Investigation)}
+     */
+    protected abstract java.util.Collection handleFindByInvestigation(
+            ubic.gemma.model.analysis.Investigation investigation ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByInvestigations(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleFindByInvestigations( java.util.Collection investigations )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByName(java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.analysis.Analysis handleFindByName( java.lang.String name )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract java.util.Collection handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByUniqueInvestigations(java.util.Collection)}
+     */
+    protected abstract ubic.gemma.model.analysis.Analysis handleFindByUniqueInvestigations(
+            java.util.Collection investigations ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.analysis.Analysis handleLoad( java.lang.Long id ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAll()}
+     */
+    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
 
 }

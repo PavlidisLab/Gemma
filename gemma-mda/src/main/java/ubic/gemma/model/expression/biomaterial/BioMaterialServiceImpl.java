@@ -32,15 +32,15 @@ import java.util.List;
  */
 public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase {
 
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#getBioMaterials()
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleCopy(ubic.gemma.model.expression.biomaterial
+     * .BioMaterial)
      */
     @Override
-    @SuppressWarnings("unchecked")
-    protected java.util.List handleGetBioMaterials() throws java.lang.Exception {
-        List<BioMaterial> results = new ArrayList<BioMaterial>();
-        results.addAll( this.getBioMaterialDao().loadAll() );
-        return results;
+    protected BioMaterial handleCopy( BioMaterial bioMaterial ) throws Exception {
+        return this.getBioMaterialDao().copy( bioMaterial );
     }
 
     @Override
@@ -49,11 +49,13 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#saveBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     * @param bioMaterial
+     * @return
+     * @throws Exception
      */
-    protected void handleSaveBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial )
-            throws java.lang.Exception {
-        this.getBioMaterialDao().create( bioMaterial );
+    @Override
+    protected BioMaterial handleCreate( BioMaterial bioMaterial ) throws Exception {
+        return ( BioMaterial ) this.getBioMaterialDao().create( bioMaterial );
     }
 
     /**
@@ -65,12 +67,14 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#remove(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#getBioMaterials()
      */
     @Override
-    protected void handleRemove( BioMaterial bioMaterial ) throws Exception {
-        this.getBioMaterialDao().remove( bioMaterial );
-
+    @SuppressWarnings("unchecked")
+    protected java.util.List handleGetBioMaterials() throws java.lang.Exception {
+        List<BioMaterial> results = new ArrayList<BioMaterial>();
+        results.addAll( this.getBioMaterialDao().loadAll() );
+        return results;
     }
 
     /**
@@ -91,42 +95,39 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleUpdate(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    @Override
-    protected void handleUpdate( BioMaterial bioMaterial ) throws Exception {
-        this.getBioMaterialDao().update( bioMaterial );
-    }
-
-    /**
-     * @param bioMaterial
-     * @return
-     * @throws Exception
-     */
-    @Override
-    protected BioMaterial handleCreate( BioMaterial bioMaterial ) throws Exception {
-        return ( BioMaterial ) this.getBioMaterialDao().create( bioMaterial );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleCopy(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    @Override
-    protected BioMaterial handleCopy( BioMaterial bioMaterial ) throws Exception {
-        return this.getBioMaterialDao().copy( bioMaterial );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
     protected Collection handleLoadMultiple( Collection ids ) throws Exception {
         return this.getBioMaterialDao().load( ids );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#remove(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    @Override
+    protected void handleRemove( BioMaterial bioMaterial ) throws Exception {
+        this.getBioMaterialDao().remove( bioMaterial );
+
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#saveBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    protected void handleSaveBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial )
+            throws java.lang.Exception {
+        this.getBioMaterialDao().create( bioMaterial );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleUpdate(ubic.gemma.model.expression.biomaterial
+     * .BioMaterial)
+     */
+    @Override
+    protected void handleUpdate( BioMaterial bioMaterial ) throws Exception {
+        this.getBioMaterialDao().update( bioMaterial );
     }
 
 }

@@ -75,46 +75,6 @@ public abstract class BioSequence2GeneProductDaoBase extends ubic.gemma.model.as
     }
 
     /**
-     * @see ubic.gemma.model.association.BioSequence2GeneProductDao#update(ubic.gemma.model.association.BioSequence2GeneProduct)
-     */
-    public void update( ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct ) {
-        if ( bioSequence2GeneProduct == null ) {
-            throw new IllegalArgumentException(
-                    "BioSequence2GeneProduct.update - 'bioSequence2GeneProduct' can not be null" );
-        }
-        this.getHibernateTemplate().update( bioSequence2GeneProduct );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BioSequence2GeneProduct.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.association.BioSequence2GeneProduct ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.BioSequence2GeneProductDao#remove(ubic.gemma.model.association.BioSequence2GeneProduct)
-     */
-    public void remove( ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct ) {
-        if ( bioSequence2GeneProduct == null ) {
-            throw new IllegalArgumentException(
-                    "BioSequence2GeneProduct.remove - 'bioSequence2GeneProduct' can not be null" );
-        }
-        this.getHibernateTemplate().delete( bioSequence2GeneProduct );
-    }
-
-    /**
      * @see ubic.gemma.model.association.BioSequence2GeneProductDao#remove(java.lang.Long)
      */
     @Override
@@ -141,6 +101,68 @@ public abstract class BioSequence2GeneProductDaoBase extends ubic.gemma.model.as
     }
 
     /**
+     * @see ubic.gemma.model.association.BioSequence2GeneProductDao#remove(ubic.gemma.model.association.BioSequence2GeneProduct)
+     */
+    public void remove( ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct ) {
+        if ( bioSequence2GeneProduct == null ) {
+            throw new IllegalArgumentException(
+                    "BioSequence2GeneProduct.remove - 'bioSequence2GeneProduct' can not be null" );
+        }
+        this.getHibernateTemplate().delete( bioSequence2GeneProduct );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BioSequence2GeneProduct.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.association.BioSequence2GeneProduct ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.BioSequence2GeneProductDao#update(ubic.gemma.model.association.BioSequence2GeneProduct)
+     */
+    public void update( ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct ) {
+        if ( bioSequence2GeneProduct == null ) {
+            throw new IllegalArgumentException(
+                    "BioSequence2GeneProduct.update - 'bioSequence2GeneProduct' can not be null" );
+        }
+        this.getHibernateTemplate().update( bioSequence2GeneProduct );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.association.BioSequence2GeneProduct)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.association.BioSequence2GeneProductDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.association.BioSequence2GeneProduct)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.association.BioSequence2GeneProductDao</code>, please note that the
@@ -163,26 +185,6 @@ public abstract class BioSequence2GeneProductDaoBase extends ubic.gemma.model.as
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.association.BioSequence2GeneProduct)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.association.BioSequence2GeneProductDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.association.BioSequence2GeneProduct)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

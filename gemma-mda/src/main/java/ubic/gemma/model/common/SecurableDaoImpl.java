@@ -34,18 +34,26 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.SecurableDaoBase#getRecipient(java.lang.Long)
+     * @see ubic.gemma.model.common.SecurableDaoBase#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
      */
     @Override
-    public String getRecipient( Long id ) {
+    public Long getAclObjectIdentityId( Securable target ) {
 
-        String queryString = "SELECT recipient FROM acl_permission WHERE acl_object_identity = ?";
+        String objectIdentity = createObjectIdentityFromObject( target );
+
+        String queryString = "SELECT id FROM acl_object_identity WHERE object_identity = ?";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
-            queryObject.setParameter( 0, id );
-            return ( String ) queryObject.uniqueResult();
+            queryObject.setParameter( 0, objectIdentity );
+            Integer result = ( Integer ) queryObject.uniqueResult();
+
+            Long longId = null;
+            if ( result != null ) {
+                longId = new Long( result );
+            }
+
+            return longId;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -53,7 +61,27 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
+     * @see ubic.gemma.model.common.SecurableDao#getAclObjectIdentityParent(ubic.gemma.model.common.Securable)
+     */
+    public Integer getAclObjectIdentityParentId( Securable target ) {
+
+        String objectIdentity = createObjectIdentityFromObject( target );
+
+        String queryString = "select parent_object from acl_object_identity where object_identity = ?";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setParameter( 0, objectIdentity );
+            Integer result = ( Integer ) queryObject.uniqueResult();
+
+            return result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.model.common.SecurableDaoBase#getMask(java.lang.Long)
      */
     @Override
@@ -105,49 +133,17 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.SecurableDaoBase#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.common.SecurableDaoBase#getRecipient(java.lang.Long)
      */
     @Override
-    public Long getAclObjectIdentityId( Securable target ) {
+    public String getRecipient( Long id ) {
 
-        String objectIdentity = createObjectIdentityFromObject( target );
-
-        String queryString = "SELECT id FROM acl_object_identity WHERE object_identity = ?";
+        String queryString = "SELECT recipient FROM acl_permission WHERE acl_object_identity = ?";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
-            queryObject.setParameter( 0, objectIdentity );
-            Integer result = ( Integer ) queryObject.uniqueResult();
-
-            Long longId = null;
-            if ( result != null ) {
-                longId = new Long( result );
-            }
-
-            return longId;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.SecurableDao#getAclObjectIdentityParent(ubic.gemma.model.common.Securable)
-     */
-    public Integer getAclObjectIdentityParentId( Securable target ) {
-
-        String objectIdentity = createObjectIdentityFromObject( target );
-
-        String queryString = "select parent_object from acl_object_identity where object_identity = ?";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
-            queryObject.setParameter( 0, objectIdentity );
-            Integer result = ( Integer ) queryObject.uniqueResult();
-
-            return result;
+            queryObject.setParameter( 0, id );
+            return ( String ) queryObject.uniqueResult();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

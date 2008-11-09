@@ -87,7 +87,6 @@ abstract public class GenomePersister extends CommonPersister {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
@@ -112,7 +111,6 @@ abstract public class GenomePersister extends CommonPersister {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
     @Override
@@ -350,37 +348,6 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
-     * @param geneProduct
-     */
-    private void fillInGeneProductAssociations( GeneProduct geneProduct ) {
-        if ( geneProduct.getAccessions() != null ) {
-            for ( DatabaseEntry de : geneProduct.getAccessions() ) {
-                de.setExternalDatabase( persistExternalDatabase( de.getExternalDatabase() ) );
-            }
-        }
-
-        if ( geneProduct.getCdsPhysicalLocation() != null ) {
-            geneProduct.getCdsPhysicalLocation().setChromosome(
-                    persistChromosome( geneProduct.getCdsPhysicalLocation().getChromosome() ) );
-        }
-
-        if ( geneProduct.getPhysicalLocation() != null ) {
-            geneProduct.getPhysicalLocation().setChromosome(
-                    persistChromosome( geneProduct.getPhysicalLocation().getChromosome() ) );
-
-            // sanity check, as we've had this problem...somehow.
-            assert geneProduct.getPhysicalLocation().getChromosome().getTaxon().equals(
-                    geneProduct.getGene().getTaxon() );
-        }
-
-        if ( geneProduct.getExons() != null ) {
-            for ( PhysicalLocation exon : geneProduct.getExons() ) {
-                exon.setChromosome( persistChromosome( exon.getChromosome() ) );
-            }
-        }
-    }
-
-    /**
      * @param bioSequence
      * @return
      */
@@ -526,68 +493,6 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
-     * @param existing
-     * @param geneProduct information from this is copied onto the 'existing' gene product.
-     * @return
-     */
-    private GeneProduct updateGeneProduct( GeneProduct existing, GeneProduct geneProduct ) {
-        assert !isTransient( existing.getGene() );
-
-        existing.setName( geneProduct.getName() );
-        existing.setDescription( geneProduct.getDescription() );
-        existing.setNcbiId( geneProduct.getNcbiId() );
-
-        addAnyNewAccessions( existing, geneProduct );
-
-        existing.setCdsPhysicalLocation( geneProduct.getCdsPhysicalLocation() );
-        if ( existing.getCdsPhysicalLocation() != null ) {
-            existing.getCdsPhysicalLocation().setChromosome(
-                    persistChromosome( existing.getCdsPhysicalLocation().getChromosome() ) );
-        }
-
-        existing.setPhysicalLocation( geneProduct.getPhysicalLocation() );
-        if ( existing.getPhysicalLocation() != null ) {
-
-            existing.getPhysicalLocation().setChromosome(
-                    persistChromosome( existing.getPhysicalLocation().getChromosome() ) );
-
-            // sanity check, as we've had this problem...somehow.
-            if ( !existing.getPhysicalLocation().getChromosome().getTaxon().equals( existing.getGene().getTaxon() ) ) {
-                throw new IllegalStateException( "Taxa don't match for gene product location and gene" );
-            }
-        }
-
-        existing.setExons( geneProduct.getExons() );
-        if ( existing.getExons() != null ) {
-
-            for ( PhysicalLocation exon : existing.getExons() ) {
-                exon.setChromosome( persistChromosome( exon.getChromosome() ) );
-            }
-        }
-
-        // geneProductService.update( existing );
-
-        return existing;
-    }
-
-    /**
-     * @param existing
-     * @param geneProduct
-     */
-    private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct ) {
-        Map<String, DatabaseEntry> updatedGpMap = new HashMap<String, DatabaseEntry>();
-        for ( DatabaseEntry de : existing.getAccessions() ) {
-            updatedGpMap.put( de.getAccession(), de );
-        }
-        for ( DatabaseEntry de : geneProduct.getAccessions() ) {
-            if ( !updatedGpMap.containsKey( de.getAccession() ) ) {
-                fillInDatabaseEntry( de );
-                existing.getAccessions().add( de );
-            }
-        }
-    }
-
-    /**
      * @param taxon
      */
     protected Taxon persistTaxon( Taxon taxon ) {
@@ -627,12 +532,65 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
+     * @param existing
+     * @param geneProduct
+     */
+    private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct ) {
+        Map<String, DatabaseEntry> updatedGpMap = new HashMap<String, DatabaseEntry>();
+        for ( DatabaseEntry de : existing.getAccessions() ) {
+            updatedGpMap.put( de.getAccession(), de );
+        }
+        for ( DatabaseEntry de : geneProduct.getAccessions() ) {
+            if ( !updatedGpMap.containsKey( de.getAccession() ) ) {
+                fillInDatabaseEntry( de );
+                existing.getAccessions().add( de );
+            }
+        }
+    }
+
+    /**
      * @param chromosomeLocation
      * @return
      */
     private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation ) {
         if ( chromosomeLocation == null ) return;
         chromosomeLocation.setChromosome( persistChromosome( chromosomeLocation.getChromosome() ) );
+    }
+
+    /**
+     * @param geneProduct
+     */
+    private void fillInGeneProductAssociations( GeneProduct geneProduct ) {
+        if ( geneProduct.getAccessions() != null ) {
+            for ( DatabaseEntry de : geneProduct.getAccessions() ) {
+                de.setExternalDatabase( persistExternalDatabase( de.getExternalDatabase() ) );
+            }
+        }
+
+        if ( geneProduct.getCdsPhysicalLocation() != null ) {
+            geneProduct.getCdsPhysicalLocation().setChromosome(
+                    persistChromosome( geneProduct.getCdsPhysicalLocation().getChromosome() ) );
+        }
+
+        if ( geneProduct.getPhysicalLocation() != null ) {
+            geneProduct.getPhysicalLocation().setChromosome(
+                    persistChromosome( geneProduct.getPhysicalLocation().getChromosome() ) );
+
+            // sanity check, as we've had this problem...somehow.
+            assert geneProduct.getPhysicalLocation().getChromosome().getTaxon().equals(
+                    geneProduct.getGene().getTaxon() );
+        }
+
+        if ( geneProduct.getExons() != null ) {
+            for ( PhysicalLocation exon : geneProduct.getExons() ) {
+                exon.setChromosome( persistChromosome( exon.getChromosome() ) );
+            }
+        }
+    }
+
+    private PhysicalLocation fillPhysicalLocationAssociations( PhysicalLocation physicalLocation ) {
+        physicalLocation.setChromosome( persistChromosome( physicalLocation.getChromosome() ) );
+        return physicalLocation;
     }
 
     /**
@@ -686,11 +644,6 @@ abstract public class GenomePersister extends CommonPersister {
         if ( blatResult.getTargetAlignedRegion() != null )
             blatResult.setTargetAlignedRegion( fillPhysicalLocationAssociations( blatResult.getTargetAlignedRegion() ) );
         return blatResultService.create( blatResult );
-    }
-
-    private PhysicalLocation fillPhysicalLocationAssociations( PhysicalLocation physicalLocation ) {
-        physicalLocation.setChromosome( persistChromosome( physicalLocation.getChromosome() ) );
-        return physicalLocation;
     }
 
     /**
@@ -749,5 +702,50 @@ abstract public class GenomePersister extends CommonPersister {
         } else {
             throw new UnsupportedOperationException( "Don't know how to persist a " + result.getClass().getName() );
         }
+    }
+
+    /**
+     * @param existing
+     * @param geneProduct information from this is copied onto the 'existing' gene product.
+     * @return
+     */
+    private GeneProduct updateGeneProduct( GeneProduct existing, GeneProduct geneProduct ) {
+        assert !isTransient( existing.getGene() );
+
+        existing.setName( geneProduct.getName() );
+        existing.setDescription( geneProduct.getDescription() );
+        existing.setNcbiId( geneProduct.getNcbiId() );
+
+        addAnyNewAccessions( existing, geneProduct );
+
+        existing.setCdsPhysicalLocation( geneProduct.getCdsPhysicalLocation() );
+        if ( existing.getCdsPhysicalLocation() != null ) {
+            existing.getCdsPhysicalLocation().setChromosome(
+                    persistChromosome( existing.getCdsPhysicalLocation().getChromosome() ) );
+        }
+
+        existing.setPhysicalLocation( geneProduct.getPhysicalLocation() );
+        if ( existing.getPhysicalLocation() != null ) {
+
+            existing.getPhysicalLocation().setChromosome(
+                    persistChromosome( existing.getPhysicalLocation().getChromosome() ) );
+
+            // sanity check, as we've had this problem...somehow.
+            if ( !existing.getPhysicalLocation().getChromosome().getTaxon().equals( existing.getGene().getTaxon() ) ) {
+                throw new IllegalStateException( "Taxa don't match for gene product location and gene" );
+            }
+        }
+
+        existing.setExons( geneProduct.getExons() );
+        if ( existing.getExons() != null ) {
+
+            for ( PhysicalLocation exon : existing.getExons() ) {
+                exon.setChromosome( persistChromosome( exon.getChromosome() ) );
+            }
+        }
+
+        // geneProductService.update( existing );
+
+        return existing;
     }
 }

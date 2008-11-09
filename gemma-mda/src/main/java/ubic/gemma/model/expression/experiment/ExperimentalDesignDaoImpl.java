@@ -34,27 +34,9 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#find(ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-    @Override
-    public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign ) {
-        // FIXME move to checkKey; key is not complete!!!
-        if ( experimentalDesign.getName() == null ) {
-            throw new IllegalArgumentException( "ExperimentalDesign must have name or external accession." );
-        }
-        ExperimentalDesign existingExperimentalDesign = this.find( experimentalDesign );
-        if ( existingExperimentalDesign != null ) {
-            return existingExperimentalDesign;
-        }
-        log.debug( "Creating new ExperimentalDesign: " + experimentalDesign.getName() );
-        return ( ExperimentalDesign ) create( experimentalDesign );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#find(ubic.gemma.model.expression.experiment.ExperimentalDesign)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#find(ubic.gemma.model.expression.experiment.
+     * ExperimentalDesign)
      */
     @Override
     public ExperimentalDesign find( ExperimentalDesign ExperimentalDesign ) {
@@ -83,8 +65,29 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#handleGetExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#find(ubic.gemma.model.expression.experiment.
+     * ExperimentalDesign)
+     */
+    @Override
+    public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign ) {
+        // FIXME move to checkKey; key is not complete!!!
+        if ( experimentalDesign.getName() == null ) {
+            throw new IllegalArgumentException( "ExperimentalDesign must have name or external accession." );
+        }
+        ExperimentalDesign existingExperimentalDesign = this.find( experimentalDesign );
+        if ( existingExperimentalDesign != null ) {
+            return existingExperimentalDesign;
+        }
+        log.debug( "Creating new ExperimentalDesign: " + experimentalDesign.getName() );
+        return ( ExperimentalDesign ) create( experimentalDesign );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#handleGetExpressionExperiment(ubic.gemma.model
+     * .expression.experiment.ExperimentalDesign)
      */
     @SuppressWarnings("unchecked")
     @Override

@@ -41,8 +41,9 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoBase#find(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoBase#find(ubic.gemma.model.expression.bioAssayData
+     * .BioAssayDimension)
      */
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
@@ -92,8 +93,8 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoBase#findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
+     * @seeubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoBase#findOrCreate(ubic.gemma.model.expression.
+     * bioAssayData.BioAssayDimension)
      */
     @Override
     public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension ) {

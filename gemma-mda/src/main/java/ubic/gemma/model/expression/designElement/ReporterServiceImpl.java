@@ -29,12 +29,36 @@ import java.util.Collection;
  */
 public class ReporterServiceImpl extends ubic.gemma.model.expression.designElement.ReporterServiceBase {
 
-    /**
-     * @see ubic.gemma.model.expression.designElement.ReporterService#saveReporter(ubic.gemma.model.expression.designElement.Reporter)
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.designElement.ReporterServiceBase#handleCreate(java.util.Collection)
      */
-    protected void handleSaveReporter( ubic.gemma.model.expression.designElement.Reporter reporter )
-            throws java.lang.Exception {
-        this.getReporterDao().create( reporter );
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleCreate( Collection reporters ) throws Exception {
+        return this.getReporterDao().create( reporters );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.designElement.ReporterServiceBase#handleCreate(ubic.gemma.model.expression.designElement
+     * .Reporter)
+     */
+    @Override
+    protected Reporter handleCreate( Reporter reporter ) throws Exception {
+        return ( Reporter ) this.getReporterDao().create( reporter );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.designElement.ReporterServiceBase#handleFind(ubic.gemma.model.expression.designElement
+     * .Reporter)
+     */
+    @Override
+    protected Reporter handleFind( Reporter reporter ) throws Exception {
+        return this.getReporterDao().find( reporter );
     }
 
     @Override
@@ -48,35 +72,12 @@ public class ReporterServiceImpl extends ubic.gemma.model.expression.designEleme
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.ReporterServiceBase#handleFind(ubic.gemma.model.expression.designElement.Reporter)
+    /**
+     * @see ubic.gemma.model.expression.designElement.ReporterService#saveReporter(ubic.gemma.model.expression.designElement.Reporter)
      */
-    @Override
-    protected Reporter handleFind( Reporter reporter ) throws Exception {
-        return this.getReporterDao().find( reporter );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.ReporterServiceBase#handleCreate(ubic.gemma.model.expression.designElement.Reporter)
-     */
-    @Override
-    protected Reporter handleCreate( Reporter reporter ) throws Exception {
-        return ( Reporter ) this.getReporterDao().create( reporter );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.ReporterServiceBase#handleCreate(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleCreate( Collection reporters ) throws Exception {
-        return this.getReporterDao().create( reporters );
+    protected void handleSaveReporter( ubic.gemma.model.expression.designElement.Reporter reporter )
+            throws java.lang.Exception {
+        this.getReporterDao().create( reporter );
     }
 
 }

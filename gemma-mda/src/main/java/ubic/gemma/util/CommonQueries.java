@@ -97,29 +97,25 @@ public class CommonQueries {
     }
 
     /**
-     * @param genes
+     * Given a gene, get all the composite sequences that map to it.
+     * 
+     * @param gene
+     * @param session
      * @return
      */
-    public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes, Session session ) {
+    @SuppressWarnings("unchecked")
+    public static Collection<CompositeSequence> getCompositeSequences( Gene gene, Session session ) {
 
-        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+        /*
+         * TODO should there be a constraint on taxon for the array design?
+         */
+        final String csQueryString = "select distinct cs from GeneImpl as gene"
                 + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and gene in (:genes)";
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene = :gene ";
 
-        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
-        queryObject.setParameterList( "genes", genes );
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-            CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
-            Gene g = ( Gene ) results.get( 1 );
-            if ( !cs2gene.containsKey( cs ) ) {
-                cs2gene.put( cs, new HashSet<Gene>() );
-            }
-            cs2gene.get( cs ).add( g );
-        }
-        results.close();
-        return cs2gene;
+        queryObject.setParameter( "gene", gene );
+        return queryObject.list();
     }
 
     /**
@@ -153,25 +149,29 @@ public class CommonQueries {
     }
 
     /**
-     * Given a gene, get all the composite sequences that map to it.
-     * 
-     * @param gene
-     * @param session
+     * @param genes
      * @return
      */
-    @SuppressWarnings("unchecked")
-    public static Collection<CompositeSequence> getCompositeSequences( Gene gene, Session session ) {
+    public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes, Session session ) {
 
-        /*
-         * TODO should there be a constraint on taxon for the array design?
-         */
-        final String csQueryString = "select distinct cs from GeneImpl as gene"
+        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
                 + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene = :gene ";
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and gene in (:genes)";
 
+        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
-        queryObject.setParameter( "gene", gene );
-        return queryObject.list();
+        queryObject.setParameterList( "genes", genes );
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+            CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
+            Gene g = ( Gene ) results.get( 1 );
+            if ( !cs2gene.containsKey( cs ) ) {
+                cs2gene.put( cs, new HashSet<Gene>() );
+            }
+            cs2gene.get( cs ).add( g );
+        }
+        results.close();
+        return cs2gene;
     }
 
 }

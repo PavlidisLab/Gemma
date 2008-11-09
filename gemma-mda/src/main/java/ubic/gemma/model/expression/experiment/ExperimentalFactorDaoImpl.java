@@ -37,8 +37,9 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDaoBase#find(ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExperimentalFactorDaoBase#find(ubic.gemma.model.expression.experiment.
+     * ExperimentalFactor)
      */
     @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
@@ -68,8 +69,9 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorDaoBase#findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExperimentalFactorDaoBase#findOrCreate(ubic.gemma.model.expression.experiment
+     * .ExperimentalFactor)
      */
     @Override
     public ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor ) {

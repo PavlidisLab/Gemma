@@ -24,8 +24,8 @@ package ubic.gemma.model.expression.bioAssay;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.expression.bioAssay.BioAssayService</code>, provides access
- * to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.expression.bioAssay.BioAssayService</code>, provides access to
+ * all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.expression.bioAssay.BioAssayService
@@ -35,164 +35,7 @@ public abstract class BioAssayServiceBase extends ubic.gemma.model.common.Audita
 
     private ubic.gemma.model.expression.biomaterial.BioMaterialService bioMaterialService;
 
-    /**
-     * Sets the reference to <code>bioMaterialService</code>.
-     */
-    public void setBioMaterialService( ubic.gemma.model.expression.biomaterial.BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    /**
-     * Gets the reference to <code>bioMaterialService</code>.
-     */
-    protected ubic.gemma.model.expression.biomaterial.BioMaterialService getBioMaterialService() {
-        return this.bioMaterialService;
-    }
-
     private ubic.gemma.model.expression.bioAssay.BioAssayDao bioAssayDao;
-
-    /**
-     * Sets the reference to <code>bioAssay</code>'s DAO.
-     */
-    public void setBioAssayDao( ubic.gemma.model.expression.bioAssay.BioAssayDao bioAssayDao ) {
-        this.bioAssayDao = bioAssayDao;
-    }
-
-    /**
-     * Gets the reference to <code>bioAssay</code>'s DAO.
-     */
-    protected ubic.gemma.model.expression.bioAssay.BioAssayDao getBioAssayDao() {
-        return this.bioAssayDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findOrCreate(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    public ubic.gemma.model.expression.bioAssay.BioAssay findOrCreate(
-            final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        try {
-            return this.handleFindOrCreate( bioAssay );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.findOrCreate(ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.bioAssay.BioAssay)}
-     */
-    protected abstract ubic.gemma.model.expression.bioAssay.BioAssay handleFindOrCreate(
-            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#getAllBioAssays()
-     */
-    public java.util.Collection getAllBioAssays() {
-        try {
-            return this.handleGetAllBioAssays();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.getAllBioAssays()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getAllBioAssays()}
-     */
-    protected abstract java.util.Collection handleGetAllBioAssays() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#remove(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    public void remove( final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        try {
-            this.handleRemove( bioAssay );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.remove(ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.bioAssay.BioAssay)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadAll()
-     */
-    public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.loadAll()' --> " + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#update(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    public void update( final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        try {
-            this.handleUpdate( bioAssay );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.update(ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.expression.bioAssay.BioAssay)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findBioAssayDimensions(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    public java.util.Collection findBioAssayDimensions( final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        try {
-            return this.handleFindBioAssayDimensions( bioAssay );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.findBioAssayDimensions(ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findBioAssayDimensions(ubic.gemma.model.expression.bioAssay.BioAssay)}
-     */
-    protected abstract java.util.Collection handleFindBioAssayDimensions(
-            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#countAll()
-     */
-    public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.countAll()' --> " + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#addBioMaterialAssociation(ubic.gemma.model.expression.bioAssay.BioAssay,
@@ -210,11 +53,94 @@ public abstract class BioAssayServiceBase extends ubic.gemma.model.common.Audita
     }
 
     /**
-     * Performs the core logic for
-     * {@link #addBioMaterialAssociation(ubic.gemma.model.expression.bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#countAll()
      */
-    protected abstract void handleAddBioMaterialAssociation( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
+    public java.lang.Integer countAll() {
+        try {
+            return this.handleCountAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.countAll()' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findBioAssayDimensions(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public java.util.Collection findBioAssayDimensions( final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+        try {
+            return this.handleFindBioAssayDimensions( bioAssay );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.findBioAssayDimensions(ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findOrCreate(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public ubic.gemma.model.expression.bioAssay.BioAssay findOrCreate(
+            final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+        try {
+            return this.handleFindOrCreate( bioAssay );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.findOrCreate(ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#getAllBioAssays()
+     */
+    public java.util.Collection getAllBioAssays() {
+        try {
+            return this.handleGetAllBioAssays();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.getAllBioAssays()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#load(java.lang.Long)
+     */
+    public ubic.gemma.model.expression.bioAssay.BioAssay load( final java.lang.Long id ) {
+        try {
+            return this.handleLoad( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.load(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadAll()
+     */
+    public java.util.Collection loadAll() {
+        try {
+            return this.handleLoadAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.loadAll()' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#remove(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public void remove( final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+        try {
+            this.handleRemove( bioAssay );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.remove(ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#removeBioMaterialAssociation(ubic.gemma.model.expression.bioAssay.BioAssay,
@@ -232,30 +158,18 @@ public abstract class BioAssayServiceBase extends ubic.gemma.model.common.Audita
     }
 
     /**
-     * Performs the core logic for
-     * {@link #removeBioMaterialAssociation(ubic.gemma.model.expression.bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     * Sets the reference to <code>bioAssay</code>'s DAO.
      */
-    protected abstract void handleRemoveBioMaterialAssociation( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#load(java.lang.Long)
-     */
-    public ubic.gemma.model.expression.bioAssay.BioAssay load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
+    public void setBioAssayDao( ubic.gemma.model.expression.bioAssay.BioAssayDao bioAssayDao ) {
+        this.bioAssayDao = bioAssayDao;
     }
 
     /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
+     * Sets the reference to <code>bioMaterialService</code>.
      */
-    protected abstract ubic.gemma.model.expression.bioAssay.BioAssay handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
+    public void setBioMaterialService( ubic.gemma.model.expression.biomaterial.BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#thaw(ubic.gemma.model.expression.bioAssay.BioAssay)
@@ -271,9 +185,95 @@ public abstract class BioAssayServiceBase extends ubic.gemma.model.common.Audita
     }
 
     /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#update(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public void update( final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+        try {
+            this.handleUpdate( bioAssay );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
+                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.update(ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Gets the reference to <code>bioAssay</code>'s DAO.
+     */
+    protected ubic.gemma.model.expression.bioAssay.BioAssayDao getBioAssayDao() {
+        return this.bioAssayDao;
+    }
+
+    /**
+     * Gets the reference to <code>bioMaterialService</code>.
+     */
+    protected ubic.gemma.model.expression.biomaterial.BioMaterialService getBioMaterialService() {
+        return this.bioMaterialService;
+    }
+
+    /**
+     * Performs the core logic for
+     * {@link #addBioMaterialAssociation(ubic.gemma.model.expression.bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     */
+    protected abstract void handleAddBioMaterialAssociation( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
+            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #countAll()}
+     */
+    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findBioAssayDimensions(ubic.gemma.model.expression.bioAssay.BioAssay)}
+     */
+    protected abstract java.util.Collection handleFindBioAssayDimensions(
+            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.bioAssay.BioAssay)}
+     */
+    protected abstract ubic.gemma.model.expression.bioAssay.BioAssay handleFindOrCreate(
+            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getAllBioAssays()}
+     */
+    protected abstract java.util.Collection handleGetAllBioAssays() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.expression.bioAssay.BioAssay handleLoad( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAll()}
+     */
+    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.bioAssay.BioAssay)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #removeBioMaterialAssociation(ubic.gemma.model.expression.bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     */
+    protected abstract void handleRemoveBioMaterialAssociation( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
+            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.bioAssay.BioAssay)}
      */
     protected abstract void handleThaw( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.expression.bioAssay.BioAssay)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay )
             throws java.lang.Exception;
 
 }

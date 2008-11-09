@@ -24,8 +24,8 @@ package ubic.gemma.model.genome;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.genome.ChromosomeService</code>, provides access to all
- * services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.genome.ChromosomeService</code>, provides access to all services
+ * and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.genome.ChromosomeService
@@ -33,6 +33,32 @@ package ubic.gemma.model.genome;
 public abstract class ChromosomeServiceBase implements ubic.gemma.model.genome.ChromosomeService {
 
     private ubic.gemma.model.genome.ChromosomeDao chromosomeDao;
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeService#find(ubic.gemma.model.genome.Chromosome)
+     */
+    public ubic.gemma.model.genome.Chromosome find( final ubic.gemma.model.genome.Chromosome chromosome ) {
+        try {
+            return this.handleFind( chromosome );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.ChromosomeServiceException(
+                    "Error performing 'ubic.gemma.model.genome.ChromosomeService.find(ubic.gemma.model.genome.Chromosome chromosome)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeService#findOrCreate(ubic.gemma.model.genome.Chromosome)
+     */
+    public ubic.gemma.model.genome.Chromosome findOrCreate( final ubic.gemma.model.genome.Chromosome chromosome ) {
+        try {
+            return this.handleFindOrCreate( chromosome );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.ChromosomeServiceException(
+                    "Error performing 'ubic.gemma.model.genome.ChromosomeService.findOrCreate(ubic.gemma.model.genome.Chromosome chromosome)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * Sets the reference to <code>chromosome</code>'s DAO.
@@ -49,58 +75,16 @@ public abstract class ChromosomeServiceBase implements ubic.gemma.model.genome.C
     }
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeService#find(ubic.gemma.model.genome.Chromosome)
-     */
-    public ubic.gemma.model.genome.Chromosome find( final ubic.gemma.model.genome.Chromosome chromosome ) {
-        try {
-            return this.handleFind( chromosome );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.ChromosomeServiceException(
-                    "Error performing 'ubic.gemma.model.genome.ChromosomeService.find(ubic.gemma.model.genome.Chromosome chromosome)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.Chromosome)}
-     */
-    protected abstract ubic.gemma.model.genome.Chromosome handleFind( ubic.gemma.model.genome.Chromosome chromosome )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeService#findOrCreate(ubic.gemma.model.genome.Chromosome)
-     */
-    public ubic.gemma.model.genome.Chromosome findOrCreate( final ubic.gemma.model.genome.Chromosome chromosome ) {
-        try {
-            return this.handleFindOrCreate( chromosome );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.ChromosomeServiceException(
-                    "Error performing 'ubic.gemma.model.genome.ChromosomeService.findOrCreate(ubic.gemma.model.genome.Chromosome chromosome)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.Chromosome)}
-     */
-    protected abstract ubic.gemma.model.genome.Chromosome handleFindOrCreate(
-            ubic.gemma.model.genome.Chromosome chromosome ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
+     * <code>locale</code>.
      * 
-     * @return the current principal
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     * @param locale the locale of the messages to retrieve.
      */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
+            final java.util.Locale locale ) {
+        return this.getMessages().getMessage( key, arguments, locale );
     }
 
     /**
@@ -113,8 +97,7 @@ public abstract class ChromosomeServiceBase implements ubic.gemma.model.genome.C
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
      * 
      * @param key the key of the message in the messages.properties message bundle.
      * @param arguments any arguments to substitute when resolving the message.
@@ -124,16 +107,32 @@ public abstract class ChromosomeServiceBase implements ubic.gemma.model.genome.C
     }
 
     /**
-     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
-     * <code>locale</code>.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     * @param locale the locale of the messages to retrieve.
+     * Gets the message source available to this service.
      */
-    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
-            final java.util.Locale locale ) {
-        return this.getMessages().getMessage( key, arguments, locale );
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
     }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.genome.Chromosome)}
+     */
+    protected abstract ubic.gemma.model.genome.Chromosome handleFind( ubic.gemma.model.genome.Chromosome chromosome )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.Chromosome)}
+     */
+    protected abstract ubic.gemma.model.genome.Chromosome handleFindOrCreate(
+            ubic.gemma.model.genome.Chromosome chromosome ) throws java.lang.Exception;
 
 }

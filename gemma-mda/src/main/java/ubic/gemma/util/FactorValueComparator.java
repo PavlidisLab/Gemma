@@ -6,14 +6,16 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author luke
- *
  */
 public class FactorValueComparator implements Comparator<FactorValue> {
     private static FactorValueComparator _instance = new FactorValueComparator();
-    
-    public static FactorValueComparator getInstance() { return _instance; }
 
-    /* (non-Javadoc)
+    public static FactorValueComparator getInstance() {
+        return _instance;
+    }
+
+    /*
+     * (non-Javadoc)
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
     public int compare( FactorValue v1, FactorValue v2 ) {

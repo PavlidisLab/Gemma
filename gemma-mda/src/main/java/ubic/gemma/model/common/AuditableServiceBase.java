@@ -24,8 +24,8 @@ package ubic.gemma.model.common;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.AuditableService</code>, provides access to all
- * services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.common.AuditableService</code>, provides access to all services
+ * and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.common.AuditableService
@@ -33,20 +33,6 @@ package ubic.gemma.model.common;
 public abstract class AuditableServiceBase implements ubic.gemma.model.common.AuditableService {
 
     private ubic.gemma.model.common.AuditableDao auditableDao;
-
-    /**
-     * Sets the reference to <code>auditable</code>'s DAO.
-     */
-    public void setAuditableDao( ubic.gemma.model.common.AuditableDao auditableDao ) {
-        this.auditableDao = auditableDao;
-    }
-
-    /**
-     * Gets the reference to <code>auditable</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.AuditableDao getAuditableDao() {
-        return this.auditableDao;
-    }
 
     /**
      * @see ubic.gemma.model.common.AuditableService#getEvents(ubic.gemma.model.common.Auditable)
@@ -62,10 +48,19 @@ public abstract class AuditableServiceBase implements ubic.gemma.model.common.Au
     }
 
     /**
-     * Performs the core logic for {@link #getEvents(ubic.gemma.model.common.Auditable)}
+     * @see ubic.gemma.model.common.AuditableService#getLastAuditEvent(java.util.Collection,
+     *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
-    protected abstract java.util.Collection handleGetEvents( ubic.gemma.model.common.Auditable auditable )
-            throws java.lang.Exception;
+    public java.util.Map getLastAuditEvent( final java.util.Collection auditables,
+            final ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) {
+        try {
+            return this.handleGetLastAuditEvent( auditables, type );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.AuditableServiceException(
+                    "Error performing 'ubic.gemma.model.common.AuditableService.getLastAuditEvent(java.util.Collection auditables, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.common.AuditableService#getLastAuditEvent(ubic.gemma.model.common.Auditable,
@@ -84,36 +79,6 @@ public abstract class AuditableServiceBase implements ubic.gemma.model.common.Au
     }
 
     /**
-     * Performs the core logic for
-     * {@link #getLastAuditEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)}
-     */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent(
-            ubic.gemma.model.common.Auditable auditable,
-            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.AuditableService#getLastAuditEvent(java.util.Collection,
-     *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
-     */
-    public java.util.Map getLastAuditEvent( final java.util.Collection auditables,
-            final ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) {
-        try {
-            return this.handleGetLastAuditEvent( auditables, type );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.AuditableServiceException(
-                    "Error performing 'ubic.gemma.model.common.AuditableService.getLastAuditEvent(java.util.Collection auditables, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #getLastAuditEvent(java.util.Collection, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)}
-     */
-    protected abstract java.util.Map handleGetLastAuditEvent( java.util.Collection auditables,
-            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.common.AuditableService#getLastTypedAuditEvents(java.util.Collection)
      */
     public java.util.Map getLastTypedAuditEvents( final java.util.Collection auditables ) {
@@ -127,46 +92,17 @@ public abstract class AuditableServiceBase implements ubic.gemma.model.common.Au
     }
 
     /**
-     * Performs the core logic for {@link #getLastTypedAuditEvents(java.util.Collection)}
+     * Sets the reference to <code>auditable</code>'s DAO.
      */
-    protected abstract java.util.Map handleGetLastTypedAuditEvents( java.util.Collection auditables )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public void setAuditableDao( ubic.gemma.model.common.AuditableDao auditableDao ) {
+        this.auditableDao = auditableDao;
     }
 
     /**
-     * Gets the message source available to this service.
+     * Gets the reference to <code>auditable</code>'s DAO.
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.common.AuditableDao getAuditableDao() {
+        return this.auditableDao;
     }
 
     /**
@@ -181,5 +117,68 @@ public abstract class AuditableServiceBase implements ubic.gemma.model.common.Au
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #getEvents(ubic.gemma.model.common.Auditable)}
+     */
+    protected abstract java.util.Collection handleGetEvents( ubic.gemma.model.common.Auditable auditable )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #getLastAuditEvent(java.util.Collection, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)}
+     */
+    protected abstract java.util.Map handleGetLastAuditEvent( java.util.Collection auditables,
+            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #getLastAuditEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)}
+     */
+    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent(
+            ubic.gemma.model.common.Auditable auditable,
+            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getLastTypedAuditEvents(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetLastTypedAuditEvents( java.util.Collection auditables )
+            throws java.lang.Exception;
 
 }

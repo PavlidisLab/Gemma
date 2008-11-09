@@ -22,7 +22,6 @@
 //
 package ubic.gemma.model.common;
 
-
 /**
  * @see ubic.gemma.model.common.Securable
  */
@@ -30,124 +29,21 @@ public interface SecurableDao {
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or
      * other types, different methods in a class implementing this interface support this feature: look for an
-     * <code>int</code> parameter called <code>transform</code>. <p/> This specific flag denotes no transformation
-     * will occur.
+     * <code>int</code> parameter called <code>transform</code>.
+     * <p/>
+     * This specific flag denotes no transformation will occur.
      */
     public final static int TRANSFORM_NONE = 0;
 
     /**
-     * Loads an instance of ubic.gemma.model.common.Securable from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
-    /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.common.Securable}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Updates the <code>securable</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.common.Securable securable );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.Securable from the persistent store.
-     */
-    public void remove( ubic.gemma.model.common.Securable securable );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.Securable having the given <code>identifier</code> from the
-     * persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * 
-     */
-    public java.lang.String getRecipient( java.lang.Long id );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #getRecipient(java.lang.Long)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #getRecipient(java.lang.Long)}.
+     * Does the same thing as {@link #getAclObjectIdentityId(boolean, ubic.gemma.model.common.Securable)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #getAclObjectIdentityId(int, ubic.gemma.model.common.Securable
+     * securable)}.
      * </p>
      */
-    public java.lang.String getRecipient( String queryString, java.lang.Long id );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #getRecipient(java.lang.Long)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object getRecipient( int transform, java.lang.Long id );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #getRecipient(boolean, java.lang.Long)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #getRecipient(int, java.lang.Long id)}.
-     * </p>
-     */
-    public Object getRecipient( int transform, String queryString, java.lang.Long id );
-
-    /**
-     * 
-     */
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #getAclObjectIdentityId(ubic.gemma.model.common.Securable)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #getAclObjectIdentityId(ubic.gemma.model.common.Securable)}.
-     * </p>
-     */
-    public java.lang.Long getAclObjectIdentityId( String queryString, ubic.gemma.model.common.Securable securable );
+    public Object getAclObjectIdentityId( int transform, String queryString, ubic.gemma.model.common.Securable securable );
 
     /**
      * <p>
@@ -162,27 +58,33 @@ public interface SecurableDao {
 
     /**
      * <p>
-     * Does the same thing as {@link #getAclObjectIdentityId(boolean, ubic.gemma.model.common.Securable)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #getAclObjectIdentityId(int, ubic.gemma.model.common.Securable securable)}.
+     * Does the same thing as {@link #getAclObjectIdentityId(ubic.gemma.model.common.Securable)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #getAclObjectIdentityId(ubic.gemma.model.common.Securable)}.
      * </p>
      */
-    public Object getAclObjectIdentityId( int transform, String queryString, ubic.gemma.model.common.Securable securable );
+    public java.lang.Long getAclObjectIdentityId( String queryString, ubic.gemma.model.common.Securable securable );
 
     /**
      * 
      */
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable );
+    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable );
+
+    /**
+     * Get the acl_object_identity parent id of aclObjectIdentity.
+     * 
+     * @return
+     */
+    public Integer getAclObjectIdentityParentId( Securable securable );
 
     /**
      * <p>
-     * Does the same thing as {@link #getMask(ubic.gemma.model.common.Securable)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #getMask(ubic.gemma.model.common.Securable)}.
+     * Does the same thing as {@link #getMask(boolean, ubic.gemma.model.common.Securable)} with an additional argument
+     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
+     * defined in {@link #getMask(int, ubic.gemma.model.common.Securable securable)}.
      * </p>
      */
-    public java.lang.Integer getMask( String queryString, ubic.gemma.model.common.Securable securable );
+    public Object getMask( int transform, String queryString, ubic.gemma.model.common.Securable securable );
 
     /**
      * <p>
@@ -197,26 +99,17 @@ public interface SecurableDao {
 
     /**
      * <p>
-     * Does the same thing as {@link #getMask(boolean, ubic.gemma.model.common.Securable)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #getMask(int, ubic.gemma.model.common.Securable securable)}.
+     * Does the same thing as {@link #getMask(ubic.gemma.model.common.Securable)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #getMask(ubic.gemma.model.common.Securable)}.
      * </p>
      */
-    public Object getMask( int transform, String queryString, ubic.gemma.model.common.Securable securable );
+    public java.lang.Integer getMask( String queryString, ubic.gemma.model.common.Securable securable );
 
     /**
      * 
      */
-    public java.util.Map getMasks( java.util.Collection securables );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #getMasks(java.util.Collection)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #getMasks(java.util.Collection)}.
-     * </p>
-     */
-    public java.util.Map getMasks( String queryString, java.util.Collection securables );
+    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable );
 
     /**
      * <p>
@@ -232,17 +125,124 @@ public interface SecurableDao {
     /**
      * <p>
      * Does the same thing as {@link #getMasks(boolean, java.util.Collection)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #getMasks(int, java.util.Collection securables)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #getMasks(int, java.util.Collection securables)}.
      * </p>
      */
     public Object getMasks( int transform, String queryString, java.util.Collection securables );
 
     /**
-     * Get the acl_object_identity parent id of aclObjectIdentity.
      * 
-     * @return
      */
-    public Integer getAclObjectIdentityParentId( Securable securable );
+    public java.util.Map getMasks( java.util.Collection securables );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #getMasks(java.util.Collection)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #getMasks(java.util.Collection)}.
+     * </p>
+     */
+    public java.util.Map getMasks( String queryString, java.util.Collection securables );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #getRecipient(java.lang.Long)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object getRecipient( int transform, java.lang.Long id );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #getRecipient(boolean, java.lang.Long)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #getRecipient(int, java.lang.Long id)}.
+     * </p>
+     */
+    public Object getRecipient( int transform, String queryString, java.lang.Long id );
+
+    /**
+     * 
+     */
+    public java.lang.String getRecipient( java.lang.Long id );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #getRecipient(java.lang.Long)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #getRecipient(java.lang.Long)}.
+     * </p>
+     */
+    public java.lang.String getRecipient( String queryString, java.lang.Long id );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
+     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
+     * </p>
+     * 
+     * @param id the identifier of the entity to load.
+     * @return either the entity or the object transformed from the entity.
+     */
+    public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.common.Securable from the persistent store.
+     */
+    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+
+    /**
+     * Loads all entities of type {@link ubic.gemma.model.common.Securable}.
+     * 
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll();
+
+    /**
+     * <p>
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * operation which can optionally transform the entity (into a value object for example). By default, transformation
+     * does not occur.
+     * </p>
+     * 
+     * @param transform the flag indicating what transformation to use.
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll( final int transform );
+
+    /**
+     * Removes the instance of ubic.gemma.model.common.Securable having the given <code>identifier</code> from the
+     * persistent store.
+     */
+    public void remove( java.lang.Long id );
+
+    /**
+     * Removes all entities in the given <code>entities<code> collection.
+     */
+    public void remove( java.util.Collection entities );
+
+    /**
+     * Removes the instance of ubic.gemma.model.common.Securable from the persistent store.
+     */
+    public void remove( ubic.gemma.model.common.Securable securable );
+
+    /**
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     */
+    public void update( java.util.Collection entities );
+
+    /**
+     * Updates the <code>securable</code> instance in the persistent store.
+     */
+    public void update( ubic.gemma.model.common.Securable securable );
 
 }

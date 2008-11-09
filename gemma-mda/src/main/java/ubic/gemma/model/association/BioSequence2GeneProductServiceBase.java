@@ -36,6 +36,20 @@ public abstract class BioSequence2GeneProductServiceBase implements
     private ubic.gemma.model.association.BioSequence2GeneProductDao bioSequence2GeneProductDao;
 
     /**
+     * @see ubic.gemma.model.association.BioSequence2GeneProductService#create(ubic.gemma.model.association.BioSequence2GeneProduct)
+     */
+    public ubic.gemma.model.association.BioSequence2GeneProduct create(
+            final ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct ) {
+        try {
+            return this.handleCreate( bioSequence2GeneProduct );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.association.BioSequence2GeneProductServiceException(
+                    "Error performing 'ubic.gemma.model.association.BioSequence2GeneProductService.create(ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * Sets the reference to <code>bioSequence2GeneProduct</code>'s DAO.
      */
     public void setBioSequence2GeneProductDao(
@@ -51,40 +65,16 @@ public abstract class BioSequence2GeneProductServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.model.association.BioSequence2GeneProductService#create(ubic.gemma.model.association.BioSequence2GeneProduct)
-     */
-    public ubic.gemma.model.association.BioSequence2GeneProduct create(
-            final ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct ) {
-        try {
-            return this.handleCreate( bioSequence2GeneProduct );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.BioSequence2GeneProductServiceException(
-                    "Error performing 'ubic.gemma.model.association.BioSequence2GeneProductService.create(ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.association.BioSequence2GeneProduct)}
-     */
-    protected abstract ubic.gemma.model.association.BioSequence2GeneProduct handleCreate(
-            ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
+     * <code>locale</code>.
      * 
-     * @return the current principal
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     * @param locale the locale of the messages to retrieve.
      */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
+            final java.util.Locale locale ) {
+        return this.getMessages().getMessage( key, arguments, locale );
     }
 
     /**
@@ -97,8 +87,7 @@ public abstract class BioSequence2GeneProductServiceBase implements
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
      * 
      * @param key the key of the message in the messages.properties message bundle.
      * @param arguments any arguments to substitute when resolving the message.
@@ -108,16 +97,26 @@ public abstract class BioSequence2GeneProductServiceBase implements
     }
 
     /**
-     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
-     * <code>locale</code>.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     * @param locale the locale of the messages to retrieve.
+     * Gets the message source available to this service.
      */
-    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
-            final java.util.Locale locale ) {
-        return this.getMessages().getMessage( key, arguments, locale );
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
     }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.association.BioSequence2GeneProduct)}
+     */
+    protected abstract ubic.gemma.model.association.BioSequence2GeneProduct handleCreate(
+            ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct ) throws java.lang.Exception;
 
 }

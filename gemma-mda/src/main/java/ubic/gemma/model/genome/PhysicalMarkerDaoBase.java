@@ -34,6 +34,373 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
         ubic.gemma.model.genome.PhysicalMarkerDao {
 
     /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "PhysicalMarker.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.genome.PhysicalMarker ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#create(int transform, ubic.gemma.model.genome.PhysicalMarker)
+     */
+    public Object create( final int transform, final ubic.gemma.model.genome.PhysicalMarker physicalMarker ) {
+        if ( physicalMarker == null ) {
+            throw new IllegalArgumentException( "PhysicalMarker.create - 'physicalMarker' can not be null" );
+        }
+        this.getHibernateTemplate().save( physicalMarker );
+        return this.transformEntity( transform, physicalMarker );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#create(ubic.gemma.model.genome.PhysicalMarker)
+     */
+    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.PhysicalMarker physicalMarker ) {
+        return ( ubic.gemma.model.genome.PhysicalMarker ) this.create( TRANSFORM_NONE, physicalMarker );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByNcbiId(int, java.lang.String)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByNcbiId( final int transform, final java.lang.String ncbiId ) {
+        return this.findByNcbiId( transform, "from GeneImpl g where g.ncbiId = :ncbiId", ncbiId );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByNcbiId(int, java.lang.String, java.lang.String)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByNcbiId( final int transform, final java.lang.String queryString,
+            final java.lang.String ncbiId ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( ncbiId );
+        argNames.add( "ncbiId" );
+        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() );
+        transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByNcbiId(java.lang.String)
+     */
+    @Override
+    public java.util.Collection findByNcbiId( java.lang.String ncbiId ) {
+        return this.findByNcbiId( TRANSFORM_NONE, ncbiId );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByNcbiId(java.lang.String, java.lang.String)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
+        return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByPhysicalLocation(int, java.lang.String,
+     *      ubic.gemma.model.genome.PhysicalLocation)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByPhysicalLocation( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.genome.PhysicalLocation location ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( location );
+        argNames.add( "location" );
+        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() );
+        transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByPhysicalLocation(int,
+     *      ubic.gemma.model.genome.PhysicalLocation)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByPhysicalLocation( final int transform,
+            final ubic.gemma.model.genome.PhysicalLocation location ) {
+        return this
+                .findByPhysicalLocation(
+                        transform,
+                        "from ubic.gemma.model.genome.PhysicalMarker as physicalMarker where physicalMarker.location = :location",
+                        location );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByPhysicalLocation(java.lang.String,
+     *      ubic.gemma.model.genome.PhysicalLocation)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByPhysicalLocation( final java.lang.String queryString,
+            final ubic.gemma.model.genome.PhysicalLocation location ) {
+        return this.findByPhysicalLocation( TRANSFORM_NONE, queryString, location );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
+     */
+    @Override
+    public java.util.Collection findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location ) {
+        return this.findByPhysicalLocation( TRANSFORM_NONE, location );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getAclObjectIdentityId(int, java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.genome.PhysicalMarker ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getAclObjectIdentityId(int, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
+        return this
+                .getAclObjectIdentityId(
+                        transform,
+                        "from ubic.gemma.model.genome.PhysicalMarker as physicalMarker where physicalMarker.securable = :securable",
+                        securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getAclObjectIdentityId(java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     */
+    @Override
+    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMask(int, java.lang.String, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMask( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.genome.PhysicalMarker ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMask(int, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
+        return this
+                .getMask(
+                        transform,
+                        "from ubic.gemma.model.genome.PhysicalMarker as physicalMarker where physicalMarker.securable = :securable",
+                        securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMask(java.lang.String, ubic.gemma.model.common.Securable)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.Integer getMask( final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMask(ubic.gemma.model.common.Securable)
+     */
+    @Override
+    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMasks(int, java.lang.String, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMasks( final int transform, final java.lang.String queryString,
+            final java.util.Collection securables ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securables );
+        argNames.add( "securables" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.genome.PhysicalMarker ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMasks(int, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getMasks( final int transform, final java.util.Collection securables ) {
+        return this
+                .getMasks(
+                        transform,
+                        "from ubic.gemma.model.genome.PhysicalMarker as physicalMarker where physicalMarker.securables = :securables",
+                        securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMasks(java.lang.String, java.util.Collection)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
+        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMasks(java.util.Collection)
+     */
+    @Override
+    public java.util.Map getMasks( java.util.Collection securables ) {
+        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getRecipient(int, java.lang.Long)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getRecipient( final int transform, final java.lang.Long id ) {
+        return this.getRecipient( transform,
+                "from ubic.gemma.model.genome.PhysicalMarker as physicalMarker where physicalMarker.id = :id", id );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getRecipient(int, java.lang.String, java.lang.Long)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( id );
+        argNames.add( "id" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.genome.PhysicalMarker ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getRecipient(java.lang.Long)
+     */
+    @Override
+    public java.lang.String getRecipient( java.lang.Long id ) {
+        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getRecipient(java.lang.String, java.lang.Long)
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
+        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
+    }
+
+    /**
      * @see ubic.gemma.model.genome.PhysicalMarkerDao#load(int, java.lang.Long)
      */
     @Override
@@ -74,88 +441,6 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
     }
 
     /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#create(ubic.gemma.model.genome.PhysicalMarker)
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.PhysicalMarker physicalMarker ) {
-        return ( ubic.gemma.model.genome.PhysicalMarker ) this.create( TRANSFORM_NONE, physicalMarker );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#create(int transform, ubic.gemma.model.genome.PhysicalMarker)
-     */
-    public Object create( final int transform, final ubic.gemma.model.genome.PhysicalMarker physicalMarker ) {
-        if ( physicalMarker == null ) {
-            throw new IllegalArgumentException( "PhysicalMarker.create - 'physicalMarker' can not be null" );
-        }
-        this.getHibernateTemplate().save( physicalMarker );
-        return this.transformEntity( transform, physicalMarker );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "PhysicalMarker.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.genome.PhysicalMarker ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#update(ubic.gemma.model.genome.PhysicalMarker)
-     */
-    public void update( ubic.gemma.model.genome.PhysicalMarker physicalMarker ) {
-        if ( physicalMarker == null ) {
-            throw new IllegalArgumentException( "PhysicalMarker.update - 'physicalMarker' can not be null" );
-        }
-        this.getHibernateTemplate().update( physicalMarker );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "PhysicalMarker.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.PhysicalMarker ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#remove(ubic.gemma.model.genome.PhysicalMarker)
-     */
-    public void remove( ubic.gemma.model.genome.PhysicalMarker physicalMarker ) {
-        if ( physicalMarker == null ) {
-            throw new IllegalArgumentException( "PhysicalMarker.remove - 'physicalMarker' can not be null" );
-        }
-        this.getHibernateTemplate().delete( physicalMarker );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.PhysicalMarkerDao#remove(java.lang.Long)
      */
     @Override
@@ -181,326 +466,62 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
     }
 
     /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#remove(ubic.gemma.model.genome.PhysicalMarker)
      */
-    @Override
-    public java.util.Collection findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location ) {
-        return this.findByPhysicalLocation( TRANSFORM_NONE, location );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByPhysicalLocation(java.lang.String,
-     *      ubic.gemma.model.genome.PhysicalLocation)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByPhysicalLocation( final java.lang.String queryString,
-            final ubic.gemma.model.genome.PhysicalLocation location ) {
-        return this.findByPhysicalLocation( TRANSFORM_NONE, queryString, location );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByPhysicalLocation(int,
-     *      ubic.gemma.model.genome.PhysicalLocation)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByPhysicalLocation( final int transform,
-            final ubic.gemma.model.genome.PhysicalLocation location ) {
-        return this
-                .findByPhysicalLocation(
-                        transform,
-                        "from ubic.gemma.model.genome.PhysicalMarker as physicalMarker where physicalMarker.location = :location",
-                        location );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByPhysicalLocation(int, java.lang.String,
-     *      ubic.gemma.model.genome.PhysicalLocation)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByPhysicalLocation( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.genome.PhysicalLocation location ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( location );
-        argNames.add( "location" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByNcbiId(java.lang.String)
-     */
-    @Override
-    public java.util.Collection findByNcbiId( java.lang.String ncbiId ) {
-        return this.findByNcbiId( TRANSFORM_NONE, ncbiId );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByNcbiId(java.lang.String, java.lang.String)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
-        return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByNcbiId(int, java.lang.String)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByNcbiId( final int transform, final java.lang.String ncbiId ) {
-        return this.findByNcbiId( transform, "from GeneImpl g where g.ncbiId = :ncbiId", ncbiId );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByNcbiId(int, java.lang.String, java.lang.String)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByNcbiId( final int transform, final java.lang.String queryString,
-            final java.lang.String ncbiId ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( ncbiId );
-        argNames.add( "ncbiId" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getRecipient(java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this.getRecipient( transform,
-                "from ubic.gemma.model.genome.PhysicalMarker as physicalMarker where physicalMarker.id = :id", id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getRecipient(int, java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public void remove( ubic.gemma.model.genome.PhysicalMarker physicalMarker ) {
+        if ( physicalMarker == null ) {
+            throw new IllegalArgumentException( "PhysicalMarker.remove - 'physicalMarker' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.PhysicalMarker ) result );
-        return result;
+        this.getHibernateTemplate().delete( physicalMarker );
     }
 
     /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
     @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getAclObjectIdentityId(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.genome.PhysicalMarker as physicalMarker where physicalMarker.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "PhysicalMarker.update - 'entities' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.PhysicalMarker ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMask(java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.genome.PhysicalMarker as physicalMarker where physicalMarker.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMask(int, java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.genome.PhysicalMarker ) entityIterator.next() );
+                }
+                return null;
             }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.PhysicalMarkerDao#update(ubic.gemma.model.genome.PhysicalMarker)
+     */
+    public void update( ubic.gemma.model.genome.PhysicalMarker physicalMarker ) {
+        if ( physicalMarker == null ) {
+            throw new IllegalArgumentException( "PhysicalMarker.update - 'physicalMarker' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.PhysicalMarker ) result );
-        return result;
+        this.getHibernateTemplate().update( physicalMarker );
     }
 
     /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMasks(java.util.Collection)
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.genome.PhysicalMarker)} method. This method does not instantiate a
+     * new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.PhysicalMarkerDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.PhysicalMarker)
      */
     @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.genome.PhysicalMarker as physicalMarker where physicalMarker.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalMarkerDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.PhysicalMarker ) result );
-        return result;
     }
 
     /**
@@ -525,25 +546,6 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.genome.PhysicalMarker)} method. This method does not instantiate a
-     * new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.PhysicalMarkerDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.PhysicalMarker)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

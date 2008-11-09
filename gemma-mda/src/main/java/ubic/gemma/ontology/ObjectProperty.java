@@ -27,5 +27,5 @@ import java.util.Collection;
 public interface ObjectProperty extends OntologyProperty {
 
     public Collection<OntologyTerm> getRange();
-    
+
 }

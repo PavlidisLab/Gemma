@@ -34,7 +34,6 @@ public class PersisterHelper extends RelationshipPersister {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(ubic.gemma.model.genome.Gene)
      */
     @Override

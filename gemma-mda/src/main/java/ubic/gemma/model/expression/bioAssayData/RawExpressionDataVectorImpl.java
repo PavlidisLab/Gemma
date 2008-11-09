@@ -71,6 +71,20 @@ public class RawExpressionDataVectorImpl extends ubic.gemma.model.expression.bio
         return hashCode;
     }
 
+    @Override
+    /*
+     * @see ubic.gemma.model.common.Describable#toString()
+     */
+    public java.lang.String toString() {
+        return this.getClass().getSimpleName()
+                + ( this.getId() == null ? "" : " Id=" + this.getId() )
+                + ( this.getDesignElement() == null ? "" : " DE=" + this.getDesignElement().getName() )
+                + ( this.getQuantitationType() == null ? "" : " QT=" + this.getQuantitationType().getName() )
+                + ( this.getExpressionExperiment() == null ? "" : " EE=" + this.getExpressionExperiment().getName()
+                        + ", " + this.getData().length + " bytes" );
+
+    }
+
     private int computeHashCode() {
         int hashCode = 0;
 
@@ -93,20 +107,6 @@ public class RawExpressionDataVectorImpl extends ubic.gemma.model.expression.bio
         // }
 
         return hashCode;
-    }
-
-    @Override
-    /**
-     * @see ubic.gemma.model.common.Describable#toString()
-     */
-    public java.lang.String toString() {
-        return this.getClass().getSimpleName()
-                + ( this.getId() == null ? "" : " Id=" + this.getId() )
-                + ( this.getDesignElement() == null ? "" : " DE=" + this.getDesignElement().getName() )
-                + ( this.getQuantitationType() == null ? "" : " QT=" + this.getQuantitationType().getName() )
-                + ( this.getExpressionExperiment() == null ? "" : " EE=" + this.getExpressionExperiment().getName()
-                        + ", " + this.getData().length + " bytes" );
-
     }
 
 }

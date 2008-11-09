@@ -60,11 +60,6 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
      */
     protected SessionFactory sessionFactory;
 
-    protected int numElementsPerUpdate( Collection col ) {
-        if ( col == null || col.size() < COLLECTION_INFO_FREQUENCY ) return Integer.MAX_VALUE;
-        return Math.max( ( int ) Math.ceil( col.size() / ( double ) COLLECTION_INFO_FREQUENCY ), 20 );
-    }
-
     /*
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(java.util.Collection)
      */
@@ -98,6 +93,35 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
     }
 
     /**
+     * @param startTime
+     * @return
+     */
+    protected double elapsedMinutes( long startTime ) {
+        return Double.parseDouble( NumberFormat.getNumberInstance().format(
+                0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) );
+    }
+
+    /**
+     * Determine if a entity is transient (not persistent).
+     * 
+     * @param entity
+     * @return If the entity is null, return true. If the entity is non-null and has a null "id" property, return true;
+     *         Otherwise return false.
+     */
+    protected boolean isTransient( Object entity ) {
+        if ( entity == null ) return true;
+        try {
+            return org.apache.commons.beanutils.BeanUtils.getSimpleProperty( entity, "id" ) == null;
+        } catch ( IllegalAccessException e ) {
+            throw new RuntimeException( e );
+        } catch ( InvocationTargetException e ) {
+            throw new RuntimeException( e );
+        } catch ( NoSuchMethodException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
      * @param col
      * @param count
      * @param numElementsPerUpdate
@@ -115,13 +139,9 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
         return count;
     }
 
-    /**
-     * @param startTime
-     * @return
-     */
-    protected double elapsedMinutes( long startTime ) {
-        return Double.parseDouble( NumberFormat.getNumberInstance().format(
-                0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) );
+    protected int numElementsPerUpdate( Collection col ) {
+        if ( col == null || col.size() < COLLECTION_INFO_FREQUENCY ) return Integer.MAX_VALUE;
+        return Math.max( ( int ) Math.ceil( col.size() / ( double ) COLLECTION_INFO_FREQUENCY ), 20 );
     }
 
     /**
@@ -174,26 +194,6 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
                 BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
                 assert BeanUtils.getSimpleProperty( object, "id" ) != null;
             }
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
-            throw new RuntimeException( e );
-        } catch ( NoSuchMethodException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * Determine if a entity is transient (not persistent).
-     * 
-     * @param entity
-     * @return If the entity is null, return true. If the entity is non-null and has a null "id" property, return true;
-     *         Otherwise return false.
-     */
-    protected boolean isTransient( Object entity ) {
-        if ( entity == null ) return true;
-        try {
-            return org.apache.commons.beanutils.BeanUtils.getSimpleProperty( entity, "id" ) == null;
         } catch ( IllegalAccessException e ) {
             throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {

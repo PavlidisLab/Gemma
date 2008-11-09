@@ -35,40 +35,6 @@ public class DesignElementDataVectorServiceException extends java.lang.RuntimeEx
     private static final long serialVersionUID = -2122618251169140856L;
 
     /**
-     * The default constructor for <code>DesignElementDataVectorServiceException</code>.
-     */
-    public DesignElementDataVectorServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>DesignElementDataVectorServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public DesignElementDataVectorServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>DesignElementDataVectorServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public DesignElementDataVectorServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>DesignElementDataVectorServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public DesignElementDataVectorServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class DesignElementDataVectorServiceException extends java.lang.RuntimeEx
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>DesignElementDataVectorServiceException</code>.
+     */
+    public DesignElementDataVectorServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>DesignElementDataVectorServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public DesignElementDataVectorServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>DesignElementDataVectorServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public DesignElementDataVectorServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>DesignElementDataVectorServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public DesignElementDataVectorServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

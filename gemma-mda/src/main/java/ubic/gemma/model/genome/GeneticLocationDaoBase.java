@@ -34,6 +34,50 @@ public abstract class GeneticLocationDaoBase extends ubic.gemma.model.genome.Chr
         ubic.gemma.model.genome.GeneticLocationDao {
 
     /**
+     * @see ubic.gemma.model.genome.GeneticLocationDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "GeneticLocation.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.genome.GeneticLocation ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneticLocationDao#create(int transform, ubic.gemma.model.genome.GeneticLocation)
+     */
+    public Object create( final int transform, final ubic.gemma.model.genome.GeneticLocation geneticLocation ) {
+        if ( geneticLocation == null ) {
+            throw new IllegalArgumentException( "GeneticLocation.create - 'geneticLocation' can not be null" );
+        }
+        this.getHibernateTemplate().save( geneticLocation );
+        return this.transformEntity( transform, geneticLocation );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneticLocationDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneticLocationDao#create(ubic.gemma.model.genome.GeneticLocation)
+     */
+    public ubic.gemma.model.genome.ChromosomeLocation create( ubic.gemma.model.genome.GeneticLocation geneticLocation ) {
+        return ( ubic.gemma.model.genome.GeneticLocation ) this.create( TRANSFORM_NONE, geneticLocation );
+    }
+
+    /**
      * @see ubic.gemma.model.genome.GeneticLocationDao#load(int, java.lang.Long)
      */
     @Override
@@ -74,88 +118,6 @@ public abstract class GeneticLocationDaoBase extends ubic.gemma.model.genome.Chr
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneticLocationDao#create(ubic.gemma.model.genome.GeneticLocation)
-     */
-    public ubic.gemma.model.genome.ChromosomeLocation create( ubic.gemma.model.genome.GeneticLocation geneticLocation ) {
-        return ( ubic.gemma.model.genome.GeneticLocation ) this.create( TRANSFORM_NONE, geneticLocation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneticLocationDao#create(int transform, ubic.gemma.model.genome.GeneticLocation)
-     */
-    public Object create( final int transform, final ubic.gemma.model.genome.GeneticLocation geneticLocation ) {
-        if ( geneticLocation == null ) {
-            throw new IllegalArgumentException( "GeneticLocation.create - 'geneticLocation' can not be null" );
-        }
-        this.getHibernateTemplate().save( geneticLocation );
-        return this.transformEntity( transform, geneticLocation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneticLocationDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneticLocationDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "GeneticLocation.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.genome.GeneticLocation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneticLocationDao#update(ubic.gemma.model.genome.GeneticLocation)
-     */
-    public void update( ubic.gemma.model.genome.GeneticLocation geneticLocation ) {
-        if ( geneticLocation == null ) {
-            throw new IllegalArgumentException( "GeneticLocation.update - 'geneticLocation' can not be null" );
-        }
-        this.getHibernateTemplate().update( geneticLocation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ChromosomeLocationDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "GeneticLocation.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.GeneticLocation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneticLocationDao#remove(ubic.gemma.model.genome.GeneticLocation)
-     */
-    public void remove( ubic.gemma.model.genome.GeneticLocation geneticLocation ) {
-        if ( geneticLocation == null ) {
-            throw new IllegalArgumentException( "GeneticLocation.remove - 'geneticLocation' can not be null" );
-        }
-        this.getHibernateTemplate().delete( geneticLocation );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.GeneticLocationDao#remove(java.lang.Long)
      */
     @Override
@@ -181,6 +143,65 @@ public abstract class GeneticLocationDaoBase extends ubic.gemma.model.genome.Chr
     }
 
     /**
+     * @see ubic.gemma.model.genome.GeneticLocationDao#remove(ubic.gemma.model.genome.GeneticLocation)
+     */
+    public void remove( ubic.gemma.model.genome.GeneticLocation geneticLocation ) {
+        if ( geneticLocation == null ) {
+            throw new IllegalArgumentException( "GeneticLocation.remove - 'geneticLocation' can not be null" );
+        }
+        this.getHibernateTemplate().delete( geneticLocation );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.ChromosomeLocationDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "GeneticLocation.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.genome.GeneticLocation ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneticLocationDao#update(ubic.gemma.model.genome.GeneticLocation)
+     */
+    public void update( ubic.gemma.model.genome.GeneticLocation geneticLocation ) {
+        if ( geneticLocation == null ) {
+            throw new IllegalArgumentException( "GeneticLocation.update - 'geneticLocation' can not be null" );
+        }
+        this.getHibernateTemplate().update( geneticLocation );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.genome.GeneticLocation)} method. This method does not instantiate a
+     * new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.GeneticLocationDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.GeneticLocation)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.genome.GeneticLocationDao</code>, please note that the {@link #TRANSFORM_NONE} constant
@@ -202,25 +223,6 @@ public abstract class GeneticLocationDaoBase extends ubic.gemma.model.genome.Chr
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.genome.GeneticLocation)} method. This method does not instantiate a
-     * new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.GeneticLocationDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.GeneticLocation)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

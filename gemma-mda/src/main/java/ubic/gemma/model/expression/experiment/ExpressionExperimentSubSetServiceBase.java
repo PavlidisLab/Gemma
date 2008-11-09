@@ -36,18 +36,30 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
     private ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
 
     /**
-     * Sets the reference to <code>expressionExperimentSubSet</code>'s DAO.
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
      */
-    public void setExpressionExperimentSubSetDao(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao expressionExperimentSubSetDao ) {
-        this.expressionExperimentSubSetDao = expressionExperimentSubSetDao;
+    public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet create(
+            final ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {
+        try {
+            return this.handleCreate( expressionExperimentSubSet );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the reference to <code>expressionExperimentSubSet</code>'s DAO.
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#load(java.lang.Long)
      */
-    protected ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao getExpressionExperimentSubSetDao() {
-        return this.expressionExperimentSubSetDao;
+    public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet load( final java.lang.Long id ) {
+        try {
+            return this.handleLoad( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.load(java.lang.Long id)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -64,85 +76,18 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #loadAll()}
+     * Sets the reference to <code>expressionExperimentSubSet</code>'s DAO.
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
-     */
-    public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet create(
-            final ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {
-        try {
-            return this.handleCreate( expressionExperimentSubSet );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet)' --> "
-                            + th, th );
-        }
+    public void setExpressionExperimentSubSetDao(
+            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao expressionExperimentSubSetDao ) {
+        this.expressionExperimentSubSetDao = expressionExperimentSubSetDao;
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)}
+     * Gets the reference to <code>expressionExperimentSubSet</code>'s DAO.
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet handleCreate(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#load(java.lang.Long)
-     */
-    public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao getExpressionExperimentSubSetDao() {
+        return this.expressionExperimentSubSetDao;
     }
 
     /**
@@ -157,5 +102,59 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)}
+     */
+    protected abstract ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet handleCreate(
+            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet handleLoad( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAll()}
+     */
+    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
 
 }

@@ -35,40 +35,6 @@ public class BioAssayServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 3672261947426757660L;
 
     /**
-     * The default constructor for <code>BioAssayServiceException</code>.
-     */
-    public BioAssayServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>BioAssayServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public BioAssayServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>BioAssayServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public BioAssayServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>BioAssayServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public BioAssayServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class BioAssayServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>BioAssayServiceException</code>.
+     */
+    public BioAssayServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>BioAssayServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public BioAssayServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>BioAssayServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public BioAssayServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>BioAssayServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public BioAssayServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

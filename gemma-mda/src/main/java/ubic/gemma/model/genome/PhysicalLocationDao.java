@@ -27,9 +27,40 @@ package ubic.gemma.model.genome;
  */
 public interface PhysicalLocationDao extends ubic.gemma.model.genome.ChromosomeLocationDao {
     /**
-     * Loads an instance of ubic.gemma.model.genome.PhysicalLocation from the persistent store.
+     * <p>
+     * Does the same thing as {@link #create(ubic.gemma.model.genome.PhysicalLocation)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
+     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
+     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
+     * objects for example). By default, transformation does not occur.
+     * </p>
      */
-    public ubic.gemma.model.genome.ChromosomeLocation load( java.lang.Long id );
+    public java.util.Collection create( int transform, java.util.Collection entities );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #create(ubic.gemma.model.genome.PhysicalLocation)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
+     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
+     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a value
+     * object for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object create( int transform, ubic.gemma.model.genome.PhysicalLocation physicalLocation );
+
+    /**
+     * Creates a new instance of ubic.gemma.model.genome.PhysicalLocation and adds from the passed in
+     * <code>entities</code> collection
+     * 
+     * @param entities the collection of ubic.gemma.model.genome.PhysicalLocation instances to create.
+     * @return the created instances.
+     */
+    public java.util.Collection create( java.util.Collection entities );
+
+    /**
+     * Creates an instance of ubic.gemma.model.genome.PhysicalLocation and adds it to the persistent store.
+     */
+    public ubic.gemma.model.genome.ChromosomeLocation create( ubic.gemma.model.genome.PhysicalLocation physicalLocation );
 
     /**
      * <p>
@@ -44,6 +75,11 @@ public interface PhysicalLocationDao extends ubic.gemma.model.genome.ChromosomeL
      * @return either the entity or the object transformed from the entity.
      */
     public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.genome.PhysicalLocation from the persistent store.
+     */
+    public ubic.gemma.model.genome.ChromosomeLocation load( java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.genome.PhysicalLocation}.
@@ -67,57 +103,6 @@ public interface PhysicalLocationDao extends ubic.gemma.model.genome.ChromosomeL
     public java.util.Collection loadAll( final int transform );
 
     /**
-     * Creates an instance of ubic.gemma.model.genome.PhysicalLocation and adds it to the persistent store.
-     */
-    public ubic.gemma.model.genome.ChromosomeLocation create( ubic.gemma.model.genome.PhysicalLocation physicalLocation );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.PhysicalLocation)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
-     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a value
-     * object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform, ubic.gemma.model.genome.PhysicalLocation physicalLocation );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.genome.PhysicalLocation and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.genome.PhysicalLocation instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.PhysicalLocation)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
-     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
-     * objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * Updates the <code>physicalLocation</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.genome.PhysicalLocation physicalLocation );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.PhysicalLocation from the persistent store.
-     */
-    public void remove( ubic.gemma.model.genome.PhysicalLocation physicalLocation );
-
-    /**
      * Removes the instance of ubic.gemma.model.genome.PhysicalLocation having the given <code>identifier</code> from
      * the persistent store.
      */
@@ -128,6 +113,21 @@ public interface PhysicalLocationDao extends ubic.gemma.model.genome.ChromosomeL
      */
     public void remove( java.util.Collection entities );
 
+    /**
+     * Removes the instance of ubic.gemma.model.genome.PhysicalLocation from the persistent store.
+     */
+    public void remove( ubic.gemma.model.genome.PhysicalLocation physicalLocation );
+
     public void thaw( PhysicalLocation physicalLocation );
+
+    /**
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     */
+    public void update( java.util.Collection entities );
+
+    /**
+     * Updates the <code>physicalLocation</code> instance in the persistent store.
+     */
+    public void update( ubic.gemma.model.genome.PhysicalLocation physicalLocation );
 
 }

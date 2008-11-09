@@ -39,6 +39,24 @@ public class NativeQueryUtils {
     /**
      * Queries are read-only (no updates).
      * 
+     * @param hibernatetemplate
+     * @param queryString with no parameters
+     * @return a single object
+     */
+    public static List find( HibernateTemplate hibernateTemplate, final String queryString ) {
+        return ( List ) hibernateTemplate.execute( new HibernateCallback() {
+            public Object doInHibernate( Session session ) throws HibernateException {
+                SQLQuery queryObject = session.createSQLQuery( queryString );
+                queryObject.setReadOnly( true );
+                return queryObject.list();
+            }
+        } );
+
+    }
+
+    /**
+     * Queries are read-only (no updates).
+     * 
      * @param hibernateTemplate
      * @param queryString
      * @param paramName
@@ -78,24 +96,6 @@ public class NativeQueryUtils {
                 return queryObject.list();
             }
         } );
-    }
-
-    /**
-     * Queries are read-only (no updates).
-     * 
-     * @param hibernatetemplate
-     * @param queryString with no parameters
-     * @return a single object
-     */
-    public static List find( HibernateTemplate hibernateTemplate, final String queryString ) {
-        return ( List ) hibernateTemplate.execute( new HibernateCallback() {
-            public Object doInHibernate( Session session ) throws HibernateException {
-                SQLQuery queryObject = session.createSQLQuery( queryString );
-                queryObject.setReadOnly( true );
-                return queryObject.list();
-            }
-        } );
-
     }
 
 }

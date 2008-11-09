@@ -31,7 +31,6 @@ public class PredictedGeneDaoImpl extends ubic.gemma.model.genome.PredictedGeneD
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
      */
     @Override

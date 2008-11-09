@@ -24,8 +24,8 @@ package ubic.gemma.model.association;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.association.Gene2GOAssociationService</code>, provides access
- * to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.association.Gene2GOAssociationService</code>, provides access to
+ * all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.association.Gene2GOAssociationService
@@ -34,35 +34,20 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
 
     private ubic.gemma.model.association.Gene2GOAssociationDao gene2GOAssociationDao;
 
-    /**
-     * Sets the reference to <code>gene2GOAssociation</code>'s DAO.
-     */
-    public void setGene2GOAssociationDao( ubic.gemma.model.association.Gene2GOAssociationDao gene2GOAssociationDao ) {
-        this.gene2GOAssociationDao = gene2GOAssociationDao;
-    }
-
-    /**
-     * Gets the reference to <code>gene2GOAssociation</code>'s DAO.
-     */
-    protected ubic.gemma.model.association.Gene2GOAssociationDao getGene2GOAssociationDao() {
-        return this.gene2GOAssociationDao;
-    }
-
     private ubic.gemma.model.common.description.VocabCharacteristicDao vocabCharacteristicDao;
 
     /**
-     * Sets the reference to <code>vocabCharacteristic</code>'s DAO.
+     * @see ubic.gemma.model.association.Gene2GOAssociationService#create(ubic.gemma.model.association.Gene2GOAssociation)
      */
-    public void setVocabCharacteristicDao(
-            ubic.gemma.model.common.description.VocabCharacteristicDao vocabCharacteristicDao ) {
-        this.vocabCharacteristicDao = vocabCharacteristicDao;
-    }
-
-    /**
-     * Gets the reference to <code>vocabCharacteristic</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.description.VocabCharacteristicDao getVocabCharacteristicDao() {
-        return this.vocabCharacteristicDao;
+    public ubic.gemma.model.association.Gene2GOAssociation create(
+            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        try {
+            return this.handleCreate( gene2GOAssociation );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
+                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.create(ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -80,50 +65,17 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.association.Gene2GOAssociation)}
+     * @see ubic.gemma.model.association.Gene2GOAssociationService#findAssociationByGene(ubic.gemma.model.genome.Gene)
      */
-    protected abstract ubic.gemma.model.association.Gene2GOAssociation handleFind(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#create(ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    public ubic.gemma.model.association.Gene2GOAssociation create(
-            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+    public java.util.Collection findAssociationByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
-            return this.handleCreate( gene2GOAssociation );
+            return this.handleFindAssociationByGene( gene );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.create(ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation)' --> "
+                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findAssociationByGene(ubic.gemma.model.genome.Gene gene)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.association.Gene2GOAssociation)}
-     */
-    protected abstract ubic.gemma.model.association.Gene2GOAssociation handleCreate(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findOrCreate(ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
-            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        try {
-            return this.handleFindOrCreate( gene2GOAssociation );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findOrCreate(ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.association.Gene2GOAssociation)}
-     */
-    protected abstract ubic.gemma.model.association.Gene2GOAssociation handleFindOrCreate(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGene(ubic.gemma.model.genome.Gene)
@@ -137,12 +89,6 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #findByGene(ubic.gemma.model.genome.Gene)}
-     */
-    protected abstract java.util.Collection handleFindByGene( ubic.gemma.model.genome.Gene gene )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerm(java.lang.String,
@@ -159,29 +105,18 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     }
 
     /**
-     * Performs the core logic for {@link #findByGOTerm(java.lang.String, ubic.gemma.model.genome.Taxon)}
+     * @see ubic.gemma.model.association.Gene2GOAssociationService#findOrCreate(ubic.gemma.model.association.Gene2GOAssociation)
      */
-    protected abstract java.util.Collection handleFindByGOTerm( java.lang.String goID,
-            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findAssociationByGene(ubic.gemma.model.genome.Gene)
-     */
-    public java.util.Collection findAssociationByGene( final ubic.gemma.model.genome.Gene gene ) {
+    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
+            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         try {
-            return this.handleFindAssociationByGene( gene );
+            return this.handleFindOrCreate( gene2GOAssociation );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findAssociationByGene(ubic.gemma.model.genome.Gene gene)' --> "
+                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findOrCreate(ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #findAssociationByGene(ubic.gemma.model.genome.Gene)}
-     */
-    protected abstract java.util.Collection handleFindAssociationByGene( ubic.gemma.model.genome.Gene gene )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#removeAll()
@@ -197,45 +132,25 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     }
 
     /**
-     * Performs the core logic for {@link #removeAll()}
+     * Sets the reference to <code>gene2GOAssociation</code>'s DAO.
      */
-    protected abstract void handleRemoveAll() throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public void setGene2GOAssociationDao( ubic.gemma.model.association.Gene2GOAssociationDao gene2GOAssociationDao ) {
+        this.gene2GOAssociationDao = gene2GOAssociationDao;
     }
 
     /**
-     * Gets the message source available to this service.
+     * Sets the reference to <code>vocabCharacteristic</code>'s DAO.
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    public void setVocabCharacteristicDao(
+            ubic.gemma.model.common.description.VocabCharacteristicDao vocabCharacteristicDao ) {
+        this.vocabCharacteristicDao = vocabCharacteristicDao;
     }
 
     /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
+     * Gets the reference to <code>gene2GOAssociation</code>'s DAO.
      */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.association.Gene2GOAssociationDao getGene2GOAssociationDao() {
+        return this.gene2GOAssociationDao;
     }
 
     /**
@@ -250,5 +165,89 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Gets the reference to <code>vocabCharacteristic</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.description.VocabCharacteristicDao getVocabCharacteristicDao() {
+        return this.vocabCharacteristicDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.association.Gene2GOAssociation)}
+     */
+    protected abstract ubic.gemma.model.association.Gene2GOAssociation handleCreate(
+            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.association.Gene2GOAssociation)}
+     */
+    protected abstract ubic.gemma.model.association.Gene2GOAssociation handleFind(
+            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findAssociationByGene(ubic.gemma.model.genome.Gene)}
+     */
+    protected abstract java.util.Collection handleFindAssociationByGene( ubic.gemma.model.genome.Gene gene )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByGene(ubic.gemma.model.genome.Gene)}
+     */
+    protected abstract java.util.Collection handleFindByGene( ubic.gemma.model.genome.Gene gene )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByGOTerm(java.lang.String, ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract java.util.Collection handleFindByGOTerm( java.lang.String goID,
+            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.association.Gene2GOAssociation)}
+     */
+    protected abstract ubic.gemma.model.association.Gene2GOAssociation handleFindOrCreate(
+            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #removeAll()}
+     */
+    protected abstract void handleRemoveAll() throws java.lang.Exception;
 
 }

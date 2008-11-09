@@ -32,9 +32,35 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServiceBase {
 
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#delete(java.lang.Long)
+     */
+    @Override
+    protected void handleDelete( java.lang.Long idToDelete ) throws java.lang.Exception {
+
+        this.getAnalysisDao().remove( idToDelete );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#delete(ubic.gemma.model.analysis.Analysis)
+     */
+    @Override
+    protected void handleDelete( ubic.gemma.model.analysis.Analysis toDelete ) throws java.lang.Exception {
+        this.getAnalysisDao().remove( toDelete );
+    }
+
+    @Override
+    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
+    }
+
+    @Override
+    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
+    }
+
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.analysis.AnalysisServiceBase#handleFindByName(java.lang.String)
      */
     @Override
@@ -66,6 +92,16 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
         return mostRecent;
     }
 
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
+    }
+
+    @Override
+    protected Analysis handleFindByUniqueInvestigations( Collection investigations ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
+    }
+
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#load(java.lang.Long)
      */
@@ -80,43 +116,6 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
     @Override
     protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getAnalysisDao().loadAll();
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#delete(ubic.gemma.model.analysis.Analysis)
-     */
-    @Override
-    protected void handleDelete( ubic.gemma.model.analysis.Analysis toDelete ) throws java.lang.Exception {
-        this.getAnalysisDao().remove( toDelete );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#delete(java.lang.Long)
-     */
-    @Override
-    protected void handleDelete( java.lang.Long idToDelete ) throws java.lang.Exception {
-
-        this.getAnalysisDao().remove( idToDelete );
-    }
-
-    @Override
-    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
-        throw new UnsupportedOperationException( "Please call this method on a subclass" );
-    }
-
-    @Override
-    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
-        throw new UnsupportedOperationException( "Please call this method on a subclass" );
-    }
-
-    @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
-        throw new UnsupportedOperationException( "Please call this method on a subclass" );
-    }
-
-    @Override
-    protected Analysis handleFindByUniqueInvestigations( Collection investigations ) throws Exception {
-        throw new UnsupportedOperationException( "Please call this method on a subclass" );
     }
 
 }

@@ -35,40 +35,6 @@ public class ExperimentalFactorServiceException extends java.lang.RuntimeExcepti
     private static final long serialVersionUID = -8613608726754220445L;
 
     /**
-     * The default constructor for <code>ExperimentalFactorServiceException</code>.
-     */
-    public ExperimentalFactorServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>ExperimentalFactorServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public ExperimentalFactorServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>ExperimentalFactorServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public ExperimentalFactorServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>ExperimentalFactorServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public ExperimentalFactorServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class ExperimentalFactorServiceException extends java.lang.RuntimeExcepti
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>ExperimentalFactorServiceException</code>.
+     */
+    public ExperimentalFactorServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>ExperimentalFactorServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public ExperimentalFactorServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>ExperimentalFactorServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public ExperimentalFactorServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>ExperimentalFactorServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public ExperimentalFactorServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

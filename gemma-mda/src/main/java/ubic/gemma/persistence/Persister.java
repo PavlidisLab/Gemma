@@ -24,8 +24,7 @@ import java.util.Collection;
  * Interface defining the ability to create domain objects in bulk or singly. Classes that implement this interface
  * should expect:
  * <ul>
- * <li>To be passed an object graph that is valid - that is, all non-nullable properties and associations are filled
- * in.
+ * <li>To be passed an object graph that is valid - that is, all non-nullable properties and associations are filled in.
  * <li>The objects passed might include objects that are already persistent in the system.
  * </ul>
  * 

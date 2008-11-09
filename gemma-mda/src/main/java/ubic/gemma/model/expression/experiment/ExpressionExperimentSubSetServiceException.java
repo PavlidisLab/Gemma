@@ -35,40 +35,6 @@ public class ExpressionExperimentSubSetServiceException extends java.lang.Runtim
     private static final long serialVersionUID = 7300491592726931461L;
 
     /**
-     * The default constructor for <code>ExpressionExperimentSubSetServiceException</code>.
-     */
-    public ExpressionExperimentSubSetServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>ExpressionExperimentSubSetServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public ExpressionExperimentSubSetServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>ExpressionExperimentSubSetServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public ExpressionExperimentSubSetServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>ExpressionExperimentSubSetServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public ExpressionExperimentSubSetServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class ExpressionExperimentSubSetServiceException extends java.lang.Runtim
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>ExpressionExperimentSubSetServiceException</code>.
+     */
+    public ExpressionExperimentSubSetServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>ExpressionExperimentSubSetServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public ExpressionExperimentSubSetServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>ExpressionExperimentSubSetServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public ExpressionExperimentSubSetServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>ExpressionExperimentSubSetServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public ExpressionExperimentSubSetServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

@@ -35,40 +35,6 @@ public class BioAssayDataVectorServiceException extends java.lang.RuntimeExcepti
     private static final long serialVersionUID = 3258525910590620913L;
 
     /**
-     * The default constructor for <code>BioAssayDataVectorServiceException</code>.
-     */
-    public BioAssayDataVectorServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>BioAssayDataVectorServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public BioAssayDataVectorServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>BioAssayDataVectorServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public BioAssayDataVectorServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>BioAssayDataVectorServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public BioAssayDataVectorServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class BioAssayDataVectorServiceException extends java.lang.RuntimeExcepti
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>BioAssayDataVectorServiceException</code>.
+     */
+    public BioAssayDataVectorServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>BioAssayDataVectorServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public BioAssayDataVectorServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>BioAssayDataVectorServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public BioAssayDataVectorServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>BioAssayDataVectorServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public BioAssayDataVectorServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

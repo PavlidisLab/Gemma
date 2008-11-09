@@ -36,112 +36,18 @@ public abstract class BioMaterialServiceBase extends ubic.gemma.model.common.Aud
     private ubic.gemma.model.expression.biomaterial.BioMaterialDao bioMaterialDao;
 
     /**
-     * Sets the reference to <code>bioMaterial</code>'s DAO.
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#copy(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
-    public void setBioMaterialDao( ubic.gemma.model.expression.biomaterial.BioMaterialDao bioMaterialDao ) {
-        this.bioMaterialDao = bioMaterialDao;
-    }
-
-    /**
-     * Gets the reference to <code>bioMaterial</code>'s DAO.
-     */
-    protected ubic.gemma.model.expression.biomaterial.BioMaterialDao getBioMaterialDao() {
-        return this.bioMaterialDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#getBioMaterials()
-     */
-    public java.util.Collection getBioMaterials() {
-        try {
-            return this.handleGetBioMaterials();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.getBioMaterials()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getBioMaterials()}
-     */
-    protected abstract java.util.Collection handleGetBioMaterials() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    public ubic.gemma.model.expression.biomaterial.BioMaterial findOrCreate(
+    public ubic.gemma.model.expression.biomaterial.BioMaterial copy(
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         try {
-            return this.handleFindOrCreate( bioMaterial );
+            return this.handleCopy( bioMaterial );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial)' --> "
+                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.copy(ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)}
-     */
-    protected abstract ubic.gemma.model.expression.biomaterial.BioMaterial handleFindOrCreate(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#remove(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    public void remove( final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
-        try {
-            this.handleRemove( bioMaterial );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.remove(ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.biomaterial.BioMaterial)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#load(java.lang.Long)
-     */
-    public ubic.gemma.model.expression.biomaterial.BioMaterial load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.expression.biomaterial.BioMaterial handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
-     */
-    public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.loadAll()' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#countAll()
@@ -155,30 +61,6 @@ public abstract class BioMaterialServiceBase extends ubic.gemma.model.common.Aud
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#update(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    public void update( final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
-        try {
-            this.handleUpdate( bioMaterial );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.update(ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.expression.biomaterial.BioMaterial)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#create(ubic.gemma.model.expression.biomaterial.BioMaterial)
@@ -195,30 +77,57 @@ public abstract class BioMaterialServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
-    protected abstract ubic.gemma.model.expression.biomaterial.BioMaterial handleCreate(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#copy(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    public ubic.gemma.model.expression.biomaterial.BioMaterial copy(
+    public ubic.gemma.model.expression.biomaterial.BioMaterial findOrCreate(
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         try {
-            return this.handleCopy( bioMaterial );
+            return this.handleFindOrCreate( bioMaterial );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.copy(ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial)' --> "
+                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #copy(ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#getBioMaterials()
      */
-    protected abstract ubic.gemma.model.expression.biomaterial.BioMaterial handleCopy(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
+    public java.util.Collection getBioMaterials() {
+        try {
+            return this.handleGetBioMaterials();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
+                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.getBioMaterials()' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#load(java.lang.Long)
+     */
+    public ubic.gemma.model.expression.biomaterial.BioMaterial load( final java.lang.Long id ) {
+        try {
+            return this.handleLoad( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
+                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.load(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
+     */
+    public java.util.Collection loadAll() {
+        try {
+            return this.handleLoadAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
+                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.loadAll()' --> " + th,
+                    th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadMultiple(java.util.Collection)
@@ -234,8 +143,99 @@ public abstract class BioMaterialServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#remove(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    public void remove( final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
+        try {
+            this.handleRemove( bioMaterial );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
+                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.remove(ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>bioMaterial</code>'s DAO.
+     */
+    public void setBioMaterialDao( ubic.gemma.model.expression.biomaterial.BioMaterialDao bioMaterialDao ) {
+        this.bioMaterialDao = bioMaterialDao;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#update(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    public void update( final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
+        try {
+            this.handleUpdate( bioMaterial );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
+                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.update(ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Gets the reference to <code>bioMaterial</code>'s DAO.
+     */
+    protected ubic.gemma.model.expression.biomaterial.BioMaterialDao getBioMaterialDao() {
+        return this.bioMaterialDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #copy(ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     */
+    protected abstract ubic.gemma.model.expression.biomaterial.BioMaterial handleCopy(
+            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #countAll()}
+     */
+    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     */
+    protected abstract ubic.gemma.model.expression.biomaterial.BioMaterial handleCreate(
+            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     */
+    protected abstract ubic.gemma.model.expression.biomaterial.BioMaterial handleFindOrCreate(
+            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getBioMaterials()}
+     */
+    protected abstract java.util.Collection handleGetBioMaterials() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.expression.biomaterial.BioMaterial handleLoad( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAll()}
+     */
+    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
     protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial )
+            throws java.lang.Exception;
 
 }

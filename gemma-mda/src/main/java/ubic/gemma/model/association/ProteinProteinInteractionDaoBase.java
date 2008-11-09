@@ -35,6 +35,55 @@ public abstract class ProteinProteinInteractionDaoBase extends
         ubic.gemma.model.association.ProteinProteinInteractionDao {
 
     /**
+     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ProteinProteinInteraction.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.association.ProteinProteinInteraction ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#create(int transform,
+     *      ubic.gemma.model.association.ProteinProteinInteraction)
+     */
+    public Object create( final int transform,
+            final ubic.gemma.model.association.ProteinProteinInteraction proteinProteinInteraction ) {
+        if ( proteinProteinInteraction == null ) {
+            throw new IllegalArgumentException(
+                    "ProteinProteinInteraction.create - 'proteinProteinInteraction' can not be null" );
+        }
+        this.getHibernateTemplate().save( proteinProteinInteraction );
+        return this.transformEntity( transform, proteinProteinInteraction );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#create(ubic.gemma.model.association.ProteinProteinInteraction)
+     */
+    public ubic.gemma.model.association.Relationship create(
+            ubic.gemma.model.association.ProteinProteinInteraction proteinProteinInteraction ) {
+        return ( ubic.gemma.model.association.ProteinProteinInteraction ) this.create( TRANSFORM_NONE,
+                proteinProteinInteraction );
+    }
+
+    /**
      * @see ubic.gemma.model.association.ProteinProteinInteractionDao#load(int, java.lang.Long)
      */
     @Override
@@ -76,95 +125,6 @@ public abstract class ProteinProteinInteractionDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#create(ubic.gemma.model.association.ProteinProteinInteraction)
-     */
-    public ubic.gemma.model.association.Relationship create(
-            ubic.gemma.model.association.ProteinProteinInteraction proteinProteinInteraction ) {
-        return ( ubic.gemma.model.association.ProteinProteinInteraction ) this.create( TRANSFORM_NONE,
-                proteinProteinInteraction );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#create(int transform,
-     *      ubic.gemma.model.association.ProteinProteinInteraction)
-     */
-    public Object create( final int transform,
-            final ubic.gemma.model.association.ProteinProteinInteraction proteinProteinInteraction ) {
-        if ( proteinProteinInteraction == null ) {
-            throw new IllegalArgumentException(
-                    "ProteinProteinInteraction.create - 'proteinProteinInteraction' can not be null" );
-        }
-        this.getHibernateTemplate().save( proteinProteinInteraction );
-        return this.transformEntity( transform, proteinProteinInteraction );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ProteinProteinInteraction.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.association.ProteinProteinInteraction ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#update(ubic.gemma.model.association.ProteinProteinInteraction)
-     */
-    public void update( ubic.gemma.model.association.ProteinProteinInteraction proteinProteinInteraction ) {
-        if ( proteinProteinInteraction == null ) {
-            throw new IllegalArgumentException(
-                    "ProteinProteinInteraction.update - 'proteinProteinInteraction' can not be null" );
-        }
-        this.getHibernateTemplate().update( proteinProteinInteraction );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ProteinProteinInteraction.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.association.ProteinProteinInteraction ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#remove(ubic.gemma.model.association.ProteinProteinInteraction)
-     */
-    public void remove( ubic.gemma.model.association.ProteinProteinInteraction proteinProteinInteraction ) {
-        if ( proteinProteinInteraction == null ) {
-            throw new IllegalArgumentException(
-                    "ProteinProteinInteraction.remove - 'proteinProteinInteraction' can not be null" );
-        }
-        this.getHibernateTemplate().delete( proteinProteinInteraction );
-    }
-
-    /**
      * @see ubic.gemma.model.association.ProteinProteinInteractionDao#remove(java.lang.Long)
      */
     @Override
@@ -191,6 +151,68 @@ public abstract class ProteinProteinInteractionDaoBase extends
     }
 
     /**
+     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#remove(ubic.gemma.model.association.ProteinProteinInteraction)
+     */
+    public void remove( ubic.gemma.model.association.ProteinProteinInteraction proteinProteinInteraction ) {
+        if ( proteinProteinInteraction == null ) {
+            throw new IllegalArgumentException(
+                    "ProteinProteinInteraction.remove - 'proteinProteinInteraction' can not be null" );
+        }
+        this.getHibernateTemplate().delete( proteinProteinInteraction );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ProteinProteinInteraction.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.association.ProteinProteinInteraction ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.ProteinProteinInteractionDao#update(ubic.gemma.model.association.ProteinProteinInteraction)
+     */
+    public void update( ubic.gemma.model.association.ProteinProteinInteraction proteinProteinInteraction ) {
+        if ( proteinProteinInteraction == null ) {
+            throw new IllegalArgumentException(
+                    "ProteinProteinInteraction.update - 'proteinProteinInteraction' can not be null" );
+        }
+        this.getHibernateTemplate().update( proteinProteinInteraction );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.association.ProteinProteinInteraction)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.association.ProteinProteinInteractionDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.association.ProteinProteinInteraction)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.association.ProteinProteinInteractionDao</code>, please note that the
@@ -214,26 +236,6 @@ public abstract class ProteinProteinInteractionDaoBase extends
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.association.ProteinProteinInteraction)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.association.ProteinProteinInteractionDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.association.ProteinProteinInteraction)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

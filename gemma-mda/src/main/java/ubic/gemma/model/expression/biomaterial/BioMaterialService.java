@@ -28,9 +28,23 @@ package ubic.gemma.model.expression.biomaterial;
 public interface BioMaterialService extends ubic.gemma.model.common.AuditableService {
 
     /**
+     * <p>
+     * Copies a bioMaterial.
+     * </p>
+     */
+    public ubic.gemma.model.expression.biomaterial.BioMaterial copy(
+            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+
+    /**
      * 
      */
-    public java.util.Collection getBioMaterials();
+    public java.lang.Integer countAll();
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.expression.biomaterial.BioMaterial create(
+            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
 
     /**
      * 
@@ -41,7 +55,7 @@ public interface BioMaterialService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public void remove( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+    public java.util.Collection getBioMaterials();
 
     /**
      * 
@@ -56,7 +70,12 @@ public interface BioMaterialService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.lang.Integer countAll();
+    public java.util.Collection loadMultiple( java.util.Collection ids );
+
+    /**
+     * 
+     */
+    public void remove( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
 
     /**
      * <p>
@@ -64,24 +83,5 @@ public interface BioMaterialService extends ubic.gemma.model.common.AuditableSer
      * </p>
      */
     public void update( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.biomaterial.BioMaterial create(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
-
-    /**
-     * <p>
-     * Copies a bioMaterial.
-     * </p>
-     */
-    public ubic.gemma.model.expression.biomaterial.BioMaterial copy(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
-
-    /**
-     * 
-     */
-    public java.util.Collection loadMultiple( java.util.Collection ids );
 
 }

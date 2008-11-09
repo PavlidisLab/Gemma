@@ -35,40 +35,6 @@ public class CompositeSequenceServiceException extends java.lang.RuntimeExceptio
     private static final long serialVersionUID = 4832234054291732512L;
 
     /**
-     * The default constructor for <code>CompositeSequenceServiceException</code>.
-     */
-    public CompositeSequenceServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>CompositeSequenceServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public CompositeSequenceServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>CompositeSequenceServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public CompositeSequenceServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>CompositeSequenceServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public CompositeSequenceServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class CompositeSequenceServiceException extends java.lang.RuntimeExceptio
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>CompositeSequenceServiceException</code>.
+     */
+    public CompositeSequenceServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>CompositeSequenceServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public CompositeSequenceServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>CompositeSequenceServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public CompositeSequenceServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>CompositeSequenceServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public CompositeSequenceServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

@@ -31,26 +31,13 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGOTerm(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleFindByGOTerm( String goID, Taxon taxon ) throws Exception {
-        return this.getGene2GOAssociationDao().findByGoTerm( goID, taxon );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationService#create(ubic.gemma.model.association.Gene2GOAssociation)
      */
     @Override
-    protected Collection handleFindByGene( Gene gene ) throws Exception {
-        return this.getGene2GOAssociationDao().findByGene( gene );
-
+    protected ubic.gemma.model.association.Gene2GOAssociation handleCreate(
+            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception {
+        return ( Gene2GOAssociation ) this.getGene2GOAssociationDao().create( gene2GOAssociation );
     }
 
     /**
@@ -62,13 +49,35 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
         return this.getGene2GOAssociationDao().find( gene2GOAssociation );
     }
 
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#create(ubic.gemma.model.association.Gene2GOAssociation)
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindAssociationByGene(ubic.gemma.model.genome
+     * .Gene)
      */
     @Override
-    protected ubic.gemma.model.association.Gene2GOAssociation handleCreate(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception {
-        return ( Gene2GOAssociation ) this.getGene2GOAssociationDao().create( gene2GOAssociation );
+    protected Collection handleFindAssociationByGene( Gene gene ) throws java.lang.Exception {
+        return this.getGene2GOAssociationDao().findAssociationByGene( gene );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFindByGene( Gene gene ) throws Exception {
+        return this.getGene2GOAssociationDao().findByGene( gene );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindByGOTerm(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleFindByGOTerm( String goID, Taxon taxon ) throws Exception {
+        return this.getGene2GOAssociationDao().findByGoTerm( goID, taxon );
     }
 
     /**
@@ -82,17 +91,6 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindAssociationByGene(ubic.gemma.model.genome.Gene)
-     */
-    @Override
-    protected Collection handleFindAssociationByGene( Gene gene ) throws java.lang.Exception {
-        return this.getGene2GOAssociationDao().findAssociationByGene( gene );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleRemoveAll()
      */
     @Override

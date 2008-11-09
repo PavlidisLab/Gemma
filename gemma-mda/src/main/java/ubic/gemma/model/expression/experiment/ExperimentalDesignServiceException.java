@@ -35,40 +35,6 @@ public class ExperimentalDesignServiceException extends java.lang.RuntimeExcepti
     private static final long serialVersionUID = 6848028069997138356L;
 
     /**
-     * The default constructor for <code>ExperimentalDesignServiceException</code>.
-     */
-    public ExperimentalDesignServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>ExperimentalDesignServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public ExperimentalDesignServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>ExperimentalDesignServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public ExperimentalDesignServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>ExperimentalDesignServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public ExperimentalDesignServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class ExperimentalDesignServiceException extends java.lang.RuntimeExcepti
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>ExperimentalDesignServiceException</code>.
+     */
+    public ExperimentalDesignServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>ExperimentalDesignServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public ExperimentalDesignServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>ExperimentalDesignServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public ExperimentalDesignServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>ExperimentalDesignServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public ExperimentalDesignServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

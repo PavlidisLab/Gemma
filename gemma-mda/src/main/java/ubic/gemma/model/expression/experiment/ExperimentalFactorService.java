@@ -30,12 +30,18 @@ public interface ExperimentalFactorService extends ubic.gemma.model.common.Audit
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public ubic.gemma.model.expression.experiment.ExperimentalFactor create(
+            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalFactor create(
+    public void delete( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.expression.experiment.ExperimentalFactor find(
             ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
 
     /**
@@ -47,22 +53,16 @@ public interface ExperimentalFactorService extends ubic.gemma.model.common.Audit
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalFactor find(
-            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
-
-    /**
-     * 
-     */
     public ubic.gemma.model.expression.experiment.ExperimentalFactor load( java.lang.Long id );
 
     /**
      * 
      */
-    public void update( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
+    public java.util.Collection loadAll();
 
     /**
      * 
      */
-    public void delete( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
+    public void update( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
 
 }

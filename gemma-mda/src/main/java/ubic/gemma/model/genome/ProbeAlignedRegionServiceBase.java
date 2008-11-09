@@ -24,8 +24,8 @@ package ubic.gemma.model.genome;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.genome.ProbeAlignedRegionService</code>, provides access to
- * all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.genome.ProbeAlignedRegionService</code>, provides access to all
+ * services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.genome.ProbeAlignedRegionService
@@ -33,20 +33,6 @@ package ubic.gemma.model.genome;
 public abstract class ProbeAlignedRegionServiceBase implements ubic.gemma.model.genome.ProbeAlignedRegionService {
 
     private ubic.gemma.model.genome.ProbeAlignedRegionDao probeAlignedRegionDao;
-
-    /**
-     * Sets the reference to <code>probeAlignedRegion</code>'s DAO.
-     */
-    public void setProbeAlignedRegionDao( ubic.gemma.model.genome.ProbeAlignedRegionDao probeAlignedRegionDao ) {
-        this.probeAlignedRegionDao = probeAlignedRegionDao;
-    }
-
-    /**
-     * Gets the reference to <code>probeAlignedRegion</code>'s DAO.
-     */
-    protected ubic.gemma.model.genome.ProbeAlignedRegionDao getProbeAlignedRegionDao() {
-        return this.probeAlignedRegionDao;
-    }
 
     /**
      * @see ubic.gemma.model.genome.ProbeAlignedRegionService#findAssociations(ubic.gemma.model.genome.PhysicalLocation)
@@ -62,12 +48,6 @@ public abstract class ProbeAlignedRegionServiceBase implements ubic.gemma.model.
     }
 
     /**
-     * Performs the core logic for {@link #findAssociations(ubic.gemma.model.genome.PhysicalLocation)}
-     */
-    protected abstract java.util.Collection handleFindAssociations(
-            ubic.gemma.model.genome.PhysicalLocation physicalLocation ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.genome.ProbeAlignedRegionService#findAssociations(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
     public java.util.Collection findAssociations( final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
@@ -81,46 +61,10 @@ public abstract class ProbeAlignedRegionServiceBase implements ubic.gemma.model.
     }
 
     /**
-     * Performs the core logic for {@link #findAssociations(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     * Sets the reference to <code>probeAlignedRegion</code>'s DAO.
      */
-    protected abstract java.util.Collection handleFindAssociations(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    public void setProbeAlignedRegionDao( ubic.gemma.model.genome.ProbeAlignedRegionDao probeAlignedRegionDao ) {
+        this.probeAlignedRegionDao = probeAlignedRegionDao;
     }
 
     /**
@@ -135,5 +79,60 @@ public abstract class ProbeAlignedRegionServiceBase implements ubic.gemma.model.
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Gets the reference to <code>probeAlignedRegion</code>'s DAO.
+     */
+    protected ubic.gemma.model.genome.ProbeAlignedRegionDao getProbeAlignedRegionDao() {
+        return this.probeAlignedRegionDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #findAssociations(ubic.gemma.model.genome.PhysicalLocation)}
+     */
+    protected abstract java.util.Collection handleFindAssociations(
+            ubic.gemma.model.genome.PhysicalLocation physicalLocation ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findAssociations(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     */
+    protected abstract java.util.Collection handleFindAssociations(
+            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception;
 
 }

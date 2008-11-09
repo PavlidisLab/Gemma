@@ -620,6 +620,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAclObjectIdentityId(int, java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
+    @Override
     @SuppressWarnings( { "unchecked" })
     public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -647,6 +648,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAclObjectIdentityId(int,
      *      ubic.gemma.model.common.Securable)
      */
+    @Override
     @SuppressWarnings( { "unchecked" })
     public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
         return this
@@ -660,6 +662,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAclObjectIdentityId(java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -669,6 +672,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
      */
+    @Override
     public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
         return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
     }
@@ -848,6 +852,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMask(int, java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
+    @Override
     @SuppressWarnings( { "unchecked" })
     public Object getMask( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -875,6 +880,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMask(int,
      *      ubic.gemma.model.common.Securable)
      */
+    @Override
     @SuppressWarnings( { "unchecked" })
     public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
         return this
@@ -888,6 +894,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMask(java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.lang.Integer getMask( final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {

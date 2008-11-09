@@ -25,47 +25,14 @@ package ubic.gemma.model.analysis;
 import org.apache.commons.beanutils.PropertyUtils;
 
 /**
- * The default exception thrown for unexpected errors occurring within {@link ubic.gemma.model.analysis.AnalysisService}.
+ * The default exception thrown for unexpected errors occurring within {@link ubic.gemma.model.analysis.AnalysisService}
+ * .
  */
 public class AnalysisServiceException extends java.lang.RuntimeException {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 7333441061643424241L;
-
-    /**
-     * The default constructor for <code>AnalysisServiceException</code>.
-     */
-    public AnalysisServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>AnalysisServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public AnalysisServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>AnalysisServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public AnalysisServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>AnalysisServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public AnalysisServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
 
     /**
      * Finds the root cause of the parent exception by traveling up the exception tree
@@ -101,5 +68,39 @@ public class AnalysisServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>AnalysisServiceException</code>.
+     */
+    public AnalysisServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>AnalysisServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public AnalysisServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>AnalysisServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public AnalysisServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>AnalysisServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public AnalysisServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

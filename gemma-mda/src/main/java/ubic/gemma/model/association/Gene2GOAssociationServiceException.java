@@ -35,40 +35,6 @@ public class Gene2GOAssociationServiceException extends java.lang.RuntimeExcepti
     private static final long serialVersionUID = 655203402389372432L;
 
     /**
-     * The default constructor for <code>Gene2GOAssociationServiceException</code>.
-     */
-    public Gene2GOAssociationServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>Gene2GOAssociationServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public Gene2GOAssociationServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>Gene2GOAssociationServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public Gene2GOAssociationServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>Gene2GOAssociationServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public Gene2GOAssociationServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class Gene2GOAssociationServiceException extends java.lang.RuntimeExcepti
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>Gene2GOAssociationServiceException</code>.
+     */
+    public Gene2GOAssociationServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>Gene2GOAssociationServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public Gene2GOAssociationServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>Gene2GOAssociationServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public Gene2GOAssociationServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>Gene2GOAssociationServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public Gene2GOAssociationServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

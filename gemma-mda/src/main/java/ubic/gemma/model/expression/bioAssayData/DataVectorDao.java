@@ -29,29 +29,30 @@ public interface DataVectorDao {
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or
      * other types, different methods in a class implementing this interface support this feature: look for an
-     * <code>int</code> parameter called <code>transform</code>. <p/> This specific flag denotes no transformation
-     * will occur.
+     * <code>int</code> parameter called <code>transform</code>.
+     * <p/>
+     * This specific flag denotes no transformation will occur.
      */
     public final static int TRANSFORM_NONE = 0;
-
-    /**
-     * Loads an instance of ubic.gemma.model.expression.bioAssayData.DataVector from the persistent store.
-     */
-    public ubic.gemma.model.expression.bioAssayData.DataVector load( java.lang.Long id );
 
     /**
      * <p>
      * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
      * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
      * </p>
      * 
      * @param id the identifier of the entity to load.
      * @return either the entity or the object transformed from the entity.
      */
     public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.expression.bioAssayData.DataVector from the persistent store.
+     */
+    public ubic.gemma.model.expression.bioAssayData.DataVector load( java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.expression.bioAssayData.DataVector}.
@@ -62,9 +63,9 @@ public interface DataVectorDao {
 
     /**
      * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
      * operation which can optionally transform the entity (into a value object for example). By default, transformation
      * does not occur.
      * </p>
@@ -73,21 +74,6 @@ public interface DataVectorDao {
      * @return the loaded entities.
      */
     public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Updates the <code>dataVector</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.expression.bioAssayData.DataVector dataVector );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.expression.bioAssayData.DataVector from the persistent store.
-     */
-    public void remove( ubic.gemma.model.expression.bioAssayData.DataVector dataVector );
 
     /**
      * Removes the instance of ubic.gemma.model.expression.bioAssayData.DataVector having the given
@@ -99,5 +85,20 @@ public interface DataVectorDao {
      * Removes all entities in the given <code>entities<code> collection.
      */
     public void remove( java.util.Collection entities );
+
+    /**
+     * Removes the instance of ubic.gemma.model.expression.bioAssayData.DataVector from the persistent store.
+     */
+    public void remove( ubic.gemma.model.expression.bioAssayData.DataVector dataVector );
+
+    /**
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     */
+    public void update( java.util.Collection entities );
+
+    /**
+     * Updates the <code>dataVector</code> instance in the persistent store.
+     */
+    public void update( ubic.gemma.model.expression.bioAssayData.DataVector dataVector );
 
 }

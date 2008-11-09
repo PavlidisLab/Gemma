@@ -346,26 +346,32 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @param newResults
-     * @return
+     * @param ees
+     * @param genes
+     * @param results
+     * @param needToSearch
+     * @param genesToSearch
      */
-    private Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> makeCacheMap(
-            Collection<DoubleVectorValueObject> newResults ) {
-        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = new HashMap<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>>();
-        for ( DoubleVectorValueObject v : newResults ) {
-            ExpressionExperiment e = v.getExpressionExperiment();
-            if ( !mapForCache.containsKey( e ) ) {
-                mapForCache.put( e, new HashMap<Gene, Collection<DoubleVectorValueObject>>() );
-            }
-            Map<Gene, Collection<DoubleVectorValueObject>> innerMap = mapForCache.get( e );
-            for ( Gene g : v.getGenes() ) {
-                if ( !innerMap.containsKey( g ) ) {
-                    innerMap.put( g, new HashSet<DoubleVectorValueObject>() );
+    @SuppressWarnings("unchecked")
+    private void checkCache( Collection<ExpressionExperiment> ees, Collection<Gene> genes,
+            Collection<DoubleVectorValueObject> results, Collection<ExpressionExperiment> needToSearch,
+            Collection<Gene> genesToSearch ) {
+        for ( ExpressionExperiment ee : ees ) {
+            Cache cache = ProcessedDataVectorCache.getCache( ee );
+            for ( Gene g : genes ) {
+                Element element = cache.get( g );
+                if ( element != null ) {
+                    Collection<DoubleVectorValueObject> obs = ( Collection<DoubleVectorValueObject> ) element
+                            .getObjectValue();
+                    results.addAll( obs );
+                } else {
+                    genesToSearch.add( g );
                 }
-                innerMap.get( g ).add( v );
+            }
+            if ( genesToSearch.size() > 0 ) {
+                needToSearch.add( ee );
             }
         }
-        return mapForCache;
     }
 
     private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {
@@ -447,32 +453,26 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @param ees
-     * @param genes
-     * @param results
-     * @param needToSearch
-     * @param genesToSearch
+     * @param newResults
+     * @return
      */
-    @SuppressWarnings("unchecked")
-    private void checkCache( Collection<ExpressionExperiment> ees, Collection<Gene> genes,
-            Collection<DoubleVectorValueObject> results, Collection<ExpressionExperiment> needToSearch,
-            Collection<Gene> genesToSearch ) {
-        for ( ExpressionExperiment ee : ees ) {
-            Cache cache = ProcessedDataVectorCache.getCache( ee );
-            for ( Gene g : genes ) {
-                Element element = cache.get( g );
-                if ( element != null ) {
-                    Collection<DoubleVectorValueObject> obs = ( Collection<DoubleVectorValueObject> ) element
-                            .getObjectValue();
-                    results.addAll( obs );
-                } else {
-                    genesToSearch.add( g );
-                }
+    private Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> makeCacheMap(
+            Collection<DoubleVectorValueObject> newResults ) {
+        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = new HashMap<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>>();
+        for ( DoubleVectorValueObject v : newResults ) {
+            ExpressionExperiment e = v.getExpressionExperiment();
+            if ( !mapForCache.containsKey( e ) ) {
+                mapForCache.put( e, new HashMap<Gene, Collection<DoubleVectorValueObject>>() );
             }
-            if ( genesToSearch.size() > 0 ) {
-                needToSearch.add( ee );
+            Map<Gene, Collection<DoubleVectorValueObject>> innerMap = mapForCache.get( e );
+            for ( Gene g : v.getGenes() ) {
+                if ( !innerMap.containsKey( g ) ) {
+                    innerMap.put( g, new HashSet<DoubleVectorValueObject>() );
+                }
+                innerMap.get( g ).add( v );
             }
         }
+        return mapForCache;
     }
 
     /**

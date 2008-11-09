@@ -35,40 +35,6 @@ public class DesignElementDimensionServiceException extends java.lang.RuntimeExc
     private static final long serialVersionUID = -7128427816413993065L;
 
     /**
-     * The default constructor for <code>DesignElementDimensionServiceException</code>.
-     */
-    public DesignElementDimensionServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>DesignElementDimensionServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public DesignElementDimensionServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>DesignElementDimensionServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public DesignElementDimensionServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>DesignElementDimensionServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public DesignElementDimensionServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class DesignElementDimensionServiceException extends java.lang.RuntimeExc
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>DesignElementDimensionServiceException</code>.
+     */
+    public DesignElementDimensionServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>DesignElementDimensionServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public DesignElementDimensionServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>DesignElementDimensionServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public DesignElementDimensionServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>DesignElementDimensionServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public DesignElementDimensionServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

@@ -32,7 +32,6 @@ public class SequenceBinUtils {
     /*
      * Basic idea: bin is identified by right-shifting the start and end values until they are equal. The number of
      * shifts gives an offset.
-     * 
      */
 
     private static int _binFirstShift = 17; /* How much to shift to get to finest bin. */
@@ -45,24 +44,37 @@ public class SequenceBinUtils {
     private static int _binOffsetOldToExtended = 4681;
 
     /**
-     * Given start,end in chromosome coordinates assign it a bin. There's a bin for each 128k segment, for each 1M
-     * segment, for each 8M segment, for each 64M segment, and for each chromosome (which is assumed to be less than
-     * 512M.) A range goes into the smallest bin it will fit in.
+     * Directly ported from jksrc binRange.c and hdb.c
+     * <p>
+     * From the binRange.c comments: There's a bin for each 128k segment, for each 1M segment, for each 8M segment, for
+     * each 64M segment, and for each chromosome (which is assumed to be less than 512M.) A range goes into the smallest
+     * bin it will fit in.
+     * 
+     * @param table The alias of the table (SQL) or class (HQL)
+     * @param start
+     * @param end
+     * @return clause that will restrict to relevant bins to query. This should be ANDed into your WHERE clause.
+     */
+    public static String addBinToQuery( String table, Long start, Long end ) {
+        if ( end <= BINRANGE_MAXEND_512M ) {
+            return hAddBinToQueryStandard( table, start, end, Boolean.TRUE );
+        } else {
+            return hAddBinToQueryExtended( table, start, end );
+        }
+    }
+
+    /**
+     * return bin that this start-end segment is in
      * 
      * @param start
      * @param end
      * @return
      */
-    private static int binFromRangeStandard( int start, int end ) {
-        int startBin = start, endBin = end - 1, i;
-        startBin >>= _binFirstShift;
-        endBin >>= _binFirstShift;
-        for ( i = 0; i < binOffsets.length; ++i ) {
-            if ( startBin == endBin ) return binOffsets[i] + startBin;
-            startBin >>= _binNextShift;
-            endBin >>= _binNextShift;
-        }
-        throw new IllegalArgumentException( "start " + start + ", end " + end + " out of range (max is 512M)" );
+    public static int binFromRange( int start, int end ) {
+        if ( end <= BINRANGE_MAXEND_512M )
+            return binFromRangeStandard( start, end );
+        else
+            return binFromRangeExtended( start, end );
     }
 
     /**
@@ -88,43 +100,24 @@ public class SequenceBinUtils {
     }
 
     /**
-     * return bin that this start-end segment is in
+     * Given start,end in chromosome coordinates assign it a bin. There's a bin for each 128k segment, for each 1M
+     * segment, for each 8M segment, for each 64M segment, and for each chromosome (which is assumed to be less than
+     * 512M.) A range goes into the smallest bin it will fit in.
      * 
      * @param start
      * @param end
      * @return
      */
-    public static int binFromRange( int start, int end ) {
-        if ( end <= BINRANGE_MAXEND_512M )
-            return binFromRangeStandard( start, end );
-        else
-            return binFromRangeExtended( start, end );
-    }
-
-    /**
-     * Directly ported from jksrc binRange.c and hdb.c
-     * <p>
-     * From the binRange.c comments: There's a bin for each 128k segment, for each 1M segment, for each 8M segment, for
-     * each 64M segment, and for each chromosome (which is assumed to be less than 512M.) A range goes into the smallest
-     * bin it will fit in.
-     * 
-     * @param table The alias of the table (SQL) or class (HQL)
-     * @param start
-     * @param end
-     * @return clause that will restrict to relevant bins to query. This should be ANDed into your WHERE clause.
-     */
-    public static String addBinToQuery( String table, Long start, Long end ) {
-        if ( end <= BINRANGE_MAXEND_512M ) {
-            return hAddBinToQueryStandard( table, start, end, Boolean.TRUE );
-        } else {
-            return hAddBinToQueryExtended( table, start, end );
+    private static int binFromRangeStandard( int start, int end ) {
+        int startBin = start, endBin = end - 1, i;
+        startBin >>= _binFirstShift;
+        endBin >>= _binFirstShift;
+        for ( i = 0; i < binOffsets.length; ++i ) {
+            if ( startBin == endBin ) return binOffsets[i] + startBin;
+            startBin >>= _binNextShift;
+            endBin >>= _binNextShift;
         }
-    }
-
-    /** Return offset for bins of a given level. */
-    private static int binOffsetExtended( int level ) {
-        assert ( level >= 0 && level < binOffsetsExtended.length );
-        return binOffsetsExtended[level] + _binOffsetOldToExtended;
+        throw new IllegalArgumentException( "start " + start + ", end " + end + " out of range (max is 512M)" );
     }
 
     /** Return offset for bins of a given level. */
@@ -133,34 +126,10 @@ public class SequenceBinUtils {
         return binOffsets[level];
     }
 
-    /** Add clause that will restrict to relevant bins to query. */
-    private static String hAddBinToQueryStandard( String table, long start, long end, boolean selfContained ) {
-        int bFirstShift = _binFirstShift, bNextShift = _binNextShift;
-        long startBin = ( start >> bFirstShift ), endBin = ( ( end - 1 ) >> bFirstShift );
-        int i, levels = binOffsets.length;
-
-        String column = table + ".bin";
-
-        String query = "";
-        if ( selfContained ) {
-            query = query + " (";
-        }
-        for ( i = 0; i < levels; ++i ) {
-            int offset = binOffset( i );
-            if ( i != 0 ) {
-                query = query + " or ";
-            }
-
-            query = getClause( startBin, endBin, column, query, offset );
-
-            startBin >>= bNextShift;
-            endBin >>= bNextShift;
-        }
-        if ( selfContained ) {
-            query = query + " or  " + column + " = " + _binOffsetOldToExtended;
-        }
-        query = query + ")";
-        return query;
+    /** Return offset for bins of a given level. */
+    private static int binOffsetExtended( int level ) {
+        assert ( level >= 0 && level < binOffsetsExtended.length );
+        return binOffsetsExtended[level] + _binOffsetOldToExtended;
     }
 
     /**
@@ -206,6 +175,36 @@ public class SequenceBinUtils {
         }
         query = query + ")";
 
+        return query;
+    }
+
+    /** Add clause that will restrict to relevant bins to query. */
+    private static String hAddBinToQueryStandard( String table, long start, long end, boolean selfContained ) {
+        int bFirstShift = _binFirstShift, bNextShift = _binNextShift;
+        long startBin = ( start >> bFirstShift ), endBin = ( ( end - 1 ) >> bFirstShift );
+        int i, levels = binOffsets.length;
+
+        String column = table + ".bin";
+
+        String query = "";
+        if ( selfContained ) {
+            query = query + " (";
+        }
+        for ( i = 0; i < levels; ++i ) {
+            int offset = binOffset( i );
+            if ( i != 0 ) {
+                query = query + " or ";
+            }
+
+            query = getClause( startBin, endBin, column, query, offset );
+
+            startBin >>= bNextShift;
+            endBin >>= bNextShift;
+        }
+        if ( selfContained ) {
+            query = query + " or  " + column + " = " + _binOffsetOldToExtended;
+        }
+        query = query + ")";
         return query;
     }
 

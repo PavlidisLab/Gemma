@@ -35,40 +35,6 @@ public class BioSequence2GeneProductServiceException extends java.lang.RuntimeEx
     private static final long serialVersionUID = -2784283295874461259L;
 
     /**
-     * The default constructor for <code>BioSequence2GeneProductServiceException</code>.
-     */
-    public BioSequence2GeneProductServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>BioSequence2GeneProductServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public BioSequence2GeneProductServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>BioSequence2GeneProductServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public BioSequence2GeneProductServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>BioSequence2GeneProductServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public BioSequence2GeneProductServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class BioSequence2GeneProductServiceException extends java.lang.RuntimeEx
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>BioSequence2GeneProductServiceException</code>.
+     */
+    public BioSequence2GeneProductServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>BioSequence2GeneProductServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public BioSequence2GeneProductServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>BioSequence2GeneProductServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public BioSequence2GeneProductServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>BioSequence2GeneProductServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public BioSequence2GeneProductServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

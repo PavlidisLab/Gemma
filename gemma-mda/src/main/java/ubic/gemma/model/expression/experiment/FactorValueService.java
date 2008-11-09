@@ -30,12 +30,7 @@ public interface FactorValueService {
     /**
      * 
      */
-    public java.util.Collection loadAll();
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.experiment.FactorValue findOrCreate(
+    public ubic.gemma.model.expression.experiment.FactorValue create(
             ubic.gemma.model.expression.experiment.FactorValue factorValue );
 
     /**
@@ -46,7 +41,7 @@ public interface FactorValueService {
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.FactorValue create(
+    public ubic.gemma.model.expression.experiment.FactorValue findOrCreate(
             ubic.gemma.model.expression.experiment.FactorValue factorValue );
 
     /**
@@ -57,11 +52,16 @@ public interface FactorValueService {
     /**
      * 
      */
-    public void update( ubic.gemma.model.expression.experiment.FactorValue factorValue );
+    public java.util.Collection loadAll();
 
     /**
      * 
      */
     public void update( java.util.Collection factorValues );
+
+    /**
+     * 
+     */
+    public void update( ubic.gemma.model.expression.experiment.FactorValue factorValue );
 
 }

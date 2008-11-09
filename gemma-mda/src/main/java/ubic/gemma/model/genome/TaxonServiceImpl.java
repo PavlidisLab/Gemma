@@ -27,6 +27,14 @@ import java.util.Collection;
 public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
 
     /**
+     * @see ubic.gemma.model.genome.TaxonService#create(ubic.gemma.model.genome.Taxon)
+     */
+    protected ubic.gemma.model.genome.Taxon handleCreate( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception {
+        return this.getTaxonDao().create( taxon );
+    }
+
+    /**
      * @see ubic.gemma.model.genome.TaxonService#find(ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -35,12 +43,30 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
         return this.getTaxonDao().find( taxon );
     }
 
-    /**
-     * @see ubic.gemma.model.genome.TaxonService#update(ubic.gemma.model.genome.Taxon)
-     */
     @Override
-    protected void handleUpdate( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception {
-        this.getTaxonDao().update( taxon );
+    protected Taxon handleFindByCommonName( String commonName ) throws Exception {
+        return this.getTaxonDao().findByCommonName( commonName );
+    }
+
+    @Override
+    protected Taxon handleFindByScientificName( String scientificName ) throws Exception {
+        return this.getTaxonDao().findByScientificName( scientificName );
+    }
+
+    @Override
+    protected Taxon handleFindOrCreate( Taxon taxon ) throws Exception {
+        return this.getTaxonDao().findOrCreate( taxon );
+    }
+
+    @Override
+    protected Taxon handleLoad( Long id ) throws Exception {
+        return this.getTaxonDao().load( id );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Taxon> handleLoadAll() throws Exception {
+        return this.getTaxonDao().loadAll();
     }
 
     /**
@@ -52,37 +78,11 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     }
 
     /**
-     * @see ubic.gemma.model.genome.TaxonService#create(ubic.gemma.model.genome.Taxon)
+     * @see ubic.gemma.model.genome.TaxonService#update(ubic.gemma.model.genome.Taxon)
      */
-    protected ubic.gemma.model.genome.Taxon handleCreate( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception {
-        return this.getTaxonDao().create( taxon );
-    }
-
     @Override
-    protected Taxon handleFindOrCreate( Taxon taxon ) throws Exception {
-        return this.getTaxonDao().findOrCreate( taxon );
-    }
-
-    @Override
-    protected Taxon handleFindByScientificName( String scientificName ) throws Exception {
-        return this.getTaxonDao().findByScientificName( scientificName );
-    }
-
-    @Override
-    protected Taxon handleFindByCommonName( String commonName ) throws Exception {
-        return this.getTaxonDao().findByCommonName( commonName );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<Taxon> handleLoadAll() throws Exception {
-        return this.getTaxonDao().loadAll();
-    }
-
-    @Override
-    protected Taxon handleLoad( Long id ) throws Exception {
-        return this.getTaxonDao().load( id );
+    protected void handleUpdate( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception {
+        this.getTaxonDao().update( taxon );
     }
 
 }

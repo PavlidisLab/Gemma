@@ -30,11 +30,6 @@ public interface ExpressionExperimentSubSetService {
     /**
      * 
      */
-    public java.util.Collection loadAll();
-
-    /**
-     * 
-     */
     public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet create(
             ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet );
 
@@ -42,5 +37,10 @@ public interface ExpressionExperimentSubSetService {
      * 
      */
     public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet load( java.lang.Long id );
+
+    /**
+     * 
+     */
+    public java.util.Collection loadAll();
 
 }

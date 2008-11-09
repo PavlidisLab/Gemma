@@ -22,10 +22,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ConfigUtils;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Configures the cache for data vectors.
@@ -53,8 +53,13 @@ public class ProcessedDataVectorCache {
      */
     private static final Map<ExpressionExperiment, Cache> caches = new HashMap<ExpressionExperiment, Cache>();
 
-    private static String getCacheName( ExpressionExperiment e ) {
-        return PROBE2PROBE_COEXPRESSION_CACHE_NAME + "_" + e.getShortName() + "_" + e.getId();
+    /**
+     * 
+     */
+    public static void clearAllCaches() {
+        for ( ExpressionExperiment e : caches.keySet() ) {
+            clearCache( e );
+        }
     }
 
     /**
@@ -66,15 +71,6 @@ public class ProcessedDataVectorCache {
         CacheManager manager = CacheManager.getInstance();
         Cache cache = manager.getCache( getCacheName( e ) );
         if ( cache != null ) cache.removeAll();
-    }
-
-    /**
-     * 
-     */
-    public static void clearAllCaches() {
-        for ( ExpressionExperiment e : caches.keySet() ) {
-            clearCache( e );
-        }
     }
 
     /**
@@ -95,6 +91,10 @@ public class ProcessedDataVectorCache {
             initializeCache( e );
         }
         return caches.get( e );
+    }
+
+    private static String getCacheName( ExpressionExperiment e ) {
+        return PROBE2PROBE_COEXPRESSION_CACHE_NAME + "_" + e.getShortName() + "_" + e.getId();
     }
 
     /**

@@ -69,6 +69,36 @@ public class FactorValueVector {
 
     }
 
+    @Override
+    public boolean equals( Object obj ) {
+        if ( obj instanceof FactorValueVector ) return key.equals( ( ( FactorValueVector ) obj ).key );
+
+        return false;
+    }
+
+    public List<ExperimentalFactor> getFactors() {
+        return factors;
+    }
+
+    public List<FactorValue> getValuesForFactor( ExperimentalFactor factor ) {
+        List<FactorValue> values = valuesForFactor.get( factor );
+        if ( values == null ) {
+            values = new ArrayList<FactorValue>();
+            valuesForFactor.put( factor, values );
+        }
+        return values;
+    }
+
+    @Override
+    public int hashCode() {
+        return key.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return key;
+    }
+
     protected String buildKey() {
         StringBuffer buf = new StringBuffer();
         buf.append( "[" );
@@ -86,35 +116,5 @@ public class FactorValueVector {
         }
         buf.append( "]" );
         return buf.toString();
-    }
-
-    public List<FactorValue> getValuesForFactor( ExperimentalFactor factor ) {
-        List<FactorValue> values = valuesForFactor.get( factor );
-        if ( values == null ) {
-            values = new ArrayList<FactorValue>();
-            valuesForFactor.put( factor, values );
-        }
-        return values;
-    }
-
-    public List<ExperimentalFactor> getFactors() {
-        return factors;
-    }
-
-    @Override
-    public String toString() {
-        return key;
-    }
-
-    @Override
-    public int hashCode() {
-        return key.hashCode();
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( obj instanceof FactorValueVector ) return key.equals( ( ( FactorValueVector ) obj ).key );
-
-        return false;
     }
 }

@@ -30,18 +30,9 @@ package ubic.gemma.model.analysis;
 public interface AnalysisService {
 
     /**
-     * <p>
-     * Returns the analysis with the specified ID
-     * </p>
+     * 
      */
-    public ubic.gemma.model.analysis.Analysis load( java.lang.Long id );
-
-    /**
-     * <p>
-     * Returns all of the analysis objects
-     * </p>
-     */
-    public java.util.Collection loadAll();
+    public void delete( java.lang.Long idToDelete );
 
     /**
      * <p>
@@ -49,11 +40,6 @@ public interface AnalysisService {
      * </p>
      */
     public void delete( ubic.gemma.model.analysis.Analysis toDelete );
-
-    /**
-     * 
-     */
-    public void delete( java.lang.Long idToDelete );
 
     /**
      * <p>
@@ -75,14 +61,6 @@ public interface AnalysisService {
 
     /**
      * <p>
-     * An analysis is uniquely determined by its set of investigations. Only returns an analyis if the collection of
-     * investigations given exacly matches other wise returns null
-     * </p>
-     */
-    public ubic.gemma.model.analysis.Analysis findByUniqueInvestigations( java.util.Collection investigations );
-
-    /**
-     * <p>
      * Returns the first exact match of the given name. If there is no exact match returns the most current analysis
      * that starts with the given name (ie: most recent name*)
      * </p>
@@ -93,5 +71,27 @@ public interface AnalysisService {
      * 
      */
     public java.util.Collection<Analysis> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * <p>
+     * An analysis is uniquely determined by its set of investigations. Only returns an analyis if the collection of
+     * investigations given exacly matches other wise returns null
+     * </p>
+     */
+    public ubic.gemma.model.analysis.Analysis findByUniqueInvestigations( java.util.Collection investigations );
+
+    /**
+     * <p>
+     * Returns the analysis with the specified ID
+     * </p>
+     */
+    public ubic.gemma.model.analysis.Analysis load( java.lang.Long id );
+
+    /**
+     * <p>
+     * Returns all of the analysis objects
+     * </p>
+     */
+    public java.util.Collection loadAll();
 
 }

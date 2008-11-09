@@ -35,6 +35,227 @@ public abstract class Gene2GOAssociationDaoBase extends
         ubic.gemma.model.association.Gene2GOAssociationDao {
 
     /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Gene2GOAssociation.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.association.Gene2GOAssociation ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(int transform,
+     *      ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    public Object create( final int transform, final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        if ( gene2GOAssociation == null ) {
+            throw new IllegalArgumentException( "Gene2GOAssociation.create - 'gene2GOAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().save( gene2GOAssociation );
+        return this.transformEntity( transform, gene2GOAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    public ubic.gemma.model.association.Relationship create(
+            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        return ( ubic.gemma.model.association.Gene2GOAssociation ) this.create( TRANSFORM_NONE, gene2GOAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#find(int, java.lang.String,
+     *      ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object find( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( gene2GOAssociation );
+        argNames.add( "gene2GOAssociation" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'ubic.gemma.model.association.Gene2GOAssociation"
+                                + "' was found when executing query --> '" + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.association.Gene2GOAssociation ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#find(int,
+     *      ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object find( final int transform, final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        return this
+                .find(
+                        transform,
+                        "from ubic.gemma.model.association.Gene2GOAssociation as gene2GOAssociation where gene2GOAssociation.gene2GOAssociation = :gene2GOAssociation",
+                        gene2GOAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#find(java.lang.String,
+     *      ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public ubic.gemma.model.association.Gene2GOAssociation find( final java.lang.String queryString,
+            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        return ( ubic.gemma.model.association.Gene2GOAssociation ) this.find( TRANSFORM_NONE, queryString,
+                gene2GOAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#find(ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    public ubic.gemma.model.association.Gene2GOAssociation find(
+            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        return ( ubic.gemma.model.association.Gene2GOAssociation ) this.find( TRANSFORM_NONE, gene2GOAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findAssociationByGene(ubic.gemma.model.genome.Gene)
+     */
+    public java.util.Collection findAssociationByGene( final ubic.gemma.model.genome.Gene gene ) {
+        try {
+            return this.handleFindAssociationByGene( gene );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationDao.findAssociationByGene(ubic.gemma.model.genome.Gene gene)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGene(ubic.gemma.model.genome.Gene)
+     */
+    public java.util.Collection findByGene( final ubic.gemma.model.genome.Gene gene ) {
+        try {
+            return this.handleFindByGene( gene );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationDao.findByGene(ubic.gemma.model.genome.Gene gene)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGoTerm(java.lang.String,
+     *      ubic.gemma.model.genome.Taxon)
+     */
+    public java.util.Collection findByGoTerm( final java.lang.String goId, final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.handleFindByGoTerm( goId, taxon );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationDao.findByGoTerm(java.lang.String goId, ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGOTerm(java.util.Collection,
+     *      ubic.gemma.model.genome.Taxon)
+     */
+    public java.util.Collection findByGOTerm( final java.util.Collection goTerms,
+            final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.handleFindByGOTerm( goTerms, taxon );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationDao.findByGOTerm(java.util.Collection goTerms, ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findOrCreate(int, java.lang.String,
+     *      ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object findOrCreate( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( gene2GOAssociation );
+        argNames.add( "gene2GOAssociation" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'ubic.gemma.model.association.Gene2GOAssociation"
+                                + "' was found when executing query --> '" + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.association.Gene2GOAssociation ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findOrCreate(int,
+     *      ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object findOrCreate( final int transform,
+            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        return this
+                .findOrCreate(
+                        transform,
+                        "from ubic.gemma.model.association.Gene2GOAssociation as gene2GOAssociation where gene2GOAssociation.gene2GOAssociation = :gene2GOAssociation",
+                        gene2GOAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findOrCreate(java.lang.String,
+     *      ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate( final java.lang.String queryString,
+            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        return ( ubic.gemma.model.association.Gene2GOAssociation ) this.findOrCreate( TRANSFORM_NONE, queryString,
+                gene2GOAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findOrCreate(ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
+            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        return ( ubic.gemma.model.association.Gene2GOAssociation ) this.findOrCreate( TRANSFORM_NONE,
+                gene2GOAssociation );
+    }
+
+    /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#load(int, java.lang.Long)
      */
     @Override
@@ -76,90 +297,6 @@ public abstract class Gene2GOAssociationDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    public ubic.gemma.model.association.Relationship create(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        return ( ubic.gemma.model.association.Gene2GOAssociation ) this.create( TRANSFORM_NONE, gene2GOAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(int transform,
-     *      ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    public Object create( final int transform, final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        if ( gene2GOAssociation == null ) {
-            throw new IllegalArgumentException( "Gene2GOAssociation.create - 'gene2GOAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().save( gene2GOAssociation );
-        return this.transformEntity( transform, gene2GOAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Gene2GOAssociation.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.association.Gene2GOAssociation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#update(ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    public void update( ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        if ( gene2GOAssociation == null ) {
-            throw new IllegalArgumentException( "Gene2GOAssociation.update - 'gene2GOAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().update( gene2GOAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Gene2GOAssociation.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.association.Gene2GOAssociation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#remove(ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    public void remove( ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        if ( gene2GOAssociation == null ) {
-            throw new IllegalArgumentException( "Gene2GOAssociation.remove - 'gene2GOAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().delete( gene2GOAssociation );
-    }
-
-    /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#remove(java.lang.Long)
      */
     @Override
@@ -186,203 +323,14 @@ public abstract class Gene2GOAssociationDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#find(ubic.gemma.model.association.Gene2GOAssociation)
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#remove(ubic.gemma.model.association.Gene2GOAssociation)
      */
-    public ubic.gemma.model.association.Gene2GOAssociation find(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        return ( ubic.gemma.model.association.Gene2GOAssociation ) this.find( TRANSFORM_NONE, gene2GOAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#find(java.lang.String,
-     *      ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.association.Gene2GOAssociation find( final java.lang.String queryString,
-            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        return ( ubic.gemma.model.association.Gene2GOAssociation ) this.find( TRANSFORM_NONE, queryString,
-                gene2GOAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#find(int,
-     *      ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        return this
-                .find(
-                        transform,
-                        "from ubic.gemma.model.association.Gene2GOAssociation as gene2GOAssociation where gene2GOAssociation.gene2GOAssociation = :gene2GOAssociation",
-                        gene2GOAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#find(int, java.lang.String,
-     *      ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( gene2GOAssociation );
-        argNames.add( "gene2GOAssociation" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.association.Gene2GOAssociation"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public void remove( ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        if ( gene2GOAssociation == null ) {
+            throw new IllegalArgumentException( "Gene2GOAssociation.remove - 'gene2GOAssociation' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.association.Gene2GOAssociation ) result );
-        return result;
+        this.getHibernateTemplate().delete( gene2GOAssociation );
     }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findOrCreate(ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        return ( ubic.gemma.model.association.Gene2GOAssociation ) this.findOrCreate( TRANSFORM_NONE,
-                gene2GOAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        return ( ubic.gemma.model.association.Gene2GOAssociation ) this.findOrCreate( TRANSFORM_NONE, queryString,
-                gene2GOAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findOrCreate(int,
-     *      ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform,
-            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        return this
-                .findOrCreate(
-                        transform,
-                        "from ubic.gemma.model.association.Gene2GOAssociation as gene2GOAssociation where gene2GOAssociation.gene2GOAssociation = :gene2GOAssociation",
-                        gene2GOAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findOrCreate(int, java.lang.String,
-     *      ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( gene2GOAssociation );
-        argNames.add( "gene2GOAssociation" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.association.Gene2GOAssociation"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.association.Gene2GOAssociation ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGene(ubic.gemma.model.genome.Gene)
-     */
-    public java.util.Collection findByGene( final ubic.gemma.model.genome.Gene gene ) {
-        try {
-            return this.handleFindByGene( gene );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationDao.findByGene(ubic.gemma.model.genome.Gene gene)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByGene(ubic.gemma.model.genome.Gene)}
-     */
-    protected abstract java.util.Collection handleFindByGene( ubic.gemma.model.genome.Gene gene )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGOTerm(java.util.Collection,
-     *      ubic.gemma.model.genome.Taxon)
-     */
-    public java.util.Collection findByGOTerm( final java.util.Collection goTerms,
-            final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleFindByGOTerm( goTerms, taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationDao.findByGOTerm(java.util.Collection goTerms, ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByGOTerm(java.util.Collection, ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract java.util.Collection handleFindByGOTerm( java.util.Collection goTerms,
-            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGoTerm(java.lang.String,
-     *      ubic.gemma.model.genome.Taxon)
-     */
-    public java.util.Collection findByGoTerm( final java.lang.String goId, final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleFindByGoTerm( goId, taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationDao.findByGoTerm(java.lang.String goId, ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByGoTerm(java.lang.String, ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract java.util.Collection handleFindByGoTerm( java.lang.String goId,
-            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findAssociationByGene(ubic.gemma.model.genome.Gene)
-     */
-    public java.util.Collection findAssociationByGene( final ubic.gemma.model.genome.Gene gene ) {
-        try {
-            return this.handleFindAssociationByGene( gene );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationDao.findAssociationByGene(ubic.gemma.model.genome.Gene gene)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findAssociationByGene(ubic.gemma.model.genome.Gene)}
-     */
-    protected abstract java.util.Collection handleFindAssociationByGene( ubic.gemma.model.genome.Gene gene )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#removeAll()
@@ -397,9 +345,82 @@ public abstract class Gene2GOAssociationDaoBase extends
     }
 
     /**
+     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Gene2GOAssociation.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.association.Gene2GOAssociation ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#update(ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    public void update( ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+        if ( gene2GOAssociation == null ) {
+            throw new IllegalArgumentException( "Gene2GOAssociation.update - 'gene2GOAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().update( gene2GOAssociation );
+    }
+
+    /**
+     * Performs the core logic for {@link #findAssociationByGene(ubic.gemma.model.genome.Gene)}
+     */
+    protected abstract java.util.Collection handleFindAssociationByGene( ubic.gemma.model.genome.Gene gene )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByGene(ubic.gemma.model.genome.Gene)}
+     */
+    protected abstract java.util.Collection handleFindByGene( ubic.gemma.model.genome.Gene gene )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByGoTerm(java.lang.String, ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract java.util.Collection handleFindByGoTerm( java.lang.String goId,
+            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByGOTerm(java.util.Collection, ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract java.util.Collection handleFindByGOTerm( java.util.Collection goTerms,
+            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #removeAll()}
      */
     protected abstract void handleRemoveAll() throws java.lang.Exception;
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.association.Gene2GOAssociation)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.association.Gene2GOAssociationDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.association.Gene2GOAssociation)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
 
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
@@ -423,25 +444,6 @@ public abstract class Gene2GOAssociationDaoBase extends
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.association.Gene2GOAssociation)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.association.Gene2GOAssociationDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.association.Gene2GOAssociation)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

@@ -38,15 +38,16 @@ public abstract class DataVectorValueObject {
         byteArrayConverter = new ByteArrayConverter();
     }
 
-    public DataVectorValueObject() {
-    }
-
     protected Long id;
+
     protected DesignElement designElement;
     protected BioAssayDimension bioAssayDimension;
     protected QuantitationType quantitationType;
     protected ExpressionExperiment expressionExperiment;
     Collection<Gene> genes;
+
+    public DataVectorValueObject() {
+    }
 
     public DataVectorValueObject( DesignElementDataVector dedv ) {
         this.bioAssayDimension = dedv.getBioAssayDimension();
@@ -61,38 +62,6 @@ public abstract class DataVectorValueObject {
         this.genes = genes;
     }
 
-    public BioAssayDimension getBioAssayDimension() {
-        return bioAssayDimension;
-    }
-
-    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
-        this.bioAssayDimension = bioAssayDimension;
-    }
-
-    public QuantitationType getQuantitationType() {
-        return quantitationType;
-    }
-
-    public void setQuantitationType( QuantitationType quantitationType ) {
-        this.quantitationType = quantitationType;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        return result;
-    }
-
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;
@@ -105,16 +74,12 @@ public abstract class DataVectorValueObject {
         return true;
     }
 
+    public BioAssayDimension getBioAssayDimension() {
+        return bioAssayDimension;
+    }
+
     public DesignElement getDesignElement() {
         return designElement;
-    }
-
-    public void setDesignElement( DesignElement designElement ) {
-        this.designElement = designElement;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
     }
 
     public ExpressionExperiment getExpressionExperiment() {
@@ -128,9 +93,32 @@ public abstract class DataVectorValueObject {
         return genes;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public QuantitationType getQuantitationType() {
+        return quantitationType;
+    }
+
     @Override
-    public String toString() {
-        return "EE=" + this.expressionExperiment.getId() + " Probe=" + this.designElement.getId();
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        return result;
+    }
+
+    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
+        this.bioAssayDimension = bioAssayDimension;
+    }
+
+    public void setDesignElement( DesignElement designElement ) {
+        this.designElement = designElement;
+    }
+
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     /**
@@ -138,6 +126,19 @@ public abstract class DataVectorValueObject {
      */
     public void setGenes( Collection<Gene> genes ) {
         this.genes = genes;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public void setQuantitationType( QuantitationType quantitationType ) {
+        this.quantitationType = quantitationType;
+    }
+
+    @Override
+    public String toString() {
+        return "EE=" + this.expressionExperiment.getId() + " Probe=" + this.designElement.getId();
     }
 
 }

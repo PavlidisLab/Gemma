@@ -45,7 +45,6 @@ public class DifferentialExpressionAnalysisResultComparator implements Comparato
 
     /*
      * (non-Javadoc)
-     * 
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
     public int compare( DifferentialExpressionAnalysisResult ear1, DifferentialExpressionAnalysisResult ear2 ) {

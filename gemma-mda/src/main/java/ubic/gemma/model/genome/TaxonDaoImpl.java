@@ -38,7 +38,6 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.TaxonDaoBase#find(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("boxing")
@@ -72,7 +71,6 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.TaxonDaoBase#findOrCreate(ubic.gemma.model.genome.Taxon)
      */
     @Override

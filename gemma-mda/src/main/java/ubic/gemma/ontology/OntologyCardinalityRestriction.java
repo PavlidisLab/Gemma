@@ -28,8 +28,8 @@ public interface OntologyCardinalityRestriction extends OntologyRestriction {
         MIN_CARDINALITY, MAX_CARDINALITY, CARDINALITY
     }
 
-    public CardinalityType getCardinalityType();
-
     public int getCardinality();
+
+    public CardinalityType getCardinalityType();
 
 }

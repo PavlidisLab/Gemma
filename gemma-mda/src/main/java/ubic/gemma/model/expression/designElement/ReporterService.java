@@ -30,6 +30,17 @@ public interface ReporterService {
     /**
      * 
      */
+    public java.util.Collection create( java.util.Collection reporters );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.expression.designElement.Reporter create(
+            ubic.gemma.model.expression.designElement.Reporter reporter );
+
+    /**
+     * 
+     */
     public ubic.gemma.model.expression.designElement.Reporter find(
             ubic.gemma.model.expression.designElement.Reporter reporter );
 
@@ -43,16 +54,5 @@ public interface ReporterService {
      * 
      */
     public void remove( ubic.gemma.model.expression.designElement.Reporter reporter );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.designElement.Reporter create(
-            ubic.gemma.model.expression.designElement.Reporter reporter );
-
-    /**
-     * 
-     */
-    public java.util.Collection create( java.util.Collection reporters );
 
 }

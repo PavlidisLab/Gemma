@@ -42,11 +42,11 @@ public interface CompoundService {
     /**
      * 
      */
-    public void update( ubic.gemma.model.expression.biomaterial.Compound compound );
+    public void remove( ubic.gemma.model.expression.biomaterial.Compound compound );
 
     /**
      * 
      */
-    public void remove( ubic.gemma.model.expression.biomaterial.Compound compound );
+    public void update( ubic.gemma.model.expression.biomaterial.Compound compound );
 
 }

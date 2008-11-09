@@ -63,20 +63,6 @@ public class TaxonImpl extends ubic.gemma.model.genome.Taxon {
         return hashCode;
     }
 
-    private int computeHashCode() {
-        int hashCode = 0;
-
-        if ( this.getNcbiId() != null ) {
-            hashCode += this.getNcbiId().hashCode();
-        } else if ( this.getScientificName() != null ) {
-            hashCode += this.getScientificName().hashCode();
-        } else {
-            hashCode += super.hashCode();
-        }
-
-        return hashCode;
-    }
-
     /**
      * @see ubic.gemma.model.genome.Taxon#toString()
      */
@@ -99,6 +85,20 @@ public class TaxonImpl extends ubic.gemma.model.genome.Taxon {
         }
 
         return buf.toString();
+    }
+
+    private int computeHashCode() {
+        int hashCode = 0;
+
+        if ( this.getNcbiId() != null ) {
+            hashCode += this.getNcbiId().hashCode();
+        } else if ( this.getScientificName() != null ) {
+            hashCode += this.getScientificName().hashCode();
+        } else {
+            hashCode += super.hashCode();
+        }
+
+        return hashCode;
     }
 
 }
