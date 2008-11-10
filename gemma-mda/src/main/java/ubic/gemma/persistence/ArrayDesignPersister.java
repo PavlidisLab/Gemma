@@ -171,7 +171,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         log.info( "Caching array design elements for " + arrayDesign );
 
         int startCacheSize = designElementCache.keySet().size();
-        this.getHibernateTemplate().execute( new HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
 
             // We need to do this in hibernate to thaw the biosequences.
             public Object doInHibernate( Session session ) throws HibernateException {

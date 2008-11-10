@@ -119,7 +119,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
         }
 
-        this.getHibernateTemplate().execute( new HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
                 session.update( arrayDesign );
                 arrayDesign.getMergees().clear();

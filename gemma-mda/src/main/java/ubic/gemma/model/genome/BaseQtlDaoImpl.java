@@ -54,7 +54,7 @@ public abstract class BaseQtlDaoImpl<T extends Qtl> extends HibernateDaoSupport 
      * @see ubic.gemma.model.genome.BaseQtlDao#findByPhysicalMarkers(ubic.gemma.model.genome.PhysicalMarker,
      *      ubic.gemma.model.genome.PhysicalMarker)
      */
-    public java.util.Collection findByPhysicalMarkers( ubic.gemma.model.genome.PhysicalMarker startMarker,
+    public java.util.Collection<T> findByPhysicalMarkers( ubic.gemma.model.genome.PhysicalMarker startMarker,
             ubic.gemma.model.genome.PhysicalMarker endMarker ) {
         return this.findByPhysicalMarkers( TRANSFORM_NONE, startMarker, endMarker );
     }

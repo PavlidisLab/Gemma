@@ -89,7 +89,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
             return newBioMaterial;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new bioMaterial: " + bioMaterial.getName() );
-        return ( BioMaterial ) create( bioMaterial );
+        return create( bioMaterial );
     }
 
     /*
@@ -101,7 +101,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     @Override
     protected BioMaterial handleCopy( final BioMaterial bioMaterial ) throws Exception {
 
-        BioMaterial newMaterial = ( BioMaterial ) this.getHibernateTemplate().execute(
+        return ( BioMaterial ) this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback() {
 
                     public Object doInHibernate( org.hibernate.Session session )
@@ -120,9 +120,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
                         newMaterial = findOrCreate( newMaterial );
                         return newMaterial;
                     }
-                }, true );
-
-        return newMaterial;
+                } );
 
     }
 

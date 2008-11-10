@@ -40,7 +40,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
     @Override
     protected void handleThaw( final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {
 
-        this.getHibernateTemplate().execute( new HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
                 session.lock( resultSet, LockMode.NONE );
                 for ( ExperimentalFactor factor : resultSet.getExperimentalFactor() ) {

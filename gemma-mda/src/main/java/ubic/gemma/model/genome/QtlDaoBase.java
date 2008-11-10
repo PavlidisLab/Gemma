@@ -33,7 +33,7 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
     /**
      * @see ubic.gemma.model.genome.BaseQtlDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<Qtl> create( final int transform, final java.util.Collection<Qtl> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Qtl.create - 'entities' can not be null" );
         }
@@ -41,8 +41,8 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.genome.Qtl ) entityIterator.next() );
+                        for ( java.util.Iterator<Qtl> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform, entityIterator.next() );
                         }
                         return null;
                     }
@@ -109,9 +109,10 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
      * @see ubic.gemma.model.genome.BaseQtlDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate()
-                .loadAll( ubic.gemma.model.genome.QtlImpl.class );
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<Qtl> loadAll( final int transform ) {
+        final java.util.Collection<Qtl> results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.genome.QtlImpl.class );
         this.transformEntities( transform, results );
         return results;
     }
@@ -124,7 +125,7 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
         if ( id == null ) {
             throw new IllegalArgumentException( "Qtl.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.Qtl entity = ( ubic.gemma.model.genome.Qtl ) this.load( id );
+        ubic.gemma.model.genome.Qtl entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -134,7 +135,7 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<Qtl> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Qtl.remove - 'entities' can not be null" );
         }
@@ -155,18 +156,20 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<Qtl> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Qtl.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.Qtl ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<Qtl> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**

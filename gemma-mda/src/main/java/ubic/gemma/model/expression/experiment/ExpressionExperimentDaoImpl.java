@@ -223,7 +223,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
         // thawBioAssays( toDelete );
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
 
                 session.lock( toDelete, LockMode.NONE );
@@ -1390,7 +1390,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         if ( ee == null ) {
             return;
         }
-        this.getHibernateTemplate().execute( new HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 try {
                     session.lock( ee, LockMode.NONE );

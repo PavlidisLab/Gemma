@@ -257,7 +257,7 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
         assert at != null;
         if ( at.getId() != null ) {
             // this.auditTrailDao.thaw( at );
-            this.getHibernateTemplate().execute( new HibernateCallback() {
+            this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
                 public Object doInHibernate( Session session ) throws HibernateException {
                     session.lock( at, LockMode.NONE );
                     at.getEvents().size();

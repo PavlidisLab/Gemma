@@ -171,7 +171,7 @@ public abstract class BioAssaySetDaoBase<T extends BioAssaySet> extends
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioAssaySet.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
                     update( ( ubic.gemma.model.expression.experiment.BioAssaySet ) entityIterator.next() );

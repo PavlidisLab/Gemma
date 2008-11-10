@@ -98,7 +98,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
     public void remove( FactorValue factorValue ) {
         final FactorValue toDelete = factorValue;
 
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
 
                 log.info( "Loading data for deletion..." );

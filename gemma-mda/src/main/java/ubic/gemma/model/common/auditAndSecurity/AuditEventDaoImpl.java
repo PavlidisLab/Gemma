@@ -98,7 +98,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     @Override
     protected void handleThaw( final AuditEvent auditEvent ) throws Exception {
-        this.getHibernateTemplate().execute( new HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
                 /*
                  * FIXME this check really won't work. This thaw will not operate correctly if the event isn't already

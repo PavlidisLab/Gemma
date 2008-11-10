@@ -166,7 +166,7 @@ public abstract class InvestigationDaoBase<T extends Investigation> extends Hibe
         if ( entities == null ) {
             throw new IllegalArgumentException( "Investigation.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
                     update( ( ubic.gemma.model.analysis.Investigation ) entityIterator.next() );

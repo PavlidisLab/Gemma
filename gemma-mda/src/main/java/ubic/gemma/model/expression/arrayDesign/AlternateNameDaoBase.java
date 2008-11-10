@@ -40,14 +40,17 @@ public abstract class AlternateNameDaoBase extends org.springframework.orm.hiber
         if ( entities == null ) {
             throw new IllegalArgumentException( "AlternateName.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.expression.arrayDesign.AlternateName ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform, ( ubic.gemma.model.expression.arrayDesign.AlternateName ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -156,14 +159,16 @@ public abstract class AlternateNameDaoBase extends org.springframework.orm.hiber
         if ( entities == null ) {
             throw new IllegalArgumentException( "AlternateName.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.arrayDesign.AlternateName ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.expression.arrayDesign.AlternateName ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**

@@ -110,14 +110,16 @@ public abstract class AnalysisResultSetDaoBase extends org.springframework.orm.h
         if ( entities == null ) {
             throw new IllegalArgumentException( "AnalysisResultSet.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.analysis.AnalysisResultSet ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.analysis.AnalysisResultSet ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**

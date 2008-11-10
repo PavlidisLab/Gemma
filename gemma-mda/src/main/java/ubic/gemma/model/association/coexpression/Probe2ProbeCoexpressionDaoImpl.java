@@ -156,7 +156,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     @Override
     protected List handleCreate( final List links ) {
-        List result = ( List ) this.getHibernateTemplate().execute( new HibernateCallback() {
+        List result = ( List ) this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
                 int numDone = 0;
                 List<Object> result = new ArrayList<Object>();
