@@ -42,15 +42,18 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioMaterialMeasurement.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform,
-                            ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform,
+                                    ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) entityIterator
+                                            .next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -83,245 +86,6 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
             ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement bioMaterialMeasurement ) {
         return ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) this.create( TRANSFORM_NONE,
                 bioMaterialMeasurement );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getAclObjectIdentityId(int,
-     *      java.lang.String, ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement as bioMaterialMeasurement where bioMaterialMeasurement.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMask(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement as bioMaterialMeasurement where bioMaterialMeasurement.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMask(ubic.gemma.model.common.Securable)
-     */
-
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMasks(int, java.lang.String,
-     *      java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMasks(int, java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement as bioMaterialMeasurement where bioMaterialMeasurement.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMasks(java.lang.String,
-     *      java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMasks(java.util.Collection)
-     */
-
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getRecipient(int, java.lang.Long)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this
-                .getRecipient(
-                        transform,
-                        "from ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement as bioMaterialMeasurement where bioMaterialMeasurement.id = :id",
-                        id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getRecipient(int, java.lang.String,
-     *      java.lang.Long)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getRecipient(java.lang.Long)
-     */
-
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getRecipient(java.lang.String,
-     *      java.lang.Long)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
     }
 
     /**
@@ -373,8 +137,7 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
         if ( id == null ) {
             throw new IllegalArgumentException( "BioMaterialMeasurement.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement entity = ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) this
-                .load( id );
+        ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -410,14 +173,17 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioMaterialMeasurement.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**

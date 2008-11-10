@@ -28,7 +28,9 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -74,7 +76,7 @@ public interface ExpressionExperimentDao extends
      * Converts a Collection of instances of type
      * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject} to this DAO's entity.
      */
-    public void expressionExperimentValueObjectToEntityCollection( java.util.Collection instances );
+    public void expressionExperimentValueObjectToEntityCollection( java.util.Collection<ExpressionExperiment> instances );
 
     /**
      * <p>
@@ -84,7 +86,7 @@ public interface ExpressionExperimentDao extends
      * ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)}.
      * </p>
      */
-    public Object find( int transform, String queryString,
+    public ExpressionExperiment find( int transform, String queryString,
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
@@ -96,7 +98,8 @@ public interface ExpressionExperimentDao extends
      * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object find( int transform, ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public ExpressionExperiment find( int transform,
+            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
      * <p>
@@ -122,7 +125,7 @@ public interface ExpressionExperimentDao extends
      * ubic.gemma.model.common.description.DatabaseEntry accession)}.
      * </p>
      */
-    public Object findByAccession( int transform, String queryString,
+    public ExpressionExperiment findByAccession( int transform, String queryString,
             ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
@@ -134,7 +137,8 @@ public interface ExpressionExperimentDao extends
      * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findByAccession( int transform, ubic.gemma.model.common.description.DatabaseEntry accession );
+    public ExpressionExperiment findByAccession( int transform,
+            ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
      * <p>
@@ -168,7 +172,7 @@ public interface ExpressionExperimentDao extends
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperiment> findByBioMaterials( java.util.Collection bioMaterials );
+    public java.util.Collection<ExpressionExperiment> findByBioMaterials( java.util.Collection<BioMaterial> bioMaterials );
 
     /**
      * <p>
@@ -188,7 +192,7 @@ public interface ExpressionExperimentDao extends
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperiment> findByFactorValues( java.util.Collection factorValues );
+    public java.util.Collection<ExpressionExperiment> findByFactorValues( java.util.Collection<FactorValue> factorValues );
 
     /**
      * <p>
@@ -206,7 +210,7 @@ public interface ExpressionExperimentDao extends
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findByName( int transform, java.lang.String name );
+    public ExpressionExperiment findByName( int transform, java.lang.String name );
 
     /**
      * <p>
@@ -215,7 +219,7 @@ public interface ExpressionExperimentDao extends
      * in {@link #findByName(int, java.lang.String name)}.
      * </p>
      */
-    public Object findByName( int transform, String queryString, java.lang.String name );
+    public ExpressionExperiment findByName( int transform, String queryString, java.lang.String name );
 
     /**
      * 
@@ -243,7 +247,7 @@ public interface ExpressionExperimentDao extends
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findByShortName( int transform, java.lang.String shortName );
+    public ExpressionExperiment findByShortName( int transform, java.lang.String shortName );
 
     /**
      * <p>
@@ -252,7 +256,7 @@ public interface ExpressionExperimentDao extends
      * in {@link #findByShortName(int, java.lang.String shortName)}.
      * </p>
      */
-    public Object findByShortName( int transform, String queryString, java.lang.String shortName );
+    public ExpressionExperiment findByShortName( int transform, String queryString, java.lang.String shortName );
 
     /**
      * 
@@ -283,7 +287,7 @@ public interface ExpressionExperimentDao extends
      * expressionExperiment)}.
      * </p>
      */
-    public Object findOrCreate( int transform, String queryString,
+    public ExpressionExperiment findOrCreate( int transform, String queryString,
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
@@ -295,7 +299,7 @@ public interface ExpressionExperimentDao extends
      * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findOrCreate( int transform,
+    public ExpressionExperiment findOrCreate( int transform,
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
@@ -320,7 +324,7 @@ public interface ExpressionExperimentDao extends
      * Get the map of ids to number of terms associated with each expression experiment.
      * </p>
      */
-    public java.util.Map getAnnotationCounts( java.util.Collection ids );
+    public java.util.Map getAnnotationCounts( java.util.Collection<Long> ids );
 
     /**
      * 
@@ -373,18 +377,19 @@ public interface ExpressionExperimentDao extends
     /**
      * 
      */
-    public java.util.Collection getDesignElementDataVectors( java.util.Collection quantitationTypes );
+    public java.util.Collection getDesignElementDataVectors( java.util.Collection<QuantitationType> quantitationTypes );
 
     /**
      * 
      */
-    public java.util.Collection getDesignElementDataVectors( java.util.Collection designElements,
+    public java.util.Collection getDesignElementDataVectors( java.util.Collection<DesignElement> designElements,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * 
      */
-    public java.util.Map getLastArrayDesignUpdate( java.util.Collection expressionExperiments, java.lang.Class type );
+    public java.util.Map getLastArrayDesignUpdate( java.util.Collection<ExpressionExperiment> expressionExperiments,
+            java.lang.Class type );
 
     /**
      * <p>
@@ -415,7 +420,7 @@ public interface ExpressionExperimentDao extends
      * with biomaterials.
      * </p>
      */
-    public java.util.Map getPopulatedFactorCounts( java.util.Collection ids );
+    public java.util.Map getPopulatedFactorCounts( java.util.Collection<Long> ids );
 
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
 
@@ -435,7 +440,7 @@ public interface ExpressionExperimentDao extends
     /**
      * 
      */
-    public java.util.Collection getQuantitationTypes(
+    public java.util.Collection<QuantitationType> getQuantitationTypes(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
@@ -451,7 +456,7 @@ public interface ExpressionExperimentDao extends
     /**
      * 
      */
-    public java.util.Map getSampleRemovalEvents( java.util.Collection expressionExperiments );
+    public java.util.Map getSampleRemovalEvents( java.util.Collection<ExpressionExperiment> expressionExperiments );
 
     /**
      * 
@@ -523,6 +528,6 @@ public interface ExpressionExperimentDao extends
      * Converts this DAO's entity to a Collection of instances of type
      * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject}.
      */
-    public void toExpressionExperimentValueObjectCollection( java.util.Collection entities );
+    public void toExpressionExperimentValueObjectCollection( java.util.Collection<ExpressionExperiment> entities );
 
 }

@@ -43,12 +43,12 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * Switch an expression experiment from one array design to another. This is valuable when the EE uses more than on AD,
  * and a merged AD exists. The following steps are needed:
  * <ul>
- * <li> For each array design, for each probe, identify the matching probe on the merged AD. Have to deal with situation
- * <li> where more than one occurrence of each sequence is found.
- * <li> all DEDVs must be switched to use the new AD's design elements
+ * <li>For each array design, for each probe, identify the matching probe on the merged AD. Have to deal with situation
+ * <li>where more than one occurrence of each sequence is found.
+ * <li>all DEDVs must be switched to use the new AD's design elements
  * <li>all bioassays must be switched to the new AD.
- * <li> update the EE description
- * <li> commit changes.
+ * <li>update the EE description
+ * <li>commit changes.
  * </ul>
  * 
  * @spring.bean id="expressionExperimentPlatformSwitchService"
@@ -97,7 +97,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param expExp
      * @param arrayDesign
      */
-    @SuppressWarnings("unchecked")
     public void switchExperimentToArrayDesign( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 

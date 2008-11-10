@@ -30,43 +30,6 @@ import ubic.gemma.persistence.BaseDao;
 public interface QuantitationTypeDao extends BaseDao<QuantitationType> {
     /**
      * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.quantitationtype.QuantitationType)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
-     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities
-     * (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.quantitationtype.QuantitationType)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
-     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity
-     * (into a value object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform, ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.common.quantitationtype.QuantitationType and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.common.quantitationtype.QuantitationType instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * Creates an instance of ubic.gemma.model.common.quantitationtype.QuantitationType and adds it to the persistent
-     * store.
-     */
-    public QuantitationType create( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * <p>
      * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.quantitationtype.QuantitationType)} with an
      * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
      * override the query string defined in {@link #find(int, ubic.gemma.model.common.quantitationtype.QuantitationType
@@ -142,71 +105,5 @@ public interface QuantitationTypeDao extends BaseDao<QuantitationType> {
      */
     public ubic.gemma.model.common.quantitationtype.QuantitationType findOrCreate(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads an instance of ubic.gemma.model.common.quantitationtype.QuantitationType from the persistent store.
-     */
-    public QuantitationType load( java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.common.quantitationtype.QuantitationType}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.quantitationtype.QuantitationType having the given
-     * <code>identifier</code> from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.quantitationtype.QuantitationType from the persistent store.
-     */
-    public void remove( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Updates the <code>quantitationType</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
 }

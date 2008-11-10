@@ -76,7 +76,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     public ExpressionExperiment expressionExperimentValueObjectToEntity(
             ExpressionExperimentValueObject expressionExperimentValueObject ) {
-        return ( ExpressionExperiment ) this.load( expressionExperimentValueObject.getId() );
+        return this.load( expressionExperimentValueObject.getId() );
     }
 
     /*
@@ -160,7 +160,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             return newExpressionExperiment;
         }
         log.debug( "Creating new expressionExperiment: " + expressionExperiment.getName() );
-        newExpressionExperiment = ( ExpressionExperiment ) create( expressionExperiment );
+        newExpressionExperiment = create( expressionExperiment );
         return newExpressionExperiment;
     }
 

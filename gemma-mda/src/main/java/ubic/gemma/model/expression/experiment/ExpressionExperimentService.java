@@ -302,7 +302,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * Return all the quantitation types used by the given expression experiment
      * </p>
      */
-    public java.util.Collection getQuantitationTypes(
+    public java.util.Collection<QuantitationType> getQuantitationTypes(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
@@ -311,7 +311,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * useful for expression experiments that use more than one array design.
      * </p>
      */
-    public java.util.Collection getQuantitationTypes(
+    public java.util.Collection<QuantitationType> getQuantitationTypes(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 

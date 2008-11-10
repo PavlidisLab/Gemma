@@ -81,7 +81,6 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#create(int, java.util.Collection)
      */
-    @SuppressWarnings("unused")
     public java.util.Collection<ExpressionExperiment> create( final int transform, final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.create - 'entities' can not be null" );
@@ -252,7 +251,7 @@ public abstract class ExpressionExperimentDaoBase extends
      *      ubic.gemma.model.common.description.DatabaseEntry)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object findByAccession( final int transform,
+    public ExpressionExperiment findByAccession( final int transform,
             final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         return this.findByAccession( transform, "from ExpressionExperiment where accession=:accession", accession );
     }
@@ -492,7 +491,7 @@ public abstract class ExpressionExperimentDaoBase extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByShortName(int, java.lang.String)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object findByShortName( final int transform, final java.lang.String shortName ) {
+    public ExpressionExperiment findByShortName( final int transform, final java.lang.String shortName ) {
         return this.findByShortName( transform, "from ExpressionExperimentImpl a where a.shortName=:shortName",
                 shortName );
     }
@@ -569,15 +568,14 @@ public abstract class ExpressionExperimentDaoBase extends
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ExpressionExperiment result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.experiment.ExpressionExperiment"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.experiment.ExpressionExperiment"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) results.iterator().next();
         }
+
         result = ( ExpressionExperiment ) transformEntity( transform, result );
         return result;
     }
@@ -586,8 +584,7 @@ public abstract class ExpressionExperimentDaoBase extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findOrCreate(int,
      *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform,
+    public ExpressionExperiment findOrCreate( final int transform,
             final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
         return this
                 .findOrCreate(
@@ -600,7 +597,6 @@ public abstract class ExpressionExperimentDaoBase extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findOrCreate(
             final java.lang.String queryString,
             final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
@@ -612,8 +608,7 @@ public abstract class ExpressionExperimentDaoBase extends
      */
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findOrCreate(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
-        return ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) this.findOrCreate( TRANSFORM_NONE,
-                expressionExperiment );
+        return this.findOrCreate( TRANSFORM_NONE, expressionExperiment );
     }
 
     /**

@@ -69,14 +69,17 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioMaterial.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.expression.biomaterial.BioMaterial ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform, ( ubic.gemma.model.expression.biomaterial.BioMaterial ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -324,14 +327,16 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioMaterial.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.biomaterial.BioMaterial ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.expression.biomaterial.BioMaterial ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**
