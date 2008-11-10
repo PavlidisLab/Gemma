@@ -34,7 +34,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class QtlDaoImplTest extends BaseSpringContextTest {
 
-    QtlDao qtlDao = null;
+    BaseQtlDao qtlDao = null;
     PhysicalLocationDao physicalLocationDao = null;
     PhysicalMarkerDao physicalMarkerDao = null;
     ChromosomeDao chromosomeDao = null;
@@ -180,7 +180,7 @@ public class QtlDaoImplTest extends BaseSpringContextTest {
     /**
      * @param qtlDao The qtlDao to set.
      */
-    public void setQtlDao( QtlDao qtlDao ) {
+    public void setQtlDao( BaseQtlDao qtlDao ) {
         this.qtlDao = qtlDao;
     }
 

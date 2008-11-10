@@ -25,5 +25,6 @@ package ubic.gemma.model.common.protocol;
 /**
  * @see ubic.gemma.model.common.protocol.Parameterizable
  */
-public class ParameterizableDaoImpl extends ubic.gemma.model.common.protocol.ParameterizableDaoBase {
+public abstract class ParameterizableDaoImpl<T extends Parameterizable> extends
+        ubic.gemma.model.common.protocol.ParameterizableDaoBase<T> {
 }

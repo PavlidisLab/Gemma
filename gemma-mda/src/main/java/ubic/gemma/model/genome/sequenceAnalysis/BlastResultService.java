@@ -36,11 +36,6 @@ public interface BlastResultService {
     /**
      * 
      */
-    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
-
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find(
             ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFind );
 
@@ -49,5 +44,10 @@ public interface BlastResultService {
      */
     public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
             ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFindOrCreate );
+
+    /**
+     * 
+     */
+    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
 
 }

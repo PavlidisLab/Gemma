@@ -35,6 +35,171 @@ public abstract class BlastResultDaoBase extends
         ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao {
 
     /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BlastResult.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#create(int transform,
+     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    public Object create( final int transform, final ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
+        if ( blastResult == null ) {
+            throw new IllegalArgumentException( "BlastResult.create - 'blastResult' can not be null" );
+        }
+        this.getHibernateTemplate().save( blastResult );
+        return this.transformEntity( transform, blastResult );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#create(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    public ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult create(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
+        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) this.create( TRANSFORM_NONE, blastResult );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#find(int, java.lang.String,
+     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object find( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( toFind );
+        argNames.add( "toFind" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'ubic.gemma.model.genome.sequenceAnalysis.BlastResult"
+                                + "' was found when executing query --> '" + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#find(int,
+     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object find( final int transform, final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind ) {
+        return this
+                .find(
+                        transform,
+                        "from ubic.gemma.model.genome.sequenceAnalysis.BlastResult as blastResult where blastResult.toFind = :toFind",
+                        toFind );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#find(java.lang.String,
+     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find( final java.lang.String queryString,
+            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind ) {
+        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) this.find( TRANSFORM_NONE, queryString, toFind );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind ) {
+        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) this.find( TRANSFORM_NONE, toFind );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#findOrCreate(int, java.lang.String,
+     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object findOrCreate( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( toFindOrCreate );
+        argNames.add( "toFindOrCreate" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'ubic.gemma.model.genome.sequenceAnalysis.BlastResult"
+                                + "' was found when executing query --> '" + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#findOrCreate(int,
+     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object findOrCreate( final int transform,
+            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate ) {
+        return this
+                .findOrCreate(
+                        transform,
+                        "from ubic.gemma.model.genome.sequenceAnalysis.BlastResult as blastResult where blastResult.toFindOrCreate = :toFindOrCreate",
+                        toFindOrCreate );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#findOrCreate(java.lang.String,
+     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate( final java.lang.String queryString,
+            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate ) {
+        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) this.findOrCreate( TRANSFORM_NONE, queryString,
+                toFindOrCreate );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate ) {
+        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) this.findOrCreate( TRANSFORM_NONE,
+                toFindOrCreate );
+    }
+
+    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#load(int, java.lang.Long)
      */
     @Override
@@ -76,90 +241,6 @@ public abstract class BlastResultDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#create(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    public ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult create(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
-        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) this.create( TRANSFORM_NONE, blastResult );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#create(int transform,
-     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    public Object create( final int transform, final ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
-        if ( blastResult == null ) {
-            throw new IllegalArgumentException( "BlastResult.create - 'blastResult' can not be null" );
-        }
-        this.getHibernateTemplate().save( blastResult );
-        return this.transformEntity( transform, blastResult );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BlastResult.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#update(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    public void update( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
-        if ( blastResult == null ) {
-            throw new IllegalArgumentException( "BlastResult.update - 'blastResult' can not be null" );
-        }
-        this.getHibernateTemplate().update( blastResult );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BlastResult.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
-        if ( blastResult == null ) {
-            throw new IllegalArgumentException( "BlastResult.remove - 'blastResult' can not be null" );
-        }
-        this.getHibernateTemplate().delete( blastResult );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#remove(java.lang.Long)
      */
     @Override
@@ -186,122 +267,63 @@ public abstract class BlastResultDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind ) {
-        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) this.find( TRANSFORM_NONE, toFind );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#find(java.lang.String,
-     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find( final java.lang.String queryString,
-            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind ) {
-        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) this.find( TRANSFORM_NONE, queryString, toFind );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#find(int,
-     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind ) {
-        return this
-                .find(
-                        transform,
-                        "from ubic.gemma.model.genome.sequenceAnalysis.BlastResult as blastResult where blastResult.toFind = :toFind",
-                        toFind );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#find(int, java.lang.String,
-     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( toFind );
-        argNames.add( "toFind" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.sequenceAnalysis.BlastResult"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
+        if ( blastResult == null ) {
+            throw new IllegalArgumentException( "BlastResult.remove - 'blastResult' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) result );
-        return result;
+        this.getHibernateTemplate().delete( blastResult );
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#update(java.util.Collection)
      */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate ) {
-        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) this.findOrCreate( TRANSFORM_NONE,
-                toFindOrCreate );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate ) {
-        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) this.findOrCreate( TRANSFORM_NONE, queryString,
-                toFindOrCreate );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#findOrCreate(int,
-     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform,
-            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate ) {
-        return this
-                .findOrCreate(
-                        transform,
-                        "from ubic.gemma.model.genome.sequenceAnalysis.BlastResult as blastResult where blastResult.toFindOrCreate = :toFindOrCreate",
-                        toFindOrCreate );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#findOrCreate(int, java.lang.String,
-     *      ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( toFindOrCreate );
-        argNames.add( "toFindOrCreate" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.sequenceAnalysis.BlastResult"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BlastResult.update - 'entities' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) result );
-        return result;
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.genome.sequenceAnalysis.BlastResult ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao#update(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    public void update( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
+        if ( blastResult == null ) {
+            throw new IllegalArgumentException( "BlastResult.update - 'blastResult' can not be null" );
+        }
+        this.getHibernateTemplate().update( blastResult );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -327,26 +349,6 @@ public abstract class BlastResultDaoBase extends
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

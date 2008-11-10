@@ -44,6 +44,72 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
     private static final OKStatusFlagEvent OK_STATUS_FLAG_EVENT = OKStatusFlagEvent.Factory.newInstance();
     private static final ValidatedFlagEvent VALIDATED_FLAG_EVENT = ValidatedFlagEvent.Factory.newInstance();
 
+    @Override
+    protected void handleAddComment( Auditable auditable, String comment, String detail ) throws Exception {
+        AuditEventType type = CommentedEvent.Factory.newInstance();
+        this.addUpdateEvent( auditable, type, comment, detail );
+
+    }
+
+    @Override
+    protected void handleAddOkFlag( Auditable auditable, String comment, String detail ) throws Exception {
+        // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
+        // should only be used to reverse "trouble".
+        AuditEventType type = OKStatusFlagEvent.Factory.newInstance();
+        this.addUpdateEvent( auditable, type, comment, detail );
+    }
+
+    @Override
+    protected void handleAddTroubleFlag( Auditable auditable, String comment, String detail ) throws Exception {
+        AuditEventType type = TroubleStatusFlagEvent.Factory.newInstance();
+        this.addUpdateEvent( auditable, type, comment, detail );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase#handleAddUpdateEvent(ubic.gemma.model.common.Auditable
+     * , ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType, java.lang.String)
+     */
+    @Override
+    protected AuditEvent handleAddUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note )
+            throws Exception {
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setDate( Calendar.getInstance().getTime() );
+        auditEvent.setAction( AuditAction.UPDATE );
+        auditEvent.setEventType( auditEventType );
+        auditEvent.setNote( note );
+        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
+    }
+
+    @Override
+    protected AuditEvent handleAddUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note,
+            String detail ) throws Exception {
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setDate( Calendar.getInstance().getTime() );
+        auditEvent.setAction( AuditAction.UPDATE );
+        auditEvent.setEventType( auditEventType );
+        auditEvent.setNote( note );
+        auditEvent.setDetail( detail );
+        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
+    }
+
+    @Override
+    protected AuditEvent handleAddUpdateEvent( Auditable auditable, String note ) throws Exception {
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setDate( Calendar.getInstance().getTime() );
+        auditEvent.setAction( AuditAction.UPDATE );
+        auditEvent.setNote( note );
+        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
+    }
+
+    @Override
+    protected void handleAddValidatedFlag( Auditable auditable, String comment, String detail ) throws Exception {
+        AuditEventType type = ValidatedFlagEvent.Factory.newInstance();
+        this.addUpdateEvent( auditable, type, comment, detail );
+
+    }
+
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#audit(ubic.gemma.model.common.Describable,
      *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
@@ -78,89 +144,6 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         return this.getAuditTrailDao().create( auditTrail );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase#handleThaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    @Override
-    protected void handleThaw( AuditTrail auditTrail ) throws Exception {
-        this.getAuditTrailDao().thaw( auditTrail );
-
-    }
-
-    @Override
-    protected void handleThaw( Auditable auditable ) throws Exception {
-        this.getAuditTrailDao().thaw( auditable );
-
-    }
-
-    @Override
-    protected AuditEvent handleAddUpdateEvent( Auditable auditable, String note ) throws Exception {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( Calendar.getInstance().getTime() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setNote( note );
-        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase#handleAddUpdateEvent(ubic.gemma.model.common.Auditable,
-     *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType, java.lang.String)
-     */
-    @Override
-    protected AuditEvent handleAddUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note )
-            throws Exception {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( Calendar.getInstance().getTime() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setEventType( auditEventType );
-        auditEvent.setNote( note );
-        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
-    }
-
-    @Override
-    protected AuditEvent handleAddUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note,
-            String detail ) throws Exception {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( Calendar.getInstance().getTime() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setEventType( auditEventType );
-        auditEvent.setNote( note );
-        auditEvent.setDetail( detail );
-        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
-    }
-
-    @Override
-    protected void handleAddComment( Auditable auditable, String comment, String detail ) throws Exception {
-        AuditEventType type = CommentedEvent.Factory.newInstance();
-        this.addUpdateEvent( auditable, type, comment, detail );
-
-    }
-
-    @Override
-    protected void handleAddOkFlag( Auditable auditable, String comment, String detail ) throws Exception {
-        // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
-        // should only be used to reverse "trouble".
-        AuditEventType type = OKStatusFlagEvent.Factory.newInstance();
-        this.addUpdateEvent( auditable, type, comment, detail );
-    }
-
-    @Override
-    protected void handleAddTroubleFlag( Auditable auditable, String comment, String detail ) throws Exception {
-        AuditEventType type = TroubleStatusFlagEvent.Factory.newInstance();
-        this.addUpdateEvent( auditable, type, comment, detail );
-    }
-
-    @Override
-    protected void handleAddValidatedFlag( Auditable auditable, String comment, String detail ) throws Exception {
-        AuditEventType type = ValidatedFlagEvent.Factory.newInstance();
-        this.addUpdateEvent( auditable, type, comment, detail );
-
-    }
-
     @Override
     protected AuditEvent handleGetLastTroubleEvent( Auditable auditable ) throws Exception {
         AuditEvent troubleEvent = getAuditableService().getLastAuditEvent( auditable, TROUBLE_STATUS_FLAG_EVENT );
@@ -178,5 +161,23 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
     @Override
     protected AuditEvent handleGetLastValidationEvent( Auditable auditable ) throws Exception {
         return getAuditableService().getLastAuditEvent( auditable, VALIDATED_FLAG_EVENT );
+    }
+
+    @Override
+    protected void handleThaw( Auditable auditable ) throws Exception {
+        this.getAuditTrailDao().thaw( auditable );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase#handleThaw(ubic.gemma.model.common.auditAndSecurity
+     * .AuditTrail)
+     */
+    @Override
+    protected void handleThaw( AuditTrail auditTrail ) throws Exception {
+        this.getAuditTrailDao().thaw( auditTrail );
+
     }
 }

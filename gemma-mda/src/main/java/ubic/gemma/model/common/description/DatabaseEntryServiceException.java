@@ -35,40 +35,6 @@ public class DatabaseEntryServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 70562687768195969L;
 
     /**
-     * The default constructor for <code>DatabaseEntryServiceException</code>.
-     */
-    public DatabaseEntryServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>DatabaseEntryServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public DatabaseEntryServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>DatabaseEntryServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public DatabaseEntryServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>DatabaseEntryServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public DatabaseEntryServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class DatabaseEntryServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>DatabaseEntryServiceException</code>.
+     */
+    public DatabaseEntryServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>DatabaseEntryServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public DatabaseEntryServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>DatabaseEntryServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public DatabaseEntryServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>DatabaseEntryServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public DatabaseEntryServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

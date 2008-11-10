@@ -51,6 +51,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     ExpressionExperiment e2;
     ExpressionExperiment e3;
 
+    @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
@@ -74,7 +75,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
         ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
         eeSet.setTaxon( mouse );
-        eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
+        eeSet = expressionExperimentSetDao.create( eeSet );
 
         eeSet.getExperiments().add( e1 );
 
@@ -86,7 +87,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
         eeSet = ExpressionExperimentSet.Factory.newInstance();
         eeSet.setTaxon( mouse );
-        eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
+        eeSet = expressionExperimentSetDao.create( eeSet );
         eeSet.getExperiments().add( e1 );
         eeSet.getExperiments().add( e2 );
 
@@ -98,7 +99,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
         eeSet = ExpressionExperimentSet.Factory.newInstance();
         eeSet.setTaxon( mouse );
-        eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
+        eeSet = expressionExperimentSetDao.create( eeSet );
         eeSet.getExperiments().add( e1 );
         eeSet.getExperiments().add( e2 );
         eeSet.getExperiments().add( e3 );
@@ -111,7 +112,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
         eeSet = ExpressionExperimentSet.Factory.newInstance();
         eeSet.setTaxon( mouse );
-        eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
+        eeSet = expressionExperimentSetDao.create( eeSet );
         eeSet.getExperiments().add( e1 );
         eeSet.getExperiments().add( e2 );
         eeSet.getExperiments().add( e3 );
@@ -172,15 +173,15 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
     public void testFindByNameExact() {
 
-        Analysis result = analysisService.findByName( "Test" );
+        Collection<Analysis> result = analysisService.findByName( "Test" );
         assertNotNull( result );
-        assertEquals( "Test", result.getName() );
+        assertEquals( "Test", result.iterator().next().getName() );
     }
 
     public void testFindByNameRecent() {
-        Analysis result = analysisService.findByName( "TestAnalysis3" );
+        Collection<Analysis> result = analysisService.findByName( "TestAnalysis3" );
         assertNotNull( result );
-        assertEquals( "TestAnalysis3", result.getName() );
+        assertEquals( "TestAnalysis3", result.iterator().next().getName() );
     }
 
     /**

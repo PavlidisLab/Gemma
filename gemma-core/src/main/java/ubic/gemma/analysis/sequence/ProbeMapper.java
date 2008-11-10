@@ -406,7 +406,6 @@ public class ProbeMapper {
      * @param blatResult
      * @return BlatAssociations between the queried biosequence and one or more gene products.
      */
-    @SuppressWarnings("unchecked")
     private Collection<BlatAssociation> processBlatResult( GoldenPathSequenceAnalysis goldenPathDb,
             BlatResult blatResult ) {
         assert blatResult.getTargetChromosome() != null : "Chromosome not filled in for blat result";
@@ -427,13 +426,13 @@ public class ProbeMapper {
             return blatAssociations;
         }
 
-//        Gene nearestGene = goldenPathDb.findClosestGene( blatResult.getTargetChromosome().getName(), blatResult
-//                .getTargetStart(), blatResult.getTargetEnd(), strand, 50000 );
+        // Gene nearestGene = goldenPathDb.findClosestGene( blatResult.getTargetChromosome().getName(), blatResult
+        // .getTargetStart(), blatResult.getTargetEnd(), strand, 50000 );
 
-//        if ( nearestGene != null ) {
-//            log.info( "Nearest gene to " + blatResult.getTargetChromosome().getName() + "(" + strand + "):"
-//                    + blatResult.getTargetStart() + "-" + blatResult.getTargetEnd() + " is " + nearestGene );
-//        }
+        // if ( nearestGene != null ) {
+        // log.info( "Nearest gene to " + blatResult.getTargetChromosome().getName() + "(" + strand + "):"
+        // + blatResult.getTargetStart() + "-" + blatResult.getTargetEnd() + " is " + nearestGene );
+        // }
 
         // no genes, have to look for pre-existing probealignedregions that overlap.
 

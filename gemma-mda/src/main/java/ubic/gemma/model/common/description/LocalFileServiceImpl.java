@@ -36,28 +36,6 @@ import java.io.OutputStream;
 public class LocalFileServiceImpl extends ubic.gemma.model.common.description.LocalFileServiceBase {
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileService#deleteFile(ubic.gemma.model.common.description.LocalFile)
-     */
-    @Override
-    protected void handleDeleteFile( ubic.gemma.model.common.description.LocalFile localFile )
-            throws java.lang.Exception {
-
-        if ( localFile == null ) return;
-        File file = localFile.asFile();
-        if ( file == null ) throw new IOException( "Could not convert LocalFile into java.io.File" );
-
-        boolean success = false;
-        if ( file.exists() ) {
-            success = file.delete();
-        }
-
-        if ( file.exists() || !success ) {
-            throw new IOException( "Cannot delete file" );
-        }
-        this.getLocalFileDao().remove( localFile );
-    }
-
-    /**
      * @see ubic.gemma.model.common.description.LocalFileService#copyFile(ubic.gemma.model.common.description.LocalFile,
      *      ubic.gemma.model.common.description.LocalFile)
      */
@@ -91,9 +69,41 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
         return targetFile;
     }
 
+    /**
+     * @see ubic.gemma.model.common.description.LocalFileService#deleteFile(ubic.gemma.model.common.description.LocalFile)
+     */
+    @Override
+    protected void handleDeleteFile( ubic.gemma.model.common.description.LocalFile localFile )
+            throws java.lang.Exception {
+
+        if ( localFile == null ) return;
+        File file = localFile.asFile();
+        if ( file == null ) throw new IOException( "Could not convert LocalFile into java.io.File" );
+
+        boolean success = false;
+        if ( file.exists() ) {
+            success = file.delete();
+        }
+
+        if ( file.exists() || !success ) {
+            throw new IOException( "Cannot delete file" );
+        }
+        this.getLocalFileDao().remove( localFile );
+    }
+
     /*
      * (non-Javadoc)
-     * 
+     * @see
+     * ubic.gemma.model.common.description.LocalFileServiceBase#handleFind(ubic.gemma.model.common.description.LocalFile
+     * )
+     */
+    @Override
+    protected LocalFile handleFind( LocalFile localFile ) throws Exception {
+        return this.getLocalFileDao().find( localFile );
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.model.common.description.LocalFileServiceBase#handleFindByPath(java.lang.String)
      */
     @Override
@@ -106,18 +116,20 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.LocalFileServiceBase#handleFind(ubic.gemma.model.common.description.LocalFile)
+     * @see
+     * ubic.gemma.model.common.description.LocalFileServiceBase#handleFindOrCreate(ubic.gemma.model.common.description
+     * .LocalFile)
      */
     @Override
-    protected LocalFile handleFind( LocalFile localFile ) throws Exception {
-        return this.getLocalFileDao().find( localFile );
+    protected LocalFile handleFindOrCreate( LocalFile localFile ) throws Exception {
+        return this.getLocalFileDao().findOrCreate( localFile );
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.LocalFileServiceBase#handleSave(ubic.gemma.model.common.description.LocalFile)
+     * @see
+     * ubic.gemma.model.common.description.LocalFileServiceBase#handleSave(ubic.gemma.model.common.description.LocalFile
+     * )
      */
     @Override
     protected LocalFile handleSave( LocalFile localFile ) throws Exception {
@@ -126,22 +138,13 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.LocalFileServiceBase#handleUpdate(ubic.gemma.model.common.description.LocalFile)
+     * @see
+     * ubic.gemma.model.common.description.LocalFileServiceBase#handleUpdate(ubic.gemma.model.common.description.LocalFile
+     * )
      */
     @Override
     protected void handleUpdate( LocalFile localFile ) throws Exception {
         this.getLocalFileDao().update( localFile );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.LocalFileServiceBase#handleFindOrCreate(ubic.gemma.model.common.description.LocalFile)
-     */
-    @Override
-    protected LocalFile handleFindOrCreate( LocalFile localFile ) throws Exception {
-        return this.getLocalFileDao().findOrCreate( localFile );
     }
 
 }

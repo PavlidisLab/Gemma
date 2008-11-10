@@ -25,6 +25,7 @@ package ubic.gemma.model.analysis.expression;
 /**
  * @see ubic.gemma.model.expression.analysis.ExpressionAnalysis
  */
-public abstract class ExpressionAnalysisDaoImpl extends ubic.gemma.model.analysis.expression.ExpressionAnalysisDaoBase {
+public abstract class ExpressionAnalysisDaoImpl<T extends ExpressionAnalysis> extends
+        ubic.gemma.model.analysis.expression.ExpressionAnalysisDaoBase<T> {
 
 }

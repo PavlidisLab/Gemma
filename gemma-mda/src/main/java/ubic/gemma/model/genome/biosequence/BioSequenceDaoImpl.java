@@ -52,7 +52,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @SuppressWarnings("unchecked")
@@ -102,8 +101,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
+     * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findByAccession(ubic.gemma.model.common.description.
+     * DatabaseEntry)
      */
     @Override
     public BioSequence findByAccession( DatabaseEntry databaseEntry ) {
@@ -146,8 +145,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see
+     * ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence
+     * )
      */
     @Override
     public BioSequence findOrCreate( BioSequence bioSequence ) {
@@ -167,7 +167,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -202,7 +201,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByAccession(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -216,7 +214,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -238,7 +235,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -250,8 +246,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see
+     * ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(ubic.gemma.model.genome.biosequence.BioSequence
+     * )
      */
     @Override
     protected void handleThaw( final BioSequence bioSequence ) throws Exception {
@@ -296,7 +293,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java.util.Collection)
      */
     @Override
@@ -306,7 +302,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java.util.Collection)
      */
     @Override

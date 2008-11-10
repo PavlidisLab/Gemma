@@ -34,6 +34,52 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
         implements ubic.gemma.model.common.measurement.MeasurementDao {
 
     /**
+     * @see ubic.gemma.model.common.measurement.MeasurementDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Measurement.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.measurement.Measurement ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.measurement.MeasurementDao#create(int transform,
+     *      ubic.gemma.model.common.measurement.Measurement)
+     */
+    public Object create( final int transform, final ubic.gemma.model.common.measurement.Measurement measurement ) {
+        if ( measurement == null ) {
+            throw new IllegalArgumentException( "Measurement.create - 'measurement' can not be null" );
+        }
+        this.getHibernateTemplate().save( measurement );
+        return this.transformEntity( transform, measurement );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.measurement.MeasurementDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.measurement.MeasurementDao#create(ubic.gemma.model.common.measurement.Measurement)
+     */
+    public ubic.gemma.model.common.measurement.Measurement create(
+            ubic.gemma.model.common.measurement.Measurement measurement ) {
+        return ( ubic.gemma.model.common.measurement.Measurement ) this.create( TRANSFORM_NONE, measurement );
+    }
+
+    /**
      * @see ubic.gemma.model.common.measurement.MeasurementDao#load(int, java.lang.Long)
      */
     public Object load( final int transform, final java.lang.Long id ) {
@@ -71,89 +117,6 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
     }
 
     /**
-     * @see ubic.gemma.model.common.measurement.MeasurementDao#create(ubic.gemma.model.common.measurement.Measurement)
-     */
-    public ubic.gemma.model.common.measurement.Measurement create(
-            ubic.gemma.model.common.measurement.Measurement measurement ) {
-        return ( ubic.gemma.model.common.measurement.Measurement ) this.create( TRANSFORM_NONE, measurement );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.measurement.MeasurementDao#create(int transform,
-     *      ubic.gemma.model.common.measurement.Measurement)
-     */
-    public Object create( final int transform, final ubic.gemma.model.common.measurement.Measurement measurement ) {
-        if ( measurement == null ) {
-            throw new IllegalArgumentException( "Measurement.create - 'measurement' can not be null" );
-        }
-        this.getHibernateTemplate().save( measurement );
-        return this.transformEntity( transform, measurement );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.measurement.MeasurementDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.measurement.MeasurementDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Measurement.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.measurement.Measurement ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.measurement.MeasurementDao#update(ubic.gemma.model.common.measurement.Measurement)
-     */
-    public void update( ubic.gemma.model.common.measurement.Measurement measurement ) {
-        if ( measurement == null ) {
-            throw new IllegalArgumentException( "Measurement.update - 'measurement' can not be null" );
-        }
-        this.getHibernateTemplate().update( measurement );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.measurement.MeasurementDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Measurement.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.measurement.Measurement ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.measurement.MeasurementDao#remove(ubic.gemma.model.common.measurement.Measurement)
-     */
-    public void remove( ubic.gemma.model.common.measurement.Measurement measurement ) {
-        if ( measurement == null ) {
-            throw new IllegalArgumentException( "Measurement.remove - 'measurement' can not be null" );
-        }
-        this.getHibernateTemplate().delete( measurement );
-    }
-
-    /**
      * @see ubic.gemma.model.common.measurement.MeasurementDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -174,6 +137,63 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
             throw new IllegalArgumentException( "Measurement.remove - 'entities' can not be null" );
         }
         this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.measurement.MeasurementDao#remove(ubic.gemma.model.common.measurement.Measurement)
+     */
+    public void remove( ubic.gemma.model.common.measurement.Measurement measurement ) {
+        if ( measurement == null ) {
+            throw new IllegalArgumentException( "Measurement.remove - 'measurement' can not be null" );
+        }
+        this.getHibernateTemplate().delete( measurement );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.measurement.MeasurementDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Measurement.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.measurement.Measurement ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.measurement.MeasurementDao#update(ubic.gemma.model.common.measurement.Measurement)
+     */
+    public void update( ubic.gemma.model.common.measurement.Measurement measurement ) {
+        if ( measurement == null ) {
+            throw new IllegalArgumentException( "Measurement.update - 'measurement' can not be null" );
+        }
+        this.getHibernateTemplate().update( measurement );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.measurement.Measurement)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.common.measurement.MeasurementDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.measurement.Measurement)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -198,24 +218,6 @@ public abstract class MeasurementDaoBase extends org.springframework.orm.hiberna
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.measurement.Measurement)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.common.measurement.MeasurementDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.measurement.Measurement)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

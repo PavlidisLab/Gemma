@@ -267,7 +267,8 @@ public class CustomJdbcExtendedDaoImpl extends JdbcDaoImpl implements BasicAclEx
         return lookupPermissionIdQuery;
     }
 
-    protected void initDao() throws ApplicationContextException {
+    @Override
+    protected void initDao() throws ApplicationContextException { 
         super.initDao();
         lookupPermissionIdMapping = new LookupPermissionIdMapping( getDataSource() );
         aclPermissionInsert = new AclPermissionInsert( getDataSource() );
@@ -451,6 +452,7 @@ public class CustomJdbcExtendedDaoImpl extends JdbcDaoImpl implements BasicAclEx
             compile();
         }
 
+        @Override
         protected Object mapRow( ResultSet rs, int rownum ) throws SQLException {
             return new Long( rs.getLong( 1 ) );
         }

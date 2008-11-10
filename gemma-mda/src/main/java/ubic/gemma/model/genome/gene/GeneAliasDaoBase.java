@@ -34,6 +34,50 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
         ubic.gemma.model.genome.gene.GeneAliasDao {
 
     /**
+     * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "GeneAlias.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.genome.gene.GeneAlias ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(int transform, ubic.gemma.model.genome.gene.GeneAlias)
+     */
+    public Object create( final int transform, final ubic.gemma.model.genome.gene.GeneAlias geneAlias ) {
+        if ( geneAlias == null ) {
+            throw new IllegalArgumentException( "GeneAlias.create - 'geneAlias' can not be null" );
+        }
+        this.getHibernateTemplate().save( geneAlias );
+        return this.transformEntity( transform, geneAlias );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(ubic.gemma.model.genome.gene.GeneAlias)
+     */
+    public ubic.gemma.model.genome.gene.GeneAlias create( ubic.gemma.model.genome.gene.GeneAlias geneAlias ) {
+        return ( ubic.gemma.model.genome.gene.GeneAlias ) this.create( TRANSFORM_NONE, geneAlias );
+    }
+
+    /**
      * @see ubic.gemma.model.genome.gene.GeneAliasDao#load(int, java.lang.Long)
      */
     public Object load( final int transform, final java.lang.Long id ) {
@@ -70,87 +114,6 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(ubic.gemma.model.genome.gene.GeneAlias)
-     */
-    public ubic.gemma.model.genome.gene.GeneAlias create( ubic.gemma.model.genome.gene.GeneAlias geneAlias ) {
-        return ( ubic.gemma.model.genome.gene.GeneAlias ) this.create( TRANSFORM_NONE, geneAlias );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(int transform, ubic.gemma.model.genome.gene.GeneAlias)
-     */
-    public Object create( final int transform, final ubic.gemma.model.genome.gene.GeneAlias geneAlias ) {
-        if ( geneAlias == null ) {
-            throw new IllegalArgumentException( "GeneAlias.create - 'geneAlias' can not be null" );
-        }
-        this.getHibernateTemplate().save( geneAlias );
-        return this.transformEntity( transform, geneAlias );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "GeneAlias.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.genome.gene.GeneAlias ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneAliasDao#update(ubic.gemma.model.genome.gene.GeneAlias)
-     */
-    public void update( ubic.gemma.model.genome.gene.GeneAlias geneAlias ) {
-        if ( geneAlias == null ) {
-            throw new IllegalArgumentException( "GeneAlias.update - 'geneAlias' can not be null" );
-        }
-        this.getHibernateTemplate().update( geneAlias );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneAliasDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "GeneAlias.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.gene.GeneAlias ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneAliasDao#remove(ubic.gemma.model.genome.gene.GeneAlias)
-     */
-    public void remove( ubic.gemma.model.genome.gene.GeneAlias geneAlias ) {
-        if ( geneAlias == null ) {
-            throw new IllegalArgumentException( "GeneAlias.remove - 'geneAlias' can not be null" );
-        }
-        this.getHibernateTemplate().delete( geneAlias );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.gene.GeneAliasDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -171,6 +134,63 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
             throw new IllegalArgumentException( "GeneAlias.remove - 'entities' can not be null" );
         }
         this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneAliasDao#remove(ubic.gemma.model.genome.gene.GeneAlias)
+     */
+    public void remove( ubic.gemma.model.genome.gene.GeneAlias geneAlias ) {
+        if ( geneAlias == null ) {
+            throw new IllegalArgumentException( "GeneAlias.remove - 'geneAlias' can not be null" );
+        }
+        this.getHibernateTemplate().delete( geneAlias );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneAliasDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "GeneAlias.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.genome.gene.GeneAlias ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneAliasDao#update(ubic.gemma.model.genome.gene.GeneAlias)
+     */
+    public void update( ubic.gemma.model.genome.gene.GeneAlias geneAlias ) {
+        if ( geneAlias == null ) {
+            throw new IllegalArgumentException( "GeneAlias.update - 'geneAlias' can not be null" );
+        }
+        this.getHibernateTemplate().update( geneAlias );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.genome.gene.GeneAlias)} method. This method does not instantiate a
+     * new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.gene.GeneAliasDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.gene.GeneAlias)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -195,24 +215,6 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.genome.gene.GeneAlias)} method. This method does not instantiate a
-     * new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.gene.GeneAliasDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.gene.GeneAlias)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

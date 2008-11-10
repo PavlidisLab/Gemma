@@ -31,7 +31,7 @@ package ubic.gemma.model.expression.experiment;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet
  */
 public abstract class ExpressionExperimentSubSetDaoBase extends
-        ubic.gemma.model.expression.experiment.BioAssaySetDaoImpl implements
+        ubic.gemma.model.expression.experiment.BioAssaySetDaoImpl<ExpressionExperimentSubSet> implements
         ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao {
 
     /**
@@ -78,7 +78,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
      */
-    public ubic.gemma.model.common.Securable create(
+    public ExpressionExperimentSubSet create(
             ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {
         return ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) this.create( TRANSFORM_NONE,
                 expressionExperimentSubSet );
@@ -137,266 +137,24 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getAclObjectIdentityId(int,
-     *      java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform,
-                ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet as expressionExperimentSubSet where expressionExperimentSubSet.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform,
-                ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getMask(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet as expressionExperimentSubSet where expressionExperimentSubSet.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getMasks(int, java.lang.String,
-     *      java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform,
-                ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet as expressionExperimentSubSet where expressionExperimentSubSet.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getMasks(java.lang.String,
-     *      java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this
-                .getRecipient(
-                        transform,
-                        "from ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet as expressionExperimentSubSet where expressionExperimentSubSet.id = :id",
-                        id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getRecipient(int, java.lang.String,
-     *      java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform,
-                ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getRecipient(java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getRecipient(java.lang.String,
-     *      java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#load(int, java.lang.Long)
      */
     @Override
-    public Object load( final int transform, final java.lang.Long id ) {
+    public ExpressionExperimentSubSet load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSubSet.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) entity );
+        return ( ExpressionExperimentSubSet ) transformEntity( transform,
+                ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) entity );
     }
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#load(java.lang.Long)
      */
     @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
+    public ExpressionExperimentSubSet load( java.lang.Long id ) {
         return ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) this.load( TRANSFORM_NONE, id );
     }
 

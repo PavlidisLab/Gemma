@@ -43,6 +43,11 @@ public class CandidateGeneListServiceImpl extends ubic.gemma.model.genome.gene.C
     User actor = null;
 
     @Override
+    public Collection handleFindAll() {
+        return this.getCandidateGeneListDao().loadAll();
+    }
+
+    @Override
     public Collection handleFindByContributer( Person person ) {
         return this.getCandidateGeneListDao().findByContributer( person );
     }
@@ -60,11 +65,6 @@ public class CandidateGeneListServiceImpl extends ubic.gemma.model.genome.gene.C
     @Override
     public Collection handleFindByListOwner( Person owner ) {
         return this.getCandidateGeneListDao().findByListOwner( owner );
-    }
-
-    @Override
-    public Collection handleFindAll() {
-        return this.getCandidateGeneListDao().loadAll();
     }
 
     @Override

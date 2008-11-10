@@ -30,12 +30,12 @@ public interface GeneProductService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public ubic.gemma.model.genome.gene.GeneProduct create( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
+    public java.lang.Integer countAll();
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.gene.GeneProduct findOrCreate( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
+    public ubic.gemma.model.genome.gene.GeneProduct create( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
     /**
      * 
@@ -45,12 +45,12 @@ public interface GeneProductService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public void update( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
+    public ubic.gemma.model.genome.gene.GeneProduct find( ubic.gemma.model.genome.gene.GeneProduct gProduct );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.gene.GeneProduct load( java.lang.Long id );
+    public ubic.gemma.model.genome.gene.GeneProduct findOrCreate( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
     /**
      * 
@@ -65,12 +65,7 @@ public interface GeneProductService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public ubic.gemma.model.genome.gene.GeneProduct find( ubic.gemma.model.genome.gene.GeneProduct gProduct );
-
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
+    public ubic.gemma.model.genome.gene.GeneProduct load( java.lang.Long id );
 
     /**
      * <p>
@@ -78,5 +73,10 @@ public interface GeneProductService extends ubic.gemma.model.common.AuditableSer
      * </p>
      */
     public java.util.Collection loadMultiple( java.util.Collection ids );
+
+    /**
+     * 
+     */
+    public void update( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
 }

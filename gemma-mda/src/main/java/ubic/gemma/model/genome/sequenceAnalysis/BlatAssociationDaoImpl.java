@@ -42,8 +42,9 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see
+     * ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence
+     * )
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -61,7 +62,6 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoBase#find(ubic.gemma.model.genome.Gene)
      */
     @SuppressWarnings("unchecked")
@@ -109,17 +109,6 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
         }, true );
     }
 
-    private void thawBlatAssociation( org.hibernate.Session session, BlatAssociation blatAssociation ) {
-        session.update( blatAssociation );
-        session.update( blatAssociation.getBioSequence() );
-        session.update( blatAssociation.getGeneProduct() );
-        session.update( blatAssociation.getGeneProduct().getGene() );
-        session.update( blatAssociation.getGeneProduct().getGene().getPhysicalLocation() );
-        blatAssociation.getGeneProduct().getGene().getProducts().size();
-        session.update( blatAssociation.getBioSequence() );
-        blatAssociation.getBioSequence().getSequenceDatabaseEntry();
-    }
-
     @Override
     protected void handleThaw( final Collection blatAssociations ) throws Exception {
         if ( blatAssociations == null ) return;
@@ -136,5 +125,16 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
             }
 
         }, true );
+    }
+
+    private void thawBlatAssociation( org.hibernate.Session session, BlatAssociation blatAssociation ) {
+        session.update( blatAssociation );
+        session.update( blatAssociation.getBioSequence() );
+        session.update( blatAssociation.getGeneProduct() );
+        session.update( blatAssociation.getGeneProduct().getGene() );
+        session.update( blatAssociation.getGeneProduct().getGene().getPhysicalLocation() );
+        blatAssociation.getGeneProduct().getGene().getProducts().size();
+        session.update( blatAssociation.getBioSequence() );
+        blatAssociation.getBioSequence().getSequenceDatabaseEntry();
     }
 }

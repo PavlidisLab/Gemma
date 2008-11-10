@@ -224,7 +224,7 @@ public class CompositeSequenceServiceImpl extends
      * ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+    protected Collection<CompositeSequence> handleLoadMultiple( Collection ids ) throws Exception {
         return this.getCompositeSequenceDao().load( ids );
     }
 

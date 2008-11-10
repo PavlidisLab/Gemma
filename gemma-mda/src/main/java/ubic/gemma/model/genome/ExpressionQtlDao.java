@@ -25,7 +25,7 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.ExpressionQtl
  */
-public interface ExpressionQtlDao extends ubic.gemma.model.genome.QtlDao {
+public interface ExpressionQtlDao extends ubic.gemma.model.genome.BaseQtlDao {
     /**
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.genome.ExpressionQtl)} with an additional flag called

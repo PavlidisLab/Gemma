@@ -36,17 +36,15 @@ public abstract class GeneProductServiceBase extends ubic.gemma.model.common.Aud
     private ubic.gemma.model.genome.gene.GeneProductDao geneProductDao;
 
     /**
-     * Sets the reference to <code>geneProduct</code>'s DAO.
+     * @see ubic.gemma.model.genome.gene.GeneProductService#countAll()
      */
-    public void setGeneProductDao( ubic.gemma.model.genome.gene.GeneProductDao geneProductDao ) {
-        this.geneProductDao = geneProductDao;
-    }
-
-    /**
-     * Gets the reference to <code>geneProduct</code>'s DAO.
-     */
-    protected ubic.gemma.model.genome.gene.GeneProductDao getGeneProductDao() {
-        return this.geneProductDao;
+    public java.lang.Integer countAll() {
+        try {
+            return this.handleCountAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.gene.GeneProductServiceException(
+                    "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.countAll()' --> " + th, th );
+        }
     }
 
     /**
@@ -63,10 +61,30 @@ public abstract class GeneProductServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.genome.gene.GeneProduct)}
+     * @see ubic.gemma.model.genome.gene.GeneProductService#delete(ubic.gemma.model.genome.gene.GeneProduct)
      */
-    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleCreate(
-            ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception;
+    public void delete( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
+        try {
+            this.handleDelete( geneProduct );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.gene.GeneProductServiceException(
+                    "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.delete(ubic.gemma.model.genome.gene.GeneProduct geneProduct)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneProductService#find(ubic.gemma.model.genome.gene.GeneProduct)
+     */
+    public ubic.gemma.model.genome.gene.GeneProduct find( final ubic.gemma.model.genome.gene.GeneProduct gProduct ) {
+        try {
+            return this.handleFind( gProduct );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.gene.GeneProductServiceException(
+                    "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.find(ubic.gemma.model.genome.gene.GeneProduct gProduct)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
@@ -83,69 +101,6 @@ public abstract class GeneProductServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)}
-     */
-    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleFindOrCreate(
-            ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#delete(ubic.gemma.model.genome.gene.GeneProduct)
-     */
-    public void delete( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
-        try {
-            this.handleDelete( geneProduct );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.gene.GeneProductServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.delete(ubic.gemma.model.genome.gene.GeneProduct geneProduct)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #delete(ubic.gemma.model.genome.gene.GeneProduct)}
-     */
-    protected abstract void handleDelete( ubic.gemma.model.genome.gene.GeneProduct geneProduct )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#update(ubic.gemma.model.genome.gene.GeneProduct)
-     */
-    public void update( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
-        try {
-            this.handleUpdate( geneProduct );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.gene.GeneProductServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.update(ubic.gemma.model.genome.gene.GeneProduct geneProduct)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.genome.gene.GeneProduct)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.genome.gene.GeneProduct geneProduct )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#load(java.lang.Long)
-     */
-    public ubic.gemma.model.genome.gene.GeneProduct load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.gene.GeneProductServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#getGenesByName(java.lang.String)
      */
     public java.util.Collection getGenesByName( final java.lang.String search ) {
@@ -157,11 +112,6 @@ public abstract class GeneProductServiceBase extends ubic.gemma.model.common.Aud
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #getGenesByName(java.lang.String)}
-     */
-    protected abstract java.util.Collection handleGetGenesByName( java.lang.String search ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#getGenesByNcbiId(java.lang.String)
@@ -177,46 +127,17 @@ public abstract class GeneProductServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * Performs the core logic for {@link #getGenesByNcbiId(java.lang.String)}
+     * @see ubic.gemma.model.genome.gene.GeneProductService#load(java.lang.Long)
      */
-    protected abstract java.util.Collection handleGetGenesByNcbiId( java.lang.String search )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#find(ubic.gemma.model.genome.gene.GeneProduct)
-     */
-    public ubic.gemma.model.genome.gene.GeneProduct find( final ubic.gemma.model.genome.gene.GeneProduct gProduct ) {
+    public ubic.gemma.model.genome.gene.GeneProduct load( final java.lang.Long id ) {
         try {
-            return this.handleFind( gProduct );
+            return this.handleLoad( id );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.gene.GeneProductServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.find(ubic.gemma.model.genome.gene.GeneProduct gProduct)' --> "
+                    "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.load(java.lang.Long id)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.gene.GeneProduct)}
-     */
-    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleFind(
-            ubic.gemma.model.genome.gene.GeneProduct gProduct ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#countAll()
-     */
-    public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.gene.GeneProductServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.countAll()' --> " + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#loadMultiple(java.util.Collection)
@@ -232,8 +153,87 @@ public abstract class GeneProductServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
+     * Sets the reference to <code>geneProduct</code>'s DAO.
+     */
+    public void setGeneProductDao( ubic.gemma.model.genome.gene.GeneProductDao geneProductDao ) {
+        this.geneProductDao = geneProductDao;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneProductService#update(ubic.gemma.model.genome.gene.GeneProduct)
+     */
+    public void update( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
+        try {
+            this.handleUpdate( geneProduct );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.gene.GeneProductServiceException(
+                    "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.update(ubic.gemma.model.genome.gene.GeneProduct geneProduct)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Gets the reference to <code>geneProduct</code>'s DAO.
+     */
+    protected ubic.gemma.model.genome.gene.GeneProductDao getGeneProductDao() {
+        return this.geneProductDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #countAll()}
+     */
+    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.genome.gene.GeneProduct)}
+     */
+    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleCreate(
+            ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #delete(ubic.gemma.model.genome.gene.GeneProduct)}
+     */
+    protected abstract void handleDelete( ubic.gemma.model.genome.gene.GeneProduct geneProduct )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.genome.gene.GeneProduct)}
+     */
+    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleFind(
+            ubic.gemma.model.genome.gene.GeneProduct gProduct ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)}
+     */
+    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleFindOrCreate(
+            ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getGenesByName(java.lang.String)}
+     */
+    protected abstract java.util.Collection handleGetGenesByName( java.lang.String search ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getGenesByNcbiId(java.lang.String)}
+     */
+    protected abstract java.util.Collection handleGetGenesByNcbiId( java.lang.String search )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleLoad( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
     protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.genome.gene.GeneProduct)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.genome.gene.GeneProduct geneProduct )
+            throws java.lang.Exception;
 
 }

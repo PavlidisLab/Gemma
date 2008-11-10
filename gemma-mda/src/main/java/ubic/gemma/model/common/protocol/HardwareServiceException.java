@@ -35,40 +35,6 @@ public class HardwareServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 4554153119537337218L;
 
     /**
-     * The default constructor for <code>HardwareServiceException</code>.
-     */
-    public HardwareServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>HardwareServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public HardwareServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>HardwareServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public HardwareServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>HardwareServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public HardwareServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class HardwareServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>HardwareServiceException</code>.
+     */
+    public HardwareServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>HardwareServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public HardwareServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>HardwareServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public HardwareServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>HardwareServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public HardwareServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

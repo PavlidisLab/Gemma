@@ -34,128 +34,56 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
 
     private ubic.gemma.model.common.AuditableService auditableService;
 
-    /**
-     * Sets the reference to <code>auditableService</code>.
-     */
-    public void setAuditableService( ubic.gemma.model.common.AuditableService auditableService ) {
-        this.auditableService = auditableService;
-    }
-
-    /**
-     * Gets the reference to <code>auditableService</code>.
-     */
-    protected ubic.gemma.model.common.AuditableService getAuditableService() {
-        return this.auditableService;
-    }
-
     private ubic.gemma.model.common.auditAndSecurity.AuditTrailDao auditTrailDao;
 
-    /**
-     * Sets the reference to <code>auditTrail</code>'s DAO.
-     */
-    public void setAuditTrailDao( ubic.gemma.model.common.auditAndSecurity.AuditTrailDao auditTrailDao ) {
-        this.auditTrailDao = auditTrailDao;
-    }
-
-    /**
-     * Gets the reference to <code>auditTrail</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.auditAndSecurity.AuditTrailDao getAuditTrailDao() {
-        return this.auditTrailDao;
-    }
-
     private ubic.gemma.model.common.auditAndSecurity.UserDao userDao;
-
-    /**
-     * Sets the reference to <code>user</code>'s DAO.
-     */
-    public void setUserDao( ubic.gemma.model.common.auditAndSecurity.UserDao userDao ) {
-        this.userDao = userDao;
-    }
-
-    /**
-     * Gets the reference to <code>user</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.auditAndSecurity.UserDao getUserDao() {
-        return this.userDao;
-    }
 
     private ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao;
 
     /**
-     * Sets the reference to <code>auditEvent</code>'s DAO.
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addComment(ubic.gemma.model.common.Auditable,
+     *      java.lang.String, java.lang.String)
      */
-    public void setAuditEventDao( ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao ) {
-        this.auditEventDao = auditEventDao;
-    }
-
-    /**
-     * Gets the reference to <code>auditEvent</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.auditAndSecurity.AuditEventDao getAuditEventDao() {
-        return this.auditEventDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#audit(ubic.gemma.model.common.Auditable,
-     *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
-    public void audit( final ubic.gemma.model.common.Auditable entity,
-            final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
+    public void addComment( final ubic.gemma.model.common.Auditable auditable, final java.lang.String comment,
+            final java.lang.String detail ) {
         try {
-            this.handleAudit( entity, auditEvent );
+            this.handleAddComment( auditable, comment, detail );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.audit(ubic.gemma.model.common.Auditable entity, ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent)' --> "
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.addComment(ubic.gemma.model.common.Auditable auditable, java.lang.String comment, java.lang.String detail)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for
-     * {@link #audit(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.AuditEvent)}
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addOkFlag(ubic.gemma.model.common.Auditable,
+     *      java.lang.String, java.lang.String)
      */
-    protected abstract void handleAudit( ubic.gemma.model.common.Auditable entity,
-            ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#create(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    public ubic.gemma.model.common.auditAndSecurity.AuditTrail create(
-            final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+    public void addOkFlag( final ubic.gemma.model.common.Auditable auditable, final java.lang.String comment,
+            final java.lang.String detail ) {
         try {
-            return this.handleCreate( auditTrail );
+            this.handleAddOkFlag( auditable, comment, detail );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.create(ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail)' --> "
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.addOkFlag(ubic.gemma.model.common.Auditable auditable, java.lang.String comment, java.lang.String detail)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.common.auditAndSecurity.AuditTrail)}
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addTroubleFlag(ubic.gemma.model.common.Auditable,
+     *      java.lang.String, java.lang.String)
      */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditTrail handleCreate(
-            ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    public void thaw( final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+    public void addTroubleFlag( final ubic.gemma.model.common.Auditable auditable, final java.lang.String comment,
+            final java.lang.String detail ) {
         try {
-            this.handleThaw( auditTrail );
+            this.handleAddTroubleFlag( auditable, comment, detail );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail)' --> "
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.addTroubleFlag(ubic.gemma.model.common.Auditable auditable, java.lang.String comment, java.lang.String detail)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
@@ -171,12 +99,6 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #addUpdateEvent(ubic.gemma.model.common.Auditable, java.lang.String)}
-     */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleAddUpdateEvent(
-            ubic.gemma.model.common.Auditable auditable, java.lang.String note ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
@@ -196,161 +118,6 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
     }
 
     /**
-     * Performs the core logic for
-     * {@link #addUpdateEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType, java.lang.String)}
-     */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleAddUpdateEvent(
-            ubic.gemma.model.common.Auditable auditable,
-            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType auditEventType, java.lang.String note )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#thaw(ubic.gemma.model.common.Auditable)
-     */
-    public void thaw( final ubic.gemma.model.common.Auditable auditable ) {
-        try {
-            this.handleThaw( auditable );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.thaw(ubic.gemma.model.common.Auditable auditable)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.Auditable)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addComment(ubic.gemma.model.common.Auditable,
-     *      java.lang.String, java.lang.String)
-     */
-    public void addComment( final ubic.gemma.model.common.Auditable auditable, final java.lang.String comment,
-            final java.lang.String detail ) {
-        try {
-            this.handleAddComment( auditable, comment, detail );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.addComment(ubic.gemma.model.common.Auditable auditable, java.lang.String comment, java.lang.String detail)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #addComment(ubic.gemma.model.common.Auditable, java.lang.String, java.lang.String)}
-     */
-    protected abstract void handleAddComment( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
-            java.lang.String detail ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addTroubleFlag(ubic.gemma.model.common.Auditable,
-     *      java.lang.String, java.lang.String)
-     */
-    public void addTroubleFlag( final ubic.gemma.model.common.Auditable auditable, final java.lang.String comment,
-            final java.lang.String detail ) {
-        try {
-            this.handleAddTroubleFlag( auditable, comment, detail );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.addTroubleFlag(ubic.gemma.model.common.Auditable auditable, java.lang.String comment, java.lang.String detail)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #addTroubleFlag(ubic.gemma.model.common.Auditable, java.lang.String, java.lang.String)}
-     */
-    protected abstract void handleAddTroubleFlag( ubic.gemma.model.common.Auditable auditable,
-            java.lang.String comment, java.lang.String detail ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addOkFlag(ubic.gemma.model.common.Auditable,
-     *      java.lang.String, java.lang.String)
-     */
-    public void addOkFlag( final ubic.gemma.model.common.Auditable auditable, final java.lang.String comment,
-            final java.lang.String detail ) {
-        try {
-            this.handleAddOkFlag( auditable, comment, detail );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.addOkFlag(ubic.gemma.model.common.Auditable auditable, java.lang.String comment, java.lang.String detail)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #addOkFlag(ubic.gemma.model.common.Auditable, java.lang.String, java.lang.String)}
-     */
-    protected abstract void handleAddOkFlag( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
-            java.lang.String detail ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addValidatedFlag(ubic.gemma.model.common.Auditable,
-     *      java.lang.String, java.lang.String)
-     */
-    public void addValidatedFlag( final ubic.gemma.model.common.Auditable auditable, final java.lang.String comment,
-            final java.lang.String detail ) {
-        try {
-            this.handleAddValidatedFlag( auditable, comment, detail );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.addValidatedFlag(ubic.gemma.model.common.Auditable auditable, java.lang.String comment, java.lang.String detail)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #addValidatedFlag(ubic.gemma.model.common.Auditable, java.lang.String, java.lang.String)}
-     */
-    protected abstract void handleAddValidatedFlag( ubic.gemma.model.common.Auditable auditable,
-            java.lang.String comment, java.lang.String detail ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastTroubleEvent(ubic.gemma.model.common.Auditable)
-     */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastTroubleEvent(
-            final ubic.gemma.model.common.Auditable auditable ) {
-        try {
-            return this.handleGetLastTroubleEvent( auditable );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.getLastTroubleEvent(ubic.gemma.model.common.Auditable auditable)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getLastTroubleEvent(ubic.gemma.model.common.Auditable)}
-     */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastTroubleEvent(
-            ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastValidationEvent(ubic.gemma.model.common.Auditable)
-     */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastValidationEvent(
-            final ubic.gemma.model.common.Auditable auditable ) {
-        try {
-            return this.handleGetLastValidationEvent( auditable );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.getLastValidationEvent(ubic.gemma.model.common.Auditable auditable)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getLastValidationEvent(ubic.gemma.model.common.Auditable)}
-     */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastValidationEvent(
-            ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
      *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType, java.lang.String, java.lang.String)
      */
@@ -368,49 +135,150 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
     }
 
     /**
-     * Performs the core logic for
-     * {@link #addUpdateEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType, java.lang.String, java.lang.String)}
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addValidatedFlag(ubic.gemma.model.common.Auditable,
+     *      java.lang.String, java.lang.String)
      */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleAddUpdateEvent(
-            ubic.gemma.model.common.Auditable auditable,
-            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType auditEventType, java.lang.String note,
-            java.lang.String detail ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public void addValidatedFlag( final ubic.gemma.model.common.Auditable auditable, final java.lang.String comment,
+            final java.lang.String detail ) {
+        try {
+            this.handleAddValidatedFlag( auditable, comment, detail );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.addValidatedFlag(ubic.gemma.model.common.Auditable auditable, java.lang.String comment, java.lang.String detail)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message source available to this service.
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#audit(ubic.gemma.model.common.Auditable,
+     *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    public void audit( final ubic.gemma.model.common.Auditable entity,
+            final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
+        try {
+            this.handleAudit( entity, auditEvent );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.audit(ubic.gemma.model.common.Auditable entity, ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#create(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
      */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
+    public ubic.gemma.model.common.auditAndSecurity.AuditTrail create(
+            final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+        try {
+            return this.handleCreate( auditTrail );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.create(ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastTroubleEvent(ubic.gemma.model.common.Auditable)
      */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastTroubleEvent(
+            final ubic.gemma.model.common.Auditable auditable ) {
+        try {
+            return this.handleGetLastTroubleEvent( auditable );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.getLastTroubleEvent(ubic.gemma.model.common.Auditable auditable)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastValidationEvent(ubic.gemma.model.common.Auditable)
+     */
+    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastValidationEvent(
+            final ubic.gemma.model.common.Auditable auditable ) {
+        try {
+            return this.handleGetLastValidationEvent( auditable );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.getLastValidationEvent(ubic.gemma.model.common.Auditable auditable)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>auditableService</code>.
+     */
+    public void setAuditableService( ubic.gemma.model.common.AuditableService auditableService ) {
+        this.auditableService = auditableService;
+    }
+
+    /**
+     * Sets the reference to <code>auditEvent</code>'s DAO.
+     */
+    public void setAuditEventDao( ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao ) {
+        this.auditEventDao = auditEventDao;
+    }
+
+    /**
+     * Sets the reference to <code>auditTrail</code>'s DAO.
+     */
+    public void setAuditTrailDao( ubic.gemma.model.common.auditAndSecurity.AuditTrailDao auditTrailDao ) {
+        this.auditTrailDao = auditTrailDao;
+    }
+
+    /**
+     * Sets the reference to <code>user</code>'s DAO.
+     */
+    public void setUserDao( ubic.gemma.model.common.auditAndSecurity.UserDao userDao ) {
+        this.userDao = userDao;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#thaw(ubic.gemma.model.common.Auditable)
+     */
+    public void thaw( final ubic.gemma.model.common.Auditable auditable ) {
+        try {
+            this.handleThaw( auditable );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.thaw(ubic.gemma.model.common.Auditable auditable)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
+     */
+    public void thaw( final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+        try {
+            this.handleThaw( auditTrail );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Gets the reference to <code>auditableService</code>.
+     */
+    protected ubic.gemma.model.common.AuditableService getAuditableService() {
+        return this.auditableService;
+    }
+
+    /**
+     * Gets the reference to <code>auditEvent</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.auditAndSecurity.AuditEventDao getAuditEventDao() {
+        return this.auditEventDao;
+    }
+
+    /**
+     * Gets the reference to <code>auditTrail</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.auditAndSecurity.AuditTrailDao getAuditTrailDao() {
+        return this.auditTrailDao;
     }
 
     /**
@@ -425,5 +293,136 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Gets the reference to <code>user</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.auditAndSecurity.UserDao getUserDao() {
+        return this.userDao;
+    }
+
+    /**
+     * Performs the core logic for
+     * {@link #addComment(ubic.gemma.model.common.Auditable, java.lang.String, java.lang.String)}
+     */
+    protected abstract void handleAddComment( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
+            java.lang.String detail ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #addOkFlag(ubic.gemma.model.common.Auditable, java.lang.String, java.lang.String)}
+     */
+    protected abstract void handleAddOkFlag( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
+            java.lang.String detail ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #addTroubleFlag(ubic.gemma.model.common.Auditable, java.lang.String, java.lang.String)}
+     */
+    protected abstract void handleAddTroubleFlag( ubic.gemma.model.common.Auditable auditable,
+            java.lang.String comment, java.lang.String detail ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #addUpdateEvent(ubic.gemma.model.common.Auditable, java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleAddUpdateEvent(
+            ubic.gemma.model.common.Auditable auditable, java.lang.String note ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #addUpdateEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType, java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleAddUpdateEvent(
+            ubic.gemma.model.common.Auditable auditable,
+            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType auditEventType, java.lang.String note )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #addUpdateEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType, java.lang.String, java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleAddUpdateEvent(
+            ubic.gemma.model.common.Auditable auditable,
+            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType auditEventType, java.lang.String note,
+            java.lang.String detail ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #addValidatedFlag(ubic.gemma.model.common.Auditable, java.lang.String, java.lang.String)}
+     */
+    protected abstract void handleAddValidatedFlag( ubic.gemma.model.common.Auditable auditable,
+            java.lang.String comment, java.lang.String detail ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #audit(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.AuditEvent)}
+     */
+    protected abstract void handleAudit( ubic.gemma.model.common.Auditable entity,
+            ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.common.auditAndSecurity.AuditTrail)}
+     */
+    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditTrail handleCreate(
+            ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getLastTroubleEvent(ubic.gemma.model.common.Auditable)}
+     */
+    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastTroubleEvent(
+            ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getLastValidationEvent(ubic.gemma.model.common.Auditable)}
+     */
+    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastValidationEvent(
+            ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.Auditable)}
+     */
+    protected abstract void handleThaw( ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)}
+     */
+    protected abstract void handleThaw( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail )
+            throws java.lang.Exception;
 
 }

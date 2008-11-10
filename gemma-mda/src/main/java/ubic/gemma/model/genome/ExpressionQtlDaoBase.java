@@ -30,13 +30,13 @@ package ubic.gemma.model.genome;
  * 
  * @see ubic.gemma.model.genome.ExpressionQtl
  */
-public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDaoImpl implements
-        ubic.gemma.model.genome.ExpressionQtlDao {
+public abstract class ExpressionQtlDaoBase extends BaseQtlDaoImpl<ExpressionQtl> implements
+        ubic.gemma.model.genome.BaseQtlDao<ExpressionQtl> {
 
     /**
      * @see ubic.gemma.model.genome.ExpressionQtlDao#create(int, java.util.Collection)
      */
-    @Override
+
     public java.util.Collection create( final int transform, final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionQtl.create - 'entities' can not be null" );
@@ -66,7 +66,7 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
     /**
      * @see ubic.gemma.model.genome.ExpressionQtlDao#create(java.util.Collection)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
@@ -75,7 +75,7 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
     /**
      * @see ubic.gemma.model.genome.ExpressionQtlDao#create(ubic.gemma.model.genome.ExpressionQtl)
      */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.ExpressionQtl expressionQtl ) {
+    public ExpressionQtl create( ubic.gemma.model.genome.ExpressionQtl expressionQtl ) {
         return ( ubic.gemma.model.genome.ExpressionQtl ) this.create( TRANSFORM_NONE, expressionQtl );
     }
 
@@ -83,7 +83,7 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
      * @see ubic.gemma.model.genome.ExpressionQtlDao#findByPhysicalMarkers(int, java.lang.String,
      *      ubic.gemma.model.genome.PhysicalMarker, ubic.gemma.model.genome.PhysicalMarker)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalMarkers( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalMarker startMarker,
@@ -104,7 +104,7 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
      * @see ubic.gemma.model.genome.ExpressionQtlDao#findByPhysicalMarkers(int, ubic.gemma.model.genome.PhysicalMarker,
      *      ubic.gemma.model.genome.PhysicalMarker)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalMarkers( final int transform,
             final ubic.gemma.model.genome.PhysicalMarker startMarker,
@@ -120,7 +120,7 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
      * @see ubic.gemma.model.genome.ExpressionQtlDao#findByPhysicalMarkers(java.lang.String,
      *      ubic.gemma.model.genome.PhysicalMarker, ubic.gemma.model.genome.PhysicalMarker)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalMarkers( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalMarker startMarker,
@@ -132,244 +132,16 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
      * @see ubic.gemma.model.genome.ExpressionQtlDao#findByPhysicalMarkers(ubic.gemma.model.genome.PhysicalMarker,
      *      ubic.gemma.model.genome.PhysicalMarker)
      */
-    @Override
+
     public java.util.Collection findByPhysicalMarkers( ubic.gemma.model.genome.PhysicalMarker startMarker,
             ubic.gemma.model.genome.PhysicalMarker endMarker ) {
         return this.findByPhysicalMarkers( TRANSFORM_NONE, startMarker, endMarker );
     }
 
     /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.ExpressionQtl ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getAclObjectIdentityId(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.genome.ExpressionQtl as expressionQtl where expressionQtl.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getMask(int, java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.ExpressionQtl ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.genome.ExpressionQtl as expressionQtl where expressionQtl.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getMask(java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.ExpressionQtl ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.genome.ExpressionQtl as expressionQtl where expressionQtl.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this.getRecipient( transform,
-                "from ubic.gemma.model.genome.ExpressionQtl as expressionQtl where expressionQtl.id = :id", id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getRecipient(int, java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.ExpressionQtl ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getRecipient(java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.ExpressionQtlDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.ExpressionQtlDao#load(int, java.lang.Long)
      */
-    @Override
+
     public Object load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionQtl.load - 'id' can not be null" );
@@ -381,15 +153,15 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
     /**
      * @see ubic.gemma.model.genome.ExpressionQtlDao#load(java.lang.Long)
      */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
+
+    public ExpressionQtl load( java.lang.Long id ) {
         return ( ubic.gemma.model.genome.ExpressionQtl ) this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.genome.ExpressionQtlDao#loadAll()
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
@@ -398,7 +170,7 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
     /**
      * @see ubic.gemma.model.genome.ExpressionQtlDao#loadAll(int)
      */
-    @Override
+
     public java.util.Collection loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.ExpressionQtlImpl.class );
@@ -409,7 +181,7 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
     /**
      * @see ubic.gemma.model.genome.ExpressionQtlDao#remove(java.lang.Long)
      */
-    @Override
+
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionQtl.remove - 'id' can not be null" );
@@ -423,7 +195,7 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    @Override
+
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionQtl.remove - 'entities' can not be null" );
@@ -444,7 +216,7 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    @Override
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionQtl.update - 'entities' can not be null" );
@@ -467,50 +239,6 @@ public abstract class ExpressionQtlDaoBase extends ubic.gemma.model.genome.QtlDa
             throw new IllegalArgumentException( "ExpressionQtl.update - 'expressionQtl' can not be null" );
         }
         this.getHibernateTemplate().update( expressionQtl );
-    }
-
-    /**
-     * Transforms a collection of entities using the {@link #transformEntity(int,ubic.gemma.model.genome.ExpressionQtl)}
-     * method. This method does not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.ExpressionQtlDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.ExpressionQtl)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.genome.ExpressionQtlDao</code>, please note that the {@link #TRANSFORM_NONE} constant
-     * denotes no transformation, so the entity itself will be returned. If the integer argument value is unknown
-     * {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in {@link ubic.gemma.model.genome.ExpressionQtlDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    protected Object transformEntity( final int transform, final ubic.gemma.model.genome.ExpressionQtl entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
     }
 
 }

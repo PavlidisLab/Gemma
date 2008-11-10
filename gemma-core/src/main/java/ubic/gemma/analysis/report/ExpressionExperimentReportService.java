@@ -177,7 +177,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 AuditEvent event = linkAnalysisEvents.get( id );
                 if ( event != null ) {
                     eeVo.setDateLinkAnalysis( event.getDate() );
-                    eeVo.setLinkAnalysisEventType( event.getEventType() );
+                    eeVo.setLinkAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
 
@@ -185,7 +185,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 AuditEvent event = missingValueAnalysisEvents.get( id );
                 if ( event != null ) {
                     eeVo.setDateMissingValueAnalysis( ( event.getDate() ) );
-                    eeVo.setMissingValueAnalysisEventType( event.getEventType() );
+                    eeVo.setMissingValueAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
 
@@ -193,7 +193,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 AuditEvent event = rankComputationEvents.get( id );
                 if ( event != null ) {
                     eeVo.setDateProcessedDataVectorComputation( event.getDate() );
-                    eeVo.setProcessedDataVectorComputationEventType( event.getEventType() );
+                    eeVo.setProcessedDataVectorComputationEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
 
@@ -208,7 +208,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 AuditEvent event = differentialAnalysisEvents.get( id );
                 if ( event != null ) {
                     eeVo.setDateDifferentialAnalysis( event.getDate() );
-                    eeVo.setDifferentialAnalysisEventType( event.getEventType() );
+                    eeVo.setDifferentialAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
 

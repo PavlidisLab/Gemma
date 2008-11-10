@@ -26,10 +26,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
-
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -171,11 +167,11 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         String style = "";
         if ( dateObject != null ) {
             boolean mostRecent = determineIfMostRecent( dateObject, object );
-            AuditEventType type = object.getLinkAnalysisEventType();
+            String type = object.getLinkAnalysisEventType();
 
-            if ( type instanceof FailedLinkAnalysisEvent ) {
+            if ( type.equals( "FailedLinkAnalysisEventImpl" ) ) {
                 style = "style=\"color:#F33;\" title='There was an error during analysis'";
-            } else if ( type instanceof TooSmallDatasetLinkAnalysisEvent ) {
+            } else if ( type.equals( "TooSmallDatasetLinkAnalysisEventImpl" ) ) {
                 style = "style=\"font-style:italic;\" title='This dataset may be too small to analyze'";
                 return "<span " + style + "'>small</span>";
             }

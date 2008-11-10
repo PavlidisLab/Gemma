@@ -25,9 +25,9 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.model.common.Securable;
 
@@ -41,9 +41,8 @@ public class UserGroupServiceImpl extends ubic.gemma.model.common.auditAndSecuri
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupServiceBase#handleCreate(java.lang.String,
-     *      java.lang.String)
+     * java.lang.String)
      */
     @Override
     protected Securable handleCreate( String name, String description ) throws Exception {
@@ -69,9 +68,8 @@ public class UserGroupServiceImpl extends ubic.gemma.model.common.auditAndSecuri
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupServiceBase#handleUpdate(java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.User)
+     * ubic.gemma.model.common.auditAndSecurity.User)
      */
     @Override
     protected void handleUpdate( String groupName, User groupMember ) throws Exception {

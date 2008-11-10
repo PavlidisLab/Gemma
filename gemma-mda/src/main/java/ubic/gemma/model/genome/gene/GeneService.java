@@ -39,7 +39,180 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public void update( ubic.gemma.model.genome.Gene gene );
+    public java.lang.Integer countAll();
+
+    /**
+     * 
+     */
+    public java.util.Collection<Gene> create( java.util.Collection<Gene> genes );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Gene create( ubic.gemma.model.genome.Gene gene );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Gene find( ubic.gemma.model.genome.Gene gene );
+
+    /**
+     * 
+     */
+    public java.util.Collection findAllQtlsByPhysicalMapLocation(
+            ubic.gemma.model.genome.PhysicalLocation physicalMapLocation );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Gene findByAccession( java.lang.String accession,
+            ubic.gemma.model.common.description.ExternalDatabase source );
+
+    /**
+     * 
+     */
+    public java.util.Collection<Gene> findByAlias( java.lang.String search );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Gene findByNCBIId( java.lang.String accession );
+
+    /**
+     * 
+     */
+    public java.util.Collection<Gene> findByOfficialName( java.lang.String officialName );
+
+    /**
+     * 
+     */
+    public java.util.Collection<Gene> findByOfficialSymbol( java.lang.String officialSymbol );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Gene findByOfficialSymbol( java.lang.String symbol,
+            ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * 
+     */
+    public java.util.Collection<Gene> findByOfficialSymbolInexact( java.lang.String officialSymbol );
+
+    /**
+     * Find the gene(s) nearest to the location.
+     * 
+     * @param physicalLocation
+     * @return
+     */
+    public Collection<Gene> findNearest( PhysicalLocation physicalLocation );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
+
+    /**
+     * <p>
+     * Function to get coexpressed genes given a gene and a collection of expressionExperiments. Returns the value
+     * object:: CoexpressionCollectionValueObject
+     * </p>
+     */
+    public java.lang.Object getCoexpressedGenes( ubic.gemma.model.genome.Gene gene, java.util.Collection ees,
+            java.lang.Integer stringency, boolean knownGenesOnly );
+
+    /**
+     * <p>
+     * Returns a Collection of Genes. Not ProbeAlignedRegions, Not PredictedGenes, just straight up known genes that
+     * didn't have any specificty problems (ie all the probes were clean).
+     * </p>
+     */
+    public java.util.Collection<Gene> getCoexpressedKnownGenes( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<ExpressionExperiment> ees, java.lang.Integer stringency );
+
+    /**
+     * 
+     */
+    public long getCompositeSequenceCountById( java.lang.Long id );
+
+    /**
+     * <p>
+     * Returns a list of compositeSequences associated with the given gene and array design
+     * </p>
+     */
+    public java.util.Collection<CompositeSequence> getCompositeSequences( ubic.gemma.model.genome.Gene gene,
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+
+    /**
+     * Return probes for a gene id.
+     */
+    public java.util.Collection<CompositeSequence> getCompositeSequencesById( java.lang.Long id );
+
+    /**
+     * <p>
+     * Gets all the genes for a given taxon
+     * </p>
+     */
+    public java.util.Collection<Gene> getGenesByTaxon( ubic.gemma.model.genome.Taxon taxon );
+
+    // /**
+    // *
+    // */
+    // public java.util.Map getCompositeSequenceMap( java.util.Collection genes );
+
+    /**
+     * <p>
+     * Gets all the microRNA for a given taxon. Note query could be slow or inexact due to use of wild card searching of
+     * the genes description
+     * </p>
+     */
+    public java.util.Collection getMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * <p>
+     * Returns a CoexpressionCollection similar to getCoexpressedGenes() but for multiple input genes.
+     * </p>
+     */
+    public java.lang.Object getMultipleCoexpressionResults( java.util.Collection<Gene> genes,
+            java.util.Collection<ExpressionExperiment> ees, java.lang.Integer stringency );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Gene load( long id );
+
+    /**
+     * 
+     */
+    public java.util.Collection<Gene> loadAll();
+
+    /**
+     * <p>
+     * Returns a collection of geneImpls for the specified taxon. Ie not probe aligned regions and predicted genes
+     * </p>
+     */
+    public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * <p>
+     * load all genes specified by the given ids.
+     * </p>
+     */
+    public java.util.Collection<Gene> loadMultiple( java.util.Collection<Long> ids );
+
+    /**
+     * <p>
+     * Returns a collection of Predicted Genes for the specified taxon
+     * </p>
+     */
+    public java.util.Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * <p>
+     * Returns a collection of all ProbeAlignedRegion's for the specfied taxon
+     * </p>
+     */
+    public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * 
@@ -54,166 +227,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public java.util.Collection<Gene> findByOfficialName( java.lang.String officialName );
-
-    /**
-     * 
-     */
-    public java.util.Collection findAllQtlsByPhysicalMapLocation(
-            ubic.gemma.model.genome.PhysicalLocation physicalMapLocation );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> findByOfficialSymbol( java.lang.String officialSymbol );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( java.lang.String officialSymbol );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> loadAll();
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Gene create( ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> create( java.util.Collection<Gene> genes );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Gene load( long id );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> findByAlias( java.lang.String search );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Gene find( ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * <p>
-     * Function to get coexpressed genes given a gene and a collection of expressionExperiments. Returns the value
-     * object:: CoexpressionCollectionValueObject
-     * </p>
-     */
-    public java.lang.Object getCoexpressedGenes( ubic.gemma.model.genome.Gene gene, java.util.Collection ees,
-            java.lang.Integer stringency, boolean knownGenesOnly );
-
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
-
-    /**
-     * <p>
-     * Gets all the genes for a given taxon
-     * </p>
-     */
-    public java.util.Collection<Gene> getGenesByTaxon( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * <p>
-     * load all genes specified by the given ids.
-     * </p>
-     */
-    public java.util.Collection<Gene> loadMultiple( java.util.Collection<Long> ids );
-
-    /**
-     * <p>
-     * Gets all the microRNA for a given taxon. Note query could be slow or inexact due to use of wild card searching of
-     * the genes description
-     * </p>
-     */
-    public java.util.Collection getMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * <p>
-     * Returns a list of compositeSequences associated with the given gene and array design
-     * </p>
-     */
-    public java.util.Collection<CompositeSequence> getCompositeSequences( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    // /**
-    // *
-    // */
-    // public java.util.Map getCompositeSequenceMap( java.util.Collection genes );
-
-    /**
-     * 
-     */
-    public long getCompositeSequenceCountById( java.lang.Long id );
-
-    /**
-     * Return probes for a gene id.
-     */
-    public java.util.Collection<CompositeSequence> getCompositeSequencesById( java.lang.Long id );
-
-    /**
-     * <p>
-     * Returns a CoexpressionCollection similar to getCoexpressedGenes() but for multiple input genes.
-     * </p>
-     */
-    public java.lang.Object getMultipleCoexpressionResults( java.util.Collection<Gene> genes,
-            java.util.Collection<ExpressionExperiment> ees, java.lang.Integer stringency );
-
-    /**
-     * <p>
-     * Returns a collection of all ProbeAlignedRegion's for the specfied taxon
-     * </p>
-     */
-    public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * <p>
-     * Returns a collection of geneImpls for the specified taxon. Ie not probe aligned regions and predicted genes
-     * </p>
-     */
-    public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * <p>
-     * Returns a collection of Predicted Genes for the specified taxon
-     * </p>
-     */
-    public java.util.Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * <p>
-     * Returns a Collection of Genes. Not ProbeAlignedRegions, Not PredictedGenes, just straight up known genes that
-     * didn't have any specificty problems (ie all the probes were clean).
-     * </p>
-     */
-    public java.util.Collection<Gene> getCoexpressedKnownGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<ExpressionExperiment> ees, java.lang.Integer stringency );
-
-    /**
-     * 
-     */
     public void thaw( ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Gene findByOfficialSymbol( java.lang.String symbol,
-            ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * 
@@ -221,22 +235,8 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     public void thawLite( java.util.Collection<Gene> genes );
 
     /**
-     * Find the gene(s) nearest to the location.
-     * 
-     * @param physicalLocation
-     * @return
-     */
-    public Collection<Gene> findNearest( PhysicalLocation physicalLocation );
-
-    /**
      * 
      */
-    public ubic.gemma.model.genome.Gene findByAccession( java.lang.String accession,
-            ubic.gemma.model.common.description.ExternalDatabase source );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Gene findByNCBIId( java.lang.String accession );
+    public void update( ubic.gemma.model.genome.Gene gene );
 
 }

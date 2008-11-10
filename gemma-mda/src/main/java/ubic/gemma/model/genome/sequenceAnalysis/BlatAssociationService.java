@@ -46,12 +46,12 @@ public interface BlatAssociationService {
     /**
      * 
      */
-    public void thaw( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );
+    public void thaw( java.util.Collection blatAssociations );
 
     /**
      * 
      */
-    public void thaw( java.util.Collection blatAssociations );
+    public void thaw( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );
 
     /**
      * 

@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.common.description;
 
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -30,56 +32,25 @@ package ubic.gemma.model.common.description;
  * 
  * @see ubic.gemma.model.common.description.ExternalDatabase
  */
-public abstract class ExternalDatabaseDaoBase extends ubic.gemma.model.common.AuditableDaoImpl implements
+public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.common.description.ExternalDatabaseDao {
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#load(int, java.lang.Long)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#create(int, java.util.Collection)
      */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ExternalDatabase.load - 'id' can not be null" );
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ExternalDatabase.create - 'entities' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.common.description.ExternalDatabaseImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.description.ExternalDatabaseImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#create(ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    public ubic.gemma.model.common.Securable create(
-            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.create( TRANSFORM_NONE, externalDatabase );
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
     }
 
     /**
@@ -104,102 +75,70 @@ public abstract class ExternalDatabaseDaoBase extends ubic.gemma.model.common.Au
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#create(int, java.util.Collection)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#create(ubic.gemma.model.common.description.ExternalDatabase)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ExternalDatabase.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
+    public ExternalDatabase create(
+            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.create( TRANSFORM_NONE, externalDatabase );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#update(ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    public void update( ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        if ( externalDatabase == null ) {
-            throw new IllegalArgumentException( "ExternalDatabase.update - 'externalDatabase' can not be null" );
-        }
-        this.getHibernateTemplate().update( externalDatabase );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ExternalDatabase.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.description.ExternalDatabase ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#remove(ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    public void remove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        if ( externalDatabase == null ) {
-            throw new IllegalArgumentException( "ExternalDatabase.remove - 'externalDatabase' can not be null" );
-        }
-        this.getHibernateTemplate().delete( externalDatabase );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ExternalDatabase.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.common.description.ExternalDatabase entity = ( ubic.gemma.model.common.description.ExternalDatabase ) this
-                .load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ExternalDatabase.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findByLocalDbInstallName(java.lang.String)
-     */
-    public java.util.Collection findByLocalDbInstallName( java.lang.String localInstallDBName ) {
-        return this.findByLocalDbInstallName( TRANSFORM_NONE, localInstallDBName );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findByLocalDbInstallName(java.lang.String,
-     *      java.lang.String)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(int, java.lang.String,
+     *      ubic.gemma.model.common.description.ExternalDatabase)
      */
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByLocalDbInstallName( final java.lang.String queryString,
-            final java.lang.String localInstallDBName ) {
-        return this.findByLocalDbInstallName( TRANSFORM_NONE, queryString, localInstallDBName );
+    public Object find( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( externalDatabase );
+        argNames.add( "externalDatabase" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'ubic.gemma.model.common.description.ExternalDatabase"
+                                + "' was found when executing query --> '" + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(int,
+     *      ubic.gemma.model.common.description.ExternalDatabase)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object find( final int transform, final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+        return this
+                .find(
+                        transform,
+                        "from DatabaseEntryImpl where accession=databaseEntry.accession and externalDatabase=databaseEntry.externalDatabase",
+                        externalDatabase );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(java.lang.String,
+     *      ubic.gemma.model.common.description.ExternalDatabase)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public ubic.gemma.model.common.description.ExternalDatabase find( final java.lang.String queryString,
+            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.find( TRANSFORM_NONE, queryString,
+                externalDatabase );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(ubic.gemma.model.common.description.ExternalDatabase)
+     */
+    public ubic.gemma.model.common.description.ExternalDatabase find(
+            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.find( TRANSFORM_NONE, externalDatabase );
     }
 
     /**
@@ -232,20 +171,20 @@ public abstract class ExternalDatabaseDaoBase extends ubic.gemma.model.common.Au
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findByName(java.lang.String)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findByLocalDbInstallName(java.lang.String)
      */
-    public ubic.gemma.model.common.description.ExternalDatabase findByName( java.lang.String name ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findByName( TRANSFORM_NONE, name );
+    public java.util.Collection findByLocalDbInstallName( java.lang.String localInstallDBName ) {
+        return this.findByLocalDbInstallName( TRANSFORM_NONE, localInstallDBName );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findByName(java.lang.String, java.lang.String)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findByLocalDbInstallName(java.lang.String,
+     *      java.lang.String)
      */
     @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.description.ExternalDatabase findByName( final java.lang.String queryString,
-            final java.lang.String name ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findByName( TRANSFORM_NONE, queryString,
-                name );
+    public java.util.Collection findByLocalDbInstallName( final java.lang.String queryString,
+            final java.lang.String localInstallDBName ) {
+        return this.findByLocalDbInstallName( TRANSFORM_NONE, queryString, localInstallDBName );
     }
 
     /**
@@ -282,96 +221,20 @@ public abstract class ExternalDatabaseDaoBase extends ubic.gemma.model.common.Au
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(ubic.gemma.model.common.description.ExternalDatabase)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findByName(java.lang.String)
      */
-    public ubic.gemma.model.common.description.ExternalDatabase find(
-            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.find( TRANSFORM_NONE, externalDatabase );
+    public ubic.gemma.model.common.description.ExternalDatabase findByName( java.lang.String name ) {
+        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findByName( TRANSFORM_NONE, name );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(java.lang.String,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findByName(java.lang.String, java.lang.String)
      */
     @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.description.ExternalDatabase find( final java.lang.String queryString,
-            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.find( TRANSFORM_NONE, queryString,
-                externalDatabase );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(int,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return this
-                .find(
-                        transform,
-                        "from DatabaseEntryImpl where accession=databaseEntry.accession and externalDatabase=databaseEntry.externalDatabase",
-                        externalDatabase );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(int, java.lang.String,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( externalDatabase );
-        argNames.add( "externalDatabase" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.description.ExternalDatabase"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findOrCreate(ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    public ubic.gemma.model.common.description.ExternalDatabase findOrCreate(
-            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findOrCreate( TRANSFORM_NONE,
-                externalDatabase );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.description.ExternalDatabase findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findOrCreate( TRANSFORM_NONE, queryString,
-                externalDatabase );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findOrCreate(int,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform,
-            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return this
-                .findOrCreate(
-                        transform,
-                        "from ubic.gemma.model.common.description.ExternalDatabase as externalDatabase where externalDatabase.externalDatabase = :externalDatabase",
-                        externalDatabase );
+    public ubic.gemma.model.common.description.ExternalDatabase findByName( final java.lang.String queryString,
+            final java.lang.String name ) {
+        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findByName( TRANSFORM_NONE, queryString,
+                name );
     }
 
     /**
@@ -402,238 +265,164 @@ public abstract class ExternalDatabaseDaoBase extends ubic.gemma.model.common.Au
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getRecipient(java.lang.Long)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findOrCreate(int,
+     *      ubic.gemma.model.common.description.ExternalDatabase)
      */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
     @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
+    public Object findOrCreate( final int transform,
+            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
         return this
-                .getRecipient(
+                .findOrCreate(
                         transform,
-                        "from ubic.gemma.model.common.description.ExternalDatabase as externalDatabase where externalDatabase.id = :id",
-                        id );
+                        "from ubic.gemma.model.common.description.ExternalDatabase as externalDatabase where externalDatabase.externalDatabase = :externalDatabase",
+                        externalDatabase );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getRecipient(int, java.lang.String, java.lang.Long)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findOrCreate(java.lang.String,
+     *      ubic.gemma.model.common.description.ExternalDatabase)
      */
-    @Override
     @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public ubic.gemma.model.common.description.ExternalDatabase findOrCreate( final java.lang.String queryString,
+            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findOrCreate( TRANSFORM_NONE, queryString,
+                externalDatabase );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findOrCreate(ubic.gemma.model.common.description.ExternalDatabase)
+     */
+    public ubic.gemma.model.common.description.ExternalDatabase findOrCreate(
+            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findOrCreate( TRANSFORM_NONE,
+                externalDatabase );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#load(int, java.lang.Long)
+     */
+
+    public Object load( final int transform, final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ExternalDatabase.load - 'id' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) result );
-        return result;
+        final Object entity = this.getHibernateTemplate().get(
+                ubic.gemma.model.common.description.ExternalDatabaseImpl.class, id );
+        return transformEntity( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) entity );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#load(java.lang.Long)
      */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
+
+    public ExternalDatabase load( java.lang.Long id ) {
+        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.load( TRANSFORM_NONE, id );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#loadAll()
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    public java.util.Collection loadAll() {
+        return this.loadAll( TRANSFORM_NONE );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#loadAll(int)
      */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.common.description.ExternalDatabase as externalDatabase where externalDatabase.securable = :securable",
-                        securable );
+
+    public java.util.Collection loadAll( final int transform ) {
+        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.common.description.ExternalDatabaseImpl.class );
+        this.transformEntities( transform, results );
+        return results;
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#remove(java.lang.Long)
      */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ExternalDatabase.remove - 'id' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.common.description.ExternalDatabase as externalDatabase where externalDatabase.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        ubic.gemma.model.common.description.ExternalDatabase entity = ( ubic.gemma.model.common.description.ExternalDatabase ) this
+                .load( id );
+        if ( entity != null ) {
+            this.remove( entity );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) result );
-        return result;
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getMasks(java.util.Collection)
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
 
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.common.description.ExternalDatabase as externalDatabase where externalDatabase.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#getMasks(int, java.lang.String,
-     *      java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ExternalDatabase.remove - 'entities' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) result );
-        return result;
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#remove(ubic.gemma.model.common.description.ExternalDatabase)
+     */
+    public void remove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+        if ( externalDatabase == null ) {
+            throw new IllegalArgumentException( "ExternalDatabase.remove - 'externalDatabase' can not be null" );
+        }
+        this.getHibernateTemplate().delete( externalDatabase );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
+     */
+
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ExternalDatabase.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.description.ExternalDatabase ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#update(ubic.gemma.model.common.description.ExternalDatabase)
+     */
+    public void update( ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+        if ( externalDatabase == null ) {
+            throw new IllegalArgumentException( "ExternalDatabase.update - 'externalDatabase' can not be null" );
+        }
+        this.getHibernateTemplate().update( externalDatabase );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.description.ExternalDatabase)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.common.description.ExternalDatabaseDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.description.ExternalDatabase)
+     */
+
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -659,26 +448,6 @@ public abstract class ExternalDatabaseDaoBase extends ubic.gemma.model.common.Au
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.description.ExternalDatabase)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.description.ExternalDatabaseDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

@@ -28,14 +28,20 @@ package ubic.gemma.model.common.description;
 public interface CharacteristicService {
 
     /**
-     * <p>
-     * Returns a collection of characteristcs that have a Value that match the given search string
-     * </p>
-     * <p>
-     * (the value is usually a human readable form of the termURI
-     * </p>
+     * 
      */
-    public java.util.Collection findByValue( java.lang.String search );
+    public ubic.gemma.model.common.description.Characteristic create(
+            ubic.gemma.model.common.description.Characteristic c );
+
+    /**
+     * 
+     */
+    public void delete( java.lang.Long id );
+
+    /**
+     * 
+     */
+    public void delete( ubic.gemma.model.common.description.Characteristic c );
 
     /**
      * <p>
@@ -44,20 +50,6 @@ public interface CharacteristicService {
      * </p>
      */
     public java.util.Map findByParentClass( java.lang.Class parentClass );
-
-    /**
-     * <p>
-     * Returns the parent object of the specified Characteristic.
-     * </p>
-     */
-    public java.lang.Object getParent( ubic.gemma.model.common.description.Characteristic characteristic );
-
-    /**
-     * <p>
-     * Returns a map of the specified characteristics to their parent objects.
-     * </p>
-     */
-    public java.util.Map getParents( java.util.Collection characteristics );
 
     /**
      * <p>
@@ -75,6 +67,30 @@ public interface CharacteristicService {
     public java.util.Collection findByUri( java.util.Collection uris );
 
     /**
+     * <p>
+     * Returns a collection of characteristcs that have a Value that match the given search string
+     * </p>
+     * <p>
+     * (the value is usually a human readable form of the termURI
+     * </p>
+     */
+    public java.util.Collection findByValue( java.lang.String search );
+
+    /**
+     * <p>
+     * Returns the parent object of the specified Characteristic.
+     * </p>
+     */
+    public java.lang.Object getParent( ubic.gemma.model.common.description.Characteristic characteristic );
+
+    /**
+     * <p>
+     * Returns a map of the specified characteristics to their parent objects.
+     * </p>
+     */
+    public java.util.Map getParents( java.util.Collection characteristics );
+
+    /**
      * 
      */
     public ubic.gemma.model.common.description.Characteristic load( java.lang.Long id );
@@ -82,22 +98,6 @@ public interface CharacteristicService {
     /**
      * 
      */
-    public void delete( ubic.gemma.model.common.description.Characteristic c );
-
-    /**
-     * 
-     */
     public void update( ubic.gemma.model.common.description.Characteristic c );
-
-    /**
-     * 
-     */
-    public void delete( java.lang.Long id );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.description.Characteristic create(
-            ubic.gemma.model.common.description.Characteristic c );
 
 }

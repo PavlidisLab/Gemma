@@ -30,27 +30,20 @@ import java.util.Collection;
  */
 public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.PersonServiceBase {
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonService#savePerson(ubic.gemma.model.common.auditAndSecurity.Person)
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleCreate(ubic.gemma.model.common.auditAndSecurity
+     * .Person)
      */
-    protected Person handleSavePerson( ubic.gemma.model.common.auditAndSecurity.Person person )
-            throws java.lang.Exception {
+    @Override
+    protected Person handleCreate( Person person ) throws Exception {
         return ( Person ) this.getPersonDao().create( person );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonService#getAllPersons()
-     */
-    protected java.util.Collection handleGetAllPersons() throws java.lang.Exception {
-        return this.getPersonDao().loadAll();
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonService#removePerson(ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-    protected void handleRemovePerson( ubic.gemma.model.common.auditAndSecurity.Person person )
-            throws java.lang.Exception {
-        this.getPersonDao().remove( person );
+    @Override
+    protected Collection handleFindByFullName( String name, String lastName ) throws Exception {
+        return this.getPersonDao().findByFullName( name, lastName );
     }
 
     /**
@@ -81,31 +74,15 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
         return this.getPersonDao().findOrCreate( person );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleCreate(ubic.gemma.model.common.auditAndSecurity.Person)
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.PersonService#getAllPersons()
      */
-    @Override
-    protected Person handleCreate( Person person ) throws Exception {
-        return ( Person ) this.getPersonDao().create( person );
+    protected java.util.Collection handleGetAllPersons() throws java.lang.Exception {
+        return this.getPersonDao().loadAll();
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleExpfindByName(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
-
-    @Override
-    protected Collection handleFindByFullName( String name, String lastName ) throws Exception {
-        return this.getPersonDao().findByFullName( name, lastName );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleLoadAll()
      */
     @SuppressWarnings("unchecked")
@@ -116,12 +93,35 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleRemove(ubic.gemma.model.common.auditAndSecurity.Person)
+     * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleExpfindByName(java.lang.String,
+     * java.lang.String, java.lang.String)
+     */
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleRemove(ubic.gemma.model.common.auditAndSecurity
+     * .Person)
      */
     @Override
     protected void handleRemove( Person person ) throws Exception {
         this.getPersonDao().remove( person );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.PersonService#removePerson(ubic.gemma.model.common.auditAndSecurity.Person)
+     */
+    protected void handleRemovePerson( ubic.gemma.model.common.auditAndSecurity.Person person )
+            throws java.lang.Exception {
+        this.getPersonDao().remove( person );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.PersonService#savePerson(ubic.gemma.model.common.auditAndSecurity.Person)
+     */
+    protected Person handleSavePerson( ubic.gemma.model.common.auditAndSecurity.Person person )
+            throws java.lang.Exception {
+        return ( Person ) this.getPersonDao().create( person );
     }
 
 }

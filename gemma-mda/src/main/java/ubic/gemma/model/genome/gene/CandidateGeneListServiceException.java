@@ -35,40 +35,6 @@ public class CandidateGeneListServiceException extends java.lang.RuntimeExceptio
     private static final long serialVersionUID = -2118780280953608974L;
 
     /**
-     * The default constructor for <code>CandidateGeneListServiceException</code>.
-     */
-    public CandidateGeneListServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>CandidateGeneListServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public CandidateGeneListServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>CandidateGeneListServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public CandidateGeneListServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>CandidateGeneListServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public CandidateGeneListServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class CandidateGeneListServiceException extends java.lang.RuntimeExceptio
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>CandidateGeneListServiceException</code>.
+     */
+    public CandidateGeneListServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>CandidateGeneListServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public CandidateGeneListServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>CandidateGeneListServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public CandidateGeneListServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>CandidateGeneListServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public CandidateGeneListServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

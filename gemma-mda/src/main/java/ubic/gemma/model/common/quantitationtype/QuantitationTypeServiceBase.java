@@ -24,8 +24,8 @@ package ubic.gemma.model.common.quantitationtype;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.quantitationtype.QuantitationTypeService</code>,
- * provides access to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.common.quantitationtype.QuantitationTypeService</code>, provides
+ * access to all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService
@@ -36,17 +36,17 @@ public abstract class QuantitationTypeServiceBase implements
     private ubic.gemma.model.common.quantitationtype.QuantitationTypeDao quantitationTypeDao;
 
     /**
-     * Sets the reference to <code>quantitationType</code>'s DAO.
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#create(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    public void setQuantitationTypeDao( ubic.gemma.model.common.quantitationtype.QuantitationTypeDao quantitationTypeDao ) {
-        this.quantitationTypeDao = quantitationTypeDao;
-    }
-
-    /**
-     * Gets the reference to <code>quantitationType</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.quantitationtype.QuantitationTypeDao getQuantitationTypeDao() {
-        return this.quantitationTypeDao;
+    public ubic.gemma.model.common.quantitationtype.QuantitationType create(
+            final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
+        try {
+            return this.handleCreate( quantitationType );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.create(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -64,12 +64,6 @@ public abstract class QuantitationTypeServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleFind(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#findOrCreate(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     public ubic.gemma.model.common.quantitationtype.QuantitationType findOrCreate(
@@ -82,88 +76,6 @@ public abstract class QuantitationTypeServiceBase implements
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleFindOrCreate(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#update(ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    public void update( final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
-        try {
-            this.handleUpdate( quantitationType );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
-                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.update(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#remove(ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    public void remove( final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
-        try {
-            this.handleRemove( quantitationType );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
-                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.remove(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#create(ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType create(
-            final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
-        try {
-            return this.handleCreate( quantitationType );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
-                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.create(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.common.quantitationtype.QuantitationType)}
-     */
-    protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleCreate(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#loadAll()
-     */
-    public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
-                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.loadAll()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#load(java.lang.Long)
@@ -179,46 +91,49 @@ public abstract class QuantitationTypeServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#loadAll()
      */
-    protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public java.util.Collection loadAll() {
+        try {
+            return this.handleLoadAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.loadAll()' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message source available to this service.
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#remove(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    public void remove( final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
+        try {
+            this.handleRemove( quantitationType );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.remove(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
+     * Sets the reference to <code>quantitationType</code>'s DAO.
      */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
+    public void setQuantitationTypeDao( ubic.gemma.model.common.quantitationtype.QuantitationTypeDao quantitationTypeDao ) {
+        this.quantitationTypeDao = quantitationTypeDao;
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#update(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    public void update( final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
+        try {
+            this.handleUpdate( quantitationType );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
+                    "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.update(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -233,5 +148,89 @@ public abstract class QuantitationTypeServiceBase implements
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Gets the reference to <code>quantitationType</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.quantitationtype.QuantitationTypeDao getQuantitationTypeDao() {
+        return this.quantitationTypeDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     */
+    protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleCreate(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     */
+    protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleFind(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     */
+    protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleFindOrCreate(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.common.quantitationtype.QuantitationType handleLoad( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAll()}
+     */
+    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.common.quantitationtype.QuantitationType)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
+            throws java.lang.Exception;
 
 }

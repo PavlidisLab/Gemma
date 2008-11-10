@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.analysis;
 
+import java.util.Collection;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.analysis.AnalysisService</code>, provides access to all services
@@ -30,9 +32,7 @@ package ubic.gemma.model.analysis;
  * 
  * @see ubic.gemma.model.analysis.AnalysisService
  */
-public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.AnalysisService {
-
-    private ubic.gemma.model.analysis.AnalysisDao analysisDao;
+public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.gemma.model.analysis.AnalysisService<T> {
 
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#delete(java.lang.Long)
@@ -50,7 +50,7 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#delete(ubic.gemma.model.analysis.Analysis)
      */
-    public void delete( final ubic.gemma.model.analysis.Analysis toDelete ) {
+    public void delete( T toDelete ) {
         try {
             this.handleDelete( toDelete );
         } catch ( Throwable th ) {
@@ -89,7 +89,7 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByName(java.lang.String)
      */
-    public ubic.gemma.model.analysis.Analysis findByName( final java.lang.String name ) {
+    public Collection findByName( final java.lang.String name ) {
         try {
             return this.handleFindByName( name );
         } catch ( Throwable th ) {
@@ -115,7 +115,7 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByUniqueInvestigations(java.util.Collection)
      */
-    public ubic.gemma.model.analysis.Analysis findByUniqueInvestigations( final java.util.Collection investigations ) {
+    public T findByUniqueInvestigations( final java.util.Collection investigations ) {
         try {
             return this.handleFindByUniqueInvestigations( investigations );
         } catch ( Throwable th ) {
@@ -128,7 +128,7 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#load(java.lang.Long)
      */
-    public ubic.gemma.model.analysis.Analysis load( final java.lang.Long id ) {
+    public T load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
         } catch ( Throwable th ) {
@@ -148,20 +148,6 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
             throw new ubic.gemma.model.analysis.AnalysisServiceException(
                     "Error performing 'ubic.gemma.model.analysis.AnalysisService.loadAll()' --> " + th, th );
         }
-    }
-
-    /**
-     * Sets the reference to <code>analysis</code>'s DAO.
-     */
-    public void setAnalysisDao( ubic.gemma.model.analysis.AnalysisDao analysisDao ) {
-        this.analysisDao = analysisDao;
-    }
-
-    /**
-     * Gets the reference to <code>analysis</code>'s DAO.
-     */
-    protected ubic.gemma.model.analysis.AnalysisDao getAnalysisDao() {
-        return this.analysisDao;
     }
 
     /**
@@ -221,7 +207,7 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
     /**
      * Performs the core logic for {@link #delete(ubic.gemma.model.analysis.Analysis)}
      */
-    protected abstract void handleDelete( ubic.gemma.model.analysis.Analysis toDelete ) throws java.lang.Exception;
+    protected abstract void handleDelete( T toDelete ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByInvestigation(ubic.gemma.model.analysis.Investigation)}
@@ -238,8 +224,7 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
     /**
      * Performs the core logic for {@link #findByName(java.lang.String)}
      */
-    protected abstract ubic.gemma.model.analysis.Analysis handleFindByName( java.lang.String name )
-            throws java.lang.Exception;
+    protected abstract Collection handleFindByName( java.lang.String name ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
@@ -250,13 +235,13 @@ public abstract class AnalysisServiceBase implements ubic.gemma.model.analysis.A
     /**
      * Performs the core logic for {@link #findByUniqueInvestigations(java.util.Collection)}
      */
-    protected abstract ubic.gemma.model.analysis.Analysis handleFindByUniqueInvestigations(
-            java.util.Collection investigations ) throws java.lang.Exception;
+    protected abstract T handleFindByUniqueInvestigations( java.util.Collection investigations )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.analysis.Analysis handleLoad( java.lang.Long id ) throws java.lang.Exception;
+    protected abstract T handleLoad( java.lang.Long id ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadAll()}

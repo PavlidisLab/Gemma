@@ -34,48 +34,21 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
         implements ubic.gemma.model.common.description.FileFormatDao {
 
     /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#load(int, java.lang.Long)
+     * @see ubic.gemma.model.common.description.FileFormatDao#create(int, java.util.Collection)
      */
-    public Object load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "FileFormat.load - 'id' can not be null" );
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "FileFormat.create - 'entities' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.common.description.FileFormatImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.description.FileFormat ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#load(java.lang.Long)
-     */
-    public ubic.gemma.model.common.description.FileFormat load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.description.FileFormat ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#loadAll()
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#loadAll(int)
-     */
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.description.FileFormatImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#create(ubic.gemma.model.common.description.FileFormat)
-     */
-    public ubic.gemma.model.common.description.FileFormat create(
-            ubic.gemma.model.common.description.FileFormat fileFormat ) {
-        return ( ubic.gemma.model.common.description.FileFormat ) this.create( TRANSFORM_NONE, fileFormat );
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.description.FileFormat ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
     }
 
     /**
@@ -99,99 +72,11 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#create(int, java.util.Collection)
+     * @see ubic.gemma.model.common.description.FileFormatDao#create(ubic.gemma.model.common.description.FileFormat)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "FileFormat.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.description.FileFormat ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#update(ubic.gemma.model.common.description.FileFormat)
-     */
-    public void update( ubic.gemma.model.common.description.FileFormat fileFormat ) {
-        if ( fileFormat == null ) {
-            throw new IllegalArgumentException( "FileFormat.update - 'fileFormat' can not be null" );
-        }
-        this.getHibernateTemplate().update( fileFormat );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "FileFormat.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.description.FileFormat ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#remove(ubic.gemma.model.common.description.FileFormat)
-     */
-    public void remove( ubic.gemma.model.common.description.FileFormat fileFormat ) {
-        if ( fileFormat == null ) {
-            throw new IllegalArgumentException( "FileFormat.remove - 'fileFormat' can not be null" );
-        }
-        this.getHibernateTemplate().delete( fileFormat );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#remove(java.lang.Long)
-     */
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "FileFormat.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.common.description.FileFormat entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#remove(java.util.Collection)
-     */
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "FileFormat.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#findByFormatIdentifier(java.lang.String)
-     */
-    public ubic.gemma.model.common.description.FileFormat findByFormatIdentifier( java.lang.String formatIdentifier ) {
-        return ( ubic.gemma.model.common.description.FileFormat ) this.findByFormatIdentifier( TRANSFORM_NONE,
-                formatIdentifier );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.FileFormatDao#findByFormatIdentifier(java.lang.String, java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.description.FileFormat findByFormatIdentifier( final java.lang.String queryString,
-            final java.lang.String formatIdentifier ) {
-        return ( ubic.gemma.model.common.description.FileFormat ) this.findByFormatIdentifier( TRANSFORM_NONE,
-                queryString, formatIdentifier );
+    public ubic.gemma.model.common.description.FileFormat create(
+            ubic.gemma.model.common.description.FileFormat fileFormat ) {
+        return ( ubic.gemma.model.common.description.FileFormat ) this.create( TRANSFORM_NONE, fileFormat );
     }
 
     /**
@@ -231,6 +116,141 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#findByFormatIdentifier(java.lang.String)
+     */
+    public ubic.gemma.model.common.description.FileFormat findByFormatIdentifier( java.lang.String formatIdentifier ) {
+        return ( ubic.gemma.model.common.description.FileFormat ) this.findByFormatIdentifier( TRANSFORM_NONE,
+                formatIdentifier );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#findByFormatIdentifier(java.lang.String, java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public ubic.gemma.model.common.description.FileFormat findByFormatIdentifier( final java.lang.String queryString,
+            final java.lang.String formatIdentifier ) {
+        return ( ubic.gemma.model.common.description.FileFormat ) this.findByFormatIdentifier( TRANSFORM_NONE,
+                queryString, formatIdentifier );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#load(int, java.lang.Long)
+     */
+    public Object load( final int transform, final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "FileFormat.load - 'id' can not be null" );
+        }
+        final Object entity = this.getHibernateTemplate().get(
+                ubic.gemma.model.common.description.FileFormatImpl.class, id );
+        return transformEntity( transform, ( ubic.gemma.model.common.description.FileFormat ) entity );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#load(java.lang.Long)
+     */
+    public ubic.gemma.model.common.description.FileFormat load( java.lang.Long id ) {
+        return ( ubic.gemma.model.common.description.FileFormat ) this.load( TRANSFORM_NONE, id );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#loadAll()
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection loadAll() {
+        return this.loadAll( TRANSFORM_NONE );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#loadAll(int)
+     */
+    public java.util.Collection loadAll( final int transform ) {
+        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.common.description.FileFormatImpl.class );
+        this.transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#remove(java.lang.Long)
+     */
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "FileFormat.remove - 'id' can not be null" );
+        }
+        ubic.gemma.model.common.description.FileFormat entity = this.load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#remove(java.util.Collection)
+     */
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "FileFormat.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#remove(ubic.gemma.model.common.description.FileFormat)
+     */
+    public void remove( ubic.gemma.model.common.description.FileFormat fileFormat ) {
+        if ( fileFormat == null ) {
+            throw new IllegalArgumentException( "FileFormat.remove - 'fileFormat' can not be null" );
+        }
+        this.getHibernateTemplate().delete( fileFormat );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "FileFormat.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.description.FileFormat ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatDao#update(ubic.gemma.model.common.description.FileFormat)
+     */
+    public void update( ubic.gemma.model.common.description.FileFormat fileFormat ) {
+        if ( fileFormat == null ) {
+            throw new IllegalArgumentException( "FileFormat.update - 'fileFormat' can not be null" );
+        }
+        this.getHibernateTemplate().update( fileFormat );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.description.FileFormat)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.common.description.FileFormatDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.description.FileFormat)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.common.description.FileFormatDao</code>, please note that the {@link #TRANSFORM_NONE}
@@ -252,24 +272,6 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.description.FileFormat)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.common.description.FileFormatDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.description.FileFormat)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

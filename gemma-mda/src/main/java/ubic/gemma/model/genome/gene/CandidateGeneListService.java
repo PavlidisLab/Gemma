@@ -35,12 +35,7 @@ public interface CandidateGeneListService {
     /**
      * 
      */
-    public void updateCandidateGeneList( ubic.gemma.model.genome.gene.CandidateGeneList candidateList );
-
-    /**
-     * 
-     */
-    public void removeCandidateGeneList( ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList );
+    public java.util.Collection findAll();
 
     /**
      * 
@@ -65,7 +60,7 @@ public interface CandidateGeneListService {
     /**
      * 
      */
-    public void setActor( ubic.gemma.model.common.auditAndSecurity.User actor );
+    public void removeCandidateGeneList( ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList );
 
     /**
      * 
@@ -76,6 +71,11 @@ public interface CandidateGeneListService {
     /**
      * 
      */
-    public java.util.Collection findAll();
+    public void setActor( ubic.gemma.model.common.auditAndSecurity.User actor );
+
+    /**
+     * 
+     */
+    public void updateCandidateGeneList( ubic.gemma.model.genome.gene.CandidateGeneList candidateList );
 
 }

@@ -34,6 +34,55 @@ public abstract class BlastAssociationDaoBase extends ubic.gemma.model.associati
         implements ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao {
 
     /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BlastAssociation.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation ) entityIterator
+                            .next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#create(int transform,
+     *      ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
+     */
+    public Object create( final int transform,
+            final ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
+        if ( blastAssociation == null ) {
+            throw new IllegalArgumentException( "BlastAssociation.create - 'blastAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().save( blastAssociation );
+        return this.transformEntity( transform, blastAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#create(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
+     */
+    public ubic.gemma.model.association.Relationship create(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
+        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation ) this.create( TRANSFORM_NONE,
+                blastAssociation );
+    }
+
+    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#load(int, java.lang.Long)
      */
     @Override
@@ -75,93 +124,6 @@ public abstract class BlastAssociationDaoBase extends ubic.gemma.model.associati
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#create(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
-     */
-    public ubic.gemma.model.association.Relationship create(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
-        return ( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation ) this.create( TRANSFORM_NONE,
-                blastAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#create(int transform,
-     *      ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
-     */
-    public Object create( final int transform,
-            final ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
-        if ( blastAssociation == null ) {
-            throw new IllegalArgumentException( "BlastAssociation.create - 'blastAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().save( blastAssociation );
-        return this.transformEntity( transform, blastAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BlastAssociation.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation ) entityIterator
-                            .next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#update(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
-     */
-    public void update( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
-        if ( blastAssociation == null ) {
-            throw new IllegalArgumentException( "BlastAssociation.update - 'blastAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().update( blastAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BlastAssociation.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
-     */
-    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
-        if ( blastAssociation == null ) {
-            throw new IllegalArgumentException( "BlastAssociation.remove - 'blastAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().delete( blastAssociation );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#remove(java.lang.Long)
      */
     @Override
@@ -188,6 +150,66 @@ public abstract class BlastAssociationDaoBase extends ubic.gemma.model.associati
     }
 
     /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
+     */
+    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
+        if ( blastAssociation == null ) {
+            throw new IllegalArgumentException( "BlastAssociation.remove - 'blastAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().delete( blastAssociation );
+    }
+
+    /**
+     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BlastAssociation.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao#update(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
+     */
+    public void update( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) {
+        if ( blastAssociation == null ) {
+            throw new IllegalArgumentException( "BlastAssociation.update - 'blastAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().update( blastAssociation );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)} method. This method does
+     * not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao</code>, please note that the
@@ -211,26 +233,6 @@ public abstract class BlastAssociationDaoBase extends ubic.gemma.model.associati
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)} method. This method does
-     * not instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

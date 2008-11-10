@@ -27,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
@@ -47,6 +46,15 @@ import ubic.gemma.model.genome.Taxon;
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
 
     private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
+
+    public Collection<Gene> findNearest( PhysicalLocation physicalLocation ) {
+        return this.getGeneDao().findNearest( physicalLocation );
+    }
+
+    @Override
+    public void handleThawLite( Collection genes ) {
+        this.getGeneDao().thawLite( genes );
+    }
 
     @Override
     protected Integer handleCountAll() throws Exception {
@@ -86,11 +94,38 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().findByPhysicalLocation( physicalMapLocation );
     }
 
+    @Override
+    protected Gene handleFindByAccession( String accession, ExternalDatabase source ) throws Exception {
+        return this.getGeneDao().findByAccession( accession, source );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetByGeneAlias(java.lang.String)
+     */
+    @Override
+    protected Collection handleFindByAlias( String search ) throws Exception {
+        return this.getGeneDao().findByAlias( search );
+    }
+
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#handleFindByID(java.lang.long)
      */
     protected ubic.gemma.model.genome.Gene handleFindByID( Long id ) throws java.lang.Exception {
         return ( Gene ) this.getGeneDao().load( id );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Gene handleFindByNCBIId( String accession ) throws Exception {
+        Collection<Gene> genes = this.getGeneDao().findByNcbiId( accession );
+        if ( genes.size() > 1 ) {
+            log.warn( "More than one gene with accession=" + accession );
+        } else if ( genes.size() == 1 ) {
+            return genes.iterator().next();
+        }
+        return null;
+
     }
 
     /**
@@ -111,6 +146,20 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().findByOfficalSymbol( officialSymbol );
     }
 
+    @Override
+    protected Gene handleFindByOfficialSymbol( String symbol, Taxon taxon ) throws Exception {
+        return this.getGeneDao().findByOfficialSymbol( symbol, taxon );
+    }
+
+    // /*
+    // * (non-Javadoc)
+    // * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequenceMap(java.util.Collection)
+    // */
+    // @Override
+    // protected Map handleGetCompositeSequenceMap( Collection genes ) throws Exception {
+    // return this.getGeneDao().getCompositeSequenceMap( genes );
+    // }
+
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#handleFindByOfficialSymbolInexact(java.lang.String)
      */
@@ -123,15 +172,6 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     @Override
     protected Gene handleFindOrCreate( Gene gene ) throws Exception {
         return this.getGeneDao().findOrCreate( gene );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetByGeneAlias(java.lang.String)
-     */
-    @Override
-    protected Collection handleFindByAlias( String search ) throws Exception {
-        return this.getGeneDao().findByAlias( search );
     }
 
     /*
@@ -159,15 +199,6 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     protected long handleGetCompositeSequenceCountById( Long id ) throws Exception {
         return this.getGeneDao().getCompositeSequenceCountById( id );
     }
-
-    // /*
-    // * (non-Javadoc)
-    // * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequenceMap(java.util.Collection)
-    // */
-    // @Override
-    // protected Map handleGetCompositeSequenceMap( Collection genes ) throws Exception {
-    // return this.getGeneDao().getCompositeSequenceMap( genes );
-    // }
 
     /*
      * (non-Javadoc)
@@ -249,7 +280,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      */
     @Override
     protected Collection handleLoadMultiple( Collection ids ) throws Exception {
-        return this.getGeneDao().loadMultiple( ids );
+        return this.getGeneDao().load( ids );
     }
 
     @Override
@@ -293,6 +324,11 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return ( Gene ) this.getGeneDao().create( gene );
     }
 
+    @Override
+    protected void handleThaw( Gene gene ) throws Exception {
+        this.getGeneDao().thaw( gene );
+    }
+
     /**
      * This was created because calling saveGene with an existing gene actually causes a caching error in Spring.
      * 
@@ -301,43 +337,6 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     @Override
     protected void handleUpdate( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception {
         this.getGeneDao().update( gene );
-    }
-
-    @Override
-    protected void handleThaw( Gene gene ) throws Exception {
-        this.getGeneDao().thaw( gene );
-    }
-
-    @Override
-    protected Gene handleFindByOfficialSymbol( String symbol, Taxon taxon ) throws Exception {
-        return this.getGeneDao().findByOfficialSymbol( symbol, taxon );
-    }
-
-    @Override
-    public void handleThawLite( Collection genes ) {
-        this.getGeneDao().thawLite( genes );
-    }
-
-    @Override
-    protected Gene handleFindByAccession( String accession, ExternalDatabase source ) throws Exception {
-        return this.getGeneDao().findByAccession( accession, source );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Gene handleFindByNCBIId( String accession ) throws Exception {
-        Collection<Gene> genes = this.getGeneDao().findByNcbiId( accession );
-        if ( genes.size() > 1 ) {
-            log.warn( "More than one gene with accession=" + accession );
-        } else if ( genes.size() == 1 ) {
-            return genes.iterator().next();
-        }
-        return null;
-
-    }
-
-    public Collection<Gene> findNearest( PhysicalLocation physicalLocation ) {
-        return this.getGeneDao().findNearest( physicalLocation );
     }
 
 }

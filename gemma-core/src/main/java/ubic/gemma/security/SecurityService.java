@@ -49,7 +49,6 @@ import ubic.gemma.util.ReflectionUtil;
  * @spring.property name="customAclDao" ref="customAclDao"
  * @spring.property name="crudUtils" ref="crudUtils"
  */
-@SuppressWarnings("deprecation")
 public class SecurityService {
 
     private Log log = LogFactory.getLog( SecurityService.class );
@@ -66,7 +65,6 @@ public class SecurityService {
      * 
      * @param object
      */
-    @SuppressWarnings("unchecked")
     public void makePrivate( Object object ) {
         if ( object == null ) {
             log.warn( "Null cannot be made private" );
@@ -82,7 +80,6 @@ public class SecurityService {
      * 
      * @param object
      */
-    @SuppressWarnings("unchecked")
     public void makePublic( Object object ) {
         if ( object == null ) {
             log.warn( "Null cannot be made public" );
@@ -364,18 +361,18 @@ public class SecurityService {
 
         /*
          * (non-Javadoc)
-         * 
          * @see java.lang.Object#hashCode()
          */
+        @Override
         public int hashCode() {
             return 29 * entity.getId().hashCode() + entity.getClass().hashCode();
         }
 
         /*
          * (non-Javadoc)
-         * 
          * @see java.lang.Object#equals(java.lang.Object)
          */
+        @Override
         public boolean equals( Object other ) {
             if ( this == other ) {
                 return true;

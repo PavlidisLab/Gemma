@@ -34,6 +34,52 @@ public abstract class NotedReferenceDaoBase extends org.springframework.orm.hibe
         implements ubic.gemma.model.common.description.NotedReferenceDao {
 
     /**
+     * @see ubic.gemma.model.common.description.NotedReferenceDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "NotedReference.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.description.NotedReference ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.NotedReferenceDao#create(int transform,
+     *      ubic.gemma.model.common.description.NotedReference)
+     */
+    public Object create( final int transform, final ubic.gemma.model.common.description.NotedReference notedReference ) {
+        if ( notedReference == null ) {
+            throw new IllegalArgumentException( "NotedReference.create - 'notedReference' can not be null" );
+        }
+        this.getHibernateTemplate().save( notedReference );
+        return this.transformEntity( transform, notedReference );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.NotedReferenceDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.NotedReferenceDao#create(ubic.gemma.model.common.description.NotedReference)
+     */
+    public ubic.gemma.model.common.description.NotedReference create(
+            ubic.gemma.model.common.description.NotedReference notedReference ) {
+        return ( ubic.gemma.model.common.description.NotedReference ) this.create( TRANSFORM_NONE, notedReference );
+    }
+
+    /**
      * @see ubic.gemma.model.common.description.NotedReferenceDao#load(int, java.lang.Long)
      */
     public Object load( final int transform, final java.lang.Long id ) {
@@ -71,89 +117,6 @@ public abstract class NotedReferenceDaoBase extends org.springframework.orm.hibe
     }
 
     /**
-     * @see ubic.gemma.model.common.description.NotedReferenceDao#create(ubic.gemma.model.common.description.NotedReference)
-     */
-    public ubic.gemma.model.common.description.NotedReference create(
-            ubic.gemma.model.common.description.NotedReference notedReference ) {
-        return ( ubic.gemma.model.common.description.NotedReference ) this.create( TRANSFORM_NONE, notedReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.NotedReferenceDao#create(int transform,
-     *      ubic.gemma.model.common.description.NotedReference)
-     */
-    public Object create( final int transform, final ubic.gemma.model.common.description.NotedReference notedReference ) {
-        if ( notedReference == null ) {
-            throw new IllegalArgumentException( "NotedReference.create - 'notedReference' can not be null" );
-        }
-        this.getHibernateTemplate().save( notedReference );
-        return this.transformEntity( transform, notedReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.NotedReferenceDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.NotedReferenceDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "NotedReference.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.description.NotedReference ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.NotedReferenceDao#update(ubic.gemma.model.common.description.NotedReference)
-     */
-    public void update( ubic.gemma.model.common.description.NotedReference notedReference ) {
-        if ( notedReference == null ) {
-            throw new IllegalArgumentException( "NotedReference.update - 'notedReference' can not be null" );
-        }
-        this.getHibernateTemplate().update( notedReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.NotedReferenceDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "NotedReference.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.description.NotedReference ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.NotedReferenceDao#remove(ubic.gemma.model.common.description.NotedReference)
-     */
-    public void remove( ubic.gemma.model.common.description.NotedReference notedReference ) {
-        if ( notedReference == null ) {
-            throw new IllegalArgumentException( "NotedReference.remove - 'notedReference' can not be null" );
-        }
-        this.getHibernateTemplate().delete( notedReference );
-    }
-
-    /**
      * @see ubic.gemma.model.common.description.NotedReferenceDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -177,11 +140,69 @@ public abstract class NotedReferenceDaoBase extends org.springframework.orm.hibe
     }
 
     /**
+     * @see ubic.gemma.model.common.description.NotedReferenceDao#remove(ubic.gemma.model.common.description.NotedReference)
+     */
+    public void remove( ubic.gemma.model.common.description.NotedReference notedReference ) {
+        if ( notedReference == null ) {
+            throw new IllegalArgumentException( "NotedReference.remove - 'notedReference' can not be null" );
+        }
+        this.getHibernateTemplate().delete( notedReference );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.NotedReferenceDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "NotedReference.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.description.NotedReference ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.NotedReferenceDao#update(ubic.gemma.model.common.description.NotedReference)
+     */
+    public void update( ubic.gemma.model.common.description.NotedReference notedReference ) {
+        if ( notedReference == null ) {
+            throw new IllegalArgumentException( "NotedReference.update - 'notedReference' can not be null" );
+        }
+        this.getHibernateTemplate().update( notedReference );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.description.NotedReference)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.common.description.NotedReferenceDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.description.NotedReference)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.common.description.NotedReferenceDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
-     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
+     * <code>ubic.gemma.model.common.description.NotedReferenceDao</code>, please note that the {@link #TRANSFORM_NONE}
+     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
+     * unknown {@link #TRANSFORM_NONE} is assumed.
      * 
      * @param transform one of the constants declared in {@link ubic.gemma.model.common.description.NotedReferenceDao}
      * @param entity an entity that was found
@@ -199,25 +220,6 @@ public abstract class NotedReferenceDaoBase extends org.springframework.orm.hibe
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.description.NotedReference)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.description.NotedReferenceDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.description.NotedReference)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

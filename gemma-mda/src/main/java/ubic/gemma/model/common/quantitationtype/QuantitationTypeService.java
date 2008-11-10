@@ -30,6 +30,12 @@ public interface QuantitationTypeService {
     /**
      * 
      */
+    public ubic.gemma.model.common.quantitationtype.QuantitationType create(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+
+    /**
+     * 
+     */
     public ubic.gemma.model.common.quantitationtype.QuantitationType find(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
@@ -42,18 +48,7 @@ public interface QuantitationTypeService {
     /**
      * 
      */
-    public void update( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * 
-     */
-    public void remove( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType create(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    public ubic.gemma.model.common.quantitationtype.QuantitationType load( java.lang.Long id );
 
     /**
      * 
@@ -63,6 +58,11 @@ public interface QuantitationTypeService {
     /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType load( java.lang.Long id );
+    public void remove( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+
+    /**
+     * 
+     */
+    public void update( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
 }

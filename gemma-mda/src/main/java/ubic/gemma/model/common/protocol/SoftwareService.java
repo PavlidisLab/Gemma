@@ -30,21 +30,21 @@ public interface SoftwareService {
     /**
      * 
      */
-    public ubic.gemma.model.common.protocol.Software findOrCreate( ubic.gemma.model.common.protocol.Software software );
-
-    /**
-     * 
-     */
     public ubic.gemma.model.common.protocol.Software find( ubic.gemma.model.common.protocol.Software software );
 
     /**
      * 
      */
-    public void update( ubic.gemma.model.common.protocol.Software software );
+    public ubic.gemma.model.common.protocol.Software findOrCreate( ubic.gemma.model.common.protocol.Software software );
 
     /**
      * 
      */
     public void remove( ubic.gemma.model.common.protocol.Software software );
+
+    /**
+     * 
+     */
+    public void update( ubic.gemma.model.common.protocol.Software software );
 
 }

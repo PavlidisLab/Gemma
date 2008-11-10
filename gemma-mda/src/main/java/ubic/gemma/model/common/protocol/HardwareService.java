@@ -40,11 +40,11 @@ public interface HardwareService {
     /**
      * 
      */
-    public void update( ubic.gemma.model.common.protocol.Hardware hardware );
+    public void remove( ubic.gemma.model.common.protocol.Hardware hardware );
 
     /**
      * 
      */
-    public void remove( ubic.gemma.model.common.protocol.Hardware hardware );
+    public void update( ubic.gemma.model.common.protocol.Hardware hardware );
 
 }

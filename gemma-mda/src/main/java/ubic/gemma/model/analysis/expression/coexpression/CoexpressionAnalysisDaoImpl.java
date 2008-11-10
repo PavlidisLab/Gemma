@@ -27,6 +27,6 @@ package ubic.gemma.model.analysis.expression.coexpression;
  * 
  * @see ubic.gemma.model.analysis.CoexpressionAnalysis
  */
-public class CoexpressionAnalysisDaoImpl extends
-        ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDaoBase {
+public abstract class CoexpressionAnalysisDaoImpl<T extends CoexpressionAnalysis> extends
+        ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDaoBase<T> {
 }

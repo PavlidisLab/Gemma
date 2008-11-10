@@ -24,8 +24,8 @@ package ubic.gemma.model.common.description;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.description.FileFormatService</code>, provides access
- * to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.common.description.FileFormatService</code>, provides access to
+ * all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.common.description.FileFormatService
@@ -33,6 +33,19 @@ package ubic.gemma.model.common.description;
 public abstract class FileFormatServiceBase implements ubic.gemma.model.common.description.FileFormatService {
 
     private ubic.gemma.model.common.description.FileFormatDao fileFormatDao;
+
+    /**
+     * @see ubic.gemma.model.common.description.FileFormatService#findByIdentifier(java.lang.String)
+     */
+    public ubic.gemma.model.common.description.FileFormat findByIdentifier( final java.lang.String identifier ) {
+        try {
+            return this.handleFindByIdentifier( identifier );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.description.FileFormatServiceException(
+                    "Error performing 'ubic.gemma.model.common.description.FileFormatService.findByIdentifier(java.lang.String identifier)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * Sets the reference to <code>fileFormat</code>'s DAO.
@@ -49,39 +62,16 @@ public abstract class FileFormatServiceBase implements ubic.gemma.model.common.d
     }
 
     /**
-     * @see ubic.gemma.model.common.description.FileFormatService#findByIdentifier(java.lang.String)
-     */
-    public ubic.gemma.model.common.description.FileFormat findByIdentifier( final java.lang.String identifier ) {
-        try {
-            return this.handleFindByIdentifier( identifier );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.FileFormatServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.FileFormatService.findByIdentifier(java.lang.String identifier)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByIdentifier(java.lang.String)}
-     */
-    protected abstract ubic.gemma.model.common.description.FileFormat handleFindByIdentifier(
-            java.lang.String identifier ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
+     * <code>locale</code>.
      * 
-     * @return the current principal
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     * @param locale the locale of the messages to retrieve.
      */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
+            final java.util.Locale locale ) {
+        return this.getMessages().getMessage( key, arguments, locale );
     }
 
     /**
@@ -94,8 +84,7 @@ public abstract class FileFormatServiceBase implements ubic.gemma.model.common.d
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
      * 
      * @param key the key of the message in the messages.properties message bundle.
      * @param arguments any arguments to substitute when resolving the message.
@@ -105,16 +94,26 @@ public abstract class FileFormatServiceBase implements ubic.gemma.model.common.d
     }
 
     /**
-     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
-     * <code>locale</code>.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     * @param locale the locale of the messages to retrieve.
+     * Gets the message source available to this service.
      */
-    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
-            final java.util.Locale locale ) {
-        return this.getMessages().getMessage( key, arguments, locale );
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
     }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #findByIdentifier(java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.common.description.FileFormat handleFindByIdentifier(
+            java.lang.String identifier ) throws java.lang.Exception;
 
 }

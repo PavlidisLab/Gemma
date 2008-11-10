@@ -42,21 +42,23 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
-     */
-    @Override
-    protected void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult )
-            throws java.lang.Exception {
-        this.getBlatResultDao().remove( blatResult );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#find(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
     @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleFind(
             ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception {
         return this.getBlatResultDao().find( blatResult );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleFindByBioSequence(ubic.gemma.model.genome
+     * .biosequence.BioSequence)
+     */
+    @Override
+    protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
+        return this.getBlatResultDao().findByBioSequence( bioSequence );
     }
 
     /**
@@ -70,22 +72,20 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleFindByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
-        return this.getBlatResultDao().findByBioSequence( bioSequence );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleLoad(java.util.Collection)
      */
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
         return this.getBlatResultDao().load( ids );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
+     */
+    @Override
+    protected void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult )
+            throws java.lang.Exception {
+        this.getBlatResultDao().remove( blatResult );
     }
 
     @Override

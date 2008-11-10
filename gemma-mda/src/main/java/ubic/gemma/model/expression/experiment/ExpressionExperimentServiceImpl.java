@@ -137,7 +137,7 @@ public class ExpressionExperimentServiceImpl extends
             } else {
 
                 eeset.getExperiments().remove( ee );
-                this.getExpressionExperimentDao().update( eeset );
+                this.getExpressionExperimentSetDao().update( eeset );
 
             }
         }

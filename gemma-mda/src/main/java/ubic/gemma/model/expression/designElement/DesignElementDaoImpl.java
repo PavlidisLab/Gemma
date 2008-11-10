@@ -25,5 +25,6 @@ package ubic.gemma.model.expression.designElement;
 /**
  * @see ubic.gemma.model.expression.designElement.DesignElement
  */
-public class DesignElementDaoImpl extends ubic.gemma.model.expression.designElement.DesignElementDaoBase {
+public abstract class DesignElementDaoImpl<T extends DesignElement> extends
+        ubic.gemma.model.expression.designElement.DesignElementDaoBase<T> {
 }

@@ -32,18 +32,18 @@ public interface UserQueryDao {
 
     public UserQuery create( UserQuery userQuery );
 
+    public Collection<UserQuery> findByUser( User user );
+
+    public UserQuery findMostRecentForUser( User user );
+
+    public UserQuery load( Long id );
+
+    public Collection<UserQuery> loadAll();
+
     public void remove( UserQuery userQuery );
 
     public void removeAllForUser( User user );
 
     public void removeOldForUser( User user, Date staleDate );
-
-    public Collection<UserQuery> loadAll();
-
-    public Collection<UserQuery> findByUser( User user );
-
-    public UserQuery load( Long id );
-
-    public UserQuery findMostRecentForUser( User user );
 
 }

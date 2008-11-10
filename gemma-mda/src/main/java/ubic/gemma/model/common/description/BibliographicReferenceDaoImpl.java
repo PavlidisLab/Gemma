@@ -40,8 +40,8 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDaoBase#find(ubic.gemma.model.common.description.BibliographicReference)
+     * @seeubic.gemma.model.common.description.BibliographicReferenceDaoBase#find(ubic.gemma.model.common.description.
+     * BibliographicReference)
      */
     @Override
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
@@ -80,8 +80,9 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDaoBase#findOrCreate(ubic.gemma.model.common.description.BibliographicReference)
+     * @see
+     * ubic.gemma.model.common.description.BibliographicReferenceDaoBase#findOrCreate(ubic.gemma.model.common.description
+     * .BibliographicReference)
      */
     @Override
     public BibliographicReference findOrCreate( BibliographicReference bibliographicReference ) {

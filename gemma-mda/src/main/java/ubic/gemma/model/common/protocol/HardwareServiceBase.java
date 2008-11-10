@@ -24,8 +24,8 @@ package ubic.gemma.model.common.protocol;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.protocol.HardwareService</code>, provides access to
- * all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.common.protocol.HardwareService</code>, provides access to all
+ * services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.common.protocol.HardwareService
@@ -33,20 +33,6 @@ package ubic.gemma.model.common.protocol;
 public abstract class HardwareServiceBase implements ubic.gemma.model.common.protocol.HardwareService {
 
     private ubic.gemma.model.common.protocol.HardwareDao hardwareDao;
-
-    /**
-     * Sets the reference to <code>hardware</code>'s DAO.
-     */
-    public void setHardwareDao( ubic.gemma.model.common.protocol.HardwareDao hardwareDao ) {
-        this.hardwareDao = hardwareDao;
-    }
-
-    /**
-     * Gets the reference to <code>hardware</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.protocol.HardwareDao getHardwareDao() {
-        return this.hardwareDao;
-    }
 
     /**
      * @see ubic.gemma.model.common.protocol.HardwareService#find(ubic.gemma.model.common.protocol.Hardware)
@@ -60,12 +46,6 @@ public abstract class HardwareServiceBase implements ubic.gemma.model.common.pro
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.protocol.Hardware)}
-     */
-    protected abstract ubic.gemma.model.common.protocol.Hardware handleFind(
-            ubic.gemma.model.common.protocol.Hardware hardware ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.common.protocol.HardwareService#findOrCreate(ubic.gemma.model.common.protocol.Hardware)
@@ -82,10 +62,24 @@ public abstract class HardwareServiceBase implements ubic.gemma.model.common.pro
     }
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.protocol.Hardware)}
+     * @see ubic.gemma.model.common.protocol.HardwareService#remove(ubic.gemma.model.common.protocol.Hardware)
      */
-    protected abstract ubic.gemma.model.common.protocol.Hardware handleFindOrCreate(
-            ubic.gemma.model.common.protocol.Hardware hardware ) throws java.lang.Exception;
+    public void remove( final ubic.gemma.model.common.protocol.Hardware hardware ) {
+        try {
+            this.handleRemove( hardware );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.protocol.HardwareServiceException(
+                    "Error performing 'ubic.gemma.model.common.protocol.HardwareService.remove(ubic.gemma.model.common.protocol.Hardware hardware)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>hardware</code>'s DAO.
+     */
+    public void setHardwareDao( ubic.gemma.model.common.protocol.HardwareDao hardwareDao ) {
+        this.hardwareDao = hardwareDao;
+    }
 
     /**
      * @see ubic.gemma.model.common.protocol.HardwareService#update(ubic.gemma.model.common.protocol.Hardware)
@@ -101,65 +95,10 @@ public abstract class HardwareServiceBase implements ubic.gemma.model.common.pro
     }
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.protocol.Hardware)}
+     * Gets the reference to <code>hardware</code>'s DAO.
      */
-    protected abstract void handleUpdate( ubic.gemma.model.common.protocol.Hardware hardware )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.protocol.HardwareService#remove(ubic.gemma.model.common.protocol.Hardware)
-     */
-    public void remove( final ubic.gemma.model.common.protocol.Hardware hardware ) {
-        try {
-            this.handleRemove( hardware );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.protocol.HardwareServiceException(
-                    "Error performing 'ubic.gemma.model.common.protocol.HardwareService.remove(ubic.gemma.model.common.protocol.Hardware hardware)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.protocol.Hardware)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.common.protocol.Hardware hardware )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.common.protocol.HardwareDao getHardwareDao() {
+        return this.hardwareDao;
     }
 
     /**
@@ -174,5 +113,65 @@ public abstract class HardwareServiceBase implements ubic.gemma.model.common.pro
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.common.protocol.Hardware)}
+     */
+    protected abstract ubic.gemma.model.common.protocol.Hardware handleFind(
+            ubic.gemma.model.common.protocol.Hardware hardware ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.protocol.Hardware)}
+     */
+    protected abstract ubic.gemma.model.common.protocol.Hardware handleFindOrCreate(
+            ubic.gemma.model.common.protocol.Hardware hardware ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.common.protocol.Hardware)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.common.protocol.Hardware hardware )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.common.protocol.Hardware)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.common.protocol.Hardware hardware )
+            throws java.lang.Exception;
 
 }

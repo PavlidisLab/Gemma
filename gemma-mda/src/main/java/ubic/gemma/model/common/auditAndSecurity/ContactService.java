@@ -30,13 +30,13 @@ public interface ContactService {
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
+    public ubic.gemma.model.common.auditAndSecurity.Contact find(
             ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.Contact find(
+    public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
             ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**

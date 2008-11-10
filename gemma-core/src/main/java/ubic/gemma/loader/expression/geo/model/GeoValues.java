@@ -256,8 +256,6 @@ public class GeoValues {
         if ( qtNameMapForPlatform.containsKey( columnName )
                 && qtNameMapForPlatform.get( columnName ).intValue() != index.intValue() ) {
             throw new IllegalArgumentException( "You just tried to reassign the column for a quantitation type" );
-        } else {
-
         }
 
         qtNameMapForPlatform.put( columnName, index );
@@ -418,9 +416,9 @@ public class GeoValues {
 
     /*
      * (non-Javadoc)
-     * 
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
 

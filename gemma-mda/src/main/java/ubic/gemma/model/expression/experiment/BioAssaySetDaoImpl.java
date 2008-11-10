@@ -25,5 +25,6 @@ package ubic.gemma.model.expression.experiment;
 /**
  * @see ubic.gemma.model.expression.experiment.BioAssaySet
  */
-public class BioAssaySetDaoImpl extends ubic.gemma.model.expression.experiment.BioAssaySetDaoBase {
+public abstract class BioAssaySetDaoImpl<T extends BioAssaySet> extends
+        ubic.gemma.model.expression.experiment.BioAssaySetDaoBase<T> {
 }

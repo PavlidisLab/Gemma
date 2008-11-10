@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -92,8 +94,22 @@ public class ReporterDaoImpl extends ubic.gemma.model.expression.designElement.R
             return existingReporter;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new reporter: " + reporter.getName() );
-        Reporter result = ( Reporter ) create( reporter );
+        Reporter result = create( reporter );
         return result;
+    }
+
+    public Collection<Reporter> load( Collection<Long> ids ) {
+        Collection<Reporter> reporters = null;
+        final String queryString = "select distinct cs from ReporterImpl cs where cs.id in (:ids)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            reporters = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return reporters;
     }
 
 }

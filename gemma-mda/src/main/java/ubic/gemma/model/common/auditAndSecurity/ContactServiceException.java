@@ -35,40 +35,6 @@ public class ContactServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = -2020599529753322439L;
 
     /**
-     * The default constructor for <code>ContactServiceException</code>.
-     */
-    public ContactServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>ContactServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public ContactServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>ContactServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public ContactServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>ContactServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public ContactServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class ContactServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>ContactServiceException</code>.
+     */
+    public ContactServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>ContactServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public ContactServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>ContactServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public ContactServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>ContactServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public ContactServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

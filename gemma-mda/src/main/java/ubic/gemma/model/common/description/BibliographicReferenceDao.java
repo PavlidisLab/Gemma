@@ -22,205 +22,51 @@
 //
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.common.description.BibliographicReference
  */
-public interface BibliographicReferenceDao extends ubic.gemma.model.common.AuditableDao {
-    /**
-     * Loads an instance of ubic.gemma.model.common.description.BibliographicReference from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
+public interface BibliographicReferenceDao extends BaseDao<BibliographicReference> {
     /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.common.description.BibliographicReference}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Creates an instance of ubic.gemma.model.common.description.BibliographicReference and adds it to the persistent
-     * store.
-     */
-    public ubic.gemma.model.common.Securable create(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.description.BibliographicReference)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined
-     * here then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entity (into a value object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform,
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.common.description.BibliographicReference and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.common.description.BibliographicReference instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.description.BibliographicReference)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined
-     * here then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * Updates the <code>bibliographicReference</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.description.BibliographicReference from the persistent store.
-     */
-    public void remove( ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.description.BibliographicReference having the given
-     * <code>identifier</code> from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * <p>
-     * Find by the external database id, such as for PubMed
-     * </p>
-     */
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId(
-            ubic.gemma.model.common.description.DatabaseEntry externalId );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByExternalId(ubic.gemma.model.common.description.DatabaseEntry)} with an
+     * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.description.BibliographicReference)} with an
      * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findByExternalId(ubic.gemma.model.common.description.DatabaseEntry)}.
+     * override the query string defined in {@link #find(int, ubic.gemma.model.common.description.BibliographicReference
+     * bibliographicReference)}.
      * </p>
      */
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( String queryString,
-            ubic.gemma.model.common.description.DatabaseEntry externalId );
+    public Object find( int transform, String queryString,
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
      * <p>
-     * Does the same thing as {@link #findByExternalId(ubic.gemma.model.common.description.DatabaseEntry)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
+     * Does the same thing as {@link #find(ubic.gemma.model.common.description.BibliographicReference)} with an
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findByExternalId( int transform, ubic.gemma.model.common.description.DatabaseEntry externalId );
+    public Object find( int transform, ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
      * <p>
-     * Does the same thing as {@link #findByExternalId(boolean, ubic.gemma.model.common.description.DatabaseEntry)} with
-     * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findByExternalId(int, ubic.gemma.model.common.description.DatabaseEntry externalId)}.
+     * Does the same thing as {@link #find(ubic.gemma.model.common.description.BibliographicReference)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #find(ubic.gemma.model.common.description.BibliographicReference)}.
      * </p>
      */
-    public Object findByExternalId( int transform, String queryString,
-            ubic.gemma.model.common.description.DatabaseEntry externalId );
+    public ubic.gemma.model.common.description.BibliographicReference find( String queryString,
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.BibliographicReference findByTitle( java.lang.String title );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByTitle(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByTitle(java.lang.String)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.description.BibliographicReference findByTitle( String queryString,
-            java.lang.String title );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByTitle(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findByTitle( int transform, java.lang.String title );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByTitle(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByTitle(int, java.lang.String title)}.
-     * </p>
-     */
-    public Object findByTitle( int transform, String queryString, java.lang.String title );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( java.lang.String id,
-            java.lang.String databaseName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByExternalId(java.lang.String, java.lang.String)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findByExternalId(java.lang.String, java.lang.String)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( String queryString,
-            java.lang.String id, java.lang.String databaseName );
+    public ubic.gemma.model.common.description.BibliographicReference find(
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
      * <p>
@@ -236,55 +82,126 @@ public interface BibliographicReferenceDao extends ubic.gemma.model.common.Audit
     /**
      * <p>
      * Does the same thing as {@link #findByExternalId(boolean, java.lang.String, java.lang.String)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #findByExternalId(int, java.lang.String id, java.lang.String databaseName)}.
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #findByExternalId(int, java.lang.String id, java.lang.String databaseName)}.
      * </p>
      */
     public Object findByExternalId( int transform, String queryString, java.lang.String id,
             java.lang.String databaseName );
 
     /**
-     * 
+     * <p>
+     * Does the same thing as {@link #findByExternalId(boolean, ubic.gemma.model.common.description.DatabaseEntry)} with
+     * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findByExternalId(int,
+     * ubic.gemma.model.common.description.DatabaseEntry externalId)}.
+     * </p>
      */
-    public ubic.gemma.model.common.description.BibliographicReference find(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+    public Object findByExternalId( int transform, String queryString,
+            ubic.gemma.model.common.description.DatabaseEntry externalId );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.common.description.BibliographicReference)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #find(ubic.gemma.model.common.description.BibliographicReference)}.
+     * Does the same thing as {@link #findByExternalId(ubic.gemma.model.common.description.DatabaseEntry)} with an
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public ubic.gemma.model.common.description.BibliographicReference find( String queryString,
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.common.description.BibliographicReference)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object find( int transform, ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.description.BibliographicReference)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #find(int, ubic.gemma.model.common.description.BibliographicReference bibliographicReference)}.
-     * </p>
-     */
-    public Object find( int transform, String queryString,
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+    public Object findByExternalId( int transform, ubic.gemma.model.common.description.DatabaseEntry externalId );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
+    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( java.lang.String id,
+            java.lang.String databaseName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByExternalId(java.lang.String, java.lang.String)} with an additional argument
+     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
+     * defined in {@link #findByExternalId(java.lang.String, java.lang.String)}.
+     * </p>
+     */
+    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( String queryString,
+            java.lang.String id, java.lang.String databaseName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByExternalId(ubic.gemma.model.common.description.DatabaseEntry)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findByExternalId(ubic.gemma.model.common.description.DatabaseEntry)}
+     * .
+     * </p>
+     */
+    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( String queryString,
+            ubic.gemma.model.common.description.DatabaseEntry externalId );
+
+    /**
+     * <p>
+     * Find by the external database id, such as for PubMed
+     * </p>
+     */
+    public ubic.gemma.model.common.description.BibliographicReference findByExternalId(
+            ubic.gemma.model.common.description.DatabaseEntry externalId );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByTitle(java.lang.String)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object findByTitle( int transform, java.lang.String title );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByTitle(boolean, java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByTitle(int, java.lang.String title)}.
+     * </p>
+     */
+    public Object findByTitle( int transform, String queryString, java.lang.String title );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.common.description.BibliographicReference findByTitle( java.lang.String title );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByTitle(java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByTitle(java.lang.String)}.
+     * </p>
+     */
+    public ubic.gemma.model.common.description.BibliographicReference findByTitle( String queryString,
+            java.lang.String title );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.common.description.BibliographicReference)}
+     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findOrCreate(int,
+     * ubic.gemma.model.common.description.BibliographicReference bibliographicReference)}.
+     * </p>
+     */
+    public Object findOrCreate( int transform, String queryString,
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.description.BibliographicReference)} with an
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object findOrCreate( int transform,
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
@@ -299,32 +216,9 @@ public interface BibliographicReferenceDao extends ubic.gemma.model.common.Audit
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.description.BibliographicReference)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform,
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.common.description.BibliographicReference)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows
-     * you to override the query string defined in
-     * {@link #findOrCreate(int, ubic.gemma.model.common.description.BibliographicReference bibliographicReference)}.
-     * </p>
-     */
-    public Object findOrCreate( int transform, String queryString,
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
      * 
      */
-    public java.util.Collection getRelatedExperiments(
+    public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
@@ -335,6 +229,9 @@ public interface BibliographicReferenceDao extends ubic.gemma.model.common.Audit
     /**
      * 
      */
-    public java.util.Collection loadMultiple( java.util.Collection ids );
+    public java.util.Collection getRelatedExperiments(
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+
+    public Collection<BibliographicReference> load( Collection<Long> ids );
 
 }

@@ -33,19 +33,6 @@ public class DatabaseEntryImpl extends ubic.gemma.model.common.description.Datab
      */
     private static final long serialVersionUID = 2482685192599172941L;
 
-    /**
-     * @see ubic.gemma.model.common.description.DatabaseEntry#toString()
-     */
-    @Override
-    public java.lang.String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append( this.getAccession() + " " );
-        buf.append( this.getExternalDatabase() == null ? "[no external database]" : this.getExternalDatabase()
-                .getName() );
-        buf.append( this.getId() == null ? "" : " (Id=" + this.getId() + ")" );
-        return buf.toString();
-    }
-
     @Override
     public boolean equals( Object object ) {
         if ( !( object instanceof DatabaseEntry ) ) return false;
@@ -78,6 +65,19 @@ public class DatabaseEntryImpl extends ubic.gemma.model.common.description.Datab
         if ( this.getExternalDatabase() != null ) hashCode += this.getExternalDatabase().hashCode();
 
         return hashCode;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.DatabaseEntry#toString()
+     */
+    @Override
+    public java.lang.String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append( this.getAccession() + " " );
+        buf.append( this.getExternalDatabase() == null ? "[no external database]" : this.getExternalDatabase()
+                .getName() );
+        buf.append( this.getId() == null ? "" : " (Id=" + this.getId() + ")" );
+        return buf.toString();
     }
 
 }

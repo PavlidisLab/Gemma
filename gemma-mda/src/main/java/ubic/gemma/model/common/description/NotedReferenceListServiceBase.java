@@ -35,52 +35,23 @@ public abstract class NotedReferenceListServiceBase implements
 
     private ubic.gemma.model.common.description.NotedReferenceDao notedReferenceDao;
 
-    /**
-     * Sets the reference to <code>notedReference</code>'s DAO.
-     */
-    public void setNotedReferenceDao( ubic.gemma.model.common.description.NotedReferenceDao notedReferenceDao ) {
-        this.notedReferenceDao = notedReferenceDao;
-    }
-
-    /**
-     * Gets the reference to <code>notedReference</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.description.NotedReferenceDao getNotedReferenceDao() {
-        return this.notedReferenceDao;
-    }
-
     private ubic.gemma.model.common.description.NotedReferenceListDao notedReferenceListDao;
-
-    /**
-     * Sets the reference to <code>notedReferenceList</code>'s DAO.
-     */
-    public void setNotedReferenceListDao(
-            ubic.gemma.model.common.description.NotedReferenceListDao notedReferenceListDao ) {
-        this.notedReferenceListDao = notedReferenceListDao;
-    }
-
-    /**
-     * Gets the reference to <code>notedReferenceList</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.description.NotedReferenceListDao getNotedReferenceListDao() {
-        return this.notedReferenceListDao;
-    }
 
     private ubic.gemma.model.common.description.BibliographicReferenceDao bibliographicReferenceDao;
 
     /**
-     * Sets the reference to <code>bibliographicReference</code>'s DAO.
+     * @see ubic.gemma.model.common.description.NotedReferenceListService#addReferenceToList(ubic.gemma.model.common.description.NotedReferenceList,
+     *      ubic.gemma.model.common.description.BibliographicReference)
      */
-    public void setBibliographicReferenceDao(
-            ubic.gemma.model.common.description.BibliographicReferenceDao bibliographicReferenceDao ) {
-        this.bibliographicReferenceDao = bibliographicReferenceDao;
-    }
-
-    /**
-     * Gets the reference to <code>bibliographicReference</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.description.BibliographicReferenceDao getBibliographicReferenceDao() {
-        return this.bibliographicReferenceDao;
+    public void addReferenceToList( final ubic.gemma.model.common.description.NotedReferenceList notedReferenceList,
+            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+        try {
+            this.handleAddReferenceToList( notedReferenceList, bibliographicReference );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.description.NotedReferenceListServiceException(
+                    "Error performing 'ubic.gemma.model.common.description.NotedReferenceListService.addReferenceToList(ubic.gemma.model.common.description.NotedReferenceList notedReferenceList, ubic.gemma.model.common.description.BibliographicReference bibliographicReference)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -99,37 +70,6 @@ public abstract class NotedReferenceListServiceBase implements
     }
 
     /**
-     * Performs the core logic for
-     * {@link #createNewList(java.lang.String, ubic.gemma.model.common.auditAndSecurity.User)}
-     */
-    protected abstract ubic.gemma.model.common.description.NotedReferenceList handleCreateNewList(
-            java.lang.String name, ubic.gemma.model.common.auditAndSecurity.User owner ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.description.NotedReferenceListService#addReferenceToList(ubic.gemma.model.common.description.NotedReferenceList,
-     *      ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public void addReferenceToList( final ubic.gemma.model.common.description.NotedReferenceList notedReferenceList,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        try {
-            this.handleAddReferenceToList( notedReferenceList, bibliographicReference );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.NotedReferenceListServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.NotedReferenceListService.addReferenceToList(ubic.gemma.model.common.description.NotedReferenceList notedReferenceList, ubic.gemma.model.common.description.BibliographicReference bibliographicReference)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #addReferenceToList(ubic.gemma.model.common.description.NotedReferenceList, ubic.gemma.model.common.description.BibliographicReference)}
-     */
-    protected abstract void handleAddReferenceToList(
-            ubic.gemma.model.common.description.NotedReferenceList notedReferenceList,
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
-            throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.common.description.NotedReferenceListService#getAllReferencesForList(ubic.gemma.model.common.description.NotedReferenceList)
      */
     public java.util.Collection getAllReferencesForList(
@@ -144,57 +84,6 @@ public abstract class NotedReferenceListServiceBase implements
     }
 
     /**
-     * Performs the core logic for
-     * {@link #getAllReferencesForList(ubic.gemma.model.common.description.NotedReferenceList)}
-     */
-    protected abstract java.util.Collection handleGetAllReferencesForList(
-            ubic.gemma.model.common.description.NotedReferenceList notedReferenceList ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.description.NotedReferenceListService#setListDescription(java.lang.String,
-     *      ubic.gemma.model.common.description.NotedReferenceList)
-     */
-    public void setListDescription( final java.lang.String description,
-            final ubic.gemma.model.common.description.NotedReferenceList notedReferenceList ) {
-        try {
-            this.handleSetListDescription( description, notedReferenceList );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.NotedReferenceListServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.NotedReferenceListService.setListDescription(java.lang.String description, ubic.gemma.model.common.description.NotedReferenceList notedReferenceList)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #setListDescription(java.lang.String, ubic.gemma.model.common.description.NotedReferenceList)}
-     */
-    protected abstract void handleSetListDescription( java.lang.String description,
-            ubic.gemma.model.common.description.NotedReferenceList notedReferenceList ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.description.NotedReferenceListService#setComment(java.lang.String,
-     *      ubic.gemma.model.common.description.NotedReference)
-     */
-    public void setComment( final java.lang.String comment,
-            final ubic.gemma.model.common.description.NotedReference notedReference ) {
-        try {
-            this.handleSetComment( comment, notedReference );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.NotedReferenceListServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.NotedReferenceListService.setComment(java.lang.String comment, ubic.gemma.model.common.description.NotedReference notedReference)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #setComment(java.lang.String, ubic.gemma.model.common.description.NotedReference)}
-     */
-    protected abstract void handleSetComment( java.lang.String comment,
-            ubic.gemma.model.common.description.NotedReference notedReference ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.common.description.NotedReferenceListService#removeList(ubic.gemma.model.common.description.NotedReferenceList)
      */
     public void removeList( final ubic.gemma.model.common.description.NotedReferenceList notedReferenceList ) {
@@ -206,12 +95,6 @@ public abstract class NotedReferenceListServiceBase implements
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #removeList(ubic.gemma.model.common.description.NotedReferenceList)}
-     */
-    protected abstract void handleRemoveList( ubic.gemma.model.common.description.NotedReferenceList notedReferenceList )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.common.description.NotedReferenceListService#removeReferenceFromList(ubic.gemma.model.common.description.NotedReference,
@@ -229,12 +112,57 @@ public abstract class NotedReferenceListServiceBase implements
     }
 
     /**
-     * Performs the core logic for
-     * {@link #removeReferenceFromList(ubic.gemma.model.common.description.NotedReference, ubic.gemma.model.common.description.NotedReferenceList)}
+     * Sets the reference to <code>bibliographicReference</code>'s DAO.
      */
-    protected abstract void handleRemoveReferenceFromList(
-            ubic.gemma.model.common.description.NotedReference notedReference,
-            ubic.gemma.model.common.description.NotedReferenceList notedReferenceList ) throws java.lang.Exception;
+    public void setBibliographicReferenceDao(
+            ubic.gemma.model.common.description.BibliographicReferenceDao bibliographicReferenceDao ) {
+        this.bibliographicReferenceDao = bibliographicReferenceDao;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.NotedReferenceListService#setComment(java.lang.String,
+     *      ubic.gemma.model.common.description.NotedReference)
+     */
+    public void setComment( final java.lang.String comment,
+            final ubic.gemma.model.common.description.NotedReference notedReference ) {
+        try {
+            this.handleSetComment( comment, notedReference );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.description.NotedReferenceListServiceException(
+                    "Error performing 'ubic.gemma.model.common.description.NotedReferenceListService.setComment(java.lang.String comment, ubic.gemma.model.common.description.NotedReference notedReference)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.NotedReferenceListService#setListDescription(java.lang.String,
+     *      ubic.gemma.model.common.description.NotedReferenceList)
+     */
+    public void setListDescription( final java.lang.String description,
+            final ubic.gemma.model.common.description.NotedReferenceList notedReferenceList ) {
+        try {
+            this.handleSetListDescription( description, notedReferenceList );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.description.NotedReferenceListServiceException(
+                    "Error performing 'ubic.gemma.model.common.description.NotedReferenceListService.setListDescription(java.lang.String description, ubic.gemma.model.common.description.NotedReferenceList notedReferenceList)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>notedReference</code>'s DAO.
+     */
+    public void setNotedReferenceDao( ubic.gemma.model.common.description.NotedReferenceDao notedReferenceDao ) {
+        this.notedReferenceDao = notedReferenceDao;
+    }
+
+    /**
+     * Sets the reference to <code>notedReferenceList</code>'s DAO.
+     */
+    public void setNotedReferenceListDao(
+            ubic.gemma.model.common.description.NotedReferenceListDao notedReferenceListDao ) {
+        this.notedReferenceListDao = notedReferenceListDao;
+    }
 
     /**
      * @see ubic.gemma.model.common.description.NotedReferenceListService#setRating(java.lang.Integer,
@@ -252,47 +180,10 @@ public abstract class NotedReferenceListServiceBase implements
     }
 
     /**
-     * Performs the core logic for
-     * {@link #setRating(java.lang.Integer, ubic.gemma.model.common.description.NotedReference)}
+     * Gets the reference to <code>bibliographicReference</code>'s DAO.
      */
-    protected abstract void handleSetRating( java.lang.Integer rating,
-            ubic.gemma.model.common.description.NotedReference notedReference ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.common.description.BibliographicReferenceDao getBibliographicReferenceDao() {
+        return this.bibliographicReferenceDao;
     }
 
     /**
@@ -307,5 +198,113 @@ public abstract class NotedReferenceListServiceBase implements
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the reference to <code>notedReference</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.description.NotedReferenceDao getNotedReferenceDao() {
+        return this.notedReferenceDao;
+    }
+
+    /**
+     * Gets the reference to <code>notedReferenceList</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.description.NotedReferenceListDao getNotedReferenceListDao() {
+        return this.notedReferenceListDao;
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for
+     * {@link #addReferenceToList(ubic.gemma.model.common.description.NotedReferenceList, ubic.gemma.model.common.description.BibliographicReference)}
+     */
+    protected abstract void handleAddReferenceToList(
+            ubic.gemma.model.common.description.NotedReferenceList notedReferenceList,
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #createNewList(java.lang.String, ubic.gemma.model.common.auditAndSecurity.User)}
+     */
+    protected abstract ubic.gemma.model.common.description.NotedReferenceList handleCreateNewList(
+            java.lang.String name, ubic.gemma.model.common.auditAndSecurity.User owner ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #getAllReferencesForList(ubic.gemma.model.common.description.NotedReferenceList)}
+     */
+    protected abstract java.util.Collection handleGetAllReferencesForList(
+            ubic.gemma.model.common.description.NotedReferenceList notedReferenceList ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #removeList(ubic.gemma.model.common.description.NotedReferenceList)}
+     */
+    protected abstract void handleRemoveList( ubic.gemma.model.common.description.NotedReferenceList notedReferenceList )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #removeReferenceFromList(ubic.gemma.model.common.description.NotedReference, ubic.gemma.model.common.description.NotedReferenceList)}
+     */
+    protected abstract void handleRemoveReferenceFromList(
+            ubic.gemma.model.common.description.NotedReference notedReference,
+            ubic.gemma.model.common.description.NotedReferenceList notedReferenceList ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #setComment(java.lang.String, ubic.gemma.model.common.description.NotedReference)}
+     */
+    protected abstract void handleSetComment( java.lang.String comment,
+            ubic.gemma.model.common.description.NotedReference notedReference ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #setListDescription(java.lang.String, ubic.gemma.model.common.description.NotedReferenceList)}
+     */
+    protected abstract void handleSetListDescription( java.lang.String description,
+            ubic.gemma.model.common.description.NotedReferenceList notedReferenceList ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #setRating(java.lang.Integer, ubic.gemma.model.common.description.NotedReference)}
+     */
+    protected abstract void handleSetRating( java.lang.Integer rating,
+            ubic.gemma.model.common.description.NotedReference notedReference ) throws java.lang.Exception;
 
 }

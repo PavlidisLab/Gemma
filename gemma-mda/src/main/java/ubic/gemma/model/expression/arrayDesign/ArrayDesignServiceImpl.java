@@ -402,7 +402,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
-        return this.getArrayDesignDao().loadMultiple( ids );
+        return this.getArrayDesignDao().load( ids );
     }
 
     /*

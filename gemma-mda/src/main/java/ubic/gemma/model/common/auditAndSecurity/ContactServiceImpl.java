@@ -46,6 +46,11 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
         return this.getContactDao().find( contact );
     }
 
+    @Override
+    protected Contact handleFindOrCreate( Contact contact ) throws Exception {
+        return this.getContactDao().findOrCreate( contact );
+    }
+
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#remove(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
@@ -60,11 +65,6 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
     @Override
     protected void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception {
         this.getContactDao().update( contact );
-    }
-
-    @Override
-    protected Contact handleFindOrCreate( Contact contact ) throws Exception {
-        return this.getContactDao().findOrCreate( contact );
     }
 
 }

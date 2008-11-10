@@ -33,7 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * 
  * @see ubic.gemma.model.genome.Gene
  */
-public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeatureDaoImpl implements
+public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeatureDaoImpl<Gene> implements
         ubic.gemma.model.genome.GeneDao {
 
     /**
@@ -41,7 +41,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * objects) to {@link ubic.gemma.model.genome.gene.GeneValueObject} using the Jakarta Commons-Collections
      * Transformation API.
      */
-    private org.apache.commons.collections.Transformer GENEVALUEOBJECT_TRANSFORMER = new org.apache.commons.collections.Transformer() {
+    protected org.apache.commons.collections.Transformer GENEVALUEOBJECT_TRANSFORMER = new org.apache.commons.collections.Transformer() {
         public Object transform( Object input ) {
             Object result = null;
             if ( input instanceof ubic.gemma.model.genome.Gene ) {
@@ -53,7 +53,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
         }
     };
 
-    private final org.apache.commons.collections.Transformer GeneValueObjectToEntityTransformer = new org.apache.commons.collections.Transformer() {
+    protected final org.apache.commons.collections.Transformer GeneValueObjectToEntityTransformer = new org.apache.commons.collections.Transformer() {
         public Object transform( Object input ) {
             return geneValueObjectToEntity( ( ubic.gemma.model.genome.gene.GeneValueObject ) input );
         }
@@ -112,7 +112,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#create(ubic.gemma.model.genome.Gene)
      */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.Gene gene ) {
+    public Gene create( ubic.gemma.model.genome.Gene gene ) {
         return ( ubic.gemma.model.genome.Gene ) this.create( TRANSFORM_NONE, gene );
     }
 
@@ -120,7 +120,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @see ubic.gemma.model.genome.GeneDao#find(int, java.lang.String, ubic.gemma.model.genome.Gene)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString, final ubic.gemma.model.genome.Gene gene ) {
+    public Gene find( final int transform, final java.lang.String queryString, final ubic.gemma.model.genome.Gene gene ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( gene );
@@ -136,13 +136,13 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
             result = results.iterator().next();
         }
         result = transformEntity( transform, ( ubic.gemma.model.genome.Gene ) result );
-        return result;
+        return ( Gene ) result;
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#find(int, ubic.gemma.model.genome.Gene)
      */
-    public Object find( final int transform, final ubic.gemma.model.genome.Gene gene ) {
+    public Gene find( final int transform, final ubic.gemma.model.genome.Gene gene ) {
         return this.find( transform, "from ubic.gemma.model.genome.Gene as gene where gene.gene = :gene", gene );
     }
 
@@ -192,7 +192,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(int, java.lang.String)
      */
-    @Override
+
     public java.util.Collection<Gene> findByNcbiId( final int transform, final java.lang.String ncbiId ) {
         return this.findByNcbiId( transform, "from GeneImpl g where g.ncbiId = :ncbiId", ncbiId );
     }
@@ -200,7 +200,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(int, java.lang.String, java.lang.String)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection<Gene> findByNcbiId( final int transform, final java.lang.String queryString,
             final java.lang.String ncbiId ) {
@@ -217,7 +217,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(java.lang.String)
      */
-    @Override
+
     public java.util.Collection<Gene> findByNcbiId( java.lang.String ncbiId ) {
         return this.findByNcbiId( TRANSFORM_NONE, ncbiId );
     }
@@ -225,7 +225,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(java.lang.String, java.lang.String)
      */
-    @Override
+
     public java.util.Collection<Gene> findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
         return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
     }
@@ -366,7 +366,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @see ubic.gemma.model.genome.GeneDao#findByPhysicalLocation(int, java.lang.String,
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection<Gene> findByPhysicalLocation( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -383,7 +383,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByPhysicalLocation(int, ubic.gemma.model.genome.PhysicalLocation)
      */
-    @Override
+
     public java.util.Collection<Gene> findByPhysicalLocation( final int transform,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( transform,
@@ -394,7 +394,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @see ubic.gemma.model.genome.GeneDao#findByPhysicalLocation(java.lang.String,
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
-    @Override
+
     public java.util.Collection<Gene> findByPhysicalLocation( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( TRANSFORM_NONE, queryString, location );
@@ -403,7 +403,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
      */
-    @Override
+
     public java.util.Collection<Gene> findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( TRANSFORM_NONE, location );
     }
@@ -493,59 +493,6 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                            + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Gene ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getAclObjectIdentityId(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this.getAclObjectIdentityId( transform,
-                "from ubic.gemma.model.genome.Gene as gene where gene.securable = :securable", securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getAclObjectIdentityId(java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.GeneDao#getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection,
      *      java.lang.Integer, boolean)
      */
@@ -616,111 +563,6 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#getMask(int, java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Gene ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this.getMask( transform, "from ubic.gemma.model.genome.Gene as gene where gene.securable = :securable",
-                securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getMask(java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'java.util.Map" + "' was found when executing query --> '" + queryString
-                            + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Gene ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this.getMasks( transform,
-                "from ubic.gemma.model.genome.Gene as gene where gene.securables = :securables", securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.GeneDao#getMicroRnaByTaxon(ubic.gemma.model.genome.Taxon)
      */
     public java.util.Collection<Gene> getMicroRnaByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
@@ -734,58 +576,9 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this.getRecipient( transform, "from ubic.gemma.model.genome.Gene as gene where gene.id = :id", id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getRecipient(int, java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                            + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Gene ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getRecipient(java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.GeneDao#load(int, java.lang.Long)
      */
-    @Override
+
     public Object load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene.load - 'id' can not be null" );
@@ -797,15 +590,15 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#load(java.lang.Long)
      */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
+
+    public Gene load( java.lang.Long id ) {
         return ( ubic.gemma.model.genome.Gene ) this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#loadAll()
      */
-    @Override
+
     public java.util.Collection<Gene> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -813,7 +606,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#loadAll(int)
      */
-    @Override
+
     public java.util.Collection<Gene> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.GeneImpl.class );
@@ -835,9 +628,9 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#loadMultiple(java.util.Collection)
+     * @see ubic.gemma.model.genome.GeneDao#load(java.util.Collection)
      */
-    public java.util.Collection<Gene> loadMultiple( final java.util.Collection<Long> ids ) {
+    public java.util.Collection<Gene> load( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -876,7 +669,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#remove(java.lang.Long)
      */
-    @Override
+
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene.remove - 'id' can not be null" );
@@ -890,7 +683,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    @Override
+
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene.remove - 'entities' can not be null" );
@@ -934,31 +727,12 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
         }
     }
 
-    // /**
-    // * @see ubic.gemma.model.genome.GeneDao#getCompositeSequenceMap(java.util.Collection)
-    // */
-    // public java.util.Map<Long, Collection<Long>> getCompositeSequenceMap( final java.util.Collection<Gene> genes ) {
-    // try {
-    // return this.handleGetCompositeSequenceMap( genes );
-    // } catch ( Throwable th ) {
-    // throw new java.lang.RuntimeException(
-    // "Error performing 'ubic.gemma.model.genome.GeneDao.getCompositeSequenceMap(java.util.Collection genes)' --> "
-    // + th, th );
-    // }
-    // }
-    //
-    // /**
-    // * Performs the core logic for {@link #getCompositeSequenceMap(java.util.Collection)}
-    // */
-    // protected abstract java.util.Map<Long, Collection<Long>> handleGetCompositeSequenceMap(
-    // java.util.Collection<Gene> genes ) throws java.lang.Exception;
-
     /**
      * @see ubic.gemma.model.genome.GeneDao#toGeneValueObject(ubic.gemma.model.genome.Gene)
      */
     public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject( final ubic.gemma.model.genome.Gene entity ) {
         final ubic.gemma.model.genome.gene.GeneValueObject target = new ubic.gemma.model.genome.gene.GeneValueObject();
-        this.toGeneValueObject( entity, target );
+        toGeneValueObject( entity, target );
         return target;
     }
 
@@ -988,7 +762,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    @Override
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene.update - 'entities' can not be null" );
@@ -1085,7 +859,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
             throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
+     * Performs the core logic for {@link #load(java.util.Collection)}
      */
     protected abstract java.util.Collection<Gene> handleLoadMultiple( java.util.Collection<Long> ids )
             throws java.lang.Exception;
@@ -1126,7 +900,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
             for ( int ctr = 0; ctr < numberOfObjects; ctr++ ) {
                 final Object object = row[ctr];
                 if ( object instanceof ubic.gemma.model.genome.Gene ) {
-                    target = this.toGeneValueObject( ( ubic.gemma.model.genome.Gene ) object );
+                    target = toGeneValueObject( ( ubic.gemma.model.genome.Gene ) object );
                     break;
                 }
             }
@@ -1145,7 +919,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.genome.Gene)
      */
-    @Override
+
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case ubic.gemma.model.genome.GeneDao.TRANSFORM_GENEVALUEOBJECT:

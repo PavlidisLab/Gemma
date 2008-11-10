@@ -22,62 +22,30 @@
 //
 package ubic.gemma.model.common.auditAndSecurity;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserRole
  */
-public interface UserRoleDao extends ubic.gemma.model.common.DescribableDao {
-    /**
-     * Loads an instance of ubic.gemma.model.common.auditAndSecurity.UserRole from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
+public interface UserRoleDao extends BaseDao<UserRole> {
     /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * Does the same thing as {@link #create(ubic.gemma.model.common.auditAndSecurity.UserRole)} with an additional flag
+     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
+     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
+     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
+     * objects for example). By default, transformation does not occur.
      * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
      */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.common.auditAndSecurity.UserRole}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Creates an instance of ubic.gemma.model.common.auditAndSecurity.UserRole and adds it to the persistent store.
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.common.auditAndSecurity.UserRole userRole );
+    public java.util.Collection create( int transform, java.util.Collection entities );
 
     /**
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.common.auditAndSecurity.UserRole)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the
-     * result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a
-     * value object for example). By default, transformation does not occur.
+     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
+     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
+     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a value
+     * object for example). By default, transformation does not occur.
      * </p>
      */
     public Object create( int transform, ubic.gemma.model.common.auditAndSecurity.UserRole userRole );
@@ -92,91 +60,9 @@ public interface UserRoleDao extends ubic.gemma.model.common.DescribableDao {
     public java.util.Collection create( java.util.Collection entities );
 
     /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.auditAndSecurity.UserRole)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the
-     * result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into
-     * value objects for example). By default, transformation does not occur.
-     * </p>
+     * Creates an instance of ubic.gemma.model.common.auditAndSecurity.UserRole and adds it to the persistent store.
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * Updates the <code>userRole</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.common.auditAndSecurity.UserRole userRole );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.auditAndSecurity.UserRole from the persistent store.
-     */
-    public void remove( ubic.gemma.model.common.auditAndSecurity.UserRole userRole );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.auditAndSecurity.UserRole having the given
-     * <code>identifier</code> from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * <p>
-     * Return all roles
-     * </p>
-     */
-    public java.util.Collection findRolesByUserName( java.lang.String userName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findRolesByUserName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findRolesByUserName(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection findRolesByUserName( String queryString, java.lang.String userName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findRolesByUserName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection findRolesByUserName( int transform, java.lang.String userName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findRolesByUserName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findRolesByUserName(int, java.lang.String userName)}.
-     * </p>
-     */
-    public java.util.Collection findRolesByUserName( int transform, String queryString, java.lang.String userName );
-
-    /**
-     * 
-     */
-    public java.util.Collection findRolesByRoleName( java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findRolesByRoleName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findRolesByRoleName(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection findRolesByRoleName( String queryString, java.lang.String name );
+    public UserRole create( ubic.gemma.model.common.auditAndSecurity.UserRole userRole );
 
     /**
      * <p>
@@ -192,10 +78,126 @@ public interface UserRoleDao extends ubic.gemma.model.common.DescribableDao {
     /**
      * <p>
      * Does the same thing as {@link #findRolesByRoleName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findRolesByRoleName(int, java.lang.String name)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findRolesByRoleName(int, java.lang.String name)}.
      * </p>
      */
     public java.util.Collection findRolesByRoleName( int transform, String queryString, java.lang.String name );
+
+    /**
+     * 
+     */
+    public java.util.Collection findRolesByRoleName( java.lang.String name );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findRolesByRoleName(java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findRolesByRoleName(java.lang.String)}.
+     * </p>
+     */
+    public java.util.Collection findRolesByRoleName( String queryString, java.lang.String name );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findRolesByUserName(java.lang.String)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public java.util.Collection findRolesByUserName( int transform, java.lang.String userName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findRolesByUserName(boolean, java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findRolesByUserName(int, java.lang.String userName)}.
+     * </p>
+     */
+    public java.util.Collection findRolesByUserName( int transform, String queryString, java.lang.String userName );
+
+    /**
+     * <p>
+     * Return all roles
+     * </p>
+     */
+    public java.util.Collection findRolesByUserName( java.lang.String userName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findRolesByUserName(java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findRolesByUserName(java.lang.String)}.
+     * </p>
+     */
+    public java.util.Collection findRolesByUserName( String queryString, java.lang.String userName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
+     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
+     * </p>
+     * 
+     * @param id the identifier of the entity to load.
+     * @return either the entity or the object transformed from the entity.
+     */
+    public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.common.auditAndSecurity.UserRole from the persistent store.
+     */
+    public UserRole load( java.lang.Long id );
+
+    /**
+     * Loads all entities of type {@link ubic.gemma.model.common.auditAndSecurity.UserRole}.
+     * 
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll();
+
+    /**
+     * <p>
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * operation which can optionally transform the entity (into a value object for example). By default, transformation
+     * does not occur.
+     * </p>
+     * 
+     * @param transform the flag indicating what transformation to use.
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll( final int transform );
+
+    /**
+     * Removes the instance of ubic.gemma.model.common.auditAndSecurity.UserRole having the given
+     * <code>identifier</code> from the persistent store.
+     */
+    public void remove( java.lang.Long id );
+
+    /**
+     * Removes all entities in the given <code>entities<code> collection.
+     */
+    public void remove( java.util.Collection entities );
+
+    /**
+     * Removes the instance of ubic.gemma.model.common.auditAndSecurity.UserRole from the persistent store.
+     */
+    public void remove( ubic.gemma.model.common.auditAndSecurity.UserRole userRole );
+
+    /**
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     */
+    public void update( java.util.Collection entities );
+
+    /**
+     * Updates the <code>userRole</code> instance in the persistent store.
+     */
+    public void update( ubic.gemma.model.common.auditAndSecurity.UserRole userRole );
 
 }

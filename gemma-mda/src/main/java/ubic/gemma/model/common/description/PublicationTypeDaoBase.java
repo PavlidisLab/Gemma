@@ -34,6 +34,52 @@ public abstract class PublicationTypeDaoBase extends org.springframework.orm.hib
         implements ubic.gemma.model.common.description.PublicationTypeDao {
 
     /**
+     * @see ubic.gemma.model.common.description.PublicationTypeDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "PublicationType.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.description.PublicationType ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.PublicationTypeDao#create(int transform,
+     *      ubic.gemma.model.common.description.PublicationType)
+     */
+    public Object create( final int transform, final ubic.gemma.model.common.description.PublicationType publicationType ) {
+        if ( publicationType == null ) {
+            throw new IllegalArgumentException( "PublicationType.create - 'publicationType' can not be null" );
+        }
+        this.getHibernateTemplate().save( publicationType );
+        return this.transformEntity( transform, publicationType );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.PublicationTypeDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.PublicationTypeDao#create(ubic.gemma.model.common.description.PublicationType)
+     */
+    public ubic.gemma.model.common.description.PublicationType create(
+            ubic.gemma.model.common.description.PublicationType publicationType ) {
+        return ( ubic.gemma.model.common.description.PublicationType ) this.create( TRANSFORM_NONE, publicationType );
+    }
+
+    /**
      * @see ubic.gemma.model.common.description.PublicationTypeDao#load(int, java.lang.Long)
      */
     public Object load( final int transform, final java.lang.Long id ) {
@@ -71,89 +117,6 @@ public abstract class PublicationTypeDaoBase extends org.springframework.orm.hib
     }
 
     /**
-     * @see ubic.gemma.model.common.description.PublicationTypeDao#create(ubic.gemma.model.common.description.PublicationType)
-     */
-    public ubic.gemma.model.common.description.PublicationType create(
-            ubic.gemma.model.common.description.PublicationType publicationType ) {
-        return ( ubic.gemma.model.common.description.PublicationType ) this.create( TRANSFORM_NONE, publicationType );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.PublicationTypeDao#create(int transform,
-     *      ubic.gemma.model.common.description.PublicationType)
-     */
-    public Object create( final int transform, final ubic.gemma.model.common.description.PublicationType publicationType ) {
-        if ( publicationType == null ) {
-            throw new IllegalArgumentException( "PublicationType.create - 'publicationType' can not be null" );
-        }
-        this.getHibernateTemplate().save( publicationType );
-        return this.transformEntity( transform, publicationType );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.PublicationTypeDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.PublicationTypeDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "PublicationType.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.description.PublicationType ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.PublicationTypeDao#update(ubic.gemma.model.common.description.PublicationType)
-     */
-    public void update( ubic.gemma.model.common.description.PublicationType publicationType ) {
-        if ( publicationType == null ) {
-            throw new IllegalArgumentException( "PublicationType.update - 'publicationType' can not be null" );
-        }
-        this.getHibernateTemplate().update( publicationType );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.PublicationTypeDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "PublicationType.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.description.PublicationType ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.PublicationTypeDao#remove(ubic.gemma.model.common.description.PublicationType)
-     */
-    public void remove( ubic.gemma.model.common.description.PublicationType publicationType ) {
-        if ( publicationType == null ) {
-            throw new IllegalArgumentException( "PublicationType.remove - 'publicationType' can not be null" );
-        }
-        this.getHibernateTemplate().delete( publicationType );
-    }
-
-    /**
      * @see ubic.gemma.model.common.description.PublicationTypeDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -177,11 +140,69 @@ public abstract class PublicationTypeDaoBase extends org.springframework.orm.hib
     }
 
     /**
+     * @see ubic.gemma.model.common.description.PublicationTypeDao#remove(ubic.gemma.model.common.description.PublicationType)
+     */
+    public void remove( ubic.gemma.model.common.description.PublicationType publicationType ) {
+        if ( publicationType == null ) {
+            throw new IllegalArgumentException( "PublicationType.remove - 'publicationType' can not be null" );
+        }
+        this.getHibernateTemplate().delete( publicationType );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.PublicationTypeDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "PublicationType.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.description.PublicationType ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.PublicationTypeDao#update(ubic.gemma.model.common.description.PublicationType)
+     */
+    public void update( ubic.gemma.model.common.description.PublicationType publicationType ) {
+        if ( publicationType == null ) {
+            throw new IllegalArgumentException( "PublicationType.update - 'publicationType' can not be null" );
+        }
+        this.getHibernateTemplate().update( publicationType );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.description.PublicationType)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.common.description.PublicationTypeDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.description.PublicationType)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.common.description.PublicationTypeDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
-     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
+     * <code>ubic.gemma.model.common.description.PublicationTypeDao</code>, please note that the {@link #TRANSFORM_NONE}
+     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
+     * unknown {@link #TRANSFORM_NONE} is assumed.
      * 
      * @param transform one of the constants declared in {@link ubic.gemma.model.common.description.PublicationTypeDao}
      * @param entity an entity that was found
@@ -199,25 +220,6 @@ public abstract class PublicationTypeDaoBase extends org.springframework.orm.hib
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.description.PublicationType)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.description.PublicationTypeDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.description.PublicationType)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

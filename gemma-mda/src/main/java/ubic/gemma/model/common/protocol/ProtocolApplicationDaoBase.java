@@ -31,57 +31,26 @@ package ubic.gemma.model.common.protocol;
  * @see ubic.gemma.model.common.protocol.ProtocolApplication
  */
 public abstract class ProtocolApplicationDaoBase extends
-        ubic.gemma.model.common.protocol.ParameterizableApplicationDaoImpl implements
+        ubic.gemma.model.common.protocol.ParameterizableApplicationDaoImpl<ProtocolApplication> implements
         ubic.gemma.model.common.protocol.ProtocolApplicationDao {
 
     /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#load(int, java.lang.Long)
+     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#create(int, java.util.Collection)
      */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ProtocolApplication.load - 'id' can not be null" );
+
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ProtocolApplication.create - 'entities' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.common.protocol.ProtocolApplicationImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.protocol.ProtocolApplication ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.protocol.ProtocolApplication ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.protocol.ProtocolApplicationImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#create(ubic.gemma.model.common.protocol.ProtocolApplication)
-     */
-    public ubic.gemma.model.common.Securable create(
-            ubic.gemma.model.common.protocol.ProtocolApplication protocolApplication ) {
-        return ( ubic.gemma.model.common.protocol.ProtocolApplication ) this.create( TRANSFORM_NONE,
-                protocolApplication );
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.protocol.ProtocolApplication ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
     }
 
     /**
@@ -100,45 +69,101 @@ public abstract class ProtocolApplicationDaoBase extends
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#create(java.util.Collection)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
     /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#create(int, java.util.Collection)
+     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#create(ubic.gemma.model.common.protocol.ProtocolApplication)
      */
-    @Override
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ProtocolApplication.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.protocol.ProtocolApplication ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
+    public ProtocolApplication create( ubic.gemma.model.common.protocol.ProtocolApplication protocolApplication ) {
+        return ( ubic.gemma.model.common.protocol.ProtocolApplication ) this.create( TRANSFORM_NONE,
+                protocolApplication );
     }
 
     /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#update(ubic.gemma.model.common.protocol.ProtocolApplication)
+     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#load(int, java.lang.Long)
      */
-    public void update( ubic.gemma.model.common.protocol.ProtocolApplication protocolApplication ) {
-        if ( protocolApplication == null ) {
-            throw new IllegalArgumentException( "ProtocolApplication.update - 'protocolApplication' can not be null" );
+
+    public ProtocolApplication load( final int transform, final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ProtocolApplication.load - 'id' can not be null" );
         }
-        this.getHibernateTemplate().update( protocolApplication );
+        final Object entity = this.getHibernateTemplate().get(
+                ubic.gemma.model.common.protocol.ProtocolApplicationImpl.class, id );
+        return ( ProtocolApplication ) transformEntity( transform, ( ubic.gemma.model.common.protocol.ProtocolApplication ) entity );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#load(java.lang.Long)
+     */
+
+    public ProtocolApplication load( java.lang.Long id ) {
+        return this.load( TRANSFORM_NONE, id );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#loadAll()
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection loadAll() {
+        return this.loadAll( TRANSFORM_NONE );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#loadAll(int)
+     */
+
+    public java.util.Collection loadAll( final int transform ) {
+        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.common.protocol.ProtocolApplicationImpl.class );
+        this.transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#remove(java.lang.Long)
+     */
+
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ProtocolApplication.remove - 'id' can not be null" );
+        }
+        ubic.gemma.model.common.protocol.ProtocolApplication entity = ( ubic.gemma.model.common.protocol.ProtocolApplication ) this
+                .load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     */
+
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ProtocolApplication.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#remove(ubic.gemma.model.common.protocol.ProtocolApplication)
+     */
+    public void remove( ubic.gemma.model.common.protocol.ProtocolApplication protocolApplication ) {
+        if ( protocolApplication == null ) {
+            throw new IllegalArgumentException( "ProtocolApplication.remove - 'protocolApplication' can not be null" );
+        }
+        this.getHibernateTemplate().delete( protocolApplication );
     }
 
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    @Override
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProtocolApplication.update - 'entities' can not be null" );
@@ -154,274 +179,35 @@ public abstract class ProtocolApplicationDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#remove(ubic.gemma.model.common.protocol.ProtocolApplication)
+     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#update(ubic.gemma.model.common.protocol.ProtocolApplication)
      */
-    public void remove( ubic.gemma.model.common.protocol.ProtocolApplication protocolApplication ) {
+    public void update( ubic.gemma.model.common.protocol.ProtocolApplication protocolApplication ) {
         if ( protocolApplication == null ) {
-            throw new IllegalArgumentException( "ProtocolApplication.remove - 'protocolApplication' can not be null" );
+            throw new IllegalArgumentException( "ProtocolApplication.update - 'protocolApplication' can not be null" );
         }
-        this.getHibernateTemplate().delete( protocolApplication );
+        this.getHibernateTemplate().update( protocolApplication );
     }
 
     /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#remove(java.lang.Long)
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.protocol.ProtocolApplication)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.common.protocol.ProtocolApplicationDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.protocol.ProtocolApplication)
      */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ProtocolApplication.remove - 'id' can not be null" );
+
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
         }
-        ubic.gemma.model.common.protocol.ProtocolApplication entity = ( ubic.gemma.model.common.protocol.ProtocolApplication ) this
-                .load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ProtocolApplication.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getRecipient(java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this
-                .getRecipient(
-                        transform,
-                        "from ubic.gemma.model.common.protocol.ProtocolApplication as protocolApplication where protocolApplication.id = :id",
-                        id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getRecipient(int, java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.protocol.ProtocolApplication ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.common.protocol.ProtocolApplication as protocolApplication where protocolApplication.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.protocol.ProtocolApplication ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.common.protocol.ProtocolApplication as protocolApplication where protocolApplication.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.protocol.ProtocolApplication ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.common.protocol.ProtocolApplication as protocolApplication where protocolApplication.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#getMasks(int, java.lang.String,
-     *      java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.protocol.ProtocolApplication ) result );
-        return result;
     }
 
     /**
@@ -447,26 +233,6 @@ public abstract class ProtocolApplicationDaoBase extends
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.protocol.ProtocolApplication)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.protocol.ProtocolApplicationDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.protocol.ProtocolApplication)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

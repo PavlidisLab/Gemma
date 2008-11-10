@@ -24,8 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.auditAndSecurity.ContactService</code>, provides
- * access to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.common.auditAndSecurity.ContactService</code>, provides access
+ * to all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.common.auditAndSecurity.ContactService
@@ -35,17 +35,17 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     private ubic.gemma.model.common.auditAndSecurity.ContactDao contactDao;
 
     /**
-     * Sets the reference to <code>contact</code>'s DAO.
+     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#find(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    public void setContactDao( ubic.gemma.model.common.auditAndSecurity.ContactDao contactDao ) {
-        this.contactDao = contactDao;
-    }
-
-    /**
-     * Gets the reference to <code>contact</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.auditAndSecurity.ContactDao getContactDao() {
-        return this.contactDao;
+    public ubic.gemma.model.common.auditAndSecurity.Contact find(
+            final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
+        try {
+            return this.handleFind( contact );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.auditAndSecurity.ContactServiceException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.ContactService.find(ubic.gemma.model.common.auditAndSecurity.Contact contact)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -63,32 +63,6 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     }
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)}
-     */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.Contact handleFindOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#find(ubic.gemma.model.common.auditAndSecurity.Contact)
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Contact find(
-            final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        try {
-            return this.handleFind( contact );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.ContactServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.ContactService.find(ubic.gemma.model.common.auditAndSecurity.Contact contact)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.auditAndSecurity.Contact)}
-     */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.Contact handleFind(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#remove(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
     public void remove( final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
@@ -102,10 +76,11 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     }
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.auditAndSecurity.Contact)}
+     * Sets the reference to <code>contact</code>'s DAO.
      */
-    protected abstract void handleRemove( ubic.gemma.model.common.auditAndSecurity.Contact contact )
-            throws java.lang.Exception;
+    public void setContactDao( ubic.gemma.model.common.auditAndSecurity.ContactDao contactDao ) {
+        this.contactDao = contactDao;
+    }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#update(ubic.gemma.model.common.auditAndSecurity.Contact)
@@ -121,46 +96,10 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     }
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.auditAndSecurity.Contact)}
+     * Gets the reference to <code>contact</code>'s DAO.
      */
-    protected abstract void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.common.auditAndSecurity.ContactDao getContactDao() {
+        return this.contactDao;
     }
 
     /**
@@ -175,5 +114,65 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.common.auditAndSecurity.Contact)}
+     */
+    protected abstract ubic.gemma.model.common.auditAndSecurity.Contact handleFind(
+            ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)}
+     */
+    protected abstract ubic.gemma.model.common.auditAndSecurity.Contact handleFindOrCreate(
+            ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.common.auditAndSecurity.Contact)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.common.auditAndSecurity.Contact contact )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.common.auditAndSecurity.Contact)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact )
+            throws java.lang.Exception;
 
 }

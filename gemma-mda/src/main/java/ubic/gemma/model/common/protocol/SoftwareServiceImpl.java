@@ -37,12 +37,9 @@ public class SoftwareServiceImpl extends ubic.gemma.model.common.protocol.Softwa
         return this.getSoftwareDao().find( software );
     }
 
-    /**
-     * @see ubic.gemma.model.common.protocol.SoftwareService#update(ubic.gemma.model.common.protocol.Software)
-     */
     @Override
-    protected void handleUpdate( ubic.gemma.model.common.protocol.Software software ) throws java.lang.Exception {
-        this.getSoftwareDao().update( software );
+    protected Software handleFindOrCreate( Software software ) throws Exception {
+        return this.getSoftwareDao().findOrCreate( software );
     }
 
     /**
@@ -53,9 +50,12 @@ public class SoftwareServiceImpl extends ubic.gemma.model.common.protocol.Softwa
         this.getSoftwareDao().remove( software );
     }
 
+    /**
+     * @see ubic.gemma.model.common.protocol.SoftwareService#update(ubic.gemma.model.common.protocol.Software)
+     */
     @Override
-    protected Software handleFindOrCreate( Software software ) throws Exception {
-        return this.getSoftwareDao().findOrCreate( software );
+    protected void handleUpdate( ubic.gemma.model.common.protocol.Software software ) throws java.lang.Exception {
+        this.getSoftwareDao().update( software );
     }
 
 }

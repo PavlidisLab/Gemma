@@ -38,8 +38,9 @@ import ubic.gemma.model.genome.Taxon;
  * 
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
-public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expression.experiment.BioAssaySetDaoImpl
-        implements ubic.gemma.model.expression.experiment.ExpressionExperimentDao {
+public abstract class ExpressionExperimentDaoBase extends
+        ubic.gemma.model.expression.experiment.BioAssaySetDaoImpl<ExpressionExperiment> implements
+        ubic.gemma.model.expression.experiment.ExpressionExperimentDao {
 
     /**
      * This anonymous transformer is designed to transform entities or report query results (which result in an array of
@@ -81,7 +82,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#create(int, java.util.Collection)
      */
     @SuppressWarnings("unused")
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<ExpressionExperiment> create( final int transform, final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.create - 'entities' can not be null" );
         }
@@ -121,8 +122,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#create(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
-    public ubic.gemma.model.common.Securable create(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
+    public ExpressionExperiment create( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
         return ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) this.create( TRANSFORM_NONE,
                 expressionExperiment );
     }
@@ -375,7 +375,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByInvestigator(int, java.lang.String,
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
@@ -393,7 +393,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByInvestigator(int,
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final int transform,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
@@ -408,7 +408,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByInvestigator(java.lang.String,
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
@@ -418,7 +418,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     public java.util.Collection findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         return this.findByInvestigator( TRANSFORM_NONE, investigator );
     }
@@ -617,67 +617,6 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     }
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.expression.experiment.ExpressionExperiment as expressionExperiment where expressionExperiment.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAnnotationCounts(java.util.Collection)
      */
     public java.util.Map getAnnotationCounts( final java.util.Collection ids ) {
@@ -849,66 +788,6 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     }
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMask(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.expression.experiment.ExpressionExperiment as expressionExperiment where expressionExperiment.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMaskedPreferredQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     public ubic.gemma.model.common.quantitationtype.QuantitationType getMaskedPreferredQuantitationType(
@@ -920,64 +799,6 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
                     "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentDao.getMaskedPreferredQuantitationType(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
                             + th, th );
         }
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMasks(int, java.lang.String,
-     *      java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.expression.experiment.ExpressionExperiment as expressionExperiment where expressionExperiment.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMasks(java.lang.String,
-     *      java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getMasks(java.util.Collection)
-     */
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
     }
 
     /**
@@ -1102,24 +923,6 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     }
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getRecipient(java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getRecipient(java.lang.String,
-     *      java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getSampleRemovalEvents(java.util.Collection)
      */
     public java.util.Map getSampleRemovalEvents( final java.util.Collection expressionExperiments ) {
@@ -1178,21 +981,22 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#load(int, java.lang.Long)
      */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
+
+    public ExpressionExperiment load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) entity );
+        return ( ExpressionExperiment ) transformEntity( transform,
+                ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) entity );
     }
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#load(java.lang.Long)
      */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
+
+    public ExpressionExperiment load( java.lang.Long id ) {
         return ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) this.load( TRANSFORM_NONE, id );
     }
 
@@ -1212,7 +1016,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadAll()
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
@@ -1222,7 +1026,6 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadAll(int)
      */
     @SuppressWarnings("unchecked")
-    @Override
     public java.util.Collection<ExpressionExperiment> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.class );
@@ -1259,7 +1062,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#remove(java.lang.Long)
      */
-    @Override
+
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.remove - 'id' can not be null" );
@@ -1274,7 +1077,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    @Override
+
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.remove - 'entities' can not be null" );
@@ -1355,7 +1158,7 @@ public abstract class ExpressionExperimentDaoBase extends ubic.gemma.model.expre
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    @Override
+
     @SuppressWarnings("unused")
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {

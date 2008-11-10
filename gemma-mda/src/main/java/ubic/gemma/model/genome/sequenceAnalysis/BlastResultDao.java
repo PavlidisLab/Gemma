@@ -27,58 +27,23 @@ package ubic.gemma.model.genome.sequenceAnalysis;
  */
 public interface BlastResultDao extends ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao {
     /**
-     * Loads an instance of ubic.gemma.model.genome.sequenceAnalysis.BlastResult from the persistent store.
-     */
-    public ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult load( java.lang.Long id );
-
-    /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
+     * Does the same thing as {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an additional
+     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
+     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
+     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
+     * objects for example). By default, transformation does not occur.
      * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
      */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.genome.sequenceAnalysis.BlastResult}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Creates an instance of ubic.gemma.model.genome.sequenceAnalysis.BlastResult and adds it to the persistent store.
-     */
-    public ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult create(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
+    public java.util.Collection create( int transform, java.util.Collection entities );
 
     /**
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned
-     * entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then
-     * the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into
-     * a value object for example). By default, transformation does not occur.
+     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
+     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
+     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a value
+     * object for example). By default, transformation does not occur.
      * </p>
      */
     public Object create( int transform, ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
@@ -93,30 +58,125 @@ public interface BlastResultDao extends ubic.gemma.model.genome.sequenceAnalysis
     public java.util.Collection create( java.util.Collection entities );
 
     /**
+     * Creates an instance of ubic.gemma.model.genome.sequenceAnalysis.BlastResult and adds it to the persistent store.
+     */
+    public ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult create(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
+
+    /**
      * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned
-     * entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then
-     * the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities
-     * (into value objects for example). By default, transformation does not occur.
+     * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #find(int, ubic.gemma.model.genome.sequenceAnalysis.BlastResult
+     * toFind)}.
      * </p>
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
+    public Object find( int transform, String queryString, ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind );
 
     /**
-     * Updates the <code>blastResult</code> instance in the persistent store.
+     * <p>
+     * Does the same thing as {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an additional
+     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
      */
-    public void update( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
+    public Object find( int transform, ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind );
 
     /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     * <p>
+     * Does the same thing as {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}.
+     * </p>
      */
-    public void update( java.util.Collection entities );
+    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find( String queryString,
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind );
 
     /**
-     * Removes the instance of ubic.gemma.model.genome.sequenceAnalysis.BlastResult from the persistent store.
+     * 
      */
-    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
+    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with
+     * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findOrCreate(int,
+     * ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate)}.
+     * </p>
+     */
+    public Object findOrCreate( int transform, String queryString,
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object findOrCreate( int transform, ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}.
+     * </p>
+     */
+    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate( String queryString,
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
+     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
+     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
+     * example). By default, transformation does not occur.
+     * </p>
+     * 
+     * @param id the identifier of the entity to load.
+     * @return either the entity or the object transformed from the entity.
+     */
+    public Object load( int transform, java.lang.Long id );
+
+    /**
+     * Loads an instance of ubic.gemma.model.genome.sequenceAnalysis.BlastResult from the persistent store.
+     */
+    public ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult load( java.lang.Long id );
+
+    /**
+     * Loads all entities of type {@link ubic.gemma.model.genome.sequenceAnalysis.BlastResult}.
+     * 
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll();
+
+    /**
+     * <p>
+     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
+     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
+     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
+     * operation which can optionally transform the entity (into a value object for example). By default, transformation
+     * does not occur.
+     * </p>
+     * 
+     * @param transform the flag indicating what transformation to use.
+     * @return the loaded entities.
+     */
+    public java.util.Collection loadAll( final int transform );
 
     /**
      * Removes the instance of ubic.gemma.model.genome.sequenceAnalysis.BlastResult having the given
@@ -130,78 +190,18 @@ public interface BlastResultDao extends ubic.gemma.model.genome.sequenceAnalysis
     public void remove( java.util.Collection entities );
 
     /**
-     * 
+     * Removes the instance of ubic.gemma.model.genome.sequenceAnalysis.BlastResult from the persistent store.
      */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind );
+    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
 
     /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}.
-     * </p>
+     * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find( String queryString,
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind );
+    public void update( java.util.Collection entities );
 
     /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results
-     * will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined
-     * here then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
+     * Updates the <code>blastResult</code> instance in the persistent store.
      */
-    public Object find( int transform, ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #find(int, ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind)}.
-     * </p>
-     */
-    public Object find( int transform, String queryString, ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}.
-     * </p>
-     */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate( String queryString,
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform, ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.sequenceAnalysis.BlastResult)} with
-     * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findOrCreate(int, ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate)}.
-     * </p>
-     */
-    public Object findOrCreate( int transform, String queryString,
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate );
+    public void update( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
 
 }

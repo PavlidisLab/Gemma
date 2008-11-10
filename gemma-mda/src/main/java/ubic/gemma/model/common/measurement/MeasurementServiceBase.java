@@ -24,8 +24,8 @@ package ubic.gemma.model.common.measurement;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.measurement.MeasurementService</code>, provides access
- * to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.common.measurement.MeasurementService</code>, provides access to
+ * all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.common.measurement.MeasurementService
@@ -33,20 +33,6 @@ package ubic.gemma.model.common.measurement;
 public abstract class MeasurementServiceBase implements ubic.gemma.model.common.measurement.MeasurementService {
 
     private ubic.gemma.model.common.measurement.MeasurementDao measurementDao;
-
-    /**
-     * Sets the reference to <code>measurement</code>'s DAO.
-     */
-    public void setMeasurementDao( ubic.gemma.model.common.measurement.MeasurementDao measurementDao ) {
-        this.measurementDao = measurementDao;
-    }
-
-    /**
-     * Gets the reference to <code>measurement</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.measurement.MeasurementDao getMeasurementDao() {
-        return this.measurementDao;
-    }
 
     /**
      * @see ubic.gemma.model.common.measurement.MeasurementService#create(ubic.gemma.model.common.measurement.Measurement)
@@ -63,46 +49,17 @@ public abstract class MeasurementServiceBase implements ubic.gemma.model.common.
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.common.measurement.Measurement)}
+     * Sets the reference to <code>measurement</code>'s DAO.
      */
-    protected abstract ubic.gemma.model.common.measurement.Measurement handleCreate(
-            ubic.gemma.model.common.measurement.Measurement measurement ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public void setMeasurementDao( ubic.gemma.model.common.measurement.MeasurementDao measurementDao ) {
+        this.measurementDao = measurementDao;
     }
 
     /**
-     * Gets the message source available to this service.
+     * Gets the reference to <code>measurement</code>'s DAO.
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.common.measurement.MeasurementDao getMeasurementDao() {
+        return this.measurementDao;
     }
 
     /**
@@ -117,5 +74,47 @@ public abstract class MeasurementServiceBase implements ubic.gemma.model.common.
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.common.measurement.Measurement)}
+     */
+    protected abstract ubic.gemma.model.common.measurement.Measurement handleCreate(
+            ubic.gemma.model.common.measurement.Measurement measurement ) throws java.lang.Exception;
 
 }

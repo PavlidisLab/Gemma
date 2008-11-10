@@ -71,43 +71,6 @@ public abstract class BibRefAnnotationDaoBase extends org.springframework.orm.hi
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibRefAnnotationDao#update(ubic.gemma.model.common.description.BibRefAnnotation)
-     */
-    public void update( ubic.gemma.model.common.description.BibRefAnnotation bibRefAnnotation ) {
-        if ( bibRefAnnotation == null ) {
-            throw new IllegalArgumentException( "BibRefAnnotation.update - 'bibRefAnnotation' can not be null" );
-        }
-        this.getHibernateTemplate().update( bibRefAnnotation );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibRefAnnotationDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BibRefAnnotation.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.description.BibRefAnnotation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibRefAnnotationDao#remove(ubic.gemma.model.common.description.BibRefAnnotation)
-     */
-    public void remove( ubic.gemma.model.common.description.BibRefAnnotation bibRefAnnotation ) {
-        if ( bibRefAnnotation == null ) {
-            throw new IllegalArgumentException( "BibRefAnnotation.remove - 'bibRefAnnotation' can not be null" );
-        }
-        this.getHibernateTemplate().delete( bibRefAnnotation );
-    }
-
-    /**
      * @see ubic.gemma.model.common.description.BibRefAnnotationDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -128,6 +91,64 @@ public abstract class BibRefAnnotationDaoBase extends org.springframework.orm.hi
             throw new IllegalArgumentException( "BibRefAnnotation.remove - 'entities' can not be null" );
         }
         this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibRefAnnotationDao#remove(ubic.gemma.model.common.description.BibRefAnnotation)
+     */
+    public void remove( ubic.gemma.model.common.description.BibRefAnnotation bibRefAnnotation ) {
+        if ( bibRefAnnotation == null ) {
+            throw new IllegalArgumentException( "BibRefAnnotation.remove - 'bibRefAnnotation' can not be null" );
+        }
+        this.getHibernateTemplate().delete( bibRefAnnotation );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibRefAnnotationDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BibRefAnnotation.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.description.BibRefAnnotation ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibRefAnnotationDao#update(ubic.gemma.model.common.description.BibRefAnnotation)
+     */
+    public void update( ubic.gemma.model.common.description.BibRefAnnotation bibRefAnnotation ) {
+        if ( bibRefAnnotation == null ) {
+            throw new IllegalArgumentException( "BibRefAnnotation.update - 'bibRefAnnotation' can not be null" );
+        }
+        this.getHibernateTemplate().update( bibRefAnnotation );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.description.BibRefAnnotation)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.common.description.BibRefAnnotationDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.description.BibRefAnnotation)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -153,25 +174,6 @@ public abstract class BibRefAnnotationDaoBase extends org.springframework.orm.hi
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.description.BibRefAnnotation)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.description.BibRefAnnotationDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.description.BibRefAnnotation)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

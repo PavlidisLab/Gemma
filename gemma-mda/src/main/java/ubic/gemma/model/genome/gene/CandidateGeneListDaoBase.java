@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.genome.gene;
 
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -30,71 +32,27 @@ package ubic.gemma.model.genome.gene;
  * 
  * @see ubic.gemma.model.genome.gene.CandidateGeneList
  */
-public abstract class CandidateGeneListDaoBase extends ubic.gemma.model.common.AuditableDaoImpl implements
+public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.genome.gene.CandidateGeneListDao {
 
     private ubic.gemma.model.genome.gene.CandidateGeneDao candidateGeneDao;
 
     /**
-     * Sets the reference to <code>candidateGeneDao</code>.
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#create(int, java.util.Collection)
      */
-    public void setCandidateGeneDao( ubic.gemma.model.genome.gene.CandidateGeneDao candidateGeneDao ) {
-        this.candidateGeneDao = candidateGeneDao;
-    }
-
-    /**
-     * Gets the reference to <code>candidateGeneDao</code>.
-     */
-    protected ubic.gemma.model.genome.gene.CandidateGeneDao getCandidateGeneDao() {
-        return this.candidateGeneDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#load(int, java.lang.Long)
-     */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "CandidateGeneList.load - 'id' can not be null" );
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "CandidateGeneList.create - 'entities' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.genome.gene.CandidateGeneListImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.genome.gene.CandidateGeneList ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.genome.gene.CandidateGeneList ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.genome.gene.CandidateGeneListImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#create(ubic.gemma.model.genome.gene.CandidateGeneList)
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) {
-        return ( ubic.gemma.model.genome.gene.CandidateGeneList ) this.create( TRANSFORM_NONE, candidateGeneList );
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.genome.gene.CandidateGeneList ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
     }
 
     /**
@@ -118,116 +76,10 @@ public abstract class CandidateGeneListDaoBase extends ubic.gemma.model.common.A
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#create(int, java.util.Collection)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#create(ubic.gemma.model.genome.gene.CandidateGeneList)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "CandidateGeneList.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.genome.gene.CandidateGeneList ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#update(ubic.gemma.model.genome.gene.CandidateGeneList)
-     */
-    public void update( ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) {
-        if ( candidateGeneList == null ) {
-            throw new IllegalArgumentException( "CandidateGeneList.update - 'candidateGeneList' can not be null" );
-        }
-        this.getHibernateTemplate().update( candidateGeneList );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "CandidateGeneList.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.gene.CandidateGeneList ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#remove(ubic.gemma.model.genome.gene.CandidateGeneList)
-     */
-    public void remove( ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) {
-        if ( candidateGeneList == null ) {
-            throw new IllegalArgumentException( "CandidateGeneList.remove - 'candidateGeneList' can not be null" );
-        }
-        this.getHibernateTemplate().delete( candidateGeneList );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "CandidateGeneList.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.genome.gene.CandidateGeneList entity = ( ubic.gemma.model.genome.gene.CandidateGeneList ) this
-                .load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "CandidateGeneList.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByContributer(ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-    public java.util.Collection findByContributer( ubic.gemma.model.common.auditAndSecurity.Person owner ) {
-        return this.findByContributer( TRANSFORM_NONE, owner );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByContributer(java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByContributer( final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
-        return this.findByContributer( TRANSFORM_NONE, queryString, owner );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByContributer(int,
-     *      ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByContributer( final int transform,
-            final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
-        return this
-                .findByContributer(
-                        transform,
-                        "from edu.columbia.gemma.genome.gene.CandidateGeneListImpl list inner join list.candidates c where c.owner=:owner order by list.name",
-                        owner );
+    public CandidateGeneList create( ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) {
+        return ( ubic.gemma.model.genome.gene.CandidateGeneList ) this.create( TRANSFORM_NONE, candidateGeneList );
     }
 
     /**
@@ -248,19 +100,34 @@ public abstract class CandidateGeneListDaoBase extends ubic.gemma.model.common.A
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByGeneOfficialName(java.lang.String)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByContributer(int,
+     *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    public java.util.Collection findByGeneOfficialName( java.lang.String officialName ) {
-        return this.findByGeneOfficialName( TRANSFORM_NONE, officialName );
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByContributer( final int transform,
+            final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
+        return this
+                .findByContributer(
+                        transform,
+                        "from edu.columbia.gemma.genome.gene.CandidateGeneListImpl list inner join list.candidates c where c.owner=:owner order by list.name",
+                        owner );
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByGeneOfficialName(java.lang.String, java.lang.String)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByContributer(java.lang.String,
+     *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByGeneOfficialName( final java.lang.String queryString,
-            final java.lang.String officialName ) {
-        return this.findByGeneOfficialName( TRANSFORM_NONE, queryString, officialName );
+    public java.util.Collection findByContributer( final java.lang.String queryString,
+            final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
+        return this.findByContributer( TRANSFORM_NONE, queryString, owner );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByContributer(ubic.gemma.model.common.auditAndSecurity.Person)
+     */
+    public java.util.Collection findByContributer( ubic.gemma.model.common.auditAndSecurity.Person owner ) {
+        return this.findByContributer( TRANSFORM_NONE, owner );
     }
 
     /**
@@ -293,19 +160,19 @@ public abstract class CandidateGeneListDaoBase extends ubic.gemma.model.common.A
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByID(java.lang.Long)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByGeneOfficialName(java.lang.String)
      */
-    public ubic.gemma.model.genome.gene.CandidateGeneList findByID( java.lang.Long id ) {
-        return ( ubic.gemma.model.genome.gene.CandidateGeneList ) this.findByID( TRANSFORM_NONE, id );
+    public java.util.Collection findByGeneOfficialName( java.lang.String officialName ) {
+        return this.findByGeneOfficialName( TRANSFORM_NONE, officialName );
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByID(java.lang.String, java.lang.Long)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByGeneOfficialName(java.lang.String, java.lang.String)
      */
     @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.genome.gene.CandidateGeneList findByID( final java.lang.String queryString,
-            final java.lang.Long id ) {
-        return ( ubic.gemma.model.genome.gene.CandidateGeneList ) this.findByID( TRANSFORM_NONE, queryString, id );
+    public java.util.Collection findByGeneOfficialName( final java.lang.String queryString,
+            final java.lang.String officialName ) {
+        return this.findByGeneOfficialName( TRANSFORM_NONE, queryString, officialName );
     }
 
     /**
@@ -344,34 +211,19 @@ public abstract class CandidateGeneListDaoBase extends ubic.gemma.model.common.A
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByListOwner(ubic.gemma.model.common.auditAndSecurity.Person)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByID(java.lang.Long)
      */
-    public java.util.Collection findByListOwner( ubic.gemma.model.common.auditAndSecurity.Person owner ) {
-        return this.findByListOwner( TRANSFORM_NONE, owner );
+    public ubic.gemma.model.genome.gene.CandidateGeneList findByID( java.lang.Long id ) {
+        return ( ubic.gemma.model.genome.gene.CandidateGeneList ) this.findByID( TRANSFORM_NONE, id );
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByListOwner(java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.Person)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByID(java.lang.String, java.lang.Long)
      */
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByListOwner( final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
-        return this.findByListOwner( TRANSFORM_NONE, queryString, owner );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByListOwner(int,
-     *      ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByListOwner( final int transform,
-            final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
-        return this
-                .findByListOwner(
-                        transform,
-                        "from edu.columbia.gemma.genome.gene.CandidateGeneListImpl list where list.owner=:owner order by list.name",
-                        owner );
+    public ubic.gemma.model.genome.gene.CandidateGeneList findByID( final java.lang.String queryString,
+            final java.lang.Long id ) {
+        return ( ubic.gemma.model.genome.gene.CandidateGeneList ) this.findByID( TRANSFORM_NONE, queryString, id );
     }
 
     /**
@@ -392,237 +244,174 @@ public abstract class CandidateGeneListDaoBase extends ubic.gemma.model.common.A
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getRecipient(java.lang.Long)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByListOwner(int,
+     *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
     @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
+    public java.util.Collection findByListOwner( final int transform,
+            final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
         return this
-                .getRecipient(
+                .findByListOwner(
                         transform,
-                        "from ubic.gemma.model.genome.gene.CandidateGeneList as candidateGeneList where candidateGeneList.id = :id",
-                        id );
+                        "from edu.columbia.gemma.genome.gene.CandidateGeneListImpl list where list.owner=:owner order by list.name",
+                        owner );
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getRecipient(int, java.lang.String, java.lang.Long)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByListOwner(java.lang.String,
+     *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    @Override
     @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public java.util.Collection findByListOwner( final java.lang.String queryString,
+            final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
+        return this.findByListOwner( TRANSFORM_NONE, queryString, owner );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByListOwner(ubic.gemma.model.common.auditAndSecurity.Person)
+     */
+    public java.util.Collection findByListOwner( ubic.gemma.model.common.auditAndSecurity.Person owner ) {
+        return this.findByListOwner( TRANSFORM_NONE, owner );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#load(int, java.lang.Long)
+     */
+
+    public Object load( final int transform, final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "CandidateGeneList.load - 'id' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.gene.CandidateGeneList ) result );
-        return result;
+        final Object entity = this.getHibernateTemplate().get(
+                ubic.gemma.model.genome.gene.CandidateGeneListImpl.class, id );
+        return transformEntity( transform, ( ubic.gemma.model.genome.gene.CandidateGeneList ) entity );
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#load(java.lang.Long)
      */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
+
+    public CandidateGeneList load( java.lang.Long id ) {
+        return ( ubic.gemma.model.genome.gene.CandidateGeneList ) this.load( TRANSFORM_NONE, id );
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#loadAll()
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    public java.util.Collection loadAll() {
+        return this.loadAll( TRANSFORM_NONE );
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#loadAll(int)
      */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.genome.gene.CandidateGeneList as candidateGeneList where candidateGeneList.securable = :securable",
-                        securable );
+
+    public java.util.Collection loadAll( final int transform ) {
+        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.genome.gene.CandidateGeneListImpl.class );
+        this.transformEntities( transform, results );
+        return results;
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#remove(java.lang.Long)
      */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "CandidateGeneList.remove - 'id' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.gene.CandidateGeneList ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.genome.gene.CandidateGeneList as candidateGeneList where candidateGeneList.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        ubic.gemma.model.genome.gene.CandidateGeneList entity = ( ubic.gemma.model.genome.gene.CandidateGeneList ) this
+                .load( id );
+        if ( entity != null ) {
+            this.remove( entity );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.gene.CandidateGeneList ) result );
-        return result;
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getMasks(java.util.Collection)
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
 
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.genome.gene.CandidateGeneList as candidateGeneList where candidateGeneList.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "CandidateGeneList.remove - 'entities' can not be null" );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.gene.CandidateGeneList ) result );
-        return result;
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#remove(ubic.gemma.model.genome.gene.CandidateGeneList)
+     */
+    public void remove( ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) {
+        if ( candidateGeneList == null ) {
+            throw new IllegalArgumentException( "CandidateGeneList.remove - 'candidateGeneList' can not be null" );
+        }
+        this.getHibernateTemplate().delete( candidateGeneList );
+    }
+
+    /**
+     * Sets the reference to <code>candidateGeneDao</code>.
+     */
+    public void setCandidateGeneDao( ubic.gemma.model.genome.gene.CandidateGeneDao candidateGeneDao ) {
+        this.candidateGeneDao = candidateGeneDao;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
+     */
+
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "CandidateGeneList.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.genome.gene.CandidateGeneList ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#update(ubic.gemma.model.genome.gene.CandidateGeneList)
+     */
+    public void update( ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) {
+        if ( candidateGeneList == null ) {
+            throw new IllegalArgumentException( "CandidateGeneList.update - 'candidateGeneList' can not be null" );
+        }
+        this.getHibernateTemplate().update( candidateGeneList );
+    }
+
+    /**
+     * Gets the reference to <code>candidateGeneDao</code>.
+     */
+    protected ubic.gemma.model.genome.gene.CandidateGeneDao getCandidateGeneDao() {
+        return this.candidateGeneDao;
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.genome.gene.CandidateGeneList)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.gene.CandidateGeneListDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.gene.CandidateGeneList)
+     */
+
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -647,25 +436,6 @@ public abstract class CandidateGeneListDaoBase extends ubic.gemma.model.common.A
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.genome.gene.CandidateGeneList)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.gene.CandidateGeneListDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.gene.CandidateGeneList)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

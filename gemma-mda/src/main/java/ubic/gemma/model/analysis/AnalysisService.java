@@ -22,12 +22,14 @@
 //
 package ubic.gemma.model.analysis;
 
+import java.util.Collection;
+
 /**
  * <p>
  * Provides basic services for dealing with analysis
  * </p>
  */
-public interface AnalysisService {
+public interface AnalysisService<T extends Analysis> {
 
     /**
      * 
@@ -39,7 +41,7 @@ public interface AnalysisService {
      * deletes the given analysis from the system
      * </p>
      */
-    public void delete( ubic.gemma.model.analysis.Analysis toDelete );
+    public void delete( T toDelete );
 
     /**
      * <p>
@@ -60,17 +62,13 @@ public interface AnalysisService {
     public java.util.Map findByInvestigations( java.util.Collection investigations );
 
     /**
-     * <p>
-     * Returns the first exact match of the given name. If there is no exact match returns the most current analysis
-     * that starts with the given name (ie: most recent name*)
-     * </p>
      */
-    public ubic.gemma.model.analysis.Analysis findByName( java.lang.String name );
+    public Collection findByName( java.lang.String name );
 
     /**
      * 
      */
-    public java.util.Collection<Analysis> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection<T> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -78,14 +76,14 @@ public interface AnalysisService {
      * investigations given exacly matches other wise returns null
      * </p>
      */
-    public ubic.gemma.model.analysis.Analysis findByUniqueInvestigations( java.util.Collection investigations );
+    public T findByUniqueInvestigations( java.util.Collection investigations );
 
     /**
      * <p>
      * Returns the analysis with the specified ID
      * </p>
      */
-    public ubic.gemma.model.analysis.Analysis load( java.lang.Long id );
+    public T load( java.lang.Long id );
 
     /**
      * <p>

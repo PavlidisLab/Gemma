@@ -42,14 +42,14 @@ public class ExternalDatabaseServiceImpl extends ubic.gemma.model.common.descrip
     }
 
     @Override
-    protected void handleRemove( ExternalDatabase externalDatabase ) throws Exception {
-        this.getExternalDatabaseDao().remove( externalDatabase );
-
+    protected Collection handleLoadAll() throws Exception {
+        return this.getExternalDatabaseDao().loadAll();
     }
 
     @Override
-    protected Collection handleLoadAll() throws Exception {
-        return this.getExternalDatabaseDao().loadAll();
+    protected void handleRemove( ExternalDatabase externalDatabase ) throws Exception {
+        this.getExternalDatabaseDao().remove( externalDatabase );
+
     }
 
 }

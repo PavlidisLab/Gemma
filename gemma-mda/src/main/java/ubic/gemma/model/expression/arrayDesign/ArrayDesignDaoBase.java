@@ -22,6 +22,12 @@
 //
 package ubic.gemma.model.expression.arrayDesign;
 
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -30,8 +36,7 @@ package ubic.gemma.model.expression.arrayDesign;
  * 
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
-public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.AuditableDaoImpl implements
-        ubic.gemma.model.expression.arrayDesign.ArrayDesignDao {
+public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements ArrayDesignDao {
 
     /**
      * This anonymous transformer is designed to transform entities or report query results (which result in an array of
@@ -79,9 +84,9 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#arrayDesignValueObjectToEntityCollection(java.util.Collection)
      */
-    public final void arrayDesignValueObjectToEntityCollection( java.util.Collection instances ) {
+    public final void arrayDesignValueObjectToEntityCollection( java.util.Collection<ArrayDesignValueObject> instances ) {
         if ( instances != null ) {
-            for ( final java.util.Iterator iterator = instances.iterator(); iterator.hasNext(); ) {
+            for ( final java.util.Iterator<ArrayDesignValueObject> iterator = instances.iterator(); iterator.hasNext(); ) {
                 // - remove an objects that are null or not of the correct instance
                 if ( !( iterator.next() instanceof ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject ) ) {
                     iterator.remove();
@@ -95,7 +100,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public java.util.Collection compositeSequenceWithoutBioSequences(
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBioSequences(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
             return this.handleCompositeSequenceWithoutBioSequences( arrayDesign );
@@ -150,18 +155,22 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<ArrayDesign> create( final int transform,
+            final java.util.Collection<ArrayDesign> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ArrayDesign.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -180,15 +189,14 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<ArrayDesign> create( final java.util.Collection<ArrayDesign> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#create(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    public ArrayDesign create( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         return ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) this.create( TRANSFORM_NONE, arrayDesign );
     }
 
@@ -218,12 +226,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
         }
     }
 
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(int, java.lang.String,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
+    public ArrayDesign find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -242,14 +245,13 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
             }
         }
         result = transformEntity( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) result );
-        return result;
+        return ( ArrayDesign ) result;
     }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(int,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    @SuppressWarnings( { "unchecked" })
     public Object find( final int transform, final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         return this
                 .find(
@@ -262,7 +264,6 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(java.lang.String,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign find( final java.lang.String queryString,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         return ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) this.find( TRANSFORM_NONE, queryString,
@@ -270,17 +271,9 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign find(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        return ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) this.find( TRANSFORM_NONE, arrayDesign );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByAlternateName(java.lang.String)
      */
-    public java.util.Collection findByAlternateName( final java.lang.String queryString ) {
+    public java.util.Collection<ArrayDesign> findByAlternateName( final java.lang.String queryString ) {
         try {
             return this.handleFindByAlternateName( queryString );
         } catch ( Throwable th ) {
@@ -293,7 +286,6 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByName(int, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
     public Object findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "from ArrayDesignImpl a where a.name=:name", name );
     }
@@ -310,15 +302,15 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) result );
         return result;
     }
@@ -333,7 +325,6 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByName(java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByName( final java.lang.String queryString,
             final java.lang.String name ) {
         return ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) this.findByName( TRANSFORM_NONE, queryString,
@@ -343,7 +334,6 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByShortName(int, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
     public Object findByShortName( final int transform, final java.lang.String shortName ) {
         return this.findByShortName( transform, "from ArrayDesignImpl a where a.shortName=:shortName", shortName );
     }
@@ -362,15 +352,15 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) result );
         return result;
     }
@@ -385,7 +375,6 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByShortName(java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByShortName( final java.lang.String queryString,
             final java.lang.String shortName ) {
         return ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) this.findByShortName( TRANSFORM_NONE,
@@ -406,15 +395,15 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) result );
         return result;
     }
@@ -450,67 +439,6 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign findOrCreate(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         return ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) this.findOrCreate( TRANSFORM_NONE, arrayDesign );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
     }
 
     /**
@@ -554,177 +482,6 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this.getRecipient( transform,
-                "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.id = :id",
-                id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getRecipient(int, java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getRecipient(java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getTaxon(java.lang.Long)
      */
     public ubic.gemma.model.genome.Taxon getTaxon( final java.lang.Long id ) {
@@ -753,7 +510,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#isMergee(java.util.Collection)
      */
-    public java.util.Map isMergee( final java.util.Collection ids ) {
+    public java.util.Map<Long, Boolean> isMergee( final java.util.Collection<Long> ids ) {
         try {
             return this.handleIsMergee( ids );
         } catch ( Throwable th ) {
@@ -766,7 +523,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#isSubsumed(java.util.Collection)
      */
-    public java.util.Map isSubsumed( final java.util.Collection ids ) {
+    public java.util.Map<Long, Boolean> isSubsumed( final java.util.Collection<Long> ids ) {
         try {
             return this.handleIsSubsumed( ids );
         } catch ( Throwable th ) {
@@ -779,7 +536,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#isSubsumer(java.util.Collection)
      */
-    public java.util.Map isSubsumer( final java.util.Collection ids ) {
+    public java.util.Map<Long, Boolean> isSubsumer( final java.util.Collection<Long> ids ) {
         try {
             return this.handleIsSubsumer( ids );
         } catch ( Throwable th ) {
@@ -792,38 +549,34 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#load(int, java.lang.Long)
      */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
+    public ArrayDesign load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ArrayDesign.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) entity );
+        return ( ArrayDesign ) transformEntity( transform,
+                ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) entity );
     }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#load(java.lang.Long)
      */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) this.load( TRANSFORM_NONE, id );
+    public ArrayDesign load( java.lang.Long id ) {
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadAll()
      */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+    public java.util.Collection<ArrayDesign> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadAll(int)
      */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
+    public java.util.Collection<ArrayDesign> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.class );
         this.transformEntities( transform, results );
@@ -833,7 +586,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadAllValueObjects()
      */
-    public java.util.Collection loadAllValueObjects() {
+    public java.util.Collection<ArrayDesignValueObject> loadAllValueObjects() {
         try {
             return this.handleLoadAllValueObjects();
         } catch ( Throwable th ) {
@@ -846,7 +599,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadCompositeSequences(java.lang.Long)
      */
-    public java.util.Collection loadCompositeSequences( final java.lang.Long id ) {
+    public java.util.Collection<CompositeSequence> loadCompositeSequences( final java.lang.Long id ) {
         try {
             return this.handleLoadCompositeSequences( id );
         } catch ( Throwable th ) {
@@ -870,9 +623,9 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadMultiple(java.util.Collection)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#load(java.util.Collection)
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+    public java.util.Collection<ArrayDesign> load( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -1136,13 +889,11 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#remove(java.lang.Long)
      */
-    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ArrayDesign.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.expression.arrayDesign.ArrayDesign entity = ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) this
-                .load( id );
+        ubic.gemma.model.expression.arrayDesign.ArrayDesign entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -1151,8 +902,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<ArrayDesign> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ArrayDesign.remove - 'entities' can not be null" );
         }
@@ -1243,19 +993,20 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<ArrayDesign> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ArrayDesign.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**
@@ -1288,21 +1039,21 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
      * Performs the core logic for
      * {@link #compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Collection handleCompositeSequenceWithoutBioSequences(
+    protected abstract java.util.Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Collection handleCompositeSequenceWithoutBlatResults(
+    protected abstract java.util.Collection<CompositeSequence> handleCompositeSequenceWithoutBlatResults(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Collection handleCompositeSequenceWithoutGenes(
+    protected abstract java.util.Collection<CompositeSequence> handleCompositeSequenceWithoutGenes(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
@@ -1326,25 +1077,25 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * Performs the core logic for {@link #findByAlternateName(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByAlternateName( java.lang.String queryString )
+    protected abstract java.util.Collection<ArrayDesign> handleFindByAlternateName( java.lang.String queryString )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getAllAssociatedBioAssays(java.lang.Long)}
      */
-    protected abstract java.util.Collection handleGetAllAssociatedBioAssays( java.lang.Long id )
+    protected abstract java.util.Collection<BioAssay> handleGetAllAssociatedBioAssays( java.lang.Long id )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getAuditEvents(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetAuditEvents( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map handleGetAuditEvents( java.util.Collection<Long> ids ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Collection handleGetExpressionExperiments(
+    protected abstract java.util.Collection<ExpressionExperiment> handleGetExpressionExperiments(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
@@ -1355,32 +1106,37 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * Performs the core logic for {@link #isMerged(java.util.Collection)}
      */
-    protected abstract java.util.Map handleIsMerged( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Boolean> handleIsMerged( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #isMergee(java.util.Collection)}
      */
-    protected abstract java.util.Map handleIsMergee( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Boolean> handleIsMergee( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #isSubsumed(java.util.Collection)}
      */
-    protected abstract java.util.Map handleIsSubsumed( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Boolean> handleIsSubsumed( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #isSubsumer(java.util.Collection)}
      */
-    protected abstract java.util.Map handleIsSubsumer( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Boolean> handleIsSubsumer( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadAllValueObjects()}
      */
-    protected abstract java.util.Collection handleLoadAllValueObjects() throws java.lang.Exception;
+    protected abstract java.util.Collection<ArrayDesignValueObject> handleLoadAllValueObjects()
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadCompositeSequences(java.lang.Long)}
      */
-    protected abstract java.util.Collection handleLoadCompositeSequences( java.lang.Long id )
+    protected abstract java.util.Collection<CompositeSequence> handleLoadCompositeSequences( java.lang.Long id )
             throws java.lang.Exception;
 
     /**
@@ -1390,15 +1146,16 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
             throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
+     * Performs the core logic for {@link #load(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection<ArrayDesign> handleLoadMultiple( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadValueObjects(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadValueObjects( java.util.Collection ids )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<ArrayDesignValueObject> handleLoadValueObjects(
+            java.util.Collection<Long> ids ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #numAllCompositeSequenceWithBioSequences()}
@@ -1408,7 +1165,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * Performs the core logic for {@link #numAllCompositeSequenceWithBioSequences(java.util.Collection)}
      */
-    protected abstract long handleNumAllCompositeSequenceWithBioSequences( java.util.Collection ids )
+    protected abstract long handleNumAllCompositeSequenceWithBioSequences( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
@@ -1419,7 +1176,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * Performs the core logic for {@link #numAllCompositeSequenceWithBlatResults(java.util.Collection)}
      */
-    protected abstract long handleNumAllCompositeSequenceWithBlatResults( java.util.Collection ids )
+    protected abstract long handleNumAllCompositeSequenceWithBlatResults( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
@@ -1430,7 +1187,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * Performs the core logic for {@link #numAllCompositeSequenceWithGenes(java.util.Collection)}
      */
-    protected abstract long handleNumAllCompositeSequenceWithGenes( java.util.Collection ids )
+    protected abstract long handleNumAllCompositeSequenceWithGenes( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
@@ -1441,7 +1198,7 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
     /**
      * Performs the core logic for {@link #numAllGenes(java.util.Collection)}
      */
-    protected abstract long handleNumAllGenes( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract long handleNumAllGenes( java.util.Collection<Long> ids ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
@@ -1569,7 +1326,6 @@ public abstract class ArrayDesignDaoBase extends ubic.gemma.model.common.Auditab
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    @Override
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.TRANSFORM_ARRAYDESIGNVALUEOBJECT:

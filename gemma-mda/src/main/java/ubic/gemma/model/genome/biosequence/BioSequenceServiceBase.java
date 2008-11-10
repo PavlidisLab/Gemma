@@ -24,8 +24,8 @@ package ubic.gemma.model.genome.biosequence;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.genome.biosequence.BioSequenceService</code>, provides access
- * to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.genome.biosequence.BioSequenceService</code>, provides access to
+ * all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.genome.biosequence.BioSequenceService
@@ -35,17 +35,43 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     private ubic.gemma.model.genome.biosequence.BioSequenceDao bioSequenceDao;
 
     /**
-     * Sets the reference to <code>bioSequence</code>'s DAO.
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#countAll()
      */
-    public void setBioSequenceDao( ubic.gemma.model.genome.biosequence.BioSequenceDao bioSequenceDao ) {
-        this.bioSequenceDao = bioSequenceDao;
+    public java.lang.Integer countAll() {
+        try {
+            return this.handleCountAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.countAll()' --> " + th,
+                    th );
+        }
     }
 
     /**
-     * Gets the reference to <code>bioSequence</code>'s DAO.
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#create(java.util.Collection)
      */
-    protected ubic.gemma.model.genome.biosequence.BioSequenceDao getBioSequenceDao() {
-        return this.bioSequenceDao;
+    public java.util.Collection create( final java.util.Collection bioSequences ) {
+        try {
+            return this.handleCreate( bioSequences );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.create(java.util.Collection bioSequences)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#create(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    public ubic.gemma.model.genome.biosequence.BioSequence create(
+            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        try {
+            return this.handleCreate( bioSequence );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.create(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -63,29 +89,57 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)}
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
      */
-    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleFind(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#remove(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    public void remove( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
+            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         try {
-            this.handleRemove( bioSequence );
+            return this.handleFindByAccession( accession );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.remove(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.findByAccession(ubic.gemma.model.common.description.DatabaseEntry accession)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.genome.biosequence.BioSequence)}
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findByGenes(java.util.Collection)
      */
-    protected abstract void handleRemove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception;
+    public java.util.Map findByGenes( final java.util.Collection genes ) {
+        try {
+            return this.handleFindByGenes( genes );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.findByGenes(java.util.Collection genes)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findByName(java.lang.String)
+     */
+    public java.util.Collection findByName( final java.lang.String name ) {
+        try {
+            return this.handleFindByName( name );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.findByName(java.lang.String name)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findOrCreate(java.util.Collection)
+     */
+    public java.util.Collection findOrCreate( final java.util.Collection bioSequences ) {
+        try {
+            return this.handleFindOrCreate( bioSequences );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.findOrCreate(java.util.Collection bioSequences)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)
@@ -102,105 +156,17 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)}
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#getGenesByAccession(java.lang.String)
      */
-    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleFindOrCreate(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    public void update( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    public java.util.Collection getGenesByAccession( final java.lang.String search ) {
         try {
-            this.handleUpdate( bioSequence );
+            return this.handleGetGenesByAccession( search );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.update(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.getGenesByAccession(java.lang.String search)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#create(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence create(
-            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        try {
-            return this.handleCreate( bioSequence );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.create(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleCreate(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#create(java.util.Collection)
-     */
-    public java.util.Collection create( final java.util.Collection bioSequences ) {
-        try {
-            return this.handleCreate( bioSequences );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.create(java.util.Collection bioSequences)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #create(java.util.Collection)}
-     */
-    protected abstract java.util.Collection handleCreate( java.util.Collection bioSequences )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findOrCreate(java.util.Collection)
-     */
-    public java.util.Collection findOrCreate( final java.util.Collection bioSequences ) {
-        try {
-            return this.handleFindOrCreate( bioSequences );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.findOrCreate(java.util.Collection bioSequences)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(java.util.Collection)}
-     */
-    protected abstract java.util.Collection handleFindOrCreate( java.util.Collection bioSequences )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection bioSequences ) {
-        try {
-            this.handleUpdate( bioSequences );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.update(java.util.Collection bioSequences)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #update(java.util.Collection)}
-     */
-    protected abstract void handleUpdate( java.util.Collection bioSequences ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#getGenesByName(java.lang.String)
@@ -216,30 +182,6 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * Performs the core logic for {@link #getGenesByName(java.lang.String)}
-     */
-    protected abstract java.util.Collection handleGetGenesByName( java.lang.String search ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#getGenesByAccession(java.lang.String)
-     */
-    public java.util.Collection getGenesByAccession( final java.lang.String search ) {
-        try {
-            return this.handleGetGenesByAccession( search );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.getGenesByAccession(java.lang.String search)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getGenesByAccession(java.lang.String)}
-     */
-    protected abstract java.util.Collection handleGetGenesByAccession( java.lang.String search )
-            throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#load(long)
      */
     public ubic.gemma.model.genome.biosequence.BioSequence load( final long id ) {
@@ -251,67 +193,6 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
                     th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #load(long)}
-     */
-    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleLoad( long id ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#countAll()
-     */
-    public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.countAll()' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findByName(java.lang.String)
-     */
-    public java.util.Collection findByName( final java.lang.String name ) {
-        try {
-            return this.handleFindByName( name );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.findByName(java.lang.String name)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByName(java.lang.String)}
-     */
-    protected abstract java.util.Collection handleFindByName( java.lang.String name ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
-            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
-        try {
-            return this.handleFindByAccession( accession );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.findByAccession(ubic.gemma.model.common.description.DatabaseEntry accession)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByAccession(ubic.gemma.model.common.description.DatabaseEntry)}
-     */
-    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleFindByAccession(
-            ubic.gemma.model.common.description.DatabaseEntry accession ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#loadMultiple(java.util.Collection)
@@ -327,9 +208,24 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#remove(ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+    public void remove( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        try {
+            this.handleRemove( bioSequence );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.remove(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>bioSequence</code>'s DAO.
+     */
+    public void setBioSequenceDao( ubic.gemma.model.genome.biosequence.BioSequenceDao bioSequenceDao ) {
+        this.bioSequenceDao = bioSequenceDao;
+    }
 
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#thaw(java.util.Collection)
@@ -345,11 +241,6 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * Performs the core logic for {@link #thaw(java.util.Collection)}
-     */
-    protected abstract void handleThaw( java.util.Collection bioSequences ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#thaw(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     public void thaw( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
@@ -361,12 +252,6 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#thawLite(java.util.Collection)
@@ -382,63 +267,36 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * Performs the core logic for {@link #thawLite(java.util.Collection)}
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(java.util.Collection)
      */
-    protected abstract void handleThawLite( java.util.Collection bioSequences ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findByGenes(java.util.Collection)
-     */
-    public java.util.Map findByGenes( final java.util.Collection genes ) {
+    public void update( final java.util.Collection bioSequences ) {
         try {
-            return this.handleFindByGenes( genes );
+            this.handleUpdate( bioSequences );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.findByGenes(java.util.Collection genes)' --> "
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.update(java.util.Collection bioSequences)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #findByGenes(java.util.Collection)}
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    protected abstract java.util.Map handleFindByGenes( java.util.Collection genes ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public void update( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        try {
+            this.handleUpdate( bioSequence );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.update(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message source available to this service.
+     * Gets the reference to <code>bioSequence</code>'s DAO.
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.genome.biosequence.BioSequenceDao getBioSequenceDao() {
+        return this.bioSequenceDao;
     }
 
     /**
@@ -453,5 +311,146 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #countAll()}
+     */
+    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #create(java.util.Collection)}
+     */
+    protected abstract java.util.Collection handleCreate( java.util.Collection bioSequences )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.genome.biosequence.BioSequence)}
+     */
+    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleCreate(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)}
+     */
+    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleFind(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByAccession(ubic.gemma.model.common.description.DatabaseEntry)}
+     */
+    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleFindByAccession(
+            ubic.gemma.model.common.description.DatabaseEntry accession ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByGenes(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleFindByGenes( java.util.Collection genes ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByName(java.lang.String)}
+     */
+    protected abstract java.util.Collection handleFindByName( java.lang.String name ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(java.util.Collection)}
+     */
+    protected abstract java.util.Collection handleFindOrCreate( java.util.Collection bioSequences )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)}
+     */
+    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleFindOrCreate(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getGenesByAccession(java.lang.String)}
+     */
+    protected abstract java.util.Collection handleGetGenesByAccession( java.lang.String search )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getGenesByName(java.lang.String)}
+     */
+    protected abstract java.util.Collection handleGetGenesByName( java.lang.String search ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(long)}
+     */
+    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleLoad( long id ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
+     */
+    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.genome.biosequence.BioSequence)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(java.util.Collection)}
+     */
+    protected abstract void handleThaw( java.util.Collection bioSequences ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}
+     */
+    protected abstract void handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thawLite(java.util.Collection)}
+     */
+    protected abstract void handleThawLite( java.util.Collection bioSequences ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(java.util.Collection)}
+     */
+    protected abstract void handleUpdate( java.util.Collection bioSequences ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.genome.biosequence.BioSequence)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
+            throws java.lang.Exception;
 
 }

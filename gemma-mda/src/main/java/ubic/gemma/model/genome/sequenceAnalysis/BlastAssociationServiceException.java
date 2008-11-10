@@ -35,40 +35,6 @@ public class BlastAssociationServiceException extends java.lang.RuntimeException
     private static final long serialVersionUID = -530184844340509052L;
 
     /**
-     * The default constructor for <code>BlastAssociationServiceException</code>.
-     */
-    public BlastAssociationServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>BlastAssociationServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public BlastAssociationServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>BlastAssociationServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public BlastAssociationServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>BlastAssociationServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public BlastAssociationServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class BlastAssociationServiceException extends java.lang.RuntimeException
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>BlastAssociationServiceException</code>.
+     */
+    public BlastAssociationServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>BlastAssociationServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public BlastAssociationServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>BlastAssociationServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public BlastAssociationServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>BlastAssociationServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public BlastAssociationServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

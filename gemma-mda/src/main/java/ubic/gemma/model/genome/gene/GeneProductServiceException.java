@@ -35,40 +35,6 @@ public class GeneProductServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = -6720101349238996880L;
 
     /**
-     * The default constructor for <code>GeneProductServiceException</code>.
-     */
-    public GeneProductServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>GeneProductServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public GeneProductServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>GeneProductServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public GeneProductServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>GeneProductServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public GeneProductServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class GeneProductServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>GeneProductServiceException</code>.
+     */
+    public GeneProductServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>GeneProductServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public GeneProductServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>GeneProductServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public GeneProductServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>GeneProductServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public GeneProductServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

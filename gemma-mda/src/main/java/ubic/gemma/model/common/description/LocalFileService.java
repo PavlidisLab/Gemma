@@ -30,14 +30,19 @@ public interface LocalFileService {
     /**
      * 
      */
+    public ubic.gemma.model.common.description.LocalFile copyFile(
+            ubic.gemma.model.common.description.LocalFile sourceFile,
+            ubic.gemma.model.common.description.LocalFile targetFile );
+
+    /**
+     * 
+     */
     public void deleteFile( ubic.gemma.model.common.description.LocalFile localFile );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile copyFile(
-            ubic.gemma.model.common.description.LocalFile sourceFile,
-            ubic.gemma.model.common.description.LocalFile targetFile );
+    public ubic.gemma.model.common.description.LocalFile find( ubic.gemma.model.common.description.LocalFile localFile );
 
     /**
      * 
@@ -47,7 +52,8 @@ public interface LocalFileService {
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile find( ubic.gemma.model.common.description.LocalFile localFile );
+    public ubic.gemma.model.common.description.LocalFile findOrCreate(
+            ubic.gemma.model.common.description.LocalFile localFile );
 
     /**
      * 
@@ -58,11 +64,5 @@ public interface LocalFileService {
      * 
      */
     public void update( ubic.gemma.model.common.description.LocalFile localFile );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.description.LocalFile findOrCreate(
-            ubic.gemma.model.common.description.LocalFile localFile );
 
 }

@@ -42,18 +42,13 @@ public interface BlatResultService {
     /**
      * 
      */
+    public java.util.Collection findByBioSequence( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+
+    /**
+     * 
+     */
     public ubic.gemma.model.genome.sequenceAnalysis.BlatResult findOrCreate(
             ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
-
-    /**
-     * 
-     */
-    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
-
-    /**
-     * 
-     */
-    public java.util.Collection findByBioSequence( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * <p>
@@ -61,6 +56,11 @@ public interface BlatResultService {
      * </p>
      */
     public java.util.Collection load( java.util.Collection ids );
+
+    /**
+     * 
+     */
+    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
 
     /**
      * 

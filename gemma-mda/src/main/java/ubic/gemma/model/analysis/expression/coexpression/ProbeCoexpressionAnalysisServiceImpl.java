@@ -44,7 +44,15 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
     protected ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis handleCreate(
             ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis )
             throws java.lang.Exception {
-        return ( ProbeCoexpressionAnalysis ) this.getProbeCoexpressionAnalysisDao().create( probeCoexpressionAnalysis );
+        return this.getProbeCoexpressionAnalysisDao().create( probeCoexpressionAnalysis );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
+     */
+    @Override
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+        return this.getProbeCoexpressionAnalysisDao().loadAll();
     }
 
     @Override
@@ -89,6 +97,26 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
         }
 
         return null;
+    }
+
+    @Override
+    protected void handleDelete( Long idToDelete ) throws Exception {
+        this.getProbeCoexpressionAnalysisDao().remove( idToDelete );
+    }
+
+    @Override
+    protected void handleDelete( ProbeCoexpressionAnalysis toDelete ) throws Exception {
+        this.getProbeCoexpressionAnalysisDao().remove( toDelete );
+    }
+
+    @Override
+    protected Collection handleFindByName( String name ) throws Exception {
+        return this.getProbeCoexpressionAnalysisDao().findByName( name );
+    }
+
+    @Override
+    protected ProbeCoexpressionAnalysis handleLoad( Long id ) throws Exception {
+        return this.getProbeCoexpressionAnalysisDao().load( id );
     }
 
 }

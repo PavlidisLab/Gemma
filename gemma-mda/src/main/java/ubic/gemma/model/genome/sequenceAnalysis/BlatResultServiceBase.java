@@ -35,20 +35,6 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     private ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao blatResultDao;
 
     /**
-     * Sets the reference to <code>blatResult</code>'s DAO.
-     */
-    public void setBlatResultDao( ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao blatResultDao ) {
-        this.blatResultDao = blatResultDao;
-    }
-
-    /**
-     * Gets the reference to <code>blatResult</code>'s DAO.
-     */
-    protected ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao getBlatResultDao() {
-        return this.blatResultDao;
-    }
-
-    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#create(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
     public ubic.gemma.model.genome.sequenceAnalysis.BlatResult create(
@@ -61,12 +47,6 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
-     */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#find(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
@@ -83,10 +63,17 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleFind(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception;
+    public java.util.Collection findByBioSequence( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        try {
+            return this.handleFindByBioSequence( bioSequence );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceException(
+                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
@@ -103,10 +90,17 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     }
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#load(java.util.Collection)
      */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleFindOrCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception;
+    public java.util.Collection load( final java.util.Collection ids ) {
+        try {
+            return this.handleLoad( ids );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceException(
+                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.load(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
@@ -122,47 +116,11 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     }
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     * Sets the reference to <code>blatResult</code>'s DAO.
      */
-    protected abstract void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    public java.util.Collection findByBioSequence( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        try {
-            return this.handleFindByBioSequence( bioSequence );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
-                            + th, th );
-        }
+    public void setBlatResultDao( ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao blatResultDao ) {
+        this.blatResultDao = blatResultDao;
     }
-
-    /**
-     * Performs the core logic for {@link #findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract java.util.Collection handleFindByBioSequence(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#load(java.util.Collection)
-     */
-    public java.util.Collection load( final java.util.Collection ids ) {
-        try {
-            return this.handleLoad( ids );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.load(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #load(java.util.Collection)}
-     */
-    protected abstract java.util.Collection handleLoad( java.util.Collection ids ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#update(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
@@ -178,46 +136,10 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
     }
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     * Gets the reference to <code>blatResult</code>'s DAO.
      */
-    protected abstract void handleUpdate( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao getBlatResultDao() {
+        return this.blatResultDao;
     }
 
     /**
@@ -232,5 +154,82 @@ public abstract class BlatResultServiceBase implements ubic.gemma.model.genome.s
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     */
+    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     */
+    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleFind(
+            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)}
+     */
+    protected abstract java.util.Collection handleFindByBioSequence(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     */
+    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleFindOrCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.util.Collection)}
+     */
+    protected abstract java.util.Collection handleLoad( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult )
+            throws java.lang.Exception;
 
 }

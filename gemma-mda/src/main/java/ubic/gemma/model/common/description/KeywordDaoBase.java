@@ -34,6 +34,52 @@ public abstract class KeywordDaoBase extends ubic.gemma.model.common.description
         ubic.gemma.model.common.description.KeywordDao {
 
     /**
+     * @see ubic.gemma.model.common.description.KeywordDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Keyword.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.description.Keyword ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.KeywordDao#create(int transform,
+     *      ubic.gemma.model.common.description.Keyword)
+     */
+    public Object create( final int transform, final ubic.gemma.model.common.description.Keyword keyword ) {
+        if ( keyword == null ) {
+            throw new IllegalArgumentException( "Keyword.create - 'keyword' can not be null" );
+        }
+        this.getHibernateTemplate().save( keyword );
+        return this.transformEntity( transform, keyword );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.KeywordDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.KeywordDao#create(ubic.gemma.model.common.description.Keyword)
+     */
+    public ubic.gemma.model.common.description.BibRefAnnotation create(
+            ubic.gemma.model.common.description.Keyword keyword ) {
+        return ( ubic.gemma.model.common.description.Keyword ) this.create( TRANSFORM_NONE, keyword );
+    }
+
+    /**
      * @see ubic.gemma.model.common.description.KeywordDao#load(int, java.lang.Long)
      */
     @Override
@@ -75,90 +121,6 @@ public abstract class KeywordDaoBase extends ubic.gemma.model.common.description
     }
 
     /**
-     * @see ubic.gemma.model.common.description.KeywordDao#create(ubic.gemma.model.common.description.Keyword)
-     */
-    public ubic.gemma.model.common.description.BibRefAnnotation create(
-            ubic.gemma.model.common.description.Keyword keyword ) {
-        return ( ubic.gemma.model.common.description.Keyword ) this.create( TRANSFORM_NONE, keyword );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.KeywordDao#create(int transform,
-     *      ubic.gemma.model.common.description.Keyword)
-     */
-    public Object create( final int transform, final ubic.gemma.model.common.description.Keyword keyword ) {
-        if ( keyword == null ) {
-            throw new IllegalArgumentException( "Keyword.create - 'keyword' can not be null" );
-        }
-        this.getHibernateTemplate().save( keyword );
-        return this.transformEntity( transform, keyword );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.KeywordDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.KeywordDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Keyword.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.description.Keyword ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.KeywordDao#update(ubic.gemma.model.common.description.Keyword)
-     */
-    public void update( ubic.gemma.model.common.description.Keyword keyword ) {
-        if ( keyword == null ) {
-            throw new IllegalArgumentException( "Keyword.update - 'keyword' can not be null" );
-        }
-        this.getHibernateTemplate().update( keyword );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibRefAnnotationDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Keyword.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.description.Keyword ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.KeywordDao#remove(ubic.gemma.model.common.description.Keyword)
-     */
-    public void remove( ubic.gemma.model.common.description.Keyword keyword ) {
-        if ( keyword == null ) {
-            throw new IllegalArgumentException( "Keyword.remove - 'keyword' can not be null" );
-        }
-        this.getHibernateTemplate().delete( keyword );
-    }
-
-    /**
      * @see ubic.gemma.model.common.description.KeywordDao#remove(java.lang.Long)
      */
     @Override
@@ -185,6 +147,65 @@ public abstract class KeywordDaoBase extends ubic.gemma.model.common.description
     }
 
     /**
+     * @see ubic.gemma.model.common.description.KeywordDao#remove(ubic.gemma.model.common.description.Keyword)
+     */
+    public void remove( ubic.gemma.model.common.description.Keyword keyword ) {
+        if ( keyword == null ) {
+            throw new IllegalArgumentException( "Keyword.remove - 'keyword' can not be null" );
+        }
+        this.getHibernateTemplate().delete( keyword );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibRefAnnotationDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Keyword.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.description.Keyword ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.KeywordDao#update(ubic.gemma.model.common.description.Keyword)
+     */
+    public void update( ubic.gemma.model.common.description.Keyword keyword ) {
+        if ( keyword == null ) {
+            throw new IllegalArgumentException( "Keyword.update - 'keyword' can not be null" );
+        }
+        this.getHibernateTemplate().update( keyword );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.description.Keyword)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.common.description.KeywordDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.description.Keyword)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.common.description.KeywordDao</code>, please note that the {@link #TRANSFORM_NONE}
@@ -206,25 +227,6 @@ public abstract class KeywordDaoBase extends ubic.gemma.model.common.description
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.description.Keyword)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.common.description.KeywordDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.description.Keyword)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

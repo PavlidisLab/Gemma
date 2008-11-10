@@ -35,40 +35,6 @@ public class UserGroupServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = -409359595623985309L;
 
     /**
-     * The default constructor for <code>UserGroupServiceException</code>.
-     */
-    public UserGroupServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>UserGroupServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public UserGroupServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>UserGroupServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public UserGroupServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>UserGroupServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public UserGroupServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class UserGroupServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>UserGroupServiceException</code>.
+     */
+    public UserGroupServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>UserGroupServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public UserGroupServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>UserGroupServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public UserGroupServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>UserGroupServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public UserGroupServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

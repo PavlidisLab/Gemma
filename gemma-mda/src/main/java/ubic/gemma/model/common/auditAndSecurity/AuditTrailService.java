@@ -30,21 +30,20 @@ public interface AuditTrailService {
     /**
      * 
      */
-    public void audit( ubic.gemma.model.common.Auditable entity,
-            ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
+    public void addComment( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
+            java.lang.String detail );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.AuditTrail create(
-            ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail );
+    public void addOkFlag( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
+            java.lang.String detail );
 
     /**
-     * <p>
-     * Thaws the given audit trail to prevent lazy load errors
-     * </p>
+     * 
      */
-    public void thaw( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail );
+    public void addTroubleFlag( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
+            java.lang.String detail );
 
     /**
      * <p>
@@ -64,24 +63,9 @@ public interface AuditTrailService {
     /**
      * 
      */
-    public void thaw( ubic.gemma.model.common.Auditable auditable );
-
-    /**
-     * 
-     */
-    public void addComment( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
-            java.lang.String detail );
-
-    /**
-     * 
-     */
-    public void addTroubleFlag( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
-            java.lang.String detail );
-
-    /**
-     * 
-     */
-    public void addOkFlag( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
+    public ubic.gemma.model.common.auditAndSecurity.AuditEvent addUpdateEvent(
+            ubic.gemma.model.common.Auditable auditable,
+            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType auditEventType, java.lang.String note,
             java.lang.String detail );
 
     /**
@@ -89,6 +73,18 @@ public interface AuditTrailService {
      */
     public void addValidatedFlag( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
             java.lang.String detail );
+
+    /**
+     * 
+     */
+    public void audit( ubic.gemma.model.common.Auditable entity,
+            ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.common.auditAndSecurity.AuditTrail create(
+            ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail );
 
     /**
      * <p>
@@ -110,9 +106,13 @@ public interface AuditTrailService {
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent addUpdateEvent(
-            ubic.gemma.model.common.Auditable auditable,
-            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType auditEventType, java.lang.String note,
-            java.lang.String detail );
+    public void thaw( ubic.gemma.model.common.Auditable auditable );
+
+    /**
+     * <p>
+     * Thaws the given audit trail to prevent lazy load errors
+     * </p>
+     */
+    public void thaw( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail );
 
 }

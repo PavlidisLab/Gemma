@@ -30,24 +30,12 @@ public interface BioSequenceService {
     /**
      * 
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence find(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public java.lang.Integer countAll();
 
     /**
      * 
      */
-    public void remove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * 
-     */
-    public void update( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public java.util.Collection create( java.util.Collection bioSequences );
 
     /**
      * 
@@ -58,37 +46,22 @@ public interface BioSequenceService {
     /**
      * 
      */
-    public java.util.Collection create( java.util.Collection bioSequences );
+    public ubic.gemma.model.genome.biosequence.BioSequence find(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * 
      */
-    public java.util.Collection findOrCreate( java.util.Collection bioSequences );
+    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
+            ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
-     * 
+     * <p>
+     * Returns matching biosequences for the given genes in a Map (gene to biosequences). Genes which had no associated
+     * sequences are not included in the result.
+     * </p>
      */
-    public void update( java.util.Collection bioSequences );
-
-    /**
-     * 
-     */
-    public java.util.Collection getGenesByName( java.lang.String search );
-
-    /**
-     * 
-     */
-    public java.util.Collection getGenesByAccession( java.lang.String search );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence load( long id );
-
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
+    public java.util.Map findByGenes( java.util.Collection genes );
 
     /**
      * <p>
@@ -101,8 +74,28 @@ public interface BioSequenceService {
     /**
      * 
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
-            ubic.gemma.model.common.description.DatabaseEntry accession );
+    public java.util.Collection findOrCreate( java.util.Collection bioSequences );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+
+    /**
+     * 
+     */
+    public java.util.Collection getGenesByAccession( java.lang.String search );
+
+    /**
+     * 
+     */
+    public java.util.Collection getGenesByName( java.lang.String search );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.biosequence.BioSequence load( long id );
 
     /**
      * <p>
@@ -110,6 +103,11 @@ public interface BioSequenceService {
      * </p>
      */
     public java.util.Collection loadMultiple( java.util.Collection ids );
+
+    /**
+     * 
+     */
+    public void remove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * 
@@ -129,11 +127,13 @@ public interface BioSequenceService {
     public void thawLite( java.util.Collection bioSequences );
 
     /**
-     * <p>
-     * Returns matching biosequences for the given genes in a Map (gene to biosequences). Genes which had no associated
-     * sequences are not included in the result.
-     * </p>
+     * 
      */
-    public java.util.Map findByGenes( java.util.Collection genes );
+    public void update( java.util.Collection bioSequences );
+
+    /**
+     * 
+     */
+    public void update( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
 }

@@ -40,7 +40,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDaoBase#find(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
     @Override
-    public Collection<Gene> find( BlatResult blatResult ) {
+    public Collection<ProbeAlignedRegion> find( BlatResult blatResult ) {
         Chromosome chrom = blatResult.getTargetChromosome();
         final Long targetStart = blatResult.getTargetStart();
         final Long targetEnd = blatResult.getTargetEnd();
@@ -56,7 +56,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
      * )
      */
     @Override
-    public Collection<Gene> findByPhysicalLocation( PhysicalLocation location ) {
+    public Collection<ProbeAlignedRegion> findByPhysicalLocation( PhysicalLocation location ) {
         Chromosome chrom = location.getChromosome();
         final Long targetStart = location.getNucleotide();
         final Long targetEnd = location.getNucleotide() + location.getNucleotideLength();
@@ -71,12 +71,12 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
      */
     @Override
     public ProbeAlignedRegion geneValueObjectToEntity( GeneValueObject geneValueObject ) {
-        return ( ProbeAlignedRegion ) this.load( geneValueObject.getId() );
+        return this.load( geneValueObject.getId() );
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<Gene> findByPosition( Chromosome chrom, final Long targetStart, final Long targetEnd,
-            final String strand ) {
+    private Collection<ProbeAlignedRegion> findByPosition( Chromosome chrom, final Long targetStart,
+            final Long targetEnd, final String strand ) {
 
         // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
         String query = "select distinct par from ProbeAlignedRegionImpl as par inner join fetch par.physicalLocation pl "

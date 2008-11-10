@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * @see ubic.gemma.model.genome.Gene
  */
-public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
+public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Gene> {
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or
      * other types, different methods in a class implementing this interface support this feature: look for an
@@ -48,48 +48,12 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
 
     /**
      * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.Gene)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
-     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
-     * objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<Gene> create( int transform, java.util.Collection<Gene> entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.Gene)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
-     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a value
-     * object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform, ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.genome.Gene and adds from the passed in <code>entities</code>
-     * collection
-     * 
-     * @param entities the collection of ubic.gemma.model.genome.Gene instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection<Gene> create( java.util.Collection<Gene> entities );
-
-    /**
-     * Creates an instance of ubic.gemma.model.genome.Gene and adds it to the persistent store.
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * <p>
      * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.Gene)} with an additional argument called
      * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
      * in {@link #find(int, ubic.gemma.model.genome.Gene gene)}.
      * </p>
      */
-    public Object find( int transform, String queryString, ubic.gemma.model.genome.Gene gene );
+    public Gene find( int transform, String queryString, ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
@@ -100,7 +64,7 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object find( int transform, ubic.gemma.model.genome.Gene gene );
+    public Gene find( int transform, ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
@@ -250,7 +214,28 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
      * @param physicalLocation
      * @return
      */
-    public Collection findNearest( PhysicalLocation physicalLocation );
+    public Collection<Gene> findNearest( PhysicalLocation physicalLocation );
+
+    /**
+     * Converts an instance of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's entity.
+     */
+    public ubic.gemma.model.genome.Gene geneValueObjectToEntity(
+            ubic.gemma.model.genome.gene.GeneValueObject geneValueObject );
+
+    /**
+     * Copies the fields of {@link ubic.gemma.model.genome.gene.GeneValueObject} to the specified entity.
+     * 
+     * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
+     *        TRUE, it will be copied regardless of its value.
+     */
+    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject sourceVO,
+            ubic.gemma.model.genome.Gene targetEntity, boolean copyIfNull );
+
+    /**
+     * Converts a Collection of instances of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's
+     * entity.
+     */
+    public void geneValueObjectToEntityCollection( java.util.Collection<Gene> instances );
 
     /**
      * <p>
@@ -285,27 +270,6 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
      * 
      */
     public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * Converts an instance of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's entity.
-     */
-    public ubic.gemma.model.genome.Gene geneValueObjectToEntity(
-            ubic.gemma.model.genome.gene.GeneValueObject geneValueObject );
-
-    /**
-     * Copies the fields of {@link ubic.gemma.model.genome.gene.GeneValueObject} to the specified entity.
-     * 
-     * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
-     *        TRUE, it will be copied regardless of its value.
-     */
-    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject sourceVO,
-            ubic.gemma.model.genome.Gene targetEntity, boolean copyIfNull );
-
-    /**
-     * Converts a Collection of instances of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's
-     * entity.
-     */
-    public void geneValueObjectToEntityCollection( java.util.Collection<Gene> instances );
 
     /**
      * <p>
@@ -349,101 +313,11 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
 
     /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads an instance of ubic.gemma.model.genome.Gene from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.genome.Gene}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection<Gene> loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection<Gene> loadAll( final int transform );
-
-    /**
-     * <p>
      * Returns a collection of genes for the specified taxon (not all genes, ie not probe aligned regions and predicted
      * genes)
      * </p>
      */
     public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> loadMultiple( java.util.Collection<Long> ids );
-
-    /**
-     * <p>
-     * Returns a collection of predicted genes for the specified taxon.
-     * </p>
-     */
-    public java.util.Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * <p>
-     * Returns a collection of probe aligned regions for the specified taxon
-     * </p>
-     */
-    public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.Gene having the given <code>identifier</code> from the persistent
-     * store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection<Gene> entities );
-
-    // /**
-    // *
-    // */
-    // public java.util.Map<Long, Collection<Long>> getCompositeSequenceMap( java.util.Collection<Gene> genes );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.Gene from the persistent store.
-     */
-    public void remove( ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * 
-     */
-    public void thaw( ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * 
-     */
-    public void thawLite( java.util.Collection<Gene> genes );
 
     /**
      * Converts this DAO's entity to an object of type {@link ubic.gemma.model.genome.gene.GeneValueObject}.
@@ -465,13 +339,32 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao {
     public void toGeneValueObjectCollection( java.util.Collection<Gene> entities );
 
     /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     * 
      */
-    public void update( java.util.Collection<Gene> entities );
+    public java.util.Collection<Gene> load( java.util.Collection<Long> ids );
 
     /**
-     * Updates the <code>gene</code> instance in the persistent store.
+     * <p>
+     * Returns a collection of predicted genes for the specified taxon.
+     * </p>
      */
-    public void update( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * <p>
+     * Returns a collection of probe aligned regions for the specified taxon
+     * </p>
+     */
+    public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * 
+     */
+    public void thaw( ubic.gemma.model.genome.Gene gene );
+
+    /**
+     * 
+     */
+    public void thawLite( java.util.Collection<Gene> genes );
 
 }

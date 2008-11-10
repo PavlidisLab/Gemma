@@ -71,6 +71,47 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
         return ( ( List<AuditEvent> ) this.getEvents() ).get( this.getEvents().size() - 1 );
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#read()
+     */
+    @Override
+    public void read() {
+        this.read( null );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#read(java.lang.String)
+     */
+    @Override
+    public void read( String note ) {
+        this.read( note, null );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#read(java.lang.String,
+     * ubic.gemma.model.common.auditAndSecurity.User)
+     */
+    @Override
+    public void read( String note, User actor ) {
+        assert this.getEvents() != null;
+        assert this.getEvents().size() > 0; // can't have read as the first
+        // event.
+
+        AuditEvent newEvent = AuditEvent.Factory.newInstance();
+        newEvent.setAction( AuditAction.READ );
+        newEvent.setPerformer( actor );
+        newEvent.setDate( new Date() );
+        if ( note != null ) newEvent.setNote( note );
+
+        this.addEvent( newEvent );
+
+    }
+
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#start()
      */
@@ -154,50 +195,6 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
      */
     private boolean trailIsNull() {
         return this.getEvents() == null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#read()
-     */
-    @Override
-    public void read() {
-        this.read( null );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#read(java.lang.String)
-     */
-    @Override
-    public void read( String note ) {
-        this.read( note, null );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#read(java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.User)
-     */
-    @Override
-    public void read( String note, User actor ) {
-        assert this.getEvents() != null;
-        assert this.getEvents().size() > 0; // can't have read as the first
-        // event.
-
-        AuditEvent newEvent = AuditEvent.Factory.newInstance();
-        newEvent.setAction( AuditAction.READ );
-        newEvent.setPerformer( actor );
-        newEvent.setDate( new Date() );
-        if ( note != null ) newEvent.setNote( note );
-
-        this.addEvent( newEvent );
-
     }
 
     // todo this has to be added to the model.F

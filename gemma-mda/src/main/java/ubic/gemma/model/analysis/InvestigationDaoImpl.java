@@ -25,5 +25,6 @@ package ubic.gemma.model.analysis;
 /**
  * @see ubic.gemma.model.analysis.Investigation
  */
-public class InvestigationDaoImpl extends ubic.gemma.model.analysis.InvestigationDaoBase {
+public abstract class InvestigationDaoImpl<T extends Investigation> extends
+        ubic.gemma.model.analysis.InvestigationDaoBase<T> {
 }

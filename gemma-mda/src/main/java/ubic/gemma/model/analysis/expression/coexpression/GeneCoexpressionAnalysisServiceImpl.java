@@ -38,18 +38,19 @@ public class GeneCoexpressionAnalysisServiceImpl extends
         ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisServiceBase {
 
     /*
-     * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysisService#create(ubic.gemma.model.analysis.GeneCoexpressionAnalysis)
+     * @see
+     * ubic.gemma.model.analysis.GeneCoexpressionAnalysisService#create(ubic.gemma.model.analysis.GeneCoexpressionAnalysis
+     * )
      */
     @Override
     protected ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis handleCreate(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis )
             throws java.lang.Exception {
-        return ( GeneCoexpressionAnalysis ) this.getGeneCoexpressionAnalysisDao().create( analysis );
+        return this.getGeneCoexpressionAnalysisDao().create( analysis );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.analysis.AnalysisServiceImpl#handleLoadAll()
      */
     @Override
@@ -57,10 +58,30 @@ public class GeneCoexpressionAnalysisServiceImpl extends
         return this.getGeneCoexpressionAnalysisDao().loadAll();
     }
 
+    @Override
+    protected void handleDelete( Long idToDelete ) throws Exception {
+        this.getGeneCoexpressionAnalysisDao().remove( idToDelete );
+    }
+
+    @Override
+    protected void handleDelete( GeneCoexpressionAnalysis toDelete ) throws Exception {
+        this.getGeneCoexpressionAnalysisDao().remove( toDelete );
+    }
+
+    @Override
+    protected Collection handleFindByName( String name ) throws Exception {
+        return this.getGeneCoexpressionAnalysisDao().findByName( name );
+    }
+
+    @Override
+    protected GeneCoexpressionAnalysis handleLoad( Long id ) throws Exception {
+        return this.getGeneCoexpressionAnalysisDao().load( id );
+    }
+
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
+     * @see
+     * ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
     protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {

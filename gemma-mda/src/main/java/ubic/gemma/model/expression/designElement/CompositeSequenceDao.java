@@ -22,53 +22,17 @@
 //
 package ubic.gemma.model.expression.designElement;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * @see ubic.gemma.model.expression.designElement.CompositeSequence
  */
-public interface CompositeSequenceDao extends ubic.gemma.model.expression.designElement.DesignElementDao {
+public interface CompositeSequenceDao extends
+        ubic.gemma.model.expression.designElement.DesignElementDao<CompositeSequence> {
     /**
      * 
      */
     public java.lang.Integer countAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.expression.designElement.CompositeSequence)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
-     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities
-     * (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.expression.designElement.CompositeSequence)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
-     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity
-     * (into a value object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform, ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.expression.designElement.CompositeSequence and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.expression.designElement.CompositeSequence instances to
-     *        create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * Creates an instance of ubic.gemma.model.expression.designElement.CompositeSequence and adds it to the persistent
-     * store.
-     */
-    public ubic.gemma.model.common.Securable create(
-            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
 
     /**
      * <p>
@@ -78,7 +42,7 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence)}.
      * </p>
      */
-    public Object find( int transform, String queryString,
+    public CompositeSequence find( int transform, String queryString,
             ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
 
     /**
@@ -90,7 +54,8 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object find( int transform, ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
+    public CompositeSequence find( int transform,
+            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
 
     /**
      * <p>
@@ -111,12 +76,13 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
     /**
      * 
      */
-    public java.util.Collection findByBioSequence( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public java.util.Collection<CompositeSequence> findByBioSequence(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * 
      */
-    public java.util.Collection findByBioSequenceName( java.lang.String name );
+    public java.util.Collection<CompositeSequence> findByBioSequenceName( java.lang.String name );
 
     /**
      * <p>
@@ -125,7 +91,8 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * defined in {@link #findByGene(int, ubic.gemma.model.genome.Gene gene)}.
      * </p>
      */
-    public java.util.Collection findByGene( int transform, String queryString, ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<CompositeSequence> findByGene( int transform, String queryString,
+            ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
@@ -136,8 +103,8 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)}.
      * </p>
      */
-    public java.util.Collection findByGene( int transform, String queryString, ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public java.util.Collection<CompositeSequence> findByGene( int transform, String queryString,
+            ubic.gemma.model.genome.Gene gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -148,7 +115,7 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection findByGene( int transform, ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<CompositeSequence> findByGene( int transform, ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
@@ -160,7 +127,7 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection findByGene( int transform, ubic.gemma.model.genome.Gene gene,
+    public java.util.Collection<CompositeSequence> findByGene( int transform, ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
@@ -170,7 +137,7 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * in {@link #findByGene(ubic.gemma.model.genome.Gene)}.
      * </p>
      */
-    public java.util.Collection findByGene( String queryString, ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<CompositeSequence> findByGene( String queryString, ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
@@ -181,18 +148,18 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * {@link #findByGene(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign)}.
      * </p>
      */
-    public java.util.Collection findByGene( String queryString, ubic.gemma.model.genome.Gene gene,
+    public java.util.Collection<CompositeSequence> findByGene( String queryString, ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    public java.util.Collection findByGene( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<CompositeSequence> findByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
      */
-    public java.util.Collection findByGene( ubic.gemma.model.genome.Gene gene,
+    public java.util.Collection<CompositeSequence> findByGene( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
@@ -204,7 +171,7 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection findByName( int transform, java.lang.String name );
+    public java.util.Collection<CompositeSequence> findByName( int transform, java.lang.String name );
 
     /**
      * <p>
@@ -213,7 +180,7 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * in {@link #findByName(int, java.lang.String name)}.
      * </p>
      */
-    public java.util.Collection findByName( int transform, String queryString, java.lang.String name );
+    public java.util.Collection<CompositeSequence> findByName( int transform, String queryString, java.lang.String name );
 
     /**
      * <p>
@@ -224,7 +191,7 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * arrayDesign, java.lang.String name)}.
      * </p>
      */
-    public Object findByName( int transform, String queryString,
+    public CompositeSequence findByName( int transform, String queryString,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, java.lang.String name );
 
     /**
@@ -236,13 +203,13 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * optionally transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findByName( int transform, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            java.lang.String name );
+    public CompositeSequence findByName( int transform,
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, java.lang.String name );
 
     /**
      * 
      */
-    public java.util.Collection findByName( java.lang.String name );
+    public java.util.Collection<CompositeSequence> findByName( java.lang.String name );
 
     /**
      * <p>
@@ -251,7 +218,7 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * in {@link #findByName(java.lang.String)}.
      * </p>
      */
-    public java.util.Collection findByName( String queryString, java.lang.String name );
+    public java.util.Collection<CompositeSequence> findByName( String queryString, java.lang.String name );
 
     /**
      * <p>
@@ -279,7 +246,7 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * compositeSequence)}.
      * </p>
      */
-    public Object findOrCreate( int transform, String queryString,
+    public CompositeSequence findOrCreate( int transform, String queryString,
             ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
 
     /**
@@ -291,7 +258,7 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findOrCreate( int transform,
+    public CompositeSequence findOrCreate( int transform,
             ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
 
     /**
@@ -316,26 +283,28 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
      * Given a collection of composite sequences returns a map of the given composite sequences to a collection of genes
      * </p>
      */
-    public java.util.Map getGenes( java.util.Collection compositeSequences );
+    public java.util.Map getGenes( java.util.Collection<CompositeSequence> compositeSequences );
 
     /**
      * <p>
      * given a composite sequence returns a collection of genes
      * </p>
      */
-    public java.util.Collection getGenes( ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
+    public java.util.Collection<Gene> getGenes(
+            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
 
     /**
      * <p>
      * Returns a map of CompositeSequences to PhysicalLocation to BlatAssociations at each location.
      * </p>
      */
-    public java.util.Map getGenesWithSpecificity( java.util.Collection compositeSequences );
+    public java.util.Map getGenesWithSpecificity( java.util.Collection<CompositeSequence> compositeSequences );
 
     /**
      * 
      */
-    public java.util.Collection getRawSummary( java.util.Collection compositeSequences, java.lang.Integer numResults );
+    public java.util.Collection getRawSummary( java.util.Collection<CompositeSequence> compositeSequences,
+            java.lang.Integer numResults );
 
     /**
      * 
@@ -352,79 +321,8 @@ public interface CompositeSequenceDao extends ubic.gemma.model.expression.design
             ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence, java.lang.Integer numResults );
 
     /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads an instance of ubic.gemma.model.expression.designElement.CompositeSequence from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
-    /**
      * 
      */
-    public java.util.Collection load( java.util.Collection ids );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.expression.designElement.CompositeSequence}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Removes the instance of ubic.gemma.model.expression.designElement.CompositeSequence having the given
-     * <code>identifier</code> from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.expression.designElement.CompositeSequence from the persistent store.
-     */
-    public void remove( ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
-
-    /**
-     * 
-     */
-    public void thaw( java.util.Collection compositeSequences );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Updates the <code>compositeSequence</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
+    public void thaw( java.util.Collection<CompositeSequence> compositeSequences );
 
 }

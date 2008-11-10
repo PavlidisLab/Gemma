@@ -25,14 +25,15 @@ package ubic.gemma.model.analysis.expression.diff;
 /**
  * <p>
  * Spring Service base class for
- * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService</code>, provides access to
- * all services and entities referenced by this service.
+ * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService</code>, provides access to all
+ * services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService
  */
-public abstract class DifferentialExpressionAnalysisServiceBase extends ubic.gemma.model.analysis.AnalysisServiceImpl
-        implements ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService {
+public abstract class DifferentialExpressionAnalysisServiceBase extends
+        ubic.gemma.model.analysis.AnalysisServiceImpl<DifferentialExpressionAnalysis> implements
+        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService {
 
     private ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
@@ -214,5 +215,7 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends ubic.gem
      */
     protected abstract java.util.Map handleFindByInvestigationIds( java.util.Collection investigationIds )
             throws java.lang.Exception;
+
+    protected abstract void handleDelete( DifferentialExpressionAnalysis toDelete ) throws Exception;
 
 }

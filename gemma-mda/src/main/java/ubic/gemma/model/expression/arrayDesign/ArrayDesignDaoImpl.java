@@ -43,7 +43,9 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
@@ -62,7 +64,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     public ArrayDesign arrayDesignValueObjectToEntity( ArrayDesignValueObject arrayDesignValueObject ) {
         Long id = arrayDesignValueObject.getId();
-        return ( ArrayDesign ) this.load( id );
+        return this.load( id );
     }
 
     /*
@@ -70,7 +72,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    @Override
     public ArrayDesign find( ArrayDesign arrayDesign ) {
         try {
 
@@ -109,7 +110,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             return existingArrayDesign;
         }
         log.debug( "Creating new arrayDesign: " + arrayDesign.getName() );
-        return ( ArrayDesign ) create( arrayDesign );
+        return create( arrayDesign );
     }
 
     @Override
@@ -137,7 +138,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * .model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) throws Exception {
+    protected Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign )
+            throws Exception {
         final String queryString = "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " left join cs.biologicalCharacteristic bs where ar = :ar and bs IS NULL";
         return getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
@@ -150,7 +152,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * .model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) throws Exception {
+    protected Collection<CompositeSequence> handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign )
+            throws Exception {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
@@ -173,7 +176,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * .expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign ) throws Exception {
+    protected Collection<CompositeSequence> handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign )
+            throws Exception {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
@@ -193,7 +197,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return ( ( Long ) getHibernateTemplate().find( queryString ).iterator().next() ).intValue();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) throws Exception {
         // First have to delete all blatAssociations, because they are referred to by the alignments
@@ -210,7 +213,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
         final String queryString = "select ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
@@ -222,7 +224,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     @Override
-    protected Collection handleFindByAlternateName( String queryString ) throws Exception {
+    protected Collection<ArrayDesign> handleFindByAlternateName( String queryString ) throws Exception {
         return this.getHibernateTemplate().findByNamedParam(
                 "from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q", "q", queryString );
     }
@@ -232,7 +234,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
     @Override
-    protected Collection handleGetAllAssociatedBioAssays( Long id ) throws Exception {
+    protected Collection<BioAssay> handleGetAllAssociatedBioAssays( Long id ) throws Exception {
         final String queryString = "select b from BioAssayImpl as b inner join b.arrayDesignUsed a where a.id = :id";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
@@ -279,7 +281,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetExpressionExperimentsById(long)
      */
     @Override
-    protected Collection handleGetExpressionExperiments( ArrayDesign arrayDesign ) throws Exception {
+    protected Collection<ExpressionExperiment> handleGetExpressionExperiments( ArrayDesign arrayDesign )
+            throws Exception {
         final String queryString = "select distinct ee from ArrayDesignImpl ad, "
                 + "BioAssayImpl ba, ExpressionExperimentImpl ee inner join ee.bioAssays eeba where"
                 + " ba.arrayDesignUsed=ad and eeba=ba and ad = :ad";
@@ -449,7 +452,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
     @Override
-    protected Collection handleLoadCompositeSequences( Long id ) throws Exception {
+    protected Collection<CompositeSequence> handleLoadCompositeSequences( Long id ) throws Exception {
         final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
@@ -496,7 +499,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     @Override
-    protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
+    protected Collection<ArrayDesignValueObject> handleLoadValueObjects( Collection<Long> ids ) throws Exception {
         Collection<ArrayDesignValueObject> vo = new ArrayList<ArrayDesignValueObject>();
         // sanity check
         if ( ids == null || ids.size() == 0 ) {
@@ -866,7 +869,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     /**
      * 
      */
-    private void debug( List results ) {
+    private void debug( List<? extends Object> results ) {
         for ( Object ad : results ) {
             log.error( ad );
         }
@@ -943,7 +946,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "left outer join fetch bs.taxon left outer join fetch bs.bioSequence2GeneProduct bs2gp "
                 + " left outer join fetch bs2gp.geneProduct gp left outer join fetch gp.gene g left outer join fetch g.aliases where cs = :cs";
 
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
 
                 // The following are VERY important for performance.
@@ -1028,7 +1031,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 session.setCacheMode( oldCacheMode );
                 return null;
             }
-        }, true );
+        } );
 
     }
 }

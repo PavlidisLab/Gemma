@@ -49,17 +49,17 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     /**
      * Note that this only returns selected classes of auditables.
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(java.util.Date)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
      * @return Collection of Auditables
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected java.util.Collection handleGetUpdatedSinceDate( java.util.Date date ) {
+    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
         Collection<Auditable> result = new HashSet<Auditable>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
             String queryString = "select distinct adb from "
                     + clazz
-                    + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
+                    + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
             try {
                 org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
                 queryObject.setParameter( "date", date );
@@ -74,17 +74,17 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     /**
      * Note that this only returns selected classes of auditables.
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(java.util.Date)
      * @return Collection of Auditables
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
+    protected java.util.Collection handleGetUpdatedSinceDate( java.util.Date date ) {
         Collection<Auditable> result = new HashSet<Auditable>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
             String queryString = "select distinct adb from "
                     + clazz
-                    + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
+                    + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
             try {
                 org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
                 queryObject.setParameter( "date", date );

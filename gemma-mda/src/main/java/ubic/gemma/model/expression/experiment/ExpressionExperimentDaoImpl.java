@@ -896,7 +896,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         if ( timer.getTime() > 1000 ) log.info( "Get array designs used for EEs: " + timer.getTime() );
         timer.reset();
 
-        List<String> classes = getClassHierarchy( type );
+        List<String> classes = CommonQueries.getEventTypeClassHierarchy( type, this.getSession() );
         List<ArrayDesign> ads = new ArrayList<ArrayDesign>( eeAdMap.keySet() );
         final String queryString = "select ad,event from ArrayDesignImpl ad inner join ad.auditTrail trail inner join trail.events event inner join event.eventType et "
                 + " where ad in (:ads) and et.class in ("
@@ -973,12 +973,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     }
 
-    @Override
-    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent(
-            final ubic.gemma.model.common.Auditable auditable,
-            final ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception {
-        return super.handleGetLastAuditEvent( auditable, type );
-    }
+    // @Override
+    // protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent(
+    // final ubic.gemma.model.common.Auditable auditable,
+    // final ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception {
+    // return CommonQueries.getLastAuditEvent( auditable, type, this.getSession() );
+    // }
 
     @Override
     @SuppressWarnings("unchecked")

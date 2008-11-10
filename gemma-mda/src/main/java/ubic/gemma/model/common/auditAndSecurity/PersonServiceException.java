@@ -35,40 +35,6 @@ public class PersonServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = -7729552864190441917L;
 
     /**
-     * The default constructor for <code>PersonServiceException</code>.
-     */
-    public PersonServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>PersonServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public PersonServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>PersonServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public PersonServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>PersonServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public PersonServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class PersonServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>PersonServiceException</code>.
+     */
+    public PersonServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>PersonServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public PersonServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>PersonServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public PersonServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>PersonServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public PersonServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

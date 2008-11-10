@@ -28,10 +28,26 @@ package ubic.gemma.model.common.description;
 public interface BibliographicReferenceService extends ubic.gemma.model.common.AuditableService {
 
     /**
+     * <p>
+     * Adds a document (in PDF format) for the reference.
+     * </p>
+     */
+    public void addPDF( ubic.gemma.model.common.description.LocalFile pdfFile,
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+
+    /**
      * 
      */
-    public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
-            ubic.gemma.model.common.description.BibliographicReference BibliographicReference );
+    public ubic.gemma.model.common.description.BibliographicReference create(
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+
+    /**
+     * <p>
+     * check to see if the object already exists
+     * </p>
+     */
+    public ubic.gemma.model.common.description.BibliographicReference find(
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
      * <p>
@@ -49,14 +65,6 @@ public interface BibliographicReferenceService extends ubic.gemma.model.common.A
             java.lang.String databaseName );
 
     /**
-     * <p>
-     * check to see if the object already exists
-     * </p>
-     */
-    public ubic.gemma.model.common.description.BibliographicReference find(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
      * 
      */
     public ubic.gemma.model.common.description.BibliographicReference findByTitle( java.lang.String title );
@@ -64,31 +72,15 @@ public interface BibliographicReferenceService extends ubic.gemma.model.common.A
     /**
      * 
      */
-    public void update( ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
-     * 
-     */
-    public void remove( ubic.gemma.model.common.description.BibliographicReference BibliographicReference );
+    public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
+            ubic.gemma.model.common.description.BibliographicReference BibliographicReference );
 
     /**
      * <p>
-     * Adds a document (in PDF format) for the reference.
+     * Return all the BibRefs that are linked to ExpressionExperiments.
      * </p>
      */
-    public void addPDF( ubic.gemma.model.common.description.LocalFile pdfFile,
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.description.BibliographicReference create(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.description.BibliographicReference load( java.lang.Long id );
+    public java.util.Collection getAllExperimentLinkedReferences();
 
     /**
      * <p>
@@ -99,15 +91,23 @@ public interface BibliographicReferenceService extends ubic.gemma.model.common.A
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
-     * <p>
-     * Return all the BibRefs that are linked to ExpressionExperiments.
-     * </p>
+     * 
      */
-    public java.util.Collection getAllExperimentLinkedReferences();
+    public ubic.gemma.model.common.description.BibliographicReference load( java.lang.Long id );
 
     /**
      * 
      */
     public java.util.Collection loadMultiple( java.util.Collection ids );
+
+    /**
+     * 
+     */
+    public void remove( ubic.gemma.model.common.description.BibliographicReference BibliographicReference );
+
+    /**
+     * 
+     */
+    public void update( ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
 }

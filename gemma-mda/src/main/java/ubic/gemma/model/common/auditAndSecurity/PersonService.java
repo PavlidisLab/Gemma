@@ -36,16 +36,6 @@ public interface PersonService {
     /**
      * 
      */
-    public java.util.Collection loadAll();
-
-    /**
-     * 
-     */
-    public void remove( ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * 
-     */
     public java.util.Collection findByFullName( java.lang.String name, java.lang.String lastName );
 
     /**
@@ -53,5 +43,15 @@ public interface PersonService {
      */
     public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate(
             ubic.gemma.model.common.auditAndSecurity.Person person );
+
+    /**
+     * 
+     */
+    public java.util.Collection loadAll();
+
+    /**
+     * 
+     */
+    public void remove( ubic.gemma.model.common.auditAndSecurity.Person person );
 
 }

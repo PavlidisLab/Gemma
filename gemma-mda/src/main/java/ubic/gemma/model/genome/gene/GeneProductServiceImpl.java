@@ -29,29 +29,9 @@ import java.util.Collection;
  */
 public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GeneProductServiceBase {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByName(java.lang.String)
-     */
-    @Override
-    protected Collection handleGetGenesByName( String search ) throws Exception {
-        return this.getGeneProductDao().getGenesByName( search );
-    }
-
     @Override
     protected Integer handleCountAll() throws Exception {
         return this.getGeneProductDao().countAll();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByNcbiId(java.lang.String)
-     */
-    @Override
-    protected Collection handleGetGenesByNcbiId( String search ) throws Exception {
-        return this.getGeneProductDao().getGenesByNcbiId( search );
     }
 
     /**
@@ -64,6 +44,24 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     }
 
     /**
+     * @see ubic.gemma.model.genome.gene.GeneProductService#delete(ubic.gemma.model.genome.gene.GeneProduct)
+     */
+    @Override
+    protected void handleDelete( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
+        this.getGeneProductDao().remove( geneProduct );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleFind(ubic.gemma.model.genome.gene.GeneProduct)
+     */
+    @Override
+    protected ubic.gemma.model.genome.gene.GeneProduct handleFind( ubic.gemma.model.genome.gene.GeneProduct gProduct )
+            throws Exception {
+        return this.getGeneProductDao().find( gProduct );
+    }
+
+    /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
@@ -72,20 +70,22 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
         return this.getGeneProductDao().findOrCreate( geneProduct );
     }
 
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#delete(ubic.gemma.model.genome.gene.GeneProduct)
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByName(java.lang.String)
      */
     @Override
-    protected void handleDelete( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
-        this.getGeneProductDao().remove( geneProduct );
+    protected Collection handleGetGenesByName( String search ) throws Exception {
+        return this.getGeneProductDao().getGenesByName( search );
     }
 
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#update(ubic.gemma.model.genome.gene.GeneProduct)
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByNcbiId(java.lang.String)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
-        this.getGeneProductDao().update( geneProduct );
+    protected Collection handleGetGenesByNcbiId( String search ) throws Exception {
+        return this.getGeneProductDao().getGenesByNcbiId( search );
     }
 
     /**
@@ -98,23 +98,19 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleFind(ubic.gemma.model.genome.gene.GeneProduct)
-     */
-    @Override
-    protected ubic.gemma.model.genome.gene.GeneProduct handleFind( ubic.gemma.model.genome.gene.GeneProduct gProduct )
-            throws Exception {
-        return this.getGeneProductDao().find( gProduct );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
     protected Collection handleLoadMultiple( Collection ids ) throws Exception {
         return this.getGeneProductDao().load( ids );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneProductService#update(ubic.gemma.model.genome.gene.GeneProduct)
+     */
+    @Override
+    protected void handleUpdate( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
+        this.getGeneProductDao().update( geneProduct );
     }
 
 }

@@ -42,7 +42,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
  * @version $Id$
  * @see ubic.gemma.model.common.Auditable
  */
-public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
+public final class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase<Auditable> {
 
     private static Log log = LogFactory.getLog( AuditableDaoImpl.class.getName() );
 
@@ -157,8 +157,8 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Auditable, AuditEvent> handleGetLastAuditEvent( final Collection auditables, AuditEventType type )
-            throws Exception {
+    protected Map<Auditable, AuditEvent> handleGetLastAuditEvent( final Collection<? extends Auditable> auditables,
+            AuditEventType type ) throws Exception {
 
         Map<Auditable, AuditEvent> result = new HashMap<Auditable, AuditEvent>();
         if ( auditables.size() == 0 ) return result;
@@ -215,8 +215,8 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Class, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents( Collection auditables )
-            throws Exception {
+    protected Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents(
+            Collection<? extends Auditable> auditables ) throws Exception {
 
         Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
         for ( Auditable a : ( Collection<Auditable> ) auditables ) {
@@ -227,7 +227,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
                 + "inner join fetch trail.events event inner join event.eventType et inner join fetch event.performer "
                 + "where trail in (:trails) order by event.date desc ";
 
-        Map<Class, Map<Auditable, AuditEvent>> result = new HashMap<Class, Map<Auditable, AuditEvent>>();
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> result = new HashMap<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>>();
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setCacheable( true );
@@ -271,7 +271,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Map<AuditTrail, Auditable> getAuditTrailMap( final Collection auditables ) {
+    private Map<AuditTrail, Auditable> getAuditTrailMap( final Collection<? extends Auditable> auditables ) {
         /*
          * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because Auditable
          * is not mapped, we have to query for each class separately ... just in case the user has passed a

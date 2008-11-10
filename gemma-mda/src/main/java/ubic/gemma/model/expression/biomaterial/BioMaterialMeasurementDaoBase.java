@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.expression.biomaterial;
 
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -30,7 +32,7 @@ package ubic.gemma.model.expression.biomaterial;
  * 
  * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement
  */
-public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.common.DescribableDaoImpl implements
+public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao {
 
     /**
@@ -77,7 +79,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#create(ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement)
      */
-    public ubic.gemma.model.common.Securable create(
+    public BioMaterialMeasurement create(
             ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement bioMaterialMeasurement ) {
         return ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) this.create( TRANSFORM_NONE,
                 bioMaterialMeasurement );
@@ -87,7 +89,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getAclObjectIdentityId(int,
      *      java.lang.String, ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -115,7 +117,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getAclObjectIdentityId(int,
      *      ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
         return this
@@ -129,7 +131,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getAclObjectIdentityId(java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -139,7 +141,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
      */
-    @Override
+
     public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
         return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
     }
@@ -148,7 +150,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMask(int, java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getMask( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -176,7 +178,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMask(int,
      *      ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
         return this
@@ -190,7 +192,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMask(java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.lang.Integer getMask( final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -200,7 +202,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMask(ubic.gemma.model.common.Securable)
      */
-    @Override
+
     public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
         return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
     }
@@ -209,7 +211,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMasks(int, java.lang.String,
      *      java.util.Collection)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getMasks( final int transform, final java.lang.String queryString,
             final java.util.Collection securables ) {
@@ -236,7 +238,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMasks(int, java.util.Collection)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getMasks( final int transform, final java.util.Collection securables ) {
         return this
@@ -250,7 +252,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMasks(java.lang.String,
      *      java.util.Collection)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
         return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
@@ -259,7 +261,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getMasks(java.util.Collection)
      */
-    @Override
+
     public java.util.Map getMasks( java.util.Collection securables ) {
         return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
     }
@@ -267,7 +269,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getRecipient(int, java.lang.Long)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getRecipient( final int transform, final java.lang.Long id ) {
         return this
@@ -281,7 +283,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getRecipient(int, java.lang.String,
      *      java.lang.Long)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -307,7 +309,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getRecipient(java.lang.Long)
      */
-    @Override
+
     public java.lang.String getRecipient( java.lang.Long id ) {
         return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
     }
@@ -316,7 +318,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#getRecipient(java.lang.String,
      *      java.lang.Long)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
         return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
@@ -325,7 +327,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#load(int, java.lang.Long)
      */
-    @Override
+
     public Object load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BioMaterialMeasurement.load - 'id' can not be null" );
@@ -338,15 +340,15 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#load(java.lang.Long)
      */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
+
+    public BioMaterialMeasurement load( java.lang.Long id ) {
         return ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#loadAll()
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
@@ -355,7 +357,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#loadAll(int)
      */
-    @Override
+
     public java.util.Collection loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementImpl.class );
@@ -366,7 +368,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#remove(java.lang.Long)
      */
-    @Override
+
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BioMaterialMeasurement.remove - 'id' can not be null" );
@@ -381,7 +383,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    @Override
+
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioMaterialMeasurement.remove - 'entities' can not be null" );
@@ -403,7 +405,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    @Override
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioMaterialMeasurement.update - 'entities' can not be null" );
@@ -442,7 +444,7 @@ public abstract class BioMaterialMeasurementDaoBase extends ubic.gemma.model.com
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement)
      */
-    @Override
+
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through

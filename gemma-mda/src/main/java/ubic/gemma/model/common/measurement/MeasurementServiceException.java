@@ -35,40 +35,6 @@ public class MeasurementServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 7424678090083371992L;
 
     /**
-     * The default constructor for <code>MeasurementServiceException</code>.
-     */
-    public MeasurementServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>MeasurementServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public MeasurementServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>MeasurementServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public MeasurementServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>MeasurementServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public MeasurementServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class MeasurementServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>MeasurementServiceException</code>.
+     */
+    public MeasurementServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>MeasurementServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public MeasurementServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>MeasurementServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public MeasurementServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>MeasurementServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public MeasurementServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

@@ -24,8 +24,8 @@ package ubic.gemma.model.genome.gene;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.genome.gene.CandidateGeneListService</code>, provides access
- * to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.genome.gene.CandidateGeneListService</code>, provides access to
+ * all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.genome.gene.CandidateGeneListService
@@ -34,99 +34,15 @@ public abstract class CandidateGeneListServiceBase implements ubic.gemma.model.g
 
     private ubic.gemma.model.genome.gene.GeneService geneService;
 
-    /**
-     * Sets the reference to <code>geneService</code>.
-     */
-    public void setGeneService( ubic.gemma.model.genome.gene.GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    /**
-     * Gets the reference to <code>geneService</code>.
-     */
-    protected ubic.gemma.model.genome.gene.GeneService getGeneService() {
-        return this.geneService;
-    }
-
     private ubic.gemma.model.genome.gene.CandidateGeneListDao candidateGeneListDao;
-
-    /**
-     * Sets the reference to <code>candidateGeneList</code>'s DAO.
-     */
-    public void setCandidateGeneListDao( ubic.gemma.model.genome.gene.CandidateGeneListDao candidateGeneListDao ) {
-        this.candidateGeneListDao = candidateGeneListDao;
-    }
-
-    /**
-     * Gets the reference to <code>candidateGeneList</code>'s DAO.
-     */
-    protected ubic.gemma.model.genome.gene.CandidateGeneListDao getCandidateGeneListDao() {
-        return this.candidateGeneListDao;
-    }
 
     private ubic.gemma.model.genome.gene.CandidateGeneDao candidateGeneDao;
 
-    /**
-     * Sets the reference to <code>candidateGene</code>'s DAO.
-     */
-    public void setCandidateGeneDao( ubic.gemma.model.genome.gene.CandidateGeneDao candidateGeneDao ) {
-        this.candidateGeneDao = candidateGeneDao;
-    }
-
-    /**
-     * Gets the reference to <code>candidateGene</code>'s DAO.
-     */
-    protected ubic.gemma.model.genome.gene.CandidateGeneDao getCandidateGeneDao() {
-        return this.candidateGeneDao;
-    }
-
     private ubic.gemma.model.genome.GeneDao geneDao;
-
-    /**
-     * Sets the reference to <code>gene</code>'s DAO.
-     */
-    public void setGeneDao( ubic.gemma.model.genome.GeneDao geneDao ) {
-        this.geneDao = geneDao;
-    }
-
-    /**
-     * Gets the reference to <code>gene</code>'s DAO.
-     */
-    protected ubic.gemma.model.genome.GeneDao getGeneDao() {
-        return this.geneDao;
-    }
 
     private ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao;
 
-    /**
-     * Sets the reference to <code>auditEvent</code>'s DAO.
-     */
-    public void setAuditEventDao( ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao ) {
-        this.auditEventDao = auditEventDao;
-    }
-
-    /**
-     * Gets the reference to <code>auditEvent</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.auditAndSecurity.AuditEventDao getAuditEventDao() {
-        return this.auditEventDao;
-    }
-
     private ubic.gemma.model.common.auditAndSecurity.AuditTrailDao auditTrailDao;
-
-    /**
-     * Sets the reference to <code>auditTrail</code>'s DAO.
-     */
-    public void setAuditTrailDao( ubic.gemma.model.common.auditAndSecurity.AuditTrailDao auditTrailDao ) {
-        this.auditTrailDao = auditTrailDao;
-    }
-
-    /**
-     * Gets the reference to <code>auditTrail</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.auditAndSecurity.AuditTrailDao getAuditTrailDao() {
-        return this.auditTrailDao;
-    }
 
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListService#createByName(java.lang.String)
@@ -142,48 +58,16 @@ public abstract class CandidateGeneListServiceBase implements ubic.gemma.model.g
     }
 
     /**
-     * Performs the core logic for {@link #createByName(java.lang.String)}
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListService#findAll()
      */
-    protected abstract ubic.gemma.model.genome.gene.CandidateGeneList handleCreateByName( java.lang.String newName )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListService#updateCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)
-     */
-    public void updateCandidateGeneList( final ubic.gemma.model.genome.gene.CandidateGeneList candidateList ) {
+    public java.util.Collection findAll() {
         try {
-            this.handleUpdateCandidateGeneList( candidateList );
+            return this.handleFindAll();
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.gene.CandidateGeneListServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.CandidateGeneListService.updateCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList candidateList)' --> "
-                            + th, th );
+                    "Error performing 'ubic.gemma.model.genome.gene.CandidateGeneListService.findAll()' --> " + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #updateCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)}
-     */
-    protected abstract void handleUpdateCandidateGeneList( ubic.gemma.model.genome.gene.CandidateGeneList candidateList )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListService#removeCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)
-     */
-    public void removeCandidateGeneList( final ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) {
-        try {
-            this.handleRemoveCandidateGeneList( candidateGeneList );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.gene.CandidateGeneListServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.CandidateGeneListService.removeCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #removeCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)}
-     */
-    protected abstract void handleRemoveCandidateGeneList(
-            ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListService#findByContributer(ubic.gemma.model.common.auditAndSecurity.Person)
@@ -199,12 +83,6 @@ public abstract class CandidateGeneListServiceBase implements ubic.gemma.model.g
     }
 
     /**
-     * Performs the core logic for {@link #findByContributer(ubic.gemma.model.common.auditAndSecurity.Person)}
-     */
-    protected abstract java.util.Collection handleFindByContributer(
-            ubic.gemma.model.common.auditAndSecurity.Person person ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListService#findByGeneOfficialName(java.lang.String)
      */
     public java.util.Collection findByGeneOfficialName( final java.lang.String geneName ) {
@@ -216,12 +94,6 @@ public abstract class CandidateGeneListServiceBase implements ubic.gemma.model.g
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #findByGeneOfficialName(java.lang.String)}
-     */
-    protected abstract java.util.Collection handleFindByGeneOfficialName( java.lang.String geneName )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListService#findByID(java.lang.Long)
@@ -237,12 +109,6 @@ public abstract class CandidateGeneListServiceBase implements ubic.gemma.model.g
     }
 
     /**
-     * Performs the core logic for {@link #findByID(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.genome.gene.CandidateGeneList handleFindByID( java.lang.Long id )
-            throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListService#findByListOwner(ubic.gemma.model.common.auditAndSecurity.Person)
      */
     public java.util.Collection findByListOwner( final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
@@ -256,29 +122,17 @@ public abstract class CandidateGeneListServiceBase implements ubic.gemma.model.g
     }
 
     /**
-     * Performs the core logic for {@link #findByListOwner(ubic.gemma.model.common.auditAndSecurity.Person)}
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListService#removeCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)
      */
-    protected abstract java.util.Collection handleFindByListOwner( ubic.gemma.model.common.auditAndSecurity.Person owner )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListService#setActor(ubic.gemma.model.common.auditAndSecurity.User)
-     */
-    public void setActor( final ubic.gemma.model.common.auditAndSecurity.User actor ) {
+    public void removeCandidateGeneList( final ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) {
         try {
-            this.handleSetActor( actor );
+            this.handleRemoveCandidateGeneList( candidateGeneList );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.gene.CandidateGeneListServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.CandidateGeneListService.setActor(ubic.gemma.model.common.auditAndSecurity.User actor)' --> "
+                    "Error performing 'ubic.gemma.model.genome.gene.CandidateGeneListService.removeCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #setActor(ubic.gemma.model.common.auditAndSecurity.User)}
-     */
-    protected abstract void handleSetActor( ubic.gemma.model.common.auditAndSecurity.User actor )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListService#saveCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)
@@ -295,63 +149,113 @@ public abstract class CandidateGeneListServiceBase implements ubic.gemma.model.g
     }
 
     /**
-     * Performs the core logic for {@link #saveCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)}
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListService#setActor(ubic.gemma.model.common.auditAndSecurity.User)
      */
-    protected abstract ubic.gemma.model.genome.gene.CandidateGeneList handleSaveCandidateGeneList(
-            ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.gene.CandidateGeneListService#findAll()
-     */
-    public java.util.Collection findAll() {
+    public void setActor( final ubic.gemma.model.common.auditAndSecurity.User actor ) {
         try {
-            return this.handleFindAll();
+            this.handleSetActor( actor );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.gene.CandidateGeneListServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.CandidateGeneListService.findAll()' --> " + th, th );
+                    "Error performing 'ubic.gemma.model.genome.gene.CandidateGeneListService.setActor(ubic.gemma.model.common.auditAndSecurity.User actor)' --> "
+                            + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #findAll()}
+     * Sets the reference to <code>auditEvent</code>'s DAO.
      */
-    protected abstract java.util.Collection handleFindAll() throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public void setAuditEventDao( ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao ) {
+        this.auditEventDao = auditEventDao;
     }
 
     /**
-     * Gets the message source available to this service.
+     * Sets the reference to <code>auditTrail</code>'s DAO.
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    public void setAuditTrailDao( ubic.gemma.model.common.auditAndSecurity.AuditTrailDao auditTrailDao ) {
+        this.auditTrailDao = auditTrailDao;
     }
 
     /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
+     * Sets the reference to <code>candidateGene</code>'s DAO.
      */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
+    public void setCandidateGeneDao( ubic.gemma.model.genome.gene.CandidateGeneDao candidateGeneDao ) {
+        this.candidateGeneDao = candidateGeneDao;
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
+     * Sets the reference to <code>candidateGeneList</code>'s DAO.
      */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    public void setCandidateGeneListDao( ubic.gemma.model.genome.gene.CandidateGeneListDao candidateGeneListDao ) {
+        this.candidateGeneListDao = candidateGeneListDao;
+    }
+
+    /**
+     * Sets the reference to <code>gene</code>'s DAO.
+     */
+    public void setGeneDao( ubic.gemma.model.genome.GeneDao geneDao ) {
+        this.geneDao = geneDao;
+    }
+
+    /**
+     * Sets the reference to <code>geneService</code>.
+     */
+    public void setGeneService( ubic.gemma.model.genome.gene.GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.CandidateGeneListService#updateCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)
+     */
+    public void updateCandidateGeneList( final ubic.gemma.model.genome.gene.CandidateGeneList candidateList ) {
+        try {
+            this.handleUpdateCandidateGeneList( candidateList );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.gene.CandidateGeneListServiceException(
+                    "Error performing 'ubic.gemma.model.genome.gene.CandidateGeneListService.updateCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList candidateList)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Gets the reference to <code>auditEvent</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.auditAndSecurity.AuditEventDao getAuditEventDao() {
+        return this.auditEventDao;
+    }
+
+    /**
+     * Gets the reference to <code>auditTrail</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.auditAndSecurity.AuditTrailDao getAuditTrailDao() {
+        return this.auditTrailDao;
+    }
+
+    /**
+     * Gets the reference to <code>candidateGene</code>'s DAO.
+     */
+    protected ubic.gemma.model.genome.gene.CandidateGeneDao getCandidateGeneDao() {
+        return this.candidateGeneDao;
+    }
+
+    /**
+     * Gets the reference to <code>candidateGeneList</code>'s DAO.
+     */
+    protected ubic.gemma.model.genome.gene.CandidateGeneListDao getCandidateGeneListDao() {
+        return this.candidateGeneListDao;
+    }
+
+    /**
+     * Gets the reference to <code>gene</code>'s DAO.
+     */
+    protected ubic.gemma.model.genome.GeneDao getGeneDao() {
+        return this.geneDao;
+    }
+
+    /**
+     * Gets the reference to <code>geneService</code>.
+     */
+    protected ubic.gemma.model.genome.gene.GeneService getGeneService() {
+        return this.geneService;
     }
 
     /**
@@ -366,5 +270,100 @@ public abstract class CandidateGeneListServiceBase implements ubic.gemma.model.g
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #createByName(java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.genome.gene.CandidateGeneList handleCreateByName( java.lang.String newName )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findAll()}
+     */
+    protected abstract java.util.Collection handleFindAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByContributer(ubic.gemma.model.common.auditAndSecurity.Person)}
+     */
+    protected abstract java.util.Collection handleFindByContributer(
+            ubic.gemma.model.common.auditAndSecurity.Person person ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByGeneOfficialName(java.lang.String)}
+     */
+    protected abstract java.util.Collection handleFindByGeneOfficialName( java.lang.String geneName )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByID(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.genome.gene.CandidateGeneList handleFindByID( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByListOwner(ubic.gemma.model.common.auditAndSecurity.Person)}
+     */
+    protected abstract java.util.Collection handleFindByListOwner( ubic.gemma.model.common.auditAndSecurity.Person owner )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #removeCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)}
+     */
+    protected abstract void handleRemoveCandidateGeneList(
+            ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #saveCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)}
+     */
+    protected abstract ubic.gemma.model.genome.gene.CandidateGeneList handleSaveCandidateGeneList(
+            ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #setActor(ubic.gemma.model.common.auditAndSecurity.User)}
+     */
+    protected abstract void handleSetActor( ubic.gemma.model.common.auditAndSecurity.User actor )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #updateCandidateGeneList(ubic.gemma.model.genome.gene.CandidateGeneList)}
+     */
+    protected abstract void handleUpdateCandidateGeneList( ubic.gemma.model.genome.gene.CandidateGeneList candidateList )
+            throws java.lang.Exception;
 
 }

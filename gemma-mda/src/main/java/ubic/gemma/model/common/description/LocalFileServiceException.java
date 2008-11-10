@@ -35,40 +35,6 @@ public class LocalFileServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = -171754370835869354L;
 
     /**
-     * The default constructor for <code>LocalFileServiceException</code>.
-     */
-    public LocalFileServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>LocalFileServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public LocalFileServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>LocalFileServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public LocalFileServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>LocalFileServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public LocalFileServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class LocalFileServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>LocalFileServiceException</code>.
+     */
+    public LocalFileServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>LocalFileServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public LocalFileServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>LocalFileServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public LocalFileServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>LocalFileServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public LocalFileServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

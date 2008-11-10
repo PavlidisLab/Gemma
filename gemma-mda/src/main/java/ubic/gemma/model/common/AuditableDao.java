@@ -22,21 +22,27 @@
 //
 package ubic.gemma.model.common;
 
+import java.util.Map;
+
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+
 /**
  * @see ubic.gemma.model.common.Auditable
  */
-public interface AuditableDao extends ubic.gemma.model.common.DescribableDao {
+public interface AuditableDao<T extends Auditable> {
     /**
      * 
      */
-    public java.util.Collection getAuditEvents( ubic.gemma.model.common.Auditable auditable );
+    public java.util.Collection<AuditEvent> getAuditEvents( ubic.gemma.model.common.Auditable auditable );
 
     /**
      * <p>
      * Return a map of Auditables to AuditEvents for the given AuditEventType
      * </p>
      */
-    public java.util.Map getLastAuditEvent( java.util.Collection auditables,
+    public java.util.Map<Auditable, AuditEvent> getLastAuditEvent(
+            java.util.Collection<? extends Auditable> auditables,
             ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type );
 
     /**
@@ -54,72 +60,7 @@ public interface AuditableDao extends ubic.gemma.model.common.DescribableDao {
      * map of AuditEventType.classes -> Auditable -> AuditEven
      * </p>
      */
-    public java.util.Map getLastTypedAuditEvents( java.util.Collection auditables );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads an instance of ubic.gemma.model.common.Auditable from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.common.Auditable}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.Auditable having the given <code>identifier</code> from the
-     * persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.Auditable from the persistent store.
-     */
-    public void remove( ubic.gemma.model.common.Auditable auditable );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Updates the <code>auditable</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.common.Auditable auditable );
+    public java.util.Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
+            java.util.Collection<? extends Auditable> auditables );
 
 }

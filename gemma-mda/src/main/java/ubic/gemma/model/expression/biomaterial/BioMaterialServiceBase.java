@@ -208,7 +208,7 @@ public abstract class BioMaterialServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #getBioMaterials()}
      */
-    protected abstract java.util.Collection handleGetBioMaterials() throws java.lang.Exception;
+    protected abstract java.util.Collection<BioMaterial> handleGetBioMaterials() throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
@@ -219,12 +219,13 @@ public abstract class BioMaterialServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<BioMaterial> handleLoadAll() throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection<BioMaterial> handleLoadMultiple( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.expression.biomaterial.BioMaterial)}

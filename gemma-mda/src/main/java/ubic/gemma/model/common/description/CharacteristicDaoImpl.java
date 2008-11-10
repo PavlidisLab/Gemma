@@ -42,7 +42,6 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
      */
     @SuppressWarnings("unchecked")
@@ -66,7 +65,6 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -92,7 +90,6 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -104,7 +101,6 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
      */
     @Override
@@ -115,9 +111,8 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindParents(java.lang.Class,
-     *      java.util.Collection)
+     * java.util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override

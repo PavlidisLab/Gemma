@@ -22,31 +22,11 @@
  */
 package ubic.gemma.model.analysis;
 
-import java.util.Collection;
-import java.util.Map;
-
-import ubic.gemma.model.genome.Taxon;
-
 /**
  * Note that due to limitations in Andromda we cannot make this class abstract.
  * 
  * @see ubic.gemma.model.analysis.Analysis
  */
-public class AnalysisDaoImpl extends ubic.gemma.model.analysis.AnalysisDaoBase {
-
-    @Override
-    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
-        throw new UnsupportedOperationException( "Please call this method on a subclass" );
-    }
-
-    @Override
-    protected Map handleFindByInvestigations( Collection investigators ) throws Exception {
-        throw new UnsupportedOperationException( "Please call this method on a subclass" );
-    }
-
-    @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
-        throw new UnsupportedOperationException( "Please call this method on a subclass" );
-    }
+public abstract class AnalysisDaoImpl<T extends Analysis> extends ubic.gemma.model.analysis.AnalysisDaoBase<T> {
 
 }

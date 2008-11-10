@@ -35,7 +35,8 @@ import ubic.gemma.model.genome.Taxon;
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
-public interface ExpressionExperimentDao extends ubic.gemma.model.expression.experiment.BioAssaySetDao {
+public interface ExpressionExperimentDao extends
+        ubic.gemma.model.expression.experiment.BioAssaySetDao<ExpressionExperiment> {
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or
      * other types, different methods in a class implementing this interface support this feature: look for an
@@ -50,46 +51,6 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * 
      */
     public java.lang.Integer countAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.expression.experiment.ExpressionExperiment)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
-     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities
-     * (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.expression.experiment.ExpressionExperiment)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the
-     * returned entity will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here
-     * then the result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity
-     * (into a value object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform,
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.expression.experiment.ExpressionExperiment and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.expression.experiment.ExpressionExperiment instances to
-     *        create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * Creates an instance of ubic.gemma.model.expression.experiment.ExpressionExperiment and adds it to the persistent
-     * store.
-     */
-    public ubic.gemma.model.common.Securable create(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
      * Converts an instance of type {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject} to
@@ -514,49 +475,10 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
     public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long ExpressionExperimentID );
 
     /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
+     * @param ids
+     * @return
      */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads an instance of ubic.gemma.model.expression.experiment.ExpressionExperiment from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
-    /**
-     * 
-     */
-    public java.util.Collection<ExpressionExperiment> load( java.util.Collection ids );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection<ExpressionExperiment> loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection<ExpressionExperiment> loadAll( final int transform );
+    public Collection<ExpressionExperiment> load( Collection<Long> ids );
 
     /**
      * 
@@ -567,22 +489,6 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * 
      */
     public java.util.Collection<ExpressionExperimentValueObject> loadValueObjects( java.util.Collection<Long> ids );
-
-    /**
-     * Removes the instance of ubic.gemma.model.expression.experiment.ExpressionExperiment having the given
-     * <code>identifier</code> from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.expression.experiment.ExpressionExperiment from the persistent store.
-     */
-    public void remove( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
      * 
@@ -618,15 +524,5 @@ public interface ExpressionExperimentDao extends ubic.gemma.model.expression.exp
      * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject}.
      */
     public void toExpressionExperimentValueObjectCollection( java.util.Collection entities );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Updates the <code>expressionExperiment</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
 }

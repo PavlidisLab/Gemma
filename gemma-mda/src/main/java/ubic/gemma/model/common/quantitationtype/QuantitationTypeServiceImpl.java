@@ -29,15 +29,6 @@ import java.util.Collection;
 public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceBase {
 
     /**
-     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#find(ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    @Override
-    protected ubic.gemma.model.common.quantitationtype.QuantitationType handleFind(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception {
-        return this.getQuantitationTypeDao().find( quantitationType );
-    }
-
-    /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#create(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
@@ -47,12 +38,27 @@ public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantit
     }
 
     /**
-     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#update(ubic.gemma.model.common.quantitationtype.QuantitationType)
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#find(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
-            throws java.lang.Exception {
-        this.getQuantitationTypeDao().update( quantitationType );
+    protected ubic.gemma.model.common.quantitationtype.QuantitationType handleFind(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception {
+        return this.getQuantitationTypeDao().find( quantitationType );
+    }
+
+    @Override
+    protected QuantitationType handleFindOrCreate( QuantitationType quantitationType ) throws Exception {
+        return this.getQuantitationTypeDao().findOrCreate( quantitationType );
+    }
+
+    @Override
+    protected QuantitationType handleLoad( Long id ) throws Exception {
+        return ( QuantitationType ) this.getQuantitationTypeDao().load( id );
+    }
+
+    @Override
+    protected Collection handleLoadAll() throws Exception {
+        return this.getQuantitationTypeDao().loadAll();
     }
 
     /**
@@ -64,19 +70,13 @@ public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantit
         this.getQuantitationTypeDao().remove( quantitationType );
     }
 
+    /**
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#update(ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
     @Override
-    protected QuantitationType handleFindOrCreate( QuantitationType quantitationType ) throws Exception {
-        return this.getQuantitationTypeDao().findOrCreate( quantitationType );
-    }
-
-    @Override
-    protected Collection handleLoadAll() throws Exception {
-        return this.getQuantitationTypeDao().loadAll();
-    }
-
-    @Override
-    protected QuantitationType handleLoad( Long id ) throws Exception {
-        return ( QuantitationType ) this.getQuantitationTypeDao().load( id );
+    protected void handleUpdate( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType )
+            throws java.lang.Exception {
+        this.getQuantitationTypeDao().update( quantitationType );
     }
 
 }

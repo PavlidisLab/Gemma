@@ -41,7 +41,6 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#find(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @SuppressWarnings("unchecked")
@@ -127,23 +126,8 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         }
     }
 
-    /**
-     * @param results
-     */
-    private void debug( List results ) {
-
-        StringBuilder buf = new StringBuilder();
-        buf.append( "\n" );
-        for ( Object o : results ) {
-            buf.append( o + "\n" );
-        }
-        log.error( buf );
-
-    }
-
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
@@ -154,6 +138,28 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new geneProduct: " + geneProduct.getName() );
         return ( GeneProduct ) create( geneProduct );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @seeubic.gemma.model.genome.gene.GeneProductDao#geneProductValueObjectToEntity(ubic.gemma.model.genome.gene.
+     * GeneProductValueObject)
+     */
+    public GeneProduct geneProductValueObjectToEntity( GeneProductValueObject geneProductValueObject ) {
+        final String queryString = "select distinct gp from GeneProductImpl gp where gp.id = :id";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setLong( "id", geneProductValueObject.getId() );
+            java.util.List results = queryObject.list();
+
+            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
+
+            return ( GeneProduct ) results.iterator().next();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
     @Override
@@ -170,7 +176,6 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByName(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -192,7 +197,6 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByNcbiId(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -214,7 +218,6 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -233,25 +236,17 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         return geneProducts;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneProductDao#geneProductValueObjectToEntity(ubic.gemma.model.genome.gene.GeneProductValueObject)
+    /**
+     * @param results
      */
-    public GeneProduct geneProductValueObjectToEntity( GeneProductValueObject geneProductValueObject ) {
-        final String queryString = "select distinct gp from GeneProductImpl gp where gp.id = :id";
+    private void debug( List results ) {
 
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setLong( "id", geneProductValueObject.getId() );
-            java.util.List results = queryObject.list();
-
-            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
-
-            return ( GeneProduct ) results.iterator().next();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+        StringBuilder buf = new StringBuilder();
+        buf.append( "\n" );
+        for ( Object o : results ) {
+            buf.append( o + "\n" );
         }
+        log.error( buf );
+
     }
 }

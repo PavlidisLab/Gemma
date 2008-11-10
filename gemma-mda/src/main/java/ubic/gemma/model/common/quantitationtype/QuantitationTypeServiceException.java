@@ -35,40 +35,6 @@ public class QuantitationTypeServiceException extends java.lang.RuntimeException
     private static final long serialVersionUID = 7406760429470559304L;
 
     /**
-     * The default constructor for <code>QuantitationTypeServiceException</code>.
-     */
-    public QuantitationTypeServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>QuantitationTypeServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public QuantitationTypeServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>QuantitationTypeServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public QuantitationTypeServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>QuantitationTypeServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public QuantitationTypeServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class QuantitationTypeServiceException extends java.lang.RuntimeException
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>QuantitationTypeServiceException</code>.
+     */
+    public QuantitationTypeServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>QuantitationTypeServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public QuantitationTypeServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>QuantitationTypeServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public QuantitationTypeServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>QuantitationTypeServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public QuantitationTypeServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

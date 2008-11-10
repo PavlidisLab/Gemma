@@ -39,6 +39,39 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
     private static Log log = LogFactory.getLog( BlatResultImpl.class.getName() );
 
     /**
+     * Fraction identity computation, as in psl.c. Modified to INCLUDE repeat matches in the match count.
+     * 
+     * @return Value between 0 and 1.
+     * @see http://genome.ucsc.edu/FAQ/FAQblat#blat4.
+     */
+    @Override
+    public Double identity() {
+        int sizeMul = 1; // assuming DNA; use 3 for protein.
+        long qAliSize = sizeMul * this.getQueryEnd() - this.getQueryStart();
+        long tAliSize = this.getTargetEnd() - this.getTargetStart();
+        long aliSize = Math.min( qAliSize, tAliSize );
+
+        if ( aliSize <= 0 ) return 0.0;
+
+        long sizeDif = qAliSize - tAliSize;
+        if ( sizeDif < 0 ) {
+            sizeDif = 0; // here assuming "isMrna" is true. ("The parameter isMrna should be set to TRUE, regardless
+            // of whether the input sequence is mRNA or protein")
+        }
+        int insertFactor = this.getQueryGapCount(); // assumes isMrna is true.
+        int total = ( sizeMul * ( this.getMatches() + this.getRepMatches() + this.getMismatches() ) );
+        int milliBad = 0;
+        if ( total != 0 ) {
+            milliBad = ( 1000 * ( this.getMismatches() * sizeMul + insertFactor + ( int ) Math.round( 3.0 * Math
+                    .log( 1.0 + sizeDif ) ) ) )
+                    / total;
+        }
+        assert milliBad >= 0 && milliBad <= 1000 : "Millibad was ourside of range 0-1000: " + milliBad + " for result "
+                + this;
+        return 100.0 - milliBad * 0.1;
+    }
+
+    /**
      * Based on the JKSrc method in psl.c, but without double-penalizing for mismatches. We also consider repeat matches
      * to be the same as regular matches.
      * 
@@ -79,7 +112,7 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
         }
 
         /*
-         * return sizeMul * (psl->match + ( psl->repMatch>>1)) - sizeMul * psl->misMatch - psl->qNumInsert -
+         * return sizeMul (psl->match + ( psl->repMatch>>1)) - sizeMul psl->misMatch - psl->qNumInsert -
          * psl->tNumInsert; Note that: "Currently the program does not distinguish between matches and repMatches.
          * repMatches is always zero." (http://genome.ucsc.edu/goldenPath/help/blatSpec.html)
          */
@@ -98,39 +131,6 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
                 + " sequence=" + this.getQuerySequence() + " id=" + this.getId();
 
         return score;
-    }
-
-    /**
-     * Fraction identity computation, as in psl.c. Modified to INCLUDE repeat matches in the match count.
-     * 
-     * @return Value between 0 and 1.
-     * @see http://genome.ucsc.edu/FAQ/FAQblat#blat4.
-     */
-    @Override
-    public Double identity() {
-        int sizeMul = 1; // assuming DNA; use 3 for protein.
-        long qAliSize = sizeMul * this.getQueryEnd() - this.getQueryStart();
-        long tAliSize = this.getTargetEnd() - this.getTargetStart();
-        long aliSize = Math.min( qAliSize, tAliSize );
-
-        if ( aliSize <= 0 ) return 0.0;
-
-        long sizeDif = qAliSize - tAliSize;
-        if ( sizeDif < 0 ) {
-            sizeDif = 0; // here assuming "isMrna" is true. ("The parameter isMrna should be set to TRUE, regardless
-            // of whether the input sequence is mRNA or protein")
-        }
-        int insertFactor = this.getQueryGapCount(); // assumes isMrna is true.
-        int total = ( sizeMul * ( this.getMatches() + this.getRepMatches() + this.getMismatches() ) );
-        int milliBad = 0;
-        if ( total != 0 ) {
-            milliBad = ( 1000 * ( this.getMismatches() * sizeMul + insertFactor + ( int ) Math.round( 3.0 * Math
-                    .log( 1.0 + sizeDif ) ) ) )
-                    / total;
-        }
-        assert milliBad >= 0 && milliBad <= 1000 : "Millibad was ourside of range 0-1000: " + milliBad + " for result "
-                + this;
-        return 100.0 - milliBad * 0.1;
     }
 
     @Override

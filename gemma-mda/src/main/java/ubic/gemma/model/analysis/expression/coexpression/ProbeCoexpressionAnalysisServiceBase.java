@@ -25,14 +25,15 @@ package ubic.gemma.model.analysis.expression.coexpression;
 /**
  * <p>
  * Spring Service base class for
- * <code>ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService</code>, provides access
- * to all services and entities referenced by this service.
+ * <code>ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService</code>, provides access to
+ * all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService
  */
-public abstract class ProbeCoexpressionAnalysisServiceBase extends ubic.gemma.model.analysis.AnalysisServiceImpl
-        implements ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService {
+public abstract class ProbeCoexpressionAnalysisServiceBase extends
+        ubic.gemma.model.analysis.AnalysisServiceImpl<ProbeCoexpressionAnalysis> implements
+        ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService {
 
     private ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;
 

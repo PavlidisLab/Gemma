@@ -26,20 +26,6 @@ package ubic.gemma.model.common.description;
 public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.description.NotedReferenceListServiceBase {
 
     /**
-     * @see ubic.gemma.model.common.description.NotedReferenceListService#createNewList(String,
-     *      ubic.gemma.model.common.auditAndSecurity.User)
-     */
-    @Override
-    protected ubic.gemma.model.common.description.NotedReferenceList handleCreateNewList( String name,
-            ubic.gemma.model.common.auditAndSecurity.User owner ) throws java.lang.Exception {
-        NotedReferenceList result = NotedReferenceList.Factory.newInstance();
-        result.setUser( owner );
-        result.setName( name );
-        result = ( NotedReferenceList ) this.getNotedReferenceListDao().create( result );
-        return result;
-    }
-
-    /**
      * @see ubic.gemma.model.common.description.NotedReferenceListService#addReferenceToList(ubic.gemma.model.common.description.NotedReferenceList,
      *      ubic.gemma.model.common.description.BibliographicReference)
      */
@@ -59,6 +45,20 @@ public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.descr
     }
 
     /**
+     * @see ubic.gemma.model.common.description.NotedReferenceListService#createNewList(String,
+     *      ubic.gemma.model.common.auditAndSecurity.User)
+     */
+    @Override
+    protected ubic.gemma.model.common.description.NotedReferenceList handleCreateNewList( String name,
+            ubic.gemma.model.common.auditAndSecurity.User owner ) throws java.lang.Exception {
+        NotedReferenceList result = NotedReferenceList.Factory.newInstance();
+        result.setUser( owner );
+        result.setName( name );
+        result = ( NotedReferenceList ) this.getNotedReferenceListDao().create( result );
+        return result;
+    }
+
+    /**
      * @see ubic.gemma.model.common.description.NotedReferenceListService#getAllReferencesForList(ubic.gemma.model.common.description.NotedReferenceList)
      */
     @Override
@@ -69,33 +69,8 @@ public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.descr
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.NotedReferenceListServiceBase#handleSetListDescription(java.lang.String,
-     *      ubic.gemma.model.common.description.NotedReferenceList)
-     */
-    @Override
-    protected void handleSetListDescription( String description, NotedReferenceList notedReferenceList )
-            throws Exception {
-        notedReferenceList.setDescription( description );
-        this.getNotedReferenceListDao().update( notedReferenceList );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.NotedReferenceListServiceBase#handleSetComment(java.lang.String,
-     *      ubic.gemma.model.common.description.NotedReference )
-     */
-    @Override
-    protected void handleSetComment( String comment, NotedReference notedReference ) throws Exception {
-        notedReference.setComment( comment );
-        this.getNotedReferenceDao().update( notedReference );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.NotedReferenceListServiceBase#handleRemoveList(ubic.gemma.model.common.description.NotedReferenceList)
+     * @seeubic.gemma.model.common.description.NotedReferenceListServiceBase#handleRemoveList(ubic.gemma.model.common.
+     * description.NotedReferenceList)
      */
     @Override
     protected void handleRemoveList( NotedReferenceList notedReferenceList ) throws Exception {
@@ -105,9 +80,9 @@ public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.descr
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.NotedReferenceListServiceBase#handleRemoveReferenceFromList(ubic.gemma.model.common.description.NotedReference,
-     *      ubic.gemma.model.common.description.NotedReferenceList)
+     * @see
+     * ubic.gemma.model.common.description.NotedReferenceListServiceBase#handleRemoveReferenceFromList(ubic.gemma.model
+     * .common.description.NotedReference, ubic.gemma.model.common.description.NotedReferenceList)
      */
     @Override
     protected void handleRemoveReferenceFromList( NotedReference notedReference, NotedReferenceList notedReferenceList )
@@ -118,9 +93,31 @@ public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.descr
 
     /*
      * (non-Javadoc)
-     * 
+     * @see ubic.gemma.model.common.description.NotedReferenceListServiceBase#handleSetComment(java.lang.String,
+     * ubic.gemma.model.common.description.NotedReference )
+     */
+    @Override
+    protected void handleSetComment( String comment, NotedReference notedReference ) throws Exception {
+        notedReference.setComment( comment );
+        this.getNotedReferenceDao().update( notedReference );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.description.NotedReferenceListServiceBase#handleSetListDescription(java.lang.String,
+     * ubic.gemma.model.common.description.NotedReferenceList)
+     */
+    @Override
+    protected void handleSetListDescription( String description, NotedReferenceList notedReferenceList )
+            throws Exception {
+        notedReferenceList.setDescription( description );
+        this.getNotedReferenceListDao().update( notedReferenceList );
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.model.common.description.NotedReferenceListServiceBase#handleSetRating(java.lang.Integer,
-     *      ubic.gemma.model.common.description.NotedReference )
+     * ubic.gemma.model.common.description.NotedReference )
      */
     @Override
     protected void handleSetRating( Integer rating, NotedReference notedReference ) throws Exception {

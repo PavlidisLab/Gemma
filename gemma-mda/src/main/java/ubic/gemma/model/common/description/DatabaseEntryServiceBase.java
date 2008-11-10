@@ -24,8 +24,8 @@ package ubic.gemma.model.common.description;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.description.DatabaseEntryService</code>, provides
- * access to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.common.description.DatabaseEntryService</code>, provides access
+ * to all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.common.description.DatabaseEntryService
@@ -35,17 +35,16 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     private ubic.gemma.model.common.description.DatabaseEntryDao databaseEntryDao;
 
     /**
-     * Sets the reference to <code>databaseEntry</code>'s DAO.
+     * @see ubic.gemma.model.common.description.DatabaseEntryService#countAll()
      */
-    public void setDatabaseEntryDao( ubic.gemma.model.common.description.DatabaseEntryDao databaseEntryDao ) {
-        this.databaseEntryDao = databaseEntryDao;
-    }
-
-    /**
-     * Gets the reference to <code>databaseEntry</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.description.DatabaseEntryDao getDatabaseEntryDao() {
-        return this.databaseEntryDao;
+    public java.lang.Integer countAll() {
+        try {
+            return this.handleCountAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.description.DatabaseEntryServiceException(
+                    "Error performing 'ubic.gemma.model.common.description.DatabaseEntryService.countAll()' --> " + th,
+                    th );
+        }
     }
 
     /**
@@ -63,10 +62,24 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.description.DatabaseEntry)}
+     * @see ubic.gemma.model.common.description.DatabaseEntryService#remove(ubic.gemma.model.common.description.DatabaseEntry)
      */
-    protected abstract ubic.gemma.model.common.description.DatabaseEntry handleFind(
-            ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) throws java.lang.Exception;
+    public void remove( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
+        try {
+            this.handleRemove( databaseEntry );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.description.DatabaseEntryServiceException(
+                    "Error performing 'ubic.gemma.model.common.description.DatabaseEntryService.remove(ubic.gemma.model.common.description.DatabaseEntry databaseEntry)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>databaseEntry</code>'s DAO.
+     */
+    public void setDatabaseEntryDao( ubic.gemma.model.common.description.DatabaseEntryDao databaseEntryDao ) {
+        this.databaseEntryDao = databaseEntryDao;
+    }
 
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryService#update(ubic.gemma.model.common.description.DatabaseEntry)
@@ -82,83 +95,10 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     }
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.description.DatabaseEntry)}
+     * Gets the reference to <code>databaseEntry</code>'s DAO.
      */
-    protected abstract void handleUpdate( ubic.gemma.model.common.description.DatabaseEntry databaseEntry )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.description.DatabaseEntryService#remove(ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    public void remove( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
-        try {
-            this.handleRemove( databaseEntry );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.DatabaseEntryServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.DatabaseEntryService.remove(ubic.gemma.model.common.description.DatabaseEntry databaseEntry)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.DatabaseEntry)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.description.DatabaseEntryService#countAll()
-     */
-    public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.DatabaseEntryServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.DatabaseEntryService.countAll()' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.common.description.DatabaseEntryDao getDatabaseEntryDao() {
+        return this.databaseEntryDao;
     }
 
     /**
@@ -173,5 +113,64 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #countAll()}
+     */
+    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.common.description.DatabaseEntry)}
+     */
+    protected abstract ubic.gemma.model.common.description.DatabaseEntry handleFind(
+            ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.DatabaseEntry)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.common.description.DatabaseEntry)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.common.description.DatabaseEntry databaseEntry )
+            throws java.lang.Exception;
 
 }

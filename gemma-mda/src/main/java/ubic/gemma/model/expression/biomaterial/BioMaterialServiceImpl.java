@@ -89,7 +89,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
      */
     @Override
-    protected Collection handleLoadAll() throws Exception {
+    protected Collection<BioMaterial> handleLoadAll() throws Exception {
         return this.getBioMaterialDao().loadAll();
     }
 
@@ -98,7 +98,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+    protected Collection<BioMaterial> handleLoadMultiple( Collection<Long> ids ) throws Exception {
         return this.getBioMaterialDao().load( ids );
     }
 

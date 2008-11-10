@@ -67,19 +67,6 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
         return hashCode;
     }
 
-    private int computeHashCode() {
-        int hashCode = 0;
-
-        if ( this.getNcbiId() != null ) {
-            hashCode += this.getNcbiId().hashCode();
-        } else if ( this.getName() != null && this.getGene() != null ) {
-            hashCode += this.getName().hashCode();
-            hashCode += this.getGene().hashCode();
-        }
-
-        return hashCode;
-    }
-
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
@@ -96,6 +83,19 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
 
         return buf.toString();
 
+    }
+
+    private int computeHashCode() {
+        int hashCode = 0;
+
+        if ( this.getNcbiId() != null ) {
+            hashCode += this.getNcbiId().hashCode();
+        } else if ( this.getName() != null && this.getGene() != null ) {
+            hashCode += this.getName().hashCode();
+            hashCode += this.getGene().hashCode();
+        }
+
+        return hashCode;
     }
 
 }

@@ -35,40 +35,6 @@ public class BioSequenceServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = -2699783768227137790L;
 
     /**
-     * The default constructor for <code>BioSequenceServiceException</code>.
-     */
-    public BioSequenceServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>BioSequenceServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public BioSequenceServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>BioSequenceServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public BioSequenceServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>BioSequenceServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public BioSequenceServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class BioSequenceServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>BioSequenceServiceException</code>.
+     */
+    public BioSequenceServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>BioSequenceServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public BioSequenceServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>BioSequenceServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public BioSequenceServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>BioSequenceServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public BioSequenceServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

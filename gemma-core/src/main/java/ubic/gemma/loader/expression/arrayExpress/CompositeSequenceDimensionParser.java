@@ -52,6 +52,7 @@ public class CompositeSequenceDimensionParser extends BasicOrderedLineParser<Com
      * 
      * @see ubic.gemma.loader.util.parser.BasicLineParser#getResults()
      */
+     @Override
     public Collection<CompositeSequence> getResults() {
         return results;
     }

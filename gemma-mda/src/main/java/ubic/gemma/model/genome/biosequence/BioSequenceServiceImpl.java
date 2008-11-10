@@ -32,19 +32,29 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  */
 public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.BioSequenceServiceBase {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoad(long)
-     */
-    @Override
-    protected BioSequence handleLoad( long id ) throws Exception {
-        return ( BioSequence ) this.getBioSequenceDao().load( id );
-    }
-
     @Override
     protected Integer handleCountAll() throws Exception {
         return this.getBioSequenceDao().countAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * @seeubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleCreate(ubic.gemma.model.genome.biosequence.
+     * BioSequence)
+     */
+    @Override
+    protected BioSequence handleCreate( BioSequence bioSequence ) throws Exception {
+        return ( BioSequence ) this.getBioSequenceDao().create( bioSequence );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleCreate(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleCreate( Collection bioSequences ) throws Exception {
+        return this.getBioSequenceDao().create( bioSequences );
     }
 
     /**
@@ -56,30 +66,19 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
         return this.getBioSequenceDao().find( bioSequence );
     }
 
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#remove(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
     @Override
-    protected void handleRemove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception {
-        this.getBioSequenceDao().remove( bioSequence );
+    protected BioSequence handleFindByAccession( DatabaseEntry accession ) throws Exception {
+        return this.getBioSequenceDao().findByAccession( accession );
     }
 
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
     @Override
-    protected void handleUpdate( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception {
-        this.getBioSequenceDao().update( bioSequence );
+    protected Map handleFindByGenes( Collection genes ) throws Exception {
+        return this.getBioSequenceDao().findByGenes( genes );
     }
 
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(java.util.Collection)
-     */
     @Override
-    protected void handleUpdate( Collection bioSequences ) throws Exception {
-        this.getBioSequenceDao().update( bioSequences );
+    protected Collection handleFindByName( String name ) throws Exception {
+        return this.getBioSequenceDao().findByName( name );
     }
 
     /**
@@ -92,28 +91,6 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleCreate(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    protected BioSequence handleCreate( BioSequence bioSequence ) throws Exception {
-        return ( BioSequence ) this.getBioSequenceDao().create( bioSequence );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleCreate(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleCreate( Collection bioSequences ) throws Exception {
-        return this.getBioSequenceDao().create( bioSequences );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleFindOrCreate(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -128,7 +105,6 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleGetGenesByAccession(java.lang.String)
      */
     @Override
@@ -138,7 +114,6 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleGetGenesByName(java.lang.String)
      */
     @Override
@@ -146,19 +121,17 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
         return this.getBioSequenceDao().getGenesByName( search );
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoad(long)
+     */
     @Override
-    protected Collection handleFindByName( String name ) throws Exception {
-        return this.getBioSequenceDao().findByName( name );
-    }
-
-    @Override
-    protected BioSequence handleFindByAccession( DatabaseEntry accession ) throws Exception {
-        return this.getBioSequenceDao().findByAccession( accession );
+    protected BioSequence handleLoad( long id ) throws Exception {
+        return ( BioSequence ) this.getBioSequenceDao().load( id );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
@@ -166,10 +139,20 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
         return this.getBioSequenceDao().load( ids );
     }
 
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#remove(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    @Override
+    protected void handleRemove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
+            throws java.lang.Exception {
+        this.getBioSequenceDao().remove( bioSequence );
+    }
+
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleThaw(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see
+     * ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleThaw(ubic.gemma.model.genome.biosequence.BioSequence
+     * )
      */
     @Override
     protected void handleThaw( BioSequence bioSequence ) throws Exception {
@@ -178,7 +161,6 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleThaw(java.util.Collection)
      */
     @Override
@@ -191,9 +173,21 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
         this.getBioSequenceDao().thawLite( bioSequences );
     }
 
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(java.util.Collection)
+     */
     @Override
-    protected Map handleFindByGenes( Collection genes ) throws Exception {
-        return this.getBioSequenceDao().findByGenes( genes );
+    protected void handleUpdate( Collection bioSequences ) throws Exception {
+        this.getBioSequenceDao().update( bioSequences );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    @Override
+    protected void handleUpdate( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
+            throws java.lang.Exception {
+        this.getBioSequenceDao().update( bioSequence );
     }
 
 }

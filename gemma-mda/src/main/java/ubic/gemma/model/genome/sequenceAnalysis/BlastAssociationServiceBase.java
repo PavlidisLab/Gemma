@@ -24,8 +24,8 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService</code>,
- * provides access to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService</code>, provides
+ * access to all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService
@@ -34,20 +34,6 @@ public abstract class BlastAssociationServiceBase implements
         ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService {
 
     private ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao blastAssociationDao;
-
-    /**
-     * Sets the reference to <code>blastAssociation</code>'s DAO.
-     */
-    public void setBlastAssociationDao( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao blastAssociationDao ) {
-        this.blastAssociationDao = blastAssociationDao;
-    }
-
-    /**
-     * Gets the reference to <code>blastAssociation</code>'s DAO.
-     */
-    protected ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao getBlastAssociationDao() {
-        return this.blastAssociationDao;
-    }
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService#create(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)
@@ -64,46 +50,17 @@ public abstract class BlastAssociationServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)}
+     * Sets the reference to <code>blastAssociation</code>'s DAO.
      */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public void setBlastAssociationDao( ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao blastAssociationDao ) {
+        this.blastAssociationDao = blastAssociationDao;
     }
 
     /**
-     * Gets the message source available to this service.
+     * Gets the reference to <code>blastAssociation</code>'s DAO.
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDao getBlastAssociationDao() {
+        return this.blastAssociationDao;
     }
 
     /**
@@ -118,5 +75,47 @@ public abstract class BlastAssociationServiceBase implements
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation)}
+     */
+    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation handleCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation ) throws java.lang.Exception;
 
 }

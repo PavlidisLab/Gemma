@@ -28,11 +28,9 @@ package ubic.gemma.model.common.auditAndSecurity;
 public interface UserService {
 
     /**
-     * <p>
-     * Retrieves a list of users, filtering with parameters on a user object
-     * </p>
+     * 
      */
-    public java.util.Collection loadAll();
+    public void addRole( ubic.gemma.model.common.auditAndSecurity.User user, java.lang.String roleName );
 
     /**
      * <p>
@@ -52,12 +50,7 @@ public interface UserService {
     /**
      * 
      */
-    public void addRole( ubic.gemma.model.common.auditAndSecurity.User user, java.lang.String roleName );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.auditAndSecurity.User load( java.lang.Long id );
+    public ubic.gemma.model.common.auditAndSecurity.User findByEmail( java.lang.String email );
 
     /**
      * 
@@ -67,12 +60,14 @@ public interface UserService {
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.User findByEmail( java.lang.String email );
+    public ubic.gemma.model.common.auditAndSecurity.User load( java.lang.Long id );
 
     /**
-     * 
+     * <p>
+     * Retrieves a list of users, filtering with parameters on a user object
+     * </p>
      */
-    public void update( ubic.gemma.model.common.auditAndSecurity.User user );
+    public java.util.Collection loadAll();
 
     /**
      * <p>
@@ -80,5 +75,10 @@ public interface UserService {
      * </p>
      */
     public java.util.Collection loadAllRoles();
+
+    /**
+     * 
+     */
+    public void update( ubic.gemma.model.common.auditAndSecurity.User user );
 
 }

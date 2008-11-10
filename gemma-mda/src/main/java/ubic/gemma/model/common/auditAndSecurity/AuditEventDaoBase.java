@@ -34,6 +34,78 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         implements ubic.gemma.model.common.auditAndSecurity.AuditEventDao {
 
     /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "AuditEvent.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.auditAndSecurity.AuditEvent ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(int transform,
+     *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
+     */
+    public Object create( final int transform, final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
+        if ( auditEvent == null ) {
+            throw new IllegalArgumentException( "AuditEvent.create - 'auditEvent' can not be null" );
+        }
+        this.getHibernateTemplate().save( auditEvent );
+        return this.transformEntity( transform, auditEvent );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
+     */
+    public ubic.gemma.model.common.auditAndSecurity.AuditEvent create(
+            ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
+        return ( ubic.gemma.model.common.auditAndSecurity.AuditEvent ) this.create( TRANSFORM_NONE, auditEvent );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
+     */
+    public java.util.Collection getNewSinceDate( final java.util.Date date ) {
+        try {
+            return this.handleGetNewSinceDate( date );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditEventDao.getNewSinceDate(java.util.Date date)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(java.util.Date)
+     */
+    public java.util.Collection getUpdatedSinceDate( final java.util.Date date ) {
+        try {
+            return this.handleGetUpdatedSinceDate( date );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditEventDao.getUpdatedSinceDate(java.util.Date date)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#load(int, java.lang.Long)
      */
     public Object load( final int transform, final java.lang.Long id ) {
@@ -71,89 +143,6 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent create(
-            ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.AuditEvent ) this.create( TRANSFORM_NONE, auditEvent );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(int transform,
-     *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
-    public Object create( final int transform, final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
-        if ( auditEvent == null ) {
-            throw new IllegalArgumentException( "AuditEvent.create - 'auditEvent' can not be null" );
-        }
-        this.getHibernateTemplate().save( auditEvent );
-        return this.transformEntity( transform, auditEvent );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditEvent.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.auditAndSecurity.AuditEvent ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#update(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
-    public void update( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
-        if ( auditEvent == null ) {
-            throw new IllegalArgumentException( "AuditEvent.update - 'auditEvent' can not be null" );
-        }
-        this.getHibernateTemplate().update( auditEvent );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditEvent.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.auditAndSecurity.AuditEvent ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#remove(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
-    public void remove( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
-        if ( auditEvent == null ) {
-            throw new IllegalArgumentException( "AuditEvent.remove - 'auditEvent' can not be null" );
-        }
-        this.getHibernateTemplate().delete( auditEvent );
-    }
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -177,40 +166,14 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(java.util.Date)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#remove(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
      */
-    public java.util.Collection getUpdatedSinceDate( final java.util.Date date ) {
-        try {
-            return this.handleGetUpdatedSinceDate( date );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditEventDao.getUpdatedSinceDate(java.util.Date date)' --> "
-                            + th, th );
+    public void remove( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
+        if ( auditEvent == null ) {
+            throw new IllegalArgumentException( "AuditEvent.remove - 'auditEvent' can not be null" );
         }
+        this.getHibernateTemplate().delete( auditEvent );
     }
-
-    /**
-     * Performs the core logic for {@link #getUpdatedSinceDate(java.util.Date)}
-     */
-    protected abstract java.util.Collection handleGetUpdatedSinceDate( java.util.Date date ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
-     */
-    public java.util.Collection getNewSinceDate( final java.util.Date date ) {
-        try {
-            return this.handleGetNewSinceDate( date );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditEventDao.getNewSinceDate(java.util.Date date)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getNewSinceDate(java.util.Date)}
-     */
-    protected abstract java.util.Collection handleGetNewSinceDate( java.util.Date date ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#thaw(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
@@ -226,17 +189,75 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "AuditEvent.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.auditAndSecurity.AuditEvent ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#update(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
+     */
+    public void update( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
+        if ( auditEvent == null ) {
+            throw new IllegalArgumentException( "AuditEvent.update - 'auditEvent' can not be null" );
+        }
+        this.getHibernateTemplate().update( auditEvent );
+    }
+
+    /**
+     * Performs the core logic for {@link #getNewSinceDate(java.util.Date)}
+     */
+    protected abstract java.util.Collection handleGetNewSinceDate( java.util.Date date ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getUpdatedSinceDate(java.util.Date)}
+     */
+    protected abstract java.util.Collection handleGetUpdatedSinceDate( java.util.Date date ) throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.common.auditAndSecurity.AuditEvent)}
      */
     protected abstract void handleThaw( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent )
             throws java.lang.Exception;
 
     /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.AuditEvent)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.common.auditAndSecurity.AuditEventDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.AuditEvent)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.common.auditAndSecurity.AuditEventDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
-     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
+     * <code>ubic.gemma.model.common.auditAndSecurity.AuditEventDao</code>, please note that the {@link #TRANSFORM_NONE}
+     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
+     * unknown {@link #TRANSFORM_NONE} is assumed.
      * 
      * @param transform one of the constants declared in {@link ubic.gemma.model.common.auditAndSecurity.AuditEventDao}
      * @param entity an entity that was found
@@ -254,25 +275,6 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.AuditEvent)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.auditAndSecurity.AuditEventDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

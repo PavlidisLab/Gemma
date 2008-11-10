@@ -35,20 +35,6 @@ public abstract class BlastResultServiceBase implements ubic.gemma.model.genome.
     private ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao blastResultDao;
 
     /**
-     * Sets the reference to <code>blastResult</code>'s DAO.
-     */
-    public void setBlastResultDao( ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao blastResultDao ) {
-        this.blastResultDao = blastResultDao;
-    }
-
-    /**
-     * Gets the reference to <code>blastResult</code>'s DAO.
-     */
-    protected ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao getBlastResultDao() {
-        return this.blastResultDao;
-    }
-
-    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#create(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
     public ubic.gemma.model.genome.sequenceAnalysis.BlastResult create(
@@ -61,31 +47,6 @@ public abstract class BlastResultServiceBase implements ubic.gemma.model.genome.
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}
-     */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    public void remove( final ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
-        try {
-            this.handleRemove( blastResult );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlastResultServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlastResultService.remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
@@ -102,12 +63,6 @@ public abstract class BlastResultServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}
-     */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleFind(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFind ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
     public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
@@ -122,46 +77,30 @@ public abstract class BlastResultServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleFindOrCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFindOrCreate ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public void remove( final ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
+        try {
+            this.handleRemove( blastResult );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.sequenceAnalysis.BlastResultServiceException(
+                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlastResultService.remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult)' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message source available to this service.
+     * Sets the reference to <code>blastResult</code>'s DAO.
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    public void setBlastResultDao( ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao blastResultDao ) {
+        this.blastResultDao = blastResultDao;
     }
 
     /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
+     * Gets the reference to <code>blastResult</code>'s DAO.
      */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao getBlastResultDao() {
+        return this.blastResultDao;
     }
 
     /**
@@ -176,5 +115,65 @@ public abstract class BlastResultServiceBase implements ubic.gemma.model.genome.
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}
+     */
+    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}
+     */
+    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleFind(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFind ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}
+     */
+    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleFindOrCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFindOrCreate ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult )
+            throws java.lang.Exception;
 
 }

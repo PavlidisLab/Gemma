@@ -22,6 +22,11 @@
 //
 package ubic.gemma.model.common;
 
+import java.util.Map;
+
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -30,72 +35,14 @@ package ubic.gemma.model.common;
  * 
  * @see ubic.gemma.model.common.Auditable
  */
-public abstract class AuditableDaoBase extends ubic.gemma.model.common.DescribableDaoImpl implements
-        ubic.gemma.model.common.AuditableDao {
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.Auditable ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getAclObjectIdentityId(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId( transform,
-                        "from ubic.gemma.model.common.Auditable as auditable where auditable.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
+public abstract class AuditableDaoBase<T extends Auditable> extends
+        org.springframework.orm.hibernate3.support.HibernateDaoSupport implements
+        ubic.gemma.model.common.AuditableDao<T> {
 
     /**
      * @see ubic.gemma.model.common.AuditableDao#getAuditEvents(ubic.gemma.model.common.Auditable)
      */
-    public java.util.Collection getAuditEvents( final ubic.gemma.model.common.Auditable auditable ) {
+    public java.util.Collection<AuditEvent> getAuditEvents( final ubic.gemma.model.common.Auditable auditable ) {
         try {
             return this.handleGetAuditEvents( auditable );
         } catch ( Throwable th ) {
@@ -109,7 +56,8 @@ public abstract class AuditableDaoBase extends ubic.gemma.model.common.Describab
      * @see ubic.gemma.model.common.AuditableDao#getLastAuditEvent(java.util.Collection,
      *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
-    public java.util.Map getLastAuditEvent( final java.util.Collection auditables,
+    public java.util.Map<Auditable, AuditEvent> getLastAuditEvent(
+            final java.util.Collection<? extends Auditable> auditables,
             final ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) {
         try {
             return this.handleGetLastAuditEvent( auditables, type );
@@ -139,7 +87,8 @@ public abstract class AuditableDaoBase extends ubic.gemma.model.common.Describab
     /**
      * @see ubic.gemma.model.common.AuditableDao#getLastTypedAuditEvents(java.util.Collection)
      */
-    public java.util.Map getLastTypedAuditEvents( final java.util.Collection auditables ) {
+    public java.util.Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
+            final java.util.Collection<? extends Auditable> auditables ) {
         try {
             return this.handleGetLastTypedAuditEvents( auditables );
         } catch ( Throwable th ) {
@@ -147,264 +96,6 @@ public abstract class AuditableDaoBase extends ubic.gemma.model.common.Describab
                     "Error performing 'ubic.gemma.model.common.AuditableDao.getLastTypedAuditEvents(java.util.Collection auditables)' --> "
                             + th, th );
         }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getMask(int, java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.Auditable ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask( transform,
-                        "from ubic.gemma.model.common.Auditable as auditable where auditable.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getMask(java.lang.String, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.Auditable ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this.getMasks( transform,
-                "from ubic.gemma.model.common.Auditable as auditable where auditable.securables = :securables",
-                securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this.getRecipient( transform,
-                "from ubic.gemma.model.common.Auditable as auditable where auditable.id = :id", id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getRecipient(int, java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.Auditable ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getRecipient(java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#load(int, java.lang.Long)
-     */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "Auditable.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.common.AuditableImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.Auditable ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.Auditable ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.AuditableImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "Auditable.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.common.Auditable entity = ( ubic.gemma.model.common.Auditable ) this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Auditable.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableDao#remove(ubic.gemma.model.common.Auditable)
-     */
-    public void remove( ubic.gemma.model.common.Auditable auditable ) {
-        if ( auditable == null ) {
-            throw new IllegalArgumentException( "Auditable.remove - 'auditable' can not be null" );
-        }
-        this.getHibernateTemplate().delete( auditable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Auditable.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.Auditable ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
     }
 
     /**
@@ -420,14 +111,15 @@ public abstract class AuditableDaoBase extends ubic.gemma.model.common.Describab
     /**
      * Performs the core logic for {@link #getAuditEvents(ubic.gemma.model.common.Auditable)}
      */
-    protected abstract java.util.Collection handleGetAuditEvents( ubic.gemma.model.common.Auditable auditable )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<AuditEvent> handleGetAuditEvents(
+            ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #getLastAuditEvent(java.util.Collection, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)}
      */
-    protected abstract java.util.Map handleGetLastAuditEvent( java.util.Collection auditables,
+    protected abstract java.util.Map<Auditable, AuditEvent> handleGetLastAuditEvent(
+            java.util.Collection<? extends Auditable> auditables,
             ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception;
 
     /**
@@ -441,51 +133,7 @@ public abstract class AuditableDaoBase extends ubic.gemma.model.common.Describab
     /**
      * Performs the core logic for {@link #getLastTypedAuditEvents(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetLastTypedAuditEvents( java.util.Collection auditables )
-            throws java.lang.Exception;
-
-    /**
-     * Transforms a collection of entities using the {@link #transformEntity(int,ubic.gemma.model.common.Auditable)}
-     * method. This method does not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.common.AuditableDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.Auditable)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.common.AuditableDao</code>, please note that the {@link #TRANSFORM_NONE} constant denotes
-     * no transformation, so the entity itself will be returned. If the integer argument value is unknown
-     * {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in {@link ubic.gemma.model.common.AuditableDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    protected Object transformEntity( final int transform, final ubic.gemma.model.common.Auditable entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
-    }
+    protected abstract java.util.Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents(
+            java.util.Collection<? extends Auditable> auditables ) throws java.lang.Exception;
 
 }

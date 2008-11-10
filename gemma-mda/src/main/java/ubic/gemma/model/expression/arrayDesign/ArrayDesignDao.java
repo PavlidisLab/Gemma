@@ -22,10 +22,14 @@
 //
 package ubic.gemma.model.expression.arrayDesign;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
-public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
+public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or
      * other types, different methods in a class implementing this interface support this feature: look for an
@@ -58,14 +62,14 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
      * Converts a Collection of instances of type {@link ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject}
      * to this DAO's entity.
      */
-    public void arrayDesignValueObjectToEntityCollection( java.util.Collection instances );
+    public void arrayDesignValueObjectToEntityCollection( java.util.Collection<ArrayDesignValueObject> instances );
 
     /**
      * <p>
      * returns all compositeSequences for the given arrayDesign that do not have bioSequence associations.
      * </p>
      */
-    public java.util.Collection compositeSequenceWithoutBioSequences(
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBioSequences(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
@@ -73,7 +77,7 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
      * returns all compositeSequences for the given arrayDesign that do not have BLAT results.
      * </p>
      */
-    public java.util.Collection compositeSequenceWithoutBlatResults(
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBlatResults(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
@@ -81,49 +85,13 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
      * returns all compositeSequences for the given arrayDesign without gene associations.
      * </p>
      */
-    public java.util.Collection compositeSequenceWithoutGenes(
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutGenes(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
      */
     public java.lang.Integer countAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.expression.arrayDesign.ArrayDesign)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
-     * objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.expression.arrayDesign.ArrayDesign)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a value
-     * object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.expression.arrayDesign.ArrayDesign and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.expression.arrayDesign.ArrayDesign instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * Creates an instance of ubic.gemma.model.expression.arrayDesign.ArrayDesign and adds it to the persistent store.
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
@@ -178,7 +146,7 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
     /**
      * 
      */
-    public java.util.Collection findByAlternateName( java.lang.String queryString );
+    public java.util.Collection<ArrayDesign> findByAlternateName( java.lang.String queryString );
 
     /**
      * <p>
@@ -290,14 +258,14 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
     /**
      * 
      */
-    public java.util.Collection getAllAssociatedBioAssays( java.lang.Long id );
+    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( java.lang.Long id );
 
     /**
      * <p>
      * Get all audit events associated with the specified arrayDesign ids.
      * </p>
      */
-    public java.util.Map getAuditEvents( java.util.Collection ids );
+    public java.util.Map getAuditEvents( java.util.Collection<Long> ids );
 
     /**
      * 
@@ -313,76 +281,36 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
     /**
      * 
      */
-    public java.util.Map isMerged( java.util.Collection ids );
+    public java.util.Map<Long, Boolean> isMerged( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map isMergee( java.util.Collection ids );
+    public java.util.Map<Long, Boolean> isMergee( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map isSubsumed( java.util.Collection ids );
+    public java.util.Map<Long, Boolean> isSubsumed( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map isSubsumer( java.util.Collection ids );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads an instance of ubic.gemma.model.expression.arrayDesign.ArrayDesign from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Map<Long, Boolean> isSubsumer( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * loads all Array designs as value objects.
      * </p>
      */
-    public java.util.Collection loadAllValueObjects();
+    public java.util.Collection<ArrayDesignValueObject> loadAllValueObjects();
 
     /**
      * <p>
      * Needed because we want to lazy-load composite sequences
      * </p>
      */
-    public java.util.Collection loadCompositeSequences( java.lang.Long id );
+    public java.util.Collection<CompositeSequence> loadCompositeSequences( java.lang.Long id );
 
     /**
      * <p>
@@ -396,14 +324,14 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
      * Given a list of AD ids (longs) returns a collection of ArrayDesign Objects
      * </p>
      */
-    public java.util.Collection loadMultiple( java.util.Collection ids );
+    public java.util.Collection<ArrayDesign> load( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * loads the Value Objects for the Array Designs specified by the input ids.
      * </p>
      */
-    public java.util.Collection loadValueObjects( java.util.Collection ids );
+    public java.util.Collection<ArrayDesignValueObject> loadValueObjects( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -417,7 +345,7 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
      * Function to return the count of all composite sequences with biosequences, given a list of array design Ids
      * </p>
      */
-    public long numAllCompositeSequenceWithBioSequences( java.util.Collection ids );
+    public long numAllCompositeSequenceWithBioSequences( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -431,7 +359,7 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
      * Function to return the count of all composite sequences with blat results, given a list of array design Ids
      * </p>
      */
-    public long numAllCompositeSequenceWithBlatResults( java.util.Collection ids );
+    public long numAllCompositeSequenceWithBlatResults( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -445,7 +373,7 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
      * Function to return the count of all composite sequences with genes, given a list of array design Ids
      * </p>
      */
-    public long numAllCompositeSequenceWithGenes( java.util.Collection ids );
+    public long numAllCompositeSequenceWithGenes( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -459,7 +387,7 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
      * returns a count of the unique genes associated witht the given arrayDesigns
      * </p>
      */
-    public long numAllGenes( java.util.Collection ids );
+    public long numAllGenes( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -532,22 +460,6 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
     public java.lang.Integer numReporters( java.lang.Long id );
 
     /**
-     * Removes the instance of ubic.gemma.model.expression.arrayDesign.ArrayDesign having the given
-     * <code>identifier</code> from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.expression.arrayDesign.ArrayDesign from the persistent store.
-     */
-    public void remove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
      * <p>
      * Remove all associations that this array design has with BioSequences. This is needed for cases where the original
      * import has associated the probes with the wrong sequences. A common case is for GEO data sets where the actual
@@ -591,17 +503,7 @@ public interface ArrayDesignDao extends ubic.gemma.model.common.AuditableDao {
      * Converts this DAO's entity to a Collection of instances of type
      * {@link ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject}.
      */
-    public void toArrayDesignValueObjectCollection( java.util.Collection entities );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Updates the <code>arrayDesign</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public void toArrayDesignValueObjectCollection( java.util.Collection<ArrayDesign> entities );
 
     /**
      * <p>

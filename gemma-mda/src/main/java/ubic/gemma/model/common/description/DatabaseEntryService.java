@@ -30,13 +30,13 @@ public interface DatabaseEntryService {
     /**
      * 
      */
-    public ubic.gemma.model.common.description.DatabaseEntry find(
-            ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
+    public java.lang.Integer countAll();
 
     /**
      * 
      */
-    public void update( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
+    public ubic.gemma.model.common.description.DatabaseEntry find(
+            ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
     /**
      * 
@@ -46,6 +46,6 @@ public interface DatabaseEntryService {
     /**
      * 
      */
-    public java.lang.Integer countAll();
+    public void update( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
 }

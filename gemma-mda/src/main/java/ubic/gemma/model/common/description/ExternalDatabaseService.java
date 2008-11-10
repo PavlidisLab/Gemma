@@ -41,11 +41,11 @@ public interface ExternalDatabaseService extends ubic.gemma.model.common.Auditab
     /**
      * 
      */
-    public void remove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase );
+    public java.util.Collection loadAll();
 
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public void remove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase );
 
 }

@@ -43,12 +43,19 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
     private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
             BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class, Gene2GOAssociationImpl.class };
 
-    /**
-     * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
-     */
     @Override
-    protected java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception {
-        return this.getCharacteristicDao().findByValue( search + '%' );
+    protected Characteristic handleCreate( Characteristic c ) throws Exception {
+        return ( Characteristic ) this.getCharacteristicDao().create( c );
+    }
+
+    @Override
+    protected void handleDelete( Characteristic c ) throws Exception {
+        this.getCharacteristicDao().remove( c );
+    }
+
+    @Override
+    protected void handleDelete( Long id ) throws Exception {
+        this.getCharacteristicDao().remove( id );
     }
 
     /**
@@ -59,10 +66,29 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
         return this.getCharacteristicDao().findByParentClass( parentClass );
     }
 
+    @Override
+    protected Collection handleFindByUri( Collection uris ) throws Exception {
+        return this.getCharacteristicDao().findByUri( uris );
+    }
+
+    @Override
+    protected Collection handleFindByUri( String searchString ) throws Exception {
+        return this.getCharacteristicDao().findByUri( searchString );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
+     */
+    @Override
+    protected java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception {
+        return this.getCharacteristicDao().findByValue( search + '%' );
+    }
+
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParent(ubic.gemma.model.common.description.Characteristic)
+     * @see
+     * ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParent(ubic.gemma.model.common.description
+     * .Characteristic)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -77,7 +103,6 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParents(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -91,38 +116,13 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
     }
 
     @Override
-    protected Collection handleFindByUri( String searchString ) throws Exception {
-        return this.getCharacteristicDao().findByUri( searchString );
-    }
-
-    @Override
-    protected Collection handleFindByUri( Collection uris ) throws Exception {
-        return this.getCharacteristicDao().findByUri( uris );
-    }
-
-    @Override
     protected Characteristic handleLoad( Long id ) throws Exception {
         return ( Characteristic ) this.getCharacteristicDao().load( id );
     }
 
     @Override
-    protected void handleDelete( Characteristic c ) throws Exception {
-        this.getCharacteristicDao().remove( c );
-    }
-
-    @Override
     protected void handleUpdate( Characteristic c ) throws Exception {
         this.getCharacteristicDao().update( c );
-    }
-
-    @Override
-    protected void handleDelete( Long id ) throws Exception {
-        this.getCharacteristicDao().remove( id );
-    }
-
-    @Override
-    protected Characteristic handleCreate( Characteristic c ) throws Exception {
-        return ( Characteristic ) this.getCharacteristicDao().create( c );
     }
 
 }

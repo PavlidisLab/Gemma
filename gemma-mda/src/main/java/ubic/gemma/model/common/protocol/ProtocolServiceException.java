@@ -35,40 +35,6 @@ public class ProtocolServiceException extends java.lang.RuntimeException {
     private static final long serialVersionUID = 3210789444294785373L;
 
     /**
-     * The default constructor for <code>ProtocolServiceException</code>.
-     */
-    public ProtocolServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>ProtocolServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public ProtocolServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>ProtocolServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public ProtocolServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>ProtocolServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public ProtocolServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class ProtocolServiceException extends java.lang.RuntimeException {
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>ProtocolServiceException</code>.
+     */
+    public ProtocolServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>ProtocolServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public ProtocolServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>ProtocolServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public ProtocolServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>ProtocolServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public ProtocolServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

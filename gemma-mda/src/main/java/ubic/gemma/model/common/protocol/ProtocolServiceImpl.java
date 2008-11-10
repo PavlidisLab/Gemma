@@ -37,12 +37,9 @@ public class ProtocolServiceImpl extends ubic.gemma.model.common.protocol.Protoc
         return this.getProtocolDao().find( protocol );
     }
 
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolService#update(ubic.gemma.model.common.protocol.Protocol)
-     */
     @Override
-    protected void handleUpdate( ubic.gemma.model.common.protocol.Protocol protocol ) throws java.lang.Exception {
-        this.getProtocolDao().update( protocol );
+    protected Protocol handleFindOrCreate( Protocol protocol ) throws Exception {
+        return this.getProtocolDao().findOrCreate( protocol );
     }
 
     /**
@@ -53,9 +50,12 @@ public class ProtocolServiceImpl extends ubic.gemma.model.common.protocol.Protoc
         this.getProtocolDao().remove( protocol );
     }
 
+    /**
+     * @see ubic.gemma.model.common.protocol.ProtocolService#update(ubic.gemma.model.common.protocol.Protocol)
+     */
     @Override
-    protected Protocol handleFindOrCreate( Protocol protocol ) throws Exception {
-        return this.getProtocolDao().findOrCreate( protocol );
+    protected void handleUpdate( ubic.gemma.model.common.protocol.Protocol protocol ) throws java.lang.Exception {
+        this.getProtocolDao().update( protocol );
     }
 
 }

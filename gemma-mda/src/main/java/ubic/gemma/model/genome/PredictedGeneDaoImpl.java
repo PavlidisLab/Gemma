@@ -35,6 +35,6 @@ public class PredictedGeneDaoImpl extends ubic.gemma.model.genome.PredictedGeneD
      */
     @Override
     public PredictedGene geneValueObjectToEntity( GeneValueObject geneValueObject ) {
-        return ( PredictedGene ) this.load( geneValueObject.getId() );
+        return this.load( geneValueObject.getId() );
     }
 }

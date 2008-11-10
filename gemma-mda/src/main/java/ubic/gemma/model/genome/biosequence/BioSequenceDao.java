@@ -22,127 +22,28 @@
 //
 package ubic.gemma.model.genome.biosequence;
 
+import java.util.Collection;
+
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.genome.biosequence.BioSequence
  */
-public interface BioSequenceDao extends ubic.gemma.model.common.DescribableDao {
-    /**
-     * Loads an instance of ubic.gemma.model.genome.biosequence.BioSequence from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.genome.biosequence.BioSequence}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Creates an instance of ubic.gemma.model.genome.biosequence.BioSequence and adds it to the persistent store.
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the
-     * result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a
-     * value object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.genome.biosequence.BioSequence and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.genome.biosequence.BioSequence instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the
-     * result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into
-     * value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * Updates the <code>bioSequence</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.biosequence.BioSequence from the persistent store.
-     */
-    public void remove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.biosequence.BioSequence having the given <code>identifier</code>
-     * from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
+public interface BioSequenceDao extends BaseDao<BioSequence> {
     /**
      * 
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence find(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public java.lang.Integer countAll();
 
     /**
      * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)}.
+     * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.biosequence.BioSequence)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #find(int, ubic.gemma.model.genome.biosequence.BioSequence bioSequence)}.
      * </p>
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence find( String queryString,
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public Object find( int transform, String queryString, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * <p>
@@ -153,60 +54,45 @@ public interface BioSequenceDao extends ubic.gemma.model.common.DescribableDao {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object find( int transform, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence find( int transform, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.biosequence.BioSequence)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #find(int, ubic.gemma.model.genome.biosequence.BioSequence bioSequence)}.
+     * Does the same thing as {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional argument
+     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
+     * defined in {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)}.
      * </p>
      */
-    public Object find( int transform, String queryString, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)}.
-     * </p>
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate( String queryString,
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results
-     * will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined
-     * here then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.biosequence.BioSequence)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findOrCreate(int, ubic.gemma.model.genome.biosequence.BioSequence bioSequence)}.
-     * </p>
-     */
-    public Object findOrCreate( int transform, String queryString,
+    public ubic.gemma.model.genome.biosequence.BioSequence find( String queryString,
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
+    public ubic.gemma.model.genome.biosequence.BioSequence find(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByAccession(boolean, ubic.gemma.model.common.description.DatabaseEntry)} with
+     * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findByAccession(int,
+     * ubic.gemma.model.common.description.DatabaseEntry accession)}.
+     * </p>
+     */
+    public Object findByAccession( int transform, String queryString,
             ubic.gemma.model.common.description.DatabaseEntry accession );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByAccession(ubic.gemma.model.common.description.DatabaseEntry)} with an
+     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
+     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
+     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
+     * transform the entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object findByAccession( int transform, ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
      * <p>
@@ -219,56 +105,79 @@ public interface BioSequenceDao extends ubic.gemma.model.common.DescribableDao {
             ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByAccession(ubic.gemma.model.common.description.DatabaseEntry)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
+     * 
      */
-    public Object findByAccession( int transform, ubic.gemma.model.common.description.DatabaseEntry accession );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByAccession(boolean, ubic.gemma.model.common.description.DatabaseEntry)} with
-     * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findByAccession(int, ubic.gemma.model.common.description.DatabaseEntry accession)}.
-     * </p>
-     */
-    public Object findByAccession( int transform, String queryString,
+    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
             ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
-     * 
+     * <p>
+     * Returns matching biosequences for the given genes in a Map (gene to biosequences). Genes which had no associated
+     * sequences are not included in the result.
+     * </p>
      */
-    public java.util.Collection getGenesByName( java.lang.String search );
+    public java.util.Map<Gene, Collection<BioSequence>> findByGenes( java.util.Collection<Gene> genes );
 
     /**
      * 
      */
-    public java.util.Collection getGenesByAccession( java.lang.String search );
+    public java.util.Collection<BioSequence> findByName( java.lang.String name );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.biosequence.BioSequence)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findOrCreate(int, ubic.gemma.model.genome.biosequence.BioSequence
+     * bioSequence)}.
+     * </p>
+     */
+    public Object findOrCreate( int transform, String queryString,
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional
+     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object findOrCreate( int transform, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)}.
+     * </p>
+     */
+    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate( String queryString,
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * 
      */
-    public java.lang.Integer countAll();
+    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * 
      */
-    public java.util.Collection findByName( java.lang.String name );
+    public java.util.Collection<Gene> getGenesByAccession( java.lang.String search );
+
+    /**
+     * For a biosequence name, get the genes
+     */
+    @Deprecated
+    public java.util.Collection<Gene> getGenesByName( java.lang.String search );
+
+    public Collection<BioSequence> load( Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Collection load( java.util.Collection ids );
-
-    /**
-     * 
-     */
-    public void thaw( java.util.Collection bioSequences );
+    public void thaw( java.util.Collection<BioSequence> bioSequences );
 
     /**
      * 
@@ -280,14 +189,6 @@ public interface BioSequenceDao extends ubic.gemma.model.common.DescribableDao {
      * Thaw but do not retrieve as many associations as the regular thaw.
      * </p>
      */
-    public void thawLite( java.util.Collection bioSequences );
-
-    /**
-     * <p>
-     * Returns matching biosequences for the given genes in a Map (gene to biosequences). Genes which had no associated
-     * sequences are not included in the result.
-     * </p>
-     */
-    public java.util.Map findByGenes( java.util.Collection genes );
+    public void thawLite( java.util.Collection<BioSequence> bioSequences );
 
 }

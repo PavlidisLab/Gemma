@@ -34,6 +34,68 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
         implements ubic.gemma.model.common.auditAndSecurity.AuditTrailDao {
 
     /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#addEvent(ubic.gemma.model.common.Auditable,
+     *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
+     */
+    public ubic.gemma.model.common.auditAndSecurity.AuditEvent addEvent(
+            final ubic.gemma.model.common.Auditable auditable,
+            final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
+        try {
+            return this.handleAddEvent( auditable, auditEvent );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailDao.addEvent(ubic.gemma.model.common.Auditable auditable, ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "AuditTrail.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.auditAndSecurity.AuditTrail ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#create(int transform,
+     *      ubic.gemma.model.common.auditAndSecurity.AuditTrail)
+     */
+    public Object create( final int transform, final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+        if ( auditTrail == null ) {
+            throw new IllegalArgumentException( "AuditTrail.create - 'auditTrail' can not be null" );
+        }
+        this.getHibernateTemplate().save( auditTrail );
+        return this.transformEntity( transform, auditTrail );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#create(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
+     */
+    public ubic.gemma.model.common.auditAndSecurity.AuditTrail create(
+            ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+        return ( ubic.gemma.model.common.auditAndSecurity.AuditTrail ) this.create( TRANSFORM_NONE, auditTrail );
+    }
+
+    /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#load(int, java.lang.Long)
      */
     public Object load( final int transform, final java.lang.Long id ) {
@@ -71,89 +133,6 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#create(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    public ubic.gemma.model.common.auditAndSecurity.AuditTrail create(
-            ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.AuditTrail ) this.create( TRANSFORM_NONE, auditTrail );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#create(int transform,
-     *      ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    public Object create( final int transform, final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
-        if ( auditTrail == null ) {
-            throw new IllegalArgumentException( "AuditTrail.create - 'auditTrail' can not be null" );
-        }
-        this.getHibernateTemplate().save( auditTrail );
-        return this.transformEntity( transform, auditTrail );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditTrail.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.auditAndSecurity.AuditTrail ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#update(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    public void update( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
-        if ( auditTrail == null ) {
-            throw new IllegalArgumentException( "AuditTrail.update - 'auditTrail' can not be null" );
-        }
-        this.getHibernateTemplate().update( auditTrail );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditTrail.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.auditAndSecurity.AuditTrail ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#remove(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    public void remove( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
-        if ( auditTrail == null ) {
-            throw new IllegalArgumentException( "AuditTrail.remove - 'auditTrail' can not be null" );
-        }
-        this.getHibernateTemplate().delete( auditTrail );
-    }
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -177,47 +156,14 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#remove(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
      */
-    public void thaw( final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
-        try {
-            this.handleThaw( auditTrail );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailDao.thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail)' --> "
-                            + th, th );
+    public void remove( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+        if ( auditTrail == null ) {
+            throw new IllegalArgumentException( "AuditTrail.remove - 'auditTrail' can not be null" );
         }
+        this.getHibernateTemplate().delete( auditTrail );
     }
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#addEvent(ubic.gemma.model.common.Auditable,
-     *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent addEvent(
-            final ubic.gemma.model.common.Auditable auditable,
-            final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
-        try {
-            return this.handleAddEvent( auditable, auditEvent );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailDao.addEvent(ubic.gemma.model.common.Auditable auditable, ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #addEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.AuditEvent)}
-     */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleAddEvent(
-            ubic.gemma.model.common.Auditable auditable, ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#thaw(ubic.gemma.model.common.Auditable)
@@ -233,16 +179,91 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
+     */
+    public void thaw( final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+        try {
+            this.handleThaw( auditTrail );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailDao.thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "AuditTrail.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.auditAndSecurity.AuditTrail ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#update(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
+     */
+    public void update( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+        if ( auditTrail == null ) {
+            throw new IllegalArgumentException( "AuditTrail.update - 'auditTrail' can not be null" );
+        }
+        this.getHibernateTemplate().update( auditTrail );
+    }
+
+    /**
+     * Performs the core logic for
+     * {@link #addEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.AuditEvent)}
+     */
+    protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleAddEvent(
+            ubic.gemma.model.common.Auditable auditable, ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent )
+            throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.common.Auditable)}
      */
     protected abstract void handleThaw( ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
 
     /**
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)}
+     */
+    protected abstract void handleThaw( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail )
+            throws java.lang.Exception;
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.AuditTrail)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.common.auditAndSecurity.AuditTrailDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.AuditTrail)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.common.auditAndSecurity.AuditTrailDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
-     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
+     * <code>ubic.gemma.model.common.auditAndSecurity.AuditTrailDao</code>, please note that the {@link #TRANSFORM_NONE}
+     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
+     * unknown {@link #TRANSFORM_NONE} is assumed.
      * 
      * @param transform one of the constants declared in {@link ubic.gemma.model.common.auditAndSecurity.AuditTrailDao}
      * @param entity an entity that was found
@@ -260,25 +281,6 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.AuditTrail)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.auditAndSecurity.AuditTrailDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

@@ -38,36 +38,8 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#removeAllForUser(ubic.gemma.model.common.auditAndSecurity.User)
-     */
-    public void removeAllForUser( User user ) {
-        Collection<UserQuery> items = findByUser( user );
-        for ( UserQuery userQuery : items ) {
-            this.remove( userQuery );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#removeOldForUser(ubic.gemma.model.common.auditAndSecurity.User,
-     *      java.sql.Date)
-     */
-    public void removeOldForUser( User user, Date staleDate ) {
-        Collection<UserQuery> items = findByUser( user );
-        for ( UserQuery userQuery : items ) {
-            if ( userQuery.getLastUsed().before( staleDate ) ) {
-                this.remove( userQuery );
-            }
-        }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#create(ubic.gemma.model.common.auditAndSecurity.UserQuery)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#create(ubic.gemma.model.common.auditAndSecurity.UserQuery)
      */
     public UserQuery create( UserQuery userQuery ) {
         return ( UserQuery ) this.getHibernateTemplate().save( userQuery );
@@ -76,8 +48,8 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#findByUser(ubic.gemma.model.common.auditAndSecurity.User)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#findByUser(ubic.gemma.model.common.auditAndSecurity.User)
      */
     @SuppressWarnings("unchecked")
     public Collection<UserQuery> findByUser( User user ) {
@@ -87,8 +59,9 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#findMostRecentForUser(ubic.gemma.model.common.auditAndSecurity.User)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#findMostRecentForUser(ubic.gemma.model.common.auditAndSecurity
+     * .User)
      */
     public UserQuery findMostRecentForUser( User user ) {
         Collection<UserQuery> items = findByUser( user );
@@ -111,7 +84,6 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#load(java.lang.Long)
      */
     public UserQuery load( Long id ) {
@@ -124,7 +96,6 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#loadAll()
      */
     @SuppressWarnings("unchecked")
@@ -134,14 +105,43 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#remove(ubic.gemma.model.common.auditAndSecurity.UserQuery)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#remove(ubic.gemma.model.common.auditAndSecurity.UserQuery)
      */
     public void remove( UserQuery userQuery ) {
         if ( userQuery == null ) {
             throw new IllegalArgumentException( "UserQueryRole.remove - 'userQuery' can not be null" );
         }
         this.getHibernateTemplate().delete( userQuery );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#removeAllForUser(ubic.gemma.model.common.auditAndSecurity
+     * .User)
+     */
+    public void removeAllForUser( User user ) {
+        Collection<UserQuery> items = findByUser( user );
+        for ( UserQuery userQuery : items ) {
+            this.remove( userQuery );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#removeOldForUser(ubic.gemma.model.common.auditAndSecurity
+     * .User, java.sql.Date)
+     */
+    public void removeOldForUser( User user, Date staleDate ) {
+        Collection<UserQuery> items = findByUser( user );
+        for ( UserQuery userQuery : items ) {
+            if ( userQuery.getLastUsed().before( staleDate ) ) {
+                this.remove( userQuery );
+            }
+        }
 
     }
 

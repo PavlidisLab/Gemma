@@ -22,45 +22,21 @@
 //
 package ubic.gemma.model.genome;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.genome.ProbeAlignedRegion
  */
-public interface ProbeAlignedRegionDao extends ubic.gemma.model.genome.GeneDao {
+public interface ProbeAlignedRegionDao extends BaseDao<ProbeAlignedRegion> {
     /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.ProbeAlignedRegion)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
-     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
-     * objects for example). By default, transformation does not occur.
-     * </p>
+     * This constant is used as a transformation flag; entities can be converted automatically into value objects or
+     * other types, different methods in a class implementing this interface support this feature: look for an
+     * <code>int</code> parameter called <code>transform</code>.
+     * <p/>
+     * This specific flag denotes entities must be transformed into objects of type
+     * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.genome.ProbeAlignedRegion)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
-     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a value
-     * object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform, ubic.gemma.model.genome.ProbeAlignedRegion probeAlignedRegion );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.genome.ProbeAlignedRegion and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.genome.ProbeAlignedRegion instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * Creates an instance of ubic.gemma.model.genome.ProbeAlignedRegion and adds it to the persistent store.
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.ProbeAlignedRegion probeAlignedRegion );
+    public final static int TRANSFORM_GENEVALUEOBJECT = 1;
 
     /**
      * <p>
@@ -100,68 +76,44 @@ public interface ProbeAlignedRegionDao extends ubic.gemma.model.genome.GeneDao {
 
     /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
+     * Find chromosome features that fall within the physical location.
      * </p>
+     */
+    public java.util.Collection<ProbeAlignedRegion> findByPhysicalLocation(
+            ubic.gemma.model.genome.PhysicalLocation location );
+
+    /**
+     * Copies the fields of {@link ubic.gemma.model.genome.gene.GeneValueObject} to the specified entity.
      * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
+     * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
+     *        TRUE, it will be copied regardless of its value.
      */
-    public Object load( int transform, java.lang.Long id );
+    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject sourceVO,
+            ubic.gemma.model.genome.ProbeAlignedRegion targetEntity, boolean copyIfNull );
 
     /**
-     * Loads an instance of ubic.gemma.model.genome.ProbeAlignedRegion from the persistent store.
+     * Converts a Collection of instances of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's
+     * entity.
      */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+    public void geneValueObjectToEntityCollection( java.util.Collection<ProbeAlignedRegion> instances );
 
     /**
-     * Loads all entities of type {@link ubic.gemma.model.genome.ProbeAlignedRegion}.
-     * 
-     * @return the loaded entities.
+     * Converts this DAO's entity to an object of type {@link ubic.gemma.model.genome.gene.GeneValueObject}.
      */
-    public java.util.Collection loadAll();
+    public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject(
+            ubic.gemma.model.genome.ProbeAlignedRegion entity );
 
     /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
+     * Copies the fields of the specified entity to the target value object. This method is similar to
+     * toGeneValueObject(), but it does not handle any attributes in the target value object that are "read-only" (as
+     * those do not have setter methods exposed).
      */
-    public java.util.Collection loadAll( final int transform );
+    public void toGeneValueObject( ubic.gemma.model.genome.ProbeAlignedRegion sourceEntity,
+            ubic.gemma.model.genome.gene.GeneValueObject targetVO );
 
     /**
-     * Removes the instance of ubic.gemma.model.genome.ProbeAlignedRegion having the given <code>identifier</code> from
-     * the persistent store.
+     * Converts this DAO's entity to a Collection of instances of type
+     * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
      */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.genome.ProbeAlignedRegion from the persistent store.
-     */
-    public void remove( ubic.gemma.model.genome.ProbeAlignedRegion probeAlignedRegion );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Updates the <code>probeAlignedRegion</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.genome.ProbeAlignedRegion probeAlignedRegion );
-
+    public void toGeneValueObjectCollection( java.util.Collection<ProbeAlignedRegion> entities );
 }

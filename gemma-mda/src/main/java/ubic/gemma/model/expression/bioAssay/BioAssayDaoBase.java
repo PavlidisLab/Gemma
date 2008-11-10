@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.expression.bioAssay;
 
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -30,7 +32,7 @@ package ubic.gemma.model.expression.bioAssay;
  * 
  * @see ubic.gemma.model.expression.bioAssay.BioAssay
  */
-public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableDaoImpl implements
+public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.expression.bioAssay.BioAssayDao {
 
     /**
@@ -86,7 +88,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#create(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+    public BioAssay create( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         return ( ubic.gemma.model.expression.bioAssay.BioAssay ) this.create( TRANSFORM_NONE, bioAssay );
     }
 
@@ -253,7 +255,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getAclObjectIdentityId(int, java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -281,7 +283,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getAclObjectIdentityId(int,
      *      ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
         return this.getAclObjectIdentityId( transform,
@@ -293,7 +295,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getAclObjectIdentityId(java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -303,7 +305,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
      */
-    @Override
+
     public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
         return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
     }
@@ -312,7 +314,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMask(int, java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getMask( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -339,7 +341,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMask(int, ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
         return this.getMask( transform,
@@ -351,7 +353,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMask(java.lang.String,
      *      ubic.gemma.model.common.Securable)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.lang.Integer getMask( final java.lang.String queryString,
             final ubic.gemma.model.common.Securable securable ) {
@@ -361,7 +363,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMask(ubic.gemma.model.common.Securable)
      */
-    @Override
+
     public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
         return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
     }
@@ -369,7 +371,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMasks(int, java.lang.String, java.util.Collection)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getMasks( final int transform, final java.lang.String queryString,
             final java.util.Collection securables ) {
@@ -396,7 +398,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMasks(int, java.util.Collection)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getMasks( final int transform, final java.util.Collection securables ) {
         return this
@@ -409,7 +411,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMasks(java.lang.String, java.util.Collection)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
         return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
@@ -418,7 +420,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMasks(java.util.Collection)
      */
-    @Override
+
     public java.util.Map getMasks( java.util.Collection securables ) {
         return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
     }
@@ -426,7 +428,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getRecipient(int, java.lang.Long)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getRecipient( final int transform, final java.lang.Long id ) {
         return this.getRecipient( transform,
@@ -436,7 +438,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getRecipient(int, java.lang.String, java.lang.Long)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -462,7 +464,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getRecipient(java.lang.Long)
      */
-    @Override
+
     public java.lang.String getRecipient( java.lang.Long id ) {
         return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
     }
@@ -470,7 +472,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getRecipient(java.lang.String, java.lang.Long)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
         return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
@@ -479,7 +481,6 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#load(int, java.lang.Long)
      */
-    @Override
     public Object load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BioAssay.load - 'id' can not be null" );
@@ -492,16 +493,13 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#load(java.lang.Long)
      */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
+    public BioAssay load( java.lang.Long id ) {
         return ( ubic.gemma.model.expression.bioAssay.BioAssay ) this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#loadAll()
      */
-    @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -509,7 +507,6 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#loadAll(int)
      */
-    @Override
     public java.util.Collection loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.bioAssay.BioAssayImpl.class );
@@ -520,7 +517,6 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#remove(java.lang.Long)
      */
-    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BioAssay.remove - 'id' can not be null" );
@@ -535,7 +531,6 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioAssay.remove - 'entities' can not be null" );
@@ -569,7 +564,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    @Override
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioAssay.update - 'entities' can not be null" );
@@ -617,7 +612,7 @@ public abstract class BioAssayDaoBase extends ubic.gemma.model.common.AuditableD
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    @Override
+
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through

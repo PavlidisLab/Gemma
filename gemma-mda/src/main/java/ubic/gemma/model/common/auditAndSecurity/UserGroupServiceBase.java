@@ -24,8 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.auditAndSecurity.UserGroupService</code>, provides
- * access to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.common.auditAndSecurity.UserGroupService</code>, provides access
+ * to all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroupService
@@ -34,35 +34,7 @@ public abstract class UserGroupServiceBase implements ubic.gemma.model.common.au
 
     private ubic.gemma.model.common.auditAndSecurity.UserGroupDao userGroupDao;
 
-    /**
-     * Sets the reference to <code>userGroup</code>'s DAO.
-     */
-    public void setUserGroupDao( ubic.gemma.model.common.auditAndSecurity.UserGroupDao userGroupDao ) {
-        this.userGroupDao = userGroupDao;
-    }
-
-    /**
-     * Gets the reference to <code>userGroup</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.auditAndSecurity.UserGroupDao getUserGroupDao() {
-        return this.userGroupDao;
-    }
-
     private ubic.gemma.model.common.auditAndSecurity.UserDao userDao;
-
-    /**
-     * Sets the reference to <code>user</code>'s DAO.
-     */
-    public void setUserDao( ubic.gemma.model.common.auditAndSecurity.UserDao userDao ) {
-        this.userDao = userDao;
-    }
-
-    /**
-     * Gets the reference to <code>user</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.auditAndSecurity.UserDao getUserDao() {
-        return this.userDao;
-    }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupService#create(java.lang.String, java.lang.String)
@@ -78,10 +50,18 @@ public abstract class UserGroupServiceBase implements ubic.gemma.model.common.au
     }
 
     /**
-     * Performs the core logic for {@link #create(java.lang.String, java.lang.String)}
+     * Sets the reference to <code>user</code>'s DAO.
      */
-    protected abstract ubic.gemma.model.common.Securable handleCreate( java.lang.String name,
-            java.lang.String description ) throws java.lang.Exception;
+    public void setUserDao( ubic.gemma.model.common.auditAndSecurity.UserDao userDao ) {
+        this.userDao = userDao;
+    }
+
+    /**
+     * Sets the reference to <code>userGroup</code>'s DAO.
+     */
+    public void setUserGroupDao( ubic.gemma.model.common.auditAndSecurity.UserGroupDao userGroupDao ) {
+        this.userGroupDao = userGroupDao;
+    }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupService#update(java.lang.String,
@@ -99,26 +79,16 @@ public abstract class UserGroupServiceBase implements ubic.gemma.model.common.au
     }
 
     /**
-     * Performs the core logic for {@link #update(java.lang.String, ubic.gemma.model.common.auditAndSecurity.User)}
-     */
-    protected abstract void handleUpdate( java.lang.String groupName,
-            ubic.gemma.model.common.auditAndSecurity.User groupMember ) throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
+     * <code>locale</code>.
      * 
-     * @return the current principal
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     * @param locale the locale of the messages to retrieve.
      */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
+            final java.util.Locale locale ) {
+        return this.getMessages().getMessage( key, arguments, locale );
     }
 
     /**
@@ -131,8 +101,7 @@ public abstract class UserGroupServiceBase implements ubic.gemma.model.common.au
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
      * 
      * @param key the key of the message in the messages.properties message bundle.
      * @param arguments any arguments to substitute when resolving the message.
@@ -142,16 +111,46 @@ public abstract class UserGroupServiceBase implements ubic.gemma.model.common.au
     }
 
     /**
-     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
-     * <code>locale</code>.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     * @param locale the locale of the messages to retrieve.
+     * Gets the message source available to this service.
      */
-    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
-            final java.util.Locale locale ) {
-        return this.getMessages().getMessage( key, arguments, locale );
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
     }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Gets the reference to <code>user</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.auditAndSecurity.UserDao getUserDao() {
+        return this.userDao;
+    }
+
+    /**
+     * Gets the reference to <code>userGroup</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.auditAndSecurity.UserGroupDao getUserGroupDao() {
+        return this.userGroupDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #create(java.lang.String, java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.common.Securable handleCreate( java.lang.String name,
+            java.lang.String description ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(java.lang.String, ubic.gemma.model.common.auditAndSecurity.User)}
+     */
+    protected abstract void handleUpdate( java.lang.String groupName,
+            ubic.gemma.model.common.auditAndSecurity.User groupMember ) throws java.lang.Exception;
 
 }

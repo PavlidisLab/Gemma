@@ -30,14 +30,14 @@ public interface NotedReferenceListService {
     /**
      * 
      */
-    public ubic.gemma.model.common.description.NotedReferenceList createNewList( java.lang.String name,
-            ubic.gemma.model.common.auditAndSecurity.User owner );
+    public void addReferenceToList( ubic.gemma.model.common.description.NotedReferenceList notedReferenceList,
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
      * 
      */
-    public void addReferenceToList( ubic.gemma.model.common.description.NotedReferenceList notedReferenceList,
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+    public ubic.gemma.model.common.description.NotedReferenceList createNewList( java.lang.String name,
+            ubic.gemma.model.common.auditAndSecurity.User owner );
 
     /**
      * 
@@ -48,7 +48,12 @@ public interface NotedReferenceListService {
     /**
      * 
      */
-    public void setListDescription( java.lang.String description,
+    public void removeList( ubic.gemma.model.common.description.NotedReferenceList notedReferenceList );
+
+    /**
+     * 
+     */
+    public void removeReferenceFromList( ubic.gemma.model.common.description.NotedReference notedReference,
             ubic.gemma.model.common.description.NotedReferenceList notedReferenceList );
 
     /**
@@ -61,12 +66,7 @@ public interface NotedReferenceListService {
     /**
      * 
      */
-    public void removeList( ubic.gemma.model.common.description.NotedReferenceList notedReferenceList );
-
-    /**
-     * 
-     */
-    public void removeReferenceFromList( ubic.gemma.model.common.description.NotedReference notedReference,
+    public void setListDescription( java.lang.String description,
             ubic.gemma.model.common.description.NotedReferenceList notedReferenceList );
 
     /**

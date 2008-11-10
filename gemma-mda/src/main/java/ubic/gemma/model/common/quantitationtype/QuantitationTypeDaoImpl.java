@@ -64,19 +64,6 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
         }
     }
 
-    /**
-     * @param results
-     */
-    private void debug( Collection results ) {
-        StringBuilder sb = new StringBuilder();
-        sb.append( "\nMultiple QuantitationTypes found matching query:\n" );
-        for ( Object object : results ) {
-            QuantitationType entity = ( QuantitationType ) object;
-            sb.append( entity + "\n" );
-        }
-        log.error( sb.toString() );
-    }
-
     @Override
     public QuantitationType findOrCreate( QuantitationType quantitationType ) {
         if ( quantitationType == null || quantitationType.getName() == null ) {
@@ -89,6 +76,19 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new quantitationType: " + quantitationType );
         return ( QuantitationType ) create( quantitationType );
+    }
+
+    /**
+     * @param results
+     */
+    private void debug( Collection results ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "\nMultiple QuantitationTypes found matching query:\n" );
+        for ( Object object : results ) {
+            QuantitationType entity = ( QuantitationType ) object;
+            sb.append( entity + "\n" );
+        }
+        log.error( sb.toString() );
     }
 
 }

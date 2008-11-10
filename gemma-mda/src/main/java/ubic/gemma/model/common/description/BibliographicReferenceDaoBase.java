@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.common.description;
 
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -30,57 +32,26 @@ package ubic.gemma.model.common.description;
  * 
  * @see ubic.gemma.model.common.description.BibliographicReference
  */
-public abstract class BibliographicReferenceDaoBase extends ubic.gemma.model.common.AuditableDaoImpl implements
+public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.common.description.BibliographicReferenceDao {
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#load(int, java.lang.Long)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#create(int, java.util.Collection)
      */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "BibliographicReference.load - 'id' can not be null" );
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BibliographicReference.create - 'entities' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.common.description.BibliographicReferenceImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.description.BibliographicReference ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.description.BibliographicReferenceImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#create(ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public ubic.gemma.model.common.Securable create(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.create( TRANSFORM_NONE,
-                bibliographicReference );
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.description.BibliographicReference ) entityIterator
+                            .next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
     }
 
     /**
@@ -106,132 +77,25 @@ public abstract class BibliographicReferenceDaoBase extends ubic.gemma.model.com
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#create(int, java.util.Collection)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#create(ubic.gemma.model.common.description.BibliographicReference)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BibliographicReference.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.description.BibliographicReference ) entityIterator
-                            .next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
+    public BibliographicReference create(
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.create( TRANSFORM_NONE,
+                bibliographicReference );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#update(ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public void update( ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        if ( bibliographicReference == null ) {
-            throw new IllegalArgumentException(
-                    "BibliographicReference.update - 'bibliographicReference' can not be null" );
-        }
-        this.getHibernateTemplate().update( bibliographicReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BibliographicReference.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.description.BibliographicReference ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#remove(ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public void remove( ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        if ( bibliographicReference == null ) {
-            throw new IllegalArgumentException(
-                    "BibliographicReference.remove - 'bibliographicReference' can not be null" );
-        }
-        this.getHibernateTemplate().delete( bibliographicReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "BibliographicReference.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.common.description.BibliographicReference entity = ( ubic.gemma.model.common.description.BibliographicReference ) this
-                .load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BibliographicReference.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId(
-            ubic.gemma.model.common.description.DatabaseEntry externalId ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByExternalId( TRANSFORM_NONE,
-                externalId );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(java.lang.String,
-     *      ubic.gemma.model.common.description.DatabaseEntry)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(int, java.lang.String,
+     *      ubic.gemma.model.common.description.BibliographicReference)
      */
     @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId(
-            final java.lang.String queryString, final ubic.gemma.model.common.description.DatabaseEntry externalId ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByExternalId( TRANSFORM_NONE,
-                queryString, externalId );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(int,
-     *      ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findByExternalId( final int transform,
-            final ubic.gemma.model.common.description.DatabaseEntry externalId ) {
-        return this.findByExternalId( transform, "from BibliographicReferenceImpl b where b.pubAccession=:externalId",
-                externalId );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(int, java.lang.String,
-     *      ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findByExternalId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.description.DatabaseEntry externalId ) {
+    public Object find( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( externalId );
-        argNames.add( "externalId" );
+        args.add( bibliographicReference );
+        argNames.add( "bibliographicReference" );
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
@@ -249,80 +113,37 @@ public abstract class BibliographicReferenceDaoBase extends ubic.gemma.model.com
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByTitle(java.lang.String)
-     */
-    public ubic.gemma.model.common.description.BibliographicReference findByTitle( java.lang.String title ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByTitle( TRANSFORM_NONE, title );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByTitle(java.lang.String,
-     *      java.lang.String)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(int,
+     *      ubic.gemma.model.common.description.BibliographicReference)
      */
     @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.description.BibliographicReference findByTitle( final java.lang.String queryString,
-            final java.lang.String title ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByTitle( TRANSFORM_NONE,
-                queryString, title );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByTitle(int, java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findByTitle( final int transform, final java.lang.String title ) {
+    public Object find( final int transform,
+            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         return this
-                .findByTitle(
+                .find(
                         transform,
-                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.title = :title",
-                        title );
+                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.bibliographicReference = :bibliographicReference",
+                        bibliographicReference );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByTitle(int, java.lang.String,
-     *      java.lang.String)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(java.lang.String,
+     *      ubic.gemma.model.common.description.BibliographicReference)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object findByTitle( final int transform, final java.lang.String queryString, final java.lang.String title ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( title );
-        argNames.add( "title" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.description.BibliographicReference"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.BibliographicReference ) result );
-        return result;
+    public ubic.gemma.model.common.description.BibliographicReference find( final java.lang.String queryString,
+            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.find( TRANSFORM_NONE, queryString,
+                bibliographicReference );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(java.lang.String,
-     *      java.lang.String)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(ubic.gemma.model.common.description.BibliographicReference)
      */
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( java.lang.String id,
-            java.lang.String databaseName ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByExternalId( TRANSFORM_NONE,
-                id, databaseName );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId(
-            final java.lang.String queryString, final java.lang.String id, final java.lang.String databaseName ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByExternalId( TRANSFORM_NONE,
-                queryString, id, databaseName );
+    public ubic.gemma.model.common.description.BibliographicReference find(
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.find( TRANSFORM_NONE,
+                bibliographicReference );
     }
 
     /**
@@ -368,50 +189,16 @@ public abstract class BibliographicReferenceDaoBase extends ubic.gemma.model.com
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public ubic.gemma.model.common.description.BibliographicReference find(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.find( TRANSFORM_NONE,
-                bibliographicReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(java.lang.String,
-     *      ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(int, java.lang.String,
+     *      ubic.gemma.model.common.description.DatabaseEntry)
      */
     @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.description.BibliographicReference find( final java.lang.String queryString,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.find( TRANSFORM_NONE, queryString,
-                bibliographicReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(int,
-     *      ubic.gemma.model.common.description.BibliographicReference)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return this
-                .find(
-                        transform,
-                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.bibliographicReference = :bibliographicReference",
-                        bibliographicReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(int, java.lang.String,
-     *      ubic.gemma.model.common.description.BibliographicReference)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+    public Object findByExternalId( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.description.DatabaseEntry externalId ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( bibliographicReference );
-        argNames.add( "bibliographicReference" );
+        args.add( externalId );
+        argNames.add( "externalId" );
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
@@ -429,37 +216,111 @@ public abstract class BibliographicReferenceDaoBase extends ubic.gemma.model.com
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(int,
+     *      ubic.gemma.model.common.description.DatabaseEntry)
      */
-    public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findOrCreate( TRANSFORM_NONE,
-                bibliographicReference );
+    @SuppressWarnings( { "unchecked" })
+    public Object findByExternalId( final int transform,
+            final ubic.gemma.model.common.description.DatabaseEntry externalId ) {
+        return this.findByExternalId( transform, "from BibliographicReferenceImpl b where b.pubAccession=:externalId",
+                externalId );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(java.lang.String,
+     *      java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.description.BibliographicReference findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findOrCreate( TRANSFORM_NONE,
-                queryString, bibliographicReference );
+    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( java.lang.String id,
+            java.lang.String databaseName ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByExternalId( TRANSFORM_NONE,
+                id, databaseName );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(int,
-     *      ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(java.lang.String,
+     *      java.lang.String, java.lang.String)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+    public ubic.gemma.model.common.description.BibliographicReference findByExternalId(
+            final java.lang.String queryString, final java.lang.String id, final java.lang.String databaseName ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByExternalId( TRANSFORM_NONE,
+                queryString, id, databaseName );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(java.lang.String,
+     *      ubic.gemma.model.common.description.DatabaseEntry)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public ubic.gemma.model.common.description.BibliographicReference findByExternalId(
+            final java.lang.String queryString, final ubic.gemma.model.common.description.DatabaseEntry externalId ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByExternalId( TRANSFORM_NONE,
+                queryString, externalId );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(ubic.gemma.model.common.description.DatabaseEntry)
+     */
+    public ubic.gemma.model.common.description.BibliographicReference findByExternalId(
+            ubic.gemma.model.common.description.DatabaseEntry externalId ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByExternalId( TRANSFORM_NONE,
+                externalId );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByTitle(int, java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object findByTitle( final int transform, final java.lang.String title ) {
         return this
-                .findOrCreate(
+                .findByTitle(
                         transform,
-                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.bibliographicReference = :bibliographicReference",
-                        bibliographicReference );
+                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.title = :title",
+                        title );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByTitle(int, java.lang.String,
+     *      java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Object findByTitle( final int transform, final java.lang.String queryString, final java.lang.String title ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( title );
+        argNames.add( "title" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'ubic.gemma.model.common.description.BibliographicReference"
+                                + "' was found when executing query --> '" + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform, ( ubic.gemma.model.common.description.BibliographicReference ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByTitle(java.lang.String)
+     */
+    public ubic.gemma.model.common.description.BibliographicReference findByTitle( java.lang.String title ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByTitle( TRANSFORM_NONE, title );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByTitle(java.lang.String,
+     *      java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public ubic.gemma.model.common.description.BibliographicReference findByTitle( final java.lang.String queryString,
+            final java.lang.String title ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findByTitle( TRANSFORM_NONE,
+                queryString, title );
     }
 
     /**
@@ -490,241 +351,50 @@ public abstract class BibliographicReferenceDaoBase extends ubic.gemma.model.com
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getRecipient(java.lang.Long)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(int,
+     *      ubic.gemma.model.common.description.BibliographicReference)
      */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
     @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
+    public Object findOrCreate( final int transform,
+            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         return this
-                .getRecipient(
+                .findOrCreate(
                         transform,
-                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.id = :id",
-                        id );
+                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.bibliographicReference = :bibliographicReference",
+                        bibliographicReference );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getRecipient(int, java.lang.String,
-     *      java.lang.Long)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(java.lang.String,
+     *      ubic.gemma.model.common.description.BibliographicReference)
      */
-    @Override
     @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public ubic.gemma.model.common.description.BibliographicReference findOrCreate( final java.lang.String queryString,
+            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findOrCreate( TRANSFORM_NONE,
+                queryString, bibliographicReference );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(ubic.gemma.model.common.description.BibliographicReference)
+     */
+    public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.findOrCreate( TRANSFORM_NONE,
+                bibliographicReference );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getAllExperimentLinkedReferences()
+     */
+    public java.util.Collection getAllExperimentLinkedReferences() {
+        try {
+            return this.handleGetAllExperimentLinkedReferences();
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceDao.getAllExperimentLinkedReferences()' --> "
+                            + th, th );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.BibliographicReference ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.BibliographicReference ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getMask(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.BibliographicReference ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getMasks(java.lang.String,
-     *      java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getMasks(int, java.lang.String,
-     *      java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.BibliographicReference ) result );
-        return result;
     }
 
     /**
@@ -742,35 +412,50 @@ public abstract class BibliographicReferenceDaoBase extends ubic.gemma.model.com
     }
 
     /**
-     * Performs the core logic for
-     * {@link #getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)}
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#load(int, java.lang.Long)
      */
-    protected abstract java.util.Collection handleGetRelatedExperiments(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
-            throws java.lang.Exception;
 
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getAllExperimentLinkedReferences()
-     */
-    public java.util.Collection getAllExperimentLinkedReferences() {
-        try {
-            return this.handleGetAllExperimentLinkedReferences();
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceDao.getAllExperimentLinkedReferences()' --> "
-                            + th, th );
+    public Object load( final int transform, final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "BibliographicReference.load - 'id' can not be null" );
         }
+        final Object entity = this.getHibernateTemplate().get(
+                ubic.gemma.model.common.description.BibliographicReferenceImpl.class, id );
+        return transformEntity( transform, ( ubic.gemma.model.common.description.BibliographicReference ) entity );
     }
 
     /**
-     * Performs the core logic for {@link #getAllExperimentLinkedReferences()}
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#load(java.lang.Long)
      */
-    protected abstract java.util.Collection handleGetAllExperimentLinkedReferences() throws java.lang.Exception;
+
+    public BibliographicReference load( java.lang.Long id ) {
+        return ( ubic.gemma.model.common.description.BibliographicReference ) this.load( TRANSFORM_NONE, id );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadAll()
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection loadAll() {
+        return this.loadAll( TRANSFORM_NONE );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadAll(int)
+     */
+
+    public java.util.Collection loadAll( final int transform ) {
+        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.common.description.BibliographicReferenceImpl.class );
+        this.transformEntities( transform, results );
+        return results;
+    }
 
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadMultiple(java.util.Collection)
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+    public java.util.Collection load( final java.util.Collection ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -781,9 +466,110 @@ public abstract class BibliographicReferenceDaoBase extends ubic.gemma.model.com
     }
 
     /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#remove(java.lang.Long)
+     */
+
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "BibliographicReference.remove - 'id' can not be null" );
+        }
+        ubic.gemma.model.common.description.BibliographicReference entity = ( ubic.gemma.model.common.description.BibliographicReference ) this
+                .load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     */
+
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BibliographicReference.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#remove(ubic.gemma.model.common.description.BibliographicReference)
+     */
+    public void remove( ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+        if ( bibliographicReference == null ) {
+            throw new IllegalArgumentException(
+                    "BibliographicReference.remove - 'bibliographicReference' can not be null" );
+        }
+        this.getHibernateTemplate().delete( bibliographicReference );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
+     */
+
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BibliographicReference.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.description.BibliographicReference ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#update(ubic.gemma.model.common.description.BibliographicReference)
+     */
+    public void update( ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+        if ( bibliographicReference == null ) {
+            throw new IllegalArgumentException(
+                    "BibliographicReference.update - 'bibliographicReference' can not be null" );
+        }
+        this.getHibernateTemplate().update( bibliographicReference );
+    }
+
+    /**
+     * Performs the core logic for {@link #getAllExperimentLinkedReferences()}
+     */
+    protected abstract java.util.Collection handleGetAllExperimentLinkedReferences() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)}
+     */
+    protected abstract java.util.Collection handleGetRelatedExperiments(
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
+            throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
     protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.description.BibliographicReference)} method. This method does
+     * not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.common.description.BibliographicReferenceDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.description.BibliographicReference)
+     */
+
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
 
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
@@ -809,26 +595,6 @@ public abstract class BibliographicReferenceDaoBase extends ubic.gemma.model.com
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.description.BibliographicReference)} method. This method does
-     * not instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.description.BibliographicReferenceDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.description.BibliographicReference)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

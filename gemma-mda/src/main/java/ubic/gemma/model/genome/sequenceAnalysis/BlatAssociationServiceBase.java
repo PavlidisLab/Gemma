@@ -24,8 +24,8 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService</code>,
- * provides access to all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService</code>, provides
+ * access to all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService
@@ -34,20 +34,6 @@ public abstract class BlatAssociationServiceBase implements
         ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService {
 
     private ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao blatAssociationDao;
-
-    /**
-     * Sets the reference to <code>blatAssociation</code>'s DAO.
-     */
-    public void setBlatAssociationDao( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao blatAssociationDao ) {
-        this.blatAssociationDao = blatAssociationDao;
-    }
-
-    /**
-     * Gets the reference to <code>blatAssociation</code>'s DAO.
-     */
-    protected ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao getBlatAssociationDao() {
-        return this.blatAssociationDao;
-    }
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#create(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
@@ -64,12 +50,6 @@ public abstract class BlatAssociationServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
-     */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     public java.util.Collection find( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
@@ -81,12 +61,6 @@ public abstract class BlatAssociationServiceBase implements
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract java.util.Collection handleFind( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#find(ubic.gemma.model.genome.Gene)
@@ -102,28 +76,11 @@ public abstract class BlatAssociationServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.Gene)}
+     * Sets the reference to <code>blatAssociation</code>'s DAO.
      */
-    protected abstract java.util.Collection handleFind( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
-     */
-    public void thaw( final ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
-        try {
-            this.handleThaw( blatAssociation );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation)' --> "
-                            + th, th );
-        }
+    public void setBlatAssociationDao( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao blatAssociationDao ) {
+        this.blatAssociationDao = blatAssociationDao;
     }
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#thaw(java.util.Collection)
@@ -139,9 +96,17 @@ public abstract class BlatAssociationServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #thaw(java.util.Collection)}
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
      */
-    protected abstract void handleThaw( java.util.Collection blatAssociations ) throws java.lang.Exception;
+    public void thaw( final ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
+        try {
+            this.handleThaw( blatAssociation );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceException(
+                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#update(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
@@ -157,46 +122,10 @@ public abstract class BlatAssociationServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
+     * Gets the reference to <code>blatAssociation</code>'s DAO.
      */
-    protected abstract void handleUpdate( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao getBlatAssociationDao() {
+        return this.blatAssociationDao;
     }
 
     /**
@@ -211,5 +140,75 @@ public abstract class BlatAssociationServiceBase implements
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
+     */
+    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation handleCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)}
+     */
+    protected abstract java.util.Collection handleFind( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.genome.Gene)}
+     */
+    protected abstract java.util.Collection handleFind( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(java.util.Collection)}
+     */
+    protected abstract void handleThaw( java.util.Collection blatAssociations ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
+     */
+    protected abstract void handleThaw( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation )
+            throws java.lang.Exception;
 
 }

@@ -36,20 +36,6 @@ public abstract class ExternalDatabaseServiceBase extends ubic.gemma.model.commo
     private ubic.gemma.model.common.description.ExternalDatabaseDao externalDatabaseDao;
 
     /**
-     * Sets the reference to <code>externalDatabase</code>'s DAO.
-     */
-    public void setExternalDatabaseDao( ubic.gemma.model.common.description.ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
-    }
-
-    /**
-     * Gets the reference to <code>externalDatabase</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.description.ExternalDatabaseDao getExternalDatabaseDao() {
-        return this.externalDatabaseDao;
-    }
-
-    /**
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#find(java.lang.String)
      */
     public ubic.gemma.model.common.description.ExternalDatabase find( final java.lang.String name ) {
@@ -61,12 +47,6 @@ public abstract class ExternalDatabaseServiceBase extends ubic.gemma.model.commo
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #find(java.lang.String)}
-     */
-    protected abstract ubic.gemma.model.common.description.ExternalDatabase handleFind( java.lang.String name )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#findOrCreate(ubic.gemma.model.common.description.ExternalDatabase)
@@ -83,10 +63,17 @@ public abstract class ExternalDatabaseServiceBase extends ubic.gemma.model.commo
     }
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.description.ExternalDatabase)}
+     * @see ubic.gemma.model.common.description.ExternalDatabaseService#loadAll()
      */
-    protected abstract ubic.gemma.model.common.description.ExternalDatabase handleFindOrCreate(
-            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) throws java.lang.Exception;
+    public java.util.Collection loadAll() {
+        try {
+            return this.handleLoadAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.description.ExternalDatabaseServiceException(
+                    "Error performing 'ubic.gemma.model.common.description.ExternalDatabaseService.loadAll()' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#remove(ubic.gemma.model.common.description.ExternalDatabase)
@@ -102,27 +89,40 @@ public abstract class ExternalDatabaseServiceBase extends ubic.gemma.model.commo
     }
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.ExternalDatabase)}
+     * Sets the reference to <code>externalDatabase</code>'s DAO.
      */
-    protected abstract void handleRemove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase )
+    public void setExternalDatabaseDao( ubic.gemma.model.common.description.ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
+    }
+
+    /**
+     * Gets the reference to <code>externalDatabase</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.description.ExternalDatabaseDao getExternalDatabaseDao() {
+        return this.externalDatabaseDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #find(java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.common.description.ExternalDatabase handleFind( java.lang.String name )
             throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseService#loadAll()
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.description.ExternalDatabase)}
      */
-    public java.util.Collection loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.ExternalDatabaseServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.ExternalDatabaseService.loadAll()' --> "
-                            + th, th );
-        }
-    }
+    protected abstract ubic.gemma.model.common.description.ExternalDatabase handleFindOrCreate(
+            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadAll()}
      */
     protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.ExternalDatabase)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase )
+            throws java.lang.Exception;
 
 }

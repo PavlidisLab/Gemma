@@ -44,7 +44,7 @@ public interface TaxonDao {
      * objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
+    public java.util.Collection<Taxon> create( int transform, java.util.Collection<Taxon> entities );
 
     /**
      * <p>
@@ -55,7 +55,7 @@ public interface TaxonDao {
      * object for example). By default, transformation does not occur.
      * </p>
      */
-    public Object create( int transform, ubic.gemma.model.genome.Taxon taxon );
+    public Taxon create( int transform, ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * Creates a new instance of ubic.gemma.model.genome.Taxon and adds from the passed in <code>entities</code>
@@ -64,7 +64,7 @@ public interface TaxonDao {
      * @param entities the collection of ubic.gemma.model.genome.Taxon instances to create.
      * @return the created instances.
      */
-    public java.util.Collection create( java.util.Collection entities );
+    public java.util.Collection<Taxon> create( java.util.Collection<Taxon> entities );
 
     /**
      * Creates an instance of ubic.gemma.model.genome.Taxon and adds it to the persistent store.
@@ -89,7 +89,7 @@ public interface TaxonDao {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object find( int transform, ubic.gemma.model.genome.Taxon taxon );
+    public Taxon find( int transform, ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -114,7 +114,7 @@ public interface TaxonDao {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findByCommonName( int transform, java.lang.String commonName );
+    public Taxon findByCommonName( int transform, java.lang.String commonName );
 
     /**
      * <p>
@@ -123,7 +123,7 @@ public interface TaxonDao {
      * in {@link #findByCommonName(int, java.lang.String commonName)}.
      * </p>
      */
-    public Object findByCommonName( int transform, String queryString, java.lang.String commonName );
+    public Taxon findByCommonName( int transform, String queryString, java.lang.String commonName );
 
     /**
      * 
@@ -148,7 +148,7 @@ public interface TaxonDao {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findByScientificName( int transform, java.lang.String scientificName );
+    public Taxon findByScientificName( int transform, java.lang.String scientificName );
 
     /**
      * <p>
@@ -157,7 +157,7 @@ public interface TaxonDao {
      * defined in {@link #findByScientificName(int, java.lang.String scientificName)}.
      * </p>
      */
-    public Object findByScientificName( int transform, String queryString, java.lang.String scientificName );
+    public Taxon findByScientificName( int transform, String queryString, java.lang.String scientificName );
 
     /**
      * 
@@ -180,7 +180,7 @@ public interface TaxonDao {
      * defined in {@link #findOrCreate(int, ubic.gemma.model.genome.Taxon taxon)}.
      * </p>
      */
-    public Object findOrCreate( int transform, String queryString, ubic.gemma.model.genome.Taxon taxon );
+    public Taxon findOrCreate( int transform, String queryString, ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -191,7 +191,7 @@ public interface TaxonDao {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findOrCreate( int transform, ubic.gemma.model.genome.Taxon taxon );
+    public Taxon findOrCreate( int transform, ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -219,7 +219,7 @@ public interface TaxonDao {
      * @param id the identifier of the entity to load.
      * @return either the entity or the object transformed from the entity.
      */
-    public Object load( int transform, java.lang.Long id );
+    public Taxon load( int transform, java.lang.Long id );
 
     /**
      * Loads an instance of ubic.gemma.model.genome.Taxon from the persistent store.
@@ -231,7 +231,7 @@ public interface TaxonDao {
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<Taxon> loadAll();
 
     /**
      * <p>
@@ -245,7 +245,7 @@ public interface TaxonDao {
      * @param transform the flag indicating what transformation to use.
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<Taxon> loadAll( final int transform );
 
     /**
      * Removes the instance of ubic.gemma.model.genome.Taxon having the given <code>identifier</code> from the
@@ -256,7 +256,7 @@ public interface TaxonDao {
     /**
      * Removes all entities in the given <code>entities<code> collection.
      */
-    public void remove( java.util.Collection entities );
+    public void remove( java.util.Collection<Taxon> entities );
 
     /**
      * Removes the instance of ubic.gemma.model.genome.Taxon from the persistent store.
@@ -266,7 +266,7 @@ public interface TaxonDao {
     /**
      * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public void update( java.util.Collection entities );
+    public void update( java.util.Collection<Taxon> entities );
 
     /**
      * Updates the <code>taxon</code> instance in the persistent store.

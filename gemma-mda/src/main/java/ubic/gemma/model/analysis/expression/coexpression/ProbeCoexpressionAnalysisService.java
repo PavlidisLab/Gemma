@@ -25,7 +25,8 @@ package ubic.gemma.model.analysis.expression.coexpression;
 /**
  * 
  */
-public interface ProbeCoexpressionAnalysisService extends ubic.gemma.model.analysis.AnalysisService {
+public interface ProbeCoexpressionAnalysisService extends
+        ubic.gemma.model.analysis.AnalysisService<ProbeCoexpressionAnalysis> {
 
     /**
      * 

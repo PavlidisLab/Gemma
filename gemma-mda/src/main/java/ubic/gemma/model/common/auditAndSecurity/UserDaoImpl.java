@@ -36,7 +36,6 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserDaoBase#find(ubic.gemma.model.common.auditAndSecurity.user)
      */
     @Override

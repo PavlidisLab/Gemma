@@ -37,8 +37,8 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see
+     * ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -66,8 +66,9 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
+     * @see
+     * ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis
+     * .BlatResult)
      */
     @Override
     public ubic.gemma.model.genome.sequenceAnalysis.BlatResult findOrCreate(
@@ -85,7 +86,6 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#handleLoad(java.util.Collection)
      */
     @Override

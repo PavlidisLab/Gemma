@@ -22,271 +22,20 @@
 //
 package ubic.gemma.model.common.auditAndSecurity;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.Person
  */
-public interface PersonDao extends ubic.gemma.model.common.auditAndSecurity.ContactDao {
-    /**
-     * Loads an instance of ubic.gemma.model.common.auditAndSecurity.Person from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
+public interface PersonDao extends BaseDao<Person> {
     /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.common.auditAndSecurity.Person}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Creates an instance of ubic.gemma.model.common.auditAndSecurity.Person and adds it to the persistent store.
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the
-     * result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a
-     * value object for example). By default, transformation does not occur.
+     * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.auditAndSecurity.Person)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #find(int, ubic.gemma.model.common.auditAndSecurity.Person person)}.
      * </p>
      */
-    public Object create( int transform, ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.common.auditAndSecurity.Person and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.common.auditAndSecurity.Person instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the
-     * result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into
-     * value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * Updates the <code>person</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.auditAndSecurity.Person from the persistent store.
-     */
-    public void remove( ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.auditAndSecurity.Person having the given <code>identifier</code>
-     * from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * 
-     */
-    public java.util.Collection findByFullName( java.lang.String name, java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFullName(java.lang.String, java.lang.String)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findByFullName(java.lang.String, java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection findByFullName( String queryString, java.lang.String name, java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFullName(java.lang.String, java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection findByFullName( int transform, java.lang.String name, java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFullName(boolean, java.lang.String, java.lang.String)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #findByFullName(int, java.lang.String name, java.lang.String secondName)}.
-     * </p>
-     */
-    public java.util.Collection findByFullName( int transform, String queryString, java.lang.String name,
-            java.lang.String secondName );
-
-    /**
-     * 
-     */
-    public java.util.Collection findByFirstAndLastName( java.lang.String name, java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFirstAndLastName(java.lang.String, java.lang.String)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #findByFirstAndLastName(java.lang.String, java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection findByFirstAndLastName( String queryString, java.lang.String name,
-            java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFirstAndLastName(java.lang.String, java.lang.String)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results
-     * will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined
-     * here then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection findByFirstAndLastName( int transform, java.lang.String name,
-            java.lang.String secondName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByFirstAndLastName(boolean, java.lang.String, java.lang.String)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findByFirstAndLastName(int, java.lang.String name, java.lang.String secondName)}.
-     * </p>
-     */
-    public java.util.Collection findByFirstAndLastName( int transform, String queryString, java.lang.String name,
-            java.lang.String secondName );
-
-    /**
-     * 
-     */
-    public java.util.Collection findByLastName( java.lang.String lastName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByLastName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByLastName(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection findByLastName( String queryString, java.lang.String lastName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByLastName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection findByLastName( int transform, java.lang.String lastName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByLastName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByLastName(int, java.lang.String lastName)}.
-     * </p>
-     */
-    public java.util.Collection findByLastName( int transform, String queryString, java.lang.String lastName );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate( String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results
-     * will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined
-     * here then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform, ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.common.auditAndSecurity.Person)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findOrCreate(int, ubic.gemma.model.common.auditAndSecurity.Person person)}.
-     * </p>
-     */
-    public Object findOrCreate( int transform, String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Person find( ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #find(ubic.gemma.model.common.auditAndSecurity.Person)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Person find( String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Person person );
+    public Object find( int transform, String queryString, ubic.gemma.model.common.auditAndSecurity.Person person );
 
     /**
      * <p>
@@ -301,11 +50,164 @@ public interface PersonDao extends ubic.gemma.model.common.auditAndSecurity.Cont
 
     /**
      * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.auditAndSecurity.Person)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #find(int, ubic.gemma.model.common.auditAndSecurity.Person person)}.
+     * Does the same thing as {@link #find(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional argument
+     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
+     * defined in {@link #find(ubic.gemma.model.common.auditAndSecurity.Person)}.
      * </p>
      */
-    public Object find( int transform, String queryString, ubic.gemma.model.common.auditAndSecurity.Person person );
+    public ubic.gemma.model.common.auditAndSecurity.Person find( String queryString,
+            ubic.gemma.model.common.auditAndSecurity.Person person );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.common.auditAndSecurity.Person find( ubic.gemma.model.common.auditAndSecurity.Person person );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByFirstAndLastName(java.lang.String, java.lang.String)} with an additional
+     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public java.util.Collection<Person> findByFirstAndLastName( int transform, java.lang.String name,
+            java.lang.String secondName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByFirstAndLastName(boolean, java.lang.String, java.lang.String)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findByFirstAndLastName(int, java.lang.String name, java.lang.String
+     * secondName)}.
+     * </p>
+     */
+    public java.util.Collection<Person> findByFirstAndLastName( int transform, String queryString,
+            java.lang.String name, java.lang.String secondName );
+
+    /**
+     * 
+     */
+    public java.util.Collection<Person> findByFirstAndLastName( java.lang.String name, java.lang.String secondName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByFirstAndLastName(java.lang.String, java.lang.String)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #findByFirstAndLastName(java.lang.String, java.lang.String)}.
+     * </p>
+     */
+    public java.util.Collection<Person> findByFirstAndLastName( String queryString, java.lang.String name,
+            java.lang.String secondName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByFullName(java.lang.String, java.lang.String)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public java.util.Collection<Person> findByFullName( int transform, java.lang.String name,
+            java.lang.String secondName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByFullName(boolean, java.lang.String, java.lang.String)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #findByFullName(int, java.lang.String name, java.lang.String secondName)}.
+     * </p>
+     */
+    public java.util.Collection<Person> findByFullName( int transform, String queryString, java.lang.String name,
+            java.lang.String secondName );
+
+    /**
+     * 
+     */
+    public java.util.Collection<Person> findByFullName( java.lang.String name, java.lang.String secondName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByFullName(java.lang.String, java.lang.String)} with an additional argument
+     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
+     * defined in {@link #findByFullName(java.lang.String, java.lang.String)}.
+     * </p>
+     */
+    public java.util.Collection<Person> findByFullName( String queryString, java.lang.String name,
+            java.lang.String secondName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByLastName(java.lang.String)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public java.util.Collection<Person> findByLastName( int transform, java.lang.String lastName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByLastName(boolean, java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByLastName(int, java.lang.String lastName)}.
+     * </p>
+     */
+    public java.util.Collection<Person> findByLastName( int transform, String queryString, java.lang.String lastName );
+
+    /**
+     * 
+     */
+    public java.util.Collection<Person> findByLastName( java.lang.String lastName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByLastName(java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByLastName(java.lang.String)}.
+     * </p>
+     */
+    public java.util.Collection<Person> findByLastName( String queryString, java.lang.String lastName );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.common.auditAndSecurity.Person)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findOrCreate(int, ubic.gemma.model.common.auditAndSecurity.Person
+     * person)}.
+     * </p>
+     */
+    public Object findOrCreate( int transform, String queryString,
+            ubic.gemma.model.common.auditAndSecurity.Person person );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional
+     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object findOrCreate( int transform, ubic.gemma.model.common.auditAndSecurity.Person person );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)}.
+     * </p>
+     */
+    public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate( String queryString,
+            ubic.gemma.model.common.auditAndSecurity.Person person );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate(
+            ubic.gemma.model.common.auditAndSecurity.Person person );
 
 }

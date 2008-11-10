@@ -22,165 +22,21 @@
 //
 package ubic.gemma.model.common.auditAndSecurity;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.Contact
  */
-public interface ContactDao extends ubic.gemma.model.common.AuditableDao {
-    /**
-     * Loads an instance of ubic.gemma.model.common.auditAndSecurity.Contact from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
+public interface ContactDao extends BaseDao<Contact> {
     /**
      * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entity (into a value object for example). By
-     * default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.common.auditAndSecurity.Contact}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag
-     * is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If
-     * this flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Creates an instance of ubic.gemma.model.common.auditAndSecurity.Contact and adds it to the persistent store.
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.auditAndSecurity.Contact)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the
-     * result <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a
-     * value object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform, ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.common.auditAndSecurity.Contact and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.common.auditAndSecurity.Contact instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.auditAndSecurity.Contact)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the
-     * result <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into
-     * value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * Updates the <code>contact</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.auditAndSecurity.Contact from the persistent store.
-     */
-    public void remove( ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.auditAndSecurity.Contact having the given <code>identifier</code>
-     * from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate( String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results
-     * will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined
-     * here then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform, ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.common.auditAndSecurity.Contact)} with an
+     * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.auditAndSecurity.Contact)} with an
      * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findOrCreate(int, ubic.gemma.model.common.auditAndSecurity.Contact contact)}.
+     * override the query string defined in {@link #find(int, ubic.gemma.model.common.auditAndSecurity.Contact contact)}
+     * .
      * </p>
      */
-    public Object findOrCreate( int transform, String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Contact find(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.common.auditAndSecurity.Contact)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the
-     * query string defined in {@link #find(ubic.gemma.model.common.auditAndSecurity.Contact)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Contact find( String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Contact contact );
+    public Object find( int transform, String queryString, ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**
      * <p>
@@ -195,26 +51,19 @@ public interface ContactDao extends ubic.gemma.model.common.AuditableDao {
 
     /**
      * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.auditAndSecurity.Contact)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #find(int, ubic.gemma.model.common.auditAndSecurity.Contact contact)}.
+     * Does the same thing as {@link #find(ubic.gemma.model.common.auditAndSecurity.Contact)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #find(ubic.gemma.model.common.auditAndSecurity.Contact)}.
      * </p>
      */
-    public Object find( int transform, String queryString, ubic.gemma.model.common.auditAndSecurity.Contact contact );
+    public ubic.gemma.model.common.auditAndSecurity.Contact find( String queryString,
+            ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.Contact findByEmail( java.lang.String email );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByEmail(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByEmail(java.lang.String)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Contact findByEmail( String queryString, java.lang.String email );
+    public ubic.gemma.model.common.auditAndSecurity.Contact find(
+            ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**
      * <p>
@@ -230,10 +79,62 @@ public interface ContactDao extends ubic.gemma.model.common.AuditableDao {
     /**
      * <p>
      * Does the same thing as {@link #findByEmail(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findByEmail(int, java.lang.String email)}.
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByEmail(int, java.lang.String email)}.
      * </p>
      */
     public Object findByEmail( int transform, String queryString, java.lang.String email );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.common.auditAndSecurity.Contact findByEmail( java.lang.String email );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByEmail(java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByEmail(java.lang.String)}.
+     * </p>
+     */
+    public ubic.gemma.model.common.auditAndSecurity.Contact findByEmail( String queryString, java.lang.String email );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.common.auditAndSecurity.Contact)} with an
+     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
+     * override the query string defined in {@link #findOrCreate(int, ubic.gemma.model.common.auditAndSecurity.Contact
+     * contact)}.
+     * </p>
+     */
+    public Object findOrCreate( int transform, String queryString,
+            ubic.gemma.model.common.auditAndSecurity.Contact contact );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)} with an additional
+     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Object findOrCreate( int transform, ubic.gemma.model.common.auditAndSecurity.Contact contact );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)} with an additional
+     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
+     * string defined in {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)}.
+     * </p>
+     */
+    public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate( String queryString,
+            ubic.gemma.model.common.auditAndSecurity.Contact contact );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
+            ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
 }

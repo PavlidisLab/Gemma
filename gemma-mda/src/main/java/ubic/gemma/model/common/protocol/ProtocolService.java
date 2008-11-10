@@ -40,11 +40,11 @@ public interface ProtocolService {
     /**
      * 
      */
-    public void update( ubic.gemma.model.common.protocol.Protocol protocol );
+    public void remove( ubic.gemma.model.common.protocol.Protocol protocol );
 
     /**
      * 
      */
-    public void remove( ubic.gemma.model.common.protocol.Protocol protocol );
+    public void update( ubic.gemma.model.common.protocol.Protocol protocol );
 
 }

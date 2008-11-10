@@ -25,7 +25,8 @@ package ubic.gemma.model.analysis.expression.coexpression;
 /**
  * 
  */
-public interface GeneCoexpressionAnalysisService extends ubic.gemma.model.analysis.AnalysisService {
+public interface GeneCoexpressionAnalysisService extends
+        ubic.gemma.model.analysis.AnalysisService<GeneCoexpressionAnalysis> {
 
     /**
      * 

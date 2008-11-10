@@ -31,8 +31,9 @@ package ubic.gemma.model.analysis.expression.coexpression;
  * 
  * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService
  */
-public abstract class GeneCoexpressionAnalysisServiceBase extends ubic.gemma.model.analysis.AnalysisServiceImpl
-        implements ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService {
+public abstract class GeneCoexpressionAnalysisServiceBase extends
+        ubic.gemma.model.analysis.AnalysisServiceImpl<GeneCoexpressionAnalysis> implements
+        ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService {
 
     private ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
 

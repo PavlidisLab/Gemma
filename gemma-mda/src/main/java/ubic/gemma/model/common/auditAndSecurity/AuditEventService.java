@@ -29,17 +29,17 @@ public interface AuditEventService {
 
     /**
      * <p>
-     * Returns a collection of Auditable objects that were updated since the date entered.
-     * </p>
-     */
-    public java.util.Collection getUpdatedSinceDate( java.util.Date date );
-
-    /**
-     * <p>
      * Returns a collection of Auditables created since the date given.
      * </p>
      */
     public java.util.Collection getNewSinceDate( java.util.Date date );
+
+    /**
+     * <p>
+     * Returns a collection of Auditable objects that were updated since the date entered.
+     * </p>
+     */
+    public java.util.Collection getUpdatedSinceDate( java.util.Date date );
 
     /**
      * 

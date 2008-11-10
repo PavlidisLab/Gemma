@@ -22,10 +22,12 @@
 //
 package ubic.gemma.model.expression.biomaterial;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement
  */
-public interface BioMaterialMeasurementDao extends ubic.gemma.model.common.DescribableDao {
+public interface BioMaterialMeasurementDao extends BaseDao<BioMaterialMeasurement> {
     /**
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement)} with an
@@ -63,7 +65,7 @@ public interface BioMaterialMeasurementDao extends ubic.gemma.model.common.Descr
      * Creates an instance of ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement and adds it to the
      * persistent store.
      */
-    public ubic.gemma.model.common.Securable create(
+    public BioMaterialMeasurement create(
             ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement bioMaterialMeasurement );
 
     /**
@@ -83,7 +85,7 @@ public interface BioMaterialMeasurementDao extends ubic.gemma.model.common.Descr
     /**
      * Loads an instance of ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement from the persistent store.
      */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+    public BioMaterialMeasurement load( java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement}.

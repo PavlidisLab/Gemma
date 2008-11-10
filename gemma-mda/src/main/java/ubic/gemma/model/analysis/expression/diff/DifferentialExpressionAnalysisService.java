@@ -28,7 +28,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * 
  */
-public interface DifferentialExpressionAnalysisService extends ubic.gemma.model.analysis.AnalysisService {
+public interface DifferentialExpressionAnalysisService extends
+        ubic.gemma.model.analysis.AnalysisService<DifferentialExpressionAnalysis> {
 
     /**
      * 

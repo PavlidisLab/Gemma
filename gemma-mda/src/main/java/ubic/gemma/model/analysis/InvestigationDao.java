@@ -22,10 +22,12 @@
 //
 package ubic.gemma.model.analysis;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.analysis.Investigation
  */
-public interface InvestigationDao extends ubic.gemma.model.common.AuditableDao {
+public interface InvestigationDao<T extends Investigation> extends BaseDao<T> {
     /**
      * <p>
      * Does the same thing as {@link #findByInvestigator(boolean, ubic.gemma.model.common.auditAndSecurity.Contact)}
@@ -34,7 +36,7 @@ public interface InvestigationDao extends ubic.gemma.model.common.AuditableDao {
      * ubic.gemma.model.common.auditAndSecurity.Contact investigator)}.
      * </p>
      */
-    public java.util.Collection findByInvestigator( int transform, String queryString,
+    public java.util.Collection<T> findByInvestigator( int transform, String queryString,
             ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 
     /**
@@ -46,7 +48,7 @@ public interface InvestigationDao extends ubic.gemma.model.common.AuditableDao {
      * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection findByInvestigator( int transform,
+    public java.util.Collection<T> findByInvestigator( int transform,
             ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 
     /**
@@ -57,78 +59,12 @@ public interface InvestigationDao extends ubic.gemma.model.common.AuditableDao {
      * {@link #findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)}.
      * </p>
      */
-    public java.util.Collection findByInvestigator( String queryString,
+    public java.util.Collection<T> findByInvestigator( String queryString,
             ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 
     /**
      * 
      */
-    public java.util.Collection findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads an instance of ubic.gemma.model.analysis.Investigation from the persistent store.
-     */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.analysis.Investigation}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Removes the instance of ubic.gemma.model.analysis.Investigation having the given <code>identifier</code> from the
-     * persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.analysis.Investigation from the persistent store.
-     */
-    public void remove( ubic.gemma.model.analysis.Investigation investigation );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection entities );
-
-    /**
-     * Updates the <code>investigation</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.analysis.Investigation investigation );
+    public java.util.Collection<T> findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 
 }

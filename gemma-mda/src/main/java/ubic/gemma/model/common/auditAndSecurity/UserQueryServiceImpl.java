@@ -32,18 +32,6 @@ public class UserQueryServiceImpl implements UserQueryService {
 
     UserQueryDao userQueryDao;
 
-    public void setUserQueryDao( UserQueryDao userQueryDao ) {
-        this.userQueryDao = userQueryDao;
-    }
-
-    public void removeAllForUser( User user ) {
-        userQueryDao.removeAllForUser( user );
-    }
-
-    public void removeOldForUser( User user, Date staleDate ) {
-        userQueryDao.removeOldForUser( user, staleDate );
-    }
-
     public UserQuery create( UserQuery userQuery ) {
         return userQueryDao.create( userQuery );
     }
@@ -66,6 +54,18 @@ public class UserQueryServiceImpl implements UserQueryService {
 
     public void remove( UserQuery userQuery ) {
         userQueryDao.remove( userQuery );
+    }
+
+    public void removeAllForUser( User user ) {
+        userQueryDao.removeAllForUser( user );
+    }
+
+    public void removeOldForUser( User user, Date staleDate ) {
+        userQueryDao.removeOldForUser( user, staleDate );
+    }
+
+    public void setUserQueryDao( UserQueryDao userQueryDao ) {
+        this.userQueryDao = userQueryDao;
     }
 
 }

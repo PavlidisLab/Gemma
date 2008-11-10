@@ -22,8 +22,16 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 /**
  * @see ubic.gemma.model.genome.PhysicalMarker
  */
 public class PhysicalMarkerDaoImpl extends ubic.gemma.model.genome.PhysicalMarkerDaoBase {
+
+    @Override
+    protected Collection<PhysicalMarker> handleLoad( Collection<Long> ids ) {
+        throw new UnsupportedOperationException( "Not implemented yet" );
+    }
+
 }

@@ -34,20 +34,34 @@ import ubic.gemma.util.UserConstants;
  */
 public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.UserServiceBase {
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#getUsers(ubic.gemma.model.common.auditAndSecurity.User)
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.auditAndSecurity.UserService#handleLoadAllRoles()
      */
     @Override
-    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
-        return this.getUserDao().loadAll();
+    public Collection handleLoadAllRoles() {
+        return this.getUserRoleDao().loadAll();
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#FindById(long)
-     */
+    @SuppressWarnings("unchecked")
     @Override
-    protected User handleLoad( Long id ) throws java.lang.Exception {
-        return ( User ) this.getUserDao().load( id );
+    protected void handleAddRole( User user, String role ) throws Exception {
+        if ( role == null ) throw new IllegalArgumentException( "Got passed null role!" );
+        if ( user == null ) throw new IllegalArgumentException( "Got passed null user" );
+
+        if ( !role.equals( UserConstants.ADMIN_ROLE ) && !role.equals( UserConstants.USER_ROLE ) ) {
+            throw new IllegalArgumentException( role + " is not a recognized role" );
+        }
+
+        UserRole newRole = UserRole.Factory.newInstance();
+        newRole.setName( role );
+        newRole.setUserName( user.getUserName() );
+        newRole = ( UserRole ) this.getUserRoleDao().create( newRole ); // should cascade anyway.
+        if ( user.getRoles() == null ) user.setRoles( new HashSet() );
+        Collection<UserRole> roles = user.getRoles();
+        roles.add( newRole );
+        user.setRoles( roles );
+        this.getUserDao().update( user );
     }
 
     /**
@@ -93,40 +107,8 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         this.getUserDao().remove( this.getUserDao().findByUserName( userName ) );
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    protected void handleAddRole( User user, String role ) throws Exception {
-        if ( role == null ) throw new IllegalArgumentException( "Got passed null role!" );
-        if ( user == null ) throw new IllegalArgumentException( "Got passed null user" );
-
-        if ( !role.equals( UserConstants.ADMIN_ROLE ) && !role.equals( UserConstants.USER_ROLE ) ) {
-            throw new IllegalArgumentException( role + " is not a recognized role" );
-        }
-
-        UserRole newRole = UserRole.Factory.newInstance();
-        newRole.setName( role );
-        newRole.setUserName( user.getUserName() );
-        newRole = ( UserRole ) this.getUserRoleDao().create( newRole ); // should cascade anyway.
-        if ( user.getRoles() == null ) user.setRoles( new HashSet() );
-        Collection<UserRole> roles = user.getRoles();
-        roles.add( newRole );
-        user.setRoles( roles );
-        this.getUserDao().update( user );
-    }
-
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleFindByUserName(java.lang.String)
-     */
-    @Override
-    protected User handleFindByUserName( String userName ) throws Exception {
-        return this.getUserDao().findByUserName( userName );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleFindByEmail(java.lang.String)
      */
     @Override
@@ -138,22 +120,38 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleUpdate(ubic.gemma.model.common.auditAndSecurity.User)
+     * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleFindByUserName(java.lang.String)
      */
     @Override
-    protected void handleUpdate( User user ) throws Exception {
-        this.getUserDao().update( user );
+    protected User handleFindByUserName( String userName ) throws Exception {
+        return this.getUserDao().findByUserName( userName );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.UserService#FindById(long)
+     */
+    @Override
+    protected User handleLoad( Long id ) throws java.lang.Exception {
+        return ( User ) this.getUserDao().load( id );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.UserService#getUsers(ubic.gemma.model.common.auditAndSecurity.User)
+     */
+    @Override
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+        return this.getUserDao().loadAll();
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#handleLoadAllRoles()
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleUpdate(ubic.gemma.model.common.auditAndSecurity
+     * .User)
      */
     @Override
-    public Collection handleLoadAllRoles() {
-        return this.getUserRoleDao().loadAll();
+    protected void handleUpdate( User user ) throws Exception {
+        this.getUserDao().update( user );
     }
 
 }

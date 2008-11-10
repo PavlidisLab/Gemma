@@ -22,6 +22,12 @@
 //
 package ubic.gemma.model.genome.biosequence;
 
+import java.util.Collection;
+
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
+import ubic.gemma.model.genome.Gene;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -30,55 +36,41 @@ package ubic.gemma.model.genome.biosequence;
  * 
  * @see ubic.gemma.model.genome.biosequence.BioSequence
  */
-public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.DescribableDaoImpl implements
+public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.genome.biosequence.BioSequenceDao {
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#load(int, java.lang.Long)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#countAll()
      */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "BioSequence.load - 'id' can not be null" );
+    public java.lang.Integer countAll() {
+        try {
+            return this.handleCountAll();
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.countAll()' --> " + th, th );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.genome.biosequence.BioSequenceImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) entity );
     }
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#load(java.lang.Long)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#create(int, java.util.Collection)
      */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.genome.biosequence.BioSequenceImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#create(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.create( TRANSFORM_NONE, bioSequence );
+    public java.util.Collection<BioSequence> create( final int transform,
+            final java.util.Collection<BioSequence> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BioSequence.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
+        return entities;
     }
 
     /**
@@ -102,111 +94,43 @@ public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.Describ
     }
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#create(int, java.util.Collection)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#create(ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BioSequence.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
+    public BioSequence create( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.create( TRANSFORM_NONE, bioSequence );
     }
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#update(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    public void update( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        if ( bioSequence == null ) {
-            throw new IllegalArgumentException( "BioSequence.update - 'bioSequence' can not be null" );
-        }
-        this.getHibernateTemplate().update( bioSequence );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BioSequence.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.biosequence.BioSequence ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#remove(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    public void remove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        if ( bioSequence == null ) {
-            throw new IllegalArgumentException( "BioSequence.remove - 'bioSequence' can not be null" );
-        }
-        this.getHibernateTemplate().delete( bioSequence );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "BioSequence.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.genome.biosequence.BioSequence entity = ( ubic.gemma.model.genome.biosequence.BioSequence ) this
-                .load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BioSequence.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#find(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence find(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.find( TRANSFORM_NONE, bioSequence );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#find(java.lang.String,
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#find(int, java.lang.String,
      *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.genome.biosequence.BioSequence find( final java.lang.String queryString,
+    public BioSequence find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.find( TRANSFORM_NONE, queryString, bioSequence );
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( bioSequence );
+        argNames.add( "bioSequence" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.biosequence.BioSequence"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+
+        result = transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) result );
+        return ( BioSequence ) result;
     }
 
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#find(int,
      *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    public BioSequence find( final int transform, final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         return this
                 .find(
                         transform,
@@ -215,122 +139,20 @@ public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.Describ
     }
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#find(int, java.lang.String,
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#find(java.lang.String,
      *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
+    public ubic.gemma.model.genome.biosequence.BioSequence find( final java.lang.String queryString,
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( bioSequence );
-        argNames.add( "bioSequence" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.biosequence.BioSequence"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) result );
-        return result;
+        return this.find( TRANSFORM_NONE, queryString, bioSequence );
     }
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate(
+    public ubic.gemma.model.genome.biosequence.BioSequence find(
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.findOrCreate( TRANSFORM_NONE, bioSequence );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.findOrCreate( TRANSFORM_NONE, queryString,
-                bioSequence );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findOrCreate(int,
-     *      ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return this
-                .findOrCreate(
-                        transform,
-                        "from ubic.gemma.model.genome.biosequence.BioSequence as bioSequence where bioSequence.bioSequence = :bioSequence",
-                        bioSequence );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findOrCreate(int, java.lang.String,
-     *      ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( bioSequence );
-        argNames.add( "bioSequence" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.biosequence.BioSequence"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
-            ubic.gemma.model.common.description.DatabaseEntry accession ) {
-        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.findByAccession( TRANSFORM_NONE, accession );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByAccession(java.lang.String,
-     *      ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession( final java.lang.String queryString,
-            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
-        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.findByAccession( TRANSFORM_NONE, queryString,
-                accession );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByAccession(int,
-     *      ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findByAccession( final int transform,
-            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
-        return this
-                .findByAccession(
-                        transform,
-                        "from ubic.gemma.model.genome.biosequence.BioSequence as bioSequence where bioSequence.accession = :accession",
-                        accession );
+        return this.find( TRANSFORM_NONE, bioSequence );
     }
 
     /**
@@ -347,308 +169,67 @@ public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.Describ
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.biosequence.BioSequence"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.biosequence.BioSequence"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) result );
         return result;
     }
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getRecipient(java.lang.Long)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByAccession(int,
+     *      ubic.gemma.model.common.description.DatabaseEntry)
      */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this.getRecipient( transform,
-                "from ubic.gemma.model.genome.biosequence.BioSequence as bioSequence where bioSequence.id = :id", id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getRecipient(int, java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
+    public Object findByAccession( final int transform,
+            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         return this
-                .getAclObjectIdentityId(
+                .findByAccession(
                         transform,
-                        "from ubic.gemma.model.genome.biosequence.BioSequence as bioSequence where bioSequence.securable = :securable",
-                        securable );
+                        "from ubic.gemma.model.genome.biosequence.BioSequence as bioSequence where bioSequence.accession = :accession",
+                        accession );
     }
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByAccession(java.lang.String,
+     *      ubic.gemma.model.common.description.DatabaseEntry)
      */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) result );
-        return result;
+    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession( final java.lang.String queryString,
+            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
+        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.findByAccession( TRANSFORM_NONE, queryString,
+                accession );
     }
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getMask(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
      */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
+    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
+            ubic.gemma.model.common.description.DatabaseEntry accession ) {
+        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.findByAccession( TRANSFORM_NONE, accession );
     }
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByGenes(java.util.Collection)
      */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.genome.biosequence.BioSequence as bioSequence where bioSequence.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.genome.biosequence.BioSequence as bioSequence where bioSequence.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getGenesByName(java.lang.String)
-     */
-    public java.util.Collection getGenesByName( final java.lang.String search ) {
+    public java.util.Map<Gene, Collection<BioSequence>> findByGenes( final java.util.Collection<Gene> genes ) {
         try {
-            return this.handleGetGenesByName( search );
+            return this.handleFindByGenes( genes );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.getGenesByName(java.lang.String search)' --> "
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.findByGenes(java.util.Collection genes)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #getGenesByName(java.lang.String)}
-     */
-    protected abstract java.util.Collection handleGetGenesByName( java.lang.String search ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getGenesByAccession(java.lang.String)
-     */
-    public java.util.Collection getGenesByAccession( final java.lang.String search ) {
-        try {
-            return this.handleGetGenesByAccession( search );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.getGenesByAccession(java.lang.String search)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #getGenesByAccession(java.lang.String)}
-     */
-    protected abstract java.util.Collection handleGetGenesByAccession( java.lang.String search )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#countAll()
-     */
-    public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.countAll()' --> " + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByName(java.lang.String)
      */
-    public java.util.Collection findByName( final java.lang.String name ) {
+    public java.util.Collection<BioSequence> findByName( final java.lang.String name ) {
         try {
             return this.handleFindByName( name );
         } catch ( Throwable th ) {
@@ -659,14 +240,112 @@ public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.Describ
     }
 
     /**
-     * Performs the core logic for {@link #findByName(java.lang.String)}
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findOrCreate(int, java.lang.String,
+     *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    protected abstract java.util.Collection handleFindByName( java.lang.String name ) throws java.lang.Exception;
+    @SuppressWarnings( { "unchecked" })
+    public Object findOrCreate( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( bioSequence );
+        argNames.add( "bioSequence" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.biosequence.BioSequence"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+
+        result = transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findOrCreate(int,
+     *      ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    public Object findOrCreate( final int transform, final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        return this
+                .findOrCreate(
+                        transform,
+                        "from ubic.gemma.model.genome.biosequence.BioSequence as bioSequence where bioSequence.bioSequence = :bioSequence",
+                        bioSequence );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findOrCreate(java.lang.String,
+     *      ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate( final java.lang.String queryString,
+            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.findOrCreate( TRANSFORM_NONE, queryString,
+                bioSequence );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        return ( ubic.gemma.model.genome.biosequence.BioSequence ) this.findOrCreate( TRANSFORM_NONE, bioSequence );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getGenesByAccession(java.lang.String)
+     */
+    public java.util.Collection<Gene> getGenesByAccession( final java.lang.String search ) {
+        try {
+            return this.handleGetGenesByAccession( search );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.getGenesByAccession(java.lang.String search)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#getGenesByName(java.lang.String)
+     */
+    public java.util.Collection<Gene> getGenesByName( final java.lang.String search ) {
+        try {
+            return this.handleGetGenesByName( search );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.getGenesByName(java.lang.String search)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#load(int, java.lang.Long)
+     */
+
+    public BioSequence load( final int transform, final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "BioSequence.load - 'id' can not be null" );
+        }
+        final Object entity = this.getHibernateTemplate().get(
+                ubic.gemma.model.genome.biosequence.BioSequenceImpl.class, id );
+        return transformEntity( transform, ( ubic.gemma.model.genome.biosequence.BioSequence ) entity );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#load(java.lang.Long)
+     */
+
+    public BioSequence load( java.lang.Long id ) {
+        return this.load( TRANSFORM_NONE, id );
+    }
 
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#load(java.util.Collection)
      */
-    public java.util.Collection load( final java.util.Collection ids ) {
+    public java.util.Collection<BioSequence> load( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoad( ids );
         } catch ( Throwable th ) {
@@ -677,14 +356,65 @@ public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.Describ
     }
 
     /**
-     * Performs the core logic for {@link #load(java.util.Collection)}
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#loadAll()
      */
-    protected abstract java.util.Collection handleLoad( java.util.Collection ids ) throws java.lang.Exception;
+
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection<BioSequence> loadAll() {
+        return this.loadAll( TRANSFORM_NONE );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#loadAll(int)
+     */
+
+    public java.util.Collection<BioSequence> loadAll( final int transform ) {
+        final java.util.Collection<BioSequence> results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.genome.biosequence.BioSequenceImpl.class );
+        this.transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#remove(java.lang.Long)
+     */
+
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "BioSequence.remove - 'id' can not be null" );
+        }
+        ubic.gemma.model.genome.biosequence.BioSequence entity = ( ubic.gemma.model.genome.biosequence.BioSequence ) this
+                .load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     */
+
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BioSequence.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#remove(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    public void remove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        if ( bioSequence == null ) {
+            throw new IllegalArgumentException( "BioSequence.remove - 'bioSequence' can not be null" );
+        }
+        this.getHibernateTemplate().delete( bioSequence );
+    }
 
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#thaw(java.util.Collection)
      */
-    public void thaw( final java.util.Collection bioSequences ) {
+    public void thaw( final java.util.Collection<BioSequence> bioSequences ) {
         try {
             this.handleThaw( bioSequences );
         } catch ( Throwable th ) {
@@ -693,11 +423,6 @@ public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.Describ
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #thaw(java.util.Collection)}
-     */
-    protected abstract void handleThaw( java.util.Collection bioSequences ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#thaw(ubic.gemma.model.genome.biosequence.BioSequence)
@@ -713,15 +438,9 @@ public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.Describ
     }
 
     /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#thawLite(java.util.Collection)
      */
-    public void thawLite( final java.util.Collection bioSequences ) {
+    public void thawLite( final java.util.Collection<BioSequence> bioSequences ) {
         try {
             this.handleThawLite( bioSequences );
         } catch ( Throwable th ) {
@@ -732,27 +451,106 @@ public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.Describ
     }
 
     /**
-     * Performs the core logic for {@link #thawLite(java.util.Collection)}
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    protected abstract void handleThawLite( java.util.Collection bioSequences ) throws java.lang.Exception;
+
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "BioSequence.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.genome.biosequence.BioSequence ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
+    }
 
     /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByGenes(java.util.Collection)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#update(ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    public java.util.Map findByGenes( final java.util.Collection genes ) {
-        try {
-            return this.handleFindByGenes( genes );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.findByGenes(java.util.Collection genes)' --> "
-                            + th, th );
+    public void update( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        if ( bioSequence == null ) {
+            throw new IllegalArgumentException( "BioSequence.update - 'bioSequence' can not be null" );
         }
+        this.getHibernateTemplate().update( bioSequence );
     }
+
+    /**
+     * Performs the core logic for {@link #countAll()}
+     */
+    protected abstract java.lang.Integer handleCountAll() throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByGenes(java.util.Collection)}
      */
-    protected abstract java.util.Map handleFindByGenes( java.util.Collection genes ) throws java.lang.Exception;
+    protected abstract java.util.Map<Gene, Collection<BioSequence>> handleFindByGenes( java.util.Collection<Gene> genes )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByName(java.lang.String)}
+     */
+    protected abstract java.util.Collection<BioSequence> handleFindByName( java.lang.String name )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getGenesByAccession(java.lang.String)}
+     */
+    protected abstract java.util.Collection<Gene> handleGetGenesByAccession( java.lang.String search )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getGenesByName(java.lang.String)}
+     */
+    protected abstract java.util.Collection<Gene> handleGetGenesByName( java.lang.String search )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.util.Collection)}
+     */
+    protected abstract java.util.Collection<BioSequence> handleLoad( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(java.util.Collection)}
+     */
+    protected abstract void handleThaw( java.util.Collection<BioSequence> bioSequences ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}
+     */
+    protected abstract void handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thawLite(java.util.Collection)}
+     */
+    protected abstract void handleThawLite( java.util.Collection<BioSequence> bioSequences ) throws java.lang.Exception;
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.genome.biosequence.BioSequence)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.biosequence.BioSequenceDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
 
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
@@ -766,8 +564,9 @@ public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.Describ
      * @return the transformed entity (i.e. new value object, etc)
      * @see #transformEntities(int,java.util.Collection)
      */
-    protected Object transformEntity( final int transform, final ubic.gemma.model.genome.biosequence.BioSequence entity ) {
-        Object target = null;
+    protected BioSequence transformEntity( final int transform,
+            final ubic.gemma.model.genome.biosequence.BioSequence entity ) {
+        BioSequence target = null;
         if ( entity != null ) {
             switch ( transform ) {
                 case TRANSFORM_NONE: // fall-through
@@ -776,25 +575,6 @@ public abstract class BioSequenceDaoBase extends ubic.gemma.model.common.Describ
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.genome.biosequence.BioSequence)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.biosequence.BioSequenceDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

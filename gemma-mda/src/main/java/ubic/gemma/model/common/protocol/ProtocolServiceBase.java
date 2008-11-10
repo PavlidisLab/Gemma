@@ -24,8 +24,8 @@ package ubic.gemma.model.common.protocol;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.protocol.ProtocolService</code>, provides access to
- * all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.common.protocol.ProtocolService</code>, provides access to all
+ * services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.common.protocol.ProtocolService
@@ -33,20 +33,6 @@ package ubic.gemma.model.common.protocol;
 public abstract class ProtocolServiceBase implements ubic.gemma.model.common.protocol.ProtocolService {
 
     private ubic.gemma.model.common.protocol.ProtocolDao protocolDao;
-
-    /**
-     * Sets the reference to <code>protocol</code>'s DAO.
-     */
-    public void setProtocolDao( ubic.gemma.model.common.protocol.ProtocolDao protocolDao ) {
-        this.protocolDao = protocolDao;
-    }
-
-    /**
-     * Gets the reference to <code>protocol</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.protocol.ProtocolDao getProtocolDao() {
-        return this.protocolDao;
-    }
 
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolService#find(ubic.gemma.model.common.protocol.Protocol)
@@ -60,12 +46,6 @@ public abstract class ProtocolServiceBase implements ubic.gemma.model.common.pro
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.protocol.Protocol)}
-     */
-    protected abstract ubic.gemma.model.common.protocol.Protocol handleFind(
-            ubic.gemma.model.common.protocol.Protocol protocol ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolService#findOrCreate(ubic.gemma.model.common.protocol.Protocol)
@@ -82,10 +62,24 @@ public abstract class ProtocolServiceBase implements ubic.gemma.model.common.pro
     }
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.protocol.Protocol)}
+     * @see ubic.gemma.model.common.protocol.ProtocolService#remove(ubic.gemma.model.common.protocol.Protocol)
      */
-    protected abstract ubic.gemma.model.common.protocol.Protocol handleFindOrCreate(
-            ubic.gemma.model.common.protocol.Protocol protocol ) throws java.lang.Exception;
+    public void remove( final ubic.gemma.model.common.protocol.Protocol protocol ) {
+        try {
+            this.handleRemove( protocol );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.protocol.ProtocolServiceException(
+                    "Error performing 'ubic.gemma.model.common.protocol.ProtocolService.remove(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>protocol</code>'s DAO.
+     */
+    public void setProtocolDao( ubic.gemma.model.common.protocol.ProtocolDao protocolDao ) {
+        this.protocolDao = protocolDao;
+    }
 
     /**
      * @see ubic.gemma.model.common.protocol.ProtocolService#update(ubic.gemma.model.common.protocol.Protocol)
@@ -101,45 +95,16 @@ public abstract class ProtocolServiceBase implements ubic.gemma.model.common.pro
     }
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.protocol.Protocol)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.common.protocol.Protocol protocol )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.protocol.ProtocolService#remove(ubic.gemma.model.common.protocol.Protocol)
-     */
-    public void remove( final ubic.gemma.model.common.protocol.Protocol protocol ) {
-        try {
-            this.handleRemove( protocol );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.protocol.ProtocolServiceException(
-                    "Error performing 'ubic.gemma.model.common.protocol.ProtocolService.remove(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.protocol.Protocol)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.common.protocol.Protocol protocol )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
+     * <code>locale</code>.
      * 
-     * @return the current principal
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     * @param locale the locale of the messages to retrieve.
      */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
+            final java.util.Locale locale ) {
+        return this.getMessages().getMessage( key, arguments, locale );
     }
 
     /**
@@ -152,8 +117,7 @@ public abstract class ProtocolServiceBase implements ubic.gemma.model.common.pro
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
      * 
      * @param key the key of the message in the messages.properties message bundle.
      * @param arguments any arguments to substitute when resolving the message.
@@ -163,16 +127,51 @@ public abstract class ProtocolServiceBase implements ubic.gemma.model.common.pro
     }
 
     /**
-     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
-     * <code>locale</code>.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     * @param locale the locale of the messages to retrieve.
+     * Gets the message source available to this service.
      */
-    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
-            final java.util.Locale locale ) {
-        return this.getMessages().getMessage( key, arguments, locale );
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
     }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Gets the reference to <code>protocol</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.protocol.ProtocolDao getProtocolDao() {
+        return this.protocolDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.common.protocol.Protocol)}
+     */
+    protected abstract ubic.gemma.model.common.protocol.Protocol handleFind(
+            ubic.gemma.model.common.protocol.Protocol protocol ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.protocol.Protocol)}
+     */
+    protected abstract ubic.gemma.model.common.protocol.Protocol handleFindOrCreate(
+            ubic.gemma.model.common.protocol.Protocol protocol ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.common.protocol.Protocol)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.common.protocol.Protocol protocol )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.common.protocol.Protocol)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.common.protocol.Protocol protocol )
+            throws java.lang.Exception;
 
 }

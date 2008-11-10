@@ -74,15 +74,38 @@ public abstract class SequenceSimilaritySearchResultDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#update(ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult)
+     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#remove(java.lang.Long)
      */
-    public void update(
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "SequenceSimilaritySearchResult.remove - 'id' can not be null" );
+        }
+        ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult entity = this.load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#remove(java.util.Collection)
+     */
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "SequenceSimilaritySearchResult.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#remove(ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult)
+     */
+    public void remove(
             ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult sequenceSimilaritySearchResult ) {
         if ( sequenceSimilaritySearchResult == null ) {
             throw new IllegalArgumentException(
-                    "SequenceSimilaritySearchResult.update - 'sequenceSimilaritySearchResult' can not be null" );
+                    "SequenceSimilaritySearchResult.remove - 'sequenceSimilaritySearchResult' can not be null" );
         }
-        this.getHibernateTemplate().update( sequenceSimilaritySearchResult );
+        this.getHibernateTemplate().delete( sequenceSimilaritySearchResult );
     }
 
     /**
@@ -104,38 +127,36 @@ public abstract class SequenceSimilaritySearchResultDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#remove(ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult)
+     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#update(ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult)
      */
-    public void remove(
+    public void update(
             ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult sequenceSimilaritySearchResult ) {
         if ( sequenceSimilaritySearchResult == null ) {
             throw new IllegalArgumentException(
-                    "SequenceSimilaritySearchResult.remove - 'sequenceSimilaritySearchResult' can not be null" );
+                    "SequenceSimilaritySearchResult.update - 'sequenceSimilaritySearchResult' can not be null" );
         }
-        this.getHibernateTemplate().delete( sequenceSimilaritySearchResult );
+        this.getHibernateTemplate().update( sequenceSimilaritySearchResult );
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#remove(java.lang.Long)
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult)} method.
+     * This method does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult)
      */
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "SequenceSimilaritySearchResult.remove - 'id' can not be null" );
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
         }
-        ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#remove(java.util.Collection)
-     */
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "SequenceSimilaritySearchResult.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
     }
 
     /**
@@ -162,25 +183,6 @@ public abstract class SequenceSimilaritySearchResultDaoBase extends
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult)} method.
-     * This method does not instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

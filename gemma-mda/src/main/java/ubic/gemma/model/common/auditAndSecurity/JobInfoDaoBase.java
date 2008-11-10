@@ -34,6 +34,52 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
         ubic.gemma.model.common.auditAndSecurity.JobInfoDao {
 
     /**
+     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "JobInfo.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.auditAndSecurity.JobInfo ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#create(int transform,
+     *      ubic.gemma.model.common.auditAndSecurity.JobInfo)
+     */
+    public Object create( final int transform, final ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
+        if ( jobInfo == null ) {
+            throw new IllegalArgumentException( "JobInfo.create - 'jobInfo' can not be null" );
+        }
+        this.getHibernateTemplate().save( jobInfo );
+        return this.transformEntity( transform, jobInfo );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#create(ubic.gemma.model.common.auditAndSecurity.JobInfo)
+     */
+    public ubic.gemma.model.common.auditAndSecurity.JobInfo create(
+            ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
+        return ( ubic.gemma.model.common.auditAndSecurity.JobInfo ) this.create( TRANSFORM_NONE, jobInfo );
+    }
+
+    /**
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#load(int, java.lang.Long)
      */
     public Object load( final int transform, final java.lang.Long id ) {
@@ -71,89 +117,6 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#create(ubic.gemma.model.common.auditAndSecurity.JobInfo)
-     */
-    public ubic.gemma.model.common.auditAndSecurity.JobInfo create(
-            ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.JobInfo ) this.create( TRANSFORM_NONE, jobInfo );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#create(int transform,
-     *      ubic.gemma.model.common.auditAndSecurity.JobInfo)
-     */
-    public Object create( final int transform, final ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
-        if ( jobInfo == null ) {
-            throw new IllegalArgumentException( "JobInfo.create - 'jobInfo' can not be null" );
-        }
-        this.getHibernateTemplate().save( jobInfo );
-        return this.transformEntity( transform, jobInfo );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "JobInfo.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.auditAndSecurity.JobInfo ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#update(ubic.gemma.model.common.auditAndSecurity.JobInfo)
-     */
-    public void update( ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
-        if ( jobInfo == null ) {
-            throw new IllegalArgumentException( "JobInfo.update - 'jobInfo' can not be null" );
-        }
-        this.getHibernateTemplate().update( jobInfo );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#update(java.util.Collection)
-     */
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "JobInfo.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.auditAndSecurity.JobInfo ) entityIterator.next() );
-                }
-                return null;
-            }
-        }, true );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#remove(ubic.gemma.model.common.auditAndSecurity.JobInfo)
-     */
-    public void remove( ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
-        if ( jobInfo == null ) {
-            throw new IllegalArgumentException( "JobInfo.remove - 'jobInfo' can not be null" );
-        }
-        this.getHibernateTemplate().delete( jobInfo );
-    }
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -174,6 +137,64 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
             throw new IllegalArgumentException( "JobInfo.remove - 'entities' can not be null" );
         }
         this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#remove(ubic.gemma.model.common.auditAndSecurity.JobInfo)
+     */
+    public void remove( ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
+        if ( jobInfo == null ) {
+            throw new IllegalArgumentException( "JobInfo.remove - 'jobInfo' can not be null" );
+        }
+        this.getHibernateTemplate().delete( jobInfo );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#update(java.util.Collection)
+     */
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "JobInfo.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    update( ( ubic.gemma.model.common.auditAndSecurity.JobInfo ) entityIterator.next() );
+                }
+                return null;
+            }
+        }, true );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#update(ubic.gemma.model.common.auditAndSecurity.JobInfo)
+     */
+    public void update( ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
+        if ( jobInfo == null ) {
+            throw new IllegalArgumentException( "JobInfo.update - 'jobInfo' can not be null" );
+        }
+        this.getHibernateTemplate().update( jobInfo );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.JobInfo)} method. This method does not
+     * instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.common.auditAndSecurity.JobInfoDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.JobInfo)
+     */
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -198,25 +219,6 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.JobInfo)} method. This method does not
-     * instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.auditAndSecurity.JobInfoDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.JobInfo)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

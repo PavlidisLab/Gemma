@@ -22,10 +22,12 @@
 //
 package ubic.gemma.model.expression.bioAssay;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.expression.bioAssay.BioAssay
  */
-public interface BioAssayDao extends ubic.gemma.model.common.AuditableDao {
+public interface BioAssayDao extends BaseDao<BioAssay> {
     /**
      * 
      */
@@ -65,7 +67,7 @@ public interface BioAssayDao extends ubic.gemma.model.common.AuditableDao {
     /**
      * Creates an instance of ubic.gemma.model.expression.bioAssay.BioAssay and adds it to the persistent store.
      */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    public BioAssay create( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
      * <p>
@@ -196,7 +198,7 @@ public interface BioAssayDao extends ubic.gemma.model.common.AuditableDao {
     /**
      * Loads an instance of ubic.gemma.model.expression.bioAssay.BioAssay from the persistent store.
      */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+    public BioAssay load( java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.expression.bioAssay.BioAssay}.

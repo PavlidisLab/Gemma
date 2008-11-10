@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.common.description;
 
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -30,57 +32,27 @@ package ubic.gemma.model.common.description;
  * 
  * @see ubic.gemma.model.common.description.VocabCharacteristic
  */
-public abstract class VocabCharacteristicDaoBase extends ubic.gemma.model.common.description.CharacteristicDaoImpl
-        implements ubic.gemma.model.common.description.VocabCharacteristicDao {
+public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport implements
+        ubic.gemma.model.common.description.VocabCharacteristicDao {
 
     /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#load(int, java.lang.Long)
+     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(int, java.util.Collection)
      */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "VocabCharacteristic.load - 'id' can not be null" );
+
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "VocabCharacteristic.create - 'entities' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.common.description.VocabCharacteristicImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.description.VocabCharacteristic ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.common.Securable load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.description.VocabCharacteristic ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.description.VocabCharacteristicImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(ubic.gemma.model.common.description.VocabCharacteristic)
-     */
-    public ubic.gemma.model.common.Securable create(
-            ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
-        return ( ubic.gemma.model.common.description.VocabCharacteristic ) this.create( TRANSFORM_NONE,
-                vocabCharacteristic );
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( transform, ( ubic.gemma.model.common.description.VocabCharacteristic ) entityIterator
+                            .next() );
+                }
+                return null;
+            }
+        }, true );
+        return entities;
     }
 
     /**
@@ -99,46 +71,167 @@ public abstract class VocabCharacteristicDaoBase extends ubic.gemma.model.common
     /**
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(java.util.Collection)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(int, java.util.Collection)
+     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(ubic.gemma.model.common.description.VocabCharacteristic)
      */
-    @Override
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "VocabCharacteristic.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.description.VocabCharacteristic ) entityIterator
-                            .next() );
-                }
-                return null;
-            }
-        }, true );
-        return entities;
+    public VocabCharacteristic create(
+            ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
+        return ( ubic.gemma.model.common.description.VocabCharacteristic ) this.create( TRANSFORM_NONE,
+                vocabCharacteristic );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#update(ubic.gemma.model.common.description.VocabCharacteristic)
+     * @see ubic.gemma.model.common.description.CharacteristicDao#findByParentClass(java.lang.Class)
      */
-    public void update( ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
-        if ( vocabCharacteristic == null ) {
-            throw new IllegalArgumentException( "VocabCharacteristic.update - 'vocabCharacteristic' can not be null" );
+    public java.util.Map findByParentClass( final java.lang.Class parentClass ) {
+        try {
+            return this.handleFindByParentClass( parentClass );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByParentClass(java.lang.Class parentClass)' --> "
+                            + th, th );
         }
-        this.getHibernateTemplate().update( vocabCharacteristic );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.CharacteristicDao#findByUri(java.lang.String)
+     */
+    public java.util.Collection findByUri( final java.lang.String searchString ) {
+        try {
+            return this.handleFindByUri( searchString );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByUri(java.lang.String searchString)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.CharacteristicDao#findByUri(java.util.Collection)
+     */
+    public java.util.Collection findByUri( final java.util.Collection uris ) {
+        try {
+            return this.handleFindByUri( uris );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByUri(java.util.Collection uris)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.CharacteristicDao#findByValue(java.lang.String)
+     */
+    public java.util.Collection findByValue( final java.lang.String search ) {
+        try {
+            return this.handleFindByValue( search );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.findByValue(java.lang.String search)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.CharacteristicDao#getParents(java.lang.Class, java.util.Collection)
+     */
+    public java.util.Map getParents( final java.lang.Class parentClass, final java.util.Collection characteristics ) {
+        try {
+            return this.handleGetParents( parentClass, characteristics );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.description.CharacteristicDao.getParents(java.lang.Class parentClass, java.util.Collection characteristics)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#load(int, java.lang.Long)
+     */
+
+    public Object load( final int transform, final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "VocabCharacteristic.load - 'id' can not be null" );
+        }
+        final Object entity = this.getHibernateTemplate().get(
+                ubic.gemma.model.common.description.VocabCharacteristicImpl.class, id );
+        return transformEntity( transform, ( ubic.gemma.model.common.description.VocabCharacteristic ) entity );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#load(java.lang.Long)
+     */
+
+    public VocabCharacteristic load( java.lang.Long id ) {
+        return ( ubic.gemma.model.common.description.VocabCharacteristic ) this.load( TRANSFORM_NONE, id );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#loadAll()
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection loadAll() {
+        return this.loadAll( TRANSFORM_NONE );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#loadAll(int)
+     */
+
+    public java.util.Collection loadAll( final int transform ) {
+        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.common.description.VocabCharacteristicImpl.class );
+        this.transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#remove(java.lang.Long)
+     */
+
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "VocabCharacteristic.remove - 'id' can not be null" );
+        }
+        ubic.gemma.model.common.description.VocabCharacteristic entity = ( ubic.gemma.model.common.description.VocabCharacteristic ) this
+                .load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     */
+
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "VocabCharacteristic.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#remove(ubic.gemma.model.common.description.VocabCharacteristic)
+     */
+    public void remove( ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
+        if ( vocabCharacteristic == null ) {
+            throw new IllegalArgumentException( "VocabCharacteristic.remove - 'vocabCharacteristic' can not be null" );
+        }
+        this.getHibernateTemplate().delete( vocabCharacteristic );
     }
 
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    @Override
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.update - 'entities' can not be null" );
@@ -154,275 +247,61 @@ public abstract class VocabCharacteristicDaoBase extends ubic.gemma.model.common
     }
 
     /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#remove(ubic.gemma.model.common.description.VocabCharacteristic)
+     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#update(ubic.gemma.model.common.description.VocabCharacteristic)
      */
-    public void remove( ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
+    public void update( ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
         if ( vocabCharacteristic == null ) {
-            throw new IllegalArgumentException( "VocabCharacteristic.remove - 'vocabCharacteristic' can not be null" );
+            throw new IllegalArgumentException( "VocabCharacteristic.update - 'vocabCharacteristic' can not be null" );
         }
-        this.getHibernateTemplate().delete( vocabCharacteristic );
+        this.getHibernateTemplate().update( vocabCharacteristic );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#remove(java.lang.Long)
+     * Performs the core logic for {@link #findByParentClass(java.lang.Class)}
      */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "VocabCharacteristic.remove - 'id' can not be null" );
+    protected abstract java.util.Map handleFindByParentClass( java.lang.Class parentClass ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByUri(java.lang.String)}
+     */
+    protected abstract java.util.Collection handleFindByUri( java.lang.String searchString ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByUri(java.util.Collection)}
+     */
+    protected abstract java.util.Collection handleFindByUri( java.util.Collection uris ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByValue(java.lang.String)}
+     */
+    protected abstract java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getParents(java.lang.Class, java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetParents( java.lang.Class parentClass, java.util.Collection characteristics )
+            throws java.lang.Exception;
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.common.description.VocabCharacteristic)} method. This method does
+     * not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.common.description.VocabCharacteristicDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.common.description.VocabCharacteristic)
+     */
+
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
         }
-        ubic.gemma.model.common.description.VocabCharacteristic entity = ( ubic.gemma.model.common.description.VocabCharacteristic ) this
-                .load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "VocabCharacteristic.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getRecipient(java.lang.Long)
-     */
-    @Override
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getRecipient(int, java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this
-                .getRecipient(
-                        transform,
-                        "from ubic.gemma.model.common.description.VocabCharacteristic as vocabCharacteristic where vocabCharacteristic.id = :id",
-                        id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getRecipient(int, java.lang.String,
-     *      java.lang.Long)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.VocabCharacteristic ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.common.description.VocabCharacteristic as vocabCharacteristic where vocabCharacteristic.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.VocabCharacteristic ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getMask(ubic.gemma.model.common.Securable)
-     */
-    @Override
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.common.description.VocabCharacteristic as vocabCharacteristic where vocabCharacteristic.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.VocabCharacteristic ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getMasks(java.util.Collection)
-     */
-    @Override
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getMasks(java.lang.String, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getMasks(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.common.description.VocabCharacteristic as vocabCharacteristic where vocabCharacteristic.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#getMasks(int, java.lang.String,
-     *      java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.VocabCharacteristic ) result );
-        return result;
     }
 
     /**
@@ -449,26 +328,6 @@ public abstract class VocabCharacteristicDaoBase extends ubic.gemma.model.common
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.description.VocabCharacteristic)} method. This method does
-     * not instantiate a new collection. <p/> This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.description.VocabCharacteristicDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.description.VocabCharacteristic)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

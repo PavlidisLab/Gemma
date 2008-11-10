@@ -34,6 +34,28 @@ public class BibliographicReferenceServiceImpl extends
 
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleAddDocument(byte[],
+     * ubic.gemma.model.common.description.BibliographicReference)
+     */
+    @Override
+    protected void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) throws Exception {
+        bibliographicReference.setFullTextPDF( pdfFile );
+        this.getBibliographicReferenceDao().update( bibliographicReference );
+
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
+     */
+    @Override
+    protected BibliographicReference handleCreate(
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
+            throws java.lang.Exception {
+        return ( BibliographicReference ) getBibliographicReferenceDao().create( bibliographicReference );
+    }
+
     /**
      * Check to see if the reference already exists
      * 
@@ -71,8 +93,9 @@ public class BibliographicReferenceServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleGetBibliographicReferenceByTitle(java.lang.String)
+     * @see
+     * ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleGetBibliographicReferenceByTitle(
+     * java.lang.String)
      */
     @Override
     protected BibliographicReference handleFindByTitle( String title ) throws Exception {
@@ -80,61 +103,10 @@ public class BibliographicReferenceServiceImpl extends
         return getBibliographicReferenceDao().findByTitle( title );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleLoadBibliographicReference(java.lang.Long)
-     */
-    protected BibliographicReference handleLoadBibliographicReference( Long id ) throws Exception {
-        return ( BibliographicReference ) getBibliographicReferenceDao().load( id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
-     */
-    @Override
-    protected BibliographicReference handleCreate(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
-            throws java.lang.Exception {
-        return ( BibliographicReference ) getBibliographicReferenceDao().create( bibliographicReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
-     */
-    @Override
-    protected void handleUpdate( ubic.gemma.model.common.description.BibliographicReference BibliographicReference )
-            throws java.lang.Exception {
-        getBibliographicReferenceDao().update( BibliographicReference );
-    }
-
-    @Override
-    protected void handleRemove( BibliographicReference bibliographicReference ) throws Exception {
-        this.getBibliographicReferenceDao().remove( bibliographicReference );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleAddDocument(byte[],
-     *      ubic.gemma.model.common.description.BibliographicReference)
-     */
-    @Override
-    protected void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) throws Exception {
-        bibliographicReference.setFullTextPDF( pdfFile );
-        this.getBibliographicReferenceDao().update( bibliographicReference );
-
-    }
-
     @Override
     protected BibliographicReference handleFindOrCreate( BibliographicReference bibliographicReference )
             throws Exception {
         return this.getBibliographicReferenceDao().findOrCreate( bibliographicReference );
-    }
-
-    @Override
-    protected BibliographicReference handleLoad( Long id ) throws Exception {
-        return ( BibliographicReference ) this.getBibliographicReferenceDao().load( id );
     }
 
     @Override
@@ -148,8 +120,37 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     @Override
+    protected BibliographicReference handleLoad( Long id ) throws Exception {
+        return ( BibliographicReference ) this.getBibliographicReferenceDao().load( id );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleLoadBibliographicReference(java.lang
+     * .Long)
+     */
+    protected BibliographicReference handleLoadBibliographicReference( Long id ) throws Exception {
+        return ( BibliographicReference ) getBibliographicReferenceDao().load( id );
+    }
+
+    @Override
     protected Collection handleLoadMultiple( Collection ids ) throws Exception {
-        return this.getBibliographicReferenceDao().loadMultiple( ids );
+        return this.getBibliographicReferenceDao().load( ids );
+    }
+
+    @Override
+    protected void handleRemove( BibliographicReference bibliographicReference ) throws Exception {
+        this.getBibliographicReferenceDao().remove( bibliographicReference );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
+     */
+    @Override
+    protected void handleUpdate( ubic.gemma.model.common.description.BibliographicReference BibliographicReference )
+            throws java.lang.Exception {
+        getBibliographicReferenceDao().update( BibliographicReference );
     }
 
 }

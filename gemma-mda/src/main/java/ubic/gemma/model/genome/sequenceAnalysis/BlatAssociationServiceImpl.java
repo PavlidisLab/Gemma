@@ -41,6 +41,15 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
         return ( BlatAssociation ) this.getBlatAssociationDao().create( blatAssociation );
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceBase#handleFind(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFind( Gene gene ) throws Exception {
+        return this.getBlatAssociationDao().find( gene );
+    }
+
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
@@ -48,16 +57,6 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
     protected java.util.Collection handleFind( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
             throws java.lang.Exception {
         return this.getBlatAssociationDao().find( bioSequence );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceBase#handleFind(ubic.gemma.model.genome.Gene)
-     */
-    @Override
-    protected Collection handleFind( Gene gene ) throws Exception {
-        return this.getBlatAssociationDao().find( gene );
     }
 
     @Override

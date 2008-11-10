@@ -24,8 +24,8 @@ package ubic.gemma.model.common.protocol;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.protocol.SoftwareService</code>, provides access to
- * all services and entities referenced by this service.
+ * Spring Service base class for <code>ubic.gemma.model.common.protocol.SoftwareService</code>, provides access to all
+ * services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.common.protocol.SoftwareService
@@ -35,17 +35,16 @@ public abstract class SoftwareServiceBase implements ubic.gemma.model.common.pro
     private ubic.gemma.model.common.protocol.SoftwareDao softwareDao;
 
     /**
-     * Sets the reference to <code>software</code>'s DAO.
+     * @see ubic.gemma.model.common.protocol.SoftwareService#find(ubic.gemma.model.common.protocol.Software)
      */
-    public void setSoftwareDao( ubic.gemma.model.common.protocol.SoftwareDao softwareDao ) {
-        this.softwareDao = softwareDao;
-    }
-
-    /**
-     * Gets the reference to <code>software</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.protocol.SoftwareDao getSoftwareDao() {
-        return this.softwareDao;
+    public ubic.gemma.model.common.protocol.Software find( final ubic.gemma.model.common.protocol.Software software ) {
+        try {
+            return this.handleFind( software );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.common.protocol.SoftwareServiceException(
+                    "Error performing 'ubic.gemma.model.common.protocol.SoftwareService.find(ubic.gemma.model.common.protocol.Software software)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -63,29 +62,24 @@ public abstract class SoftwareServiceBase implements ubic.gemma.model.common.pro
     }
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.protocol.Software)}
+     * @see ubic.gemma.model.common.protocol.SoftwareService#remove(ubic.gemma.model.common.protocol.Software)
      */
-    protected abstract ubic.gemma.model.common.protocol.Software handleFindOrCreate(
-            ubic.gemma.model.common.protocol.Software software ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.protocol.SoftwareService#find(ubic.gemma.model.common.protocol.Software)
-     */
-    public ubic.gemma.model.common.protocol.Software find( final ubic.gemma.model.common.protocol.Software software ) {
+    public void remove( final ubic.gemma.model.common.protocol.Software software ) {
         try {
-            return this.handleFind( software );
+            this.handleRemove( software );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.protocol.SoftwareServiceException(
-                    "Error performing 'ubic.gemma.model.common.protocol.SoftwareService.find(ubic.gemma.model.common.protocol.Software software)' --> "
+                    "Error performing 'ubic.gemma.model.common.protocol.SoftwareService.remove(ubic.gemma.model.common.protocol.Software software)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.protocol.Software)}
+     * Sets the reference to <code>software</code>'s DAO.
      */
-    protected abstract ubic.gemma.model.common.protocol.Software handleFind(
-            ubic.gemma.model.common.protocol.Software software ) throws java.lang.Exception;
+    public void setSoftwareDao( ubic.gemma.model.common.protocol.SoftwareDao softwareDao ) {
+        this.softwareDao = softwareDao;
+    }
 
     /**
      * @see ubic.gemma.model.common.protocol.SoftwareService#update(ubic.gemma.model.common.protocol.Software)
@@ -101,45 +95,16 @@ public abstract class SoftwareServiceBase implements ubic.gemma.model.common.pro
     }
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.protocol.Software)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.common.protocol.Software software )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.common.protocol.SoftwareService#remove(ubic.gemma.model.common.protocol.Software)
-     */
-    public void remove( final ubic.gemma.model.common.protocol.Software software ) {
-        try {
-            this.handleRemove( software );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.protocol.SoftwareServiceException(
-                    "Error performing 'ubic.gemma.model.common.protocol.SoftwareService.remove(ubic.gemma.model.common.protocol.Software software)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.protocol.Software)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.common.protocol.Software software )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
+     * <code>locale</code>.
      * 
-     * @return the current principal
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     * @param locale the locale of the messages to retrieve.
      */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
-    }
-
-    /**
-     * Gets the message source available to this service.
-     */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
+            final java.util.Locale locale ) {
+        return this.getMessages().getMessage( key, arguments, locale );
     }
 
     /**
@@ -152,8 +117,7 @@ public abstract class SoftwareServiceBase implements ubic.gemma.model.common.pro
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
      * 
      * @param key the key of the message in the messages.properties message bundle.
      * @param arguments any arguments to substitute when resolving the message.
@@ -163,16 +127,51 @@ public abstract class SoftwareServiceBase implements ubic.gemma.model.common.pro
     }
 
     /**
-     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
-     * <code>locale</code>.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     * @param locale the locale of the messages to retrieve.
+     * Gets the message source available to this service.
      */
-    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
-            final java.util.Locale locale ) {
-        return this.getMessages().getMessage( key, arguments, locale );
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
     }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Gets the reference to <code>software</code>'s DAO.
+     */
+    protected ubic.gemma.model.common.protocol.SoftwareDao getSoftwareDao() {
+        return this.softwareDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #find(ubic.gemma.model.common.protocol.Software)}
+     */
+    protected abstract ubic.gemma.model.common.protocol.Software handleFind(
+            ubic.gemma.model.common.protocol.Software software ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.protocol.Software)}
+     */
+    protected abstract ubic.gemma.model.common.protocol.Software handleFindOrCreate(
+            ubic.gemma.model.common.protocol.Software software ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #remove(ubic.gemma.model.common.protocol.Software)}
+     */
+    protected abstract void handleRemove( ubic.gemma.model.common.protocol.Software software )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.common.protocol.Software)}
+     */
+    protected abstract void handleUpdate( ubic.gemma.model.common.protocol.Software software )
+            throws java.lang.Exception;
 
 }
