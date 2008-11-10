@@ -166,7 +166,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
             init();
 
-            expressionExperimentService.thawLite( ee );
+            // expressionExperimentService.thawLite( ee );
             ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
                     .getName(), "Deleting dataset: " + ee.getId() );
 

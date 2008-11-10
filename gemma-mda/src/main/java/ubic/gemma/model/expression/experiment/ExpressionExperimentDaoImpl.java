@@ -222,133 +222,130 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     public void remove( final ExpressionExperiment toDelete ) {
 
         // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
-        // thawBioAssays( toDelete );
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( Session session ) throws HibernateException {
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( Session session ) throws HibernateException {
 
-                session.lock( toDelete, LockMode.NONE );
-                // log.info( "Loading data for deletion..." );
-                // ExpressionExperiment toDelete = ( ExpressionExperiment ) session
-                // .get( "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl", expressionExperiment
-                // .getId() );
-                //
-                Hibernate.initialize( toDelete.getBioAssayDataVectors() );
-                Hibernate.initialize( toDelete.getAuditTrail() );
+                        session.lock( toDelete, LockMode.NONE );
 
-                Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-                Set<QuantitationType> qts = new HashSet<QuantitationType>();
-                Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
-                Hibernate.initialize( designElementDataVectors );
-                toDelete.setRawExpressionDataVectors( null );
+                        Hibernate.initialize( toDelete.getBioAssayDataVectors() );
+                        Hibernate.initialize( toDelete.getAuditTrail() );
 
-                Collection<ProcessedExpressionDataVector> processedVectors = toDelete
-                        .getProcessedExpressionDataVectors();
-                Hibernate.initialize( processedVectors );
-                toDelete.setProcessedExpressionDataVectors( null );
+                        Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
+                        Set<QuantitationType> qts = new HashSet<QuantitationType>();
+                        Collection<RawExpressionDataVector> designElementDataVectors = toDelete
+                                .getRawExpressionDataVectors();
+                        Hibernate.initialize( designElementDataVectors );
+                        toDelete.setRawExpressionDataVectors( null );
 
-                int count = 0;
-                log.info( "Removing Design Element Data Vectors ..." );
-                for ( RawExpressionDataVector dv : designElementDataVectors ) {
-                    dims.add( dv.getBioAssayDimension() );
-                    qts.add( dv.getQuantitationType() );
-                    dv.setBioAssayDimension( null );
-                    dv.setQuantitationType( null );
-                    session.delete( dv );
-                    if ( ++count % 1000 == 0 ) {
-                        session.flush();
-                    }
-                    if ( count % 20000 == 0 ) {
-                        log.info( count + " design Element data vectors deleted" );
-                    }
-                }
-                designElementDataVectors.clear();
-                for ( ProcessedExpressionDataVector dv : processedVectors ) {
-                    dims.add( dv.getBioAssayDimension() );
-                    qts.add( dv.getQuantitationType() );
-                    dv.setBioAssayDimension( null );
-                    dv.setQuantitationType( null );
-                    session.delete( dv );
-                    if ( ++count % 1000 == 0 ) {
-                        session.flush();
-                    }
-                    if ( count % 20000 == 0 ) {
-                        log.info( count + " processed design Element data vectors deleted" );
-                    }
-                }
-                processedVectors.clear();
+                        Collection<ProcessedExpressionDataVector> processedVectors = toDelete
+                                .getProcessedExpressionDataVectors();
+                        Hibernate.initialize( processedVectors );
+                        toDelete.setProcessedExpressionDataVectors( null );
 
-                session.flush();
-                session.clear();
-                session.update( toDelete );
-
-                log.info( "Removing BioAssay Dimensions." );
-                for ( BioAssayDimension dim : dims ) {
-                    dim.getBioAssays().clear();
-                    session.update( dim );
-                    session.delete( dim );
-                }
-                dims.clear();
-                session.flush();
-
-                log.info( "Removing Bioassays and biomaterials" );
-                Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
-                for ( BioAssay ba : toDelete.getBioAssays() ) {
-                    // delete references to files on disk
-                    for ( LocalFile lf : ba.getDerivedDataFiles() ) {
-                        for ( LocalFile sf : lf.getSourceFiles() ) {
-                            session.delete( sf );
+                        int count = 0;
+                        log.info( "Removing Design Element Data Vectors ..." );
+                        for ( RawExpressionDataVector dv : designElementDataVectors ) {
+                            dims.add( dv.getBioAssayDimension() );
+                            qts.add( dv.getQuantitationType() );
+                            dv.setBioAssayDimension( null );
+                            dv.setQuantitationType( null );
+                            session.delete( dv );
+                            if ( ++count % 1000 == 0 ) {
+                                session.flush();
+                            }
+                            if ( count % 20000 == 0 ) {
+                                log.info( count + " design Element data vectors deleted" );
+                            }
                         }
-                        lf.getSourceFiles().clear();
-                        session.delete( lf );
+                        designElementDataVectors.clear();
+                        for ( ProcessedExpressionDataVector dv : processedVectors ) {
+                            dims.add( dv.getBioAssayDimension() );
+                            qts.add( dv.getQuantitationType() );
+                            dv.setBioAssayDimension( null );
+                            dv.setQuantitationType( null );
+                            session.delete( dv );
+                            if ( ++count % 1000 == 0 ) {
+                                session.flush();
+                            }
+                            if ( count % 20000 == 0 ) {
+                                log.info( count + " processed design Element data vectors deleted" );
+                            }
+                        }
+                        processedVectors.clear();
+
+                        session.flush();
+                        session.clear();
+                        session.update( toDelete );
+
+                        log.info( "Removing BioAssay Dimensions." );
+                        for ( BioAssayDimension dim : dims ) {
+                            dim.getBioAssays().clear();
+                            session.update( dim );
+                            session.delete( dim );
+                        }
+                        dims.clear();
+                        session.flush();
+
+                        log.info( "Removing Bioassays and biomaterials" );
+                        Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
+                        for ( BioAssay ba : toDelete.getBioAssays() ) {
+                            // delete references to files on disk
+                            for ( LocalFile lf : ba.getDerivedDataFiles() ) {
+                                for ( LocalFile sf : lf.getSourceFiles() ) {
+                                    session.delete( sf );
+                                }
+                                lf.getSourceFiles().clear();
+                                session.delete( lf );
+                            }
+                            ba.getDerivedDataFiles().clear();
+
+                            // Delete raw data files
+                            if ( ba.getRawDataFile() != null ) {
+                                session.delete( ba.getRawDataFile() );
+                                ba.setRawDataFile( null );
+                                // session.flush();
+                            }
+                            session.saveOrUpdate( ba );
+                            Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
+                            bioMaterialsToDelete.addAll( biomaterials );
+                            for ( BioMaterial bm : biomaterials ) {
+
+                                // fix for bug 855 - make sure this collection
+                                // is initialized.
+                                bm = ( BioMaterial ) session.merge( bm );
+                                Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                                Hibernate.initialize( bm.getFactorValues() );
+                                bm.getFactorValues().clear();
+                                bm.getBioAssaysUsedIn().clear();
+                                session.saveOrUpdate( bm );
+                            }
+                            biomaterials.clear();
+                            // session.evict( ba );
+                        }
+
+                        session.flush();
+
+                        log.info( "Last bits ..." );
+
+                        for ( BioMaterial bm : bioMaterialsToDelete ) {
+                            session.evict( bm );
+                        }
+
+                        for ( QuantitationType qt : qts ) {
+                            session.delete( qt );
+                        }
+
+                        // log.info( "Finishing up ..." );
+                        session.flush();
+                        // session.clear();
+                        session.update( toDelete );
+                        session.delete( toDelete );
+
+                        log.info( "Deleted " + toDelete );
+                        return null;
                     }
-                    ba.getDerivedDataFiles().clear();
-
-                    // Delete raw data files
-                    if ( ba.getRawDataFile() != null ) {
-                        session.delete( ba.getRawDataFile() );
-                        ba.setRawDataFile( null );
-                        // session.flush();
-                    }
-                    session.saveOrUpdate( ba );
-                    Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
-                    bioMaterialsToDelete.addAll( biomaterials );
-                    for ( BioMaterial bm : biomaterials ) {
-
-                        // fix for bug 855 - make sure this collection
-                        // is initialized.
-                        bm = ( BioMaterial ) session.merge( bm );
-                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                        Hibernate.initialize( bm.getFactorValues() );
-                        bm.getFactorValues().clear();
-                        bm.getBioAssaysUsedIn().clear();
-                        session.saveOrUpdate( bm );
-                    }
-                    biomaterials.clear();
-                    // session.evict( ba );
-                }
-
-                session.flush();
-
-                log.info( "Last bits ..." );
-
-                for ( BioMaterial bm : bioMaterialsToDelete ) {
-                    session.evict( bm );
-                }
-
-                for ( QuantitationType qt : qts ) {
-                    session.delete( qt );
-                }
-
-                // log.info( "Finishing up ..." );
-                session.flush();
-                // session.clear();
-                session.update( toDelete );
-                session.delete( toDelete );
-
-                log.info( "Deleted " + toDelete );
-                return null;
-            }
-        } );
+                } );
     }
 
     @Override
@@ -1392,12 +1389,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                try {
-                    session.lock( ee, LockMode.NONE );
-                } catch ( HibernateException e ) {
-                    // just go...this is really bad but dangling references to ee in 'opensessioninview' keeps coming
-                    // up.
-                }
+
+                session.lock( ee, LockMode.NONE );
+
                 Hibernate.initialize( ee );
                 Hibernate.initialize( ee.getQuantitationTypes() );
                 Hibernate.initialize( ee.getCharacteristics() );

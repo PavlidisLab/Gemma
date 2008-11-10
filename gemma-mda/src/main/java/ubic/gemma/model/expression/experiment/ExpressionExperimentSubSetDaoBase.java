@@ -88,7 +88,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#findByInvestigator(int,
      *      java.lang.String, ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
@@ -106,7 +106,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#findByInvestigator(int,
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final int transform,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
@@ -121,7 +121,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#findByInvestigator(java.lang.String,
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
@@ -131,7 +131,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     public java.util.Collection findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         return this.findByInvestigator( TRANSFORM_NONE, investigator );
     }
@@ -139,7 +139,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#load(int, java.lang.Long)
      */
-    @Override
+
     public ExpressionExperimentSubSet load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSubSet.load - 'id' can not be null" );
@@ -153,7 +153,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#load(java.lang.Long)
      */
-    @Override
+
     public ExpressionExperimentSubSet load( java.lang.Long id ) {
         return ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) this.load( TRANSFORM_NONE, id );
     }
@@ -161,7 +161,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#loadAll()
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
@@ -170,7 +170,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#loadAll(int)
      */
-    @Override
+
     public java.util.Collection loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl.class );
@@ -181,7 +181,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#remove(java.lang.Long)
      */
-    @Override
+
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSubSet.remove - 'id' can not be null" );
@@ -196,7 +196,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    @Override
+
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSubSet.remove - 'entities' can not be null" );
@@ -218,7 +218,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    @Override
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSubSet.update - 'entities' can not be null" );
@@ -260,7 +260,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
      */
-    @Override
+
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through

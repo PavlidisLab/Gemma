@@ -83,7 +83,7 @@ public abstract class GeneInvestigationDaoBase extends
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#findByInvestigator(int, java.lang.String,
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
@@ -101,7 +101,7 @@ public abstract class GeneInvestigationDaoBase extends
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#findByInvestigator(int,
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final int transform,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
@@ -116,7 +116,7 @@ public abstract class GeneInvestigationDaoBase extends
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#findByInvestigator(java.lang.String,
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
@@ -126,7 +126,7 @@ public abstract class GeneInvestigationDaoBase extends
     /**
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @Override
+
     public java.util.Collection findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         return this.findByInvestigator( TRANSFORM_NONE, investigator );
     }
@@ -134,7 +134,7 @@ public abstract class GeneInvestigationDaoBase extends
     /**
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#load(int, java.lang.Long)
      */
-    @Override
+
     public GeneInvestigation load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "GeneInvestigation.load - 'id' can not be null" );
@@ -148,7 +148,7 @@ public abstract class GeneInvestigationDaoBase extends
     /**
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#load(java.lang.Long)
      */
-    @Override
+
     public GeneInvestigation load( java.lang.Long id ) {
         return ( ubic.gemma.model.genome.gene.GeneInvestigation ) this.load( TRANSFORM_NONE, id );
     }
@@ -156,7 +156,7 @@ public abstract class GeneInvestigationDaoBase extends
     /**
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#loadAll()
      */
-    @Override
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
@@ -165,7 +165,7 @@ public abstract class GeneInvestigationDaoBase extends
     /**
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#loadAll(int)
      */
-    @Override
+
     public java.util.Collection loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.gene.GeneInvestigationImpl.class );
@@ -176,7 +176,7 @@ public abstract class GeneInvestigationDaoBase extends
     /**
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#remove(java.lang.Long)
      */
-    @Override
+
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "GeneInvestigation.remove - 'id' can not be null" );
@@ -191,7 +191,7 @@ public abstract class GeneInvestigationDaoBase extends
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    @Override
+
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneInvestigation.remove - 'entities' can not be null" );
@@ -212,7 +212,7 @@ public abstract class GeneInvestigationDaoBase extends
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    @Override
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneInvestigation.update - 'entities' can not be null" );
@@ -251,7 +251,7 @@ public abstract class GeneInvestigationDaoBase extends
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.genome.gene.GeneInvestigation)
      */
-    @Override
+
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
