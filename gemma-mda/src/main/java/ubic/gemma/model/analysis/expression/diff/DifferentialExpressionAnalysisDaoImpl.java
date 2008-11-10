@@ -212,8 +212,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
-        String[] paramNames = { "gene", "experimentsAnalyzed" };
-        Object[] objectValues = { gene, experimentsAnalyzed };
+        String[] paramNames = { "gene", "experimentsAnalyzed", "threshold" };
+        Object[] objectValues = { gene, experimentsAnalyzed, threshold };
 
         List qresult = this.getHibernateTemplate().findByNamedParam( qs, paramNames, objectValues );
 
