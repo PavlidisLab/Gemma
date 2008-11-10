@@ -430,26 +430,22 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 				}.createDelegate(this));
 
-		manager.on('reportUpdated', function() {
-					store.reload();
-				});
-
-		manager.on('tagsUpdated', function() {
-					store.reload();
-				});
-
-		manager.on('differential', function() {
-					store.reload();
-				});
-		manager.on('processedVector', function() {
-					store.reload();
-				});
-		manager.on('link', function() {
-					store.reload();
-				});
-		manager.on('missingValue', function() {
-					store.reload();
-				});
+		// manager.on('reportUpdated', function() {
+		// store.reload();
+		// });
+		//
+		// manager.on('differential', function() {
+		// store.reload();
+		// });
+		// manager.on('processedVector', function() {
+		// store.reload();
+		// });
+		// manager.on('link', function() {
+		// store.reload();
+		// });
+		// manager.on('missingValue', function() {
+		// store.reload();
+		//				});
 
 		var descriptionArea = new Ext.form.TextArea({
 					id : 'description',
