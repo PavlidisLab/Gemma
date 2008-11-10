@@ -38,7 +38,8 @@ public abstract class ExpressionAnalysisDaoBase<T extends ExpressionAnalysis> ex
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisDao#findByName(java.lang.String)
      */
 
-    public java.util.Collection findByName( java.lang.String name ) {
+    @Override
+    public java.util.Collection<T> findByName( java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, name );
     }
 
@@ -46,8 +47,8 @@ public abstract class ExpressionAnalysisDaoBase<T extends ExpressionAnalysis> ex
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisDao#findByName(java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
+    @Override
+    public java.util.Collection<T> findByName( final java.lang.String queryString, final java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );
     }
 
@@ -55,8 +56,8 @@ public abstract class ExpressionAnalysisDaoBase<T extends ExpressionAnalysis> ex
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisDao#findByName(int, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByName( final int transform, final java.lang.String name ) {
+    @Override
+    public java.util.Collection<T> findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
 
@@ -65,8 +66,9 @@ public abstract class ExpressionAnalysisDaoBase<T extends ExpressionAnalysis> ex
      *      java.lang.String)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByName( final int transform, final java.lang.String queryString,
+    public java.util.Collection<T> findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -91,8 +93,7 @@ public abstract class ExpressionAnalysisDaoBase<T extends ExpressionAnalysis> ex
      * @return the transformed entity (i.e. new value object, etc)
      * @see #transformEntities(int,java.util.Collection)
      */
-    protected Object transformEntity( final int transform,
-            final ubic.gemma.model.analysis.expression.ExpressionAnalysis entity ) {
+    protected Object transformEntity( final int transform, final T entity ) {
         Object target = null;
         if ( entity != null ) {
             switch ( transform ) {
@@ -117,8 +118,7 @@ public abstract class ExpressionAnalysisDaoBase<T extends ExpressionAnalysis> ex
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.analysis.expression.ExpressionAnalysis)
      */
-
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<T> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

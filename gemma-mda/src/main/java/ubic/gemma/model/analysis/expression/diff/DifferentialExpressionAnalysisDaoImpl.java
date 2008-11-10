@@ -48,128 +48,29 @@ import ubic.gemma.util.CommonQueries;
 public class DifferentialExpressionAnalysisDaoImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase {
 
+    private final String fetchResultsByGeneAndExperimentsQuery = "select e, r"
+            + " from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl bs2gp"
+            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
+            + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
+            + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
+            + " where bs2gp.bioSequence=bs and g=:gene and e in (:experimentsAnalyzed)";
+
     private Log log = LogFactory.getLog( this.getClass() );
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) {
-        final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.expressionExperimentSetAnalyzed eesa inner join eesa.experiments as ee "
-                + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    }
-
-    @Override
-    public Collection /* DifferentialExpressionAnalysis */findByName( String name ) {
+    public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select a from DifferentialExpressionAnalysisImpl as a where a.name = :name", "name", name );
     }
 
-    @Override
-    protected Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
-            Collection investigations ) throws Exception {
-        Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = new HashMap<Investigation, Collection<DifferentialExpressionAnalysis>>();
-
-        final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
-                + " inner join a.expressionExperimentSetAnalyzed eeSet inner join eeSet.experiments e where e in (:investigations)";
-        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, "investigations", investigations );
-        for ( Object o : qresult ) {
-            Object[] oa = ( Object[] ) o;
-            BioAssaySet bas = ( BioAssaySet ) oa[0];
-            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
-            if ( !results.containsKey( bas ) ) {
-                Collection<DifferentialExpressionAnalysis> deas = new HashSet<DifferentialExpressionAnalysis>();
-                results.put( bas, deas );
-            }
-            results.get( bas ).add( dea );
-        }
-        return results;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByInvestigation( Investigation investigation )
-            throws Exception {
-        final String queryString = "select distinct a from DifferentialExpressionAnalysisImpl a where :e in elements (a.expressionExperimentSetAnalyzed.experiments)";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
-    }
-
-    @Override
-    protected Map<Long, DifferentialExpressionAnalysis> handleFindByInvestigationIds( Collection investigationIds )
-            throws Exception {
-        Map<Long, DifferentialExpressionAnalysis> results = new HashMap<Long, DifferentialExpressionAnalysis>();
-        final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
-                + " inner join a.expressionExperimentSetAnalyzed eeSet inner join eeSet.experiments e where e.id in (:eeIds)";
-        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigationIds );
-        for ( Object o : qresult ) {
-            Object[] oa = ( Object[] ) o;
-            BioAssaySet bas = ( BioAssaySet ) oa[0];
-            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
-            results.put( bas.getId(), dea );
-        }
-        return results;
-    }
-
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
+     * .gemma.model.genome.Gene, java.util.Collection)
      */
     @SuppressWarnings("unchecked")
-    @Override
-    public void handleThaw( final Collection expressionAnalyses ) throws Exception {
-        for ( DifferentialExpressionAnalysis ea : ( Collection<DifferentialExpressionAnalysis> ) expressionAnalyses ) {
-            DifferentialExpressionAnalysis dea = ea;
-            thaw( dea );
-        }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindExperimentsWithAnalyses
-     *      (ubic.gemma.model.genome.Gene)
-     */
-    @Override
-    protected Collection handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
-
-        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
-
-        if ( probes.size() == 0 ) {
-            return new HashSet<ExpressionExperiment>();
-        }
-
-        /*
-         * The constraint on taxon is required because of the potential for array designs that use sequences from the
-         * "wrong" taxon, like GPL560. This way we ensure that we only get expression experiments for the same taxon as
-         * the gene.
-         */
-        final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a "
-                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba"
-                + " inner join ba.samplesUsed sa inner join ba.arrayDesignUsed ad"
-                + " inner join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon.id = "
-                + gene.getTaxon().getId();
-        return this.getHibernateTemplate().findByNamedParam( queryString, "probes", probes );
-    }
-
-    final String fetchResultsByGeneAndExperimentQuery = "select distinct r from DifferentialExpressionAnalysisImpl a"
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
-            + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
-            + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
-            + " inner join a.resultSets rs inner join rs.results r where r.probe=cs and g=:gene and e=:experimentAnalyzed";
-
-    final String queryString = "select distinct e, r from DifferentialExpressionAnalysisImpl a"
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
-            + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
-            + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
-            + " inner join a.resultSets rs inner join rs.results r where g=:gene and e in (:experimentsAnalyzed)";
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
-     *      .gemma.model.genome.Gene, java.util.Collection)
-     */
     public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> findResultsForGeneInExperiments( Gene gene,
             Collection<ExpressionExperiment> experimentsAnalyzed ) {
 
@@ -178,7 +79,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         String[] paramNames = { "gene", "experimentsAnalyzed" };
         Object[] objectValues = { gene, experimentsAnalyzed };
 
-        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
+        List qresult = this.getHibernateTemplate().findByNamedParam( fetchResultsByGeneAndExperimentsQuery, paramNames,
+                objectValues );
 
         for ( Object o : qresult ) {
 
@@ -199,16 +101,16 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene,
-     *      java.util.Collection, double)
+     * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#
+     * findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene, java.util.Collection, double)
      */
+    @SuppressWarnings("unchecked")
     public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperimentsMetThreshold(
             ubic.gemma.model.genome.Gene gene,
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
             double threshold ) {
 
-        final String qs = queryString + " and r.correctedPvalue < :threshold";
+        final String qs = fetchResultsByGeneAndExperimentsQuery + " and r.correctedPvalue < :threshold";
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
@@ -234,9 +136,24 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return results;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFind( Gene gene, ExpressionAnalysisResultSet resultSet, double threshold )
-            throws Exception {
+    public void handleThaw( final Collection expressionAnalyses ) throws Exception {
+        for ( DifferentialExpressionAnalysis ea : ( Collection<DifferentialExpressionAnalysis> ) expressionAnalyses ) {
+            DifferentialExpressionAnalysis dea = ea;
+            thaw( dea );
+        }
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<DifferentialExpressionAnalysis> handleFind( Gene gene, ExpressionAnalysisResultSet resultSet,
+            double threshold ) throws Exception {
         final String findByResultSet = "select distinct r from DifferentialExpressionAnalysisImpl a"
                 + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
                 + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
@@ -247,6 +164,87 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         Object[] objectValues = { gene, resultSet, threshold };
 
         return this.getHibernateTemplate().findByNamedParam( findByResultSet, paramNames, objectValues );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<DifferentialExpressionAnalysis> handleFindByInvestigation( Investigation investigation )
+            throws Exception {
+        final String queryString = "select distinct a from DifferentialExpressionAnalysisImpl a where :e in elements (a.expressionExperimentSetAnalyzed.experiments)";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
+    }
+
+    @Override
+    protected Map<Long, DifferentialExpressionAnalysis> handleFindByInvestigationIds( Collection<Long> investigationIds )
+            throws Exception {
+        Map<Long, DifferentialExpressionAnalysis> results = new HashMap<Long, DifferentialExpressionAnalysis>();
+        final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
+                + " inner join a.expressionExperimentSetAnalyzed eeSet inner join eeSet.experiments e where e.id in (:eeIds)";
+        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigationIds );
+        for ( Object o : qresult ) {
+            Object[] oa = ( Object[] ) o;
+            BioAssaySet bas = ( BioAssaySet ) oa[0];
+            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
+            results.put( bas.getId(), dea );
+        }
+        return results;
+    }
+
+    @Override
+    protected Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
+            Collection investigations ) throws Exception {
+        Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = new HashMap<Investigation, Collection<DifferentialExpressionAnalysis>>();
+
+        final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
+                + " inner join a.expressionExperimentSetAnalyzed eeSet inner join eeSet.experiments e where e in (:investigations)";
+        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, "investigations", investigations );
+        for ( Object o : qresult ) {
+            Object[] oa = ( Object[] ) o;
+            BioAssaySet bas = ( BioAssaySet ) oa[0];
+            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
+            if ( !results.containsKey( bas ) ) {
+                Collection<DifferentialExpressionAnalysis> deas = new HashSet<DifferentialExpressionAnalysis>();
+                results.put( bas, deas );
+            }
+            results.get( bas ).add( dea );
+        }
+        return results;
+    }
+
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) {
+        final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.expressionExperimentSetAnalyzed eesa inner join eesa.experiments as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindExperimentsWithAnalyses
+     * (ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
+
+        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
+
+        if ( probes.size() == 0 ) {
+            return new HashSet<ExpressionExperiment>();
+        }
+
+        /*
+         * The constraint on taxon is required because of the potential for array designs that use sequences from the
+         * "wrong" taxon, like GPL560. This way we ensure that we only get expression experiments for the same taxon as
+         * the gene.
+         */
+        final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a "
+                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba"
+                + " inner join ba.samplesUsed sa inner join ba.arrayDesignUsed ad"
+                + " inner join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon.id = "
+                + gene.getTaxon().getId();
+        return this.getHibernateTemplate().findByNamedParam( queryString, "probes", probes );
     }
 
     @Override

@@ -513,8 +513,8 @@
                 ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.create=admin
                 ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.delete=admin
                 ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findExperimentsWithAnalyses=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperiments=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperimentsMetThreshold=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
+                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperiments=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperimentsMetThreshold=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.analysis.AnalysisService.delete=admin
                 ubic.gemma.search.IndexService.runAll=admin
                 ubic.gemma.util.monitor.HibernateMonitor.getStats=admin

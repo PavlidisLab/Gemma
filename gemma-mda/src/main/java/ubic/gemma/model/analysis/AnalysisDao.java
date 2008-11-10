@@ -53,7 +53,7 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection findByName( int transform, java.lang.String name );
+    public java.util.Collection<T> findByName( int transform, java.lang.String name );
 
     /**
      * <p>
@@ -62,14 +62,14 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
      * in {@link #findByName(int, java.lang.String name)}.
      * </p>
      */
-    public java.util.Collection findByName( int transform, String queryString, java.lang.String name );
+    public java.util.Collection<T> findByName( int transform, String queryString, java.lang.String name );
 
     /**
      * <p>
      * Returns a collection of anaylsis that have a name that starts with the given name
      * </p>
      */
-    public java.util.Collection findByName( java.lang.String name );
+    public java.util.Collection<T> findByName( java.lang.String name );
 
     /**
      * <p>
@@ -78,11 +78,11 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
      * in {@link #findByName(java.lang.String)}.
      * </p>
      */
-    public java.util.Collection findByName( String queryString, java.lang.String name );
+    public java.util.Collection<T> findByName( String queryString, java.lang.String name );
 
     /**
      * 
      */
-    public java.util.Collection findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public java.util.Collection<T> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
 }

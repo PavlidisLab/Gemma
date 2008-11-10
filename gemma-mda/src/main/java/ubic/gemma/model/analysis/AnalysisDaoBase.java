@@ -38,7 +38,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
-    public java.util.Collection findByInvestigation( final ubic.gemma.model.analysis.Investigation investigation ) {
+    public java.util.Collection<T> findByInvestigation( final ubic.gemma.model.analysis.Investigation investigation ) {
         try {
             return this.handleFindByInvestigation( investigation );
         } catch ( Throwable th ) {
@@ -65,7 +65,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String)
      */
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByName( final int transform, final java.lang.String name ) {
+    public java.util.Collection<T> findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
 
@@ -73,7 +73,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String, java.lang.String)
      */
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByName( final int transform, final java.lang.String queryString,
+    public java.util.Collection<T> findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -88,22 +88,21 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String)
      */
-    public java.util.Collection findByName( java.lang.String name ) {
+    public java.util.Collection<T> findByName( java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, name );
     }
 
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
+    public java.util.Collection<T> findByName( final java.lang.String queryString, final java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );
     }
 
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    public java.util.Collection findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+    public java.util.Collection<T> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleFindByTaxon( taxon );
         } catch ( Throwable th ) {
@@ -116,7 +115,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * Performs the core logic for {@link #findByInvestigation(ubic.gemma.model.analysis.Investigation)}
      */
-    protected abstract java.util.Collection handleFindByInvestigation(
+    protected abstract java.util.Collection<T> handleFindByInvestigation(
             ubic.gemma.model.analysis.Investigation investigation ) throws java.lang.Exception;
 
     /**
@@ -128,7 +127,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
+    protected abstract java.util.Collection<T> handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
     /**
@@ -143,7 +142,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
      * @see #transformEntity(int,ubic.gemma.model.analysis.Analysis)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<T> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:
@@ -163,7 +162,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
      * @return the transformed entity (i.e. new value object, etc)
      * @see #transformEntities(int,java.util.Collection)
      */
-    protected Object transformEntity( final int transform, final ubic.gemma.model.analysis.Analysis entity ) {
+    protected Object transformEntity( final int transform, final T entity ) {
         Object target = null;
         if ( entity != null ) {
             switch ( transform ) {
