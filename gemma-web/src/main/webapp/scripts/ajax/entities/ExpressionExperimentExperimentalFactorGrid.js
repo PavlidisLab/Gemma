@@ -4,13 +4,11 @@ Ext.namespace('Gemma');
  * A grid holding the experiments and their associated factors.
  * 
  * @author keshav
- * @version $Id: ExpressionExperimentExperimentalFactorGrid.js,v 1.1 2008/06/23
- *          23:51:30 keshav Exp $
+ * @version $Id$
  * @class Gemma.ExperimentalFactorGrid
  * @extends Gemma.GemmaGridPanel
  */
-Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
-		Ext.grid.PropertyGrid, {
+Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(Ext.grid.PropertyGrid, {
 
 			loadMask : {
 				msg : 'Loading factors ...'
@@ -22,9 +20,8 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 			height : 250,
 
 			/**
-			 * Implementation note: PropertyGrid does not support custom cell
-			 * renders the way regular Grids do, so we preformat the Factor name
-			 * on the server.
+			 * Implementation note: PropertyGrid does not support custom cell renders the way regular Grids do, so we
+			 * preformat the Factor name on the server.
 			 */
 
 			initComponent : function() {
@@ -36,29 +33,32 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 					if (d.expressionExperiment) {
 
 						var s = new Ext.data.SimpleStore({
-							fields : [{
-								name : 'id',
-								type : 'int'
-							}, {
-								name : 'name',
-								type : 'string'
-							}, {
-								name : 'factorValues',
-								type : 'string'
-							}]
-						});
+									fields : [{
+												name : 'id',
+												type : 'int'
+											}, {
+												name : 'name',
+												type : 'string'
+											}, {
+												name : 'factorValues',
+												type : 'string'
+											}, {
+												name : 'numFactors',
+												type : 'int'
+											}]
+								});
 
 						var myData = [];
 
 						var combo = new Ext.form.ComboBox({
-							store : s,
-							editable : false,
-							forceSelection : true,
-							displayField : 'name',
-							selectOnFocus : true,
-							triggerAction : 'all',
-							mode : 'local'
-						});
+									store : s,
+									editable : false,
+									forceSelection : true,
+									displayField : 'name',
+									selectOnFocus : true,
+									triggerAction : 'all',
+									mode : 'local'
+								});
 
 						for (j in d.experimentalFactors) {
 							var f = d.experimentalFactors[j];
@@ -69,11 +69,11 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 						}
 
 						s.on("load", function(store, records, options) {
-							if (records.length < 2) {
-								/* disable the combo using this store */
-								this.disable();
-							}
-						}, combo);
+									if (records.length < 2) {
+										/* disable the combo using this store */
+										this.disable();
+									}
+								}, combo);
 
 						customEditors[d.expressionExperiment.name] = new Ext.grid.GridEditor(combo);
 						source[d.expressionExperiment.name] = d.experimentalFactors[0].name;
@@ -83,12 +83,11 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 				};
 
 				Ext.apply(this, {
-					source : source,
-					customEditors : customEditors
-				});
+							source : source,
+							customEditors : customEditors
+						});
 
-				Gemma.ExpressionExperimentExperimentalFactorGrid.superclass.initComponent
-						.call(this);
+				Gemma.ExpressionExperimentExperimentalFactorGrid.superclass.initComponent.call(this);
 
 				this.originalTitle = this.title;
 				this.colModel.config[0].header = "Experiments";

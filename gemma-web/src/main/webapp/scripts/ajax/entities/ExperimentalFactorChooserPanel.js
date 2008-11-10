@@ -20,7 +20,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	closeAction : 'hide',
 	constrainHeader : true,
 
-	title : "Choose the factors to analyze in each experiment",
+	title : "View/Choose the factors to analyze in each experiment",
 	eeFactorsMap : null,
 
 	reset : function(eeSet) {
@@ -76,9 +76,9 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 					if (efName == factorName) {
 						var efId = ef.id;
 						this.eeFactorsMap.push({
-							efId : efId,
-							eeId : eeId
-						});
+									efId : efId,
+									eeId : eeId
+								});
 
 						// console.log(eeId + " --> " + efId);
 						break;
@@ -94,8 +94,15 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	},
 
 	onHelp : function() {
-		window.open('http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser#FactorChooser',
-				'DataSetChooserHelp');
+
+		Ext.Msg
+				.alert(
+						"Help for factor choose",
+						"The meta-analysis can only use one factor per study. Experiments that have more"
+								+ " than one factor will be shown here (or view all experiments)."
+								+ " Click on the factor field to get a menu for choosing among multiple possibilities. For more help see <a target='_blank' "
+								+ "href='http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser#Datasetchooser-TheGemmaexperimentalfactorchooser'>this page</a>");
+
 	},
 
 	/*
@@ -105,28 +112,28 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	initComponent : function() {
 
 		Ext.apply(this, {
-			tbar : new Ext.Toolbar({
-				items : [{
-					pressed : true,
-					enableToggle : true,
-					text : Gemma.SHOW_ALL_FACTORS,
-					tooltip : "Click to show/hide all factors",
-					cls : 'x-btn-text-icon details',
-					toggleHandler : this.toggleFactors.createDelegate(this)
-				}]
-			}),
-			buttons : [{
-				id : 'done-selecting-button',
-				text : "Done",
-				handler : this.onCommit.createDelegate(this),
-				scope : this
-			}, {
-				id : 'help-selecting-button',
-				text : "Help",
-				handler : this.onHelp.createDelegate(this),
-				scope : this
-			}]
-		});
+					tbar : new Ext.Toolbar({
+								items : [{
+											pressed : true,
+											enableToggle : true,
+											text : Gemma.SHOW_ALL_FACTORS,
+											tooltip : "Click to show/hide all factors",
+											cls : 'x-btn-text-icon details',
+											toggleHandler : this.toggleFactors.createDelegate(this)
+										}]
+							}),
+					buttons : [{
+								id : 'done-selecting-button',
+								text : "Done",
+								handler : this.onCommit.createDelegate(this),
+								scope : this
+							}, {
+								id : 'help-selecting-button',
+								text : "Help",
+								handler : this.onHelp.createDelegate(this),
+								scope : this
+							}]
+				});
 
 		Gemma.ExperimentalFactorChooserPanel.superclass.initComponent.call(this);
 
@@ -159,7 +166,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 	filter : function(r, id) {
 
-		editor = this.efGrid.customEditors[id]; 
+		editor = this.efGrid.customEditors[id];
 
 		/*
 		 * IF there are multiple factors, show it.
@@ -181,17 +188,17 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	populateFactors : function(eeIds) {
 		if (!this.efGrid) {
 			Ext.apply(this, {
-				loadMask : new Ext.LoadMask(this.getEl(), {
-					msg : "Loading factors ..."
-				})
-			});
+						loadMask : new Ext.LoadMask(this.getEl(), {
+									msg : "Loading factors ..."
+								})
+					});
 			this.loadMask.show();
 		} else {
 			this.efGrid.loadMask.show();
 		}
 		DifferentialExpressionSearchController.getFactors(eeIds, {
-			callback : this.returnFromGetFactors.createDelegate(this)
-		});
+					callback : this.returnFromGetFactors.createDelegate(this)
+				});
 	},
 
 	/**
