@@ -27,35 +27,28 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
+import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.view.TextView;
-import cern.colt.list.DoubleArrayList;
 
 /**
+ * A controller used to get differential expression analysis and meta analysis results.
+ * 
  * @author keshav
  * @version $Id$ *
  * @spring.bean id="differentialExpressionSearchController"
@@ -64,8 +57,7 @@ import cern.colt.list.DoubleArrayList;
  * @spring.property name = "formView" value="diffExpressionSearchForm"
  * @spring.property name = "successView" value="diffExpressionResultsByExperiment"
  * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
- * @spring.property name = "differentialExpressionAnalysisResultService"
- *                  ref="differentialExpressionAnalysisResultService"
+ * @spring.property name = "geneDifferentialExpressionService" ref="geneDifferentialExpressionService"
  * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  */
@@ -73,14 +65,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
     private static final double DEFAULT_THRESHOLD = 0.01;
 
-    private static final String FV_SEP = ", ";
-
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
+    private GeneDifferentialExpressionService geneDifferentialExpressionService = null;
     private GeneService geneService = null;
     private ExpressionExperimentService expressionExperimentService = null;
-
-    private final int MAX_PVAL = 1;
 
     /**
      * 
@@ -90,43 +78,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
          * if true, reuses the same command object across the edit-submit-process (get-post-process).
          */
         setSessionForm( true );
-    }
-
-    /**
-     * When n probes map to the same gene, penalize by multiplying each pval by n and then take the 'best' value.
-     * 
-     * @param results
-     * @return the result with the min p value.
-     */
-    private ProbeAnalysisResult findMinPenalizedProbeResult( Collection<ProbeAnalysisResult> results ) {
-
-        ProbeAnalysisResult minResult = null;
-
-        int numProbesForGene = results.size();
-        if ( numProbesForGene == 1 ) {
-            return results.iterator().next();
-        }
-
-        double min = 0;
-        int i = 0;
-        for ( ProbeAnalysisResult r : results ) {
-
-            /* penalize pvals */
-            double pval = r.getPvalue() * numProbesForGene;
-            if ( pval > MAX_PVAL ) pval = MAX_PVAL;
-
-            /* find the best pval */
-            if ( i == 0 || pval <= min ) {
-                min = pval;
-                minResult = r;
-                minResult.setPvalue( min );
-            }
-
-            i++;
-        }
-
-        return minResult;
-
     }
 
     /**
@@ -209,115 +160,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             }
         }
 
-        /*
-         * Get results for each active experiment on given gene. Handling the threshold check below since we ignore this
-         * for the meta analysis. The results returned are for all factors, not just the factors we are seeking.
-         */
-        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> resultsMap = differentialExpressionAnalysisService
-                .findResultsForGeneInExperiments( g, activeExperiments );
-
-        log.debug( resultsMap.size() + " results for " + g + " in " + activeExperiments );
-
-        DifferentialExpressionMetaAnalysisValueObject mavo = new DifferentialExpressionMetaAnalysisValueObject();
-
-        DoubleArrayList pvaluesToCombine = new DoubleArrayList();
-
-        /* a gene can have multiple probes that map to it, so store one diff value object for each probe */
-        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
-
-        int numMetThreshold = 0;
-        /* each gene will have a row, and each row will have a row expander with supporting datasets */
-        for ( ExpressionExperiment ee : resultsMap.keySet() ) {
-
-            ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
-
-            Collection<ProbeAnalysisResult> probes = resultsMap.get( ee );
-            /* filter results for duplicate probes (those from experiments that had 2 way anova) */
-            Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
-                    .getExperimentalFactors( probes );
-
-            Collection<ProbeAnalysisResult> filteredResults = new HashSet<ProbeAnalysisResult>();
-            for ( ProbeAnalysisResult r : probes ) {
-                Collection<ExperimentalFactor> efs = dearToEf.get( r );
-                assert efs.size() > 0;
-                if ( efs.size() > 1 ) {
-                    // We always ignore interaction effects.
-                    continue;
-                }
-
-                ExperimentalFactor ef = efs.iterator().next();
-
-                assert eeFactorsMap.containsKey( ee.getId() ) : "eeFactorsMap does not contain ee=" + ee.getId();
-
-                Long sfId = eeFactorsMap.get( ee.getId() );
-                if ( !ef.getId().equals( sfId ) ) {
-                    /*
-                     * Screen out factors we're not using.
-                     */
-                    continue;
-                }
-
-                /* filtered result with chosen factor */
-                filteredResults.add( r );
-
-            }
-
-            if ( filteredResults.size() == 0 ) {
-                log.warn( "No result for ee=" + ee );
-                continue;
-            }
-
-            /*
-             * For the diff expression meta analysis, ignore threshold. Select the 'best' penalized probe if multiple
-             * probes map to the same gene.
-             */
-            ProbeAnalysisResult res = findMinPenalizedProbeResult( filteredResults );
-
-            Double p = res.getPvalue();
-            pvaluesToCombine.add( p );
-
-            /* for each filtered result, set up a devo (contains only results with chosen factor) */
-            for ( ProbeAnalysisResult r : filteredResults ) {
-                DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
-
-                Boolean metThreshold = r.getCorrectedPvalue() <= threshold ? true : false;
-                devo.setMetThreshold( metThreshold );
-
-                if ( metThreshold ) numMetThreshold++;
-
-                Boolean fisherContribution = r.equals( res ) ? true : false;
-                devo.setFisherContribution( fisherContribution );
-
-                devo.setGene( g );
-                devo.setExpressionExperiment( eevo );
-                devo.setProbe( r.getProbe().getName() );
-                devo.setProbeId( r.getProbe().getId() );
-                devo.setExperimentalFactors( new HashSet<ExperimentalFactorValueObject>() );
-                Collection<ExperimentalFactor> efs = dearToEf.get( r );
-                if ( efs == null ) {
-                    // This should not happen any more, but just in case.
-                    log.warn( "No experimentalfactor(s) for ProbeAnalysisResult: " + r.getId() );
-                    continue;
-                }
-                ExperimentalFactor ef = efs.iterator().next();
-
-                ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
-                devo.getExperimentalFactors().add( efvo );
-
-                devo.setP( r.getCorrectedPvalue() );
-                devo.setSortKey();
-                devos.add( devo );
-            }
-
-        }
-
-        double fisherPval = MetaAnalysis.fisherCombinePvalues( pvaluesToCombine );
-        mavo.setFisherPValue( fisherPval );
-        mavo.setGene( g );
-        mavo.setActiveExperiments( activeExperiments );
-        mavo.setProbeResults( devos );
-        mavo.setNumMetThreshold( numMetThreshold );
-        mavo.setSortKey();
+        DifferentialExpressionMetaAnalysisValueObject mavo = geneDifferentialExpressionService
+                .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
 
         return mavo;
     }
@@ -333,100 +177,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
 
-        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
         Gene g = geneService.load( geneId );
-        if ( g == null ) return devos;
-        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
-                .findExperimentsWithAnalyses( g );
-
-        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionAnalysisService
-                .findResultsForGeneInExperimentsMetThreshold( g, experimentsAnalyzed, threshold );
-
-        for ( ExpressionExperiment ee : results.keySet() ) {
-            ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
-
-            Collection<ProbeAnalysisResult> probeResults = results.get( ee );
-            Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
-                    .getExperimentalFactors( probeResults );
-
-            for ( ProbeAnalysisResult r : probeResults ) {
-                DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
-                devo.setGene( g );
-                devo.setExpressionExperiment( eevo );
-                devo.setProbe( r.getProbe().getName() );
-                devo.setProbeId( r.getProbe().getId() );
-                devo.setExperimentalFactors( new HashSet<ExperimentalFactorValueObject>() );
-                Collection<ExperimentalFactor> efs = dearToEf.get( r );
-                if ( efs == null ) {
-                    // This should not happen any more, but just in case.
-                    log.warn( "No experimentalfactor(s) for ProbeAnalysisResult: " + r.getId() );
-                    continue;
-                }
-                for ( ExperimentalFactor ef : efs ) {
-                    ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
-
-                    devo.getExperimentalFactors().add( efvo );
-                    devo.setSortKey();
-                }
-                devo.setP( r.getCorrectedPvalue() );
-                devo.setMetThreshold( r.getCorrectedPvalue() < threshold );
-                devos.add( devo );
-
-            }
-
-        }
-        return devos;
-    }
-
-    /**
-     * @param ef
-     * @return
-     */
-    private ExperimentalFactorValueObject configExperimentalFactorValueObject( ExperimentalFactor ef ) {
-        ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
-        efvo.setId( ef.getId() );
-        efvo.setName( ef.getName() );
-        efvo.setDescription( ef.getDescription() );
-        Characteristic category = ef.getCategory();
-        if ( category != null ) {
-            efvo.setCategory( category.getCategory() );
-            if ( category instanceof VocabCharacteristic )
-                efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
-        }
-        Collection<FactorValue> fvs = ef.getFactorValues();
-        String factorValuesAsString = StringUtils.EMPTY;
-
-        for ( FactorValue fv : fvs ) {
-            String fvName = fv.toString();
-            if ( StringUtils.isNotBlank( fvName ) ) {
-                factorValuesAsString += fvName + FV_SEP;
-            }
-        }
-
-        /* clean up the start and end of the string */
-        factorValuesAsString = StringUtils.remove( factorValuesAsString, ef.getName() + ":" );
-        factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, FV_SEP );
-
-        /*
-         * Preformat the factor name; due to Ext PropertyGrid limitations we can't do this on the client.
-         */
-        efvo.setName( ef.getName() + " (" + StringUtils.abbreviate( factorValuesAsString, 50 ) + ")" );
-
-        efvo.setFactorValues( factorValuesAsString );
-        return efvo;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    private ExpressionExperimentValueObject configExpressionExperimentValueObject( ExpressionExperiment ee ) {
-        ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
-        eevo.setId( ee.getId() );
-        eevo.setShortName( ee.getShortName() );
-        eevo.setName( ee.getName() );
-        eevo.setExternalUri( AnchorTagUtil.getExpressionExperimentUrl( eevo.getId() ) );
-        return eevo;
+        return geneDifferentialExpressionService.getDifferentialExpression( g, threshold );
     }
 
     /**
@@ -479,7 +231,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             eeefvo.setExpressionExperiment( eevo );
             eeefvo.setNumFactors( factors.size() );
             for ( ExperimentalFactor ef : factors ) {
-                ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
+                ExperimentalFactorValueObject efvo = geneDifferentialExpressionService
+                        .configExperimentalFactorValueObject( ef );
                 eeefvo.getExperimentalFactors().add( efvo );
             }
 
@@ -595,14 +348,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
-     * @param differentialExpressionAnalysisResultService
-     */
-    public void setDifferentialExpressionAnalysisResultService(
-            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
-        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
-    }
-
-    /**
      * @param geneService
      */
     public void setGeneService( GeneService geneService ) {
@@ -615,4 +360,13 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
+
+    /**
+     * @param geneDifferentialExpressionService
+     */
+    public void setGeneDifferentialExpressionService(
+            GeneDifferentialExpressionService geneDifferentialExpressionService ) {
+        this.geneDifferentialExpressionService = geneDifferentialExpressionService;
+    }
+
 }
