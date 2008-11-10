@@ -20,6 +20,8 @@ package ubic.gemma.web.controller.diff;
 
 import java.util.List;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
+
 
 /**
  * @author keshav

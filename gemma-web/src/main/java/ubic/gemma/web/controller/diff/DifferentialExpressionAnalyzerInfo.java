@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
 
 /**
  * Used to carry information about the experimental design analysis settings to clients.

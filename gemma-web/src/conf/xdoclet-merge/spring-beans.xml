@@ -1202,7 +1202,7 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.diff.DifferentialExpressionValueObject">
+			<entry key="ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>
@@ -1337,12 +1337,12 @@
 					</property>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject">
+			<entry key="ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.expression.experiment.FactorValueValueObject">
+			<entry key="ubic.gemma.analysis.expression.experiment.FactorValueValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>

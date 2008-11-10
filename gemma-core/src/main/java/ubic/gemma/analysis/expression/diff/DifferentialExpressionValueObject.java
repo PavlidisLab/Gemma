@@ -16,15 +16,15 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.diff;
+package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 
 /**
  * @author keshav

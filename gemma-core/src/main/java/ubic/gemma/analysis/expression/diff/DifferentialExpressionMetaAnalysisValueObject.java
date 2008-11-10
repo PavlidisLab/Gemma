@@ -1,4 +1,4 @@
-package ubic.gemma.web.controller.diff;
+package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 

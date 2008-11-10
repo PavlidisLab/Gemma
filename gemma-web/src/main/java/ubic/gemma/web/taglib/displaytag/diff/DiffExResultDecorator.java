@@ -24,9 +24,9 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
+import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.util.AnchorTagUtil;
-import ubic.gemma.web.controller.diff.DifferentialExpressionValueObject;
-import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 
 /**
  * Rendering of differential expression results for displaytag tables.

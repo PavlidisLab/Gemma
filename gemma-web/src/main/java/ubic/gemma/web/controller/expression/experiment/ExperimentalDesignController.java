@@ -32,6 +32,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.analysis.expression.experiment.FactorValueValueObject;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;

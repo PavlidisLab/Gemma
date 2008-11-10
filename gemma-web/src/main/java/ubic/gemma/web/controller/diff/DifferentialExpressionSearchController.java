@@ -31,6 +31,9 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
+import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -48,7 +51,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.web.controller.BaseFormController;
-import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.view.TextView;
 import cern.colt.list.DoubleArrayList;

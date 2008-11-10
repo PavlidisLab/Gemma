@@ -33,6 +33,7 @@ import ubic.gemma.analysis.expression.diff.TTestAnalyzer;
 import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithInteractionsAnalyzer;
 import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithoutInteractionsAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
+import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask;
@@ -45,7 +46,6 @@ import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
-import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
 
 /**
