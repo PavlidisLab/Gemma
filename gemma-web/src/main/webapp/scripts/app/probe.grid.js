@@ -106,6 +106,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	autoExpandColumn : 'alignment',
 	autoScroll : true,
+	stateful : false,
 
 	record : Ext.data.Record.create([{
 		name : "identity",

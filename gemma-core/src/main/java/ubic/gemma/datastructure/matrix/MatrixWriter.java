@@ -79,7 +79,6 @@ public class MatrixWriter<T> {
             }
 
             if ( writeGeneInfo ) {
-                buf.append( "\t" );
                 addGeneInfo( buf, probeForRow, geneAnnotations );
             }
 

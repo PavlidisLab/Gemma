@@ -10,6 +10,7 @@ Ext.namespace('Gemma');
 Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 
 			stripeRows : true,
+			stateful : false,
 			viewConfig : {
 				forceFit : true
 			},

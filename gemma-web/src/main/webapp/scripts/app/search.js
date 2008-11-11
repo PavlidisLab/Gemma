@@ -346,6 +346,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 	loadMask : true,
 	stripeRows : true,
 	collapsible : false,
+	stateful : false,
 	title : "Search results",
 	selModel : new Ext.grid.RowSelectionModel({
 		singleSelect : true

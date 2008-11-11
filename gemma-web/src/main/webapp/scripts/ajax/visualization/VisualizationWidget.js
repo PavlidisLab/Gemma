@@ -461,6 +461,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	bodyStyle : "background:white",
 	layout : 'border',
 	constrainHeader : true,
+	stateful : false,
 	title : "Visualization",
 	height : Gemma.ZOOM_PLOT_SIZE,
 	width : Gemma.PLOT_SIZE,
