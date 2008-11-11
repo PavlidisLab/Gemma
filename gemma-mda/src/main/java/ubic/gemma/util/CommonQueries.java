@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.ScrollMode;
@@ -34,9 +33,6 @@ import org.hibernate.Session;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.type.LongType;
 
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -65,8 +61,8 @@ public class CommonQueries {
         // Safety 1st....
         if ( ees == null || ees.isEmpty() ) return eeAdMap;
 
-        final String eeAdQuery = "select distinct ee,b.arrayDesignUsed from ExpressionExperimentImpl as ee inner join "
-                + "ee.bioAssays b where ee in (:ees)";
+        final String eeAdQuery = "select distinct ee,ad from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee in (:ees)";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setCacheable( true );
@@ -93,14 +89,24 @@ public class CommonQueries {
     @SuppressWarnings("unchecked")
     public static Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, Session session ) {
 
-        final String eeAdQuery = "select b.arrayDesignUsed from ExpressionExperimentImpl as ee inner join "
-                + "ee.bioAssays b where ee = :ee";
+        if ( ee == null ) {
+            return null;
+        }
+
+        final String eeAdQuery = "select ad from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee = :ee";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setCacheable( true );
         queryObject.setParameter( "ee", ee );
-        return queryObject.list();
-
+        List list = queryObject.list();
+        /*
+         * Thaw the TT. 
+         */
+        for ( ArrayDesign ad : ( Collection<ArrayDesign> ) list ) {
+            ad.getTechnologyType();
+        }
+        return list;
     }
 
     /**
