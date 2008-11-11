@@ -1002,20 +1002,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         String sId = request.getParameter( "id" );
 
         Collection<ExpressionExperimentValueObject> expressionExperiments = loadStatusSummaries( sId );
-
-        // Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
-        // public int compare( Object o1, Object o2 ) {
-        // String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
-        // String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
-        // int comparison = s1.compareToIgnoreCase( s2 );
-        // return comparison;
-        // }
-        // } );
-        if ( sId == null ) {
-            this.saveMessage( request, "Displaying all Datasets" );
-        }
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
         ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
+
+        if ( expressionExperiments.size() == 0 ) {
+            this.saveMessage( request, "There are no datasets to display." );
+        } else {
+            this.saveMessage( request, "Displaying " + expressionExperiments.size() + " datasets" );
+        }
+
         mav.addObject( "expressionExperiments", expressionExperiments );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
 
@@ -1279,6 +1274,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     private Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
             Collection<ExpressionExperiment> securedEEs ) {
+
+        if ( securedEEs.size() == 0 ) {
+            return new HashSet<ExpressionExperimentValueObject>();
+        }
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<Long> ids = new HashSet<Long>();
@@ -1301,7 +1300,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param eeCol
      * @return Collection<ExpressionExperimentValueObject>
      */
-    @SuppressWarnings("unchecked")
     private Collection<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects(
             Collection<Long> eeIds, boolean filterDataForUser ) {
 
@@ -1377,7 +1375,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param ee
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<AuditEvent> getSampleRemovalEvents( ExpressionExperiment ee ) {
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( ee );

@@ -82,7 +82,6 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.AbstractSpringAwareCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -92,6 +91,8 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
                 "Optional path to the gene_info and gene2accession files" ).withLongOpt( "file" ).create( 'f' );
 
         addOption( pathOption );
+
+        requireLogin();
     }
 
     @Override

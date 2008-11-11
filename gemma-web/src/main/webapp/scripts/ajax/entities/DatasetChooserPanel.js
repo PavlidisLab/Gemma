@@ -29,6 +29,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			border : false,
 			autoWidth : true,
 			isAdmin : false,
+			stateful : false,
 
 			setState : function(state) {
 				if (this.ready) {

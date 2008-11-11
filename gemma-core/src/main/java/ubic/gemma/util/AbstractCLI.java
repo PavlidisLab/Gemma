@@ -106,6 +106,8 @@ public abstract class AbstractCLI {
     protected Collection<Object> errorObjects = new HashSet<Object>();
 
     protected Collection<Object> successObjects = new HashSet<Object>();
+    protected Option passwordOpt;
+    protected Option usernameOpt;
 
     public AbstractCLI() {
         this.buildStandardOptions();
@@ -235,6 +237,18 @@ public abstract class AbstractCLI {
 
     public boolean hasOption( String opt ) {
         return commandLine.hasOption( opt );
+    }
+
+    /**
+     * Call in 'buildOptions' to force users to provide a user name and password.
+     */
+    protected void requireLogin() {
+        if ( this.passwordOpt != null ) {
+            this.passwordOpt.setRequired( true );
+        }
+        if ( this.usernameOpt != null ) {
+            this.usernameOpt.setRequired( true );
+        }
     }
 
     /**
@@ -392,12 +406,12 @@ public abstract class AbstractCLI {
      */
     @SuppressWarnings("static-access")
     protected void addUserNameAndPasswordOptions( boolean required ) {
-        Option usernameOpt = OptionBuilder.withArgName( "user" ).withLongOpt( "user" ).hasArg().withDescription(
+        this.usernameOpt = OptionBuilder.withArgName( "user" ).withLongOpt( "user" ).hasArg().withDescription(
                 "User name for accessing the system (optional for some tools)" ).create( USERNAME_OPTION );
 
         usernameOpt.setRequired( required );
 
-        Option passwordOpt = OptionBuilder.withArgName( "passwd" ).withLongOpt( "password" ).hasArg().withDescription(
+        this.passwordOpt = OptionBuilder.withArgName( "passwd" ).withLongOpt( "password" ).hasArg().withDescription(
                 "Password for accessing the system (optional for some tools)" ).create( PASSWORD_CONSTANT );
         passwordOpt.setRequired( required );
 

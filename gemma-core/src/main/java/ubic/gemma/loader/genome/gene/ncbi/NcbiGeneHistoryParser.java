@@ -30,14 +30,16 @@ import ubic.gemma.loader.genome.gene.ncbi.model.NcbiGeneHistory;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 
 /**
- * Parse the NCBI "gene_history" file. File format : tax_id, GeneID,Discontinued_GeneID, Discontinued_Symbol; (tab is
- * used as a separator, pound sign - start of a comment) File is obtained from ftp.ncbi.nih.gov.gene/DATA
+ * Parse the NCBI "gene_history" file. File format : tax_id, GeneID,Discontinued_GeneID, Discontinued_Symbol,
+ * Discontinue_Date; (tab is used as a separator, pound sign - start of a comment) File is obtained from
+ * ftp.ncbi.nih.gov.gene/DATA
  * 
  * @author paul
  * @version $Id$
  */
 public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHistory> {
 
+    private static final int GENE_HISTORY_FILE_NUM_FIELDS = 5;
     BlockingQueue<NcbiGeneHistory> queue = null;
     Map<String, NCBIGeneInfo> geneInfo = null;
 
@@ -48,15 +50,17 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
         return id2history.values();
     }
 
+    @Override
     public NcbiGeneHistory parseOneLine( String line ) {
         if ( line.startsWith( "#" ) ) {
             return null;
         }
         String[] fields = StringUtils.split( line, '\t' );
 
-        if ( fields.length != 4 ) {
+        if ( fields.length != GENE_HISTORY_FILE_NUM_FIELDS ) {
             // sanity check.
-            throw new IllegalStateException( "NCBI gene_history file has unexpected column count" );
+            throw new IllegalStateException( "NCBI gene_history file has unexpected column count. Expected "
+                    + GENE_HISTORY_FILE_NUM_FIELDS + ", got " + fields.length + " in line=" + line );
         }
 
         // String taxonId = fields[0];

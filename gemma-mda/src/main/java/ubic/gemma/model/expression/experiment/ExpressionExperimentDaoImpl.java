@@ -1018,9 +1018,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Long, Integer> handleGetPopulatedFactorCounts( Collection ids ) throws Exception {
+    protected Map<Long, Integer> handleGetPopulatedFactorCounts( Collection<Long> ids ) throws Exception {
         Map<Long, Integer> results = new HashMap<Long, Integer>();
-        for ( Long id : ( Collection<Long> ) ids ) {
+        if ( ids.size() == 0 ) {
+            return results;
+        }
+
+        for ( Long id : ids ) {
             results.put( id, 0 );
         }
 

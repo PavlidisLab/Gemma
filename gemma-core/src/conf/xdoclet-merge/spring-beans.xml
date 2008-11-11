@@ -33,7 +33,7 @@
 </bean>
 <bean id="mailMessage" class="org.springframework.mail.SimpleMailMessage" singleton="false">
 	<property name="from">
-		<value>${mail.from.address}</value>
+		<value>${gemma.admin.email}</value>
 	</property>
 </bean>
 <!-- 
@@ -53,7 +53,6 @@
 	</property>
 	<property name="locations">
 		<list>
-			<value>classpath:mail.properties</value>
 			<value>classpath:default.properties</value>
 		</list>
 	</property>
