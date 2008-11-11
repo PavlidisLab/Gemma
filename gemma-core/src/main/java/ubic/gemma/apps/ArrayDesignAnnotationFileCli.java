@@ -136,14 +136,14 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 GENENAME_LISTFILE_OPTION );
         addOption( geneListFile );
 
-        Option taxonName = OptionBuilder
+        Option taxonNameOption = OptionBuilder
                 .hasArg()
                 .withDescription(
                         "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all known genes for the taxon" )
                 .create( "taxon" );
-        addOption( taxonName );
+        addOption( taxonNameOption );
 
-        Option overWrite = OptionBuilder.withArgName( "Overwrites existing files" ).withDescription(
+        Option overWriteOption = OptionBuilder.withArgName( "Overwrites existing files" ).withDescription(
                 "If set will overwrite existing annotation files in the output directory" ).withLongOpt( "overwrite" )
                 .create( 'o' );
 
@@ -152,7 +152,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         addOption( fileLoading );
         addOption( genesIncludedOption );
         addOption( batchLoading );
-        addOption( overWrite );
+        addOption( overWriteOption );
 
     }
 
@@ -194,7 +194,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             } else {
                 if ( arrayDesignName == null ) {
                     throw new IllegalArgumentException(
-                            "You must specific an array design, a taxon, gene file, or batch." );
+                            "You must specify an array design, a taxon, gene file, or batch." );
                 }
                 ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
                 if ( type != null ) {

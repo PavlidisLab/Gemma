@@ -61,6 +61,7 @@ import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -113,7 +114,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
     private static boolean AJAX = true;
 
-    @SuppressWarnings("unused")
     private static Log log = LogFactory.getLog( ArrayDesignController.class.getName() );
 
     private SearchService searchService;
@@ -130,7 +130,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -161,7 +160,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param response
      * @return
      */
-    @SuppressWarnings("unused")
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
         String stringId = request.getParameter( "id" );
 
@@ -184,7 +182,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         // check that no EE depend on the arraydesign we want to delete
         // Do this by checking if there are any bioassays that depend this AD
-        Collection assays = arrayDesignService.getAllAssociatedBioAssays( id );
+        Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( id );
         if ( assays.size() != 0 ) {
             // String eeName = ( ( BioAssay ) assays.iterator().next() )
             // todo tell user what EE depends on this array design
@@ -418,7 +416,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( ed.getId() + " not found" );
         }
-        Collection assays = arrayDesignService.getAllAssociatedBioAssays( ed.getId() );
+        Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( ed.getId() );
         if ( assays.size() != 0 ) {
             throw new IllegalArgumentException( "Cannot delete " + arrayDesign
                     + ", it is used by an expression experiment" );
@@ -474,8 +472,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param errors
      * @return
      */
-    // @SuppressWarnings({ "unused", "unchecked" })
-    @SuppressWarnings("unchecked")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String name = request.getParameter( "name" );
         String idStr = request.getParameter( "id" );
@@ -537,13 +533,16 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesign> mergees = arrayDesign.getMergees();
         ArrayDesign merger = arrayDesign.getMergedInto();
 
-        File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName() + "_NoParents"
+        File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName()
+                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
-        File fap = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName() + "_AllParents"
+        File fap = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName()
+                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
-        File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName() + "_BioProcess"
+        File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName()
+                + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
         if ( fnp.exists() ) {
@@ -699,7 +698,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView showExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         if ( id == null ) {
@@ -713,10 +711,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
         }
 
-        Collection ees = arrayDesignService.getExpressionExperiments( arrayDesign );
+        Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( arrayDesign );
         Collection<Long> eeIds = new ArrayList<Long>();
-        for ( Object object : ees ) {
-            eeIds.add( ( ( ExpressionExperiment ) object ).getId() );
+        for ( ExpressionExperiment object : ees ) {
+            eeIds.add( object.getId() );
         }
         String ids = StringUtils.join( eeIds.toArray(), "," );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
@@ -787,7 +785,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             this.id = id;
         }
 
-        @SuppressWarnings("unchecked")
         public ModelAndView call() throws Exception {
 
             init();
@@ -826,7 +823,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             this.ad = ad;
         }
 
-        @SuppressWarnings("unchecked")
         public ModelAndView call() throws Exception {
 
             init();

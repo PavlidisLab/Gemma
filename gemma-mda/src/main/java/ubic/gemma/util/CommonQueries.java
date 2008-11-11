@@ -93,7 +93,7 @@ public class CommonQueries {
             return null;
         }
 
-        final String eeAdQuery = "select ad from ExpressionExperimentImpl as ee inner join "
+        final String eeAdQuery = "select distinct ad from ExpressionExperimentImpl as ee inner join "
                 + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee = :ee";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );

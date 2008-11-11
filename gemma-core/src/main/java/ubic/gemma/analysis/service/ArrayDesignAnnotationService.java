@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.collections.Transformer;
@@ -63,16 +64,15 @@ import ubic.gemma.util.DateUtil;
  * Methods to generate annotations for array designs, based on information alreay in the database. This can be used to
  * generate annotation files used for ermineJ, for eexample. The file format:
  * <ul>
- * <li> The file is tab-delimited text. Comma-delimited files or Excel spreadsheets (for example) are not supported.
- * </li>
- * <li> There is a one-line header included in the file for readability. </li>
- * <li> The first column contains the probe identifier </li>
- * <li> The second column contains a gene symbol(s). Clusters are delimited by '|' and genes within clusters are
+ * <li>The file is tab-delimited text. Comma-delimited files or Excel spreadsheets (for example) are not supported.</li>
+ * <li>There is a one-line header included in the file for readability.</li>
+ * <li>The first column contains the probe identifier</li>
+ * <li>The second column contains a gene symbol(s). Clusters are delimited by '|' and genes within clusters are
  * delimited by ','</li>
- * <li> The third column contains the gene names (or description). Clusters are delimited by '|' and names within
+ * <li>The third column contains the gene names (or description). Clusters are delimited by '|' and names within
  * clusters are delimited by '$'</li>
- * <li> The fourth column contains a delimited list of GO identifiers. These include the "GO:" prefix. Thus they read
- * "GO:00494494" and not "494494". Delimited by '|'. </li>
+ * <li>The fourth column contains a delimited list of GO identifiers. These include the "GO:" prefix. Thus they read
+ * "GO:00494494" and not "494494". Delimited by '|'.</li>
  * </ul>
  * <p>
  * Note that for backwards compatibility, GO terms are not segregated by gene cluster.
@@ -304,7 +304,7 @@ public class ArrayDesignAnnotationService {
      * @return
      */
     public static String mungeFileName( String fileBaseName ) {
-        return fileBaseName.replaceAll( File.separator, "_" );
+        return fileBaseName.replaceAll( Pattern.quote( File.separator ), "_" );
     }
 
     /**
