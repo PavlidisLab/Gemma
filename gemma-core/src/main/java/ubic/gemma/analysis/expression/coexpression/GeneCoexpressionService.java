@@ -214,16 +214,24 @@ public class GeneCoexpressionService {
             geneIds.add( gene.getId() );
         }
 
-        /*
-         * FIXME this is done just naively (slow) right now. TODO allow the user to show only interactions among their
-         * genes of interest and filter the results before the time-consuming analysis is done...
-         */
-        for ( Gene queryGene : genes ) {
+        Map<Gene, CoexpressionCollectionValueObject> allCoexpressions = new HashMap<Gene, CoexpressionCollectionValueObject>();
 
-            CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
-                    ees, stringency, knownGenesOnly, maxResults );
+        if ( genes.size() == 1 ) {
+            Gene soleQueryGene = genes.iterator().next();
+            allCoexpressions.put( soleQueryGene, probeLinkCoexpressionAnalyzer.linkAnalysis( soleQueryGene, ees,
+                    stringency, knownGenesOnly, maxResults ) );
+        } else {
+            /*
+             * Batch mode
+             */
+            allCoexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( genes, ees, stringency, knownGenesOnly,
+                    queryGenesOnly, maxResults );
+        }
 
-            // FIXME: only the last error state is preserved. That might be okay...
+        for ( Gene queryGene : allCoexpressions.keySet() ) {
+
+            CoexpressionCollectionValueObject coexpressions = allCoexpressions.get( queryGene );
+
             result.setErrorState( coexpressions.getErrorState() );
 
             addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getKnownGeneCoexpression(),
@@ -334,7 +342,7 @@ public class GeneCoexpressionService {
 
                 // The thaw needs to be done here because building the value object
                 // calls methods that require the gene's info (setSortKey, hashCode)
-                geneService.thaw( foundGene );
+               //  geneService.thaw( foundGene );
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 

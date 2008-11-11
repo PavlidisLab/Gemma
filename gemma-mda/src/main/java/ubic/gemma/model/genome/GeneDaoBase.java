@@ -22,8 +22,12 @@
 //
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+import java.util.Map;
+
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
  * <p>
@@ -496,8 +500,25 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @see ubic.gemma.model.genome.GeneDao#getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection,
      *      java.lang.Integer, boolean)
      */
-    public java.lang.Object getCoexpressedGenes( final ubic.gemma.model.genome.Gene gene,
-            final java.util.Collection<ExpressionExperiment> ees, final java.lang.Integer stringency,
+    public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes(
+            final Collection<ubic.gemma.model.genome.Gene> genes,
+            final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
+            final boolean knownGenesOnly, final boolean interGeneOnly ) {
+        try {
+            return this.handleGetCoexpressedGenes( genes, ees, stringency, knownGenesOnly, interGeneOnly );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.genome.GeneDao.getCoexpressedGenes(ubic.gemma.model.genome.Gene gene, java.util.Collection ees, java.lang.Integer stringency, boolean knownGenesOnly)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneDao#getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection,
+     *      java.lang.Integer, boolean)
+     */
+    public CoexpressionCollectionValueObject getCoexpressedGenes( final ubic.gemma.model.genome.Gene gene,
+            final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
             final boolean knownGenesOnly ) {
         try {
             return this.handleGetCoexpressedGenes( gene, ees, stringency, knownGenesOnly );
@@ -596,6 +617,19 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     }
 
     /**
+     * @see ubic.gemma.model.genome.GeneDao#load(java.util.Collection)
+     */
+    public java.util.Collection<Gene> load( final java.util.Collection<Long> ids ) {
+        try {
+            return this.handleLoadMultiple( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.genome.GeneDao.loadMultiple(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.genome.GeneDao#loadAll()
      */
 
@@ -623,19 +657,6 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.genome.GeneDao.loadKnownGenes(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#load(java.util.Collection)
-     */
-    public java.util.Collection<Gene> load( final java.util.Collection<Long> ids ) {
-        try {
-            return this.handleLoadMultiple( ids );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.loadMultiple(java.util.Collection ids)' --> "
                             + th, th );
         }
     }
@@ -813,12 +834,16 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     protected abstract ubic.gemma.model.genome.Gene handleFindByOfficialSymbol( java.lang.String symbol,
             ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
+    protected abstract Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( Collection<Gene> genes,
+            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGeneOnly )
+            throws Exception;
+
     /**
      * Performs the core logic for
      * {@link #getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection, java.lang.Integer, boolean)}
      */
-    protected abstract java.lang.Object handleGetCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<ExpressionExperiment> ees, java.lang.Integer stringency, boolean knownGenesOnly )
+    protected abstract CoexpressionCollectionValueObject handleGetCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly )
             throws java.lang.Exception;
 
     /**

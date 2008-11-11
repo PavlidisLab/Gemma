@@ -286,7 +286,6 @@
 				ubic.gemma.model.genome.gene.GeneService.getCompositeSequences=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.gene.GeneService.getCompositeSequenceCountById=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.gene.GeneService.getCompositeSequencesById=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.genome.gene.GeneService.getMultipleCoexpressionResults=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.gene.GeneService.loadProbeAlignedRegions=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.gene.GeneService.loadKnownGenes=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.gene.GeneService.loadPredictedGenes=PROPAGATION_REQUIRED,readOnly

@@ -22,9 +22,15 @@
 //
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+import java.util.Map;
+
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
+import ubic.gemma.model.genome.Qtl;
 
 /**
  * <p>
@@ -95,7 +101,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#findAllQtlsByPhysicalMapLocation(ubic.gemma.model.genome.PhysicalLocation)
      */
-    public java.util.Collection findAllQtlsByPhysicalMapLocation(
+    public java.util.Collection<Qtl> findAllQtlsByPhysicalMapLocation(
             final ubic.gemma.model.genome.PhysicalLocation physicalMapLocation ) {
         try {
             return this.handleFindAllQtlsByPhysicalMapLocation( physicalMapLocation );
@@ -218,8 +224,9 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
      * @see ubic.gemma.model.genome.gene.GeneService#getCoexpressedGenes(ubic.gemma.model.genome.Gene,
      *      java.util.Collection, java.lang.Integer, boolean)
      */
-    public java.lang.Object getCoexpressedGenes( final ubic.gemma.model.genome.Gene gene,
-            final java.util.Collection ees, final java.lang.Integer stringency, final boolean knownGenesOnly ) {
+    public CoexpressionCollectionValueObject getCoexpressedGenes( final ubic.gemma.model.genome.Gene gene,
+            final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
+            final boolean knownGenesOnly ) {
         try {
             return this.handleGetCoexpressedGenes( gene, ees, stringency, knownGenesOnly );
         } catch ( Throwable th ) {
@@ -230,10 +237,27 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     }
 
     /**
+     * @see ubic.gemma.model.genome.gene.GeneService#getCoexpressedGenes(ubic.gemma.model.genome.Gene,
+     *      java.util.Collection, java.lang.Integer, boolean)
+     */
+    public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes(
+            final Collection<ubic.gemma.model.genome.Gene> genes,
+            final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
+            final boolean knownGenesOnly, final boolean interGenesOnly ) {
+        try {
+            return this.handleGetCoexpressedGenes( genes, ees, stringency, knownGenesOnly, interGenesOnly );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.gene.GeneServiceException(
+                    "Error performing 'ubic.gemma.model.genome.gene.GeneService.getCoexpressedGenes(Collection<ubic.gemma.model.genome.Gene> genes, java.util.Collection ees, java.lang.Integer stringency, boolean knownGenesOnly)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.genome.gene.GeneService#getCoexpressedKnownGenes(ubic.gemma.model.genome.Gene,
      *      java.util.Collection, java.lang.Integer)
      */
-    public java.util.Collection getCoexpressedKnownGenes( final ubic.gemma.model.genome.Gene gene,
+    public java.util.Collection<Gene> getCoexpressedKnownGenes( final ubic.gemma.model.genome.Gene gene,
             final java.util.Collection ees, final java.lang.Integer stringency ) {
         try {
             return this.handleGetCoexpressedKnownGenes( gene, ees, stringency );
@@ -288,7 +312,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#getGenesByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    public java.util.Collection getGenesByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+    public java.util.Collection<Gene> getGenesByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleGetGenesByTaxon( taxon );
         } catch ( Throwable th ) {
@@ -307,21 +331,6 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.gene.GeneServiceException(
                     "Error performing 'ubic.gemma.model.genome.gene.GeneService.getMicroRnaByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneService#getMultipleCoexpressionResults(java.util.Collection,
-     *      java.util.Collection, java.lang.Integer)
-     */
-    public java.lang.Object getMultipleCoexpressionResults( final java.util.Collection genes,
-            final java.util.Collection ees, final java.lang.Integer stringency ) {
-        try {
-            return this.handleGetMultipleCoexpressionResults( genes, ees, stringency );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.gene.GeneServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.GeneService.getMultipleCoexpressionResults(java.util.Collection genes, java.util.Collection ees, java.lang.Integer stringency)' --> "
                             + th, th );
         }
     }
@@ -366,7 +375,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#loadMultiple(java.util.Collection)
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+    public java.util.Collection<Gene> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -521,7 +530,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #findAllQtlsByPhysicalMapLocation(ubic.gemma.model.genome.PhysicalLocation)}
      */
-    protected abstract java.util.Collection handleFindAllQtlsByPhysicalMapLocation(
+    protected abstract java.util.Collection<Qtl> handleFindAllQtlsByPhysicalMapLocation(
             ubic.gemma.model.genome.PhysicalLocation physicalMapLocation ) throws java.lang.Exception;
 
     /**
@@ -542,25 +551,6 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
      */
     protected abstract ubic.gemma.model.genome.Gene handleFindByNCBIId( java.lang.String accession )
             throws java.lang.Exception;
-
-    // /**
-    // * @see ubic.gemma.model.genome.gene.GeneService#getCompositeSequenceMap(java.util.Collection)
-    // */
-    // public java.util.Map getCompositeSequenceMap( final java.util.Collection genes ) {
-    // try {
-    // return this.handleGetCompositeSequenceMap( genes );
-    // } catch ( Throwable th ) {
-    // throw new ubic.gemma.model.genome.gene.GeneServiceException(
-    // "Error performing 'ubic.gemma.model.genome.gene.GeneService.getCompositeSequenceMap(java.util.Collection genes)' --> "
-    // + th, th );
-    // }
-    // }
-    //
-    // /**
-    // * Performs the core logic for {@link #getCompositeSequenceMap(java.util.Collection)}
-    // */
-    // protected abstract java.util.Map handleGetCompositeSequenceMap( java.util.Collection genes )
-    // throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByOfficialName(java.lang.String)}
@@ -596,8 +586,17 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
      * Performs the core logic for
      * {@link #getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection, java.lang.Integer, boolean)}
      */
-    protected abstract java.lang.Object handleGetCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection ees, java.lang.Integer stringency, boolean knownGenesOnly ) throws java.lang.Exception;
+    protected abstract CoexpressionCollectionValueObject handleGetCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection, java.lang.Integer, boolean)}
+     */
+    protected abstract Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes(
+            Collection<ubic.gemma.model.genome.Gene> genes, java.util.Collection<? extends BioAssaySet> ees,
+            java.lang.Integer stringency, boolean knownGenesOnly, boolean interGenesOnly ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
@@ -622,13 +621,13 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #getCompositeSequencesById(java.lang.Long)}
      */
-    protected abstract java.util.Collection handleGetCompositeSequencesById( java.lang.Long id )
+    protected abstract java.util.Collection<CompositeSequence> handleGetCompositeSequencesById( java.lang.Long id )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getGenesByTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection handleGetGenesByTaxon( ubic.gemma.model.genome.Taxon taxon )
+    protected abstract java.util.Collection<Gene> handleGetGenesByTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
     /**
@@ -636,13 +635,6 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
      */
     protected abstract java.util.Collection handleGetMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for
-     * {@link #getMultipleCoexpressionResults(java.util.Collection, java.util.Collection, java.lang.Integer)}
-     */
-    protected abstract java.lang.Object handleGetMultipleCoexpressionResults( java.util.Collection genes,
-            java.util.Collection ees, java.lang.Integer stringency ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #load(long)}
@@ -663,7 +655,8 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleLoadMultiple( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadPredictedGenes(ubic.gemma.model.genome.Taxon)}
@@ -685,7 +678,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #remove(java.util.Collection)}
      */
-    protected abstract void handleRemove( java.util.Collection genes ) throws java.lang.Exception;
+    protected abstract void handleRemove( java.util.Collection<Gene> genes ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.Gene)}
@@ -695,7 +688,7 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * Performs the core logic for {@link #thawLite(java.util.Collection)}
      */
-    protected abstract void handleThawLite( java.util.Collection genes ) throws java.lang.Exception;
+    protected abstract void handleThawLite( java.util.Collection<Gene> genes ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.genome.Gene)}

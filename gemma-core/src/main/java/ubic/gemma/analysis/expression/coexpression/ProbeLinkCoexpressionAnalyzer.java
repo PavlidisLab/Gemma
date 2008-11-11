@@ -93,6 +93,61 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
     }
 
     /**
+     * @param genes
+     * @param ees Collection of ExpressionExperiments that will be considered.
+     * @param stringency A positive non-zero integer. If a value less than or equal to zero is entered, the value 1 will
+     *        be silently used.
+     * @param knownGenesOnly if false, 'predicted genes' and 'probe aligned regions' will be populated.
+     * @param limit The maximum number of results that will be fully populated. Set to 0 to fill all (batch mode)
+     * @see ubic.gemma.model.genome.GeneDao.getCoexpressedGenes
+     * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject
+     * @return Fully initialized CoexpressionCollectionValueObject.
+     */
+    public Map<Gene, CoexpressionCollectionValueObject> linkAnalysis( Collection<Gene> genes,
+            Collection<BioAssaySet> ees, int stringency, boolean knownGenesOnly, boolean interGenesOnly, int limit ) {
+
+        /*
+         * Start with raw results
+         */
+        Map<Gene, CoexpressionCollectionValueObject> result = geneService.getCoexpressedGenes( genes, ees, stringency,
+                knownGenesOnly, interGenesOnly );
+
+        /*
+         * Perform postprocessing gene by gene. It is possible this could be sped up by doing batches.
+         */
+        for ( Gene gene : genes ) {
+
+            CoexpressionCollectionValueObject coexpressions = result.get( gene );
+
+            /*
+             * Identify data sets the query gene is expressed in - this is fast (?) and provides an upper bound for EEs
+             * we need to search in the first place.
+             */
+            Collection<BioAssaySet> eesQueryTestedIn = probe2ProbeCoexpressionService
+                    .getExpressionExperimentsLinkTestedIn( gene, ees, false );
+
+            /*
+             * Finish the postprocessing.
+             */
+            coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
+            if ( coexpressions.getAllGeneCoexpressionData( stringency ).size() == 0 ) {
+                continue;
+            }
+
+            // don't fill in the gene info etc if we're in batch mode.
+            if ( limit > 0 ) {
+                filter( coexpressions, limit ); // remove excess
+                fillInEEInfo( coexpressions ); // do first...
+                fillInGeneInfo( stringency, coexpressions );
+                computeGoStats( coexpressions, stringency );
+            }
+
+            computeEesTestedIn( ees, coexpressions, eesQueryTestedIn, stringency, limit );
+        }
+        return result;
+    }
+
+    /**
      * @param gene
      * @param ees Collection of ExpressionExperiments that will be considered.
      * @param stringency A positive non-zero integer. If a value less than or equal to zero is entered, the value 1 will
@@ -129,8 +184,8 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
          * Perform the coexpression search, some postprocessing done. If eesQueryTestedIn is empty, this returns real
          * quick.
          */
-        CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
-                .getCoexpressedGenes( gene, eesQueryTestedIn, stringency, knownGenesOnly );
+        CoexpressionCollectionValueObject coexpressions = geneService.getCoexpressedGenes( gene, eesQueryTestedIn,
+                stringency, knownGenesOnly );
 
         /*
          * Finish the postprocessing.

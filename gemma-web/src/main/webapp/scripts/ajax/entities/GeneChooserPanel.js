@@ -1,4 +1,5 @@
 /*
+ * GeneGrid, GeneChooserPanel, GeneChooserToolbar. Widget for picking genes.
  * 
  * Version : $Id$ Author : luke, paul
  */
@@ -92,13 +93,6 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 				}
 
 			},
-
-			// afterRender : function() {
-			// Gemma.GeneChooserPanel.superclass.afterRender.call(this);
-			// var r = new Ext.Resizable(this.getEl(), {
-			// handles : 'all'
-			// });
-			// },
 
 			removeGene : function() {
 				var selected = this.getSelectionModel().getSelections();
@@ -344,6 +338,11 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 
 		});
 
+/**
+ * 
+ * @class Gemma.GeneChooserPanel
+ * @extends Ext.Panel
+ */
 Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 
 			layout : 'border',

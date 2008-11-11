@@ -28,7 +28,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	defaults : {
 		collapsible : true,
-		// split : true,
 		bodyStyle : "padding:10px"
 	},
 
@@ -53,10 +52,8 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	restoreState : function() {
-		// console.log("restoreState");
 		var queryStart = document.URL.indexOf("?");
 		if (queryStart > -1) {
-			// console.log("Loading from url= " + document.URL);
 			this.initializeFromQueryString(document.URL.substr(queryStart + 1));
 		} else if (this.csc && queryStart < 0) {
 			this.initializeFromCoexpressionSearchCommand(this.csc);
@@ -309,14 +306,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		return [];
 	},
 
-	afterRender : function() {
-
-		Gemma.CoexpressionSearchForm.superclass.afterRender.call(this);
-		// if (this.geneChooserPanel.toolbar.taxonCombo) {
-
-		// }
-	},
-
 	searchForGene : function(geneId) {
 		this.geneChooserPanel.setGene.call(this.geneChooserPanel, geneId, this.doSearch.createDelegate(this));
 	},
@@ -346,9 +335,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				}.createDelegate(this));
 
 		this.eeSetChooserPanel.combo.on("ready", this.restoreState.createDelegate(this));
-		// this.eeSetChooserPanel.combo.on("ready", function() {
-		// alert("yay");
-		// }.createDelegate(this));
 
 		Ext.apply(this, {
 
@@ -427,14 +413,11 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		 * This horrible mess. We listen to taxon ready event and filter the presets on the taxon.
 		 */
 		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
-					// console.log("setting up filtering of combo");
 					if (taxon) {
 						if (this.eeSetChooserPanel.store.getRange().length > 0) {
-							// console.log("Load was done, filtering");
 							this.eeSetChooserPanel.filterByTaxon(taxon);
 						} else {
 							this.eeSetChooserPanel.store.on("load", function() {
-										// console.log("Filtering after load");
 										this.eeSetChooserPanel.filterByTaxon(taxon);
 									}, this);
 						}

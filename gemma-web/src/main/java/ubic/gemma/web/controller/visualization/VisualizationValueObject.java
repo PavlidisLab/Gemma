@@ -104,7 +104,9 @@ public class VisualizationValueObject {
             }
 
             int valid = 1;
-            if ( validatedProbeList.contains( vector.getDesignElement().getId() ) ) valid = 2;
+            if ( validatedProbeList == null || validatedProbeList.contains( vector.getDesignElement().getId() ) ) {
+                valid = 2;
+            }
 
             GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid );
             profiles.add( profile );

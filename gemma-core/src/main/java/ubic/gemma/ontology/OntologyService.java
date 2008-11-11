@@ -260,7 +260,7 @@ public class OntologyService {
      * returned list also. Then will search the birnlex, obo Disease Ontology and FMA Ontology for OntologyResources
      * (Terms and Individuals) that match the search term exactly
      * 
-     * @param queryString
+     * @param fetchResultsByGeneAndExperimentsQuery
      * @return
      */
     @SuppressWarnings("unchecked")

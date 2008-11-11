@@ -23,13 +23,16 @@
 package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
+import java.util.Map;
 
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
+import ubic.gemma.model.genome.Qtl;
 
 /**
  * 
@@ -59,7 +62,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     /**
      * 
      */
-    public java.util.Collection findAllQtlsByPhysicalMapLocation(
+    public java.util.Collection<Qtl> findAllQtlsByPhysicalMapLocation(
             ubic.gemma.model.genome.PhysicalLocation physicalMapLocation );
 
     /**
@@ -113,13 +116,32 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
 
     /**
+     * @param genes
+     * @param ees
+     * @param stringency
+     * @param knownGenesOnly
+     * @param interGenesOnly
+     * @param interGenesOnly if true, only links among the query genes will be returned. This is ingored if only a
+     *        single gene is entered
+     * @return
+     */
+    public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( Collection<Gene> genes,
+            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGenesOnly );
+
+    /**
      * <p>
      * Function to get coexpressed genes given a gene and a collection of expressionExperiments. Returns the value
      * object:: CoexpressionCollectionValueObject
      * </p>
+     * 
+     * @param gene
+     * @param ees
+     * @param stringency
+     * @param knownGenesOnly
+     * @return
      */
-    public java.lang.Object getCoexpressedGenes( ubic.gemma.model.genome.Gene gene, java.util.Collection ees,
-            java.lang.Integer stringency, boolean knownGenesOnly );
+    public CoexpressionCollectionValueObject getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly );
 
     /**
      * <p>
@@ -128,7 +150,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * </p>
      */
     public java.util.Collection<Gene> getCoexpressedKnownGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<ExpressionExperiment> ees, java.lang.Integer stringency );
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency );
 
     /**
      * 
@@ -155,11 +177,6 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      */
     public java.util.Collection<Gene> getGenesByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
-    // /**
-    // *
-    // */
-    // public java.util.Map getCompositeSequenceMap( java.util.Collection genes );
-
     /**
      * <p>
      * Gets all the microRNA for a given taxon. Note query could be slow or inexact due to use of wild card searching of
@@ -167,14 +184,6 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * </p>
      */
     public java.util.Collection getMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * <p>
-     * Returns a CoexpressionCollection similar to getCoexpressedGenes() but for multiple input genes.
-     * </p>
-     */
-    public java.lang.Object getMultipleCoexpressionResults( java.util.Collection<Gene> genes,
-            java.util.Collection<ExpressionExperiment> ees, java.lang.Integer stringency );
 
     /**
      * 

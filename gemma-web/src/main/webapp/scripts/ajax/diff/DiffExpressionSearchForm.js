@@ -21,7 +21,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	layout : 'border',
 	defaults : {
 		collapsible : true,
-		// split : true,
 		bodyStyle : "padding:10px"
 	},
 
@@ -29,8 +28,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
-	stateId : "Gemma.DiffExpressionSearch", // share state with main oage...
-	// page...
+	stateId : "Gemma.DiffExpressionSearch",
 
 	applyState : function(state, config) {
 		if (state) {
@@ -42,8 +40,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		return this.getDiffSearchCommand();
 	},
 
-	afterRender : function(container, position) {
-		Gemma.DiffExpressionSearchForm.superclass.afterRender.call(this, container, position);
+	onRender : function() {
+		Gemma.DiffExpressionSearchForm.superclass.onRender.apply(this, arguments);
 
 		Ext.apply(this, {
 					loadMask : new Ext.LoadMask(this.getEl(), {
@@ -56,7 +54,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	restoreState : function() {
 		var queryStart = document.URL.indexOf("?");
 		if (queryStart > -1) {
-			// Ext.log("Loading from url= " + document.URL);
 			this.initializeFromQueryString(document.URL.substr(queryStart + 1));
 		} else if (this.dsc && queryStart < 0) {
 			this.initializeFromDiffSearchCommand(this.dsc);
@@ -359,7 +356,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.geneChooserPanel = new Gemma.GeneChooserPanel({
 					id : 'gene-chooser-panel',
 					region : 'center',
-					height : 100
+					height : 100,
+					width : 230
 				});
 
 		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
@@ -382,8 +380,11 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 					this.efChooserPanel.reset(eeSetRecord.get("name"));
 				}.createDelegate(this));
 
-		this.eeSetChooserPanel.combo.on("comboReady", this.restoreState.createDelegate(this));
+		this.eeSetChooserPanel.combo.on("ready", this.restoreState.createDelegate(this));
 
+		/**
+		 * Send off the factor chooser if necessary.
+		 */
 		this.eeSetChooserPanel.on('commit', function(eeSetRecord) {
 					if (!eeSetRecord) {
 						return;
@@ -451,14 +452,11 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		 * This horrible mess. We listen to taxon ready event and filter the presets on the taxon.
 		 */
 		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
-					// console.log("setting up filtering of combo");
 					if (taxon) {
 						if (this.eeSetChooserPanel.store.getRange().length > 0) {
-							// console.log("Load was done, filtering");
 							this.eeSetChooserPanel.filterByTaxon(taxon);
 						} else {
 							this.eeSetChooserPanel.store.on("load", function() {
-										// console.log("Filtering after load");
 										this.eeSetChooserPanel.filterByTaxon(taxon);
 									}, this);
 						}

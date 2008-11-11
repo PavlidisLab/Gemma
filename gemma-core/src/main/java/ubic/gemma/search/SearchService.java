@@ -110,8 +110,8 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
- * This service is used for performing searches using free text or exact matches to items in the database.
- * <h2>Implementation notes</h2>
+ * This service is used for performing searches using free text or exact matches to items in the database. <h2>
+ * Implementation notes</h2>
  * <p>
  * Internally, there are generally two kinds of searches performed, percise database searches looking for exact matches
  * in the database and compass/lucene searches which look for matches in the stored index.
@@ -210,7 +210,6 @@ public class SearchService implements InitializingBean {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -266,7 +265,6 @@ public class SearchService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Map<Class, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
-        log.info( "================= START SEARCH: " + settings.getQuery() + " ========================" );
 
         String searchString = StringEscapeUtils.escapeJava( settings.getQuery() ); // probably not necessay to
         // escape...
@@ -314,7 +312,8 @@ public class SearchService implements InitializingBean {
         Map<Class, List<SearchResult>> sortedLimitedResults = getSortedLimitedResults( settings, rawResults,
                 fillObjects );
 
-        log.info( "---------------------------------- end search -----------------------------" );
+        log.info( "search for: " + settings.getQuery() + " " + rawResults.size()
+                + " raw results (final tally may be filtered)" );
 
         return sortedLimitedResults;
     }
@@ -324,7 +323,6 @@ public class SearchService implements InitializingBean {
      * @param taxonId required.
      * @return Collection of ids.
      */
-    @SuppressWarnings("unchecked")
     public Collection<Long> searchExpressionExperiments( String query, Long taxonId ) {
         Taxon taxon = taxonService.load( taxonId );
         Collection<Long> eeIds = new HashSet<Long>();
@@ -900,8 +898,7 @@ public class SearchService implements InitializingBean {
      * @param geneSearchResults Optional. If non-null, the results here will be used instead of conducting a brand new
      *        search for genes.
      * @param arrayDesign
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Collection<SearchResult> compositeSequenceByGeneSearch( SearchSettings settings,
             Collection<SearchResult> geneSearchResults ) {
 
@@ -941,8 +938,7 @@ public class SearchService implements InitializingBean {
      * @param geneSearchResults Can be null, otherwise used to avoid a second search.
      * @return
      * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Collection<SearchResult> compositeSequenceSearch( SearchSettings settings,
             Collection<SearchResult> geneSearchResults ) {
 

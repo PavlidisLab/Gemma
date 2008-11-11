@@ -22,6 +22,8 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 			emptyText : "Search for a gene",
 			minChars : 1,
 			selectOnFocus : true,
+			mode : 'remote', // default = remote
+			queryDelay : 800, // default = 500
 
 			record : Ext.data.Record.create([{
 						name : "id",
@@ -63,8 +65,6 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 				this.store.on("datachanged", function() {
 							if (this.store.getCount() === 0) {
 								this.fireEvent("invalid", "No matching genes");
-								// this.emptyText = "Nothing found";
-								// this.clearValue();
 							}
 						}, this);
 			},

@@ -42,19 +42,15 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	 */
 	applyState : function(state) {
 		if (state && state.taxon) {
-			// this.setTaxon(state.taxon);
 			// so we wait for the load.
-			// console.log("apply state");
 			this.setState(state.taxon.id);
 		}
 	},
 
 	setState : function(v) {
 		if (this.isReady) {
-			// console.log("already ready");
 			this.setTaxon(v);
 		} else {
-			// console.log("storing state");
 			this.tmpState = v;
 			// wait for restoreState is called.
 		}
@@ -62,14 +58,16 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
 	restoreState : function() {
 		if (this.tmpState) {
-			// console.log("restore state");
 			this.setTaxon(this.tmpState);
 			delete this.tmpState;
 			this.isReady = true;
-			// console.log("ready");
 		}
-		// this.fireEvent('ready', this.getTaxon().data); // scope problem!
-		this.fireEvent('ready');
+		if (this.getTaxon()) {
+			this.fireEvent('ready', this.getTaxon().data);
+		} else {
+			// FIXME this happens with Diff but not Coexp.
+			this.fireEvent('ready');
+		}
 	},
 
 	record : Ext.data.Record.create([{
@@ -111,16 +109,16 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 					tpl : tmpl
 				});
 
+		Gemma.TaxonCombo.superclass.initComponent.call(this);
+
+		this.addEvents('ready');
+
 		this.store.load({
 					params : [],
 					callback : this.restoreState.createDelegate(this),
 					scope : this,
 					add : false
 				});
-
-		Gemma.TaxonCombo.superclass.initComponent.call(this);
-
-		this.addEvents('ready');
 	},
 
 	getTaxon : function() {

@@ -75,7 +75,6 @@ public class GenePickerController extends BaseMultiActionController {
      * @param geneIds
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<Gene> getGenes( Collection<Long> geneIds ) {
         return geneService.loadMultiple( geneIds );
     }

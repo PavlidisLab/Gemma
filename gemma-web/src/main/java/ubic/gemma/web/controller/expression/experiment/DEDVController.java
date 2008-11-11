@@ -132,10 +132,6 @@ public class DEDVController extends BaseFormController {
         log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
                 + " genes in " + time + " ms." );
 
-                  
-        
-        
-        
         return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), null );
 
     }
@@ -166,7 +162,7 @@ public class DEDVController extends BaseFormController {
         genes.add( queryGene );
         genes.add( coexpressedGene );
         geneService.thawLite( genes );
-        
+
         if ( genes.isEmpty() ) return null;
 
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
@@ -257,8 +253,10 @@ public class DEDVController extends BaseFormController {
         // Create collection of visualizationValueObject for flotr on js side
         int i = 0;
         for ( ExpressionExperiment ee : vvoMap.keySet() ) {
-            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ), genes, validatedProbes
-                    .get( ee.getId() ) );
+            Collection<Long> validatedProbeList = null;
+
+            if ( validatedProbes != null ) validatedProbeList = validatedProbes.get( ee.getId() );
+            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ), genes, validatedProbeList );
             result[i] = vvo;
             i++;
         }
@@ -267,7 +265,6 @@ public class DEDVController extends BaseFormController {
 
     }
 
-    
     /**
      * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
      * Currently removes multiple hits for same gene. Tries to pick best DEDV.
@@ -294,7 +291,7 @@ public class DEDVController extends BaseFormController {
         // Create collection of visualizationValueObject for flotr on js side
         int i = 0;
         for ( ExpressionExperiment ee : vvoMap.keySet() ) {
-            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ), genes) ;
+            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ), genes );
             result[i] = vvo;
             i++;
         }
@@ -302,6 +299,7 @@ public class DEDVController extends BaseFormController {
         return result;
 
     }
+
     /**
      * @param newResults
      * @return

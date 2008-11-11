@@ -15,7 +15,7 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(Ext.grid.PropertyG
 			},
 			collapsible : true,
 			editable : true,
-
+			stateful : false,
 			autoScroll : true,
 			height : 250,
 

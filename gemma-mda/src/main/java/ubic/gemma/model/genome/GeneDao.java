@@ -23,9 +23,11 @@
 package ubic.gemma.model.genome;
 
 import java.util.Collection;
+import java.util.Map;
 
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
  * @see ubic.gemma.model.genome.Gene
@@ -274,12 +276,27 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     /**
      * <p>
      * Function to get coexpressed genes given a gene and a collection of expressionExperiments. The return value is a
-     * Collection of CoexpressionCollectionValueObjects. This needs to be 'postprocessed' before it has all the data
-     * needed for use by clients. Therefore this method should not be called directly for most purposes.
+     * CoexpressionCollectionValueObject.
      * </p>
      */
-    public java.lang.Object getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<ExpressionExperiment> ees, java.lang.Integer stringency, boolean knownGenesOnly );
+    public CoexpressionCollectionValueObject getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly );
+
+    /**
+     * Function to get coexpressed genes given a set of genes and a collection of expressionExperiments. The return
+     * value is a Map of CoexpressionCollectionValueObjects.
+     * 
+     * @param genes
+     * @param ees
+     * @param stringency
+     * @param knownGenesOnly
+     * @param interGeneOnly if true, only links among the query genes will be returned. This is ingored if only a single
+     *        gene is entered
+     * @return
+     */
+    public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes(
+            Collection<ubic.gemma.model.genome.Gene> genes, java.util.Collection<? extends BioAssaySet> ees,
+            java.lang.Integer stringency, boolean knownGenesOnly, boolean interGeneOnly );
 
     /**
      * 
