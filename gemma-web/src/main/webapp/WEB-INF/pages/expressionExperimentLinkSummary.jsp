@@ -9,10 +9,6 @@
 </head>
 
 <body>
-
-
-
-
 	<security:authorize ifAnyGranted="admin,user">
 		<div id="messages" style="margin: 10px; width: 400px"></div>
 
@@ -22,10 +18,5 @@
 	</security:authorize>
 	<security:authorize ifAnyGranted="admin">
 		<div id="updateAllReports-area"></div>
-	</security:authorize>
-	<security:authorize ifNotGranted="admin">
-		<p>
-			Permission denied.
-		</p>
 	</security:authorize>
 </body>
