@@ -165,12 +165,14 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 					modal : true,
 					title : "Select type of factor to favor",
 					closeAction : 'close',
+					stateful : false,
 					resizable : false,
 					columns : 1,
 					autoHeight : true,
 					width : 300,
 					items : [{
 								xtype : 'radiogroup',
+								stateful : false,
 								id : 'factor-hinting-radiogroup',
 								style : 'padding:8px;',
 								items : [{

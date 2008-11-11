@@ -148,7 +148,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	constrainHeader : true,
 	title : "Visualization",
 	height : Gemma.ZOOM_PLOT_SIZE,
-	width : Gemma.PLOT_SIZE,
+	width : 600,
 	// autoHeight : true,
 
 	listeners : {
@@ -380,7 +380,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 								if (fade) {
 									profiles[i].color = "#DDDDDD";
 								} else {
-								//	profiles[i].color = Gemma.COLD_COLORS[coldIndex];
+									// profiles[i].color = Gemma.COLD_COLORS[coldIndex];
 									profiles[i].color = "#000000";
 								}
 
@@ -389,7 +389,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 								if (fade) {
 									profiles[i].color = "#FFDDDD";
 								} else {
-								//	profiles[i].color = Gemma.HOT_COLORS[hotIndex];
+									// profiles[i].color = Gemma.HOT_COLORS[hotIndex];
 									profiles[i].color = "#FF0000";
 								}
 								hotIndex++;
@@ -464,7 +464,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	stateful : false,
 	title : "Visualization",
 	height : Gemma.ZOOM_PLOT_SIZE,
-	width : Gemma.PLOT_SIZE,
+	width : 600,
 	// autoHeight : true,
 
 	listeners : {
@@ -682,7 +682,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						// remove red color
 						// for (var i = 0; i < profiles.size(); i++) {
 						// profiles[i].color = null;
-						//						}
+						// }
 
 						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
