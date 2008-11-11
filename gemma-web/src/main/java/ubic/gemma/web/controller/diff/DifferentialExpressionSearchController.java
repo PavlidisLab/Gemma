@@ -174,7 +174,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param threshold
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
 
         Gene g = geneService.load( geneId );
@@ -242,7 +241,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
         /*
          * Because this method returns the results, we have to screen.

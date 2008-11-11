@@ -76,6 +76,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
+        if ( experimentsAnalyzed.size() == 0 ) {
+            return results;
+        }
+
         String[] paramNames = { "gene", "experimentsAnalyzed" };
         Object[] objectValues = { gene, experimentsAnalyzed };
 
@@ -113,6 +117,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         final String qs = fetchResultsByGeneAndExperimentsQuery + " and r.correctedPvalue < :threshold";
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
+
+        if ( experimentsAnalyzed.size() == 0 ) {
+            return results;
+        }
 
         String[] paramNames = { "gene", "experimentsAnalyzed", "threshold" };
         Object[] objectValues = { gene, experimentsAnalyzed, threshold };
