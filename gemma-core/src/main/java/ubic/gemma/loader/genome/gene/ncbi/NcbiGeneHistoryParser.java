@@ -57,7 +57,7 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
         }
         String[] fields = StringUtils.split( line, '\t' );
 
-        if ( fields.length != GENE_HISTORY_FILE_NUM_FIELDS ) {
+        if ( fields.length > GENE_HISTORY_FILE_NUM_FIELDS ) {
             // sanity check.
             throw new IllegalStateException( "NCBI gene_history file has unexpected column count. Expected "
                     + GENE_HISTORY_FILE_NUM_FIELDS + ", got " + fields.length + " in line=" + line );
