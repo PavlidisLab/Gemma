@@ -14,7 +14,7 @@ Ext.onReady(function() {
 		Ext.DomHelper.append('diffExpression-form', {
 			tag : 'p',
 			cls : 'trouble',
-			html : 'This page displays improperly in older versions of Internet Explorer.  Please upgrade to Internet Explorer 7.'
+			html : 'This page may display improperly in older versions of Internet Explorer. Please upgrade to Internet Explorer 7 or newer.'
 		});
 	}
 

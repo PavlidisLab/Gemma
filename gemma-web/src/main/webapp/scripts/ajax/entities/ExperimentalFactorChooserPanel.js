@@ -46,8 +46,6 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 			if (typeof factorName != 'string') {
 				continue;
 			}
-			// console.log(experimentName + " --> " + factorName);
-			// var eeIndex = store.find("name", experimentName);
 
 			// locate the experiment in the data
 			for (var i in this.data) {
@@ -79,8 +77,6 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 									efId : efId,
 									eeId : eeId
 								});
-
-						// console.log(eeId + " --> " + efId);
 						break;
 					}
 				}
@@ -100,7 +96,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 						"Help for factor choose",
 						"The meta-analysis can only use one factor per study. Experiments that have more"
 								+ " than one factor will be shown here (or view all experiments)."
-								+ " Click on the factor field to get a menu for choosing among multiple possibilities. For more help see <a target='_blank' "
+								+ " Click on the factor field to get a menu for choosing among multiple possibilities. Use the 'hinting' "
+								+ "button to choose the type of factor most useful to you, to save manual work. For more help see <a target='_blank' "
 								+ "href='http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser#Datasetchooser-TheGemmaexperimentalfactorchooser'>this page</a>");
 
 	},
@@ -117,9 +114,18 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 											pressed : true,
 											enableToggle : true,
 											text : Gemma.SHOW_ALL_FACTORS,
-											tooltip : "Click to show/hide all factors",
+											tooltip : "Click to show/hide all experiments",
+											id : 'single-factor-toggle',
 											cls : 'x-btn-text-icon details',
 											toggleHandler : this.toggleFactors.createDelegate(this)
+										}, {
+											xtype : 'tbspacer'
+										}, {
+											xtype : 'tbspacer'
+										}, {
+											text : 'Hinting',
+											tooltip : 'Provide heuristics for selecting factors',
+											handler : this.factorHinting.createDelegate(this)
 										}]
 							}),
 					buttons : [{
@@ -151,17 +157,133 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		this.populateFactors(eeIds);
 	},
 
-	toggleFactors : function(btn, pressed) {
+	/**
+	 * Show a window with radio buttons to choose between OrganismPart, DiseaseState .. possibly others
+	 */
+	factorHinting : function(btn) {
+		var w = new Ext.Window({
+					modal : true,
+					title : "Select type of factor to favor",
+					closeAction : 'close',
+					resizable : false,
+					columns : 1,
+					autoHeight : true,
+					width : 300,
+					items : [{
+								xtype : 'radiogroup',
+								id : 'factor-hinting-radiogroup',
+								style : 'padding:8px;',
+								items : [{
+											/*
+											 * FIXME: cookie doesn't work, so I check 'any' by default.
+											 */
+											stateful : true,
+											id : 'factor-hinting-button',
+											boxLabel : 'OrganismPart',
+											stateEvents : ['check'],
+											stateId : 'organism-part-hint',
+											name : 'rb-hint',
+											inputValue : 1
+										}, {
+											stateful : true,
+											boxLabel : 'DiseaseState',
+											stateId : 'disease-state-hint',
+											stateEvents : ['check'],
+											name : 'rb-hint',
+											inputValue : 2
+										}, {
+											stateful : true,
+											boxLabel : 'Any',
+											stateId : 'any-factor-hint',
+											stateEvents : ['check'],
+											name : 'rb-hint',
+											checked : true,
+											inputValue : 3
+										}]
+							}],
+					buttons : [{
+								text : 'OK',
+								handler : function() {
+									this.applyHintingFilter();
+									w.close();
+								},
+								scope : this
+							}, {
+								text : 'Cancel',
+								handler : function() {
+									w.close();
+								}
+							}]
 
+				});
+
+		w.show();
+	},
+
+	applyHintingFilter : function() {
+		var choice = Ext.getCmp('factor-hinting-button').getGroupValue();
+		if (choice == '1') {
+			// organism part
+			this.efGrid.getStore().filterBy(this.organismPartFilter, this);
+		} else if (choice == '2') {
+			this.efGrid.getStore().filterBy(this.diseaseStateFilter, this);
+		} else if (choice == '3') {
+			// no filtering
+		} else {
+			// no filtering
+		}
+
+	},
+
+	toggleFactors : function(btn, pressed) {
 		var buttonText = btn.getText();
 		if (buttonText == Gemma.SHOW_ALL_FACTORS) {
 			this.efGrid.getStore().clearFilter();
 			btn.setText(Gemma.HIDE_FACTORS);
 		} else {
-
 			this.efGrid.getStore().filterBy(this.filter, this, 0);
 			btn.setText(Gemma.SHOW_ALL_FACTORS);
 		}
+	},
+
+	/**
+	 * Set the factor for a row to be the one matching a given pattern, if possible.
+	 * 
+	 * @param {}
+	 *            r - the PropertyStore record
+	 * @param {}
+	 *            id
+	 * @param {}
+	 *            regex
+	 * @return {Boolean}
+	 */
+	filterByFactorNamePattern : function(r, id, regex) {
+		editor = this.efGrid.customEditors[id];
+
+		/*
+		 * Locate the matching factor, if any, and set the value in the store. No filtering is actually done here.
+		 */
+		editor.field.store.each(function(record) {
+					if (record.get('name').match(regex)) {
+						r.set('value', record.get('name'));
+						return false; // break the iteration.
+					}
+					return true; // keep iterating.
+				});
+
+		// honor the other filter
+		if (Ext.getCmp('single-factor-toggle').pressed && editor.field.store.getTotalCount() > 1) {
+			return true;
+		}
+		return false;
+	},
+
+	organismPartFilter : function(r, id) {
+		return this.filterByFactorNamePattern(r, id, "^OrganismPart");
+	},
+
+	diseaseStateFilter : function(r, id) {
+		return this.filterByFactorNamePattern(r, id, "^DiseaseState");
 	},
 
 	filter : function(r, id) {

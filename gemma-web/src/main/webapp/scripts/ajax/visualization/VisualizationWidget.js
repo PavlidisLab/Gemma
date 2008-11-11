@@ -680,9 +680,9 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						}
 
 						// remove red color
-						for (var i = 0; i < profiles.size(); i++) {
-							profiles[i].color = null;
-						}
+						// for (var i = 0; i < profiles.size(); i++) {
+						// profiles[i].color = null;
+						//						}
 
 						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
