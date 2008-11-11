@@ -24,6 +24,7 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -397,7 +398,8 @@ public interface ExpressionExperimentDao extends
      * </p>
      */
     public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastArrayDesignUpdate(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment ee, java.lang.Class eventType );
+            ubic.gemma.model.expression.experiment.ExpressionExperiment ee,
+            java.lang.Class<? extends AuditEventType> eventType );
 
     /**
      * <p>
@@ -469,7 +471,7 @@ public interface ExpressionExperimentDao extends
      * Return any ExpressionExperimentSubSets the given Experiment might have.
      * </p>
      */
-    public java.util.Collection getSubSets(
+    public java.util.Collection<ExpressionExperimentSubSet> getSubSets(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**

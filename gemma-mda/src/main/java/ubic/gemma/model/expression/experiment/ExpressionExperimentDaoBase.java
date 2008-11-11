@@ -24,8 +24,10 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Map;
 
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -1153,15 +1155,14 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-
-    @SuppressWarnings("unused")
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<ExpressionExperiment> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNewSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                for ( java.util.Iterator<ExpressionExperiment> entityIterator = entities.iterator(); entityIterator
+                        .hasNext(); ) {
                     update( ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) entityIterator.next() );
                 }
                 return null;
@@ -1200,7 +1201,7 @@ public abstract class ExpressionExperimentDaoBase extends
      * Performs the core logic for {@link #findByBioMaterials(java.util.Collection)}
      */
     protected abstract java.util.Collection<ExpressionExperiment> handleFindByBioMaterials(
-            java.util.Collection bioMaterials ) throws java.lang.Exception;
+            java.util.Collection<BioMaterial> bioMaterials ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByExpressedGene(ubic.gemma.model.genome.Gene, java.lang.Double)}
@@ -1218,7 +1219,7 @@ public abstract class ExpressionExperimentDaoBase extends
      * Performs the core logic for {@link #findByFactorValues(java.util.Collection)}
      */
     protected abstract java.util.Collection<ExpressionExperiment> handleFindByFactorValues(
-            java.util.Collection factorValues ) throws java.lang.Exception;
+            java.util.Collection<FactorValue> factorValues ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByGene(ubic.gemma.model.genome.Gene)}
@@ -1238,12 +1239,13 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * Performs the core logic for {@link #getAnnotationCounts(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetAnnotationCounts( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map handleGetAnnotationCounts( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getArrayDesignAuditEvents(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetArrayDesignAuditEvents( java.util.Collection ids )
+    protected abstract java.util.Map handleGetArrayDesignAuditEvents( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
@@ -1302,16 +1304,17 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * Performs the core logic for {@link #getLastArrayDesignUpdate(java.util.Collection, java.lang.Class)}
      */
-    protected abstract java.util.Map handleGetLastArrayDesignUpdate( java.util.Collection expressionExperiments,
-            java.lang.Class type ) throws java.lang.Exception;
+    protected abstract java.util.Map handleGetLastArrayDesignUpdate(
+            java.util.Collection<ExpressionExperiment> expressionExperiments,
+            java.lang.Class<? extends AuditEventType> type ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #getLastArrayDesignUpdate(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.Class)}
      */
     protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastArrayDesignUpdate(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment ee, java.lang.Class eventType )
-            throws java.lang.Exception;
+            ubic.gemma.model.expression.experiment.ExpressionExperiment ee,
+            java.lang.Class<? extends AuditEventType> eventType ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
@@ -1329,7 +1332,7 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * Performs the core logic for {@link #getPopulatedFactorCounts(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetPopulatedFactorCounts( java.util.Collection ids )
+    protected abstract java.util.Map handleGetPopulatedFactorCounts( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
@@ -1364,8 +1367,8 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * Performs the core logic for {@link #getSampleRemovalEvents(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetSampleRemovalEvents( java.util.Collection expressionExperiments )
-            throws java.lang.Exception;
+    protected abstract java.util.Map handleGetSampleRemovalEvents(
+            java.util.Collection<ExpressionExperiment> expressionExperiments ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
@@ -1378,7 +1381,7 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * Performs the core logic for {@link #getSubSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */
-    protected abstract java.util.Collection handleGetSubSets(
+    protected abstract java.util.Collection<ExpressionExperimentSubSet> handleGetSubSets(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment )
             throws java.lang.Exception;
 
@@ -1391,7 +1394,7 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * Performs the core logic for {@link #load(java.util.Collection)}
      */
-    protected abstract java.util.Collection<ExpressionExperiment> handleLoad( java.util.Collection ids )
+    protected abstract java.util.Collection<ExpressionExperiment> handleLoad( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
@@ -1456,7 +1459,7 @@ public abstract class ExpressionExperimentDaoBase extends
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<ExpressionExperiment> entities ) {
         switch ( transform ) {
             case ubic.gemma.model.expression.experiment.ExpressionExperimentDao.TRANSFORM_EXPRESSIONEXPERIMENTVALUEOBJECT:
                 toExpressionExperimentValueObjectCollection( entities );

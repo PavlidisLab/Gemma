@@ -42,10 +42,6 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			initComponent : function() {
 
-				Ext.apply(this, {
-							plugins : this.rowExpander
-						});
-
 				if (this.pageSize) {
 					Ext.apply(this, {
 								store : new Gemma.PagingDataStore({
@@ -72,19 +68,20 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				}
 
 				Ext.apply(this, {
-							rowExpander : new Gemma.DiffExpressionGridRowExpander({
-										tpl : "<div height='300px'></div>",
-										grid : this
-									})
-						});
-
-				Ext.apply(this, {
-							columns : [this.rowExpander, {
+							columns : [{
+										id : 'details',
+										header : "Details",
+										dataIndex : 'details',
+										renderer : this.detailsStyler.createDelegate(this),
+										tooltip : "Links for probe-level details",
+										sortable : false,
+										width : 30
+									}, {
 										id : 'visualize',
 										header : "Visualize",
-										dataIndex : "visualize",
+										dataIndex : 'visualize',
 										renderer : this.visStyler.createDelegate(this),
-										tooltip : "Link for visualizing raw data",
+										tooltip : "Links for visualizing raw data",
 										sortable : false,
 										width : 30
 									}, {
@@ -128,17 +125,12 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 									}]
 						});
 
-				Ext.apply(this, {
-							plugins : this.rowExpander
-						});
-
 				Gemma.DiffExpressionGrid.superclass.initComponent.call(this);
 
 				this.originalTitle = this.title;
 			},
 
 			loadData : function(results) {
-				this.rowExpander.clearCache();
 				this.getStore().proxy.data = results;
 				this.getStore().reload({
 							resetPage : true
@@ -163,6 +155,10 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			visStyler : function(value, metadata, record, row, col, ds) {
 				return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+			},
+
+			detailsStyler : function(value, metadata, record, row, col, ds) {
+				return "<img src='/Gemma/images/icons/magnifier.png' ext:qtip='Show probe-level details' />";
 			},
 
 			downloadDedv : function(value, metadata, record, row, col, ds) {

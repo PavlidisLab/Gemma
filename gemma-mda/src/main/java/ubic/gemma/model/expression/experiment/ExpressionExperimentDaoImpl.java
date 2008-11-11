@@ -744,6 +744,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetLastLinkAnalysis(java.util.Collection
      * )
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetAuditEvents( Collection ids ) throws Exception {
         final String queryString = "select ee.id, auditEvent from ExpressionExperimentImpl ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
@@ -785,6 +786,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#getQuantitationTypeCountById(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected long handleGetBioAssayCountById( long Id ) {
         final String queryString = "select count(ba) from ExpressionExperimentImpl ee "
@@ -970,13 +972,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     }
 
-    // @Override
-    // protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent(
-    // final ubic.gemma.model.common.Auditable auditable,
-    // final ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception {
-    // return CommonQueries.getLastAuditEvent( auditable, type, this.getSession() );
-    // }
-
     @Override
     @SuppressWarnings("unchecked")
     protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
@@ -1066,7 +1061,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @SuppressWarnings("unchecked")
     @Override
-    // FIXME
     protected Map<QuantitationType, Long> handleGetQuantitationTypeCountById( Long Id ) {
 
         final String queryString = "select quantType,count(*) as count "
@@ -1092,7 +1086,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
 
         List qtypes = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
-        // Hibernate.initialize( qtypes );
         return qtypes;
 
     }
@@ -1120,9 +1113,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSampleRemovalEvents(java.util.Collection
      * )
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
-            Collection /* <ExpressionExperiment> */expressionExperiments ) {
+            Collection<ExpressionExperiment> expressionExperiments ) {
         final String queryString = "select ee,ev from ExpressionExperimentImpl ee inner join ee.bioAssays ba "
                 + "inner join ba.auditTrail trail inner join trail.events ev inner join ev.eventType et "
                 + "inner join fetch ev.performer where ee in (:ees) and et.class = 'SampleRemovalEvent'";
@@ -1178,6 +1172,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * (non-Javadoc)
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetTaxon(java.lang.Long)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
         final String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE "

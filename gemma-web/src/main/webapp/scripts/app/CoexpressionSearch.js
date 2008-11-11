@@ -14,16 +14,35 @@ Ext.onReady(function() {
 		});
 	}
 
+	var getSupportingDatasetRecords = function(record, grid) {
+		var ids = record.data.supportingExperiments;
+		var supporting = [];
+		var ind = 0;
+		// this is quite inefficient, but probably doesn't matter.
+		for (var i = 0; i < ids.length; ++i) {
+			var id = ids[i];
+			for (var j = 0; j < grid.datasets.length; j++) {
+				var index = grid.datasets[j].id;
+				if (index === id) {
+					supporting.push(grid.datasets[j]);
+					break;
+				}
+			}
+		}
+		return supporting;
+	};
+
 	var geneRowClickHandler = function(grid, rowIndex, columnIndex, e) {
 		if (this.getSelectionModel().hasSelection()) {
 
 			var record = this.getStore().getAt(rowIndex);
 			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+			var queryGene = record.data.queryGene;
 
 			if (fieldName == 'foundGene') {
 				searchPanel.searchForGene(record.get("foundGene").id);
 			} else if (fieldName == 'visualize') {
-				var queryGene = record.data.queryGene;
+
 				var foundGene = record.data.foundGene;
 				var activeExperiments = record.data.supportingExperiments;
 
@@ -36,6 +55,65 @@ Ext.onReady(function() {
 							admin : admin
 						});
 				visWindow.displayWindow(activeExperiments, queryGene, foundGene);
+			} else if (fieldName == 'details') {
+
+				var supporting = getSupportingDatasetRecords(record, grid);
+
+				var dsGrid = new Gemma.ExpressionExperimentGrid({
+							records : supporting,
+							width : 750,
+							height : 400
+						});
+
+				dsGrid.getStore().load();
+
+				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
+							geneId : queryGene.id,
+							threshold : 0.01,
+							width : 750,
+							height : 400
+						});
+
+				var tabPanel = new Ext.TabPanel({
+							layoutOnTabChange : true,
+							width : 750,
+							activeTab : 0,
+							items : [{
+										title : "Supporting datasets",
+										items : [dsGrid]
+									}, {
+										title : "Differential expression of " + queryGene.officialSymbol,
+										items : [diffExGrid],
+										loaded : false,
+										listeners : {
+											"activate" : {
+												fn : function() {
+													if (!this.loaded) {
+														diffExGrid.getStore().load({
+																	params : [queryGene.id, 0.01]
+																});
+													}
+													this.loaded = true;
+												}
+											}
+										}
+
+									}]
+
+						});
+
+				var w = new Ext.Window({
+							modal : true,
+							layout : 'fit',
+							title : 'Details for ' + queryGene.officialSymbol,
+							closeAction : 'close',
+							items : [tabPanel]
+						});
+
+				w.show();
+
+				diffExGrid.getStore().loadData(supporting);
+
 			}
 		}
 	};

@@ -266,41 +266,6 @@ public class DEDVController extends BaseFormController {
     }
 
     /**
-     * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
-     * Currently removes multiple hits for same gene. Tries to pick best DEDV.
-     * 
-     * @param dedvs
-     * @param genes
-     * @return
-     */
-    private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs, List<Gene> genes ) {
-
-        Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
-
-        // Organize by expression experiment
-        for ( DoubleVectorValueObject dvvo : dedvs ) {
-            ExpressionExperiment ee = dvvo.getExpressionExperiment();
-            if ( !vvoMap.containsKey( ee ) ) {
-                vvoMap.put( ee, new HashSet<DoubleVectorValueObject>() );
-            }
-            vvoMap.get( ee ).add( dvvo );
-        }
-
-        VisualizationValueObject[] result = new VisualizationValueObject[vvoMap.keySet().size()];
-
-        // Create collection of visualizationValueObject for flotr on js side
-        int i = 0;
-        for ( ExpressionExperiment ee : vvoMap.keySet() ) {
-            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ), genes );
-            result[i] = vvo;
-            i++;
-        }
-
-        return result;
-
-    }
-
-    /**
      * @param newResults
      * @return
      */
@@ -328,7 +293,6 @@ public class DEDVController extends BaseFormController {
      * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    @SuppressWarnings( { "unchecked", "unused" })
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {

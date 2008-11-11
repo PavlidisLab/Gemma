@@ -29,6 +29,9 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * 
@@ -88,7 +91,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Collection findByBioMaterials( java.util.Collection bioMaterials );
+    public java.util.Collection<ExpressionExperiment> findByBioMaterials( java.util.Collection<BioMaterial> bioMaterials );
 
     /**
      * <p>
@@ -107,7 +110,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Collection findByFactorValues( java.util.Collection factorValues );
+    public java.util.Collection<ExpressionExperiment> findByFactorValues( java.util.Collection<FactorValue> factorValues );
 
     /**
      * <p>
@@ -153,7 +156,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * Get the map of ids to number of terms associated with each expression experiment.
      * </p>
      */
-    public java.util.Map getAnnotationCounts( java.util.Collection ids );
+    public java.util.Map getAnnotationCounts( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -169,7 +172,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * Retrieve a collection of the genes assayed in the experiment.
      * </p>
      */
-    public java.util.Collection getAssayedGenes(
+    public java.util.Collection<Gene> getAssayedGenes(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
             java.lang.Double rankThreshold );
 
@@ -199,7 +202,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * Get all the vectors for the given expression experiment, but limited to the given quantitation types.
      * </p>
      */
-    public java.util.Collection getDesignElementDataVectors( java.util.Collection quantitationTypes );
+    public java.util.Collection getDesignElementDataVectors( java.util.Collection<QuantitationType> quantitationTypes );
 
     /**
      * <p>
@@ -228,7 +231,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * of id -> AuditEvent. If the events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map getLastLinkAnalysis( java.util.Collection ids );
+    public java.util.Map getLastLinkAnalysis( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -236,7 +239,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * returns a map of id -> AuditEvent. If the events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map getLastMissingValueAnalysis( java.util.Collection ids );
+    public java.util.Map getLastMissingValueAnalysis( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -244,24 +247,24 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * map of id -> AuditEvent. If the events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map getLastProcessedDataUpdate( java.util.Collection ids );
+    public java.util.Map getLastProcessedDataUpdate( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map getLastTroubleEvent( java.util.Collection ids );
+    public java.util.Map getLastTroubleEvent( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map getLastValidationEvent( java.util.Collection ids );
+    public java.util.Map getLastValidationEvent( java.util.Collection<Long> ids );
 
     /**
      * <p>
      * Function to get a count of expression experiments, grouped by Taxon
      * </p>
      */
-    public java.util.Map getPerTaxonCount();
+    public java.util.Map<Taxon, Long> getPerTaxonCount();
 
     /**
      * <p>
@@ -269,7 +272,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * with biomaterials.
      * </p>
      */
-    public java.util.Map getPopulatedFactorCounts( java.util.Collection ids );
+    public java.util.Map getPopulatedFactorCounts( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -295,7 +298,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * Function to get a count of an expressionExperiment's designelementdatavectors, grouped by quantitation type
      * </p>
      */
-    public java.util.Map getQuantitationTypeCountById( java.lang.Long Id );
+    public java.util.Map<QuantitationType, Long> getQuantitationTypeCountById( java.lang.Long Id );
 
     /**
      * <p>
@@ -335,7 +338,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * Return any ExpressionExperimentSubSets this Experiment might have.
      * </p>
      */
-    public java.util.Collection getSubSets(
+    public java.util.Collection<ExpressionExperimentSubSet> getSubSets(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
@@ -363,12 +366,12 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Collection loadMultiple( java.util.Collection<Long> ids );
+    public java.util.Collection<ExpressionExperiment> loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperimentValueObject> loadValueObjects( java.util.Collection ids );
+    public java.util.Collection<ExpressionExperimentValueObject> loadValueObjects( java.util.Collection<Long> ids );
 
     /**
      * 

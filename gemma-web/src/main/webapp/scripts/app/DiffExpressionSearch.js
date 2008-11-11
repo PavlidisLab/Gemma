@@ -33,9 +33,10 @@ Ext.onReady(function() {
 
 			var record = this.getStore().getAt(rowIndex);
 			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+			var gene = record.data.gene;
 
 			if (fieldName == 'visualize') {
-				var gene = record.data.gene;
+
 				var activeExperiments = record.data.activeExperiments;
 				var activeExperimentIds = [];
 
@@ -52,6 +53,26 @@ Ext.onReady(function() {
 							admin : admin
 						});
 				visWindow.displayWindow(activeExperimentIds, gene);
+			} else if (fieldName == 'details') {
+
+				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
+							width : 750,
+							height : 300
+						});
+
+				var w = new Ext.Window({
+							modal : true,
+							layout : 'fit',
+							title : 'Details for ' + gene.officialSymbol,
+							closeAction : 'close',
+							items : [diffExGrid]
+						});
+
+				w.show();
+
+				var supporting = record.data.probeResults;
+				diffExGrid.getStore().loadData(supporting);
+
 			}
 		}
 	};

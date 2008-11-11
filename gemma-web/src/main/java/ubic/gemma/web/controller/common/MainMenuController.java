@@ -36,6 +36,7 @@ import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * Responsible for display of the Gemma home page.
@@ -116,9 +117,8 @@ public class MainMenuController extends AbstractController {
     /**
      * @param mav
      */
-    @SuppressWarnings("unchecked")
     private void getTaxonEECounts( ModelAndView mav ) {
-        Map<String, Long> taxonCount = expressionExperimentService.getPerTaxonCount();
+        Map<Taxon, Long> taxonCount = expressionExperimentService.getPerTaxonCount();
         long expressionExperimentCount = 0;
         Collection<Long> values = taxonCount.values();
         for ( Long count : values ) {

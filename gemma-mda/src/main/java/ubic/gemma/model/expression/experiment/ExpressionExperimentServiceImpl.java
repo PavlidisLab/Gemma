@@ -538,7 +538,8 @@ public class ExpressionExperimentServiceImpl extends
      * .experiment.ExpressionExperiment)
      */
     @Override
-    protected Collection handleGetSubSets( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected Collection<ExpressionExperimentSubSet> handleGetSubSets( ExpressionExperiment expressionExperiment )
+            throws Exception {
         return this.getExpressionExperimentDao().getSubSets( expressionExperiment );
     }
 
@@ -553,7 +554,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     protected ExpressionExperiment handleLoad( Long id ) throws Exception {
-        return ( ExpressionExperiment ) this.getExpressionExperimentDao().load( id );
+        return this.getExpressionExperimentDao().load( id );
     }
 
     /*

@@ -49,13 +49,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 							});
 				}
 
-				this.rowExpander = new Gemma.CoexpressionGridRowExpander({
-							tpl : "",
-							grid : this
-						});
-
 				Ext.apply(this, {
-							columns : [this.rowExpander, {
+							columns : [{
 										id : 'query',
 										header : "Query Gene",
 										hidden : true,
@@ -65,6 +60,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 											return value.officialSymbol;
 										},
 										sortable : true
+									}, {
+										id : 'details',
+										header : "Details",
+										dataIndex : 'details',
+										renderer : this.detailsStyler.createDelegate(this),
+										tooltip : "Links for probe-level details",
+										sortable : false,
+										width : 30
 									}, {
 										id : 'visualize',
 										header : "Visualize",
@@ -107,10 +110,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										sortable : false
 									}]
 
-						});
-
-				Ext.apply(this, {
-							plugins : this.rowExpander
 						});
 
 				Gemma.CoexpressionGrid.superclass.initComponent.call(this);
@@ -280,6 +279,10 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
 			},
 
+			detailsStyler : function(value, metadata, record, row, col, ds) {
+				return "<img src='/Gemma/images/icons/magnifier.png' ext:qtip='Show probe-level details' />";
+			},
+
 			downloadDedv : function(value, metadata, record, row, col, ds) {
 
 				var queryGene = record.data.queryGene;
@@ -310,8 +313,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					this.getColumnModel().setHidden(queryIndex, true);
 
 				}
-				this.getColumnModel().getColumnById
-				this.rowExpander.clearCache();
 				this.datasets = datasets; // the datasets that are 'relevant'.
 				this.getStore().proxy.data = data;
 				this.getStore().reload({
