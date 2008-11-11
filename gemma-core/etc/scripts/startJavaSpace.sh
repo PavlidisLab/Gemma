@@ -1,6 +1,6 @@
 # Simple unix shell script to start the JavaSpaces server. 
 
-# This script uses the following evironment variables
+# This script uses the following environment variables
 
 # JSHOMEDIR must be defined in your profile, as the Gigaspaces startup script uses it.
 # JSHOMEDIR="/proj/GigaSpacesCommunity5.2"

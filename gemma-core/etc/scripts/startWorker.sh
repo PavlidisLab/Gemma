@@ -1,7 +1,7 @@
 # Example unix shell script to start workers
 # $Id$
 
-# This script uses the following evironment variables, which you must define here or in your profile.
+# This script uses the following environment variables, which you must define here or in your profile.
 # JSHOMEDIR="/proj/GigaSpacesCommunity5.2"
 # GEMMA_LIB="/gemmaData/lib/Gemma"
 
