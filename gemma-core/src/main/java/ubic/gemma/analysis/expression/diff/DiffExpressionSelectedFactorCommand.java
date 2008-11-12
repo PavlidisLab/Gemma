@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.diff;
+package ubic.gemma.analysis.expression.diff;
 
 import java.io.Serializable;
 

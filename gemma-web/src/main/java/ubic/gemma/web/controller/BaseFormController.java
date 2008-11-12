@@ -211,7 +211,6 @@ public abstract class BaseFormController extends SimpleFormController {
      * @param request can be used to control which cancel view to use. (This is not used in the default implementation)
      * @return the name of the cancel view to use.
      */
-    @SuppressWarnings("unused")
     protected String getCancelViewName( HttpServletRequest request ) {
         // Default to successView if cancelView is not defined
         if ( StringUtils.isBlank( cancelView ) ) {
@@ -235,7 +234,6 @@ public abstract class BaseFormController extends SimpleFormController {
      * custom editors (call super.initBinder() in your implemenation)
      */
     @Override
-    @SuppressWarnings("unused")
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
         NumberFormat nf = NumberFormat.getNumberInstance();
         binder.registerCustomEditor( Integer.class, null, new CustomNumberEditor( Integer.class, nf, true ) );
@@ -270,8 +268,8 @@ public abstract class BaseFormController extends SimpleFormController {
 
     /**
      * New errors are added if <tt>message</tt> is not empty (as per the definition of
-     * {@link org.apache.commons.lang.StringUtils#isEmpty}. If empty, a new error will not be added, but existing
-     * errors will still be processed.
+     * {@link org.apache.commons.lang.StringUtils#isEmpty}. If empty, a new error will not be added, but existing errors
+     * will still be processed.
      * 
      * @param request
      * @param response

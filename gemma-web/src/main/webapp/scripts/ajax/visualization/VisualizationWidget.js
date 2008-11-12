@@ -311,7 +311,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 					region : 'center',
 					split : true,
 					width : Gemma.ZOOM_PLOT_SIZE,
-					hight : Gemma.ZOOM_PLOT_SIZE,
+					height : Gemma.ZOOM_PLOT_SIZE,
 					id : 'visualization-zoom-window',
 					closeAction : 'destroy',
 					bodyStyle : "background:white",
@@ -373,7 +373,6 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 						var sortedHotProfile = [];
 
-						// Add cold colors
 						for (var i = 0; i < profiles.size(); i++) {
 							var fade = profiles[i].factor < 2;
 							if (Gemma.geneContained(coldGeneName, profiles[i].genes)) {
@@ -515,18 +514,12 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	},
 
 	initComponent : function() {
-		// If there are any compile errors with the template the error will not
-		// make its way to the console.
-		// Tried every combination i could think of to get the profile to
-		// display...
-		// Can't seem to access the data even though its there...
-
 		this.dv = new Ext.DataView({
 			autoHeight : true,
 			emptyText : 'No images to display',
 			loadingText : 'Loading data ...',
 			store : new Gemma.VisualizationStore({
-						readMethod : DEDVController.getDEDVForVisualization
+						readMethod : DEDVController.getDEDVForDiffExVisualization
 					}),
 
 			tpl : new Gemma.ProfileTemplate(
@@ -559,7 +552,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 			prepareData : function(data) {
 
-				// Need to transform the cordinate data from an object to an
+				// Need to transform the coordinate data from an object to an
 				// array for flotr
 				// probe, genes
 				var flotrData = [];
@@ -572,6 +565,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					var probe = coordinateProfile[i].probe.name;
 					var genes = coordinateProfile[i].genes;
 					var color = coordinateProfile[i].color;
+					var factor = coordinateProfile[i].factor;
 
 					var geneNames = genes[0].name;
 					for (var k = 1; k < genes.size(); k++) {
@@ -589,7 +583,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						color : color,
 						genes : genes,
 						label : probe + "=>" + geneNames,
-						labelID : probeId
+						labelID : probeId,
+						factor : factor
 					};
 
 					flotrData.push(plotConfig);
@@ -623,7 +618,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					region : 'center',
 					split : true,
 					width : Gemma.ZOOM_PLOT_SIZE,
-					hight : Gemma.ZOOM_PLOT_SIZE,
+					height : Gemma.ZOOM_PLOT_SIZE,
+					stateful : false,
 					id : 'visualization-zoom-window',
 					closeAction : 'destroy',
 					bodyStyle : "background:white",
@@ -678,11 +674,15 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 							this.setVisible(true);
 							this.show();
 						}
+						for (var i = 0; i < profiles.size(); i++) {
+							var fade = profiles[i].factor < 2;
+							if (fade) {
+								profiles[i].color = "#FFDDDD";
+							} else {
+								profiles[i].color = "#FF0000";
+							}
 
-						// remove red color
-						// for (var i = 0; i < profiles.size(); i++) {
-						// profiles[i].color = null;
-						// }
+						}
 
 						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
@@ -698,7 +698,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 	},
 
-	displayWindow : function(eeIds, gene) {
+	displayWindow : function(eeIds, gene, threshold, factorMap) {
 
 		this.setTitle("Visualization of gene: " + gene.officialSymbol);
 
@@ -707,6 +707,9 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 		var params = [];
 		params.push(eeIds);
 		params.push([gene.id]);
+		params.push(threshold);
+		params.push(factorMap);
+
 		this.show();
 		this.dv.store.load({
 					params : params

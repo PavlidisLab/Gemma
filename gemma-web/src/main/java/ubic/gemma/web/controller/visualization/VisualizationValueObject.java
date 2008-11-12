@@ -104,7 +104,7 @@ public class VisualizationValueObject {
             }
 
             int valid = 1;
-            if ( validatedProbeList == null || validatedProbeList.contains( vector.getDesignElement().getId() ) ) {
+            if ( validatedProbeList != null && validatedProbeList.contains( vector.getDesignElement().getId() ) ) {
                 valid = 2;
             }
 

@@ -52,7 +52,8 @@ Ext.onReady(function() {
 				visWindow = new Gemma.VisualizationDifferentialWindow({
 							admin : admin
 						});
-				visWindow.displayWindow(activeExperimentIds, gene);
+				visWindow.displayWindow(activeExperimentIds, gene, Ext.getCmp('thresholdField').getValue(),
+						searchPanel.efChooserPanel.eeFactorsMap);
 			} else if (fieldName == 'details') {
 
 				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({

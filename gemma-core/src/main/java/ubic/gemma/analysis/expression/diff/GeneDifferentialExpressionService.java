@@ -2,6 +2,7 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -54,7 +55,6 @@ public class GeneDifferentialExpressionService {
      * @param activeExperiments
      * @return
      */
-    @SuppressWarnings("unchecked")
     public DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( double threshold,
             Gene g, Map<Long, Long> eeFactorsMap, Collection<ExpressionExperiment> activeExperiments ) {
         /*
@@ -170,6 +170,58 @@ public class GeneDifferentialExpressionService {
     }
 
     /**
+     * Get differential expression for a gene, constrained to a specific set of factors. Note that interactions are
+     * ignored, only main effects (the factorMap can only have one factor per experiment)
+     * 
+     * @param ees
+     * @param gene
+     * @param threshold
+     * @param factorMap
+     * @return
+     */
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression(
+            Collection<ExpressionExperiment> ees, Gene gene, double threshold,
+            Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
+
+        Collection<DifferentialExpressionValueObject> result = new ArrayList<DifferentialExpressionValueObject>();
+
+        if ( gene == null ) return result;
+
+        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> rawDiffEx = differentialExpressionAnalysisService
+                .findResultsForGeneInExperimentsMetThreshold( gene, ees, threshold );
+
+        Collection<DifferentialExpressionValueObject> rawProcResults = postProcessDiffExResults( gene, threshold,
+                rawDiffEx );
+
+        Map<Long, DiffExpressionSelectedFactorCommand> eeId2FactorCommand = new HashMap<Long, DiffExpressionSelectedFactorCommand>();
+        for ( DiffExpressionSelectedFactorCommand dsfc : factorMap ) {
+            eeId2FactorCommand.put( dsfc.getEeId(), dsfc );
+        }
+
+        for ( DifferentialExpressionValueObject raw : rawProcResults ) {
+            if ( eeId2FactorCommand.containsKey( raw.getExpressionExperiment().getId() ) ) {
+                DiffExpressionSelectedFactorCommand factorCommandForEE = eeId2FactorCommand.get( raw
+                        .getExpressionExperiment().getId() );
+
+                assert !raw.getExperimentalFactors().isEmpty();
+
+                // interaction term?
+                if ( raw.getExperimentalFactors().size() > 1 ) {
+                    continue;
+                }
+
+                ExperimentalFactorValueObject efvo = raw.getExperimentalFactors().iterator().next();
+                if ( factorCommandForEE.getEfId().equals( efvo.getId() ) ) {
+                    result.add( raw );
+                    continue;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Get the differential expression results for the given gene.
      * 
      * @param gene
@@ -188,6 +240,21 @@ public class GeneDifferentialExpressionService {
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionAnalysisService
                 .findResultsForGeneInExperimentsMetThreshold( gene, experimentsAnalyzed, threshold );
+
+        return postProcessDiffExResults( gene, threshold, results );
+    }
+
+    /**
+     * Convert the raw results into DifferentialExpressionValueObjects
+     * 
+     * @param gene
+     * @param threshold
+     * @param devos
+     * @param results
+     */
+    private Collection<DifferentialExpressionValueObject> postProcessDiffExResults( Gene gene, double threshold,
+            Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results ) {
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
 
         for ( ExpressionExperiment ee : results.keySet() ) {
             ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );

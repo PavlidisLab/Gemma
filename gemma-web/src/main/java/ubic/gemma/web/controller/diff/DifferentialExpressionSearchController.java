@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
@@ -178,6 +179,31 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Gene g = geneService.load( geneId );
         return geneDifferentialExpressionService.getDifferentialExpression( g, threshold );
+    }
+
+    /**
+     * AJAX entry which returns differential expression results for the gene with the given id, in the selected factors,
+     * at the given significance threshold.
+     * 
+     * @param geneId
+     * @param threshold corrected pvalue threshold (normally this means FDR)
+     * @param factorMap
+     * @return
+     */
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionForFactors( Collection<Long> eeIds,
+            Long geneId, double threshold, Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
+
+        if ( eeIds.isEmpty() ) {
+            return null;
+        }
+
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+
+        Gene g = geneService.load( geneId );
+        Collection<DifferentialExpressionValueObject> result = geneDifferentialExpressionService
+                .getDifferentialExpression( ees, g, threshold, factorMap );
+
+        return result;
     }
 
     /**

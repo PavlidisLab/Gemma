@@ -23,6 +23,8 @@ import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
+
 /**
  * @author keshav
  * @version $Id$

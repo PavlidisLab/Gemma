@@ -601,6 +601,7 @@
 						<list>
 							<value>getDifferentialExpression</value>
 							<value>getDiffExpressionForGenes</value>
+							<value>getDifferentialExpressionForFactors</value>
 							<value>getDiffMetaAnalysisForGenes</value>
 							<value>getFactors</value>
 						</list>
@@ -633,6 +634,7 @@
 							<value>getDEDV</value>
 							<value>getDEDVForVisualization</value>
 							<value>getDEDVForCoexpressionVisualization</value>
+							<value>getDEDVForDiffExVisualization</value>
 						</list>
 					</property>
 				</bean>
@@ -1197,7 +1199,7 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.diff.DiffExpressionSelectedFactorCommand">
+			<entry key="ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>

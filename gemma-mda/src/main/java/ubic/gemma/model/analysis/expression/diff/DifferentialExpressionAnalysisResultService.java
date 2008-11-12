@@ -22,6 +22,10 @@
 //
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.util.Collection;
+
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+
 /**
  * 
  */
@@ -36,13 +40,14 @@ public interface DifferentialExpressionAnalysisResultService {
     /**
      * 
      */
-    public java.util.Map getExperimentalFactors( java.util.Collection differentialExpressionAnalysisResults );
+    public java.util.Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
+            java.util.Collection differentialExpressionAnalysisResults );
 
     /**
      * 
      */
     public void thaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
 
-    public void thawAnalysisResult( final DifferentialExpressionAnalysisResult result  ) throws Exception;
-    
+    public void thawAnalysisResult( final DifferentialExpressionAnalysisResult result ) throws Exception;
+
 }
