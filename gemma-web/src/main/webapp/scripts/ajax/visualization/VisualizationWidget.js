@@ -402,13 +402,23 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 						// sort array by gene
 						profiles.sort(function(a, b) {
-									if ((a.genes[0].name === b.genes[0].name))
-										return 0;
-									else if (((a.genes[0].name > b.genes[0].name)))
-										return 1;
-									else
+
+								//sorts data by importance 1st
+								if (a.factor > b.factor )
+										return 1;									
+								else if (a.factor < b.factor)
 										return -1;
-								});
+
+								//if equal importance than sort by gene name
+								else {
+									if (a.genes[0].name > b.genes[0].name)
+										return 1;
+								    else if (a.genes[0].name < b.genes[0].name)
+										return -1;
+									else return (a.labelID > b.labelID);
+									
+								}
+						});
 
 						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
