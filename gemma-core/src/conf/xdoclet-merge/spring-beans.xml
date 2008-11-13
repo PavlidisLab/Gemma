@@ -9,7 +9,8 @@
 		<ref bean="velocityEngine" />
 	</property>
 </bean>
-<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+<bean id="mailSender"
+	class="org.springframework.mail.javamail.JavaMailSenderImpl">
 	<property name="host">
 		<value>${mail.host}</value>
 	</property>
@@ -21,7 +22,8 @@
 	</property>
 </bean>
 <!-- Configure Velocity for sending e-mail -->
-<bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+<bean id="velocityEngine"
+	class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
 	<property name="velocityProperties">
 		<props>
 			<prop key="resource.loader">class</prop>
@@ -31,7 +33,8 @@
 		</props>
 	</property>
 </bean>
-<bean id="mailMessage" class="org.springframework.mail.SimpleMailMessage" singleton="false">
+<bean id="mailMessage"
+	class="org.springframework.mail.SimpleMailMessage" singleton="false">
 	<property name="from">
 		<value>${gemma.admin.email}</value>
 	</property>
@@ -42,12 +45,15 @@
 	Variables are listed in a resource. If the resource is in your classpath, list in in 'locations'.
 	Other config files can be added by defining PropertiesConfiguration instances  
 	==================================================== -->
-<bean id="userProperties" class="org.apache.commons.configuration.PropertiesConfiguration" dependency-check="none">
+<bean id="userProperties"
+	class="org.apache.commons.configuration.PropertiesConfiguration"
+	dependency-check="none">
 	<constructor-arg index="0">
 		<value>Gemma.properties</value>
 	</constructor-arg>
 </bean>
-<bean id="configurationPropertyConfigurer" class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer">
+<bean id="configurationPropertyConfigurer"
+	class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer">
 	<property name="configuration">
 		<ref local="userProperties" />
 	</property>
@@ -62,7 +68,8 @@
 <!-- ==================================================== -->
 <!-- EXTERNAL DATABASE SESSION FACTORY -->
 <!-- ==================================================== -->
-<bean id="sessionFactoryGoldenPathHuman" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+<bean id="sessionFactoryGoldenPathHuman"
+	class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
 	<property name="dataSource">
 		<ref bean="dataSourceGoldenPathHuman" />
 	</property>
@@ -71,16 +78,23 @@
 	</property>
 	<property name="hibernateProperties">
 		<props>
-			<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+			<prop key="hibernate.dialect">
+				org.hibernate.dialect.MySQLDialect
+			</prop>
 			<prop key="hibernate.cache.use_query_cache">false</prop>
-			<prop key="hibernate.cache.provider_class">org.hibernate.cache.EhCacheProvider</prop>
-			<prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
+			<prop key="hibernate.cache.provider_class">
+				org.hibernate.cache.EhCacheProvider
+			</prop>
+			<prop key="hibernate.cache.query_cache_factory">
+				org.hibernate.cache.StandardQueryCacheFactory
+			</prop>
 			<prop key="hibernate.show_sql">true</prop>
 		</props>
 	</property>
 </bean>
 <!-- DATASOURCE USED BY SESSION FACTORY ABOVE -->
-<bean id="dataSourceGoldenPathHuman" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+<bean id="dataSourceGoldenPathHuman"
+	class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 	<property name="driverClassName">
 		<value>${gemma.goldenpath.db.driver}</value>
 	</property>
@@ -91,12 +105,16 @@
 		<value>${gemma.goldenpath.db.password}</value>
 	</property>
 	<property name="url">
-		<value>jdbc:mysql://${gemma.goldenpath.db.host}:${gemma.goldenpath.db.port}/${gemma.goldenpath.db.human}</value>
+		<value>
+			jdbc:mysql://${gemma.goldenpath.db.host}:${gemma.goldenpath.db.port}/${gemma.goldenpath.db.human}
+		</value>
 	</property>
 </bean>
-<bean id="auditAdvice" class="org.springframework.aop.framework.ProxyFactoryBean">
+<bean id="auditAdvice"
+	class="org.springframework.aop.framework.ProxyFactoryBean">
 	<property name="target">
-		<bean class="ubic.gemma.security.interceptor.AuditInterceptor">
+		<bean
+			class="ubic.gemma.security.interceptor.AuditInterceptor">
 			<property name="userDao">
 				<ref bean="userDao" />
 			</property>
@@ -123,39 +141,80 @@
 
 <!-- When creating new services, make sure you add a line in the transactionAttributeSource for your service. -->
 <bean id="additionalServiceTransactionInterceptor"
-		class="org.springframework.transaction.interceptor.TransactionInterceptor">
-		<property name="transactionManager">
-			<ref bean="transactionManager" />
-		</property>
-		<property name="transactionAttributeSource">
-			<value>
-				ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService.loadExpressionExperimentsForUser=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService.loadExpressionExperimentsForAnotherUser=PROPAGATION_REQUIRED,readOnly
-			</value>
-		</property>
+	class="org.springframework.transaction.interceptor.TransactionInterceptor">
+	<property name="transactionManager">
+		<ref bean="transactionManager" />
+	</property>
+	<property name="transactionAttributeSource">
+		<value>
+			ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService.loadExpressionExperimentsForUser=PROPAGATION_REQUIRED,readOnly
+			ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService.loadExpressionExperimentsForAnotherUser=PROPAGATION_REQUIRED,readOnly
+		</value>
+	</property>
 </bean>
 
 
-<bean id="expressionExperimentSecureService" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.security.expression.experiment.ExpressionExperimentSecureServiceImpl">
-				<property name="expressionExperimentDao">
-					<ref bean="expressionExperimentDao" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>serviceTransactionInterceptor</value>
-				<value>additionalServiceTransactionInterceptor</value>
-				<value>hibernateInterceptor</value>
-				<value>serviceSecurityInterceptor</value>
-				<value>addOrRemoveFromACLInterceptor</value>
-				<value>auditInterceptor</value>
-				<value>monitorInterceptor</value>
-			</list>
-		</property>
+<bean id="expressionExperimentSecureService"
+	class="org.springframework.aop.framework.ProxyFactoryBean">
+	<property name="target">
+		<bean
+			class="ubic.gemma.security.expression.experiment.ExpressionExperimentSecureServiceImpl">
+			<property name="expressionExperimentDao">
+				<ref bean="expressionExperimentDao" />
+			</property>
+		</bean>
+	</property>
+	<property name="proxyInterfaces">
+		<value>
+			ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService
+		</value>
+	</property>
+	<property name="interceptorNames">
+		<list>
+			<value>serviceTransactionInterceptor</value>
+			<value>additionalServiceTransactionInterceptor</value>
+			<value>hibernateInterceptor</value>
+			<value>serviceSecurityInterceptor</value>
+			<value>addOrRemoveFromACLInterceptor</value>
+			<value>auditInterceptor</value>
+			<value>monitorInterceptor</value>
+		</list>
+	</property>
+</bean>
+
+<bean id="processedExpressionDataVectorCreateService"
+	class="org.springframework.aop.framework.ProxyFactoryBean">
+	<property name="target">
+		<bean
+			class="ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateServiceImpl">
+			<property name="eeService">
+				<ref bean="expressionExperimentService" />
+			</property>
+			<property name="processedDataService">
+				<ref bean="processedExpressionDataVectorService" />
+			</property>
+			<property name="designElementDataVectorService">
+				<ref bean="designElementDataVectorService" />
+			</property>
+			<property name="auditTrailService">
+				<ref bean="auditTrailService" />
+			</property>
+		</bean>
+	</property>
+	<property name="proxyInterfaces">
+		<value>
+			ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService
+		</value>
+	</property>
+	<property name="interceptorNames">
+		<list>
+			<value>serviceTransactionInterceptor</value>
+			<value>additionalServiceTransactionInterceptor</value>
+			<value>hibernateInterceptor</value>
+			<value>serviceSecurityInterceptor</value>
+			<value>addOrRemoveFromACLInterceptor</value>
+			<value>auditInterceptor</value>
+			<value>monitorInterceptor</value>
+		</list>
+	</property>
 </bean>
