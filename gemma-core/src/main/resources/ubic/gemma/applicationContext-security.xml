@@ -66,6 +66,9 @@
 		<property name="userAttribute">
 			<value>anonymous,ROLE_ANONYMOUS</value>
 		</property>
+		<property name="removeAfterRequest">
+			<value>false</value>
+		</property>
 	</bean>
 
 	<!-- ======================== AUTHENTICATION FILTER ======================= -->
