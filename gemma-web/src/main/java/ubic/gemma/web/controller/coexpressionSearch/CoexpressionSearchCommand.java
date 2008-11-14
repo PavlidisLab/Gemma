@@ -51,6 +51,8 @@ public class CoexpressionSearchCommand {
     private boolean queryGenesOnly;
 
     private Integer stringency;
+    
+    private boolean useMyDatasets;
 
     /*
      * as eeQuery above, the taxon is only here so we can use this object to store the entire state of the form...
@@ -97,6 +99,10 @@ public class CoexpressionSearchCommand {
         return forceProbeLevelSearch;
     }
 
+    public boolean isUseMyDatasets() {
+        return this.useMyDatasets;
+    }
+    
     public void setDirty( boolean dirty ) {
         this.dirty = dirty;
     }
@@ -120,6 +126,11 @@ public class CoexpressionSearchCommand {
     public void setForceProbeLevelSearch( boolean forceProbeLevelSearch ) {
         this.forceProbeLevelSearch = forceProbeLevelSearch;
     }
+    
+    public void setUseMyDatasets( boolean useMyDatasets ) {
+        this.useMyDatasets = useMyDatasets;
+    }
+
 
     public void setGeneIds( Collection<Long> geneIds ) {
         this.geneIds = geneIds;

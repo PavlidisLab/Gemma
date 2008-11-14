@@ -45,6 +45,7 @@ public class CoexpressionValueObjectExt {
     private Integer goSim;
     private Integer maxGoSim;
     private String datasetVector;
+    private Boolean containsMyData;
     private Collection<Long> supportingExperiments;
 
     public Gene getQueryGene() {
@@ -172,6 +173,14 @@ public class CoexpressionValueObjectExt {
 
     public void setSupportingExperiments( Collection<Long> supportingExperiments ) {
         this.supportingExperiments = supportingExperiments;
+    }
+
+    public Boolean getContainsMyData() {
+        return containsMyData;
+    }
+
+    public void setContainsMyData( Boolean containsMyData ) {
+        this.containsMyData = containsMyData;
     }
 
 }

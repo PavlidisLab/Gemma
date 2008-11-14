@@ -18,7 +18,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	layout : 'border',
 	width : 390,
-	height : 300,
+	height : 360,
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
@@ -76,6 +76,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 					geneIds : this.geneChooserPanel.getGeneIds(),
 					stringency : Ext.getCmp('stringencyfield').getValue(),
 					forceProbeLevelSearch : Ext.getCmp('forceProbeLevelSearch').getValue(),
+					useMyDatasets : Ext.getCmp('forceUseMyDatasets').getValue(),
 					taxonId : this.geneChooserPanel.getTaxonId(),
 					queryGenesOnly : Ext.getCmp('querygenesonly').getValue()
 				});
@@ -349,7 +350,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				margins : '5 0 0 0 ',
 				plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
 				width : 250,
-				height : this.admin ? 200 : 140,
+				height : this.admin ? 240 : 180,
 				items : [{
 					xtype : 'fieldset',
 					autoHeight : true,
@@ -375,7 +376,15 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 								hidden : !this.admin,
 								hideLabel : !this.admin,
 								tooltip : "Do the query at the level of probes (for debugging)"
-							}, {
+							},{
+								xtype : 'checkbox',
+								id : 'forceUseMyDatasets',
+								fieldLabel : 'use my data',
+								disabled : !this.admin,
+								hidden : !this.admin,
+								hideLabel : !this.admin,
+								tooltip : "Use my datasets in search"
+							},{
 								xtype : 'checkbox',
 								id : 'querygenesonly',
 								fieldLabel : 'My genes only',

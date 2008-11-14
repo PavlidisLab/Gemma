@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.coexpressionSearch;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,10 +28,13 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject;
+import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.view.TextView;
 
@@ -41,6 +45,7 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "searchService" ref="searchService"
  * @spring.property name="geneCoexpressionService" ref="geneCoexpressionService"
+ * @spring.property name="expressionExperimentSecureService" ref="expressionExperimentSecureService"
  */
 public class CoexpressionSearchController extends BaseFormController {
 
@@ -52,6 +57,7 @@ public class CoexpressionSearchController extends BaseFormController {
     private SearchService searchService = null;
 
     private GeneCoexpressionService geneCoexpressionService;
+    private ExpressionExperimentSecureService expressionExperimentSecureService;
 
     /**
      * Main AJAX entry point
@@ -60,21 +66,68 @@ public class CoexpressionSearchController extends BaseFormController {
      * @return
      */
     public CoexpressionMetaValueObject doSearch( CoexpressionSearchCommand searchOptions ) {
-        Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
-        this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...s
+
+        CoexpressionMetaValueObject result;
+        Collection<ExpressionExperiment> myEE = null;
+
         log.info( "Coexpression search: " + searchOptions );
-        if ( genes == null || genes.isEmpty() ) {
+
+        if ( searchOptions.getGeneIds() == null || searchOptions.getGeneIds().isEmpty() ) {
             return getEmptyResult();
         }
+
+        Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
+        this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...s
+
+        // Add the users datasets to the selected datasets
+        if ( searchOptions.isUseMyDatasets() ) {
+            myEE = expressionExperimentSecureService.loadExpressionExperimentsForUser();
+            if ( myEE != null && !myEE.isEmpty() ) {
+                for ( ExpressionExperiment ee : myEE )
+                    searchOptions.getEeIds().add( ee.getId() );
+            } else
+                log.info( "No user data to add" );
+        }
+
         Long eeSetId = searchOptions.getEeSetId();
         if ( eeSetId != null && !searchOptions.isForceProbeLevelSearch() && ( eeSetId >= 0 && !searchOptions.isDirty() ) ) {
-            return geneCoexpressionService.coexpressionSearch( eeSetId, genes, searchOptions.getStringency(),
+            result = geneCoexpressionService.coexpressionSearch( eeSetId, genes, searchOptions.getStringency(),
                     MAX_RESULTS, searchOptions.getQueryGenesOnly() );
+        } else {
+            assert ( searchOptions.getEeIds() != null && searchOptions.getEeIds().size() > 0 );
+
+            result = geneCoexpressionService.coexpressionSearch( searchOptions.getEeIds(), genes, searchOptions
+                    .getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly(), searchOptions
+                    .isForceProbeLevelSearch() );
+
         }
-        assert ( searchOptions.getEeIds() != null && searchOptions.getEeIds().size() > 0 );
-        return geneCoexpressionService.coexpressionSearch( searchOptions.getEeIds(), genes, searchOptions
-                .getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly(), searchOptions
-                .isForceProbeLevelSearch() );
+
+        if ( searchOptions.isUseMyDatasets() ) {
+            addMyDataFlag( result, myEE );
+        }
+
+        return result;
+
+    }
+
+    private void addMyDataFlag( CoexpressionMetaValueObject vo, Collection<ExpressionExperiment> eesToFlag ) {
+
+        Collection<Long> eesToFlagIds = new ArrayList<Long>();
+        for ( ExpressionExperiment ee : eesToFlag ) {
+            eesToFlagIds.add( ee.getId() );
+        }
+
+        if(vo == null || vo.getKnownGeneResults() == null || vo.getKnownGeneResults().isEmpty())
+                return;
+        
+        for ( CoexpressionValueObjectExt covo : vo.getKnownGeneResults() ) {
+            for ( Long eeToFlag : eesToFlagIds ) {
+                if ( covo.getSupportingExperiments().contains( eeToFlag ) ) {
+                    covo.setContainsMyData( true );
+                    break;
+                }
+            }
+        }
 
     }
 
@@ -141,8 +194,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
             CoexpressionMetaValueObject result;
             if ( eeSetId != null ) {
-                result = geneCoexpressionService.coexpressionSearch( eeSetId, genes, stringency, 500,
-                        queryGenesOnly );
+                result = geneCoexpressionService.coexpressionSearch( eeSetId, genes, stringency, 500, queryGenesOnly );
             } else {
                 Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) );
                 result = geneCoexpressionService.coexpressionSearch( eeIds, genes, stringency, MAX_RESULTS,
@@ -157,5 +209,10 @@ public class CoexpressionSearchController extends BaseFormController {
         }
         return new ModelAndView( this.getFormView() );
 
+    }
+
+    public void setExpressionExperimentSecureService(
+            ExpressionExperimentSecureService expressionExperimentSecureService ) {
+        this.expressionExperimentSecureService = expressionExperimentSecureService;
     }
 }
