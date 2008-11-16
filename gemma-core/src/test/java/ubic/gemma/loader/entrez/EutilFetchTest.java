@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.entrez;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import junit.framework.TestCase;
@@ -45,9 +46,11 @@ public class EutilFetchTest extends TestCase {
             } else if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "503" ) ) {
                 log.warn( "Error 503 from NCBI, skipping test" );
                 return;
+            } else if ( e.getCause() instanceof FileNotFoundException ) {
+                log.warn( "FileNotFound - is Eutil down? Skipping test" );
+                return;
             }
             throw ( e );
         }
     }
-
 }
