@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--  $Id$ -->
+	<!--  $Id$ -->
 <andromda>
 	<properties>
 		<property name="modelValidation">${modelValidation}</property>
 		<property name="cartridgeFilter">${filter}</property>
-		<property name="loggingConfigurationUri">file:${project.basedir}/src/main/conf/log4j.xml</property>
+		<property name="loggingConfigurationUri">file:${project.basedir}/src/main/conf/log4j.xml
+		</property>
 	</properties>
 	<server>
 		<host>localhost</host>
@@ -14,7 +15,8 @@
 		<repository name="netBeansMDR">
 			<models>
 				<model>
-					<uri>jar:file:${project.basedir}/src/main/uml/gemma-om.xml.zip!/gemma-om.xml</uri>
+					<uri>jar:file:${project.basedir}/src/main/uml/gemma-om.xml.zip!/gemma-om.xml
+					</uri>
 					<moduleSearchLocations>
 						<location patterns="**/*.xml.zip, **/*.uml14">
 							${settings.localRepository}/org/andromda/profiles
@@ -32,7 +34,8 @@
 			<properties>
 				<property name="languageMappingsUri">Java</property>
 				<property name="wrapperMappingsUri">JavaWrapper</property>
-				<property name="sqlMappingsUri">file:${project.basedir}/src/main/conf/MySQLMappings.xml</property>
+				<property name="sqlMappingsUri">file:${project.basedir}/src/main/conf/MySQLMappings.xml
+				</property>
 				<property name="jdbcMappingsUri">JDBC</property>
 				<property name="maxSqlNameLength">60</property>
 				<property name="hibernateVersion">3</property>
@@ -51,13 +54,15 @@
 			<!--  Note that we are not using this -->
 			<properties>
 				<property name="forms">${maven.andromda.core.generated.dir}</property>
-				<property name="pages">${maven.andromda.web.generated.pages.dir}/pages</property>
+				<property name="pages">${maven.andromda.web.generated.pages.dir}/pages
+				</property>
 				<property name="actions">${maven.andromda.core.generated.dir}</property>
 				<property name="controllers">${maven.andromda.core.generated.dir}</property>
 				<property name="controller-impls">${maven.andromda.core.manual.dir}</property>
 				<property name="decorators">${maven.andromda.core.manual.dir}</property>
 				<property name="messages">${maven.andromda.web.messages.dir}</property>
-				<property name="configuration">${maven.andromda.web.conf.generated.dir}/WEB-INF</property>
+				<property name="configuration">${maven.andromda.web.conf.generated.dir}/WEB-INF
+				</property>
 				<property name="securityRealm"></property>
 				<property name="serviceAccessorPattern">
 					${application.package}.ServiceLocator.instance().get{1}()
@@ -74,36 +79,44 @@
 					file:${project.basedir}/src/main/conf/HibernateTypeMappings.xml
 				</property>
 				<property name="enableTemplating">true</property>
-				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory</property>
+				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory
+				</property>
 				<property name="hibernateInheritanceStrategy">${hibernate.inheritance.strategy}</property>
 				<property name="hibernateCacheProvider">org.hibernate.cache.EhCacheProvider</property>
 				<property name="entities">${maven.andromda.core.generated.dir}</property>
 				<property name="entity-impls">${maven.andromda.core.manual.dir}</property>
-				<property name="entity-mappings">${maven.andromda.hibernate.configuration.dir}</property>
+				<property name="entity-mappings">${maven.andromda.hibernate.configuration.dir}
+				</property>
 				<property name="user-types">${maven.andromda.core.generated.dir}</property>
 				<property name="customTypesPackage">${application.package}</property>
-				<property name="userTypesPackage">${application.package}.persistence.hibernate.usertypes</property>
+				<property name="userTypesPackage">${application.package}.persistence.hibernate.usertypes
+				</property>
 				<property name="compositionDefinesEagerLoading">true</property>
-				<property name="mergeLocation">${project.basedir}/src/main/custom/hibernate</property>
+				<property name="mergeLocation">${project.basedir}/src/main/custom/hibernate
+				</property>
 				<property name="mergeMappingsUri">file:${maven.andromda.merge.mappings}</property>
 				<property name="hibernateCompositionCascade">all</property>
 				<property name="hibernateAggregationCascade">none</property>
 				<property name="hibernateDefaultCascade">none</property>
 				<property name="specificCollectionInterfaces">false</property>
 				<property name="associationEndCollectionIndexName">orderedCollectionIndex</property>
-				<property name="configuration">${maven.andromda.hibernate.configuration.dir}</property>
-				<!-- 
-					<property name="hibernateEnableCache">true</property>
-					<property name="cache">${maven.andromda.hibernate.configuration.dir}</property>
-					<property name="hibernateEnableAssociationsCache">true</property>
-					<property name="ehCacheTimeToIdleSeconds">200</property>
-					<property name="ehCacheTimeToLiveSeconds">200</property>
-					<property name="ehCacheMaxElementsInMemory">2000</property>
-					<property name="ehCacheOverflowToDisk">false</property> -->
-				<property name="hibernateTransactionFactoryClass">
-					org.hibernate.transaction.JTATransactionFactory
+				<property name="configuration">${maven.andromda.hibernate.configuration.dir}
 				</property>
-				<!-- 				<property name="hibernateXMLPersistence">true</property>-->
+
+				<property name="hibernateEnableCache">true</property>
+				<!--  NOTE: the ehcache.xml file gets generated whether we include the following or not. -->
+				<property name="cache">${maven.andromda.hibernate.configuration.dir}
+				</property>
+				<property name="hibernateEnableAssociationsCache">true</property>
+				<property name="ehCacheTimeToIdleSeconds">1200</property>
+				<property name="ehCacheTimeToLiveSeconds">1200</property>
+				<property name="ehCacheMaxElementsInMemory">10000</property>
+				<property name="ehCacheOverflowToDisk">false</property>
+
+				<!--
+					<property name="hibernateTransactionFactoryClass"> org.hibernate.transaction.JTATransactionFactory </property>
+					<property name="hibernateXMLPersistence">true</property>
+				-->
 			</properties>
 		</namespace>
 		<namespace name="cs">
