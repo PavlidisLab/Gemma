@@ -379,7 +379,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         fillInBioAssayAssociations( assay );
         if ( log.isDebugEnabled() ) log.debug( "Persisting " + assay );
 
-        return bioAssayService.findOrCreate( assay );
+        /*
+         * PP changed this to use 'create', as we don't want BioAssays associated with two ExpressionExperiments.
+         * BioAssays don't exist on their own so this wouldn't get called in any conceivable situation where
+         * findOrCreate would be appropriate (?)
+         */
+        return bioAssayService.create( assay );
     }
 
     /**

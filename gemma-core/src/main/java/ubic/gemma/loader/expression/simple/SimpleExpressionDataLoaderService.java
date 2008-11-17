@@ -133,7 +133,7 @@ public class SimpleExpressionDataLoaderService {
         Collection<Object> usedDesignElements = new HashSet<Object>();
         for ( ArrayDesign design : arrayDesigns ) {
             log.info( "Processing " + design );
-            DoubleMatrix subMatrix = getSubMatrixForArrayDesign( matrix, usedDesignElements, design );
+            DoubleMatrix<String, String> subMatrix = getSubMatrixForArrayDesign( matrix, usedDesignElements, design );
             BioAssayDimension bad = convertBioAssayDimension( experiment, design, taxon, subMatrix );
             Collection<RawExpressionDataVector> vectors = convertDesignElementDataVectors( experiment, bad, design,
                     quantitationType, subMatrix );
@@ -232,9 +232,9 @@ public class SimpleExpressionDataLoaderService {
         if ( taxon == null ) throw new IllegalArgumentException( "Taxon cannot be null" );
         if ( taxonService == null ) {
             return taxon; // for tests
-        } else {
-            return taxonService.findOrCreate( taxon );
         }
+        return taxonService.findOrCreate( taxon );
+
     }
 
     /**

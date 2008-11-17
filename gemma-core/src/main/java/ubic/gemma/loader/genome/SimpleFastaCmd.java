@@ -53,7 +53,6 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchAccessions(java.util.Collection, java.lang.String)
      */
     public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database, String blastHome ) {
@@ -66,7 +65,6 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchIdentifiers(java.util.Collection, java.lang.String)
      */
     public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database,
@@ -81,7 +79,6 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getByAccesion(java.lang.String, java.lang.String)
      */
     public BioSequence getByAccession( String accession, String database, String blastHome ) {
@@ -153,8 +150,8 @@ public class SimpleFastaCmd implements FastaCmd {
             Thread.sleep( 20 ); // Makes sure results are flushed.
             log.debug( "fastacmd exit value=" + exitVal ); // often nonzero if some sequences are not found.
             is.close();
+            err.close();
             return parser.getResults();
-
         } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
         } catch ( IOException e ) {
@@ -164,7 +161,7 @@ public class SimpleFastaCmd implements FastaCmd {
     }
 
     /**
-     * @param ACCESSION
+     * @param key, which is normally either a String (ACC) or an Integer (GID)
      * @param database
      * @blastHome
      * @throws IOException
@@ -174,9 +171,9 @@ public class SimpleFastaCmd implements FastaCmd {
             blastHome = blastDbHome;
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command = fastaCmdExecutable + " -d " + database + " -s " + key.toString();
+        String command = fastaCmdExecutable + " -d " + database + " -s " + key;
         Process pr = Runtime.getRuntime().exec( command, opts );
-        if ( log.isDebugEnabled() ) log.debug( command + "( " + opts[0] + ")" );
+        if ( log.isDebugEnabled() ) log.debug( command + " ( " + opts[0] + ")" );
         Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
         if ( sequences.size() == 0 ) {
             return null;
@@ -189,7 +186,6 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getByIdentifier(int, java.lang.String)
      */
     public BioSequence getByIdentifier( int identifier, String database ) {
@@ -202,7 +198,6 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getByIdentifier(int, java.lang.String, java.lang.String)
      */
     public BioSequence getByIdentifier( int identifier, String database, String blastHome ) {
@@ -215,7 +210,6 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchAccessions(java.util.Collection, java.lang.String)
      */
     public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database ) {
@@ -224,7 +218,6 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchIdentifiers(java.util.Collection, java.lang.String)
      */
     public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database ) {
@@ -233,7 +226,6 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.genome.FastaCmd#getByAccession(java.lang.String, java.lang.String)
      */
     public BioSequence getByAccession( String accession, String database ) {

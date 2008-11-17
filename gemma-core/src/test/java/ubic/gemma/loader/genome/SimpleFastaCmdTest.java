@@ -40,7 +40,6 @@ public class SimpleFastaCmdTest extends TestCase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see junit.framework.TestCase#setUp()
      */
     @Override
@@ -50,7 +49,6 @@ public class SimpleFastaCmdTest extends TestCase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see junit.framework.TestCase#tearDown()
      */
     @Override
@@ -112,9 +110,10 @@ public class SimpleFastaCmdTest extends TestCase {
             return;
         }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-        BioSequence bs = fastaCmd.getByAccession( "AA000002", "testblastdb", ConfigUtils.getString( "gemma.home" )
+        String accession = "AA000002";
+        BioSequence bs = fastaCmd.getByAccession( accession, "testblastdb", ConfigUtils.getString( "gemma.home" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blast" );
-        assertNotNull( bs );
+        assertNotNull( "fastacmd failed to find " + accession, bs );
         String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
                 + "GAGTAGGCTAGAAACCAGAGAGCTCCAAGCTCCATCTGTGGAGAGGTGCCATCCTTGGGCTGCAGAGAGAGGAGAATTTG"
                 + "CCCCAAAGCTGCCTGCAGAGCTTCACCACCCTTAGTCTCACAAAGCCTTGAGTTCATAGCATTTCTTGAGTTTTCACCCT"

@@ -102,7 +102,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         // Need to get and thaw the experiments.
         Collection<ExpressionExperiment> eeInput = expressionExperimentService.loadMultiple( eeIDLong );
 
-        if ( eeInput.isEmpty() || eeInput == null )
+        if ( eeInput == null || eeInput.isEmpty() )
             return buildBadResponse( document, "Expression experiment(s) cannot be found or incorrect input" );
 
         // get gene id's from request
@@ -111,7 +111,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         for ( String id : geneIdInput )
             geneIDLong.add( Long.parseLong( id ) );
         Collection<Gene> geneInput = geneService.loadMultiple( geneIDLong );
-        if ( geneInput.isEmpty() || geneInput == null )
+        if ( geneInput == null || geneInput.isEmpty() )
             return buildBadResponse( document, "Gene(s) cannot be found or incorrect input" );
 
         // get method - max or mean.

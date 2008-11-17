@@ -50,8 +50,7 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
     Long secondProbeId;
 
     Probe2ProbeCoexpressionService ppcs;
-
-    @SuppressWarnings("unchecked")
+ 
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();

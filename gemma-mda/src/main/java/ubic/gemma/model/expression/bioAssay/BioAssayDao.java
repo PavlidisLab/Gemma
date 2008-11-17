@@ -22,6 +22,7 @@
 //
 package ubic.gemma.model.expression.bioAssay;
 
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -40,7 +41,7 @@ public interface BioAssayDao extends BaseDao<BioAssay> {
      * string defined in {@link #find(int, ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)}.
      * </p>
      */
-    public Object find( int transform, String queryString, ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    public BioAssay find( int transform, String queryString, ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
      * <p>
@@ -51,7 +52,7 @@ public interface BioAssayDao extends BaseDao<BioAssay> {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object find( int transform, ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    public BioAssay find( int transform, ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
      * <p>
@@ -76,7 +77,7 @@ public interface BioAssayDao extends BaseDao<BioAssay> {
      * ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)}.
      * </p>
      */
-    public java.util.Collection findBioAssayDimensions( int transform, String queryString,
+    public java.util.Collection<BioAssayDimension> findBioAssayDimensions( int transform, String queryString,
             ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
@@ -88,7 +89,7 @@ public interface BioAssayDao extends BaseDao<BioAssay> {
      * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection findBioAssayDimensions( int transform,
+    public java.util.Collection<BioAssayDimension> findBioAssayDimensions( int transform,
             ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
@@ -99,13 +100,14 @@ public interface BioAssayDao extends BaseDao<BioAssay> {
      * {@link #findBioAssayDimensions(ubic.gemma.model.expression.bioAssay.BioAssay)}.
      * </p>
      */
-    public java.util.Collection findBioAssayDimensions( String queryString,
+    public java.util.Collection<BioAssayDimension> findBioAssayDimensions( String queryString,
             ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
      * 
      */
-    public java.util.Collection findBioAssayDimensions( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    public java.util.Collection<BioAssayDimension> findBioAssayDimensions(
+            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
      * <p>
@@ -115,7 +117,7 @@ public interface BioAssayDao extends BaseDao<BioAssay> {
      * bioAssay)}.
      * </p>
      */
-    public Object findOrCreate( int transform, String queryString,
+    public BioAssay findOrCreate( int transform, String queryString,
             ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
@@ -127,7 +129,7 @@ public interface BioAssayDao extends BaseDao<BioAssay> {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public Object findOrCreate( int transform, ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    public BioAssay findOrCreate( int transform, ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
      * <p>

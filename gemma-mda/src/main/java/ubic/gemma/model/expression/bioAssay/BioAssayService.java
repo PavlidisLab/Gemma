@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.expression.bioAssay;
 
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+
 /**
  * 
  */
@@ -45,7 +47,8 @@ public interface BioAssayService extends ubic.gemma.model.common.AuditableServic
      * Locate all BioAssayDimensions in which the selected BioAssay occurs
      * </p>
      */
-    public java.util.Collection findBioAssayDimensions( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    public java.util.Collection<BioAssayDimension> findBioAssayDimensions(
+            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
     /**
      * 
@@ -53,10 +56,7 @@ public interface BioAssayService extends ubic.gemma.model.common.AuditableServic
     public ubic.gemma.model.expression.bioAssay.BioAssay findOrCreate(
             ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
-    /**
-     * 
-     */
-    public java.util.Collection getAllBioAssays();
+    public BioAssay create( BioAssay bioAssay );
 
     /**
      * 
@@ -66,7 +66,7 @@ public interface BioAssayService extends ubic.gemma.model.common.AuditableServic
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<BioAssay> loadAll();
 
     /**
      * 

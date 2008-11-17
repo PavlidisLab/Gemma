@@ -24,6 +24,8 @@ package ubic.gemma.model.expression.bioAssay;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -50,7 +52,7 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<BioAssay> create( final int transform, final java.util.Collection<BioAssay> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioAssay.create - 'entities' can not be null" );
         }
@@ -58,8 +60,9 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.expression.bioAssay.BioAssay ) entityIterator.next() );
+                        for ( java.util.Iterator<BioAssay> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
                         }
                         return null;
                     }
@@ -71,19 +74,18 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#create(int transform,
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    public Object create( final int transform, final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+    public BioAssay create( final int transform, final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         if ( bioAssay == null ) {
             throw new IllegalArgumentException( "BioAssay.create - 'bioAssay' can not be null" );
         }
         this.getHibernateTemplate().save( bioAssay );
-        return this.transformEntity( transform, bioAssay );
+        return ( BioAssay ) this.transformEntity( transform, bioAssay );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<BioAssay> create( final java.util.Collection<BioAssay> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -91,7 +93,7 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#create(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public BioAssay create( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        return ( ubic.gemma.model.expression.bioAssay.BioAssay ) this.create( TRANSFORM_NONE, bioAssay );
+        return this.create( TRANSFORM_NONE, bioAssay );
     }
 
     /**
@@ -99,7 +101,7 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
+    public BioAssay find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -108,24 +110,23 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.bioAssay.BioAssay"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.bioAssay.BioAssay"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssay.BioAssay ) result );
-        return result;
+        return ( BioAssay ) result;
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#find(int, ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+    public BioAssay find( final int transform, final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         return this
                 .find(
                         transform,
@@ -137,17 +138,16 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#find(java.lang.String,
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.bioAssay.BioAssay find( final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        return ( ubic.gemma.model.expression.bioAssay.BioAssay ) this.find( TRANSFORM_NONE, queryString, bioAssay );
+        return this.find( TRANSFORM_NONE, queryString, bioAssay );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#find(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public ubic.gemma.model.expression.bioAssay.BioAssay find( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        return ( ubic.gemma.model.expression.bioAssay.BioAssay ) this.find( TRANSFORM_NONE, bioAssay );
+        return this.find( TRANSFORM_NONE, bioAssay );
     }
 
     /**
@@ -155,8 +155,8 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findBioAssayDimensions( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+    public java.util.Collection<BioAssayDimension> findBioAssayDimensions( final int transform,
+            final java.lang.String queryString, final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( bioAssay );
@@ -171,8 +171,7 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#findBioAssayDimensions(int,
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findBioAssayDimensions( final int transform,
+    public java.util.Collection<BioAssayDimension> findBioAssayDimensions( final int transform,
             final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         return this.findBioAssayDimensions( transform,
                 "select bad from BioAssayDimensionImpl bad inner join bad.bioAssays as ba where :bioAssay in ba",
@@ -183,8 +182,7 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#findBioAssayDimensions(java.lang.String,
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findBioAssayDimensions( final java.lang.String queryString,
+    public java.util.Collection<BioAssayDimension> findBioAssayDimensions( final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         return this.findBioAssayDimensions( TRANSFORM_NONE, queryString, bioAssay );
     }
@@ -192,7 +190,8 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#findBioAssayDimensions(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    public java.util.Collection findBioAssayDimensions( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+    public java.util.Collection<BioAssayDimension> findBioAssayDimensions(
+            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         return this.findBioAssayDimensions( TRANSFORM_NONE, bioAssay );
     }
 
@@ -201,7 +200,7 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
+    public BioAssay findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -210,39 +209,24 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.bioAssay.BioAssay"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.bioAssay.BioAssay"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
         result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssay.BioAssay ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#findOrCreate(int,
-     *      ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        return this.findOrCreate( transform,
-                "from ubic.gemma.model.expression.bioAssay.BioAssay as bioAssay where bioAssay.bioAssay = :bioAssay",
-                bioAssay );
+        return ( BioAssay ) result;
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.bioAssay.BioAssay findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        return ( ubic.gemma.model.expression.bioAssay.BioAssay ) this.findOrCreate( TRANSFORM_NONE, queryString,
-                bioAssay );
+        return this.findOrCreate( TRANSFORM_NONE, queryString, bioAssay );
     }
 
     /**
@@ -250,267 +234,45 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      */
     public ubic.gemma.model.expression.bioAssay.BioAssay findOrCreate(
             ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        return ( ubic.gemma.model.expression.bioAssay.BioAssay ) this.findOrCreate( TRANSFORM_NONE, bioAssay );
+        return this.findOrCreate( TRANSFORM_NONE, bioAssay );
     }
 
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssay.BioAssay ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this.getAclObjectIdentityId( transform,
-                "from ubic.gemma.model.expression.bioAssay.BioAssay as bioAssay where bioAssay.securable = :securable",
-                securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssay.BioAssay ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this.getMask( transform,
-                "from ubic.gemma.model.expression.bioAssay.BioAssay as bioAssay where bioAssay.securable = :securable",
-                securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMask(ubic.gemma.model.common.Securable)
-     */
-
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssay.BioAssay ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMasks(int, java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.expression.bioAssay.BioAssay as bioAssay where bioAssay.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMasks(java.lang.String, java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getMasks(java.util.Collection)
-     */
-
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getRecipient(int, java.lang.Long)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this.getRecipient( transform,
-                "from ubic.gemma.model.expression.bioAssay.BioAssay as bioAssay where bioAssay.id = :id", id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getRecipient(int, java.lang.String, java.lang.Long)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssay.BioAssay ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getRecipient(java.lang.Long)
-     */
-
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
+    public BioAssay findOrCreate( int transform, BioAssay bioAssay ) {
+        return this.findOrCreate( ( BioAssay ) this.transformEntity( transform, bioAssay ) );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#load(int, java.lang.Long)
      */
-    public Object load( final int transform, final java.lang.Long id ) {
+    public BioAssay load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BioAssay.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.expression.bioAssay.BioAssayImpl.class,
                 id );
-        return transformEntity( transform, ( ubic.gemma.model.expression.bioAssay.BioAssay ) entity );
+        return ( BioAssay ) transformEntity( transform, ( ubic.gemma.model.expression.bioAssay.BioAssay ) entity );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#load(java.lang.Long)
      */
     public BioAssay load( java.lang.Long id ) {
-        return ( ubic.gemma.model.expression.bioAssay.BioAssay ) this.load( TRANSFORM_NONE, id );
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<BioAssay> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#loadAll(int)
      */
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<BioAssay> loadAll( final int transform ) {
+        final java.util.Collection<BioAssay> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.bioAssay.BioAssayImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -523,8 +285,7 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
         if ( id == null ) {
             throw new IllegalArgumentException( "BioAssay.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.expression.bioAssay.BioAssay entity = ( ubic.gemma.model.expression.bioAssay.BioAssay ) this
-                .load( id );
+        ubic.gemma.model.expression.bioAssay.BioAssay entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -533,7 +294,7 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<BioAssay> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioAssay.remove - 'entities' can not be null" );
         }
@@ -567,7 +328,7 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<BioAssay> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioAssay.update - 'entities' can not be null" );
         }
@@ -575,8 +336,9 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.expression.bioAssay.BioAssay ) entityIterator.next() );
+                        for ( java.util.Iterator<BioAssay> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }
@@ -617,7 +379,7 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
      * @see #transformEntity(int,ubic.gemma.model.expression.bioAssay.BioAssay)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<BioAssay> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

@@ -92,19 +92,6 @@ public abstract class BioAssayServiceBase extends ubic.gemma.model.common.Audita
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#getAllBioAssays()
-     */
-    public java.util.Collection getAllBioAssays() {
-        try {
-            return this.handleGetAllBioAssays();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.bioAssay.BioAssayServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssay.BioAssayService.getAllBioAssays()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#load(java.lang.Long)
      */
     public ubic.gemma.model.expression.bioAssay.BioAssay load( final java.lang.Long id ) {
@@ -120,7 +107,7 @@ public abstract class BioAssayServiceBase extends ubic.gemma.model.common.Audita
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<BioAssay> loadAll() {
         try {
             return this.handleLoadAll();
         } catch ( Throwable th ) {
@@ -236,11 +223,6 @@ public abstract class BioAssayServiceBase extends ubic.gemma.model.common.Audita
             ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #getAllBioAssays()}
-     */
-    protected abstract java.util.Collection handleGetAllBioAssays() throws java.lang.Exception;
-
-    /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
     protected abstract ubic.gemma.model.expression.bioAssay.BioAssay handleLoad( java.lang.Long id )
@@ -249,7 +231,7 @@ public abstract class BioAssayServiceBase extends ubic.gemma.model.common.Audita
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<BioAssay> handleLoadAll() throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.expression.bioAssay.BioAssay)}

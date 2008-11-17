@@ -44,6 +44,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -104,6 +105,14 @@ public class BusinessKey {
                     Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
         }
 
+    }
+
+    public static void addRestrictions( Criteria queryObject, BioAssay bioAssay ) {
+        if ( bioAssay.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", bioAssay.getId() ) );
+        } else if ( bioAssay.getAccession() != null ) {
+            attachCriteria( queryObject, bioAssay.getAccession(), "accession" );
+        }
     }
 
     /**
@@ -340,6 +349,18 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, Characteristic ontologyEntry, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, ontologyEntry );
+    }
+
+    /**
+     * Restricts query to the given DatabaseEntry association
+     * 
+     * @param queryObject
+     * @param databaseEntry to match
+     * @param propertyName often "accession"
+     */
+    public static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
+        attachCriteria( innerQuery, databaseEntry );
     }
 
     /**
@@ -741,6 +762,17 @@ public class BusinessKey {
 
     /**
      * @param session
+     * @param ontologyEntry
+     * @return
+     */
+    public static Criteria createQueryObject( Session session, BioAssay bioAssay ) {
+        Criteria queryObject = session.createCriteria( BioAssay.class );
+        addRestrictions( queryObject, bioAssay );
+        return queryObject;
+    }
+
+    /**
+     * @param session
      * @param bioSequence
      * @return
      */
@@ -768,6 +800,13 @@ public class BusinessKey {
      */
     private static void addNameRestriction( Criteria queryObject, Describable describable ) {
         if ( describable.getName() != null ) queryObject.add( Restrictions.eq( "name", describable.getName() ) );
+    }
+
+    private static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry ) {
+
+        queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
+                "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
+
     }
 
     /**

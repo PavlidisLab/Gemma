@@ -1407,7 +1407,7 @@ public abstract class ExpressionExperimentDaoBase extends
      * Performs the core logic for {@link #loadValueObjects(java.util.Collection)}
      */
     protected abstract java.util.Collection<ExpressionExperimentValueObject> handleLoadValueObjects(
-            java.util.Collection ids ) throws java.lang.Exception;
+            java.util.Collection<Long> ids ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.experiment.ExpressionExperiment)}

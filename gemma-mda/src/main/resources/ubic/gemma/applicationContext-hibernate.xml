@@ -200,7 +200,6 @@
 				<prop key="hibernate.cache.use_query_cache">true</prop>
 				<prop key="hibernate.cache.provider_class">org.hibernate.cache.EhCacheProvider</prop>
 				<prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
-				<prop key="hibernate.cache.use_query_cache">true</prop>
 				<prop key="hibernate.generate_statistics">true</prop>
 				<prop key="hibernate.cache.use_structured_entries">true</prop>
 				<!-- <prop key="hibernate.format_sql">true</prop>
@@ -573,7 +572,6 @@
 				ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadMultiple=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findByAlternateName=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssay.BioAssayService.findOrCreate=PROPAGATION_REQUIRED
-				ubic.gemma.model.expression.bioAssay.BioAssayService.getAllBioAssays=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssay.BioAssayService.remove=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssay.BioAssayService.loadAll=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssay.BioAssayService.update=PROPAGATION_REQUIRED

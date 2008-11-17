@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 /**
@@ -75,7 +76,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     }
 
     @Override
-    protected Collection handleFindBioAssayDimensions( BioAssay bioAssay ) throws Exception {
+    protected Collection<BioAssayDimension> handleFindBioAssayDimensions( BioAssay bioAssay ) throws Exception {
         if ( bioAssay.getId() == null ) throw new IllegalArgumentException( "BioAssay must be persistent" );
         return this.getBioAssayDao().findBioAssayDimensions( bioAssay );
     }
@@ -89,26 +90,18 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#getAllBioAssays()
-     */
-    @Override
-    protected java.util.Collection handleGetAllBioAssays() throws java.lang.Exception {
-        return this.getBioAssayDao().loadAll();
-    }
-
-    /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findById(Long)
      */
     @Override
     protected BioAssay handleLoad( Long id ) throws Exception {
-        return ( BioAssay ) this.getBioAssayDao().load( id );
+        return this.getBioAssayDao().load( id );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadAll()
      */
     @Override
-    protected Collection handleLoadAll() throws Exception {
+    protected Collection<BioAssay> handleLoadAll() throws Exception {
         return this.getBioAssayDao().loadAll();
     }
 
@@ -172,6 +165,14 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     @Override
     protected void handleUpdate( BioAssay bioAssay ) throws Exception {
         this.getBioAssayDao().update( bioAssay );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#create(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public BioAssay create( BioAssay bioAssay ) {
+        return this.getBioAssayDao().create( bioAssay );
     }
 
 }

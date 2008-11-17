@@ -365,7 +365,6 @@
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getReporterCount=user,admin,ROLE_ANONYMOUS               
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadCompositeSequences=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssay.BioAssayService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
-                ubic.gemma.model.expression.bioAssay.BioAssayService.getAllBioAssays=user,admin 
                 ubic.gemma.model.expression.bioAssay.BioAssayService.remove=ACL_SECURABLE_EDIT
                 ubic.gemma.model.expression.bioAssay.BioAssayService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssay.BioAssayService.load=user,admin,ROLE_ANONYMOUS

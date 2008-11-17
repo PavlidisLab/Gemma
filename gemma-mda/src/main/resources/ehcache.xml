@@ -1,5 +1,5 @@
 <ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="ehcache.xsd">
-<!--  $Id$ -->
+	<!--  $Id$ -->
 	<!--
 		Sets the path to the directory where cache .data files are created. If the path is a Java System Property it is
 		replaced by its value in the running VM. The following properties are translated: user.home - User's home directory
@@ -21,12 +21,15 @@
 	<defaultCache maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="120" timeToLiveSeconds="120"
 		overflowToDisk="false" />
 
-	<!-- customization -->
+	<!--  see http://ehcache.sourceforge.net/documentation/configuration.html -->
+
 	<cache name="org.hibernate.cache.StandardQueryCache" maxElementsInMemory="5000" eternal="false"
 		timeToLiveSeconds="60000" timeToIdleSeconds="0" overflowToDisk="false" />
 
 	<cache name="org.hibernate.cache.UpdateTimestampsCache" maxElementsInMemory="5000" eternal="true" overflowToDisk="false" />
-	<!-- end customization -->
+
+
+
 
 
 	<!--  cache names must match the class element names defined in the hbm.xml files. -->
@@ -105,8 +108,7 @@
 	<cache name="ubic.gemma.model.genome.PhysicalMarkerImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.genome.ChromosomeImpl" maxElementsInMemory="1200" eternal="true" timeToIdleSeconds="0"
-		timeToLiveSeconds="0" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.genome.ChromosomeImpl" maxElementsInMemory="1200" eternal="true" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.genome.ExpressionQtlImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -114,8 +116,7 @@
 	<cache name="ubic.gemma.model.genome.BehavioralQtlImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.genome.TaxonImpl" maxElementsInMemory="100" eternal="true" timeToIdleSeconds="0"
-		timeToLiveSeconds="0" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.genome.TaxonImpl" maxElementsInMemory="100" eternal="true" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.genome.GeneImpl" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200"
 		timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -372,8 +373,8 @@
 	<cache name="ubic.gemma.model.common.protocol.ParameterImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.protocol.ParameterizableApplicationImpl" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.common.protocol.ParameterizableApplicationImpl" maxElementsInMemory="10000"
+		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.protocol.ParameterizableApplicationImpl.parameterValues"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -411,14 +412,14 @@
 	<cache name="ubic.gemma.model.common.DescribableImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.SecurableImpl" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200"
-		timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.AuditableImpl" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200"
-		timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.common.SecurableImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+
+	<cache name="ubic.gemma.model.common.AuditableImpl" maxElementsInMemory="10000" eternal="false"
+		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" maxElementsInMemory="10000"
+		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.characteristics"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -468,8 +469,8 @@
 	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" maxElementsInMemory="10000"
+		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.designElement.CompositeSequenceImpl.componentReporters"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -495,8 +496,8 @@
 	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.subsumedArrayDesigns" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.mergees" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.mergees" maxElementsInMemory="10000"
+		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.alternateNames" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -513,8 +514,8 @@
 	<cache name="ubic.gemma.model.expression.bioAssayData.DataVectorImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorImpl" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorImpl" maxElementsInMemory="10000"
+		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -534,8 +535,8 @@
 	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterialImpl.characteristics" maxElementsInMemory="10000"
-		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterialImpl.characteristics" maxElementsInMemory="20000"
+		eternal="true" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.biomaterial.TreatmentImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -555,8 +556,8 @@
 	<cache name="ubic.gemma.model.expression.biomaterial.CompoundImpl.componentCompounds" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.biomaterial.CompoundMeasurementImpl" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.expression.biomaterial.CompoundMeasurementImpl" maxElementsInMemory="10000"
+		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />

@@ -23,10 +23,10 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @author pavlidis
@@ -36,20 +36,11 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
 
     private static Log log = LogFactory.getLog( BioAssayDaoImpl.class.getName() );
 
+    @SuppressWarnings("unchecked")
     @Override
     public BioAssay find( BioAssay bioAssay ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( BioAssay.class );
-
-            queryObject.add( Restrictions.eq( "name", bioAssay.getName() ) );
-
-            /*
-             * This syntax allows you to look at an association.
-             */
-            if ( bioAssay.getAccession() != null ) {
-                queryObject.createCriteria( "accession" ).add(
-                        Restrictions.eq( "accession", bioAssay.getAccession().getAccession() ) );
-            }
+            Criteria queryObject = BusinessKey.createQueryObject( super.getSession( false ), bioAssay );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -80,13 +71,13 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
             return newBioAssay;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new bioAssay: " + bioAssay );
-        return ( BioAssay ) create( bioAssay );
+        return create( bioAssay );
     }
 
     @Override
     public void handleThaw( final BioAssay bioAssay ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( bioAssay, LockMode.NONE );
                 Hibernate.initialize( bioAssay.getArrayDesignUsed() );
@@ -99,7 +90,7 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
                 session.evict( bioAssay );
                 return null;
             }
-        }, true );
+        } );
     }
 
     @Override

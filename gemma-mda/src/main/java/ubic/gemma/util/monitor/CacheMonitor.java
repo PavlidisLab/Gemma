@@ -46,7 +46,7 @@ public class CacheMonitor {
         buf.append( cacheNames.length + " caches" );
 
         buf.append( "<table style='font-size:small'><tr>" );
-        buf.append( "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>DiskHits</th>" );
+        buf.append( "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>DiskHits</th><th>Evicted</th>" );
         buf.append( "<th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>" );
         buf.append( "</tr>" );
 
@@ -65,12 +65,15 @@ public class CacheMonitor {
             long misses = statistics.getCacheMisses();
             long inMemoryHits = statistics.getInMemoryHits();
             long onDiskHits = statistics.getOnDiskHits();
+            long evictions = statistics.getEvictionCount();
 
             buf.append( "<td>" + hits + "</td>" );
             buf.append( "<td>" + misses + "</td>" );
             buf.append( "<td>" + objectCount + "</td>" );
             buf.append( "<td>" + inMemoryHits + "</td>" );
             buf.append( "<td>" + onDiskHits + "</td>" );
+            buf.append("<td>" + evictions + "</td>");
+            
             CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
             buf.append( "<td>" + ( cacheConfiguration.isEternal() ? "&bull;" : "" ) + "</td>" );
             buf.append( "<td>" + ( cacheConfiguration.isOverflowToDisk() ? "&bull;" : "" ) + "</td>" );
