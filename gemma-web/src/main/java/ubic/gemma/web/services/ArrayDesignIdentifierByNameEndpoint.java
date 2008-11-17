@@ -46,7 +46,7 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
     /**
      * The local name of the expected request.
      */
-    public static final String ARRAY_LOCAL_NAME = "arrayDesignIdentiferByName";
+    public static final String ARRAY_LOCAL_NAME = "arrayDesignIdentifierByName";
 
     /**
      * Sets the "business service" to delegate to.
