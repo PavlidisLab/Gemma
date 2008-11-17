@@ -34,7 +34,8 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<BioAssayDimension> create( final int transform,
+            final java.util.Collection<BioAssayDimension> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioAssayDimension.create - 'entities' can not be null" );
         }
@@ -42,7 +43,8 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                        for ( java.util.Iterator<BioAssayDimension> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
                             create( transform,
                                     ( ubic.gemma.model.expression.bioAssayData.BioAssayDimension ) entityIterator
                                             .next() );
@@ -57,20 +59,20 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#create(int transform,
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
-    public Object create( final int transform,
+    public BioAssayDimension create( final int transform,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null ) {
             throw new IllegalArgumentException( "BioAssayDimension.create - 'bioAssayDimension' can not be null" );
         }
         this.getHibernateTemplate().save( bioAssayDimension );
-        return this.transformEntity( transform, bioAssayDimension );
+        return ( BioAssayDimension ) this.transformEntity( transform, bioAssayDimension );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#create(java.util.Collection)
      */
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<BioAssayDimension> create( final java.util.Collection<BioAssayDimension> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -87,7 +89,7 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
+    public BioAssayDimension find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -106,7 +108,7 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
             }
         }
         result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssayData.BioAssayDimension ) result );
-        return result;
+        return ( BioAssayDimension ) result;
     }
 
     /**
@@ -114,7 +116,7 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform,
+    public BioAssayDimension find( final int transform,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         return this
                 .find(
@@ -148,7 +150,7 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
+    public BioAssayDimension findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -167,7 +169,7 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
             }
         }
         result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssayData.BioAssayDimension ) result );
-        return result;
+        return ( BioAssayDimension ) result;
     }
 
     /**
@@ -175,7 +177,7 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform,
+    public BioAssayDimension findOrCreate( final int transform,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         return this
                 .findOrCreate(

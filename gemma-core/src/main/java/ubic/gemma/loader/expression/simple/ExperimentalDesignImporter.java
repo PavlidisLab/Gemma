@@ -47,7 +47,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.ontology.MgedOntologyService;
@@ -80,7 +79,6 @@ import ubic.gemma.ontology.OntologyTerm;
  * @spring.property name="mgedOntologyService" ref="mgedOntologyService"
  * @spring.property name="bioMaterialService" ref="bioMaterialService"
  * @spring.property name="factorValueService" ref="factorValueService"
- * @spring.property name="eeService" ref="expressionExperimentService"
  * @spring.property name="experimentalDesignService" ref="experimentalDesignService"
  * @author Paul
  * @version $Id$
@@ -91,7 +89,6 @@ public class ExperimentalDesignImporter {
 
     private static Log log = LogFactory.getLog( ExperimentalDesignImporter.class.getName() );
 
-    private ExpressionExperimentService eeService;
     private BioMaterialService bioMaterialService;
     private FactorValueService factorValueService;
     private ExperimentalDesignService experimentalDesignService;
@@ -593,10 +590,6 @@ public class ExperimentalDesignImporter {
 
     enum FactorType {
         CATEGORICAL, CONTINUOUS
-    }
-
-    public void setEeService( ExpressionExperimentService eeService ) {
-        this.eeService = eeService;
     }
 
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {

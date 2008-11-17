@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -61,10 +62,12 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
             queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
 
             Collection<String> names = new HashSet<String>();
+            assert bioAssayDimension.getBioAssays().size() > 0;
             for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
                 names.add( bioAssay.getName() );
             }
             queryObject.createCriteria( "bioAssays" ).add( Restrictions.in( "name", names ) );
+            
             BioAssayDimension candidate = ( BioAssayDimension ) queryObject.uniqueResult();
 
             if ( candidate == null ) return null;
@@ -105,6 +108,6 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
             return existingBioAssayDimension;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new " + bioAssayDimension );
-        return ( BioAssayDimension ) create( bioAssayDimension );
+        return create( bioAssayDimension );
     }
 }

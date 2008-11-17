@@ -399,6 +399,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
             persistedBioAssays.add( persistBioAssay( bioAssay ) );
         }
+        assert persistedBioAssays.size() > 0;
         bioAssayDimension.setBioAssays( persistedBioAssays );
         return bioAssayDimensionService.findOrCreate( bioAssayDimension );
     }

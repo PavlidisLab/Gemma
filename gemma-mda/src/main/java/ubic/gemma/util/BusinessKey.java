@@ -113,6 +113,7 @@ public class BusinessKey {
         } else if ( bioAssay.getAccession() != null ) {
             attachCriteria( queryObject, bioAssay.getAccession(), "accession" );
         }
+        queryObject.add( Restrictions.eq( "name", bioAssay.getName() ) );
     }
 
     /**
@@ -767,8 +768,16 @@ public class BusinessKey {
      */
     public static Criteria createQueryObject( Session session, BioAssay bioAssay ) {
         Criteria queryObject = session.createCriteria( BioAssay.class );
+        checkKey( bioAssay );
         addRestrictions( queryObject, bioAssay );
         return queryObject;
+    }
+
+    private static void checkKey( BioAssay bioAssay ) {
+        if ( bioAssay.getId() == null && bioAssay.getAccession() == null ) {
+            throw new IllegalArgumentException( "Bioassay must have id or accession" );
+        }
+
     }
 
     /**

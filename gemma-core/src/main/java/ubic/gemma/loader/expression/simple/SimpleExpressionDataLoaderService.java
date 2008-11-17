@@ -353,7 +353,7 @@ public class SimpleExpressionDataLoaderService {
             DoubleMatrix matrix ) {
 
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-        bad.setName( "For " + ee.getName() );
+        bad.setName( "For " + ee.getShortName() );
         bad.setDescription( "Generated from flat file" );
         for ( int i = 0; i < matrix.columns(); i++ ) {
             Object columnName = matrix.getColName( i );

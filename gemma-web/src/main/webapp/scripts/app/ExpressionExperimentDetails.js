@@ -445,10 +445,11 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		// });
 		// manager.on('missingValue', function() {
 		// store.reload();
-		//				});
+		// });
 
 		var descriptionArea = new Ext.form.TextArea({
 					id : 'description',
+					allowBlank : true,
 					grow : true,
 					growMax : 300,
 					readOnly : !this.editable,
@@ -490,9 +491,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 			defaults : {
 				bodyStyle : 'vertical-align:top;font-size:12px;color:black',
 				baseCls : 'x-plain-panel',
-				fieldClass : 'x-bare-field',
+				fieldClass : 'x-bare-field'
 
-				allowBlank : false
 			},
 			items : [{
 						html : 'Short name:'
@@ -507,6 +507,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 									xtype : 'textfield',
 									id : 'shortname',
 									enableKeyEvents : true,
+									allowBlank : false,
 									disabledClass : 'disabled-plain',
 									fieldClass : 'x-bare-field',
 									readOnly : !this.editable,
@@ -539,6 +540,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					}, {
 						xtype : 'textfield',
 						value : e.name,
+						allowBlank : false,
 						id : 'name',
 						readOnly : !this.editable,
 						disabledClass : 'disabled-plain',
