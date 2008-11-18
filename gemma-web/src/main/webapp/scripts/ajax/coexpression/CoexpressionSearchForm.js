@@ -350,7 +350,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				margins : '5 0 0 0 ',
 				plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
 				width : 250,
-				height : this.admin ? 240 : 180,
+				height : this.admin ? 240 : 190,
 				items : [{
 					xtype : 'fieldset',
 					autoHeight : true,
@@ -380,9 +380,9 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 								xtype : 'checkbox',
 								id : 'forceUseMyDatasets',
 								fieldLabel : 'use my data',
-								disabled : !this.admin,
-								hidden : !this.admin,
-								hideLabel : !this.admin,
+								disabled : !this.user,
+								hidden : !this.user,
+								hideLabel : !this.user,
 								tooltip : "Use my datasets in search"
 							},{
 								xtype : 'checkbox',

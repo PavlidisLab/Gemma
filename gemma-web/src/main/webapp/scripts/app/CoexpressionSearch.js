@@ -5,7 +5,8 @@ Ext.onReady(function() {
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
 	var admin = dwr.util.getValue("hasAdmin");
-
+	var user  = dwr.util.getValue("hasUser");
+	
 	if (Ext.isIE && !Ext.isIE7) {
 		Ext.DomHelper.append('coexpression-all', {
 			tag : 'p',
@@ -120,6 +121,7 @@ Ext.onReady(function() {
 
 	var searchPanel = new Gemma.CoexpressionSearchForm({
 				admin : admin,
+				user : user,
 				id : 'searchpanel'
 			});
 

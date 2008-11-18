@@ -21,6 +21,13 @@
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </security:authorize>
 
+<security:authorize ifAnyGranted="user">
+	<input type="hidden" name="hasUser" id="hasUser" value="true" />
+</security:authorize>
+<security:authorize ifNotGranted="user">
+	<input type="hidden" name="hasUser" id="hasUser" value="" />
+</security:authorize>
+
 <div id='coexpression-messages' style='width: 100%; height: 1.2em; margin: 5px'></div>
 <div id='coexpression-experiments' class="x-hidden"></div>
 <div id='coexpression-genes' class="x-hidden"></div>
