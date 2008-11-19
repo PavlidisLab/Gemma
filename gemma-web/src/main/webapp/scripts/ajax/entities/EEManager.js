@@ -440,8 +440,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							html : 'Please confirm. The analysis performed will be a ' + analysisType
 									+ '. Previous analysis results for this experiment will be deleted.',
 							buttons : [{
-										text : 'Proceed',
-										scope : this,
+										text : 'Proceed',										
 										handler : function(btn, text) {
 											var callParams = []
 											callParams.push(id);
