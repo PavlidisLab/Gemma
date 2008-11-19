@@ -93,8 +93,8 @@
 
 		<div id="sampleQueries" style="padding: 4px; width: 200px; margin-bottom: 6px;">
 			Examples: rat
-			<a href='<c:url value="/searchCoexpression.html?g=938103&amp;a=776" />'>Ddn</a>; mouse
-			<a href='<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=708" />'>Mapk3</a>
+			<a href='<c:url value="/searchCoexpression.html?g=938103&amp;a=781" />'>Ddn</a>; mouse
+			<a href='<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=777" />'>Mapk3</a>
 		</div>
 	</div>
 
