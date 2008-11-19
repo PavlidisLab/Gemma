@@ -125,6 +125,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			csc.eeSetId = -1;
 		}
 
+		if (param.an) {
+			csc.eeSetName = param.an
+		}
+
 		if (param.setName) {
 			csc.eeSetName = param.setName;
 		}
@@ -169,7 +173,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (csc.eeSetId >= 0) {
 			this.eeSetChooserPanel.setState(csc.eeSetId);
 		} else if (csc.eeSetName) {
-			this.eeSetChooserPanel.setState(csc.eeSetName); // FIXME this won't work, expects id.
+			this.eeSetChooserPanel.setStateByName(csc.eeSetName);
 			this.updateDatasetsToBeSearched(csc.eeIds, csc.eeSetName, csc.dirty);
 		}
 
@@ -218,9 +222,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			url += "&dirty=1";
 		}
 
-		if (csc.eeSetName) {
-			// url += String.format("&setName={0}", csc.eeSetName);
-		}
 		return url;
 	},
 
@@ -380,7 +381,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 								hidden : !this.admin,
 								hideLabel : !this.admin,
 								tooltip : "Do the query at the level of probes (for debugging)"
-							},{
+							}, {
 								xtype : 'checkbox',
 								id : 'forceUseMyDatasets',
 								fieldLabel : 'use my data',
@@ -388,7 +389,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 								hidden : !this.user,
 								hideLabel : !this.user,
 								tooltip : "Use my datasets in search"
-							},{
+							}, {
 								xtype : 'checkbox',
 								id : 'querygenesonly',
 								fieldLabel : 'My genes only',

@@ -30,6 +30,8 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject;
 import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -46,8 +48,13 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name = "searchService" ref="searchService"
  * @spring.property name="geneCoexpressionService" ref="geneCoexpressionService"
  * @spring.property name="expressionExperimentSecureService" ref="expressionExperimentSecureService"
+ * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  */
 public class CoexpressionSearchController extends BaseFormController {
+
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
+    }
 
     private static final int MAX_RESULTS = 500;
 
@@ -58,6 +65,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
     private GeneCoexpressionService geneCoexpressionService;
     private ExpressionExperimentSecureService expressionExperimentSecureService;
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     /**
      * Main AJAX entry point
@@ -77,6 +85,11 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
+        
+        if (genes.size() == 0) {
+            throw new IllegalArgumentException("Invalid gene id(s) - no genes found");
+        }
+        
         this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...s
 
         // Add the users datasets to the selected datasets
@@ -90,6 +103,16 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         Long eeSetId = searchOptions.getEeSetId();
+        if ( ( eeSetId == null || eeSetId < 0 ) && StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
+            Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
+                    .getEeSetName() );
+            if ( eeSets.size() == 1 ) {
+                eeSetId = eeSets.iterator().next().getId();
+            } else {
+                throw new IllegalArgumentException( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
+            }
+        }
+
         if ( eeSetId != null && !searchOptions.isForceProbeLevelSearch() && ( eeSetId >= 0 && !searchOptions.isDirty() ) ) {
             result = geneCoexpressionService.coexpressionSearch( eeSetId, genes, searchOptions.getStringency(),
                     MAX_RESULTS, searchOptions.getQueryGenesOnly() );
@@ -117,9 +140,8 @@ public class CoexpressionSearchController extends BaseFormController {
             eesToFlagIds.add( ee.getId() );
         }
 
-        if(vo == null || vo.getKnownGeneResults() == null || vo.getKnownGeneResults().isEmpty())
-                return;
-        
+        if ( vo == null || vo.getKnownGeneResults() == null || vo.getKnownGeneResults().isEmpty() ) return;
+
         for ( CoexpressionValueObjectExt covo : vo.getKnownGeneResults() ) {
             for ( Long eeToFlag : eesToFlagIds ) {
                 if ( covo.getSupportingExperiments().contains( eeToFlag ) ) {

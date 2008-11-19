@@ -582,7 +582,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						data : oneProfile,
 						color : color,
 						genes : genes,
-						label : probe + "=>" + geneNames,
+						label : probe + " (" + geneNames + ")",
 						labelID : probeId,
 						factor : factor
 					};

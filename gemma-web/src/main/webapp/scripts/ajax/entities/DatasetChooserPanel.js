@@ -38,11 +38,22 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 					this.storedState = state;
 				}
 			},
+			
+			setStateByName : function(state) {
+				if (this.ready) {
+					this.selectByName(state);
+				} else {
+					this.storedNameState = state;
+				}
+			},
 
 			restoreState : function() {
 				if (this.storedState) {
 					this.selectById(this.storedState);
 					delete this.storedState;
+				} else if (this.storedNameState) {
+					this.selectByName(this.storedNameState);
+					delete this.storedNameState;
 				}
 				this.ready = true;
 			},
