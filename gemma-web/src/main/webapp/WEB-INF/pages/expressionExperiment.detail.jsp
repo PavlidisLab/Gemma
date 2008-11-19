@@ -71,6 +71,9 @@
 	<%-- fixme: let 'users' edit their own datasets --%>
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 </security:authorize>
+<security:authorize ifNotGranted="user,admin">
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+</security:authorize>
 
 
 
