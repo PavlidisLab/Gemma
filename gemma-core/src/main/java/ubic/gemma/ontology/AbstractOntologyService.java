@@ -290,6 +290,7 @@ public abstract class AbstractOntologyService {
 
         synchronized ( running ) {
             if ( running.get() ) return;
+            loadThread.setDaemon( true );   //So vm doesn't wait on these threads to shutdown (if shutting down)
             loadThread.start();
         }
 
