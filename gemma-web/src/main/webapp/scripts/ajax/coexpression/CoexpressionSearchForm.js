@@ -330,6 +330,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				}.createDelegate(this));
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
+					
+					if (eeSetRecord === null || eeSetRecord == undefined)
+						return;
+						
 					this.currentSet = eeSetRecord;
 					this.updateDatasetsToBeSearched(eeSetRecord.get("expressionExperimentIds"), eeSetRecord);
 					this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
@@ -350,7 +354,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				margins : '5 0 0 0 ',
 				plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
 				width : 250,
-				height : this.admin ? 240 : 190,
+				height : 180,
 				items : [{
 					xtype : 'fieldset',
 					autoHeight : true,
