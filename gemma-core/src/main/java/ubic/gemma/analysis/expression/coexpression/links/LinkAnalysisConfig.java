@@ -40,7 +40,9 @@ public class LinkAnalysisConfig {
     private boolean absoluteValue = false;
     private double fwe = 0.01;
     private double cdfCut = 0.01; // 1.0 means, keep everything.
+    private double subsetSize = 0.0;
 
+    private boolean subset = false;
     private boolean knownGenesOnly = false;
     private boolean useDb = true;
     private boolean makeSampleCorrMatImages = true;
@@ -210,5 +212,21 @@ public class LinkAnalysisConfig {
      */
     public void setNormalizationMethod( NormalizationMethod normalizationMethod ) {
         this.normalizationMethod = normalizationMethod;
+    }
+
+    public double getSubsetSize() {
+        return subsetSize;
+    }
+
+    public void setSubsetSize( double subsetSize ) {
+        this.subsetSize = subsetSize;
+    }
+    
+    public void setSubset( boolean subset ) {
+        this.subset = subset;
+    }
+
+    public boolean isSubset(){
+        return subset;
     }
 }
