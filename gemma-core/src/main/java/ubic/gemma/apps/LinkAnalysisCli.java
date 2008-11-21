@@ -127,6 +127,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .create( "normalizemethod" );
         addOption( normalizationOption );
 
+        Option subsetOption = OptionBuilder.hasArg().withArgName( "Subset of coexpression links" ).withDescription(
+        "Only random subset of total coexpression links will be written to output with size given" ).create( "subset" );
+        addOption( subsetOption );        
+        
         addForceOption();
         addAutoOption();
     }
@@ -226,6 +230,13 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 this.bail( ErrorCode.INVALID_OPTION );
             }
             this.linkAnalysisConfig.setNormalizationMethod( value );
+        }
+        
+        if (hasOption("subset")){
+            String subsetSize = getOptionValue("subset");
+            log.info( "Representative subset of links requested for output" );
+            this.linkAnalysisConfig.setSubsetSize(Double.parseDouble( subsetSize ) );
+            this.linkAnalysisConfig.setSubset( true );
         }
 
     }
