@@ -663,6 +663,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 if ( t.getExternalDatabase() != null ) {
                     Hibernate.initialize( t.getExternalDatabase() );
                 }
+                session.evict( gene );
                 return null;
             }
         } );
