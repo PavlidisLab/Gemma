@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.TransformIterator;
@@ -664,7 +665,16 @@ public class LinkAnalysisService {
 
         int i = 0;
         int numPrinted = 0;
+        Random generator = new Random();
+        double rand = 0.0;
+        double subsetSize = la.getConfig().getSubsetSize();
+        double fraction = subsetSize/links.size();
+        
         for ( int n = links.size(); i < n; i++ ) {
+            if(la.getConfig().isSubset() && links.size() > subsetSize){
+                rand = generator.nextDouble();
+                if(rand > fraction) continue;
+            }
             Object val = links.getQuick( i );
             if ( val == null ) continue;
             Link m = ( Link ) val;
