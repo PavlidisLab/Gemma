@@ -77,8 +77,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
         CoexpressionMetaValueObject result;
         Collection<ExpressionExperiment> myEE = null;
-
-        log.info( "Coexpression search: " + searchOptions );
+       
 
         if ( searchOptions.getGeneIds() == null || searchOptions.getGeneIds().isEmpty() ) {
             return getEmptyResult();
@@ -98,11 +97,16 @@ public class CoexpressionSearchController extends BaseFormController {
             if ( myEE != null && !myEE.isEmpty() ) {
                 for ( ExpressionExperiment ee : myEE )
                     searchOptions.getEeIds().add( ee.getId() );
+                
+                searchOptions.setForceProbeLevelSearch( true );
             } else
                 log.info( "No user data to add" );
         }
+        
+        log.info( "Coexpression search: " + searchOptions );
 
         Long eeSetId = searchOptions.getEeSetId();
+        
         if ( ( eeSetId == null || eeSetId < 0 ) && StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
             Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
                     .getEeSetName() );
