@@ -152,7 +152,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			this.getStore().clearFilter();
 			btn.setText(Gemma.SHOW_ONLY_MINE);
 		} else {
-			this.getStore().filterBy(function(r,id) { return r.containsMyData }, this, 0);
+			this.getStore().filterBy(function(r,id) { return r.get("containsMyData") }, this, 0);
 			btn.setText(Gemma.SHOW_ALL);
 		}	
 	},
