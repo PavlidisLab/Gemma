@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -160,7 +161,8 @@ public class DEDVController extends BaseFormController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
 
-        Map<Long, Collection<Long>> validatedProbes = getProbeDiffExValidation( ees, genes, threshold, factorMap, dedvs );
+        Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = getProbeDiffExValidation( ees,
+                genes, threshold, factorMap, dedvs );
 
         watch.stop();
         Long time = watch.getTime();
@@ -168,7 +170,7 @@ public class DEDVController extends BaseFormController {
         log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
                 + " genes in " + time + " ms." );
 
-        return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes );
+        return makeDiffVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes );
 
     }
 
@@ -180,11 +182,11 @@ public class DEDVController extends BaseFormController {
      * @param dedvs
      * @return
      */
-    private Map<Long, Collection<Long>> getProbeDiffExValidation( Collection<ExpressionExperiment> ees,
-            Collection<Gene> genes, Double threshold, Collection<DiffExpressionSelectedFactorCommand> factorMap,
-            Collection<DoubleVectorValueObject> dedvs ) {
+    private Map<Long, Collection<DifferentialExpressionValueObject>> getProbeDiffExValidation(
+            Collection<ExpressionExperiment> ees, Collection<Gene> genes, Double threshold,
+            Collection<DiffExpressionSelectedFactorCommand> factorMap, Collection<DoubleVectorValueObject> dedvs ) {
 
-        Map<Long, Collection<Long>> validatedProbes = new HashMap<Long, Collection<Long>>();
+        Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<Long, Collection<DifferentialExpressionValueObject>>();
 
         Collection<Long> wantedFactors = new HashSet<Long>();
         for ( DiffExpressionSelectedFactorCommand factor : factorMap ) {
@@ -200,7 +202,7 @@ public class DEDVController extends BaseFormController {
                 Long eeId = diffVo.getExpressionExperiment().getId();
 
                 if ( !validatedProbes.containsKey( eeId ) ) {
-                    validatedProbes.put( eeId, new HashSet<Long>() );
+                    validatedProbes.put( eeId, new HashSet<DifferentialExpressionValueObject>() );
                 }
 
                 Long probeId = diffVo.getProbeId();
@@ -208,7 +210,7 @@ public class DEDVController extends BaseFormController {
 
                 for ( ExperimentalFactorValueObject fac : factors ) {
                     if ( wantedFactors.contains( fac.getId() ) ) {
-                        validatedProbes.get( eeId ).add( probeId );
+                        validatedProbes.get( eeId ).add( diffVo );
                     }
                 }
             }
@@ -461,7 +463,6 @@ public class DEDVController extends BaseFormController {
         }
 
         VisualizationValueObject[] result = new VisualizationValueObject[vvoMap.keySet().size()];
-
         // Create collection of visualizationValueObject for flotr on js side
         int i = 0;
         for ( ExpressionExperiment ee : vvoMap.keySet() ) {
@@ -477,4 +478,101 @@ public class DEDVController extends BaseFormController {
         return result;
 
     }
+
+    /**
+     * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
+     * Currently removes multiple hits for same gene. Tries to pick best DEDV.
+     * 
+     * @param dedvs
+     * @param genes
+     * @return
+     */
+    private VisualizationValueObject[] makeDiffVisCollection( Collection<DoubleVectorValueObject> dedvs,
+            List<Gene> genes, Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes ) {
+
+        Map<Long, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<Long, Collection<DoubleVectorValueObject>>();
+
+        // Organize by expression experiment
+        for ( DoubleVectorValueObject dvvo : dedvs ) {
+            ExpressionExperiment ee = dvvo.getExpressionExperiment();
+            if ( !vvoMap.containsKey( ee.getId() ) ) {
+                vvoMap.put( ee.getId(), new HashSet<DoubleVectorValueObject>() );
+            }
+            vvoMap.get( ee.getId() ).add( dvvo );
+        }
+
+        class EE2PValue implements Comparable {
+            Long EEId;
+            double pValue;
+
+            public EE2PValue() {
+                super();
+            }
+
+            public EE2PValue( Long eeid, double pValue ) {
+                this();
+                this.EEId = eeid;
+                this.pValue = pValue;
+            }
+
+            public Long getEEId() {
+                return EEId;
+            }
+
+            public double getPValue() {
+                return pValue;
+            }
+
+            public int compareTo( Object o ) {
+                EE2PValue compareTo = ( EE2PValue ) o;
+                if ( this.pValue > compareTo.getPValue() )
+                    return 1;
+                else if ( this.pValue > compareTo.getPValue() )
+                    return -1;
+                else
+                    return 0;
+            }
+
+        }
+
+        List<EE2PValue> sortedEE = new ArrayList<EE2PValue>();
+
+        // Need to sort the expression experiments by lowest p-value
+        for ( Long eeId : vvoMap.keySet() ) {
+            Collection<DifferentialExpressionValueObject> devos = validatedProbes.get( eeId );
+            double minP = 1;
+
+            if ( devos != null && !devos.isEmpty() ) {
+                for ( DifferentialExpressionValueObject devo : devos ) {
+                    if ( minP > devo.getP() ) {
+                        minP = devo.getP();
+                    }
+                }
+            }
+            sortedEE.add( new EE2PValue( eeId, minP ) );
+        }
+
+        Collections.sort( sortedEE );
+
+        VisualizationValueObject[] result = new VisualizationValueObject[vvoMap.keySet().size()];
+
+        // Create collection of visualizationValueObject for flotr on js side
+        int i = 0;
+        for ( EE2PValue ee2P : sortedEE ) {
+            Collection<Long> validatedProbeIdList = new ArrayList<Long>();
+            if ( validatedProbes.get(ee2P.getEEId()) != null && !validatedProbes.get(ee2P.getEEId()).isEmpty() ) {
+                for ( DifferentialExpressionValueObject devo : validatedProbes.get( ee2P.getEEId() ) ) {
+                    validatedProbeIdList.add( devo.getProbeId() );
+                }
+            }
+            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ), genes,
+                    validatedProbeIdList );
+            result[i] = vvo;
+            i++;
+        }
+
+        return result;
+
+    }
+
 }
