@@ -22,9 +22,11 @@
 //
 package ubic.gemma.model.genome.gene;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.genome.gene.MappingCandidateGene
  */
-public interface MappingCandidateGeneDao extends ubic.gemma.model.genome.gene.CandidateGeneDao<MappingCandidateGene> {
+public interface MappingCandidateGeneDao extends BaseDao<MappingCandidateGene> {
 
 }

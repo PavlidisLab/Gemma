@@ -22,10 +22,12 @@
 //
 package ubic.gemma.model.genome.gene;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.genome.gene.BibReferenceCandidateGene
  */
 public interface BibReferenceCandidateGeneDao extends
-        ubic.gemma.model.genome.gene.CandidateGeneDao<BibReferenceCandidateGene> {
+        BaseDao<BibReferenceCandidateGene> {
 
 }
