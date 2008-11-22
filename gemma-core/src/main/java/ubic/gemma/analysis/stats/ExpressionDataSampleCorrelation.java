@@ -275,7 +275,7 @@ public class ExpressionDataSampleCorrelation {
         File dir = new File( ConfigUtils.getAnalysisStoragePath() + File.separatorChar
                 + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME );
         if ( !dir.exists() ) {
-            boolean success = dir.mkdir();
+            boolean success = dir.mkdirs();
             if ( !success ) {
                 throw new IOException( "Could not create directory to store results: " + dir );
             }
