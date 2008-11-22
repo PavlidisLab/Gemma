@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <settings>
-	<localRepository>C:/java/.m2/repository</localRepository>
 	<profiles>
 		<profile>
 			<id>dev</id> 
