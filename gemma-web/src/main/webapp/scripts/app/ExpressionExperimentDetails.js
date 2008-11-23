@@ -380,6 +380,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		manager.on('tagsUpdated', function() {
 					tagView.store.reload();
 				});
+				
+		manager.on('done', function() {
+				window.location.reload();
+			});
 
 		manager.on('reportUpdated', function(data) {
 					ob = data[0];
