@@ -202,7 +202,7 @@
 				/arrayDesign/associateSequences.html=admin
 				/geoBrowser/showBatch.html=admin
 				/characteristicBrowser.html=admin,user
-				/loadExpressionExperiment.html=admin,user
+				/loadExpressionExperiment.html=admin
 				/loadSimpleExpressionExperiment.html=admin,user
 				/expressionExperiment/showAllExpressionExperimentLinkSummaries.html=admin,user
                 /passwordHint.html*=admin,user
