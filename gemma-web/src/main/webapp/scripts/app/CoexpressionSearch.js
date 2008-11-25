@@ -68,6 +68,11 @@ Ext.onReady(function() {
 
 				dsGrid.getStore().load();
 
+				//Close if already open
+				if (detailsWindow){
+					detailsWindow.close();
+				}
+				
 				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
 							geneId : queryGene.id,
 							threshold : 0.01,
@@ -75,9 +80,10 @@ Ext.onReady(function() {
 							height : 400
 						});
 
-				var tabPanel = new Ext.TabPanel({
+				var detailsTP = new Ext.TabPanel({
 							layoutOnTabChange : true,
 							width : 750,
+							height : 400,
 							activeTab : 0,
 							items : [{
 										title : "Supporting datasets",
@@ -103,15 +109,17 @@ Ext.onReady(function() {
 
 						});
 
-				var w = new Ext.Window({
-							modal : true,
+				 detailsWindow = new Ext.Window({
+							modal : false,
 							layout : 'fit',
 							title : 'Details for ' + queryGene.officialSymbol,
 							closeAction : 'close',
-							items : [tabPanel]
+							items : [detailsTP],
+							width : 750,
+							height : 400
 						});
 
-				w.show();
+				detailsWindow.show();
 
 				diffExGrid.getStore().loadData(supporting);
 
@@ -223,6 +231,7 @@ Ext.onReady(function() {
 	var predictedGeneGrid;
 	var probeAlignedGrid;
 	var visWindow;
+	var detailsWindow;
 
 	knownGeneGrid.on("cellclick", geneRowClickHandler, knownGeneGrid);
 
