@@ -77,6 +77,13 @@ public class RMATest extends TestCase {
             return;
         }
         aa.setArrayDesign( arrayDesign );
+        
+        /*
+         * This is needed to make sure cdfenv.example is loaded.
+         */
+        aa.getRCommandObject().loadLibrary("affy");
+        aa.getRCommandObject().voidEval("data(cdfenv.example)");
+        
         DoubleMatrix<String, String> result = aa.summarize( celmatrix );
         assertTrue( result != null );
         assertEquals( 150, result.rows() );
