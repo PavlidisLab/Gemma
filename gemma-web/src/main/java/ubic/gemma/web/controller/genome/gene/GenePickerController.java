@@ -56,6 +56,8 @@ public class GenePickerController extends BaseMultiActionController {
     private TaxonService taxonService = null;
     private SearchService searchService = null;
 
+    private static final int MAX_GENES_PER_QUERY = 20;
+
     private static Comparator<Taxon> TAXON_COMPARATOR = new Comparator<Taxon>() {
         public int compare( Taxon o1, Taxon o2 ) {
             return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
@@ -118,6 +120,10 @@ public class GenePickerController extends BaseMultiActionController {
 
         while ( ( line = reader.readLine() ) != null ) {
             if ( StringUtils.isBlank( line ) ) continue;
+            if ( genes.size() >= MAX_GENES_PER_QUERY ) {
+                log.warn( "Too many genes, stopping" );
+                break;
+            }
             line = StringUtils.strip( line );
             SearchSettings settings = SearchSettings.GeneSearch( line, taxon );
             List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
@@ -128,6 +134,7 @@ public class GenePickerController extends BaseMultiActionController {
             for ( SearchResult sr : geneSearchResults ) {
                 genes.add( ( Gene ) sr.getResultObject() );
             }
+
         }
         return genes;
     }

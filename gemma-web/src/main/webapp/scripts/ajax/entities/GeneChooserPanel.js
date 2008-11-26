@@ -6,6 +6,13 @@
 Ext.namespace('Gemma');
 
 /**
+ * The maximum number of genes we allow users to put in at once.
+ * 
+ * @type Number
+ */
+Gemma.MAX_GENES_PER_QUERY = 20;
+
+/**
  * Widget that allows user to search for and select one or more genes from the database. The selected genes are kept in
  * a table which can be edited. This component is the top part of the coexpression interface, but should be reusable.
  * 
@@ -56,6 +63,10 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 								geneData.push([genes[i].id, genes[i].taxon.scientificName, genes[i].officialSymbol,
 										genes[i].officialName]);
 							}
+							/*
+							 * FIXME this can result in the same gene listed twice. This is taken care of at the server
+							 * side but looks funny.
+							 */
 							this.getStore().loadData(geneData);
 							if (callback) {
 								callback(args);
@@ -137,9 +148,20 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 				var text = e.geneNames;
 				GenePickerController.searchMultipleGenes(text, taxonId, function(genes) {
 							var geneData = [];
+							var warned = false;
 							for (var i = 0; i < genes.length; ++i) {
+								if (i >= Gemma.MAX_GENES_PER_QUERY) {
+									if (!warned) {
+										Ext.Msg.alert("Too many genes", "You can only search up to "
+														+ Gemma.MAX_GENES_PER_QUERY
+														+ " genes, some of your selections will be ignored.");
+										warned = true;
+									}
+									break;
+								}
 								geneData.push([genes[i].id, genes[i].taxon.scientificName, genes[i].officialSymbol,
 										genes[i].officialName]);
+
 							}
 							this.getStore().loadData(geneData, true);
 						}.createDelegate(this));

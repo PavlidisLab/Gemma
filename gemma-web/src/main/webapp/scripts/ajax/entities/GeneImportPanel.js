@@ -10,8 +10,9 @@
  */
 Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 
-			title : "Import multiple genes (one symbol per row)",
+			title : "Import multiple genes (one symbol per line, up to " + Gemma.MAX_GENES_PER_QUERY + ")",
 			modal : true,
+			layout : 'fit',
 			stateful : false,
 			autoHeight : true,
 			width : 300,
@@ -32,11 +33,17 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 							"commit" : true
 						});
 
+				/*
+				 * Gemma.MAX_GENE_PER_QUERY is defined in GeneChooserPanel.js
+				 */
+
 				Ext.apply(this, {
 							items : [{
 										id : 'gene-list-text',
 										xtype : 'textarea',
-										fieldLabel : "Paste in gene symbols, one per line",
+
+										fieldLabel : "Paste in gene symbols, one per line, up to "
+												+ Gemma.MAX_GENES_PER_QUERY,
 										width : 290
 									}],
 							buttons : [{

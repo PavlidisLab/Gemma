@@ -66,6 +66,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
     private static final double DEFAULT_THRESHOLD = 0.01;
 
+    private static final int MAX_GENES_PER_QUERY = 20;
+
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
     private GeneDifferentialExpressionService geneDifferentialExpressionService = null;
     private GeneService geneService = null;
@@ -95,6 +97,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<Long> eeScopeIds = command.getEeIds();
 
         Collection<Long> geneIds = command.getGeneIds();
+
+        if ( geneIds.size() > MAX_GENES_PER_QUERY ) {
+            throw new IllegalArgumentException( "Too many genes selected, please limit searches to "
+                    + MAX_GENES_PER_QUERY );
+        }
 
         Collection<DiffExpressionSelectedFactorCommand> selectedFactors = command.getSelectedFactors();
 

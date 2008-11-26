@@ -13,7 +13,7 @@ Gemma.NewsDisplay = Ext.extend(Ext.Panel, {
 		Ext.apply(this, {
 			items : new Ext.DataView({
 
-				autoHeight : false,
+				autoHeight : true,
 				emptyText : 'No news',
 				loadingText : 'Loading news ...',
 
