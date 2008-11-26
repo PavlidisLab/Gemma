@@ -150,7 +150,9 @@ Ext.onReady(function() {
 				title : "Coexpressed genes",
 				autoHeight : true,
 				pageSize : 25,
-				colspan : 2
+				colspan : 2,
+				user : user
+				
 			});
 
 	var items = [searchPanel, summaryPanel, knownGeneDatasetGrid, knownGeneGrid];

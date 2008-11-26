@@ -57,6 +57,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		Ext.apply(this, {
 			tbar : new Ext.Toolbar({
 				items : [{
+					hidden : !this.user,
 					pressed : true,
 					enableToggle : true,
 					text : Gemma.SHOW_ONLY_MINE,
