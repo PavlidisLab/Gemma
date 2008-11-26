@@ -28,6 +28,8 @@ Ext.onReady(function() {
 			});
 
 	var visWindow;
+	var detailsWindow;
+	
 	var geneRowClickHandler = function(grid, rowIndex, columnIndex, e) {
 		if (this.getSelectionModel().hasSelection()) {
 
@@ -56,20 +58,27 @@ Ext.onReady(function() {
 						searchPanel.efChooserPanel.eeFactorsMap);
 			} else if (fieldName == 'details') {
 
+					// destroy if already open
+				if (detailsWindow) {
+					detailsWindow.close();
+				}
+
 				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
 							width : 750,
 							height : 300
 						});
 
-				var w = new Ext.Window({
-							modal : true,
+				detailsWindow = new Ext.Window({
+							modal : false,
 							layout : 'fit',
 							title : 'Details for ' + gene.officialSymbol,
 							closeAction : 'close',
-							items : [diffExGrid]
+							items : [diffExGrid],
+							width : 750,
+							height : 400
 						});
 
-				w.show();
+				detailsWindow.show();
 
 				var supporting = record.data.probeResults;
 				diffExGrid.getStore().loadData(supporting);
