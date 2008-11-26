@@ -587,7 +587,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						data : oneProfile,
 						color : color,
 						genes : genes,
-						label : probe + "=>" + geneNames,
+						label : probe + " (" + geneNames + ")",
 						labelID : probeId,
 						factor : factor
 					};
@@ -677,7 +677,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 					displayWindow : function(eevo, profiles) {
 
-						this.setTitle("Visualization of probes in dataset:  " + eevo.shortName);
+						this.setTitle("Probes in dataset " + eevo.shortName);
 
 						if (!this.isVisible()) {
 							this.setVisible(true);
@@ -686,7 +686,10 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						for (var i = 0; i < profiles.size(); i++) {
 							var fade = profiles[i].factor < 2;
 							if (fade) {
-								profiles[i].color = "#FFDDDD";
+								/*
+								 * Note: using 'less greyed' lines here.
+								 */
+								profiles[i].color = "#FFAAAA";
 							} else {
 								profiles[i].color = "#FF0000";
 							}
