@@ -186,6 +186,10 @@ public class DEDVController extends BaseFormController {
             Collection<ExpressionExperiment> ees, Collection<Gene> genes, Double threshold,
             Collection<DiffExpressionSelectedFactorCommand> factorMap, Collection<DoubleVectorValueObject> dedvs ) {
 
+        if ( factorMap == null ) {
+            throw new IllegalArgumentException( "Factor information is missing, please make sure factors are selected." );
+        }
+
         Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<Long, Collection<DifferentialExpressionValueObject>>();
 
         Collection<Long> wantedFactors = new HashSet<Long>();
@@ -205,7 +209,6 @@ public class DEDVController extends BaseFormController {
                     validatedProbes.put( eeId, new HashSet<DifferentialExpressionValueObject>() );
                 }
 
-                Long probeId = diffVo.getProbeId();
                 Collection<ExperimentalFactorValueObject> factors = diffVo.getExperimentalFactors();
 
                 for ( ExperimentalFactorValueObject fac : factors ) {
@@ -560,7 +563,7 @@ public class DEDVController extends BaseFormController {
         int i = 0;
         for ( EE2PValue ee2P : sortedEE ) {
             Collection<Long> validatedProbeIdList = new ArrayList<Long>();
-            if ( validatedProbes.get(ee2P.getEEId()) != null && !validatedProbes.get(ee2P.getEEId()).isEmpty() ) {
+            if ( validatedProbes.get( ee2P.getEEId() ) != null && !validatedProbes.get( ee2P.getEEId() ).isEmpty() ) {
                 for ( DifferentialExpressionValueObject devo : validatedProbes.get( ee2P.getEEId() ) ) {
                     validatedProbeIdList.add( devo.getProbeId() );
                 }
