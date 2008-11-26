@@ -427,15 +427,6 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 });
 
-// -----------------------------------------------------
-// FIXME: this could be abstracted out better resolving differences with a config object on creation
-// Differences are: Read method (dwr method is different) calls getDEDVForVisualization not
-// getDEDVForCoexpressionVisualization
-// Calling load takes different paramaters (an array of genes ids not just two gene ids)
-// Titles of thumbnail panel is different (only 1 gene not 2 in title)
-// Don't need hot and cold colors differentiaion (just remove color and let flotr decide)
-// -----------------------------------------------------
-
 Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	id : 'VisualizationDifferentialWindow',
 	closeAction : 'destroy',
@@ -446,7 +437,6 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	title : "Visualization",
 	height : Gemma.ZOOM_PLOT_SIZE,
 	width : 600,
-	// autoHeight : true,
 
 	listeners : {
 		show : {
@@ -469,21 +459,6 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 							break;
 						}
 					}
-
-					// for (var i = 0; i < profiles.size(); i++) {
-					//
-					// if (profiles[i].labelID == probeId) {
-					// if (profiles[i].lines == null) {
-					// profiles[i].lines = {
-					// lineWidth : 5
-					// };
-					// } else {
-					// profiles[i].lines = null;
-					// }
-					// break;
-					// }
-					//
-					// }
 
 					window.zoomPanel.refreshWindow(profiles);
 
@@ -598,7 +573,6 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					split : true,
 					width : Gemma.PLOT_SIZE + 50,
 					collapsible : true,
-					resizable : false,
 					stateful : false,
 					margins : '3 0 3 3',
 					cmargins : '3 3 3 3',
