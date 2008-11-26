@@ -177,19 +177,6 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 					var profiles = record.get("profiles");
 
 					// FIXME make legend bold so there is a user clue as to the line being bolded.
-					// My attempts failed.
-					// Not a good way to do this cause next time click on legend the <b> element is returned.
-					// component.innerHTML = "<b>" + component.innerHTML + "</b>";
-					// component.update("<b>" + component.innerHTML + "</b>");
-					// component.repaint(); This bombs, no repaint method, but works.
-
-					// Try getting compoent via ext and changing the css class of div
-					// doesn't work dom not getting updated...
-					// var el = Ext.get(probeId);
-					// console.log(el);
-					// el.toggleClass("x-grid3-row-selected");
-					// el.repaint();
-					// console.log(el);
 
 					for (var i = 0; i < profiles.size(); i++) {
 
@@ -217,11 +204,6 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	},
 
 	initComponent : function() {
-		// If there are any compile errors with the template the error will not
-		// make its way to the console.
-		// Tried every combination i could think of to get the profile to
-		// display...
-		// Can't seem to access the data even though its there...
 
 		this.dv = new Ext.DataView({
 			autoHeight : true,
@@ -297,16 +279,12 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						if (fade) {
 							color = Gemma.COLD_FADE_COLOR;
 						} else {
-							// color = Gemma.COLD_COLORS[coldIndex]; adds color to signifigant probes
-							// coldIndex++;
 							color = "#000000";
 						}
 					} else {
 						if (fade) {
 							color = Gemma.HOT_FADE_COLOR;
 						} else {
-							// color = Gemma.HOT_COLORS[hotIndex];
-							// hotIndex++;
 							color = "#FF0000";
 						}
 					}
@@ -478,34 +456,34 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					var record = window.dv.getSelectedRecords()[0];
 					var profiles = record.get("profiles");
 
-					// FIXME make legend bold so there is a user clue as to the line being bolded.
-					// My attempts failed.
-					// Not a good way to do this cause next time click on legend the <b> element is returned.
-					// component.innerHTML = "<b>" + component.innerHTML + "</b>";
-					// component.update("<b>" + component.innerHTML + "</b>");
-					// component.repaint(); This bombs, no repaint method, but works.
-
-					// Try getting compoent via ext and changing the css class of div
-					// doesn't work dom not getting updated...
-					// var el = Ext.get(probeId);
-					// console.log(el);
-					// el.toggleClass("x-grid3-row-selected");
-					// el.repaint();
-					// console.log(el);
-
 					for (var i = 0; i < profiles.size(); i++) {
 
 						if (profiles[i].labelID == probeId) {
-							if (profiles[i].lines == null) {
-								profiles[i].lines = {
-									lineWidth : 5
-								};
+							if (profiles[i].selected) {
+								profiles[i].lines.lineWidth = profiles[i].lines.lineWidth / Gemma.SELECTED;
+								profiles[i].selected = false;
 							} else {
-								profiles[i].lines = null;
+								profiles[i].selected = true;
+								profiles[i].lines.lineWidth = profiles[i].lines.lineWidth * Gemma.SELECTED;
 							}
+							break;
 						}
-						break;
 					}
+
+					// for (var i = 0; i < profiles.size(); i++) {
+					//
+					// if (profiles[i].labelID == probeId) {
+					// if (profiles[i].lines == null) {
+					// profiles[i].lines = {
+					// lineWidth : 5
+					// };
+					// } else {
+					// profiles[i].lines = null;
+					// }
+					// break;
+					// }
+					//
+					// }
 
 					window.zoomPanel.refreshWindow(profiles);
 
@@ -595,6 +573,9 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						color : color,
 						genes : genes,
 						label : probe + " (" + geneNames + ")",
+						lines : {
+							lineWidth : Gemma.LINE_THICKNESS
+						},
 						labelID : probeId,
 						factor : factor
 					};
@@ -617,6 +598,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					split : true,
 					width : Gemma.PLOT_SIZE + 50,
 					collapsible : true,
+					resizable : false,
+					stateful : false,
 					margins : '3 0 3 3',
 					cmargins : '3 3 3 3',
 					items : this.dv,
@@ -642,15 +625,14 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					constrainHeader : true,
 					layout : 'fit',
 					title : "Click thumbnail to zoom in",
-					// hidden : true,
-					// stateful : false,
+
 					listeners : {
 						resize : {
 							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
 
 								// Change the div so that it is the size of the panel surrounding it.
 								zoomPanelDiv = Ext.get('graphzoompanel');
-								zoomPanelDiv.setHeight(rawHeight - 27);
+								zoomPanelDiv.setHeight(rawHeight - 27); // magic 27 again.
 								zoomPanelDiv.setWidth(rawWidth - 1);
 								zoomPanelDiv.repaint();
 
