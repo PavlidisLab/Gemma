@@ -166,6 +166,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	title : "Visualization",
 	height : Gemma.ZOOM_PLOT_SIZE,
 	width : 600,
+	stateful : false,
 	// autoHeight : true,
 
 	listeners : {
@@ -323,6 +324,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 					cmargins : '3 3 3 3',
 					items : this.dv,
 					autoScroll : true,
+					stateful : false,
 					html : {
 						id : 'zoomLegend',
 						tag : 'div',
@@ -344,7 +346,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 					layout : 'fit',
 					title : "Click thumbnail to zoom in",
 					// hidden : true,
-					// stateful : false,
+					stateful : false,
 					listeners : {
 						resize : {
 							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
