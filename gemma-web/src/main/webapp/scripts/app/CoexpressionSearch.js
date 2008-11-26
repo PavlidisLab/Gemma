@@ -38,10 +38,11 @@ Ext.onReady(function() {
 
 			var record = this.getStore().getAt(rowIndex);
 			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
-			var queryGene = record.data.queryGene;
+			var queryGene = record.get("queryGene");
+			var foundGene = record.get("foundGene");
 
 			if (fieldName == 'foundGene') {
-				searchPanel.searchForGene(record.get("foundGene").id);
+				searchPanel.searchForGene(foundGene.id);
 			} else if (fieldName == 'visualize') {
 
 				var foundGene = record.data.foundGene;
@@ -74,7 +75,7 @@ Ext.onReady(function() {
 				}
 				
 				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
-							geneId : queryGene.id,
+							geneId : foundGene.id,
 							threshold : 0.01,
 							width : 750,
 							height : 400
@@ -89,7 +90,7 @@ Ext.onReady(function() {
 										title : "Supporting datasets",
 										items : [dsGrid]
 									}, {
-										title : "Differential expression of " + queryGene.officialSymbol,
+										title : "Differential expression of " + foundGene.officialSymbol,
 										items : [diffExGrid],
 										loaded : false,
 										listeners : {
@@ -97,7 +98,7 @@ Ext.onReady(function() {
 												fn : function() {
 													if (!this.loaded) {
 														diffExGrid.getStore().load({
-																	params : [queryGene.id, 0.01]
+																	params : [foundGene.id, 0.01]
 																});
 													}
 													this.loaded = true;
@@ -112,7 +113,7 @@ Ext.onReady(function() {
 				 detailsWindow = new Ext.Window({
 							modal : false,
 							layout : 'fit',
-							title : 'Details for ' + queryGene.officialSymbol,
+							title : 'Details for ' + foundGene.officialSymbol,
 							closeAction : 'close',
 							items : [detailsTP],
 							width : 750,

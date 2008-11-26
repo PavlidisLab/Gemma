@@ -571,6 +571,13 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					var genes = coordinateProfile[i].genes;
 					var color = coordinateProfile[i].color;
 					var factor = coordinateProfile[i].factor;
+					if (factor < 2) {
+						/*
+						 * Note that using a 'less greyed' color here because the greyd lines often are by themselves on
+						 * a plot. This makes them a bit more obvious so the plot doesn't look empty.
+						 */
+						color = "#FFAAAA";
+					}
 
 					var geneNames = genes[0].name;
 					for (var k = 1; k < genes.size(); k++) {
@@ -682,18 +689,6 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						if (!this.isVisible()) {
 							this.setVisible(true);
 							this.show();
-						}
-						for (var i = 0; i < profiles.size(); i++) {
-							var fade = profiles[i].factor < 2;
-							if (fade) {
-								/*
-								 * Note: using 'less greyed' lines here.
-								 */
-								profiles[i].color = "#FFAAAA";
-							} else {
-								profiles[i].color = "#FF0000";
-							}
-
 						}
 
 						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
