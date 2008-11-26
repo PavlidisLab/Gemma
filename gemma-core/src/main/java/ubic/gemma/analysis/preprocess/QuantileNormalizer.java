@@ -41,7 +41,7 @@ public class QuantileNormalizer extends RCommander implements Normalizer {
 
     public QuantileNormalizer() throws IOException {
         super();
-        this.rc.voidEval( "library(affy)" );
+        this.rc.voidEval( "library(preprocessCore)" );
     }
 
     /*

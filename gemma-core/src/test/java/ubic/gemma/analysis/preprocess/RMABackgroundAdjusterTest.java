@@ -33,70 +33,86 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
  * @author pavlidis
- * @version $Id$
+ * @version $Id: RMABackgroundAdjusterTest.java,v 1.10 2008/08/15 00:11:19 paul
+ *          Exp $
  */
 public class RMABackgroundAdjusterTest extends TestCase {
 
-    private static Log log = LogFactory.getLog( RMATest.class.getName() );
-    RMABackgroundAdjuster aa;
-    DoubleMatrix celmatrix;
-    ArrayDesign arrayDesign;
-    InputStream is;
+	private static Log log = LogFactory.getLog(RMATest.class.getName());
 
-    boolean connected = false;
+	RMABackgroundAdjuster aa;
 
-    /*
-     * @see TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        super.setUp();
-        // test data are from the affybatch.example in the affy package.
-        DoubleMatrixReader reader = new DoubleMatrixReader();
-        is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/testShortCel.txt.gz" ) );
-        if ( is == null ) throw new IOException();
-        celmatrix = reader.read( is );
-        is.close();
-        arrayDesign = ArrayDesign.Factory.newInstance();
-        arrayDesign.setName( "cdfenv.example" );
+	DoubleMatrix celmatrix;
 
-        try {
-            aa = new RMABackgroundAdjuster();
-            connected = true;
-        } catch ( Exception e ) {
-            connected = false;
-        }
-    }
+	ArrayDesign arrayDesign;
 
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        if ( connected ) aa.cleanup();
-    }
+	InputStream is;
 
-    /*
-     * Test method for 'ubic.gemma.analysis.preprocess.RMABackgroundAdjuster.adjust(DoubleMatrixNamed,
-     * DoubleMatrixNamed)'
-     */
-    public void testAdjust() {
-        if ( !connected ) {
-            log.warn( "Could not connect to RServe, skipping test." );
-            return;
-        }
-        aa.setArrayDesign( arrayDesign );
-        DoubleMatrix result = aa.adjust( celmatrix, null );
-        assertTrue( result != null );
-        assertEquals( 10000, result.rows() );
-        assertEquals( 3, result.columns() );
+	boolean connected = false;
 
-        // values come from
-        // exprs(bg.correct.rma(affybatch.example))[11,3]
+	/*
+	 * @see TestCase#setUp()
+	 */
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
+		super.setUp();
+		// test data are from the affybatch.example in the affy package.
+		DoubleMatrixReader reader = new DoubleMatrixReader();
+		is = new GZIPInputStream(this.getClass().getResourceAsStream(
+				"/data/testShortCel.txt.gz"));
+		if (is == null)
+			throw new IOException();
+		celmatrix = reader.read(is);
+		is.close();
+		arrayDesign = ArrayDesign.Factory.newInstance();
+		arrayDesign.setName("cdfenv.example");
 
-        assertEquals( 936, result.get( 10, 2 ), 0.0001 );
-    }
+		try {
+			aa = new RMABackgroundAdjuster();
+			connected = true;
+		} catch (Exception e) {
+			connected = false;
+		}
+	}
+
+	/*
+	 * @see TestCase#tearDown()
+	 */
+	@Override
+	protected void tearDown() throws Exception {
+		super.tearDown();
+		if (connected)
+			aa.cleanup();
+	}
+
+	/*
+	 * Test method for
+	 * 'ubic.gemma.analysis.preprocess.RMABackgroundAdjuster.adjust(DoubleMatrixNamed,
+	 * DoubleMatrixNamed)'
+	 */
+	public void testAdjust() {
+		if (!connected) {
+			log.warn("Could not connect to RServe, skipping test.");
+			return;
+		}
+
+		/*
+		 * This is needed to make sure cdfenv.example is loaded.
+		 */
+		aa.getRCommandObject().loadLibrary("affy");
+		aa.getRCommandObject().voidEval("data(cdfenv.example)");
+
+		aa.setArrayDesign(arrayDesign);
+		DoubleMatrix result = aa.adjust(celmatrix, null);
+		assertTrue(result != null);
+		assertEquals(10000, result.rows());
+		assertEquals(3, result.columns());
+
+		// values come from
+		// exprs(bg.correct.rma(affybatch.example))[11,3]
+
+		assertEquals(936, result.get(10, 2), 0.0001);
+	}
 
 }
