@@ -42,7 +42,9 @@ import org.springframework.web.context.support.GenericWebApplicationContext;
  */
 public class SpringContextUtil {
     private static Log log = LogFactory.getLog( SpringContextUtil.class.getName() );
+
     private static BeanFactory ctx = null;
+
     public static final String GRID_SPRING_BEAN_CONFIG = "ubic/gemma/gigaspaces.xml";
 
     /**
@@ -159,6 +161,7 @@ public class SpringContextUtil {
      * @param paths
      */
     private static void addCommonConfig( boolean isWebapp, List<String> paths ) {
+
         /*
          * Note that the order here matters, somewhat - in some environments, configuring beans in schedule fails if
          * search is not listed first (?).
@@ -166,7 +169,6 @@ public class SpringContextUtil {
         paths.add( "classpath*:ubic/gemma/applicationContext-security.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-hibernate.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-serviceBeans.xml" );
-        paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-schedule.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-persisterBeans.xml" );
 
