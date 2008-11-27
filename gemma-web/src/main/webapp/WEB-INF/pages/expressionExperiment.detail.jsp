@@ -67,13 +67,19 @@
 
 </div>
 
-<security:authorize ifAnyGranted="user,admin">
+<security:authorize ifAnyGranted="admin">
 	<%-- fixme: let 'users' edit their own datasets --%>
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 </security:authorize>
-<security:authorize ifNotGranted="user,admin">
+<security:authorize ifNotGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </security:authorize>
 
+<security:authorize ifAnyGranted="user">
+	<input type="hidden" name="hasUser" id="hasUser" value="true" />
+</security:authorize>
+<security:authorize ifNotGranted="user">
+	<input type="hidden" name="hasUser" id="hasUser" value="" />
+</security:authorize>
 
 

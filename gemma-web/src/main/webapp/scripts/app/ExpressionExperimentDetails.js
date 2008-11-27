@@ -21,7 +21,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					"ready" : true
 				});
 
-		this.editable = Ext.get("hasAdmin").getValue() == 'true';
+		this.isAdmin = Ext.get("hasAdmin").getValue() == 'true';
+		this.isUser =   Ext.get("hasUser").getValue() == 'true';
+		this.editable = this.isAdmin || this.isUser;
+		
 
 		/*
 		 * Load the EE information via an ajax call.
@@ -340,10 +343,13 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></a>'
 				+ '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
 				+ e.id
-				+ '"  target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></a>&nbsp;'
-				+ '<a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
-				+ e.id
-				+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></a>&nbsp;';
+				+ '"  target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></a>&nbsp;';
+				
+			 if (this.isAdmin){
+			 	adminLinks = adminLinks
+			 	+ '<a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment(' + e.id
+				+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></a>&nbsp;';			 
+			 }
 
 		var pubmedRegion = {};
 

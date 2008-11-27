@@ -19,4 +19,13 @@
 	<security:authorize ifAnyGranted="admin">
 		<div id="updateAllReports-area"></div>
 	</security:authorize>
+	
+<security:authorize ifAnyGranted="admin">
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
+</security:authorize>
+<security:authorize ifNotGranted="admin">
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+</security:authorize>
+
+	
 </body>

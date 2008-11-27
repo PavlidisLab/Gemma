@@ -7,6 +7,7 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
+		
 	manager = new Gemma.EEManager({
 				editable : true,
 				id : 'eemanager'
@@ -44,16 +45,21 @@ Ext.onReady(function() {
 	var dateRenderer = new Ext.util.Format.dateRenderer("y/M/d");
 
 	var adminRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
-		return '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
+		var adminLink =  '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
 				+ value
-				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></a>'
+				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></a>';
 				// + '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
 				// + value
 				// + '" target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this
 				// experiment" title="edit"/></a>'
-				+ '&nbsp;&nbsp;&nbsp;<a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
-				+ value
-				+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></a>&nbsp;';
+								
+				var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
+				if (isAdmin){
+					adminLink = adminLink + '&nbsp;&nbsp;&nbsp;<a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
+					+ value
+					+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></a>&nbsp;';
+				}
+				return adminLink;
 	};
 
 	var shortNameRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
