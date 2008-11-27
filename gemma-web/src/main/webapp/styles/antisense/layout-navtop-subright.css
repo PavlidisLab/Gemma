@@ -11,10 +11,9 @@ div#content {
 	padding: 0;
 	text-align: left;
 }
-
 div#main {
 	float: left;
-	width: 100%;
+	width: 98%; /* if 100%  then no menu bar in ie7*/
 	display: inline;
 }
 
