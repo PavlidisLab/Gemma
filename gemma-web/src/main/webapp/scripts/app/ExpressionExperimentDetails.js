@@ -477,6 +477,33 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					// height : 100,
 					value : e.description
 				});
+				
+				var nameArea = new Ext.form.TextArea({
+					id : 'name',
+					fieldLabel : 'Name',
+					allowBlank : false,
+					grow : true,
+					growMax : 300,
+					readOnly : !this.editable,
+					disabledClass : 'disabled-plain',
+					growMin : 40,
+					emptyText : 'No description provided',
+					enableKeyEvents : true,
+					listeners : {
+						'keyup' : {
+							fn : function(e) {
+								if (Ext.getCmp('name').isDirty() && Ext.getCmp('name').isValid()) {
+										// show save button
+										Ext.getCmp('update-button-region').show();
+									} else {
+										Ext.getCmp('update-button-region').hide();
+									}
+							}
+						}
+					},
+					width : 500,
+					value : e.name
+				});
 
 		var basics = new Ext.Panel({
 			autoHeight : true,
@@ -541,30 +568,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 								}]
 					}, {
 						html : 'Name:'
-					}, {
-						xtype : 'textfield',
-						value : e.name,
-						allowBlank : false,
-						id : 'name',
-						readOnly : !this.editable,
-						disabledClass : 'disabled-plain',
-						enableKeyEvents : true,
-						listeners : {
-							'keyup' : {
-								fn : function(e) {
-									if (Ext.getCmp('name').isDirty() && Ext.getCmp('name').isValid()) {
-										// show save button
-										Ext.getCmp('update-button-region').show();
-									} else {
-										Ext.getCmp('update-button-region').hide();
-									}
-								}
-							}
-						},
-						id : 'name',
-						width : 500,
-						fieldLabel : 'Name'
-					}, {
+					}, nameArea, {
 						html : "Taxon:"
 					}, {
 						html : e.taxon
