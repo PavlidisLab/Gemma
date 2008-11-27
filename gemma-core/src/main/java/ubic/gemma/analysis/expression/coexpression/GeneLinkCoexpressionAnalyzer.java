@@ -207,25 +207,6 @@ public class GeneLinkCoexpressionAnalyzer {
 
     }
 
-    /**
-     * @param experimentsAnalyzed
-     * @return Map of EE IDs to the location in the vector.
-     */
-    public Map<Long, Integer> getOrderingMap( Collection<BioAssaySet> experimentsAnalyzed ) {
-        List<Long> eeIds = new ArrayList<Long>();
-        for ( BioAssaySet ee : experimentsAnalyzed ) {
-            eeIds.add( ee.getId() );
-        }
-        Collections.sort( eeIds );
-        Map<Long, Integer> eeIdOrder = new HashMap<Long, Integer>();
-        int location = 0;
-        for ( Long id : eeIds ) {
-            eeIdOrder.put( id, location );
-            location++;
-        }
-        return eeIdOrder;
-    }
-
     public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
         this.expressionExperimentSetService = expressionExperimentSetService;
     }
@@ -378,7 +359,7 @@ public class GeneLinkCoexpressionAnalyzer {
             GeneCoexpressionAnalysis analysis ) {
         int totalLinks = 0;
         Collection<Gene> processedGenes = new HashSet<Gene>();
-        Map<Long, Integer> eeIdOrder = getOrderingMap( expressionExperiments );
+        Map<Long, Integer> eeIdOrder = ProbeLinkCoexpressionAnalyzer.getOrderingMap( expressionExperiments );
 
         log.info( "Starting gene link analysis '" + analysisName + " on " + toUseGenes.size() + " genes in "
                 + expressionExperiments.size() + " experiments with a stringency of " + stringency );

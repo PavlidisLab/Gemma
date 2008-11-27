@@ -80,7 +80,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#find(ubic.gemma.model.genome.Gene)
      */
     @SuppressWarnings("unchecked")
@@ -139,7 +138,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDao#findNearest(ubic.gemma.model.genome.PhysicalLocation)
      */
     public Collection<Gene> findNearest( PhysicalLocation physicalLocation ) {
@@ -231,7 +229,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#findOrCreate(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -247,7 +244,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
      */
     public Gene geneValueObjectToEntity( GeneValueObject geneValueObject ) {
@@ -318,7 +314,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCoexpressedGenes(java.util.Collection, java.util.Collection,
      * java.lang.Integer, boolean)
      */
@@ -475,12 +470,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         postProcessSpecificity( knownGenesOnly, coexpressions );
 
-        overallWatch.stop();
-        Long overallElapsed = overallWatch.getTime();
-        if ( overallElapsed > 1000 ) {
-            log.info( "Specificity postprocessing for " + gene.getName() + " took a total of " + overallElapsed + "ms" );
-        }
-
         return coexpressions;
     }
 
@@ -494,6 +483,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     private void postProcessSpecificity( boolean knownGenesOnly, final CoexpressionCollectionValueObject coexpressions )
             throws Exception {
         // fill in information about the query gene
+        StopWatch timer = new StopWatch();
+        timer.start();
         Collection<Long> queryGeneProbeIds = coexpressions.getQueryGeneProbes();
         Collection<Long> targetGeneProbeIds = coexpressions.getTargetGeneProbes();
 
@@ -504,6 +495,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         coexpressions.setTargetGeneSpecificityInfo( targetSpecificity );
 
         postProcess( coexpressions, knownGenesOnly );
+
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Specificity postprocessing: " + timer.getTime() + "ms" );
+        }
     }
 
     /**
@@ -524,7 +520,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * Gets all the CompositeSequences related to the gene identified by the given gene and arrayDesign. (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequences(ubic.gemma.model.genome.Gene,
      * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
@@ -566,7 +561,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetGenesByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -578,7 +572,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetMicroRnaByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -591,7 +584,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadKnownGenes(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -605,7 +597,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -644,7 +635,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -659,7 +649,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -844,11 +833,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( css == null || css.size() == 0 ) {
             return csId2geneIds;
         }
-
         int count = 0;
         int CHUNK_SIZE = 1000;
-        Collection<Long> batch = new HashSet<Long>();
         Session session = this.getSession();
+
+        if ( css.size() <= CHUNK_SIZE ) {
+            processCS2GeneChunk( csId2geneIds, css, session );
+            return csId2geneIds;
+        }
+
+        Collection<Long> batch = new HashSet<Long>();
 
         for ( Long csId : css ) {
             assert csId != null;
@@ -1241,11 +1235,38 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     }
 
+    /*
+     * FIXME use a regular ehcache so we can use timeouts.
+     */
+    private HashMap<Long, Collection<Long>> gene2CsCache = new HashMap<Long, Collection<Long>>();
+
+    /**
+     * @param csId2geneIds
+     * @param csIdChunk
+     * @param session
+     */
     private void processCS2GeneChunk( Map<Long, Collection<Long>> csId2geneIds, Collection<Long> csIdChunk,
             Session session ) {
         assert csIdChunk.size() > 0;
+
+        /*
+         * Check the cache first.
+         */
+        Collection<Long> neededCs = new HashSet<Long>();
+        for ( Long csid : csIdChunk ) {
+            if ( gene2CsCache.containsKey( csid ) ) {
+                csId2geneIds.put( csid, gene2CsCache.get( csid ) );
+            } else {
+                neededCs.add( csid );
+            }
+        }
+
+        if ( neededCs.size() == 0 ) {
+            return;
+        }
+
         String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS WHERE CS in ("
-                + StringUtils.join( csIdChunk, "," ) + ")";
+                + StringUtils.join( neededCs, "," ) + ")";
 
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.addScalar( "id", new LongType() );
@@ -1263,6 +1284,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             }
             geneIds.add( geneId );
         }
+
+        /*
+         * FIXME this could be repetitive.
+         */
+        gene2CsCache.putAll( csId2geneIds );
     }
 
     /**
