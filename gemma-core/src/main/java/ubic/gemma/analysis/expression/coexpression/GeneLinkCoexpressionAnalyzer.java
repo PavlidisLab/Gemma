@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -129,8 +130,7 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param bitvector
      * @return
      */
-    private static Collection<Long> convertBitVector( Map<Integer, Long> eePositionToIdMap,
-            byte[] bitvector ) {
+    private static Collection<Long> convertBitVector( Map<Integer, Long> eePositionToIdMap, byte[] bitvector ) {
         List<Long> ids = new ArrayList<Long>();
         for ( int i = 0; i < eePositionToIdMap.size(); i++ ) {
             if ( BitUtil.get( bitvector, i ) ) {
@@ -388,8 +388,14 @@ public class GeneLinkCoexpressionAnalyzer {
                 CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis(
                         queryGene, expressionExperiments, stringency, knownGenesOnly, 0 );
                 if ( knownGenesOnly && coexpressions.getNumKnownGenes() > 0 ) {
+                    StopWatch timer = new StopWatch();
+                    timer.start();
                     Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene,
                             coexpressions, analysis, genesToAnalyzeMap, processedGenes, stringency );
+                    timer.stop();
+                    if ( timer.getTime() > 1000 ) {
+                        log.info( "Persist links: " + timer.getTime() + "ms" );
+                    }
                     totalLinks += created.size();
                 }
                 // FIXME support using other than known genes (though we really don't do that now).

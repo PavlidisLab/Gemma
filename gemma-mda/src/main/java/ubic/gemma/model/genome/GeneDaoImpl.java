@@ -80,6 +80,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#find(ubic.gemma.model.genome.Gene)
      */
     @SuppressWarnings("unchecked")
@@ -138,6 +139,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDao#findNearest(ubic.gemma.model.genome.PhysicalLocation)
      */
     public Collection<Gene> findNearest( PhysicalLocation physicalLocation ) {
@@ -229,6 +231,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#findOrCreate(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -244,6 +247,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
      */
     public Gene geneValueObjectToEntity( GeneValueObject geneValueObject ) {
@@ -314,6 +318,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCoexpressedGenes(java.util.Collection, java.util.Collection,
      * java.lang.Integer, boolean)
      */
@@ -425,6 +430,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 eesToSearch.add( ee );
             }
         }
+        overallWatch.stop();
+        if ( overallWatch.getTime() > 1000 ) {
+            log.info( "Cache check: " + overallWatch + "ms" );
+        }
+        overallWatch.reset();
+        overallWatch.start();
 
         if ( eesToSearch.size() > 0 ) {
 
@@ -439,9 +450,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             // This is the actual business of querying the database.
             processCoexpQuery( gene, queryObject, coexpressions );
         }
-
+        overallWatch.stop();
+        if ( overallWatch.getTime() > 1000 ) {
+            log.info( "Raw query: " + overallWatch.getTime() + "ms" );
+        }
+        coexpressions.setDbQuerySeconds( overallWatch.getTime() );
+        overallWatch.reset();
+        overallWatch.start();
         if ( cachedResults.size() > 0 ) {
             mergeCachedCoexpressionResults( coexpressions, cachedResults );
+            overallWatch.stop();
+            if ( overallWatch.getTime() > 1000 ) {
+                log.info( "Merge cached: " + overallWatch.getTime() + "ms" );
+            }
+            overallWatch.reset();
+            overallWatch.start();
         }
 
         if ( coexpressions.getQueryGeneProbes().size() == 0 ) {
@@ -450,14 +473,14 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             return coexpressions;
         }
 
+        postProcessSpecificity( knownGenesOnly, coexpressions );
+
         overallWatch.stop();
         Long overallElapsed = overallWatch.getTime();
-        if ( overallElapsed > 1000 )
-            log.info( "Query for " + gene.getName() + " took a total of " + overallElapsed + "ms" );
+        if ( overallElapsed > 1000 ) {
+            log.info( "Specificity postprocessing for " + gene.getName() + " took a total of " + overallElapsed + "ms" );
+        }
 
-        coexpressions.setDbQuerySeconds( overallElapsed );
-
-        postProcessSpecificity( knownGenesOnly, coexpressions );
         return coexpressions;
     }
 
@@ -501,6 +524,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * Gets all the CompositeSequences related to the gene identified by the given gene and arrayDesign. (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequences(ubic.gemma.model.genome.Gene,
      * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
@@ -542,6 +566,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetGenesByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -553,6 +578,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetMicroRnaByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -565,6 +591,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadKnownGenes(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -578,6 +605,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -616,6 +644,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -630,6 +659,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")

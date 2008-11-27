@@ -190,6 +190,8 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         /*
          * Finish the postprocessing.
          */
+        StopWatch timer = new StopWatch();
+        timer.start();
         coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
         if ( coexpressions.getAllGeneCoexpressionData( stringency ).size() == 0 ) {
             return coexpressions;
@@ -205,6 +207,10 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
 
         computeEesTestedIn( ees, coexpressions, eesQueryTestedIn, stringency, limit );
 
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Postprocessing: " + timer.getTime() + "ms" );
+        }
         log.debug( "Analysis completed" );
         return coexpressions;
     }
