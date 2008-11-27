@@ -99,7 +99,7 @@ Ext.onReady(function() {
 						id : 'biomaterial-grid-panel',
 						eeId : eeId,
 						edId : edId,
-						height : 700,
+						height : 645,
 						width : 1000,
 						editable : editable
 					});
