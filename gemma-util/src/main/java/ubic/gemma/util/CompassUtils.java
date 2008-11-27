@@ -39,176 +39,191 @@ import org.compass.gps.spi.CompassGpsInterfaceDevice;
  */
 public class CompassUtils {
 
-	private static Log log = LogFactory.getLog(CompassUtils.class);
+    private static Log log = LogFactory.getLog( CompassUtils.class );
 
-	/**
-	 * Deletes compass lock file(s).
-	 * 
-	 * @throws IOException
-	 */
-	@SuppressWarnings("unchecked")
-	public static void deleteCompassLocks() {
-		/*
-		 * FIXME lock directory is now the same as the indexes, by default.
-		 */
-		log.debug("Lucene index lock dir: " + FSDirectory.LOCK_DIR);
+    /**
+     * Deletes compass lock file(s).
+     * 
+     * @throws IOException
+     */
+    @SuppressWarnings("unchecked")
+    public static void deleteCompassLocks() {
+        /*
+         * FIXME lock directory is now the same as the indexes, by default.
+         */
+        log.debug( "Lucene index lock dir: " + FSDirectory.LOCK_DIR );
 
-		Collection<File> lockFiles = FileUtils.listFiles(new File(
-				FSDirectory.LOCK_DIR),
-				FileFilterUtils.suffixFileFilter("lock"), null);
+        Collection<File> lockFiles = FileUtils.listFiles( new File( FSDirectory.LOCK_DIR ), FileFilterUtils
+                .suffixFileFilter( "lock" ), null );
 
-		if (lockFiles.size() == 0) {
-			log.debug("Lucene lock files do not exist.");
-			return;
-		}
+        if ( lockFiles.size() == 0 ) {
+            log.debug( "Lucene lock files do not exist." );
+            return;
+        }
 
-		for (File file : lockFiles) {
-			log.debug("Removing Lucene lock file " + file);
-			file.delete();
-		}
-	}
+        for ( File file : lockFiles ) {
+            log.debug( "Removing Lucene lock file " + file );
+            file.delete();
+        }
+    }
 
-	/**
-	 * disables the index mirroring operation.
-	 * 
-	 * @param device
-	 */
-	public static void disableIndexMirroring(CompassGpsInterfaceDevice device) {
-		device.stop();
-	}
+    /**
+     * disables the index mirroring operation.
+     * 
+     * @param device
+     */
+    public static void disableIndexMirroring( CompassGpsInterfaceDevice device ) {
+        device.stop();
+    }
 
-	/**
-	 * enables the index mirroring operation.
-	 * 
-	 * @param device
-	 */
-	public static void enableIndexMirroring(CompassGpsInterfaceDevice device) {
-		device.start();
-	}
+    /**
+     * enables the index mirroring operation.
+     * 
+     * @param device
+     */
+    public static void enableIndexMirroring( CompassGpsInterfaceDevice device ) {
+        device.start();
+    }
 
-	/**
-	 * Deletes and re-creates the index. See the IndexService
-	 * 
-	 * @param gps
-	 * @throws IOException
-	 */
-	public static synchronized void rebuildCompassIndex(
-			CompassGpsInterfaceDevice gps) {
-		boolean wasRunningBefore = gps.isRunning();
+    /**
+     * Deletes and re-creates the index. See the IndexService
+     * 
+     * @param gps
+     * @throws IOException
+     */
+    public static synchronized void rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
+        boolean wasRunningBefore = gps.isRunning();
 
-		log.info("CompassGps was running? " + wasRunningBefore);
+        log.info( "CompassGps was running? " + wasRunningBefore );
 
-		/*
-		 * Check state of device. If not running and you try to index, you will
-		 * get a device exception.
-		 */
-		if (!wasRunningBefore) {
-			enableIndexMirroring(gps);
-		}
+        
+        /*
+         * Check state of device. If not running and you try to index, you will get a device exception.
+         */
+        if ( !wasRunningBefore ) {
+            enableIndexMirroring( gps );
+        }
 
-		if (gps.getIndexCompass().getSearchEngineIndexManager().indexExists()) {
-			gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
-			log.info("Deleting old index");
-		}
+        if (gps.getIndexCompass().getSearchEngineIndexManager().indexExists()){
+            if (wasRunningBefore)
+                gps.stop();
+            
+            gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
+            log.info( "Deleting old index" );
+            
+            if (wasRunningBefore)
+                gps.start();
+        }
+        
+        gps.getIndexCompass().getSearchEngineIndexManager().createIndex();
+        log.info( "indexing now ... " );
+        gps.index();
+        log.info( "Indexing done. Now Optimizing index" );
+        gps.getIndexCompass().getSearchEngineOptimizer().optimize();
+        log.info( "Optimizing complete" );
+        /* Return state of device */
+        if ( !wasRunningBefore ) {
+            disableIndexMirroring( gps );
+        }
 
-		gps.getIndexCompass().getSearchEngineIndexManager().createIndex();
-		log.info("indexing now ... ");
-		gps.index();
-		log.info("Indexing done. Now Optimizing index");
-		gps.getIndexCompass().getSearchEngineOptimizer().optimize();
-		log.info("Optimizing complete");
-		/* Return state of device */
-		if (!wasRunningBefore) {
-			disableIndexMirroring(gps);
-		}
+    }
 
-	}
+    /**
+     * @param compass eg: InternalCompass expressionBean = (InternalCompass) this.getBean("compassExpression"); Need
+     *        this for replacing the indexes and it contains the path to the indexes to replace
+     * @param pathToIndex An absolute path to the directory where the new indexes are located. Path should end at index
+     *        sub dir.
+     * @throws IOException
+     */
+    public static synchronized void swapCompassIndex( InternalCompass compass, String pathToIndex ) throws IOException {
 
-	/**
-	 * @param compass
-	 *            eg: InternalCompass expressionBean = (InternalCompass)
-	 *            this.getBean("compassExpression"); Need this for replacing the
-	 *            indexes and it contains the path to the indexes to replace
-	 * @param pathToIndex
-	 *            An absolute path to the directory where the new indexes are
-	 *            located. Path should end at index sub dir.
-	 * @throws IOException
-	 */
-	public static synchronized void swapCompassIndex(InternalCompass compass,
-			String pathToIndex) throws IOException {
+        final File srcDir = new File( pathToIndex );
+        String engineSetting = compass.getSettings().getSetting( "compass.engine.connection" );
 
-		final File srcDir = new File(pathToIndex);
-		String engineSetting = compass.getSettings().getSetting(
-				"compass.engine.connection");
+        assert engineSetting != null;
 
-		assert engineSetting != null;
+        final File targetDir = new File( engineSetting.replaceFirst( "file:", "" ) + "/index/" );
 
-		final File targetDir = new File(engineSetting.replaceFirst("file:", "")
-				+ "/index/");
+        // Validate that the new indexes exist and can read from them
+        if ( !srcDir.canRead() ) {
+            log.error( "Unable to read from specified directory: " + srcDir.getAbsolutePath() );
+            return;
+        }
 
-		// Validate that the new indexes exist and can read from them
-		if (!srcDir.canRead()) {
-			log.error("Unable to read from specified directory: "
-					+ srcDir.getAbsolutePath());
-			return;
-		}
+        // Validate that we can write where we are copying the file to.
+        if ( !targetDir.canWrite() ) {
+            log.error( "Unable to read from specified directory: " + targetDir.getAbsolutePath() );
+            return;
+        }
 
-		// Validate that we can write where we are copying the file to.
-		if (!targetDir.canWrite()) {
-			log.error("Unable to read from specified directory: "
-					+ targetDir.getAbsolutePath());
-			return;
-		}
+        compass.getSearchEngineIndexManager().stop();
 
-		compass.getSearchEngineIndexManager().stop();
+        log.info( "Deleting old index...." );
+        compass.getSearchEngineIndexManager().deleteIndex();
 
-		log.info("Deleting old index....");
-		compass.getSearchEngineIndexManager().deleteIndex();
+        log.info( "Clearing Cache.... " );
+        compass.getSearchEngineIndexManager().clearCache();
 
-		log.info("Clearing Cache.... ");
-		compass.getSearchEngineIndexManager().clearCache();
+        // Oddly this creates some empty segmants that are just cruft.
+        // log.info("Creating index...");
+        // compass.getSearchEngineIndexManager().createIndex();
 
-		log.info("swapping index.....");
-		FileUtils.copyDirectory(srcDir, targetDir);
+        log.info( "swapping index....." );
+        FileUtils.copyDirectory( srcDir, targetDir );
 
-		compass.getSearchEngineIndexManager().start();
+        compass.getSearchEngineIndexManager().start();
 
-	}
+        // gps.getIndexCompass().getSearchEngineIndexManager().replaceIndex(
+        // gps.getIndexCompass().getSearchEngineIndexManager(),
+        // new SearchEngineIndexManager.ReplaceIndexCallback() {
+        // public void buildIndexIfNeeded()
+        // throws SearchEngineException {
+        // try{
+        // //Copy must be put in the call back. If not put here then the files just get removed. when replace index is
+        // called.
+        // FileUtils.copyDirectory(srcDir, targetDir);
+        // }
+        // catch(IOException ioe){
+        // log.error("Unable to copy" + srcDir.getAbsolutePath() + " to " + targetDir.getAbsolutePath());
+        // }
+        // }
+        // });
 
-	/**
-	 * "Turning on" means adding the compass context to our spring context, as
-	 * well as creating the compass index directory. This does not turn on index
-	 * mirroring to automatically update the index while persisting data (to a
-	 * database). To do this, call enableIndexMirroring after running this.
-	 * 
-	 * @param testEnv
-	 * @param paths
-	 */
-	public static void turnOnCompass(boolean testEnv, List<String> paths) {
-		deleteCompassLocks();
-		if (testEnv) {
-			addCompassTestContext(paths);
-		} else {
-			addCompassContext(paths);
-		}
+    }
 
-	}
+    /**
+     * "Turning on" means adding the compass context to our spring context, as well as creating the compass index
+     * directory. This does not turn on index mirroring to automatically update the index while persisting data (to a
+     * database). To do this, call enableIndexMirroring after running this.
+     * 
+     * @param testEnv
+     * @param paths
+     */
+    public static void turnOnCompass( boolean testEnv, List<String> paths ) {
+        deleteCompassLocks();
+        if ( testEnv ) {
+            addCompassTestContext( paths );
+        } else {
+            addCompassContext( paths );
+        }
 
-	/**
-	 * Add the compass contexts to the other spring contexts
-	 * 
-	 * @param paths
-	 */
-	private static void addCompassContext(List<String> paths) {
-		paths.add("classpath*:ubic/gemma/applicationContext-search.xml");
-	}
+    }
 
-	/**
-	 * Add the compass test contexts to the other spring contexts.
-	 * 
-	 * @param paths
-	 */
-	private static void addCompassTestContext(List<String> paths) {
-		paths.add("classpath*:ubic/gemma/applicationContext-search.xml");
-	}
+    /**
+     * Add the compass contexts to the other spring contexts
+     * 
+     * @param paths
+     */
+    private static void addCompassContext( List<String> paths ) {
+        paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );
+    }
+
+    /**
+     * Add the compass test contexts to the other spring contexts.
+     * 
+     * @param paths
+     */
+    private static void addCompassTestContext( List<String> paths ) {
+        paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );
+    }
 }
