@@ -166,6 +166,58 @@ public class VisualizationValueObject {
         }
     }
 
+    
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes,
+            Collection<Long> validatedProbeList, double minPvalue ) {
+        this();
+
+        int i = 0;
+        if ( genes.size() > colors.length ) {
+            // / FIXME
+        }
+        for ( Gene g : genes ) {
+            log.debug( "Gene: " + g.getName() + " color=" + colors[i] );
+            colorMap.put( g.getId(), colors[i] );
+            i++;
+        }
+
+        for ( DoubleVectorValueObject vector : vectors ) {
+            if ( this.eevo == null ) {
+                setEEwithPvalue( vector.getExpressionExperiment(), minPvalue );
+            } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
+                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "
+                        + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
+            }
+
+            String color = null;
+            // log.info( vector + " GENES=" + StringUtils.join( vector.getGenes(), ',' ) );
+            for ( Gene g : genes ) {
+                if ( vector.getGenes().contains( g ) ) {
+                    if ( color != null ) {
+                        /*
+                         * Special color to denote probes that hyb to both genes.
+                         */
+                        color = "#CCCCCC";
+                        if ( log.isDebugEnabled() )
+                            log.debug( "EE: " + eevo.getId() + "; Probe: " + vector.getDesignElement().getName()
+                                    + " (id=" + vector.getDesignElement().getId()
+                                    + ") matches more than one of the genes" );
+                    } else {
+                        color = colorMap.get( g.getId() );
+                    }
+                }
+            }
+
+            int valid = 1;
+            if ( validatedProbeList != null && validatedProbeList.contains( vector.getDesignElement().getId() ) ) {
+                valid = 2;
+            }
+
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid );
+            profiles.add( profile );
+
+        }
+    }
     /**
      * @param dvvo
      */
@@ -186,7 +238,6 @@ public class VisualizationValueObject {
 
     public void setEE( ExpressionExperiment ee ) {
         this.eevo = new ExpressionExperimentValueObject();
-        this.eevo = new ExpressionExperimentValueObject();
         this.eevo.setId( ee.getId() );
         this.eevo.setName( ee.getName() );
         this.eevo.setShortName( ee.getShortName() );
@@ -197,6 +248,13 @@ public class VisualizationValueObject {
         this.eevo = eevo;
     }
 
+    public void setEEwithPvalue( ExpressionExperiment ee, double minP ) {
+        setEE(ee);
+        this.eevo.setMinPvalue( minP );
+    }
+
+    
+    
     public Collection<GeneExpressionProfile> getProfiles() {
         return profiles;
     }
