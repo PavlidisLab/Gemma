@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BaseFormController;
@@ -160,16 +161,24 @@ public class DEDVController extends BaseFormController {
 
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
-
-        Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = getProbeDiffExValidation( ees,
-                genes, threshold, factorMap, dedvs );
-
+       
         watch.stop();
         Long time = watch.getTime();
 
         log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
                 + " genes in " + time + " ms." );
+        
+        watch = new StopWatch();
+        watch.start();
+        
+        Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = getProbeDiffExValidation( ees,
+                genes, threshold, factorMap, dedvs );
 
+        watch.stop();
+        time = watch.getTime();
+        
+        log.info( "Retrieved " + validatedProbes.size() + " valid probes in " + time + " ms." );
+        
         return makeDiffVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes );
 
     }
@@ -493,6 +502,10 @@ public class DEDVController extends BaseFormController {
     private VisualizationValueObject[] makeDiffVisCollection( Collection<DoubleVectorValueObject> dedvs,
             List<Gene> genes, Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes ) {
 
+        Long time;
+        StopWatch watch = new StopWatch();
+        watch.start();
+
         Map<Long, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<Long, Collection<DoubleVectorValueObject>>();
 
         // Organize by expression experiment
@@ -503,6 +516,16 @@ public class DEDVController extends BaseFormController {
             }
             vvoMap.get( ee.getId() ).add( dvvo );
         }
+        
+        watch.stop();
+        time = watch.getTime();
+
+        if ( time > 1000 ) {
+            log.info( "Making vis collection - Organizing DEDVS by Expression experimen took: " + time );
+        }
+
+        watch = new StopWatch();
+        watch.start();
 
         class EE2PValue implements Comparable {
             Long EEId;
@@ -557,23 +580,41 @@ public class DEDVController extends BaseFormController {
 
         Collections.sort( sortedEE );
 
+        watch.stop();
+        time = watch.getTime();
+
+        if ( time > 1000 ) {
+            log.info( "Making vis collection - Sorted DEDVS by lowest p value for Expression experiment took: " + time );
+        }
+        
+        
+        watch = new StopWatch();
+        watch.start();
+
         VisualizationValueObject[] result = new VisualizationValueObject[vvoMap.keySet().size()];
 
         // Create collection of visualizationValueObject for flotr on js side
         int i = 0;
         for ( EE2PValue ee2P : sortedEE ) {
             Collection<Long> validatedProbeIdList = new ArrayList<Long>();
-            if ( validatedProbes.get( ee2P.getEEId() ) != null && !validatedProbes.get( ee2P.getEEId() ).isEmpty() ) {
+            if ( validatedProbes.get(ee2P.getEEId()) != null && !validatedProbes.get(ee2P.getEEId()).isEmpty() ) {
                 for ( DifferentialExpressionValueObject devo : validatedProbes.get( ee2P.getEEId() ) ) {
                     validatedProbeIdList.add( devo.getProbeId() );
                 }
             }
+            
             VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ), genes,
-                    validatedProbeIdList );
+                    validatedProbeIdList, ee2P.getPValue() );
             result[i] = vvo;
             i++;
         }
 
+        watch.stop();
+        time = watch.getTime();
+
+        if ( time > 1000 ) {
+            log.info( "Making vis collection - Created vis value objects in: " + time );
+        }
         return result;
 
     }
