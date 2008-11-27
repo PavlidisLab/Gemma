@@ -249,4 +249,16 @@ public class CountingMap<K> implements Map<K, Integer> {
             return map.get( key2 ).compareTo( map.get( key1 ) );
         }
     }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder( "[" );
+        boolean first = true;
+        for ( K key : keySet() ) {
+            if (!first) sb.append(", ");
+            sb.append( key.toString() + "=" + map.get( key ) );
+            first = false;
+        }
+        return sb.toString() + "]";
+    }
+
 }
