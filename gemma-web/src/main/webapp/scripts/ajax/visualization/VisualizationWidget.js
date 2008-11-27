@@ -214,7 +214,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 			tpl : new Gemma.ProfileTemplate(
 					'<tpl for="."><tpl for="eevo">',
-					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> {shortName} </div>',
+					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName} </b></div>',
 					'</tpl></tpl>'),
 
 			listeners : {
@@ -484,7 +484,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 			tpl : new Gemma.ProfileTemplate(
 					'<tpl for="."><tpl for="eevo">',
-					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> {shortName} </div>',
+					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b>:  <i>{[sprintf("%.3e", values.minPvalue)]}  </i></div>',
 					'</tpl></tpl>'),
 
 			listeners : {
