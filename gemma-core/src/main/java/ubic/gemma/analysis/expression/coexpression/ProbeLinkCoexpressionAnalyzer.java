@@ -26,15 +26,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
@@ -59,48 +54,22 @@ import ubic.gemma.ontology.OntologyTerm;
  * @author paul
  * @version $Id$
  */
-public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
+public class ProbeLinkCoexpressionAnalyzer {
 
-    private static final String EES_TESTED_GENES_CACHE_NAME = "EEsTestedGenesCache";
     private static Log log = LogFactory.getLog( ProbeLinkCoexpressionAnalyzer.class.getName() );
     private static final int MAX_GENES_TO_COMPUTE_GOOVERLAP = 100;
     private static final int MAX_GENES_TO_COMPUTE_EESTESTEDIN = 200;
-
-    private static final int EETESTEDGENE_CACHE_SIZE = 1000; // number of data sets.
 
     private GeneService geneService;
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private GeneOntologyService geneOntologyService;
     private ExpressionExperimentService expressionExperimentService;
 
-    private Cache eetestedGeneCache;
-
-    /*
+    /**
      * Gene->EEs tested in. This is a cache that _should_ be safe to use, as it is only used in batch processing, which
      * uses a 'short-lived' spring context build on the command line -- not the web application.
      */
     private Map<Long, List<Boolean>> genesTestedIn = new HashMap<Long, List<Boolean>>();
-
-    public void afterPropertiesSet() throws Exception {
-
-        try {
-            CacheManager manager = CacheManager.getInstance();
-
-            if ( manager.cacheExists( EES_TESTED_GENES_CACHE_NAME ) ) {
-                return;
-            }
-
-            eetestedGeneCache = new Cache( EES_TESTED_GENES_CACHE_NAME, EETESTEDGENE_CACHE_SIZE, /* no disk overflow */
-            false, /* eternal */
-            true, 60000, 60000 );
-
-            manager.addCache( eetestedGeneCache );
-            eetestedGeneCache = manager.getCache( EES_TESTED_GENES_CACHE_NAME );
-
-        } catch ( CacheException e ) {
-            throw new RuntimeException( e );
-        }
-    }
 
     /**
      * @param genes
@@ -401,7 +370,6 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      *        tested in.
      * @param coexpressionData information on the genes needed to be examined.
      */
-    @SuppressWarnings("unchecked")
     private void computeEesTestedInBatch( Collection<BioAssaySet> ees, List<CoexpressionValueObject> coexpressionData ) {
 
         StopWatch timer = new StopWatch();
@@ -412,80 +380,73 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         }
 
         /*
-         * Note: we assume this is actually constant.
+         * Note: we assume this is actually constant as we build a cache based on it. Small risk.
          */
         Map<Long, Integer> eeIdOrder = ProbeLinkCoexpressionAnalyzer.getOrderingMap( ees );
+        assert eeIdOrder.size() == ees.size();
 
         /*
-         * This is a bottleneck, because there are often >300 ees and >1000 cvos, and each EE tests >20000 genes.
-         * Therefore we try hard not to iterate over all the CVOs*EEs more than we need to.
+         * This is a potential bottleneck, because there are often >300 ees and >1000 cvos, and each EE tests >20000
+         * genes. Therefore we try hard not to iterate over all the CVOEEs more than we need to. So this is coded very
+         * carefully.
          */
-        int slowCount = 0;
         for ( CoexpressionValueObject cvo : coexpressionData ) {
 
             Long coexGeneId = cvo.getGeneId();
             Long queryGeneId = cvo.getQueryGene().getId();
 
-            if ( !( genesTestedIn.containsKey( coexGeneId ) && genesTestedIn.containsKey( queryGeneId ) ) ) {
-
-                slowCount++;
+            /*
+             * This condition is, pretty much, only true once in practice. That's because the first entry populates
+             * genesTestedIn for all the genes tested in any of the data sets, which is essentially all genes.
+             */
+            if ( !genesTestedIn.containsKey( coexGeneId ) || !genesTestedIn.containsKey( queryGeneId ) ) {
 
                 /*
-                 * This inner loop is slow; but once we've seen a gene, we don't have to repeat it.
+                 * This inner loop is slow; but once we've seen a gene, we don't have to repeat it. We used to cache the
+                 * ee->gene relationship, but doing it the other way around yields must faster code.
                  */
                 for ( BioAssaySet ee : ees ) {
-                    Element element = this.eetestedGeneCache.get( ee.getId() );
-                    Collection<Long> genes;
-                    if ( element != null ) {
-                        if ( log.isDebugEnabled() ) log.debug( "Cache hit" );
-                        genes = ( Collection<Long> ) element.getValue();
-                    } else {
-                        /*
-                         * Create the cache for a specific expression experiment: which genes were tested. This is done
-                         * once per EE.
-                         */
-                        genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
-                        eetestedGeneCache.put( new Element( ee.getId(), genes ) );
-                        log.info( "Cached " + genes.size() + " genes assayed by " + ee );
-                    }
+                    Collection<Long> genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
 
                     // inverted map of gene -> ees tested in.
+                    Integer indexOfEEInAr = eeIdOrder.get( ee.getId() );
                     for ( Long geneId : genes ) {
                         if ( !genesTestedIn.containsKey( geneId ) ) {
                             genesTestedIn.put( geneId, new ArrayList<Boolean>() );
+                            // initialize the boolean array for this gene.
                             for ( int i = 0; i < ees.size(); i++ ) {
                                 genesTestedIn.get( geneId ).add( false );
                             }
                         }
-                        genesTestedIn.get( geneId ).set( eeIdOrder.get( ee.getId() ), true );
+                        genesTestedIn.get( geneId ).set( indexOfEEInAr, true );
                     }
                 }
             }
 
             /*
-             * This is the most efficient way I know to check whether two collections have the same items. However, this
-             * still requires iterating over the collection, and this would be necessary even with bitwise operations --
-             * unless we never converted it back from bits. This might make sense since all we end up storing is the
-             * bits.
+             * This is the most efficient way I know to get common items out of two arrays: map them to arrays of
+             * booleans. Bits would work just as well but this is easier (fast bitwise AND would not really buy much)
              */
             List<Boolean> eesTestingQuery = genesTestedIn.get( queryGeneId );
             List<Boolean> eesTestingTarget = genesTestedIn.get( coexGeneId );
+            log.info( cvo.getQueryGene().getId() + " " + cvo.getGeneId() + " testedin "
+                    + StringUtils.join( eesTestingQuery, " " ) + ":" + StringUtils.join( eesTestingTarget, " " ) );
 
             assert eesTestingQuery.size() == eesTestingTarget.size();
 
-            for ( Long eeid : eeIdOrder.keySet() ) {
+            for ( BioAssaySet ee : ees ) {
+                Long eeid = ee.getId();
                 Integer index = eeIdOrder.get( eeid );
+                /*
+                 * Both the query and the target have to have been tested in the given experiment.
+                 */
                 if ( eesTestingQuery.get( index ) && eesTestingTarget.get( index ) ) {
                     cvo.getDatasetsTestedIn().add( eeid );
                 }
             }
         }
 
-        if ( slowCount > 0 ) {
-            log.info( "Had to fetch and fill in 'ees tested' data for " + slowCount + " coexpression objects" );
-        }
-
-        if ( timer.getTime() > 1000 ) {
+        if ( timer.getTime() > 100 ) {
             log.info( "Compute EEs tested in (batch ): " + timer.getTime() + "ms" );
         }
 
@@ -509,6 +470,8 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
             List<CoexpressionValueObject> coexpressionData ) {
         Collection<Long> coexGeneIds = new HashSet<Long>();
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         int i = 0;
         Map<Long, CoexpressionValueObject> gmap = new HashMap<Long, CoexpressionValueObject>();
 
@@ -533,6 +496,10 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
                 ids.add( eeid );
             }
             cvo.setDatasetsTestedIn( ids );
+        }
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "computeEesTestedIn: " + timer.getTime() + "ms" );
         }
     }
 
