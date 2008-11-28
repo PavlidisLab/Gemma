@@ -249,12 +249,13 @@ public class ArrayDesignWrapper extends TableDecorator {
      */
     public String getExpressionExperimentCountLink() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( object.getExpressionExperimentCount() != null && object.getExpressionExperimentCount() > 0 ) {
-            long id = object.getId();
+        if (object != null && object.getExpressionExperimentCount() != null && object.getExpressionExperimentCount() > 0 ) {
+            Long id = object.getId();
 
-            return object.getExpressionExperimentCount()
-                    + " <a title=\"Click for details\" href=\"showExpressionExperimentsFromArrayDesign.html?id=" + id
-                    + "\">" + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
+            return object.getExpressionExperimentCount().toString();
+//This string doesn't work. Sorting by expression experiments used bombs (mosly likely because of the comparator is expecting a number)            
+//                    + " <a title=\"Click for details\" href=\"showExpressionExperimentsFromArrayDesign.html?id=5"
+//                    + "\">" + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
         }
 
         return "0";

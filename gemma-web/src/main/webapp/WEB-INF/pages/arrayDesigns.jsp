@@ -97,8 +97,6 @@
 		onclick="return confirm('Regenerate report for all platforms?');"> Regenerate this report</a>
 </security:authorize>
 
-<script type='text/javascript' src='/Gemma/scripts/prototype.js'></script>
-<script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 
 <display:table name="arrayDesigns" sort="list" requestURI="" id="arrayDesignList" pagesize="50"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
