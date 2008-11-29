@@ -44,21 +44,9 @@ public class CoexpressionCacheValueObject implements Serializable {
     private double score;
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        CoexpressionCacheValueObject other = ( CoexpressionCacheValueObject ) obj;
-        if ( coexpressedProbe == null ) {
-            if ( other.coexpressedProbe != null ) return false;
-        } else if ( !coexpressedProbe.equals( other.coexpressedProbe ) ) return false;
-        if ( expressionExperiment == null ) {
-            if ( other.expressionExperiment != null ) return false;
-        } else if ( !expressionExperiment.equals( other.expressionExperiment ) ) return false;
-        if ( queryProbe == null ) {
-            if ( other.queryProbe != null ) return false;
-        } else if ( !queryProbe.equals( other.queryProbe ) ) return false;
-        return true;
+    public String toString() {
+        return this.queryGene + " coexpressed with gene=" + this.coexpressedGene + " in " + expressionExperiment
+                + " with probe " + coexpressedProbe;
     }
 
     public Long getCoexpressedGene() {
@@ -93,14 +81,48 @@ public class CoexpressionCacheValueObject implements Serializable {
         return score;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ( ( coexpressedGene == null ) ? 0 : coexpressedGene.hashCode() );
         result = prime * result + ( ( coexpressedProbe == null ) ? 0 : coexpressedProbe.hashCode() );
         result = prime * result + ( ( expressionExperiment == null ) ? 0 : expressionExperiment.hashCode() );
+        result = prime * result + ( ( queryGene == null ) ? 0 : queryGene.hashCode() );
         result = prime * result + ( ( queryProbe == null ) ? 0 : queryProbe.hashCode() );
         return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        CoexpressionCacheValueObject other = ( CoexpressionCacheValueObject ) obj;
+        if ( coexpressedGene == null ) {
+            if ( other.coexpressedGene != null ) return false;
+        } else if ( !coexpressedGene.equals( other.coexpressedGene ) ) return false;
+        if ( coexpressedProbe == null ) {
+            if ( other.coexpressedProbe != null ) return false;
+        } else if ( !coexpressedProbe.equals( other.coexpressedProbe ) ) return false;
+        if ( expressionExperiment == null ) {
+            if ( other.expressionExperiment != null ) return false;
+        } else if ( !expressionExperiment.equals( other.expressionExperiment ) ) return false;
+        if ( queryGene == null ) {
+            if ( other.queryGene != null ) return false;
+        } else if ( !queryGene.equals( other.queryGene ) ) return false;
+        if ( queryProbe == null ) {
+            if ( other.queryProbe != null ) return false;
+        } else if ( !queryProbe.equals( other.queryProbe ) ) return false;
+        return true;
     }
 
     public void setCoexpressedGene( Long coexpressedGene ) {

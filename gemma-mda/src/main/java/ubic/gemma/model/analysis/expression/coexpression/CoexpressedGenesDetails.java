@@ -106,6 +106,10 @@ public class CoexpressedGenesDetails {
      * @return
      */
     public CoexpressionValueObject add( CoexpressionValueObject value ) {
+        if ( coexpressionData.containsKey( value.getGeneId() ) ) {
+            // FIXME this seems like it would be an error.
+            if ( log.isDebugEnabled() ) log.debug( "Clobbering when adding " + value );
+        }
         return coexpressionData.put( value.getGeneId(), value );
     }
 
@@ -133,7 +137,7 @@ public class CoexpressedGenesDetails {
         this.expressionExperimentProbe2GeneMaps.put( eeID, probe2geneMap );
     }
 
-    public boolean containsKey( Object key ) {
+    public boolean containsKey( Long key ) {
         return coexpressionData.containsKey( key );
     }
 

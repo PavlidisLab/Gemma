@@ -342,7 +342,7 @@ public class GeneCoexpressionService {
 
                 // The thaw needs to be done here because building the value object
                 // calls methods that require the gene's info (setSortKey, hashCode)
-               //  geneService.thaw( foundGene );
+                // geneService.thaw( foundGene );
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
@@ -499,6 +499,7 @@ public class GeneCoexpressionService {
 
         for ( CoexpressionValueObject cvo : coexp.getCoexpressionData( stringency ) ) {
             if ( queryGenesOnly && !geneIds.contains( cvo.getGeneId() ) ) continue;
+
             CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
             ecvo.setQueryGene( queryGene );
             ecvo.setFoundGene( new SimpleGene( cvo.getGeneId(), cvo.getGeneName(), cvo.getGeneOfficialName() ) );

@@ -91,6 +91,7 @@ public class Probe2ProbeCoexpressionCache {
      * @param eeID
      * @param coExVOForCache
      */
+    @SuppressWarnings("unchecked")
     public static void addToCache( Long eeID, CoexpressionCacheValueObject coExVOForCache ) {
 
         Cache c = getCache( eeID );
@@ -105,6 +106,21 @@ public class Probe2ProbeCoexpressionCache {
             cachedValues.add( coExVOForCache );
             c.put( new Element( queryGene, cachedValues ) );
         }
+    }
+
+    /**
+     * @param eeID
+     * @param queryGene
+     * @return null if there are no cached results.
+     */
+    @SuppressWarnings("unchecked")
+    public static Collection<CoexpressionCacheValueObject> retrieve( Long eeID, Gene queryGene ) {
+        Cache c = getCache( eeID );
+        Element element = c.get( queryGene );
+        if ( element != null ) {
+            return ( Collection<CoexpressionCacheValueObject> ) element.getValue();
+        }
+        return null;
 
     }
 
@@ -132,24 +148,21 @@ public class Probe2ProbeCoexpressionCache {
             return;
         }
 
-        int maxElements = ConfigUtils.getInt( "gemma.cache.vectors.maxelements",
+        int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = ConfigUtils.getInt( "gemma.cache.vectors.timetolive",
+        int timeToLive = ConfigUtils.getInt( "gemma.cache.probe2probe.timetolive",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = ConfigUtils.getInt( "gemma.cache.vectors.timetoidle",
+        int timeToIdle = ConfigUtils.getInt( "gemma.cache.probe2probe.timetoidle",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
 
-        boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.vectors.usedisk",
+        boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.probe2probe.usedisk",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK );
 
-        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.vectors.eternal",
+        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL );
 
         String cacheName = getCacheName( e );
 
-        /*
-         * Create a cache for the probe data.s
-         */
         CacheManager manager = CacheManager.getInstance();
 
         if ( !manager.cacheExists( cacheName ) ) {

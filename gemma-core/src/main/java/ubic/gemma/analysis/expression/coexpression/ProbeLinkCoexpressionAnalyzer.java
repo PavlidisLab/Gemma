@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -343,22 +342,27 @@ public class ProbeLinkCoexpressionAnalyzer {
     }
 
     /**
-     * @param experimentsAnalyzed
-     * @return Map of EE IDs to the location in the vector.
+     * Provide a consistent mapping of experiments that can be used to index a vector. The actual ordering is not
+     * guaranteed to be anything in particular, just that repeated calls to this method with the same experiments will
+     * yield the same mapping.
+     * 
+     * @param experiments
+     * @return Map of EE IDs to an index, where the index values are from 0 ... N-1 where N is the number of
+     *         experiments.
      */
-    public static Map<Long, Integer> getOrderingMap( Collection<BioAssaySet> experimentsAnalyzed ) {
+    public static Map<Long, Integer> getOrderingMap( Collection<BioAssaySet> experiments ) {
         List<Long> eeIds = new ArrayList<Long>();
-        for ( BioAssaySet ee : experimentsAnalyzed ) {
+        for ( BioAssaySet ee : experiments ) {
             eeIds.add( ee.getId() );
         }
         Collections.sort( eeIds );
-        Map<Long, Integer> eeIdOrder = new HashMap<Long, Integer>();
-        int location = 0;
+        Map<Long, Integer> result = new HashMap<Long, Integer>();
+        int index = 0;
         for ( Long id : eeIds ) {
-            eeIdOrder.put( id, location );
-            location++;
+            result.put( id, index );
+            index++;
         }
-        return eeIdOrder;
+        return result;
     }
 
     /**
@@ -382,8 +386,8 @@ public class ProbeLinkCoexpressionAnalyzer {
         /*
          * Note: we assume this is actually constant as we build a cache based on it. Small risk.
          */
-        Map<Long, Integer> eeIdOrder = ProbeLinkCoexpressionAnalyzer.getOrderingMap( ees );
-        assert eeIdOrder.size() == ees.size();
+        Map<Long, Integer> eeIndexMap = ProbeLinkCoexpressionAnalyzer.getOrderingMap( ees );
+        assert eeIndexMap.size() == ees.size();
 
         /*
          * This is a potential bottleneck, because there are often >300 ees and >1000 cvos, and each EE tests >20000
@@ -409,7 +413,7 @@ public class ProbeLinkCoexpressionAnalyzer {
                     Collection<Long> genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
 
                     // inverted map of gene -> ees tested in.
-                    Integer indexOfEEInAr = eeIdOrder.get( ee.getId() );
+                    Integer indexOfEEInAr = eeIndexMap.get( ee.getId() );
                     for ( Long geneId : genes ) {
                         if ( !genesTestedIn.containsKey( geneId ) ) {
                             genesTestedIn.put( geneId, new ArrayList<Boolean>() );
@@ -429,14 +433,14 @@ public class ProbeLinkCoexpressionAnalyzer {
              */
             List<Boolean> eesTestingQuery = genesTestedIn.get( queryGeneId );
             List<Boolean> eesTestingTarget = genesTestedIn.get( coexGeneId );
-            log.info( cvo.getQueryGene().getId() + " " + cvo.getGeneId() + " testedin "
-                    + StringUtils.join( eesTestingQuery, " " ) + ":" + StringUtils.join( eesTestingTarget, " " ) );
+            // log.info( cvo.getQueryGene().getId() + " " + cvo.getGeneId() + " testedin "
+            // + StringUtils.join( eesTestingQuery, " " ) + ":" + StringUtils.join( eesTestingTarget, " " ) );
 
             assert eesTestingQuery.size() == eesTestingTarget.size();
 
             for ( BioAssaySet ee : ees ) {
                 Long eeid = ee.getId();
-                Integer index = eeIdOrder.get( eeid );
+                Integer index = eeIndexMap.get( eeid );
                 /*
                  * Both the query and the target have to have been tested in the given experiment.
                  */

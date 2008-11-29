@@ -113,35 +113,36 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * @param id
+     * @param coexpressedGeneId
      * @return
      */
-    public boolean contains( Long id ) {
-        return knownGeneCoexpressionData.containsKey( id ) || predictedCoexpressionData.containsKey( id )
-                || probeAlignedRegionCoexpressionData.containsKey( id );
+    public boolean contains( Long coexpressedGeneId ) {
+        return knownGeneCoexpressionData.containsKey( coexpressedGeneId )
+                || predictedCoexpressionData.containsKey( coexpressedGeneId )
+                || probeAlignedRegionCoexpressionData.containsKey( coexpressedGeneId );
     }
 
     /**
-     * @param geneId
-     * @return
+     * @param coexpressedGeneId
+     * @return coexpression results pertaining to the given gene, if any; or null otherwise
      */
-    public CoexpressionValueObject get( Long geneId ) {
-        if ( !this.contains( geneId ) ) return null;
+    public CoexpressionValueObject get( Long coexpressedGeneId ) {
+        if ( !this.contains( coexpressedGeneId ) ) return null;
 
         CoexpressionValueObject result = null;
 
-        if ( knownGeneCoexpressionData.containsKey( geneId ) ) {
-            result = knownGeneCoexpressionData.get( geneId );
+        if ( knownGeneCoexpressionData.containsKey( coexpressedGeneId ) ) {
+            result = knownGeneCoexpressionData.get( coexpressedGeneId );
         }
 
-        if ( predictedCoexpressionData.containsKey( geneId ) ) {
+        if ( predictedCoexpressionData.containsKey( coexpressedGeneId ) ) {
             assert result == null;
-            result = predictedCoexpressionData.get( geneId );
+            result = predictedCoexpressionData.get( coexpressedGeneId );
         }
 
-        if ( probeAlignedRegionCoexpressionData.containsKey( geneId ) ) {
+        if ( probeAlignedRegionCoexpressionData.containsKey( coexpressedGeneId ) ) {
             assert result == null;
-            result = probeAlignedRegionCoexpressionData.get( geneId );
+            result = probeAlignedRegionCoexpressionData.get( coexpressedGeneId );
 
         }
         return result;

@@ -29,9 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.Element;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -385,7 +382,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return Collection of CoexpressionCollectionValueObjects. This needs to be 'postprocessed' before it has all the
      *         data needed for web display.
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected CoexpressionCollectionValueObject handleGetCoexpressedGenes( final Gene gene,
             Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly ) throws Exception {
@@ -411,23 +407,26 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * Check cache first.
          */
         Collection<BioAssaySet> eesToSearch = new HashSet<BioAssaySet>();
-        // Map of EEid to COEXP for the query gene.
         Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults = new HashMap<Long, Collection<CoexpressionCacheValueObject>>();
         for ( BioAssaySet ee : ees ) {
-            Cache c = Probe2ProbeCoexpressionCache.getCache( ee.getId() );
-            Element element = c.get( gene );
-            if ( element != null ) {
-                Collection<CoexpressionCacheValueObject> eeResults = ( Collection<CoexpressionCacheValueObject> ) element
-                        .getObjectValue();
+            Collection<CoexpressionCacheValueObject> eeResults = Probe2ProbeCoexpressionCache.retrieve( ee.getId(),
+                    gene );
+
+            if ( eeResults != null ) {
                 cachedResults.put( ee.getId(), eeResults );
-                log.debug( "Cache hit!" );
+                // for ( CoexpressionCacheValueObject cc : eeResults ) {
+                // if ( cc.getCoexpressedGene() == 25670L ) {
+                // log.info( "Cache hit: " + cc );
+                // }
+                // }
+                log.debug( "Cache hit! for ee=" + ee.getId() );
             } else {
                 eesToSearch.add( ee );
             }
         }
         overallWatch.stop();
-        if ( overallWatch.getTime() > 1000 ) {
-            log.info( "Cache check: " + overallWatch + "ms" );
+        if ( overallWatch.getTime() > 100 ) {
+            log.info( "Probe2probe cache check: " + overallWatch.getTime() + "ms" );
         }
         overallWatch.reset();
         overallWatch.start();
@@ -445,17 +444,19 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             // This is the actual business of querying the database.
             processCoexpQuery( gene, queryObject, coexpressions );
         }
+
         overallWatch.stop();
         if ( overallWatch.getTime() > 1000 ) {
             log.info( "Raw query: " + overallWatch.getTime() + "ms" );
         }
+
         coexpressions.setDbQuerySeconds( overallWatch.getTime() );
         overallWatch.reset();
         overallWatch.start();
         if ( cachedResults.size() > 0 ) {
             mergeCachedCoexpressionResults( coexpressions, cachedResults );
             overallWatch.stop();
-            if ( overallWatch.getTime() > 1000 ) {
+            if ( overallWatch.getTime() > 100 ) {
                 log.info( "Merge cached: " + overallWatch.getTime() + "ms" );
             }
             overallWatch.reset();
@@ -500,6 +501,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( timer.getTime() > 1000 ) {
             log.info( "Specificity postprocessing: " + timer.getTime() + "ms" );
         }
+
     }
 
     /**
@@ -770,6 +772,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         coExVO.addScore( eeID, score, pvalue, queryProbe, coexpressedProbe );
 
         coexpressions.initializeSpecificityDataStructure( eeID, queryProbe );
+
     }
 
     /**
@@ -945,7 +948,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " WHERE "
                 + eeClause + knownGeneClause + " gcIn.GENE=:id ";
 
-        // AND gcOut.GENE <> :id //Omit , see below!
+        // AND gcOut.GENE <> :id // Omit , see below!
 
         /*
          * Important Implementation Note: The clause to exclude self-hits actually causes problems. When a self-match
@@ -1078,12 +1081,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults ) {
         for ( Long eeid : cachedResults.keySet() ) {
             Collection<CoexpressionCacheValueObject> cache = cachedResults.get( eeid );
+
             for ( CoexpressionCacheValueObject cachedCVO : cache ) {
                 assert cachedCVO.getQueryProbe() != null;
                 assert cachedCVO.getCoexpressedProbe() != null;
                 addResult( coexpressions, eeid, cachedCVO.getQueryGene(), cachedCVO.getQueryProbe(), cachedCVO
                         .getPvalue(), cachedCVO.getScore(), cachedCVO.getCoexpressedGene(), cachedCVO.getGeneType(),
                         cachedCVO.getCoexpressedProbe() );
+
+                assert coexpressions.contains( cachedCVO.getCoexpressedGene() );
             }
         }
 
@@ -1153,6 +1159,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     }
 
+    /**
+     * @param queryGenes
+     * @param queryObject
+     * @param coexpressions
+     */
     private void processCoexpQuery( Map<Long, Gene> queryGenes, Query queryObject,
             Map<Gene, CoexpressionCollectionValueObject> coexpressions ) {
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
@@ -1162,6 +1173,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     }
 
+    /**
+     * @param queryGenes
+     * @param resultSet
+     * @param coexpressions
+     */
     private void processCoexpQueryResult( Map<Long, Gene> queryGenes, ScrollableResults resultSet,
             Map<Gene, CoexpressionCollectionValueObject> coexpressions ) {
 
@@ -1192,8 +1208,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         coExVOForCache.setPvalue( pvalue );
         coExVOForCache.setQueryProbe( queryProbe );
         coExVOForCache.setCoexpressedProbe( coexpressedProbe );
+        if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
         Probe2ProbeCoexpressionCache.addToCache( eeID, coExVOForCache );
 
+        Probe2ProbeCoexpressionCache.retrieve( eeID, coExVOForCache.getQueryGene() );
     }
 
     /**
@@ -1231,6 +1249,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         coExVOForCache.setPvalue( pvalue );
         coExVOForCache.setQueryProbe( queryProbe );
         coExVOForCache.setCoexpressedProbe( coexpressedProbe );
+        if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
+
         Probe2ProbeCoexpressionCache.addToCache( eeID, coExVOForCache );
 
     }
