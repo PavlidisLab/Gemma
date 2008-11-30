@@ -24,6 +24,7 @@ import java.util.Map;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.ConfigUtils;
 
@@ -40,7 +41,7 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ProcessedDataVectorCache {
 
-    private static final String PROBE2PROBE_COEXPRESSION_CACHE_NAME = "Probe2ProbeCache";
+    private static final String PROBE2PROBE_COEXPRESSION_CACHE_NAME_BASE = "Probe2ProbeCache";
     private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
     private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
     private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
@@ -94,7 +95,7 @@ public class ProcessedDataVectorCache {
     }
 
     private static String getCacheName( ExpressionExperiment e ) {
-        return PROBE2PROBE_COEXPRESSION_CACHE_NAME + "_" + e.getShortName() + "_" + e.getId();
+        return PROBE2PROBE_COEXPRESSION_CACHE_NAME_BASE + "_" + e.getShortName() + "_" + e.getId();
     }
 
     /**
@@ -123,14 +124,19 @@ public class ProcessedDataVectorCache {
 
         String cacheName = getCacheName( e );
 
+        String diskCacheLocation = ConfigUtils.getString( "gemma.cache.disklocation" );
+        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent" );
+
         /*
-         * Create a cache for the probe data.s
+         * Create a cache for the probe data.
          */
         CacheManager manager = CacheManager.getInstance();
 
         if ( !manager.cacheExists( cacheName ) ) {
 
-            manager.addCache( new Cache( cacheName, maxElements, overFlowToDisk, eternal, timeToLive, timeToIdle ) );
+            manager.addCache( new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LFU, overFlowToDisk,
+                    diskCacheLocation, eternal, timeToLive, timeToIdle, diskPersistent,
+                    600 /* diskExpiryThreadInterval */, null ) );
         }
 
         caches.put( e, manager.getCache( cacheName ) );

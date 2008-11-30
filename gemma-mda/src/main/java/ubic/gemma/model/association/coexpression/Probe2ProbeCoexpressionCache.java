@@ -29,6 +29,7 @@ import ubic.gemma.util.ConfigUtils;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 /**
  * Configures the cache for data vectors.
@@ -43,7 +44,7 @@ import net.sf.ehcache.Element;
  */
 public class Probe2ProbeCoexpressionCache {
 
-    private static final String PROCESSED_DATA_VECTOR_CACHE_NAME = "Probe2ProbeCache";
+    private static final String PROCESSED_DATA_VECTOR_CACHE_NAME_BASE = "Probe2ProbeCache";
     private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
     private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
     private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
@@ -57,7 +58,7 @@ public class Probe2ProbeCoexpressionCache {
     private static final Map<Long, Cache> caches = new HashMap<Long, Cache>();
 
     private static String getCacheName( Long id ) {
-        return PROCESSED_DATA_VECTOR_CACHE_NAME + "_" + id;
+        return PROCESSED_DATA_VECTOR_CACHE_NAME_BASE + "_" + id;
     }
 
     /**
@@ -148,6 +149,10 @@ public class Probe2ProbeCoexpressionCache {
             return;
         }
 
+        /*
+         * TODO: allow disabling of cache.
+         */
+
         int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
         int timeToLive = ConfigUtils.getInt( "gemma.cache.probe2probe.timetolive",
@@ -161,13 +166,18 @@ public class Probe2ProbeCoexpressionCache {
         boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL );
 
+        String diskCacheLocation = ConfigUtils.getString( "gemma.cache.disklocation", "java.io.tmpdir" );
+        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false );
+
         String cacheName = getCacheName( e );
 
         CacheManager manager = CacheManager.getInstance();
 
         if ( !manager.cacheExists( cacheName ) ) {
 
-            manager.addCache( new Cache( cacheName, maxElements, overFlowToDisk, eternal, timeToLive, timeToIdle ) );
+            manager.addCache( new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LFU, overFlowToDisk,
+                    diskCacheLocation, eternal, timeToLive, timeToIdle, diskPersistent,
+                    600 /* diskExpiryThreadInterval */, null ) );
         }
         caches.put( e, manager.getCache( cacheName ) );
 

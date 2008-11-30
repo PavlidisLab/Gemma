@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.RClient;
 import ubic.basecode.util.RConnectionFactory;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * A class that encapsulates a connection to R
@@ -38,12 +39,22 @@ public abstract class RCommander {
 
     protected RClient rc;
 
+    /**
+     * Gets a connection using configured host (default is localhost). Modify by setting gemma.rserve.hostname.
+     * 
+     * @throws IOException
+     */
     public RCommander() throws IOException {
-        this.init();
+        String hostname = ConfigUtils.getString( "gemma.rserve.hostname", "localhost" );
+        this.init( hostname );
     }
 
-    protected void init() throws IOException {
-        rc = RConnectionFactory.getRConnection();
+    /**
+     * @param hostName
+     * @throws IOException
+     */
+    protected void init( String hostName ) throws IOException {
+        rc = RConnectionFactory.getRConnection( hostName );
         if ( rc == null || !rc.isConnected() ) {
             throw new IOException( "Could not get an R connection" );
         }

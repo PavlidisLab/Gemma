@@ -21,6 +21,7 @@ package ubic.gemma.model.association.coexpression;
 import ubic.gemma.util.ConfigUtils;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 /**
  * Configures the cache for gene2gene coexpression.
@@ -71,6 +72,8 @@ public class Gene2GeneCoexpressionCache {
         boolean eternal = ConfigUtils.getBoolean( "gemma.cache.gene2gene.eternal",
                 GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL );
 
+        String diskCacheLocation = ConfigUtils.getString( "gemma.cache.disklocation" );
+        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent" );
         /*
          * Create a cache for the probe data.s
          */
@@ -80,10 +83,11 @@ public class Gene2GeneCoexpressionCache {
             return manager.getCache( GENE_COEXPRESSION_CACHE_NAME );
         }
 
-        cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, overFlowToDisk, eternal, timeToLive, timeToIdle );
+        cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LFU, overFlowToDisk,
+                diskCacheLocation, eternal, timeToLive, timeToIdle, diskPersistent, 600 /* diskExpiryThreadInterval */,
+                null );
 
         manager.addCache( cache );
         return manager.getCache( GENE_COEXPRESSION_CACHE_NAME );
     }
-
 }
