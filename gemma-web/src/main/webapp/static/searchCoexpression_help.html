@@ -22,6 +22,9 @@
 	<h2>
 		Step by step
 	</h2>
+	
+	<img src="images/coexpression-search.png" alt="coexpression search" />
+	
 	<h3 class="helpstep">
 		Step 1: Choose Gene(s)
 	</h3>
@@ -62,9 +65,9 @@
 	</h3> 
 	
 	<li>
-			Decide whether you need to check "Search among query genes only". If checked, Gemma will only display results for
+			Decide whether you need to check "My genes only". If checked, Gemma will only display results for
 			coexpression
-			<em>among</em> the query genes. This will obviously only work if you select more than one query gene. That is, the the
+			<em>among</em> the query genes. This will obviously only work if you select more than one query gene. That is, the
 			result genes must also be query genes. If left unchecked, you will get coexpression results for each query gene considered
 			independently. That is, leaving the box unchecked is like running multiple single-gene queries in succession, except you
 			get the results all at once.
@@ -87,6 +90,7 @@
 			sets. See the
 			<a href="http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser">Gemma wiki</a> for details about the
 			dataset chooser.
+			<img src="images/coexpression-dataset-chooser.png" alt="dataset chooser" />
 		</li>
 	</ul>
 
@@ -117,7 +121,9 @@
 	<p>
 		This table summarizes the datasets used and the links for each query gene:
 	</p>
-
+	
+	<img src="images/coexpression-summary.png" alt="summary" />
+	
 	<ul class="plainList">
 
 		<li>
@@ -153,6 +159,9 @@
 		display the contents, click on the downward arrow at the far right of the table. The table has 7 columns and is grouped by
 		query gene.
 	</p>
+	
+	<img src="images/coexpression-relevant.png" alt="relevant data" />
+	
 	<ul class="plainList">
 
 		<li>
@@ -162,18 +171,11 @@
 			Name - The longer name of the dataset participating in the co-expression search.
 		</li>
 		<li>
-			Raw Links - The number of links available in the dataset for the query gene.
-		</li>
-		<li>
 			Contributing Links - The number of links in the dataset contributing co-expression support.
 		</li>
 		<li>
 			Specific Probe - True if the dataset contains a probe that uniquely tests for the query gene. Otherwise, the data set only
 			has probes that Gemma considers as possibly detecting multiple genes.
-		</li>
-		<li>
-			Arrays - The number of different array platforms used. For example, if a data set used both HG-U133A and HG-U133B, this
-			will be shown as '2'.
 		</li>
 		<li>
 			Assays - The number of assays (samples) in the dataset.
@@ -185,15 +187,20 @@
 		Coexpressed genes
 	</h4>
 	<p>
-		The co-expressed gene table columns show:
+		The co-expressed gene table columns show the information detailed below.
 	</p>
+	
+	<img src="images/coexpression-gene-results.png" alt="coexpressed genes" />
+		
 	<ul class="plainList">
-
-
 		<li>
-			Query Gene - The gene for which the tool is searching for co-expression. This is only displayed by default if you searched
-			for more than one query gene.
+			Details - Probe level details for the gene, including supporting datasets and differential expression results for each probe
+			assaying to the gene.
 		</li>
+		<li>
+			Visualize - Visualize the expression profile of the query gene with the coexpressed gene.
+		</li>
+		<img src="images/coexpression-expression-profiles.png" alt="expression profiles" />
 		<li>
 			Coexpressed Gene - The gene that is co-expressed with the query gene. Each gene has a icon which can be used to make it
 			the query gene. The symbol for the gene is a link to the Gemma details page for the gene.
@@ -228,12 +235,7 @@
 			</li> </span>
 		<img src="images/ee-spark.gif" alt="experiment sparks" />
 
-		<li>
-			An additional column containing a '+' is displayed (on the left by default). Clicking on the '+' will show the list of
-			experiments 'supporting' coexpression. A second tab in the expanded region will show differential expression results for
-			the gene, if available.
-		</li>
-
+<Not-Set>
 	</ul>
 	
 	<h2>Downloading or saving results</h2>
