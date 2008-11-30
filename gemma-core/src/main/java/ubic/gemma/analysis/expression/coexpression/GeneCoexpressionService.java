@@ -234,16 +234,15 @@ public class GeneCoexpressionService {
 
             result.setErrorState( coexpressions.getErrorState() );
 
-            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getKnownGeneCoexpression(),
-                    stringency, queryGenesOnly, geneIds, result.getKnownGeneResults(), result.getKnownGeneDatasets() );
+            addExtCoexpressionValueObjects( queryGene, eevos, coexpressions.getKnownGeneCoexpression(), stringency,
+                    queryGenesOnly, geneIds, result.getKnownGeneResults(), result.getKnownGeneDatasets() );
 
             // FIXME only do this part if the user is logged in?
-            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions
-                    .getPredictedGeneCoexpression(), stringency, queryGenesOnly, geneIds, result
-                    .getPredictedGeneResults(), result.getPredictedGeneDatasets() );
-            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions
-                    .getProbeAlignedRegionCoexpression(), stringency, queryGenesOnly, geneIds, result
-                    .getProbeAlignedRegionResults(), result.getProbeAlignedRegionDatasets() );
+            addExtCoexpressionValueObjects( queryGene, eevos, coexpressions.getPredictedGeneCoexpression(), stringency,
+                    queryGenesOnly, geneIds, result.getPredictedGeneResults(), result.getPredictedGeneDatasets() );
+            addExtCoexpressionValueObjects( queryGene, eevos, coexpressions.getProbeAlignedRegionCoexpression(),
+                    stringency, queryGenesOnly, geneIds, result.getProbeAlignedRegionResults(), result
+                            .getProbeAlignedRegionDatasets() );
 
             CoexpressionSummaryValueObject summary = new CoexpressionSummaryValueObject();
             summary.setDatasetsAvailable( eevos.size() );
@@ -529,15 +528,16 @@ public class GeneCoexpressionService {
             for ( int i = 0; i < eevos.size(); ++i ) {
                 ExpressionExperimentValueObject eevo = eevos.get( i );
 
-                boolean tested = cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eevo.getId() );
+                Long eeid = eevo.getId();
+                boolean tested = cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eeid );
 
                 assert cvo.getExpressionExperiments().size() <= cvo.getPositiveLinkSupport()
                         + cvo.getNegativeLinkSupport() : "got " + cvo.getExpressionExperiments().size() + " expected "
                         + ( cvo.getPositiveLinkSupport() + cvo.getNegativeLinkSupport() );
 
-                boolean supported = cvo.getExpressionExperiments().contains( eevo.getId() );
+                boolean supported = cvo.getExpressionExperiments().contains( eeid );
 
-                boolean specific = !cvo.getNonspecificEE().contains( eevo.getId() );
+                boolean specific = !cvo.getNonspecificEE().contains( eeid );
 
                 if ( supported ) {
                     if ( specific ) {
@@ -545,7 +545,7 @@ public class GeneCoexpressionService {
                     } else {
                         datasetVector.append( "2" );
                     }
-                    supportingEEs.add( eevo.getId() );
+                    supportingEEs.add( eeid );
                 } else if ( tested ) {
                     datasetVector.append( "1" );
                 } else {
