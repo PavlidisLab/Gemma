@@ -150,8 +150,7 @@ ul#primary-nav li:hover ul,ul#primary-nav li li:hover ul,ul#primary-nav li li li
 	display: block;
 }  /* The magic */
 ul#primary-nav li.menubar {
-	background: transparent url(../../images/arrow.gif) right center
-		no-repeat;
+	background: transparent url(../../images/arrow.gif) right center no-repeat;
 	z-index: 1500000;
 }
 
