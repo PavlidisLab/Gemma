@@ -42,7 +42,7 @@ import ubic.gemma.util.TaxonUtility;
  * @author klc
  * @author paul
  */
-public abstract class Gene2GeneCoexpressionDaoImpl extends
+public class Gene2GeneCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase {
 
     private class SupportComparator implements Comparator<Gene2GeneCoexpression> {

@@ -33,25 +33,34 @@ import net.sf.ehcache.config.CacheConfiguration;
  */
 public class CacheMonitor {
 
+    private CacheManager cacheManager;
+
+    /**
+     * @param cacheManager the cacheManager to set
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
+    }
+
     /**
      * @return
      */
-    public static String getStats() {
+    public String getStats() {
 
-        CacheManager cm = CacheManager.getInstance();
         StringBuilder buf = new StringBuilder();
-        String[] cacheNames = cm.getCacheNames();
+        String[] cacheNames = cacheManager.getCacheNames();
         Arrays.sort( cacheNames );
 
         buf.append( cacheNames.length + " caches" );
 
-        buf.append( "<table style='font-size:small'><tr>" );
-        buf.append( "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>DiskHits</th><th>Evicted</th>" );
+        buf.append( "<table style='font-size:small' cell-padding='1' cell-spacing='1' ><tr>" );
+        buf
+                .append( "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>DiskHits</th><th>Evicted</th>" );
         buf.append( "<th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>" );
         buf.append( "</tr>" );
 
         for ( String cacheName : cacheNames ) {
-            Cache cache = cm.getCache( cacheName );
+            Cache cache = cacheManager.getCache( cacheName );
             Statistics statistics = cache.getStatistics();
 
             long objectCount = statistics.getObjectCount();
@@ -72,15 +81,22 @@ public class CacheMonitor {
             buf.append( "<td>" + objectCount + "</td>" );
             buf.append( "<td>" + inMemoryHits + "</td>" );
             buf.append( "<td>" + onDiskHits + "</td>" );
-            buf.append("<td>" + evictions + "</td>");
-            
+            buf.append( "<td>" + evictions + "</td>" );
+
             CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
-            buf.append( "<td>" + ( cacheConfiguration.isEternal() ? "&bull;" : "" ) + "</td>" );
+            boolean eternal = cacheConfiguration.isEternal();
+            buf.append( "<td>" + ( eternal ? "&bull;" : "" ) + "</td>" );
             buf.append( "<td>" + ( cacheConfiguration.isOverflowToDisk() ? "&bull;" : "" ) + "</td>" );
             buf.append( "<td>" + cacheConfiguration.getMaxElementsInMemory() + "</td>" );
 
-            buf.append( "<td>" + cacheConfiguration.getTimeToIdleSeconds() + "</td>" );
-            buf.append( "<td>" + cacheConfiguration.getTimeToLiveSeconds() + "</td>" );
+            if ( eternal ) {
+                // timeouts are irrelevant.
+                buf.append( "<td>-</td>" );
+                buf.append( "<td>-</td>" );
+            } else {
+                buf.append( "<td>" + cacheConfiguration.getTimeToIdleSeconds() + "</td>" );
+                buf.append( "<td>" + cacheConfiguration.getTimeToLiveSeconds() + "</td>" );
+            }
             buf.append( "</tr>" );
         }
         buf.append( "</table>" );

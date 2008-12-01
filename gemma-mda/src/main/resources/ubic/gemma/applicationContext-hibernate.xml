@@ -2526,7 +2526,7 @@
 		</property>
 	</bean>
 	<!-- Gene2GeneCoexpression Entity Proxy with inner Gene2GeneCoexpression Entity implementation -->
-<!--	<bean id="gene2GeneCoexpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
+	<bean id="gene2GeneCoexpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoImpl">
 				<property name="sessionFactory">
@@ -2535,7 +2535,6 @@
 				<property name="gene2GeneCoexpressionCache">
 					<ref bean="gene2GeneCoexpressionCache" />
 				</property>		
-
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
@@ -2547,7 +2546,7 @@
 				<value>hibernateInterceptor</value>
 			</list>
 		</property>
-	</bean> -->
+	</bean> 
 	<!-- Probe2ProbeCoexpression Entity Proxy with inner Probe2ProbeCoexpression Entity implementation -->
 	<bean id="probe2ProbeCoexpressionDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -4295,9 +4294,9 @@
 				<property name="mouseGeneCoExpressionDao">
 					<ref bean="mouseGeneCoExpressionDao" />
 				</property>
-			<!--<property name="gene2GeneCoexpressionDao">
+				<property name="gene2GeneCoexpressionDao">
 					<ref bean="gene2GeneCoexpressionDao" />
-				</property> -->
+				</property>  
 			</bean>
 		</property>
 		<property name="proxyInterfaces">

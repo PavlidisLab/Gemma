@@ -41,3 +41,8 @@
 		<ref bean="cacheManager" />
 	</property>
 </bean>
+<bean id="cacheMonitor" class="ubic.gemma.util.monitor.CacheMonitor">
+	<property name="cacheManager">
+		<ref bean="cacheManager" />
+	</property>
+</bean>

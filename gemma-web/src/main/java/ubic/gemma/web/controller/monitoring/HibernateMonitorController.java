@@ -26,12 +26,15 @@ import ubic.gemma.util.monitor.HibernateMonitor;
 /**
  * @spring.bean id="hibernateMonitorController"
  * @spring.property name="hibernateMonitor" ref="hibernateMonitor"
+ * @spring.property name="cacheMonitor" ref="cacheMonitor"
  * @author paul
  * @version $Id$
  */
 public class HibernateMonitorController {
 
     HibernateMonitor hibernateMonitor;
+
+    CacheMonitor cacheMonitor;
 
     /**
      * Expose to AJAX
@@ -42,12 +45,19 @@ public class HibernateMonitorController {
         return this.hibernateMonitor.getStats( true, true, true );
     }
 
+    /**
+     * @param cacheMonitor the cacheMonitor to set
+     */
+    public void setCacheMonitor( CacheMonitor cacheMonitor ) {
+        this.cacheMonitor = cacheMonitor;
+    }
+
     public String getSpaceStatus() {
         return SpacesUtil.logSpaceStatistics( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
     public String getCacheStatus() {
-        return CacheMonitor.getStats();
+        return cacheMonitor.getStats();
     }
 
     /**
