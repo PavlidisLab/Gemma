@@ -31,6 +31,15 @@ import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
  */
 public class Gene2GeneCoexpressionCache {
 
+    private CacheManager cacheManager;
+
+    /**
+     * @param cacheManager the cacheManager to set
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
+    }
+
     private static final String GENE_COEXPRESSION_CACHE_NAME = "Gene2GeneCoexpressionCache";
     private static final int GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
     private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
@@ -40,14 +49,14 @@ public class Gene2GeneCoexpressionCache {
 
     private static Cache cache;
 
-    public static Cache getCache() {
+    public Cache getCache() {
         return cache;
     }
 
     /**
      * Remove all elements from the cache.
      */
-    public static void clearCache() {
+    public void clearCache() {
         CacheManager manager = CacheManager.getInstance();
         manager.getCache( GENE_COEXPRESSION_CACHE_NAME ).removeAll();
     }
@@ -57,7 +66,7 @@ public class Gene2GeneCoexpressionCache {
      * 
      * @return
      */
-    public static Cache initializeCache() {
+    public Cache initializeCache() {
 
         int maxElements = ConfigUtils.getInt( "gemma.cache.gene2gene.maxelements",
                 GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS );
@@ -72,22 +81,16 @@ public class Gene2GeneCoexpressionCache {
         boolean eternal = ConfigUtils.getBoolean( "gemma.cache.gene2gene.eternal",
                 GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL );
 
-        String diskCacheLocation = ConfigUtils.getString( "gemma.cache.disklocation" );
-        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent" );
-        /*
-         * Create a cache for the probe data.s
-         */
-        CacheManager manager = CacheManager.getInstance();
+        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false );
 
-        if ( manager.cacheExists( GENE_COEXPRESSION_CACHE_NAME ) ) {
-            return manager.getCache( GENE_COEXPRESSION_CACHE_NAME );
+        if ( cacheManager.cacheExists( GENE_COEXPRESSION_CACHE_NAME ) ) {
+            return cacheManager.getCache( GENE_COEXPRESSION_CACHE_NAME );
         }
 
-        cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LFU, overFlowToDisk,
-                diskCacheLocation, eternal, timeToLive, timeToIdle, diskPersistent, 600 /* diskExpiryThreadInterval */,
-                null );
+        cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
+                null, eternal, timeToLive, timeToIdle, diskPersistent, 600 /* diskExpiryThreadInterval */, null );
 
-        manager.addCache( cache );
-        return manager.getCache( GENE_COEXPRESSION_CACHE_NAME );
+        cacheManager.addCache( cache );
+        return cacheManager.getCache( GENE_COEXPRESSION_CACHE_NAME );
     }
 }

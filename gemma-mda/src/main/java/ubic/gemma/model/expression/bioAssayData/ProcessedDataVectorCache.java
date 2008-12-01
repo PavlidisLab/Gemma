@@ -54,10 +54,19 @@ public class ProcessedDataVectorCache {
      */
     private static final Map<ExpressionExperiment, Cache> caches = new HashMap<ExpressionExperiment, Cache>();
 
+    private CacheManager cacheManager;
+
+    /**
+     * @param cacheManager the cacheManager to set
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
+    }
+
     /**
      * 
      */
-    public static void clearAllCaches() {
+    public void clearAllCaches() {
         for ( ExpressionExperiment e : caches.keySet() ) {
             clearCache( e );
         }
@@ -68,16 +77,15 @@ public class ProcessedDataVectorCache {
      * 
      * @param e the expression experiment - specific cache to be cleared.
      */
-    public static void clearCache( ExpressionExperiment e ) {
-        CacheManager manager = CacheManager.getInstance();
-        Cache cache = manager.getCache( getCacheName( e ) );
+    public void clearCache( ExpressionExperiment e ) {
+        Cache cache = cacheManager.getCache( getCacheName( e ) );
         if ( cache != null ) cache.removeAll();
     }
 
     /**
      * @return
      */
-    public static Collection<Cache> getAllCaches() {
+    public Collection<Cache> getAllCaches() {
         return caches.values();
     }
 
@@ -87,14 +95,14 @@ public class ProcessedDataVectorCache {
      * @param e
      * @return
      */
-    public static Cache getCache( ExpressionExperiment e ) {
+    public Cache getCache( ExpressionExperiment e ) {
         if ( !caches.containsKey( e ) ) {
             initializeCache( e );
         }
         return caches.get( e );
     }
 
-    private static String getCacheName( ExpressionExperiment e ) {
+    private String getCacheName( ExpressionExperiment e ) {
         return PROBE2PROBE_COEXPRESSION_CACHE_NAME_BASE + "_" + e.getShortName() + "_" + e.getId();
     }
 
@@ -103,7 +111,7 @@ public class ProcessedDataVectorCache {
      * 
      * @return
      */
-    private static void initializeCache( ExpressionExperiment e ) {
+    private void initializeCache( ExpressionExperiment e ) {
 
         if ( caches.containsKey( e ) ) {
             return;
@@ -124,23 +132,15 @@ public class ProcessedDataVectorCache {
 
         String cacheName = getCacheName( e );
 
-        String diskCacheLocation = ConfigUtils.getString( "gemma.cache.disklocation" );
-        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent" );
+        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false );
 
-        /*
-         * Create a cache for the probe data.
-         */
-        CacheManager manager = CacheManager.getInstance();
+        if ( !cacheManager.cacheExists( cacheName ) ) {
 
-        if ( !manager.cacheExists( cacheName ) ) {
-
-            manager.addCache( new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LFU, overFlowToDisk,
-                    diskCacheLocation, eternal, timeToLive, timeToIdle, diskPersistent,
-                    600 /* diskExpiryThreadInterval */, null ) );
+            cacheManager.addCache( new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
+                    null, eternal, timeToLive, timeToIdle, diskPersistent, 600 /* diskExpiryThreadInterval */, null ) );
         }
 
-        caches.put( e, manager.getCache( cacheName ) );
+        caches.put( e, cacheManager.getCache( cacheName ) );
 
     }
-
 }

@@ -74,7 +74,7 @@ import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
-import org.compass.core.engine.SearchEngineException;
+import org.compass.core.engine.SearchEngineException; 
 import org.springframework.beans.factory.InitializingBean;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
@@ -206,7 +206,16 @@ public class SearchService implements InitializingBean {
 
     private Compass biosequenceBean;
 
+    /**
+     * @param cacheManager the cacheManager to set
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
+    }
+
     private Compass probeBean;
+
+    private CacheManager cacheManager;
 
     /*
      * (non-Javadoc)
@@ -214,18 +223,16 @@ public class SearchService implements InitializingBean {
      */
     public void afterPropertiesSet() throws Exception {
         try {
-            CacheManager manager = CacheManager.getInstance();
 
-            if ( manager.cacheExists( "OntologyChildrenCache" ) ) {
+            if ( cacheManager.cacheExists( "OntologyChildrenCache" ) ) {
                 return;
             }
-
             childTermCache = new Cache( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE,
-                    MemoryStoreEvictionPolicy.LFU, false, null, false, ONTOLOGY_CACHE_TIME_TO_DIE,
+                    MemoryStoreEvictionPolicy.LFU, false, null, true, ONTOLOGY_CACHE_TIME_TO_DIE,
                     ONTOLOGY_CACHE_TIME_TO_IDLE, false, 500, null );
 
-            manager.addCache( childTermCache );
-            childTermCache = manager.getCache( "OntologyChildrenCache" );
+            cacheManager.addCache( childTermCache );
+            childTermCache = cacheManager.getCache( "OntologyChildrenCache" );
 
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
@@ -898,7 +905,7 @@ public class SearchService implements InitializingBean {
      * @param geneSearchResults Optional. If non-null, the results here will be used instead of conducting a brand new
      *        search for genes.
      * @param arrayDesign
-     */ 
+     */
     private Collection<SearchResult> compositeSequenceByGeneSearch( SearchSettings settings,
             Collection<SearchResult> geneSearchResults ) {
 
@@ -938,7 +945,7 @@ public class SearchService implements InitializingBean {
      * @param geneSearchResults Can be null, otherwise used to avoid a second search.
      * @return
      * @throws Exception
-     */ 
+     */
     private Collection<SearchResult> compositeSequenceSearch( SearchSettings settings,
             Collection<SearchResult> geneSearchResults ) {
 

@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Element;
 
@@ -43,7 +42,7 @@ import ubic.gemma.util.TaxonUtility;
  * @author klc
  * @author paul
  */
-public class Gene2GeneCoexpressionDaoImpl extends
+public abstract class Gene2GeneCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase {
 
     private class SupportComparator implements Comparator<Gene2GeneCoexpression> {
@@ -57,7 +56,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
      * set it up so it can be done in a taxon-specific way?
      */
     protected void clearCache() {
-        Gene2GeneCoexpressionCache.getCache().removeAll();
+        this.getGene2GeneCoexpressionCache().getCache().removeAll();
     }
 
     /*
@@ -79,7 +78,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
         Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
         for ( Gene g : genes ) {
             result.put( g, new HashSet<Gene2GeneCoexpression>() );
-            Element e = Gene2GeneCoexpressionCache.getCache().get( g.getId() );
+            Element e = this.getGene2GeneCoexpressionCache().getCache().get( g.getId() );
             if ( e != null ) {
                 result.put( g, ( Collection<Gene2GeneCoexpression> ) e.getValue() );
             } else {
@@ -132,7 +131,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
     protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
             int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 
-        Element element = Gene2GeneCoexpressionCache.getCache().get( gene.getId() );
+        Element element = this.getGene2GeneCoexpressionCache().getCache().get( gene.getId() );
         if ( element != null ) {
             return ( Collection<Gene2GeneCoexpression> ) element.getValue();
         }
@@ -161,7 +160,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
         List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( results );
         Collections.sort( lr, new SupportComparator() );
 
-        Gene2GeneCoexpressionCache.getCache().put( new Element( gene.getId(), lr ) );
+        this.getGene2GeneCoexpressionCache().getCache().put( new Element( gene.getId(), lr ) );
 
         int count = 0;
         for ( Iterator<Gene2GeneCoexpression> it = lr.iterator(); it.hasNext(); ) {
@@ -227,7 +226,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
     protected void initDao() throws Exception {
         super.initDao();
         try {
-            Gene2GeneCoexpressionCache.initializeCache();
+            this.getGene2GeneCoexpressionCache().initializeCache();
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
         }
@@ -237,8 +236,8 @@ public class Gene2GeneCoexpressionDaoImpl extends
      * @param object
      */
     protected void removeFromCache( Gene2GeneCoexpression object ) {
-        Gene2GeneCoexpressionCache.getCache().remove( object.getFirstGene().getId() );
-        Gene2GeneCoexpressionCache.getCache().remove( object.getSecondGene().getId() );
+        this.getGene2GeneCoexpressionCache().getCache().remove( object.getFirstGene().getId() );
+        this.getGene2GeneCoexpressionCache().getCache().remove( object.getSecondGene().getId() );
     }
 
     /**
@@ -311,7 +310,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
         }
 
         for ( Gene g : genes ) {
-            Gene2GeneCoexpressionCache.getCache().put( new Element( g.getId(), result.get( g ) ) );
+            this.getGene2GeneCoexpressionCache().getCache().put( new Element( g.getId(), result.get( g ) ) );
         }
 
         return result;

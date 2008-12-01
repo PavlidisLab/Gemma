@@ -113,6 +113,9 @@
 		<property name="taxonService">
 			<ref bean="taxonService" />
 		</property>
+		<property name="cacheManager">
+			<ref bean="cacheManager"/>
+		</property>
 	</bean>
 	<!-- Generic compass configuration beans  -->
 	<bean id="hibernateGpsDevice" class="org.compass.gps.device.hibernate.HibernateGpsDevice" singleton="false">

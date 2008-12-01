@@ -51,13 +51,22 @@ public class Probe2ProbeCoexpressionCache {
     private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL = true;
     private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
 
+    private CacheManager cacheManager;
+
+    /**
+     * @param cacheManager the cacheManager to set
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
+    }
+
     /**
      * We retain references to the caches separately from the CacheManager. This _could_ create leaks of caches if the
      * cache manager needs to recreate a cache for some reason. Something to keep in mind.
      */
-    private static final Map<Long, Cache> caches = new HashMap<Long, Cache>();
+    private final Map<Long, Cache> caches = new HashMap<Long, Cache>();
 
-    private static String getCacheName( Long id ) {
+    private String getCacheName( Long id ) {
         return PROCESSED_DATA_VECTOR_CACHE_NAME_BASE + "_" + id;
     }
 
@@ -66,7 +75,7 @@ public class Probe2ProbeCoexpressionCache {
      * 
      * @param e the expression experiment - specific cache to be cleared.
      */
-    public static void clearCache( Long e ) {
+    public void clearCache( Long e ) {
         CacheManager manager = CacheManager.getInstance();
         Cache cache = manager.getCache( getCacheName( e ) );
         if ( cache != null ) cache.removeAll();
@@ -75,7 +84,7 @@ public class Probe2ProbeCoexpressionCache {
     /**
      * 
      */
-    public static void clearAllCaches() {
+    public void clearAllCaches() {
         for ( Long e : caches.keySet() ) {
             clearCache( e );
         }
@@ -84,7 +93,7 @@ public class Probe2ProbeCoexpressionCache {
     /**
      * @return
      */
-    public static Collection<Cache> getAllCaches() {
+    public Collection<Cache> getAllCaches() {
         return caches.values();
     }
 
@@ -93,7 +102,7 @@ public class Probe2ProbeCoexpressionCache {
      * @param coExVOForCache
      */
     @SuppressWarnings("unchecked")
-    public static void addToCache( Long eeID, CoexpressionCacheValueObject coExVOForCache ) {
+    public void addToCache( Long eeID, CoexpressionCacheValueObject coExVOForCache ) {
 
         Cache c = getCache( eeID );
 
@@ -115,7 +124,7 @@ public class Probe2ProbeCoexpressionCache {
      * @return null if there are no cached results.
      */
     @SuppressWarnings("unchecked")
-    public static Collection<CoexpressionCacheValueObject> retrieve( Long eeID, Gene queryGene ) {
+    public Collection<CoexpressionCacheValueObject> retrieve( Long eeID, Gene queryGene ) {
         Cache c = getCache( eeID );
         Element element = c.get( queryGene );
         if ( element != null ) {
@@ -131,7 +140,7 @@ public class Probe2ProbeCoexpressionCache {
      * @param e
      * @return
      */
-    public static Cache getCache( Long e ) {
+    public Cache getCache( Long e ) {
         if ( !caches.containsKey( e ) ) {
             initializeCache( e );
         }
@@ -143,14 +152,14 @@ public class Probe2ProbeCoexpressionCache {
      * 
      * @return
      */
-    private static void initializeCache( Long e ) {
+    private void initializeCache( Long e ) {
 
         if ( caches.containsKey( e ) ) {
             return;
         }
 
         /*
-         * TODO: allow disabling of cache.
+         * TODO: allow easy disabling of cache.
          */
 
         int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements",
@@ -166,20 +175,16 @@ public class Probe2ProbeCoexpressionCache {
         boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL );
 
-        String diskCacheLocation = ConfigUtils.getString( "gemma.cache.disklocation", "java.io.tmpdir" );
         boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false );
 
         String cacheName = getCacheName( e );
 
-        CacheManager manager = CacheManager.getInstance();
+        if ( !cacheManager.cacheExists( cacheName ) ) {
 
-        if ( !manager.cacheExists( cacheName ) ) {
-
-            manager.addCache( new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LFU, overFlowToDisk,
-                    diskCacheLocation, eternal, timeToLive, timeToIdle, diskPersistent,
-                    600 /* diskExpiryThreadInterval */, null ) );
+            cacheManager.addCache( new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
+                    null, eternal, timeToLive, timeToIdle, diskPersistent, 600 /* diskExpiryThreadInterval */, null ) );
         }
-        caches.put( e, manager.getCache( cacheName ) );
+        caches.put( e, cacheManager.getCache( cacheName ) );
 
     }
 

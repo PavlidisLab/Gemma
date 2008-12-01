@@ -52,6 +52,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorDaoImpl.class.getName() );
 
+    private ProcessedDataVectorCache processedDataVectorCache;
+
     /*
      * (non-Javadoc)
      * @see
@@ -118,7 +120,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         this.getHibernateTemplate().update( expressionExperiment );
 
-        ProcessedDataVectorCache.clearCache( expressionExperiment );
+        this.processedDataVectorCache.clearCache( expressionExperiment );
 
         return expressionExperiment.getProcessedExpressionDataVectors();
 
@@ -329,6 +331,20 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
+     * @param processedDataVectorCache the processedDataVectorCache to set
+     */
+    public void setProcessedDataVectorCache( ProcessedDataVectorCache processedDataVectorCache ) {
+        this.processedDataVectorCache = processedDataVectorCache;
+    }
+
+    /**
+     * @return the processedDataVectorCache
+     */
+    protected ProcessedDataVectorCache getProcessedDataVectorCache() {
+        return processedDataVectorCache;
+    }
+
+    /**
      * @param newResults
      */
     private void cacheResults( Collection<DoubleVectorValueObject> newResults ) {
@@ -338,7 +354,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = makeCacheMap( newResults );
 
         for ( ExpressionExperiment e : mapForCache.keySet() ) {
-            Cache cache = ProcessedDataVectorCache.getCache( e );
+            Cache cache = this.processedDataVectorCache.getCache( e );
             for ( Gene g : mapForCache.get( e ).keySet() ) {
                 cache.put( new Element( g, mapForCache.get( e ).get( g ) ) );
             }
@@ -357,7 +373,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             Collection<DoubleVectorValueObject> results, Collection<ExpressionExperiment> needToSearch,
             Collection<Gene> genesToSearch ) {
         for ( ExpressionExperiment ee : ees ) {
-            Cache cache = ProcessedDataVectorCache.getCache( ee );
+            Cache cache = processedDataVectorCache.getCache( ee );
             for ( Gene g : genes ) {
                 Element element = cache.get( g );
                 if ( element != null ) {

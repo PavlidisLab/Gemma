@@ -36,6 +36,22 @@ import ubic.gemma.model.genome.Gene;
 public abstract class Gene2GeneCoexpressionDaoBase extends ubic.gemma.model.association.Gene2GeneAssociationDaoImpl
         implements ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao {
 
+    private Gene2GeneCoexpressionCache gene2GeneCoexpressionCache;
+
+    /**
+     * @return the gene2GeneCoexpressionCache
+     */
+    public Gene2GeneCoexpressionCache getGene2GeneCoexpressionCache() {
+        return gene2GeneCoexpressionCache;
+    }
+
+    /**
+     * @param gene2GeneCoexpressionCache the gene2GeneCoexpressionCache to set
+     */
+    public void setGene2GeneCoexpressionCache( Gene2GeneCoexpressionCache gene2GeneCoexpressionCache ) {
+        this.gene2GeneCoexpressionCache = gene2GeneCoexpressionCache;
+    }
+
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#load(int, java.lang.Long)
      */

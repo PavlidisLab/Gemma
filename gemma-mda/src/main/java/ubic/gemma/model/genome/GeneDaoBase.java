@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
@@ -39,6 +40,22 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  */
 public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeatureDaoImpl<Gene> implements
         ubic.gemma.model.genome.GeneDao {
+
+    private Probe2ProbeCoexpressionCache probe2ProbeCoexpressionCache;
+
+    /**
+     * @return the probe2ProbeCoexpressionCache
+     */
+    public Probe2ProbeCoexpressionCache getProbe2ProbeCoexpressionCache() {
+        return probe2ProbeCoexpressionCache;
+    }
+
+    /**
+     * @param probe2ProbeCoexpressionCache the probe2ProbeCoexpressionCache to set
+     */
+    public void setProbe2ProbeCoexpressionCache( Probe2ProbeCoexpressionCache probe2ProbeCoexpressionCache ) {
+        this.probe2ProbeCoexpressionCache = probe2ProbeCoexpressionCache;
+    }
 
     /**
      * This anonymous transformer is designed to transform entities or report query results (which result in an array of

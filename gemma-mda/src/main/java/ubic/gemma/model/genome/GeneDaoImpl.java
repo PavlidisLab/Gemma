@@ -48,7 +48,6 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -409,8 +408,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Collection<BioAssaySet> eesToSearch = new HashSet<BioAssaySet>();
         Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults = new HashMap<Long, Collection<CoexpressionCacheValueObject>>();
         for ( BioAssaySet ee : ees ) {
-            Collection<CoexpressionCacheValueObject> eeResults = Probe2ProbeCoexpressionCache.retrieve( ee.getId(),
-                    gene );
+            Collection<CoexpressionCacheValueObject> eeResults = this.getProbe2ProbeCoexpressionCache().retrieve(
+                    ee.getId(), gene );
 
             if ( eeResults != null ) {
                 cachedResults.put( ee.getId(), eeResults );
@@ -1209,9 +1208,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         coExVOForCache.setQueryProbe( queryProbe );
         coExVOForCache.setCoexpressedProbe( coexpressedProbe );
         if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
-        Probe2ProbeCoexpressionCache.addToCache( eeID, coExVOForCache );
+        this.getProbe2ProbeCoexpressionCache().addToCache( eeID, coExVOForCache );
 
-        Probe2ProbeCoexpressionCache.retrieve( eeID, coExVOForCache.getQueryGene() );
+        this.getProbe2ProbeCoexpressionCache().retrieve( eeID, coExVOForCache.getQueryGene() );
     }
 
     /**
@@ -1251,7 +1250,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         coExVOForCache.setCoexpressedProbe( coexpressedProbe );
         if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
 
-        Probe2ProbeCoexpressionCache.addToCache( eeID, coExVOForCache );
+        this.getProbe2ProbeCoexpressionCache().addToCache( eeID, coExVOForCache );
 
     }
 

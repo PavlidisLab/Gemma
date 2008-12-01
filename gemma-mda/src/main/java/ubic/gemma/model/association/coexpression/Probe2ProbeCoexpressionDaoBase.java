@@ -33,6 +33,8 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.association.RelationshipDaoImpl implements
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao {
 
+    
+    
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#load(int, java.lang.Long)
      */
