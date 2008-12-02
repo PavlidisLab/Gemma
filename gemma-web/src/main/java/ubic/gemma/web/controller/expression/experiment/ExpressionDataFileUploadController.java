@@ -173,7 +173,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
             result.setNumberMatchingProbes( numRowsMatchingArrayDesign );
             result.setNumberOfNonMatchingProbes( numRowsNotMatchingArrayDesign );
             if ( mismatches.size() > 0 ) {
-                result.setNonMatchingProbeNameExamples( mismatches.subList( 0, Math.max( 10, mismatches.size() - 1 ) ) );
+                result.setNonMatchingProbeNameExamples( mismatches.subList( 0, Math.min( 10, mismatches.size() - 1 ) ) );
             }
 
         }
