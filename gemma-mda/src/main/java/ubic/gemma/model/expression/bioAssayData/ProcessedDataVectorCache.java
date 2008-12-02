@@ -41,7 +41,7 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ProcessedDataVectorCache {
 
-    private static final String PROBE2PROBE_COEXPRESSION_CACHE_NAME_BASE = "Probe2ProbeCache";
+    private static final String PROBE2PROBE_COEXPRESSION_CACHE_NAME_BASE = "DataVectorCache";
     private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
     private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
     private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
