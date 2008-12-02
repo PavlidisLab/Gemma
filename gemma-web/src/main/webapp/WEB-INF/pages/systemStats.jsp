@@ -9,6 +9,10 @@
 
 </head>
 <body>
+<security:authorize ifNotGranted="admin">
+<p>Sorry, you do not have permissions to view this page.</p>
+</security:authorize>
+<security:authorize ifAnyGranted="admin">
 	<h2>
 		Hibernate statistics
 	</h2>
@@ -28,4 +32,5 @@
 	<pre>
 		<div id="spaceStats">Waiting ...</div>
 </pre>
+</security:authorize>
 </body>
