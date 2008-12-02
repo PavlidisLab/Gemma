@@ -50,28 +50,28 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option geneOption = OptionBuilder.withDescription( "Use this option for indexing Genes" ).withLongOpt( "genes" )
+        Option geneOption = OptionBuilder.withDescription( "Index genes" ).withLongOpt( "genes" )
                 .create( 'g' );
         addOption( geneOption );
 
-        Option eeOption = OptionBuilder.withDescription( "Use this option for indexing Expression Experiments" )
+        Option eeOption = OptionBuilder.withDescription( "Index Expression Experiments" )
                 .withLongOpt( "ExpressionExperiments" ).create( 'e' );
         addOption( eeOption );
 
-        Option adOption = OptionBuilder.withDescription( "Use this option for indexing Array Designs" ).withLongOpt(
+        Option adOption = OptionBuilder.withDescription( "Index Array Designs" ).withLongOpt(
                 "ArrayDesigns" ).create( 'a' );
         addOption( adOption );
 
 
         Option bibliographicOption = OptionBuilder.withDescription(
-                "Use this option for indexing Bibliographic References" ).withLongOpt( "Bibliographic" ).create( 'b' );
+                "Index Bibliographic References" ).withLongOpt( "Bibliographic" ).create( 'b' );
         addOption( bibliographicOption );
 
-        Option probeOption = OptionBuilder.withDescription( "Use this option for indexing probes" ).withLongOpt(
+        Option probeOption = OptionBuilder.withDescription( "Index probes" ).withLongOpt(
                 "probes" ).create( 's' );
         addOption( probeOption );
 
-        Option sequenceOption = OptionBuilder.withDescription( "Use this option for indexing sequences" ).withLongOpt(
+        Option sequenceOption = OptionBuilder.withDescription( "Index sequences" ).withLongOpt(
                 "sequences" ).create( 'q' );
         addOption( sequenceOption );
     }
@@ -105,6 +105,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
+            p.forceCompassOn = true;
             Exception ex = p.doWork( args );
             if ( ex != null ) {
                 ex.printStackTrace();
