@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -313,6 +314,9 @@ public class GeneCoexpressionService {
 
         Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
 
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         // populate the value objects.
         for ( Gene queryGene : gg2gs.keySet() ) {
             geneService.thaw( queryGene );
@@ -446,7 +450,10 @@ public class GeneCoexpressionService {
 
             getGoOverlap( ecvos, queryGene );
         }
-
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Postprocess: " + timer.getTime() + "ms" );
+        }
         result.getKnownGeneResults().addAll( ecvos );
         return result;
     }
@@ -676,6 +683,8 @@ public class GeneCoexpressionService {
         /*
          * get GO overlap info for this query gene...
          */
+        StopWatch timer = new StopWatch();
+        timer.start();
         if ( geneOntologyService.isGeneOntologyLoaded() ) {
             int numQueryGeneGoTerms = geneOntologyService.getGOTerms( queryGene ).size();
             Collection<Long> overlapIds = new ArrayList<Long>();
@@ -691,6 +700,9 @@ public class GeneCoexpressionService {
                 Collection<OntologyTerm> overlap = goOverlap.get( ecvo.getFoundGene().getId() );
                 ecvo.setGoSim( overlap == null ? 0 : overlap.size() );
             }
+        }
+        if ( timer.getTime() > 1000 ) {
+            log.info( "GO stats: " + timer.getTime() + "ms" );
         }
     }
 
@@ -756,13 +768,26 @@ public class GeneCoexpressionService {
             return gg2gs;
         }
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         GeneCoexpressionAnalysis gA = findEnabledCoexpressionAnalysis( queryGenes );
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Get analysis: " + timer.getTime() + "ms" );
+        }
+        timer.reset();
+        timer.start();
 
         if ( queryGenesOnly ) {
             gg2gs = gene2GeneCoexpressionService.findInterCoexpressionRelationship( queryGenes, stringency, gA );
         } else {
             gg2gs = gene2GeneCoexpressionService.findCoexpressionRelationships( queryGenes, stringency, maxResults, gA );
         }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Get raw coexpression: " + timer.getTime() + "ms" );
+        }
+
         return gg2gs;
     }
 
