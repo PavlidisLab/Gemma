@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import ubic.basecode.io.ByteArrayConverter;
@@ -30,7 +31,7 @@ import ubic.gemma.model.genome.Gene;
  * @author paul
  * @version $Id$
  */
-public abstract class DataVectorValueObject {
+public abstract class DataVectorValueObject implements Serializable {
 
     protected static ByteArrayConverter byteArrayConverter;
 
