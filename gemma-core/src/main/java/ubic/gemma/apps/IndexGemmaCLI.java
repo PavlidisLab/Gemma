@@ -104,8 +104,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         IndexGemmaCLI p = new IndexGemmaCLI();
         StopWatch watch = new StopWatch();
         watch.start();
-        try {
-            p.forceCompassOn = true;
+        try { 
             Exception ex = p.doWork( args );
             if ( ex != null ) {
                 ex.printStackTrace();
@@ -121,8 +120,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Index Gemma", args );
