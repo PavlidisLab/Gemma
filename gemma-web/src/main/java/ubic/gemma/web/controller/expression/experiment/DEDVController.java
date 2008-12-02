@@ -161,24 +161,24 @@ public class DEDVController extends BaseFormController {
 
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
-       
+
         watch.stop();
         Long time = watch.getTime();
 
         log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
                 + " genes in " + time + " ms." );
-        
+
         watch = new StopWatch();
         watch.start();
-        
+
         Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = getProbeDiffExValidation( ees,
                 genes, threshold, factorMap, dedvs );
 
         watch.stop();
         time = watch.getTime();
-        
+
         log.info( "Retrieved " + validatedProbes.size() + " valid probes in " + time + " ms." );
-        
+
         return makeDiffVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes );
 
     }
@@ -290,6 +290,7 @@ public class DEDVController extends BaseFormController {
 
     /*
      * Handle case of text export of the results.
+     * 
      * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
@@ -372,6 +373,8 @@ public class DEDVController extends BaseFormController {
     }
 
     /**
+     * Identify which probes were 'responsible' for the coexpression links.
+     * 
      * @param ees
      * @param queryGene
      * @param coexpressedGene
@@ -388,24 +391,17 @@ public class DEDVController extends BaseFormController {
         Map<Long, Collection<Long>> queryEE2ProbeIds = new HashMap<Long, Collection<Long>>();
 
         for ( DoubleVectorValueObject dedv : dedvs ) {
+            Long eeid = dedv.getExpressionExperiment().getId();
             if ( dedv.getGenes().contains( queryGene ) ) {
-                if ( queryEE2ProbeIds.containsKey( dedv.getExpressionExperiment().getId() ) )
-                    queryEE2ProbeIds.get( dedv.getExpressionExperiment().getId() )
-                            .add( dedv.getDesignElement().getId() );
-                else {
-                    Collection<Long> qProbeIds = new ArrayList<Long>();
-                    qProbeIds.add( dedv.getDesignElement().getId() );
-                    queryEE2ProbeIds.put( dedv.getExpressionExperiment().getId(), qProbeIds );
+                if ( !queryEE2ProbeIds.containsKey( eeid ) ) {
+                    queryEE2ProbeIds.put( eeid, new HashSet<Long>() );
                 }
+                queryEE2ProbeIds.get( eeid ).add( dedv.getDesignElement().getId() );
             } else if ( dedv.getGenes().contains( coexpressedGene ) ) {
-                if ( coexpressedEE2ProbeIds.containsKey( dedv.getExpressionExperiment().getId() ) )
-                    coexpressedEE2ProbeIds.get( dedv.getExpressionExperiment().getId() ).add(
-                            dedv.getDesignElement().getId() );
-                else {
-                    Collection<Long> cProbeIds = new ArrayList<Long>();
-                    cProbeIds.add( dedv.getDesignElement().getId() );
-                    coexpressedEE2ProbeIds.put( dedv.getExpressionExperiment().getId(), cProbeIds );
+                if ( !coexpressedEE2ProbeIds.containsKey( eeid ) ) {
+                    coexpressedEE2ProbeIds.put( eeid, new HashSet<Long>() );
                 }
+                coexpressedEE2ProbeIds.get( eeid ).add( dedv.getDesignElement().getId() );
             } else {
                 log.error( "Impossible! Dedv doesn't belong to coexpressed or query gene. QueryGene= "
                         + queryGene.getOfficialSymbol() + "CoexprssedGene= " + coexpressedGene.getOfficialSymbol()
@@ -415,9 +411,21 @@ public class DEDVController extends BaseFormController {
 
         Map<Long, Collection<Long>> validatedProbes = new HashMap<Long, Collection<Long>>();
         for ( ExpressionExperiment ee : ees ) {
+            Collection<Long> queryProbeIds = queryEE2ProbeIds.get( ee.getId() );
+            Collection<Long> coexpressedProbeIds = coexpressedEE2ProbeIds.get( ee.getId() );
+
+            if ( queryProbeIds == null || queryProbeIds.size() == 0 ) {
+                log.warn( "Unexpectedly no probes for query in " + ee );
+                continue;
+            }
+
+            if ( coexpressedProbeIds == null || coexpressedProbeIds.size() == 0 ) {
+                log.warn( "Unexpectedly no probes for coexpressed gene in " + ee );
+                continue;
+            }
+
             validatedProbes.put( ee.getId(), this.probe2ProbeCoexpressionService.validateProbesInCoexpression(
-                    queryEE2ProbeIds.get( ee.getId() ), coexpressedEE2ProbeIds.get( ee.getId() ), ee, queryGene
-                            .getTaxon().getCommonName() ) );
+                    queryProbeIds, coexpressedProbeIds, ee, queryGene.getTaxon().getCommonName() ) );
         }
 
         watch.stop();
@@ -516,7 +524,7 @@ public class DEDVController extends BaseFormController {
             }
             vvoMap.get( ee.getId() ).add( dvvo );
         }
-        
+
         watch.stop();
         time = watch.getTime();
 
@@ -586,8 +594,7 @@ public class DEDVController extends BaseFormController {
         if ( time > 1000 ) {
             log.info( "Making vis collection - Sorted DEDVS by lowest p value for Expression experiment took: " + time );
         }
-        
-        
+
         watch = new StopWatch();
         watch.start();
 
@@ -597,12 +604,12 @@ public class DEDVController extends BaseFormController {
         int i = 0;
         for ( EE2PValue ee2P : sortedEE ) {
             Collection<Long> validatedProbeIdList = new ArrayList<Long>();
-            if ( validatedProbes.get(ee2P.getEEId()) != null && !validatedProbes.get(ee2P.getEEId()).isEmpty() ) {
+            if ( validatedProbes.get( ee2P.getEEId() ) != null && !validatedProbes.get( ee2P.getEEId() ).isEmpty() ) {
                 for ( DifferentialExpressionValueObject devo : validatedProbes.get( ee2P.getEEId() ) ) {
                     validatedProbeIdList.add( devo.getProbeId() );
                 }
             }
-            
+
             VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ), genes,
                     validatedProbeIdList, ee2P.getPValue() );
             result[i] = vvo;
