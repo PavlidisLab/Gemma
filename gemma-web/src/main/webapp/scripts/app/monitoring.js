@@ -2,6 +2,8 @@
  * Monitor hibernate
  */
 Ext.onReady(function() {
+			// fire once immediately.
+			task();
 			window.setInterval(task, 10000);
 		});
 
