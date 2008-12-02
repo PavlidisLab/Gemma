@@ -2,7 +2,7 @@
  * Monitor hibernate
  */
 Ext.onReady(function() {
-			window.setInterval(task, 5000);
+			window.setInterval(task, 10000);
 		});
 
 function task() {

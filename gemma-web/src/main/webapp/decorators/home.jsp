@@ -8,17 +8,12 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" />
+		</title>
 
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-
-		<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/FeedReader.js'></script>
+		<script type="text/javascript" src="/Gemma/scripts/ajax/dwrServices.js" ></script>
 
 		<jwr:style src="/bundles/gemma-all.css" />
 		<jwr:script src="/bundles/include.js" />

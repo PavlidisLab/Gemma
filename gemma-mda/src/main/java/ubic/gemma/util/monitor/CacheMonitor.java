@@ -51,14 +51,14 @@ public class CacheMonitor {
         String[] cacheNames = cacheManager.getCacheNames();
         Arrays.sort( cacheNames );
 
-        buf.append( cacheNames.length + " caches" );
+        buf.append( cacheNames.length + " caches; only non-empty caches listed below." );
 
-        buf.append( "<table style='font-size:small' cell-padding='1' cell-spacing='1' ><tr>" );
-        buf
-                .append( "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>DiskHits</th><th>Evicted</th>" );
-        buf.append( "<th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>" );
+        buf.append( "<table style='font-size:small'  ><tr>" );
+        String header = "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
+        buf.append( header );
         buf.append( "</tr>" );
 
+        int count = 0;
         for ( String cacheName : cacheNames ) {
             Cache cache = cacheManager.getCache( cacheName );
             Statistics statistics = cache.getStatistics();
@@ -68,6 +68,9 @@ public class CacheMonitor {
             if ( objectCount == 0 ) {
                 continue;
             }
+
+            // a little shorter...
+            cacheName = cacheName.replaceFirst( "ubic.gemma.model.", "[entity] " );
 
             buf.append( "<tr><td>" + cacheName + "</td>" );
             long hits = statistics.getCacheHits();
@@ -98,6 +101,10 @@ public class CacheMonitor {
                 buf.append( "<td>" + cacheConfiguration.getTimeToLiveSeconds() + "</td>" );
             }
             buf.append( "</tr>" );
+
+            if ( ++count % 25 == 0 ) {
+                buf.append( "<tr>" + header + "</tr>" );
+            }
         }
         buf.append( "</table>" );
         return buf.toString();

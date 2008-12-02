@@ -7,43 +7,15 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" />
+		</title>
 
 		<jwr:style src="/bundles/gemma-all.css" />
 
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+		<script type="text/javascript" src="/Gemma/scripts/ajax/dwrServices.js" ></script>
 
-		<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ArrayDesignController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/BibliographicReferenceController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/CompositeSequenceController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/CustomCompassIndexController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/DEDVController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionAnalysisController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ProcessedExpressionDataVectorCreateController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ArrayDesignRepeatScanController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionDataFileUploadController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentLoadController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/FileUploadController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/GeneController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/GeoBrowserService.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/HibernateMonitorController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/LinkAnalysisController.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/SearchService.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
 
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-all.js" />
