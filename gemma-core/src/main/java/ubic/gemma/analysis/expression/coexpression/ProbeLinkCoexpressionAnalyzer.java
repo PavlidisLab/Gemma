@@ -416,8 +416,8 @@ public class ProbeLinkCoexpressionAnalyzer {
                     Integer indexOfEEInAr = eeIndexMap.get( ee.getId() );
                     for ( Long geneId : genes ) {
                         if ( !genesTestedIn.containsKey( geneId ) ) {
-                            genesTestedIn.put( geneId, new ArrayList<Boolean>() );
                             // initialize the boolean array for this gene.
+                            genesTestedIn.put( geneId, new ArrayList<Boolean>() );
                             for ( int i = 0; i < ees.size(); i++ ) {
                                 genesTestedIn.get( geneId ).add( false );
                             }
