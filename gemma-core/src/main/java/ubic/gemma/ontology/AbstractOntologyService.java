@@ -355,6 +355,7 @@ public abstract class AbstractOntologyService {
         }
         
         Thread keepAliveThread = new KeepAliveThread();
+        keepAliveThread.setDaemon( true );  //needed or else won't shut down cleanly
         keepAliveThread.start();
         keepAliveThreads.put( this.getClass(), keepAliveThread );
     }
