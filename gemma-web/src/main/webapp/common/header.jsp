@@ -18,7 +18,7 @@
 <div id="branding">
 
 	<div id="headerLeft">
-		<a href="/Gemma"><img src="<c:url value='/images/logo/gemma-lg153x350.gif'/>" alt="gemma" /> </a>
+		<a href="<c:url value='/mainMenu.html'/>"><img src="<c:url value='/images/logo/gemma-lg153x350.gif'/>" alt="gemma" /> </a>
 	</div>
 
 
