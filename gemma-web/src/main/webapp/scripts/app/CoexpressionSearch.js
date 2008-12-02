@@ -64,7 +64,8 @@ Ext.onReady(function() {
 				var dsGrid = new Gemma.ExpressionExperimentGrid({
 							records : supporting,
 							width : 750,
-							height : 400
+							height : 380,
+							stateful : false
 						});
 
 				dsGrid.getStore().load();
@@ -78,14 +79,17 @@ Ext.onReady(function() {
 							geneId : foundGene.id,
 							threshold : 0.01,
 							width : 750,
-							height : 400
+							height : 380,
+							stateful : false,
+							autoScroll : true 
 						});
 
 				var detailsTP = new Ext.TabPanel({
 							layoutOnTabChange : true,
-							width : 750,
+							width : 760,
 							height : 400,
 							activeTab : 0,
+							stateful : false,
 							items : [{
 										title : "Supporting datasets",
 										items : [dsGrid]
@@ -112,12 +116,13 @@ Ext.onReady(function() {
 
 				 detailsWindow = new Ext.Window({
 							modal : false,
-							layout : 'fit',
+							//layout : 'fit',
 							title : 'Details for ' + foundGene.officialSymbol,
 							closeAction : 'close',
 							items : [detailsTP],
-							width : 750,
-							height : 400
+							width : 760,
+							height : 400, 
+							stateful : false 
 						});
 
 				detailsWindow.show();
