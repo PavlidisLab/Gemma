@@ -121,9 +121,6 @@ public class HibernateURLType implements UserType {
      * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[], java.lang.Object)
      */
     public Object nullSafeGet( ResultSet rs, String[] names, Object owner ) throws HibernateException, SQLException {
-        if ( names == null || names.length == 0 ) {
-            return null;
-        }
         final StringBuffer buffer = new StringBuffer();
         try {
             // First we get the stream
