@@ -388,7 +388,7 @@ Ext.onReady(function() {
 									enabled : false,
 									handler : tool.agree,
 									scope : tool,
-									fieldLabel : "I have read the '<a target=\'_blank\' href='/Gemma/static/dataUploadTermsAndConditions.html'>terms and conditions</a>'"
+									fieldLabel : "I have read the '<a target=\'_blank\' href='/Gemma/static/termsAndConditions.html'>terms and conditions</a>'"
 								}]
 					}]
 
