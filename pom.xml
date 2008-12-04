@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma</name>
@@ -6,7 +7,9 @@
 	<artifactId>gemma</artifactId>
 	<version>1.2.1-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
-	<description>The Gemma Project for meta-analysis of genomics data</description>
+	<description>
+		The Gemma Project for meta-analysis of genomics data
+	</description>
 	<url>http://www.bioinformatics.ubc.ca/Gemma</url>
 	<organization>
 		<name>UBC Centre for High-throughput Biology</name>
@@ -21,8 +24,12 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>scm:cvs:ext:@broca.ubic.ca:local:/cvs:Gemma</connection>
-		<developerConnection>scm:cvs:ext:@broca.ubic.ca:/cvs:Gemma</developerConnection>
+		<connection>
+			scm:cvs:ext:@broca.ubic.ca:local:/cvs:Gemma
+		</connection>
+		<developerConnection>
+			scm:cvs:ext:@broca.ubic.ca:/cvs:Gemma
+		</developerConnection>
 		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
 	</scm>
 	<issueManagement>
@@ -112,11 +119,11 @@
 			<version>3.2.6.ga</version>
 			<type>jar</type>
 		</dependency>
-	 	<dependency>
-        	<groupId>net.sf.ehcache</groupId>
-        	<artifactId>ehcache</artifactId>
-        	<version>1.6.0-beta1</version>
-     	</dependency>
+		<dependency>
+			<groupId>net.sf.ehcache</groupId>
+			<artifactId>ehcache</artifactId>
+			<version>1.6.0-beta1</version>
+		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
@@ -174,7 +181,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.5-SNAPSHOT</version>
+			<version>1.0.5</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
@@ -221,7 +228,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjrt</artifactId>
@@ -273,16 +280,18 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<artifactId>
+					maven-project-info-reports-plugin
+				</artifactId>
 				<reportSets>
 					<reportSet>
 						<reports>
 							<report>dependencies</report>
 							<report>dependency-convergence</report>
 							<!--	<report>index</report>
-
+								
 								<report>project-team</report>
-
+								
 								<report>cim</report>
 								<report>issue-tracking</report>
 								<report>license</report>
@@ -300,20 +309,48 @@
 					<quiet>true</quiet>
 					<aggregate>false</aggregate>
 					<links>
-						<link>http://java.sun.com/j2ee/1.4/docs/api</link>
-						<link>http://java.sun.com/j2se/1.5.0/docs/api</link>
-						<link>http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/</link>
-						<link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
-						<link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
-						<link>http://jakarta.apache.org/commons/httpclient/apidocs/</link>
-						<link>http://commons.apache.org/logging/apidocs/</link>
-						<link>http://jakarta.apache.org/commons/pool/apidocs/</link>
-						<link>http://logging.apache.org/log4j/docs/api/</link>
-						<link>http://jakarta.apache.org/regexp/apidocs/</link>
-						<link>http://jakarta.apache.org/velocity/api/</link>
-						<link>http://dsd.lbl.gov/~hoschek/colt/api/</link>
-						<link>http://static.springframework.org/spring/docs/2.0.7/api/</link>
-						<link>http://www.hibernate.org/hib_docs/v3/api/</link>
+						<link>
+							http://java.sun.com/j2ee/1.4/docs/api
+						</link>
+						<link>
+							http://java.sun.com/j2se/1.5.0/docs/api
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/dbcp/apidocs/
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/fileupload/apidocs/
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/httpclient/apidocs/
+						</link>
+						<link>
+							http://commons.apache.org/logging/apidocs/
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/pool/apidocs/
+						</link>
+						<link>
+							http://logging.apache.org/log4j/docs/api/
+						</link>
+						<link>
+							http://jakarta.apache.org/regexp/apidocs/
+						</link>
+						<link>
+							http://jakarta.apache.org/velocity/api/
+						</link>
+						<link>
+							http://dsd.lbl.gov/~hoschek/colt/api/
+						</link>
+						<link>
+							http://static.springframework.org/spring/docs/2.0.7/api/
+						</link>
+						<link>
+							http://www.hibernate.org/hib_docs/v3/api/
+						</link>
 					</links>
 				</configuration>
 			</plugin>
@@ -340,7 +377,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>-Xmx1g -ea -Djava.awt.headless=true</argLine>
+					<argLine>
+						-Xmx1g -ea -Djava.awt.headless=true
+					</argLine>
 					<excludes>
 						<exclude>**/*Abstract*</exclude>
 						<exclude>**/*IntegrationTest.java</exclude>
@@ -349,74 +388,77 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
+				<artifactId>maven-release-plugin</artifactId> 
+				<version>2.0-beta-5</version><!--  2.0-beta-8 hangs on cvs update -->
 				<configuration>
-					<allowTimestampedSnapshots>true</allowTimestampedSnapshots>
+					<allowTimestampedSnapshots>
+						true
+					</allowTimestampedSnapshots>
 					<autoVersionSubmodules>true</autoVersionSubmodules>
 				</configuration>
 			</plugin>
 		</plugins>
-	</build>			
+	</build>
 	<repositories>
 		<repository>
-		 	<id>pavlab</id>
-			 	<name>PavLab</name>
-					<url>http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2</url>
-					<layout>default</layout>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>daily</updatePolicy>
-					</snapshots>
-					<releases>
-						<enabled>true</enabled>
-						<updatePolicy>daily</updatePolicy>
-					</releases>
-				</repository>
+			<id>pavlab</id>
+			<name>PavLab</name>
+			<url>
+				http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2
+			</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</releases>
+		</repository>
 	</repositories>
 	<pluginRepositories>
-	<pluginRepository>
-		<id>apache.plugin.snapshots</id>
-		<name>Apache Development Repository</name>
-		<url>
-				http://cvs.apache.org/maven-snapshot-repository
+		<pluginRepository>
+			<id>apache.plugin.snapshots</id>
+			<name>Apache Development Repository</name>
+			<url>http://cvs.apache.org/maven-snapshot-repository</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>mojo</id>
+			<name>Mojo</name>
+			<url>http://snapshots.maven.codehaus.org/maven2/</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>pavlab</id>
+			<name>PavLab</name>
+			<url>
+				http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2
 			</url>
-		<releases>
-			<enabled>false</enabled>
-		</releases>
-		<snapshots>
-			<enabled>true</enabled>
-			<updatePolicy>daily</updatePolicy>
-		</snapshots>
-	</pluginRepository>
-	<pluginRepository>
-		<id>mojo</id>
-		<name>Mojo</name>
-		<url>
-				http://snapshots.maven.codehaus.org/maven2/
-			</url>
-		<layout>default</layout>
-		<releases>
-			<enabled>false</enabled>
-		</releases>
-		<snapshots>
-			<enabled>true</enabled>
-			<updatePolicy>daily</updatePolicy>
-		</snapshots>
-	</pluginRepository>
-	<pluginRepository>
-		<id>pavlab</id>
-		<name>PavLab</name>
-		<url>http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2</url>
-		<layout>default</layout>
-		<snapshots>
-			<enabled>true</enabled>
-			<updatePolicy>daily</updatePolicy>
-		</snapshots>
-		<releases>
-			<enabled>true</enabled>
-			<updatePolicy>daily</updatePolicy>
-		</releases>
-	</pluginRepository>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</releases>
+		</pluginRepository>
 	</pluginRepositories>
 	<profiles>
 		<profile>
@@ -434,7 +476,9 @@
 						<artifactId>maven-assembly-plugin</artifactId>
 						<configuration>
 							<descriptors>
-								<descriptor>src/assembly/src-assembly.xml</descriptor>
+								<descriptor>
+									src/assembly/src-assembly.xml
+								</descriptor>
 							</descriptors>
 						</configuration>
 					</plugin>
@@ -456,7 +500,9 @@
 						<artifactId>maven-assembly-plugin</artifactId>
 						<configuration>
 							<descriptors>
-								<descriptor>src/assembly/bin-assembly.xml</descriptor>
+								<descriptor>
+									src/assembly/bin-assembly.xml
+								</descriptor>
 							</descriptors>
 						</configuration>
 					</plugin>
@@ -467,7 +513,9 @@
 	<distributionManagement>
 		<site>
 			<id>website</id>
-			<url>scp://hebb.ubic.ca:/spacef/gemmaData/gemma-devsite</url>
+			<url>
+				scp://hebb.ubic.ca:/spacef/gemmaData/gemma-devsite
+			</url>
 		</site>
 		<repository>
 			<id>repo</id>
@@ -480,5 +528,5 @@
 			<url>scp://broca.ubic.ca:/www/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
-		
+
 </project>
