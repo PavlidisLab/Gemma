@@ -121,23 +121,10 @@ public class HibernateURLType implements UserType {
      * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[], java.lang.Object)
      */
     public Object nullSafeGet( ResultSet rs, String[] names, Object owner ) throws HibernateException, SQLException {
-//        final StringBuffer buffer = new StringBuffer();
-//        try {
-            // First we get the stream
-            String s = rs.getString( names[0] );
-//            if ( inputStream == null ) {
-//                return null;
-//            }
-//            byte[] buf = new byte[1024];
-//            int read = -1;
-//
-//            while ( ( read = inputStream.read( buf ) ) > 0 ) {
-//                buffer.append( new String( buf, 0, read ) );
-//            }
-//            inputStream.close();
-//        } catch ( IOException exception ) {
-//            throw new HibernateException( "Unable to read from resultset", exception );
-//        }
+        String s = rs.getString( names[0] );
+        if ( s == null || s.length() == 0 ) {
+            return null;
+        }
         try {
             return new java.net.URL( s );
         } catch ( MalformedURLException e ) {
