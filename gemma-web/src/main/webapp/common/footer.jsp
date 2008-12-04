@@ -14,6 +14,7 @@
 			href="<c:url value="/logout.html"/>"> <fmt:message key="user.logout" /> </a> </span>
 
 	</c:if>
+	<span class="left"><a href='<c:url value="/static/termsAndConditions.html" />'>Terms and conditions</a></span>
 	<c:if test="${empty pageContext.request.remoteUser}">
 		<span class="right"> | <a title="Login is not needed for use of Gemma" href="<c:url value="/login.jsp"/>"
 			class="current"><fmt:message key="login.title" /> </a> </span>
