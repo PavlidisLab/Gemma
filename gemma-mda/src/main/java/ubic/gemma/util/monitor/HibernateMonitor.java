@@ -127,6 +127,12 @@ public class HibernateMonitor implements InitializingBean, DisposableBean {
             }
         }
 
+        String slowQuery = stats.getQueryExecutionMaxTimeQueryString();
+        long queryExecutionMaxTime = stats.getQueryExecutionMaxTime();
+        if ( queryExecutionMaxTime > 1000 ) {
+            buf.append( "Slowest query [" + queryExecutionMaxTime + "ms]: " + slowQuery + "\n" );
+        }
+
         if ( showCollectionStats ) {
             buf.append( "\n------------------- Collection stats -----------------------\n" );
             String[] collectionRoleNames = stats.getCollectionRoleNames();
@@ -182,7 +188,6 @@ public class HibernateMonitor implements InitializingBean, DisposableBean {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -222,7 +227,6 @@ public class HibernateMonitor implements InitializingBean, DisposableBean {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.beans.factory.DisposableBean#destroy()
      */
     public void destroy() throws Exception {

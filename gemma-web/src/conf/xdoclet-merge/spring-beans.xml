@@ -534,6 +534,7 @@
 					<property name="includes">
 						<list>
 							<value>getEvents</value>
+							<value>getAuditable</value>
 							<value>addAuditEvent</value>
 						</list>
 					</property>

@@ -932,6 +932,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         String sId = request.getParameter( "id" );
         String taxonId = request.getParameter( "taxonId" );
+        String showDetailsStr = request.getParameter( "details" );
+        boolean showDetails = false;
+        if ( StringUtils.isNotBlank( showDetailsStr ) ) {
+            showDetails = true;
+        }
         Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
         Collection<ExpressionExperimentValueObject> eeValObjectCol;
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
@@ -979,7 +984,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments,
                 new ExpressionExperimentValueObjectComparator() );
 
-        if ( SecurityService.isUserAdmin() ) {
+        if ( SecurityService.isUserAdmin() && showDetails ) {
             expressionExperimentReportService.fillEventInformation( expressionExperiments );
         }
 

@@ -163,15 +163,7 @@ public final class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDao
         Map<Auditable, AuditEvent> result = new HashMap<Auditable, AuditEvent>();
         if ( auditables.size() == 0 ) return result;
 
-        StopWatch timer = new StopWatch();
-        timer.start();
-
         final Map<AuditTrail, Auditable> atmap = getAuditTrailMap( auditables );
-
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Audit trails retrieved for " + auditables.size() + " items in " + timer.getTime() + "ms" );
-        }
 
         List<String> classes = getClassHierarchy( type.getClass() );
 
@@ -179,8 +171,9 @@ public final class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDao
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
                 + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
 
-        timer.reset();
+        StopWatch timer = new StopWatch();
         timer.start();
+        // note: this is fast.
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -205,7 +198,7 @@ public final class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDao
             throw super.convertHibernateAccessException( ex );
         }
         timer.stop();
-        if ( timer.getTime() > 1000 ) {
+        if ( timer.getTime() > 500 ) {
             log.info( "Last event of type " + type.getClass().getSimpleName() + " retrieved for " + auditables.size()
                     + " items in " + timer.getTime() + "ms" );
         }
@@ -272,6 +265,7 @@ public final class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDao
      */
     @SuppressWarnings("unchecked")
     private Map<AuditTrail, Auditable> getAuditTrailMap( final Collection<? extends Auditable> auditables ) {
+
         /*
          * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because Auditable
          * is not mapped, we have to query for each class separately ... just in case the user has passed a
@@ -286,9 +280,13 @@ public final class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDao
             clazzmap.get( a.getClass().getSimpleName() ).add( a );
         }
 
-        // this is the actual thaw, done in one select.
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         for ( String clazz : clazzmap.keySet() ) {
             final String trailQuery = "select a, a.auditTrail from " + clazz + " a where a in (:auditables) ";
+            this.getHibernateTemplate().setCacheQueries( true );
+            this.getHibernateTemplate().setQueryCacheRegion( "org.hibernate.cache.StandardQueryCache" );
             List res = this.getHibernateTemplate().findByNamedParam( trailQuery, "auditables", clazzmap.get( clazz ) );
             for ( Object o : res ) {
                 Object[] ar = ( Object[] ) o;
@@ -296,6 +294,15 @@ public final class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDao
                 Auditable a = ( Auditable ) ar[0];
                 atmap.put( t, a );
             }
+
+            timer.stop();
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Audit trails retrieved for " + auditables.size() + " " + clazz + " items in "
+                        + timer.getTime() + "ms" );
+            }
+            timer.reset();
+            timer.start();
+
         }
         return atmap;
     }

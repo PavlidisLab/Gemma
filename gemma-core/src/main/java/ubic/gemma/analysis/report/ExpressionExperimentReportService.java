@@ -132,11 +132,11 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     }
 
     /**
-     * fills in event and security information from the database. This will only retrieve the latest event (if any).
+     * Fills in event and security information from the database. This will only retrieve the latest event (if any).
+     * This is rather slow so should be avoided if the information isn't needed.
      * 
      * @return the filled out value objects
      */
-    @SuppressWarnings("unchecked")
     public void fillEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : vos ) {
