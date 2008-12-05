@@ -175,12 +175,21 @@ public class GeneOntologyService {
 
     private GeneService geneService;
 
+    /**
+     * Cache of go term -> child terms
+     */
     private Map<String, Collection<OntologyTerm>> childrenCache = Collections
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
+    /**
+     * Cache of go term -> parent terms
+     */
     private Map<String, Collection<OntologyTerm>> parentsCache = Collections
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
+    /**
+     * Cache of gene -> go terms.
+     */
     private Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<Gene, Collection<OntologyTerm>>();
 
     /**
@@ -195,8 +204,7 @@ public class GeneOntologyService {
      * @returns map of gene ids to collections of ontologyTerms. This will always be populated but collection values
      *          will be empty when there is no overlap.
      */
-    @SuppressWarnings("unchecked")
-    public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection geneIds ) {
+    public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection<Long> geneIds ) {
 
         Map<Long, Collection<OntologyTerm>> overlap = new HashMap<Long, Collection<OntologyTerm>>();
         if ( queryGene == null ) return null;
@@ -246,7 +254,6 @@ public class GeneOntologyService {
      * @param queryGene2
      * @returns Collection<OntologyEntries>
      */
-    @SuppressWarnings("unchecked")
     public Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 ) {
 
         if ( queryGene1 == null || queryGene2 == null ) return null;
@@ -338,7 +345,6 @@ public class GeneOntologyService {
 
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<OntologyTerm> getChildren( OntologyTerm entry, boolean includePartOf ) {
         if ( entry == null ) return null;
         if ( log.isDebugEnabled() ) log.debug( "Getting children of " + entry );
@@ -372,7 +378,6 @@ public class GeneOntologyService {
      * @param Take a gene and return a set of all GO terms including the parents of each GO term
      * @param geneOntologyTerms
      */
-    @SuppressWarnings("unchecked")
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
         return getGOTerms( gene, true );
     }
@@ -388,8 +393,10 @@ public class GeneOntologyService {
     @SuppressWarnings("unchecked")
     public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf ) {
         Collection<OntologyTerm> cachedTerms = goTerms.get( gene );
-        if ( log.isTraceEnabled() && cachedTerms != null )
+        if ( log.isTraceEnabled() && cachedTerms != null ) {
             logIds( "found cached GO terms for " + gene.getOfficialSymbol(), goTerms.get( gene ) );
+        }
+
         if ( cachedTerms == null ) {
             Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
 
@@ -408,6 +415,7 @@ public class GeneOntologyService {
             if ( log.isTraceEnabled() ) logIds( "caching GO terms for " + gene.getOfficialSymbol(), allGOTermSet );
             goTerms.put( gene, cachedTerms );
         }
+
         return cachedTerms;
     }
 

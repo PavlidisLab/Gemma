@@ -90,7 +90,8 @@ public class GeneCoexpressionService {
     /**
      * How many genes to fill in the "expression experiments tested in" and "go overlap" info for.
      */
-    private static final int NUM_GENES_TO_DETAIL = 100;
+    private static final int NUM_GENES_TO_DETAIL = 25;
+    
     GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
     private ExpressionExperimentService expressionExperimentService;
     private ExpressionExperimentSetService expressionExperimentSetService;
@@ -317,9 +318,10 @@ public class GeneCoexpressionService {
         StopWatch timer = new StopWatch();
         timer.start();
 
+        geneService.thawLite( gg2gs.keySet() );
+
         // populate the value objects.
         for ( Gene queryGene : gg2gs.keySet() ) {
-            geneService.thaw( queryGene );
 
             /*
              * For summary statistics
@@ -680,29 +682,33 @@ public class GeneCoexpressionService {
      * @param queryGene
      */
     private void getGoOverlap( Collection<CoexpressionValueObjectExt> ecvos, Gene queryGene ) {
+        if ( !geneOntologyService.isGeneOntologyLoaded() ) {
+            return;
+        }
+
         /*
          * get GO overlap info for this query gene...
          */
         StopWatch timer = new StopWatch();
         timer.start();
-        if ( geneOntologyService.isGeneOntologyLoaded() ) {
-            int numQueryGeneGoTerms = geneOntologyService.getGOTerms( queryGene ).size();
-            Collection<Long> overlapIds = new ArrayList<Long>();
-            int i = 0;
-            for ( CoexpressionValueObjectExt ecvo : ecvos ) {
-                overlapIds.add( ecvo.getFoundGene().getId() );
-                if ( i++ > NUM_GENES_TO_DETAIL ) break;
-            }
-            Map<Long, Collection<OntologyTerm>> goOverlap = geneOntologyService.calculateGoTermOverlap( queryGene,
-                    overlapIds );
-            for ( CoexpressionValueObjectExt ecvo : ecvos ) {
-                ecvo.setMaxGoSim( numQueryGeneGoTerms );
-                Collection<OntologyTerm> overlap = goOverlap.get( ecvo.getFoundGene().getId() );
-                ecvo.setGoSim( overlap == null ? 0 : overlap.size() );
-            }
+
+        int numQueryGeneGoTerms = geneOntologyService.getGOTerms( queryGene ).size();
+        Collection<Long> overlapIds = new ArrayList<Long>();
+        int i = 0;
+        for ( CoexpressionValueObjectExt ecvo : ecvos ) {
+            overlapIds.add( ecvo.getFoundGene().getId() );
+            if ( i++ > NUM_GENES_TO_DETAIL ) break;
         }
+        Map<Long, Collection<OntologyTerm>> goOverlap = geneOntologyService.calculateGoTermOverlap( queryGene,
+                overlapIds );
+        for ( CoexpressionValueObjectExt ecvo : ecvos ) {
+            ecvo.setMaxGoSim( numQueryGeneGoTerms );
+            Collection<OntologyTerm> overlap = goOverlap.get( ecvo.getFoundGene().getId() );
+            ecvo.setGoSim( overlap == null ? 0 : overlap.size() );
+        }
+
         if ( timer.getTime() > 1000 ) {
-            log.info( "GO stats: " + timer.getTime() + "ms" );
+            log.info( "GO stats for " + queryGene.getName() + " :" + timer.getTime() + "ms" );
         }
     }
 
