@@ -58,6 +58,7 @@ import ubic.gemma.util.ConfigUtils;
  * @spring.property name="auditEventService" ref="auditEventService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="cacheManager" ref="cacheManager"
  * @author pavlidis
  * @version $Id$
  */
@@ -65,30 +66,30 @@ public class WhatsNewService implements InitializingBean {
 
     private static Log log = LogFactory.getLog( WhatsNewService.class.getName() );
 
-    private String WHATS_NEW_FILE = "WhatsNew";
-    private String WHATS_NEW_DIR = "WhatsNew";
-    private String WHATS_NEW_CACHE = "WhatsNew";
-    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
-
-    AuditEventService auditEventService;
-    ExpressionExperimentService expressionExperimentService = null;
     ArrayDesignService arrayDesignService = null;
+    AuditEventService auditEventService;
+    CacheManager cacheManager = null;
+    ExpressionExperimentService expressionExperimentService = null;
+
+    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private String WHATS_NEW_CACHE = "WhatsNew";
+    private String WHATS_NEW_DIR = "WhatsNew";
+    private String WHATS_NEW_FILE = "WhatsNew";
 
     private Cache whatsNewCache;
 
     public void afterPropertiesSet() throws Exception {
         try {
-            CacheManager manager = CacheManager.getInstance();
 
-            if ( manager.cacheExists( WHATS_NEW_CACHE ) ) {
+            if ( cacheManager.cacheExists( WHATS_NEW_CACHE ) ) {
                 return;
             }
 
             // last two values are timetolive and timetoidle.
             whatsNewCache = new Cache( WHATS_NEW_CACHE, 1500, false, false, 100000, 100000 );
 
-            manager.addCache( whatsNewCache );
-            whatsNewCache = manager.getCache( WHATS_NEW_CACHE );
+            cacheManager.addCache( whatsNewCache );
+            whatsNewCache = cacheManager.getCache( WHATS_NEW_CACHE );
 
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
@@ -97,21 +98,15 @@ public class WhatsNewService implements InitializingBean {
     }
 
     /**
-     * @param arrayDesignService the arrayDesignService to set
+     * save the report from last week. This will be the report that will be used by the WhatsNew box.
+     * 
+     * @param date
      */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param expressionExperimentService the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setAuditEventService( AuditEventService auditEventService ) {
-        this.auditEventService = auditEventService;
+    public void generateWeeklyReport() {
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        date = DateUtils.addDays( date, -7 );
+        saveReport( date );
     }
 
     /**
@@ -129,35 +124,10 @@ public class WhatsNewService implements InitializingBean {
     }
 
     /**
-     * save the report from the date specified. This will be the report that will be used by the WhatsNew box.
-     * 
-     * @param date
-     */
-    public void saveReport( Date date ) {
-        WhatsNew wn = getReport( date );
-        initDirectories( true );
-        saveFile( wn );
-    }
-
-    /**
-     * save the report from last week. This will be the report that will be used by the WhatsNew box.
-     * 
-     * @param date
-     */
-    public void generateWeeklyReport() {
-        Calendar c = Calendar.getInstance();
-        Date date = c.getTime();
-        date = DateUtils.addDays( date, -7 );
-        saveReport( date );
-    }
-
-    /**
      * Retrieve the latest WhatsNew report.
      * 
      * @return WhatsNew the latest WhatsNew report cache.
      */
-
-    @SuppressWarnings("unchecked")
     public WhatsNew retrieveReport() {
         WhatsNew wn = new WhatsNew();
         StopWatch timer = new StopWatch();
@@ -203,15 +173,39 @@ public class WhatsNewService implements InitializingBean {
     }
 
     /**
-     * Sets the date to the earliest update date of any object that has been retrieved so far.
+     * save the report from the date specified. This will be the report that will be used by the WhatsNew box.
      * 
-     * @param wn
-     * @param object
+     * @param date
      */
-    private void updateDate( WhatsNew wn, AuditableObject object ) {
-        if ( object.getDate() != null && ( wn.getDate() == null || wn.getDate().after( object.getDate() ) ) ) {
-            wn.setDate( object.getDate() );
-        }
+    public void saveReport( Date date ) {
+        WhatsNew wn = getReport( date );
+        initDirectories( true );
+        saveFile( wn );
+    }
+
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    public void setAuditEventService( AuditEventService auditEventService ) {
+        this.auditEventService = auditEventService;
+    }
+
+    /**
+     * @param expressionExperimentService the expressionExperimentService to set
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param cacheManager the cacheManager to set
+     */
+    protected void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
     }
 
     /**
@@ -243,24 +237,6 @@ public class WhatsNewService implements InitializingBean {
     }
 
     /**
-     * @param newObjects
-     * @return
-     * @throws FileNotFoundException
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<AuditableObject> loadAuditableObjects( File newObjects ) throws FileNotFoundException,
-            IOException, ClassNotFoundException {
-        FileInputStream fis = new FileInputStream( newObjects );
-        ObjectInputStream ois = new ObjectInputStream( fis );
-        Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois.readObject();
-        ois.close();
-        fis.close();
-        return aos;
-    }
-
-    /**
      * @param deleteFiles
      */
     private void initDirectories( boolean deleteFiles ) {
@@ -278,6 +254,24 @@ public class WhatsNewService implements InitializingBean {
         if ( deleteFiles ) {
             FileTools.deleteFiles( files );
         }
+    }
+
+    /**
+     * @param newObjects
+     * @return
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<AuditableObject> loadAuditableObjects( File newObjects ) throws FileNotFoundException,
+            IOException, ClassNotFoundException {
+        FileInputStream fis = new FileInputStream( newObjects );
+        ObjectInputStream ois = new ObjectInputStream( fis );
+        Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois.readObject();
+        ois.close();
+        fis.close();
+        return aos;
     }
 
     /**
@@ -354,6 +348,18 @@ public class WhatsNewService implements InitializingBean {
         }
 
         return true;
+    }
+
+    /**
+     * Sets the date to the earliest update date of any object that has been retrieved so far.
+     * 
+     * @param wn
+     * @param object
+     */
+    private void updateDate( WhatsNew wn, AuditableObject object ) {
+        if ( object.getDate() != null && ( wn.getDate() == null || wn.getDate().after( object.getDate() ) ) ) {
+            wn.setDate( object.getDate() );
+        }
     }
 
 }
