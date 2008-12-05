@@ -1316,13 +1316,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
 
             List<Long> idl = new ArrayList<Long>( ids );
-            Collections.sort( idl );
+            Collections.sort( idl ); // so it's consistent and therefore cacheable.
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
 
             Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( idl );
 
             queryObject.setParameterList( "ids", idl );
             queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "org.hibernate.cache.StandardQueryCache" );
 
             List list = queryObject.list();
             for ( Object object : list ) {

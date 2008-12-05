@@ -825,6 +825,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     @SuppressWarnings( { "unchecked" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         if ( request.getParameter( "id" ) == null ) {
             // should be a validator error on submit
             return redirectToList( request );
@@ -870,10 +873,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection characteristics = expressionExperiment.getCharacteristics();
         mav.addObject( "characteristics", characteristics );
 
-        // Collection s =
-        // expressionExperimentService.getQuantitationTypeCountById( id
-        // ).entrySet();
-        // mav.addObject( "qtCountSet", s );
         Collection quantitationTypes = expressionExperimentService.getQuantitationTypes( expressionExperiment );
         mav.addObject( "quantitationTypes", quantitationTypes );
         mav.addObject( "qtCount", quantitationTypes.size() );
@@ -916,6 +915,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         boolean isPrivate = securityService.isPrivate( expressionExperiment );
         mav.addObject( "isPrivate", isPrivate );
+
+        if ( timer.getTime() > 100 ) {
+            log.info( "Get Experiment: " + timer.getTime() + "ms" );
+        }
 
         return mav;
     }
@@ -1002,8 +1005,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @return ModelAndView
      */
     public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
-        log.info( "Processing link summary request" );
-
         String sId = request.getParameter( "id" );
 
         Collection<ExpressionExperimentValueObject> expressionExperiments = loadStatusSummaries( sId );
