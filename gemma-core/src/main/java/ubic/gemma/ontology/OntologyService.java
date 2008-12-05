@@ -428,10 +428,8 @@ public class OntologyService {
             if ( term2.equals( comparator ) ) return -1;
 
             if ( term1.startsWith( comparator ) ) {
-                if ( term2.startsWith( comparator ) )
-                    return 0;
-                else
-                    return 1;
+                if ( term2.startsWith( comparator ) ) return 0;
+                return 1;
             } else if ( term2.startsWith( comparator ) ) {
                 return -1;
             }
@@ -447,7 +445,6 @@ public class OntologyService {
      * @param vc
      * @param bioMaterialIdList
      */
-    @SuppressWarnings("unchecked")
     public void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList ) {
 
         log.debug( "Vocab Characteristic: " + vc );
@@ -479,7 +476,6 @@ public class OntologyService {
      * @param vc
      * @param eeIds
      */
-    @SuppressWarnings("unchecked")
     public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> eeIds ) {
 
         if ( vc == null ) {
@@ -528,7 +524,6 @@ public class OntologyService {
      * @param vc
      * @param bmIdList
      */
-    @SuppressWarnings("unchecked")
     public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> eeIdList ) {
 
         log.debug( "Vocab Characteristic: " + characterIds );
@@ -566,7 +561,6 @@ public class OntologyService {
      * @param vc
      * @param bmIdList
      */
-    @SuppressWarnings("unchecked")
     public void removeBioMaterialStatement( Collection<Long> characterIds, Collection<Long> bmIdList ) {
 
         log.debug( "Vocab Characteristic: " + characterIds );

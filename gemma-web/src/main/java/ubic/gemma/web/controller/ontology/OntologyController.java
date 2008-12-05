@@ -37,17 +37,12 @@
  */
 package ubic.gemma.web.controller.ontology;
 
-import java.util.Collection;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.ontology.Ontology;
 import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.ontology.OntologyTools;
 import ubic.gemma.web.controller.BaseFormController;
@@ -59,44 +54,21 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name = "commandName" value="ontology"
  * @spring.property name = "formView" value="ontology.edit"
  * @spring.property name = "successView" value="ontology"
+ * @deprecated
  */
-
+@Deprecated
 public class OntologyController extends BaseFormController {
 
-    private static Log log = LogFactory.getLog( OntologyController.class.getName() );
-    private Collection<Ontology> ontos;
-
-    public OntologyController() {
-        // /* if true, reuses the same command object across the edit-submit-process (get-post-process). */
-        // setSessionForm( true );
-        //    
-        // //ontos = OntologyService.listAvailableOntologies();
-        //        
-        // try{
-        // GZIPInputStream is = new GZIPInputStream(
-        // this.getClass().getResourceAsStream("/data/loader/ontology/MGEDOntology.owl.gz" ) );
-        // OntologyTools.initOntology( is, "http://mged.sourceforge.net/ontologies/MGEDOntology.owl",
-        // OntModelSpec.OWL_MEM_RDFS_INF );
-        // }
-        // catch(Exception e){
-        // throw new RuntimeException(e);
-        // }
-    }
-
+    @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
 
         ModelAndView mnv = new ModelAndView( getSuccessView() );
-        // mnv.addObject( "ontologies", ontos );
 
         return mnv;
     }
 
-    /*
-     * @param request @param response @param command @param errors @return ModelAndView @throws Exception
-     */
     @Override
-    @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
@@ -118,13 +90,6 @@ public class OntologyController extends BaseFormController {
 
         return mnv;
     }
-
-    // @Override
-    // protected Map referenceData( HttpServletRequest request ) throws Exception {
-    // Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
-    // //mapping.put( "technologyTypes", new ArrayList<String>( TechnologyType.literals() ) );
-    // return mapping;
-    // }
 
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {

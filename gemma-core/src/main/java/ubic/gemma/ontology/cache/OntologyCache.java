@@ -27,7 +27,9 @@ import ubic.gemma.ontology.OntologyResource;
 /**
  * @author pavlidis
  * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class OntologyCache {
 
     private static final int TIME_TO_LIVE = 10000;

@@ -77,7 +77,6 @@
 			<prop key="/blatTrack.html">blatResultTrackController</prop>
 			<prop key="/maintenanceMode.html">maintenanceModeController</prop>
 			<prop key="/systemStats.html">systemStatsController</prop>
-			<prop key="/ontology.html">ontologyController</prop>
 			<prop key="/diff/diffExpressionAnalysis.html">differentialExpressionAnalysisController</prop>
 			<prop key="/diff/diffExpressionSearch.html">differentialExpressionSearchController</prop>
 			<prop key="/expressionExperimentSetManager.html">expressionExperimentSetController</prop>

@@ -36,7 +36,9 @@ import com.hp.hpl.jena.rdf.model.Resource;
 /**
  * @author Paul
  * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class OntologyTools {
 
     private static OntologyCache cache;
@@ -140,8 +142,8 @@ public class OntologyTools {
     public static String varToString( String var, QuerySolution soln ) {
         try {
             Resource r = soln.getResource( var );
-            if (r== null) return null;
-            else return r.toString();
+            if ( r == null ) return null;
+            return r.toString();
         } catch ( ClassCastException c ) {
             Literal l = soln.getLiteral( var );
             return l.getString();
