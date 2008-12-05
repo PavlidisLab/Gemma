@@ -14,8 +14,6 @@
 
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-		<script type="text/javascript" src="/Gemma/scripts/ajax/dwrServices.js" ></script>
-
 
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-all.js" />
