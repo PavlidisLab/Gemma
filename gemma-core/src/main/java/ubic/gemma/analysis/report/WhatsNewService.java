@@ -68,8 +68,8 @@ public class WhatsNewService implements InitializingBean {
 
     ArrayDesignService arrayDesignService = null;
     AuditEventService auditEventService;
-    CacheManager cacheManager = null;
     ExpressionExperimentService expressionExperimentService = null;
+    private CacheManager cacheManager = null;
 
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
     private String WHATS_NEW_CACHE = "WhatsNew";
@@ -195,17 +195,17 @@ public class WhatsNewService implements InitializingBean {
     }
 
     /**
+     * @param cacheManager the cacheManager to set
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
+    }
+
+    /**
      * @param expressionExperimentService the expressionExperimentService to set
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param cacheManager the cacheManager to set
-     */
-    protected void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
     }
 
     /**
