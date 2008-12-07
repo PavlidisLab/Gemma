@@ -188,6 +188,8 @@ public class DesignElementDataVectorDaoImpl extends
         Session session = super.getSession( false );
         org.hibernate.Query queryObject = session.createQuery( queryString );
         Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
+        StopWatch timer = new StopWatch();
+        timer.start();
         try {
 
             if ( ees != null && ees.size() > 0 ) {
@@ -213,7 +215,12 @@ public class DesignElementDataVectorDaoImpl extends
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        this.thaw( dedv2genes.keySet() );
+        timer.stop();
+        if ( timer.getTime() > 50 ) {
+            log.info( "Fetch vectors for " + cs2gene.size() + " probes in " + ( ees == null ? "(?)" : ees.size() )
+                    + "ees : " + timer.getTime() + "ms" );
+        }
+       // this.thaw( dedv2genes.keySet() );
         return dedv2genes;
     }
 
@@ -409,7 +416,7 @@ public class DesignElementDataVectorDaoImpl extends
         }
 
         timer.stop();
-        if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 2000 ) {
+        if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 20 ) {
             log.info( "Done, thawed " + designElementDataVectors.size() + " vectors in " + timer.getTime() + "ms" );
         }
         session.setFlushMode( oldFlushMode );

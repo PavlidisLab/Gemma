@@ -419,12 +419,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
             queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv "
-                    + " inner join fetch dedv.bioAssayDimension bd inner join dedv.designElement de  "
-                    + " where dedv.designElement in ( :cs )  ";
+                    + " inner join dedv.designElement de where dedv.designElement in ( :cs )  ";
         } else {
             queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv"
-                    + " inner join fetch dedv.bioAssayDimension bd " + " inner join dedv.designElement de "
-                    + " where dedv.designElement in (:cs )  and dedv.expressionExperiment in ( :ees )";
+                    + " inner join dedv.designElement de "
+                    + " where dedv.designElement in (:cs ) and dedv.expressionExperiment in ( :ees )";
         }
         return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
     }

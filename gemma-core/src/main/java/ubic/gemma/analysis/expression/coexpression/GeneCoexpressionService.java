@@ -92,7 +92,7 @@ public class GeneCoexpressionService {
      */
     private static final int NUM_GENES_TO_DETAIL = 25;
 
-    GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
     private ExpressionExperimentService expressionExperimentService;
     private ExpressionExperimentSetService expressionExperimentSetService;
     private Gene2GeneCoexpressionService gene2GeneCoexpressionService;
@@ -693,11 +693,10 @@ public class GeneCoexpressionService {
         timer.start();
 
         int numQueryGeneGoTerms = geneOntologyService.getGOTerms( queryGene ).size();
-        Collection<Long> overlapIds = new ArrayList<Long>();
-        int i = 0;
+        Collection<Long> overlapIds = new HashSet<Long>();
         for ( CoexpressionValueObjectExt ecvo : ecvos ) {
             overlapIds.add( ecvo.getFoundGene().getId() );
-            if ( i++ > NUM_GENES_TO_DETAIL ) break;
+            if ( overlapIds.size() >= NUM_GENES_TO_DETAIL ) break;
         }
         Map<Long, Collection<OntologyTerm>> goOverlap = geneOntologyService.calculateGoTermOverlap( queryGene,
                 overlapIds );
@@ -708,7 +707,7 @@ public class GeneCoexpressionService {
         }
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "GO stats for " + queryGene.getName() + "+ " + overlapIds.size() + " coexpressed genes :"
+            log.info( "GO stats for " + queryGene.getName() + " + " + overlapIds.size() + " coexpressed genes :"
                     + timer.getTime() + "ms" );
         }
     }

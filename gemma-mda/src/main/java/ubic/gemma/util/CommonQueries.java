@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.ScrollMode;
@@ -101,7 +102,7 @@ public class CommonQueries {
         queryObject.setParameter( "ee", ee );
         List list = queryObject.list();
         /*
-         * Thaw the TT. 
+         * Thaw the TT.
          */
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) list ) {
             ad.getTechnologyType();
@@ -167,6 +168,8 @@ public class CommonQueries {
      */
     public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes, Session session ) {
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
                 + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and gene in (:genes)";
@@ -184,6 +187,9 @@ public class CommonQueries {
             cs2gene.get( cs ).add( g );
         }
         results.close();
+        if ( timer.getTime() > 200 ) {
+            log.info( "Get cs2gene for " + genes.size() + " :" + timer.getTime() + "ms" );
+        }
         return cs2gene;
     }
 
