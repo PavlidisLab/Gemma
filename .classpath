@@ -217,7 +217,6 @@
 	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/iri/0.5/iri-0.5.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-webmvc/2.5.5/spring-webmvc-2.5.5.jar" sourcepath="/JAR_SOURCE/spring-framework-2.5.5/src"/>
 	<classpathentry kind="var" path="M2_REPO/org/aspectj/aspectjrt/1.6.1/aspectjrt-1.6.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/backport-util-concurrent/backport-util-concurrent/3.1/backport-util-concurrent-3.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/aspectj/aspectjweaver/1.6.0/aspectjweaver-1.6.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/rome/rome/0.9/rome-0.9.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jdom/jdom/1.0/jdom-1.0.jar"/>

@@ -1,4 +1,4 @@
-The Gemma project, version 1.2 Release Notes
+The Gemma project, version 1.3 Release Notes
   
   Copyright (c) 2006-2008 University of British Columbia
   
@@ -16,14 +16,26 @@ The Gemma project, version 1.2 Release Notes
 
 1. Resolved issues and improvements
 
-- Completely new 'dataset chooser' interface. This allows you to define "Expression 
-experiment sets' that can be used for your analyses. Currently user-customized sets
- are stored in a browser cookie; storing these on our server will be supported in the future.
-- Differential expression interface revamped.
-- Differential expression supports meta-analysis.
-- Coexpression interface revised.
-- Performance improvements in many areas.
-- Numerous bug fixes and behind-the-scenes enhancements.
+Gemma 1.3 is a major new release. At least 150 bug and feature requests have been closed.
+
+Major new features
+- Users can register to gain access to additional features
+- Registered users can upload their own expression data and securely integrate it into the Gemma system
+- Registered users have a 'dashboard' to manage their data sets
+- A new visualization feature allows viewing expression profiles in coexpression and differential expression analyses.
+
+Other new stuff
+- Complete installation instructions are provided for those who want to run Gemma locally
+- Coexpression results now always provide information on probe specificity
+- The expression experiment details interface has been rewritten to make it easier to use.
+- Differential expression meta-analysis has been made more usable by making experimental factors easier to select.
+
+Improvements
+- Much more documentation in many area
+- Major performance improvements throughout. 
+- Differential expression analyses can be run on experiments that have more than two factors (though you are still limited to using two factors in analysis)
+- API improvements under the hood: code cleanup and removal of ~20,000 lines of unneeded code.
+- Numerous other bug fixes and behind-the-scenes enhancements.
 
 2. Known issues
 
@@ -32,9 +44,7 @@ experiment sets' that can be used for your analyses. Currently user-customized s
 
 3. Installing and running Gemma at your location
 
-Gemma is designed to be portable. However, we have not yet completed
-documenting the build and installation procedure. If you are
-interested in installing Gemma, please contact gemma@bioinformatics.ubc.ca.
+Installation instructions are now available on the Gemma Wiki, http://bioinformatics.ubc.ca/confluence/display/gemma/Home
 
 4. Downloading data
 

@@ -424,8 +424,7 @@ public class GeneOntologyService {
      * 
      * @param entry
      * @return collection, because entries can have multiple parents. (only allroot is excluded)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public Collection<OntologyTerm> getParents( OntologyTerm entry ) {
         return getParents( entry, false );
     }

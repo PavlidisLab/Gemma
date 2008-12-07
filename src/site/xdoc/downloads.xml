@@ -7,18 +7,18 @@
 		<section name="Gemma current version">
 			<p>
 				For details see the
-				<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/RELEASE-NOTES-1.1.1.txt">release notes</a>
+				<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/RELEASE-NOTES-1.3.txt">release notes</a>
 				.
 			</p>
 			<subsection name="Binaries">
 				<ul>
 					<li>
-						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/Gemma-1.1.1.jar">Gemma-1.1.1.jar</a>
+						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/Gemma-1.3.jar">Gemma-1.1.1.jar</a>
 						- The Gemma web application (this is a 'web archive' file).
 					</li>
 					<li>
-						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/gemmaCli-1.1.1.jar">
-							gemmaCli-1.1.1.jar
+						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/gemmaCli-1.3.jar">
+							gemmaCli-1.3.jar
 						</a>
 						- The Gemma command line tool package.
 					</li>
@@ -32,13 +32,13 @@
 			<subsection name="Source Code">
 				<ul>
 					<li>
-						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/gemma-1.1.1-src.zip">
-							gemma-1.1.1-src.zip
+						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/gemma-1.3-src.zip">
+							gemma-1.3-src.zip
 						</a>
 					</li>
 					<li>
-						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/basecode-1.0-src.zip">
-							basecode-1.0-src.zip
+						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/basecode-1.0.5-src.zip">
+							basecode-1.0.5-src.zip
 						</a>
 						- Basecode is a set of code used by multiple projects in our lab. More details about basecode
 						are

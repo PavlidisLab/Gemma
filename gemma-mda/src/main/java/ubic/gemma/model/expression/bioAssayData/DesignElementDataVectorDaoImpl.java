@@ -231,6 +231,7 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleGetVectors(java.util.Collection,
      * java.util.Collection)
@@ -266,6 +267,7 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataForCompositeSequence(
      * ubic.gemma.model.expression.designElement.CompositeSequence)
@@ -292,6 +294,7 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataFromQuantitationType(
      * ubic.gemma.model.expression.experiment.ExpressionExperiment,
@@ -306,6 +309,7 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleThaw(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -334,10 +338,18 @@ public class DesignElementDataVectorDaoImpl extends
             session.evict( vector );
         }
 
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Thaw phase 1," + designElementDataVectors.size() + " vectors in " + timer.getTime() + "ms elapsed" );
+        }
+
         // lightly thaw the EEs we saw
         for ( ExpressionExperiment ee : ees ) {
             Hibernate.initialize( ee );
             session.evict( ee );
+        }
+
+        if ( timer.getTime() > 2000 ) {
+            log.info( "Thaw phase 2," + designElementDataVectors.size() + " vectors in " + timer.getTime() + "ms elapsed total" );
         }
 
         // thaw the bioassaydimensions we saw
@@ -371,6 +383,10 @@ public class DesignElementDataVectorDaoImpl extends
                 // don't do this.
                 // session.evict( ba );
             }
+        }
+
+        if ( timer.getTime() > 3000 ) {
+            log.info( "Thaw phase 3," + designElementDataVectors.size() + " vectors in " + timer.getTime() + "ms elapsed total" );
         }
 
         // thaw the designelements we saw.

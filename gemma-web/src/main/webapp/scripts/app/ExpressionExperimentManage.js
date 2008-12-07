@@ -317,6 +317,7 @@ Ext.onReady(function() {
 				store : store,
 				loadMask : true,
 				autoHeight : true,
+				minHeight : 70,
 				width : 1250,
 				columns : columns,
 				rowExpander : rowExpander,
