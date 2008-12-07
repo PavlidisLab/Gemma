@@ -91,7 +91,7 @@ public class GeneCoexpressionService {
      * How many genes to fill in the "expression experiments tested in" and "go overlap" info for.
      */
     private static final int NUM_GENES_TO_DETAIL = 25;
-    
+
     GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
     private ExpressionExperimentService expressionExperimentService;
     private ExpressionExperimentSetService expressionExperimentSetService;
@@ -708,7 +708,8 @@ public class GeneCoexpressionService {
         }
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "GO stats for " + queryGene.getName() + " :" + timer.getTime() + "ms" );
+            log.info( "GO stats for " + queryGene.getName() + "+ " + overlapIds.size() + " coexpressed genes :"
+                    + timer.getTime() + "ms" );
         }
     }
 
