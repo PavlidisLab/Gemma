@@ -56,6 +56,9 @@ public class CoexpressionValueObjectExt {
         this.queryGene = queryGene;
     }
 
+    /**
+     * @return the coexpressed gene.
+     */
     public Gene getFoundGene() {
         return foundGene;
     }
