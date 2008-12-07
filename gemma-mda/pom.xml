@@ -34,6 +34,10 @@
 				<includes>
 					<include>**/*</include>
 				</includes>
+				<excludes>
+					<exclude>ehcache.xml</exclude>
+					<exclude>hibernate.cfg.xml</exclude>
+				</excludes>
 			</resource>
 		</resources>
 		<filters>
