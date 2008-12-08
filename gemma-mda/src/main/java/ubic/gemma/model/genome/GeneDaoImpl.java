@@ -1084,6 +1084,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             for ( CoexpressionCacheValueObject cachedCVO : cache ) {
                 assert cachedCVO.getQueryProbe() != null;
                 assert cachedCVO.getCoexpressedProbe() != null;
+                if ( cachedCVO.getQueryGene().getId().equals( cachedCVO.getCoexpressedGene() ) ) {
+                    // defensive check against self-links being in the cache (shouldn't happen)
+                    continue;
+                }
                 addResult( coexpressions, eeid, cachedCVO.getQueryGene(), cachedCVO.getQueryProbe(), cachedCVO
                         .getPvalue(), cachedCVO.getScore(), cachedCVO.getCoexpressedGene(), cachedCVO.getGeneType(),
                         cachedCVO.getCoexpressedProbe() );
@@ -1091,7 +1095,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 assert coexpressions.contains( cachedCVO.getCoexpressedGene() );
             }
         }
-
     }
 
     /**
