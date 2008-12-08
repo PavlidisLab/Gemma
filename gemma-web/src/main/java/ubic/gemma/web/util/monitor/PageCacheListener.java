@@ -65,7 +65,7 @@ public class PageCacheListener implements CacheMapAccessEventListener, CacheEntr
      * Constructor, empty for us
      */
     public PageCacheListener() {
-        log.info( "Creation of SimpleStatisticListenerImpl" );
+        log.info( "Creation of PageCacheListener" );
     }
 
     /**
@@ -213,6 +213,7 @@ public class PageCacheListener implements CacheMapAccessEventListener, CacheEntr
      * 
      * @return String
      */
+    @Override
     public String toString() {
         return "PageCacheListener: Hit = " + hitCount + " / " + hitCountSum + ", stale hit = " + staleHitCount + " / "
                 + staleHitCountSum + ", miss = " + missCount + " / " + missCountSum + ", flush = " + flushCount;

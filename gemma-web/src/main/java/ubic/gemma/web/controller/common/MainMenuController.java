@@ -52,7 +52,7 @@ import ubic.gemma.model.genome.Taxon;
 public class MainMenuController extends AbstractController {
     private static Log log = LogFactory.getLog( MainMenuController.class.getName() );
 
-    private static final long MIN_TO_REPORT = 200;
+    private static final long MIN_TO_REPORT = 100;
 
     private ExpressionExperimentService expressionExperimentService;
     private BioAssayService bioAssayService;
