@@ -411,13 +411,17 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 		this.geneChooserPanel.on("addgenes", function(geneids) {
 					if (this.geneChooserPanel.getGeneIds().length > 1) {
-						Ext.getCmp("querygenesonly").enable();
+						var cmp = Ext.getCmp("querygenesonly");
+						cmp.enable();
 					}
+					
 				}, this);
 
 		this.geneChooserPanel.on("removegenes", function() {
 					if (this.geneChooserPanel.getGeneIds().length < 2) {
-						Ext.getCmp("querygenesonly").disable();
+						var cmp  = Ext.getCmp("querygenesonly");
+						cmp.setValue(false);
+						cmp.disable();
 					} else {
 						// console.log(this.geneChooserPanel.getGeneIds().length);
 					}
