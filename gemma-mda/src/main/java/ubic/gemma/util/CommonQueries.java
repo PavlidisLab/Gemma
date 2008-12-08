@@ -166,18 +166,33 @@ public class CommonQueries {
      * @param genes
      * @return
      */
+    @SuppressWarnings("unchecked")
     public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes, Session session ) {
 
-        StopWatch timer = new StopWatch();
-        timer.start();
-        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+	  StopWatch timer = new StopWatch();
+    	    timer.start();
+        //TODO:  make this 1 query could potentially make it faster. 
+        //Need to do this query twice to get all the genes that map to a given probe (because probes are non specific)
+        //1st get the probes that map to the given genes
+        final String csQueryString = "select distinct cs from GeneImpl as gene"
                 + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and gene in (:genes)";
 
-        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+        
+     
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setParameterList( "genes", genes );
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        List<CompositeSequence> probes = queryObject.list();
+        
+        
+        //Use the list of probes retrieved in the 1st query and get all the genes that they map to.         
+        final String cs2GeneQueryString = "select distinct cs, gene from GeneImpl as gene"
+                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) and gene.class = 'GeneImpl' ";
+        org.hibernate.Query cs2GeneQueryObject = session.createQuery( cs2GeneQueryString );
+        cs2GeneQueryObject.setParameterList( "probes", probes );
+        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+        ScrollableResults results = cs2GeneQueryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
             CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
             Gene g = ( Gene ) results.get( 1 );
@@ -187,6 +202,7 @@ public class CommonQueries {
             cs2gene.get( cs ).add( g );
         }
         results.close();
+        
         if ( timer.getTime() > 200 ) {
             log.info( "Get cs2gene for " + genes.size() + " :" + timer.getTime() + "ms" );
         }
