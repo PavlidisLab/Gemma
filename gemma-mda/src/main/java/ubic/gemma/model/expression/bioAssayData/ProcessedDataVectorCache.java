@@ -52,7 +52,7 @@ public class ProcessedDataVectorCache {
      * We retain references to the caches separately from the CacheManager. This _could_ create leaks of caches if the
      * cache manager needs to recreate a cache for some reason. Something to keep in mind.
      */
-    private static final Map<ExpressionExperiment, Cache> caches = new HashMap<ExpressionExperiment, Cache>();
+    private static final Map<Long /* EE id */, Cache> caches = new HashMap<Long, Cache>();
 
     private CacheManager cacheManager;
 
@@ -67,8 +67,8 @@ public class ProcessedDataVectorCache {
      * 
      */
     public void clearAllCaches() {
-        for ( ExpressionExperiment e : caches.keySet() ) {
-            clearCache( e );
+        for ( Long eeid : caches.keySet() ) {
+            clearCache( eeid );
         }
     }
 
@@ -77,8 +77,8 @@ public class ProcessedDataVectorCache {
      * 
      * @param e the expression experiment - specific cache to be cleared.
      */
-    public void clearCache( ExpressionExperiment e ) {
-        Cache cache = cacheManager.getCache( getCacheName( e ) );
+    public void clearCache( Long eeid ) {
+        Cache cache = cacheManager.getCache( getCacheName( eeid ) );
         if ( cache != null ) cache.removeAll();
     }
 
@@ -95,15 +95,15 @@ public class ProcessedDataVectorCache {
      * @param e
      * @return
      */
-    public Cache getCache( ExpressionExperiment e ) {
-        if ( !caches.containsKey( e ) ) {
-            initializeCache( e );
+    public Cache getCache( Long eeid ) {
+        if ( !caches.containsKey( eeid ) ) {
+            initializeCache( eeid );
         }
-        return caches.get( e );
+        return caches.get( eeid );
     }
 
-    private String getCacheName( ExpressionExperiment e ) {
-        return PROBE2PROBE_COEXPRESSION_CACHE_NAME_BASE + "_" + e.getShortName() + "_" + e.getId();
+    private String getCacheName( Long eeid ) {
+        return PROBE2PROBE_COEXPRESSION_CACHE_NAME_BASE + "_" + eeid;
     }
 
     /**
@@ -111,9 +111,9 @@ public class ProcessedDataVectorCache {
      * 
      * @return
      */
-    private void initializeCache( ExpressionExperiment e ) {
+    private void initializeCache( Long eeid ) {
 
-        if ( caches.containsKey( e ) ) {
+        if ( caches.containsKey( eeid ) ) {
             return;
         }
 
@@ -130,7 +130,7 @@ public class ProcessedDataVectorCache {
         boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal",
                 PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_ETERNAL );
 
-        String cacheName = getCacheName( e );
+        String cacheName = getCacheName( eeid );
 
         boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false );
 
@@ -140,7 +140,7 @@ public class ProcessedDataVectorCache {
                     null, eternal, timeToLive, timeToIdle, diskPersistent, 600 /* diskExpiryThreadInterval */, null ) );
         }
 
-        caches.put( e, cacheManager.getCache( cacheName ) );
+        caches.put( eeid, cacheManager.getCache( cacheName ) );
 
     }
 }

@@ -40,6 +40,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.CommonQueries;
 
@@ -120,7 +121,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         this.getHibernateTemplate().update( expressionExperiment );
 
-        this.processedDataVectorCache.clearCache( expressionExperiment );
+        this.processedDataVectorCache.clearCache( expressionExperiment.getId() );
 
         return expressionExperiment.getProcessedExpressionDataVectors();
 
@@ -351,12 +352,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         /*
          * Break up by gene and EE to cache collections of vectors for EE-gene combos.
          */
-        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = makeCacheMap( newResults );
+        Map<Long, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = makeCacheMap( newResults );
 
-        for ( ExpressionExperiment e : mapForCache.keySet() ) {
-            Cache cache = this.processedDataVectorCache.getCache( e );
-            for ( Gene g : mapForCache.get( e ).keySet() ) {
-                cache.put( new Element( g, mapForCache.get( e ).get( g ) ) );
+        for ( Long eeid : mapForCache.keySet() ) {
+            Cache cache = this.processedDataVectorCache.getCache( eeid );
+            for ( Gene g : mapForCache.get( eeid ).keySet() ) {
+                cache.put( new Element( g, mapForCache.get( eeid ).get( g ) ) );
             }
         }
     }
@@ -373,7 +374,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             Collection<DoubleVectorValueObject> results, Collection<ExpressionExperiment> needToSearch,
             Collection<Gene> genesToSearch ) {
         for ( ExpressionExperiment ee : ees ) {
-            Cache cache = processedDataVectorCache.getCache( ee );
+            Cache cache = processedDataVectorCache.getCache( ee.getId() );
             for ( Gene g : genes ) {
                 Element element = cache.get( g );
                 if ( element != null ) {
@@ -418,10 +419,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
-            queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv "
+            queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv fetch all properties"
                     + " inner join dedv.designElement de where dedv.designElement in ( :cs )  ";
         } else {
-            queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv"
+            queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv fetch all properties"
                     + " inner join dedv.designElement de "
                     + " where dedv.designElement in (:cs ) and dedv.expressionExperiment in ( :ees )";
         }
@@ -471,15 +472,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param newResults
      * @return
      */
-    private Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> makeCacheMap(
+    private Map<Long, Map<Gene, Collection<DoubleVectorValueObject>>> makeCacheMap(
             Collection<DoubleVectorValueObject> newResults ) {
-        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = new HashMap<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>>();
+        Map<Long, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = new HashMap<Long, Map<Gene, Collection<DoubleVectorValueObject>>>();
         for ( DoubleVectorValueObject v : newResults ) {
             ExpressionExperiment e = v.getExpressionExperiment();
-            if ( !mapForCache.containsKey( e ) ) {
-                mapForCache.put( e, new HashMap<Gene, Collection<DoubleVectorValueObject>>() );
+            if ( !mapForCache.containsKey( e.getId() ) ) {
+                mapForCache.put( e.getId(), new HashMap<Gene, Collection<DoubleVectorValueObject>>() );
             }
-            Map<Gene, Collection<DoubleVectorValueObject>> innerMap = mapForCache.get( e );
+            Map<Gene, Collection<DoubleVectorValueObject>> innerMap = mapForCache.get( e.getId() );
             for ( Gene g : v.getGenes() ) {
                 if ( !innerMap.containsKey( g ) ) {
                     innerMap.put( g, new HashSet<DoubleVectorValueObject>() );

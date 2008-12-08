@@ -93,7 +93,6 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
      * {@link ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDaoImpl#getProcessedDataArrays(java.util.Collection, java.util.Collection)}
      * .
      */
-    @SuppressWarnings("unchecked")
     public void testGetProcessedDataMatrices() {
         endTransaction();
 
