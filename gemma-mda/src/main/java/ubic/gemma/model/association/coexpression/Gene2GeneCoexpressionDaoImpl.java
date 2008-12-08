@@ -85,7 +85,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
                 genesNeeded.add( g );
             }
         }
-        int CHUNK_SIZE = 1000;
+        int CHUNK_SIZE = 10;
 
         // All genes were in the cache
         if ( genesNeeded.size() == 0 ) return result;
