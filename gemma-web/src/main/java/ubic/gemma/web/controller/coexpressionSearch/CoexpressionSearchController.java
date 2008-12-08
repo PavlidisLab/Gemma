@@ -56,7 +56,7 @@ public class CoexpressionSearchController extends BaseFormController {
         this.expressionExperimentSetService = expressionExperimentSetService;
     }
 
-    private static final int MAX_RESULTS = 500;
+    private static final int MAX_RESULTS = 200;
 
     private static final int DEFAULT_STRINGENCY = 2;
 
