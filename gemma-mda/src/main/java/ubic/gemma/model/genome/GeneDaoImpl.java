@@ -1189,6 +1189,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String geneType = resultSet.getString( 6 );
         Long queryGeneId = resultSet.getLong( 7 );
 
+        if ( queryGeneId.equals( coexpressedGene ) ) {
+            return;
+        }
+
         Gene queryGene = queryGenes.get( queryGeneId );
         assert queryGene != null : queryGeneId + " did not match given queries";
         CoexpressionCollectionValueObject ccvo = coexpressions.get( queryGene );
