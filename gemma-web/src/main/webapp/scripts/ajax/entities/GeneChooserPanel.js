@@ -411,7 +411,12 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 				this.geneGrid.getStore().on("remove", function() {
 							this.fireEvent("removegenes");
 						}, this);
+				
+				this.geneGrid.getStore().on("add", function() {
+							this.fireEvent("addgenes");
+						}, this);
 
+						
 			},
 
 			getTaxonId : function() {
