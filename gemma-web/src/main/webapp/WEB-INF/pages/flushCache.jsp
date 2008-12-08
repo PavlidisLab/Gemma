@@ -3,6 +3,7 @@
 <title><fmt:message key="flushCache.title"/></title>
 <content tag="heading"><fmt:message key="flushCache.heading"/></content>
 
+<cache:
 <cache:flush/>
 <div class="message" style="font-size: 12px">
     <img src="<c:url value="/images/iconInformation.gif"/>"

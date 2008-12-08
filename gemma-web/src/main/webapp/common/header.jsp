@@ -1,3 +1,4 @@
+<cache:cache key='head' scope="application" >
 <!--  Default header for only the main gemma home page -->
 <%@ include file="/common/taglibs.jsp"%>
 <c:if test="${pageContext.request.locale.language != 'en'}">
@@ -26,3 +27,4 @@
 
 <%-- Put constants into request scope --%>
 <Gemma:constants scope="request" />
+</cache:cache>

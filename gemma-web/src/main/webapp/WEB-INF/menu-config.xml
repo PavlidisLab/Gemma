@@ -50,7 +50,7 @@
 			<Item name="ViewUsers" title="menu.admin.users" page="/activeUsers.html" />
 			<Item name="ReloadContext" title="menu.admin.reload" page="/reload.html" />
 			<Item name="FlushCache" title="menu.flushCache" page="/flushCache.html" />
-			<Item name="Clickstream" title="menu.clickstream" page="/clickstreams.jsp" />
+<!--			<Item name="Clickstream" title="menu.clickstream" page="/clickstreams.jsp" /> -->
 		</Menu>
 	</Menus>
 </MenuConfig>
