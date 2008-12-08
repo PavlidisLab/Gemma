@@ -1226,6 +1226,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             CoexpressionCollectionValueObject coexpressions ) {
 
         Long coexpressedGene = resultSet.getLong( 0 );
+
+        if ( coexpressedGene.equals( queryGene.getId() ) ) {
+            return;
+        }
+
         Long eeID = resultSet.getLong( 1 );
         Double pvalue = resultSet.getDouble( 2 );
         Double score = resultSet.getDouble( 3 );

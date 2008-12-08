@@ -778,7 +778,7 @@ public class GeneCoexpressionService {
         timer.start();
         GeneCoexpressionAnalysis gA = findEnabledCoexpressionAnalysis( queryGenes );
         timer.stop();
-        if ( timer.getTime() > 1000 ) {
+        if ( timer.getTime() > 100 ) {
             log.info( "Get analysis: " + timer.getTime() + "ms" );
         }
         timer.reset();
