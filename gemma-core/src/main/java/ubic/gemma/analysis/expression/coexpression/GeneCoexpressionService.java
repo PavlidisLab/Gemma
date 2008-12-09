@@ -338,6 +338,8 @@ public class GeneCoexpressionService {
 
             assert g2gs != null;
 
+            List<Long> relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
+
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
@@ -386,7 +388,7 @@ public class GeneCoexpressionService {
                 assert numTestingDatasets <= eevos.size();
 
                 ecvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
-                        filteredEeIds ) );
+                        relevantEEIdList ) );
 
                 /*
                  * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in the
@@ -458,6 +460,18 @@ public class GeneCoexpressionService {
         }
         result.getKnownGeneResults().addAll( ecvos );
         return result;
+    }
+
+    private List<Long> getRelevantEEidsForBitVector( Map<Integer, Long> positionToIDMap,
+            Collection<Gene2GeneCoexpression> g2gs ) {
+        Collection<Long> relevantEEIds = new HashSet<Long>();
+        List<Long> relevantEEIdList = new ArrayList<Long>();
+        for ( Gene2GeneCoexpression g2g : g2gs ) {
+            relevantEEIds.addAll( GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g, positionToIDMap ) );
+        }
+        relevantEEIdList.addAll( relevantEEIds );
+        Collections.sort( relevantEEIdList );
+        return relevantEEIdList;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -649,6 +663,7 @@ public class GeneCoexpressionService {
     /**
      * @param supporting
      * @param testing
+     * @param specific
      * @param allIds
      * @return String representation of binary vector (might as well be a string, as it gets sent to the browser that
      *         way). 0 = not tested; 1 = tested but not supporting; 2 = supporting but not specific; 3 supporting and
