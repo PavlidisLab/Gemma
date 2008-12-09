@@ -275,19 +275,8 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 						oneProfile.push(point);
 					}
 
-					// Change color to hot and cold and greyed out variety
-					if (Gemma.geneContained(coldGeneName, genes)) {
-						if (fade) {
-							color = Gemma.COLD_FADE_COLOR;
-						} else {
-							color = "#000000";
-						}
-					} else {
-						if (fade) {
-							color = Gemma.HOT_FADE_COLOR;
-						} else {
-							color = "#FF0000";
-						}
+					if (fade) {
+						color = color == 'red' ? Gemma.HOT_FADE_COLOR : Gemma.COLD_FADE_COLOR;
 					}
 
 					var plotConfig = {

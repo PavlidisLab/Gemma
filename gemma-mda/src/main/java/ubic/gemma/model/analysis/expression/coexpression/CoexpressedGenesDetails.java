@@ -455,8 +455,14 @@ public class CoexpressedGenesDetails {
             // For each experiment with coexpression data...
             for ( Long eeID : coExValObj.getExpressionExperiments() ) {
 
+                /*
+                 * Fill in 'experiment has sepcific probes' information.
+                 */
                 processLinksForSpecificity( coExValObj, links, eeID );
 
+                /*
+                 * Look for probes that cross-hybridize to the query. These are completely removed.
+                 */
                 Collection<Long> queryProbes = queryProbeInfo.get( eeID );
 
                 if ( log.isDebugEnabled() )
@@ -593,7 +599,9 @@ public class CoexpressedGenesDetails {
             throw new IllegalStateException();
         }
 
+        boolean isSpecific = false;
         for ( ProbePair probePair : rawLinks ) {
+
             Long queryProbeId = probePair.getQueryProbeId();
             Collection<Long> genesForQueryProbe = getGenesForQueryProbe( eeID, queryProbeId );
             if ( genesForQueryProbe == null ) {
@@ -606,21 +614,23 @@ public class CoexpressedGenesDetails {
             int numQueryGenesHit = genesForQueryProbe.size();
 
             Long targetProbeId = probePair.getTargetProbeId();
-            assert targetProbeId != null;
             Collection<Long> genesForProbe = getGenesForProbe( eeID, targetProbeId );
             if ( genesForProbe == null ) {
                 log.warn( "No genes for probe=" + targetProbeId + " in ee=" + eeID );
                 continue;
             }
             int numTargetGenesHit = genesForProbe.size();
+
             /*
              * If a _single_ link is 'specific', then we count the ee. as 'specific'.
              */
-            if ( numQueryGenesHit > 1 || numTargetGenesHit > 1 ) {
-                coExValObj.getNonspecificEE().add( eeID );
-            } else /* both == 1 */{
-                coExValObj.getNonspecificEE().remove( eeID );
+            if ( numQueryGenesHit == 1 && numTargetGenesHit == 1 ) {
+                isSpecific = true;
             }
+        }
+
+        if ( !isSpecific ) {
+            coExValObj.getNonspecificEE().add( eeID );
         }
     }
 

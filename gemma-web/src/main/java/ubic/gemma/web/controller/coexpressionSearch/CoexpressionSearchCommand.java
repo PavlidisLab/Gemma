@@ -51,7 +51,7 @@ public class CoexpressionSearchCommand {
     private boolean queryGenesOnly;
 
     private Integer stringency;
-    
+
     private boolean useMyDatasets;
 
     /*
@@ -102,7 +102,7 @@ public class CoexpressionSearchCommand {
     public boolean isUseMyDatasets() {
         return this.useMyDatasets;
     }
-    
+
     public void setDirty( boolean dirty ) {
         this.dirty = dirty;
     }
@@ -126,11 +126,10 @@ public class CoexpressionSearchCommand {
     public void setForceProbeLevelSearch( boolean forceProbeLevelSearch ) {
         this.forceProbeLevelSearch = forceProbeLevelSearch;
     }
-    
+
     public void setUseMyDatasets( boolean useMyDatasets ) {
         this.useMyDatasets = useMyDatasets;
     }
-
 
     public void setGeneIds( Collection<Long> geneIds ) {
         this.geneIds = geneIds;
@@ -150,9 +149,10 @@ public class CoexpressionSearchCommand {
 
     @Override
     public String toString() {
-        return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " Analysis=" + this.getEeSetId() + " Force Probe Level=" + this.forceProbeLevelSearch
-                + " QueryGenesOnly=" + this.getQueryGenesOnly() + " taxon=" + getTaxonId() + " eeQuery=" + getEeQuery()
-                + " Stringency=" + stringency + " ees=" + StringUtils.join( getEeIds(), "," );
+        return "Genes=" + StringUtils.join( getGeneIds(), "," ) + " EESet=" + this.getEeSetId() + " ForceProbeLevel="
+                + this.forceProbeLevelSearch + " QueryGenesOnly=" + this.getQueryGenesOnly() + " tax=" + getTaxonId()
+                + " Stringency=" + stringency + " ees="
+                + StringUtils.abbreviate( StringUtils.join( getEeIds(), "," ), 100 );
     }
 
 }
