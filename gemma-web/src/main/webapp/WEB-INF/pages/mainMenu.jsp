@@ -117,7 +117,7 @@
 						<a href='<c:url value="/securityManager.html"/>'> <fmt:message key="menu.securityManager" /> </a>
 					</li>
 					<li>
-						<a href='<c:url value="/expressionExperimentSetManager.html" />'>Manage gene sets</a>
+						<a href='<c:url value="/expressionExperimentSetManager.html" />'>Manage experiment sets</a>
 					</li>
 					<li>
 						<a href='<c:url value="/maintenanceMode.html" />'>Manage maintenance mode</a>
