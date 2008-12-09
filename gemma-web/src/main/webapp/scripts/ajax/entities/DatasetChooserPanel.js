@@ -73,12 +73,16 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			},
 
 			selectByName : function(name) {
+				this.combo.suppressFiltering = true;
 				var index = this.store.findBy(function(record, i) {
-							return record.get("name") == name;
+							return record.get("name").toLowerCase() == name.toLowerCase();
 						});
+				
 				var rec = this.store.getAt(index);
 				this.combo.setValue(rec.get("id"));
 				this.store.setSelected(rec);
+				this.combo.suppressFiltering = false;
+				
 				this.fireEvent("set-chosen", rec);
 			},
 
