@@ -143,7 +143,6 @@
 	<classpathentry kind="var" path="M2_REPO/velocity-tools/velocity-tools-view/1.0/velocity-tools-view-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jfree/jfreechart/1.0.2/jfreechart-1.0.2.jar" sourcepath="/JAR_SOURCE/jfreechart-1.0.2/source"/>
 	<classpathentry kind="var" path="M2_REPO/jfree/jcommon/1.0.5/jcommon-1.0.5.jar"/>
-	<classpathentry kind="var" path="M2_REPO/ajaxanywhere/ajaxanywhere/1.2-RC2/ajaxanywhere-1.2-RC2.jar" sourcepath="/JAR_SOURCE/ajaxanywhere-1.2-RC2-src.jar"/>
 	<classpathentry kind="var" path="M2_REPO/quartz/quartz/1.6.0/quartz-1.6.0.jar" sourcepath="/JAR_SOURCE/quartz-1.6.0/src/java">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.opensymphony.com/quartz/api/"/>
