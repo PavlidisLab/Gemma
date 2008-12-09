@@ -413,11 +413,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
             if ( eeResults != null ) {
                 cachedResults.put( ee.getId(), eeResults );
-                // for ( CoexpressionCacheValueObject cc : eeResults ) {
-                // if ( cc.getCoexpressedGene() == 25670L ) {
-                // log.info( "Cache hit: " + cc );
-                // }
-                // }
                 log.debug( "Cache hit! for ee=" + ee.getId() );
             } else {
                 eesToSearch.add( ee );
@@ -835,7 +830,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( css == null || css.size() == 0 ) {
             return csId2geneIds;
         }
-        int count = 0;
+
         int CHUNK_SIZE = 1000;
         Session session = this.getSession();
 
@@ -847,10 +842,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Collection<Long> batch = new HashSet<Long>();
 
         for ( Long csId : css ) {
-            assert csId != null;
             batch.add( csId );
-            count++;
-            if ( count % CHUNK_SIZE == 0 ) {
+            if ( batch.size() == CHUNK_SIZE ) {
                 processCS2GeneChunk( csId2geneIds, batch, session );
                 batch.clear();
             }
@@ -1279,6 +1272,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     private void processCS2GeneChunk( Map<Long, Collection<Long>> csId2geneIds, Collection<Long> csIdChunk,
             Session session ) {
         assert csIdChunk.size() > 0;
+
+        // if ( csIdChunk.contains( 20110L ) ) {
+        // log.info( "got it" );
+        // }
 
         /*
          * Check the cache first.

@@ -450,12 +450,19 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         checkCache( ees, genes, results, needToSearch, genesToSearch );
 
         if ( needToSearch.size() != 0 ) {
+
             Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genesToSearch, this
                     .getSession() );
-            if ( cs2gene.keySet().size() == 0 ) {
+            if ( cs2gene.size() == 0 ) {
                 log.warn( "No composite sequences found for genes" );
                 return new HashSet<DoubleVectorValueObject>();
             }
+
+            /*
+             * Fill in the map, because we want to track information on the specificity of the probes used in the data
+             * vectors.
+             */
+            cs2gene = CommonQueries.getFullCs2GeneMap( cs2gene.keySet(), this.getSession() );
 
             Map<DesignElementDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors( needToSearch,
                     cs2gene );

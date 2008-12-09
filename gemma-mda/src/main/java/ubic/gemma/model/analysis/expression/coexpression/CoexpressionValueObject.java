@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.coexpression;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -49,8 +50,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * Genes that were predicted to cross-hybridize with the target gene
      */
     private Collection<Long> crossHybridizingGenes = new HashSet<Long>();
-    private Collection<Long> datasetsTestedIn = new HashSet<Long>();
 
+    private Collection<Long> datasetsTestedIn = new HashSet<Long>();
     // the expression experiments that this coexpression was involved in. The number of these will total the 'support'
     // (pos+neg correlations, minus # of experiments that support both + and -)
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
@@ -79,6 +80,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * Number of GO terms this gene shares with the query gene.
      */
     private Collection<OntologyTerm> goOverlap;
+
+    private Map<Long, Collection<ProbePair>> links = new HashMap<Long, Collection<ProbePair>>();
 
     private Map<Long, Map<Long, Double>> negativeScores;
 
@@ -122,7 +125,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         posPvalues = new HashMap<Long, Map<Long, Double>>();
         negPvalues = new HashMap<Long, Map<Long, Double>>();
         queryProbeInfo = new HashMap<Long, Collection<Long>>();
-
+        nonspecificEEs = new HashSet<Long>();
         numQueryGeneGOTerms = 0;
     }
 
@@ -148,6 +151,12 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
             queryProbeInfo.put( eeID, new HashSet<Long>() );
         }
         queryProbeInfo.get( eeID ).add( queryProbe );
+
+        if ( !this.links.containsKey( eeID ) ) {
+            this.links.put( eeID, new HashSet<ProbePair>() );
+        }
+
+        this.links.get( eeID ).add( new ProbePair( queryProbe, coexpressedProbe, score, pvalue ) );
 
         if ( score < 0 ) {
             if ( !negativeScores.containsKey( eeID ) ) negativeScores.put( eeID, new HashMap<Long, Double>() );
@@ -286,6 +295,17 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return goOverlap;
     }
 
+    /**
+     * Function to return the max of the negative and positive link support. This is used for sorting.
+     * 
+     * @return
+     */
+    public int getMaxLinkCount() {
+        int positiveLinks = this.getPositiveLinkSupport();
+        int negativeLinks = this.getNegativeLinkSupport();
+        return Math.max( positiveLinks, negativeLinks );
+    }
+
     // /**
     // * @return
     // */
@@ -299,17 +319,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     // buf.append( taxonId );
     // return buf.toString();
     // }
-
-    /**
-     * Function to return the max of the negative and positive link support. This is used for sorting.
-     * 
-     * @return
-     */
-    public int getMaxLinkCount() {
-        int positiveLinks = this.getPositiveLinkSupport();
-        int negativeLinks = this.getNegativeLinkSupport();
-        return Math.max( positiveLinks, negativeLinks );
-    }
 
     /**
      * @param eeId
@@ -490,6 +499,15 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * @return true if there is still evidence of coexpression left in this object, false if not.
      */
     public boolean removeProbeEvidence( Long probeId, Long eeId ) {
+
+        Collection<ProbePair> pairs = this.getLinks().get( eeId );
+        for ( Iterator<ProbePair> it = pairs.iterator(); it.hasNext(); ) {
+            ProbePair probePair = it.next();
+            if ( probePair.getQueryProbeId().equals( probeId ) || probePair.getTargetProbeId().equals( probeId ) ) {
+                it.remove();
+            }
+        }
+
         if ( this.positiveScores.containsKey( eeId ) ) {
             Map<Long, Double> map = this.positiveScores.get( eeId );
             if ( map.containsKey( probeId ) ) {
@@ -641,6 +659,13 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         }
 
         return buf.toString();
+    }
+
+    /**
+     * @return the links
+     */
+    protected Map<Long, Collection<ProbePair>> getLinks() {
+        return links;
     }
 
     /**

@@ -220,7 +220,7 @@ public class DesignElementDataVectorDaoImpl extends
             log.info( "Fetch vectors for " + cs2gene.size() + " probes in " + ( ees == null ? "(?)" : ees.size() )
                     + "ees : " + timer.getTime() + "ms" );
         }
-       // this.thaw( dedv2genes.keySet() );
+        // this.thaw( dedv2genes.keySet() );
         return dedv2genes;
     }
 
@@ -238,18 +238,19 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleGetVectors(java.util.Collection,
      * java.util.Collection)
      */
     @Override
-    protected Map handleGetPreferredVectors( Collection ees, Collection genes ) throws Exception {
+    protected Map<DesignElementDataVector, Collection<Gene>> handleGetPreferredVectors( Collection ees, Collection genes )
+            throws Exception {
 
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries
+                .getCs2GeneMap( genes, this.getSession() );
         watch.stop();
 
         if ( cs2gene.keySet().size() == 0 ) {
@@ -274,7 +275,6 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataForCompositeSequence(
      * ubic.gemma.model.expression.designElement.CompositeSequence)
@@ -301,7 +301,6 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataFromQuantitationType(
      * ubic.gemma.model.expression.experiment.ExpressionExperiment,
@@ -316,7 +315,6 @@ public class DesignElementDataVectorDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleThaw(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -346,7 +344,8 @@ public class DesignElementDataVectorDaoImpl extends
         }
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Thaw phase 1," + designElementDataVectors.size() + " vectors in " + timer.getTime() + "ms elapsed" );
+            log.info( "Thaw phase 1," + designElementDataVectors.size() + " vectors in " + timer.getTime()
+                    + "ms elapsed" );
         }
 
         // lightly thaw the EEs we saw
@@ -356,7 +355,8 @@ public class DesignElementDataVectorDaoImpl extends
         }
 
         if ( timer.getTime() > 2000 ) {
-            log.info( "Thaw phase 2," + designElementDataVectors.size() + " vectors in " + timer.getTime() + "ms elapsed total" );
+            log.info( "Thaw phase 2," + designElementDataVectors.size() + " vectors in " + timer.getTime()
+                    + "ms elapsed total" );
         }
 
         // thaw the bioassaydimensions we saw
@@ -393,7 +393,8 @@ public class DesignElementDataVectorDaoImpl extends
         }
 
         if ( timer.getTime() > 3000 ) {
-            log.info( "Thaw phase 3," + designElementDataVectors.size() + " vectors in " + timer.getTime() + "ms elapsed total" );
+            log.info( "Thaw phase 3," + designElementDataVectors.size() + " vectors in " + timer.getTime()
+                    + "ms elapsed total" );
         }
 
         // thaw the designelements we saw.

@@ -133,6 +133,9 @@ public class CommonQueries {
     }
 
     /**
+     * Given gene ids, get map of probes to genes for each probe --- starting from genes. The values will only contain
+     * genes that were given, and is not filled in with other genes the probes may detect.
+     * 
      * @param genes
      * @return
      */
@@ -140,7 +143,7 @@ public class CommonQueries {
 
         Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
 
-        String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
+        String queryString = "SELECT DISTINCT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.addScalar( "csid", new LongType() );
         queryObject.addScalar( "geneId", new LongType() );
@@ -163,36 +166,26 @@ public class CommonQueries {
     }
 
     /**
-     * @param genes
-     * @return
+     * @param probes
+     * @param session
+     * @return map of probes to all the genes 'detected' by those probes -- but excluding PARs and predicted genes.
      */
-    @SuppressWarnings("unchecked")
-    public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes, Session session ) {
+    public static Map<CompositeSequence, Collection<Gene>> getFullCs2GeneMap( Collection<CompositeSequence> probes,
+            Session session ) {
 
-	  StopWatch timer = new StopWatch();
-    	    timer.start();
-        //TODO:  make this 1 query could potentially make it faster. 
-        //Need to do this query twice to get all the genes that map to a given probe (because probes are non specific)
-        //1st get the probes that map to the given genes
-        final String csQueryString = "select distinct cs from GeneImpl as gene"
+        StopWatch timer = new StopWatch();
+        timer.start();
+        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
                 + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and gene in (:genes)";
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) and gene.class='GeneImpl'";
 
-        
-     
-        org.hibernate.Query queryObject = session.createQuery( csQueryString );
-        queryObject.setParameterList( "genes", genes );
-        List<CompositeSequence> probes = queryObject.list();
-        
-        
-        //Use the list of probes retrieved in the 1st query and get all the genes that they map to.         
-        final String cs2GeneQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) and gene.class = 'GeneImpl' ";
-        org.hibernate.Query cs2GeneQueryObject = session.createQuery( cs2GeneQueryString );
-        cs2GeneQueryObject.setParameterList( "probes", probes );
         Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
-        ScrollableResults results = cs2GeneQueryObject.scroll( ScrollMode.FORWARD_ONLY );
+        org.hibernate.Query queryObject = session.createQuery( csQueryString );
+        queryObject.setCacheable( true );
+        queryObject.setCacheRegion( "org.hibernate.cache.StandardQueryCache" );
+        queryObject.setParameterList( "probes", probes );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
             CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
             Gene g = ( Gene ) results.get( 1 );
@@ -202,7 +195,43 @@ public class CommonQueries {
             cs2gene.get( cs ).add( g );
         }
         results.close();
-        
+        if ( timer.getTime() > 200 ) {
+            log.info( "Get full cs2gene map for " + probes.size() + " :" + timer.getTime() + "ms" );
+        }
+        return cs2gene;
+    }
+
+    /**
+     * @param genes
+     * @pram session
+     * @return map of probes to input genes they map to. Other genes those probes might detect are not included.
+     * @see getFullCs2GeneMap, which can be called on keyset of results of this method to get full mapping.
+     */
+    public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes, Session session ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
+                + " and gene in (:genes)  ";
+
+        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+        org.hibernate.Query queryObject = session.createQuery( csQueryString );
+        queryObject.setCacheable( true );
+        queryObject.setCacheRegion( "org.hibernate.cache.StandardQueryCache" );
+        queryObject.setParameterList( "genes", genes );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+            CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
+            Gene g = ( Gene ) results.get( 1 );
+            if ( !cs2gene.containsKey( cs ) ) {
+                cs2gene.put( cs, new HashSet<Gene>() );
+            }
+            cs2gene.get( cs ).add( g );
+        }
+        results.close();
         if ( timer.getTime() > 200 ) {
             log.info( "Get cs2gene for " + genes.size() + " :" + timer.getTime() + "ms" );
         }
@@ -235,58 +264,36 @@ public class CommonQueries {
         }
         return classes;
     }
-    //
-    // /**
-    // * @param auditTrail
-    // * @param type
-    // * @param session
-    // * @return
-    // * @throws java.lang.Exception
-    // */
-    // @SuppressWarnings("unchecked")
-    // public static ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastAuditEvent( final AuditTrail auditTrail,
-    // AuditEventType type, Session session ) throws java.lang.Exception {
-    //
-    // /*
-    // * For the = operator to work in hibernate the class or class name can't be passed in as a parameter :type -
-    // * also queryObject.setParameter("type", type.getClass()); doesn't work. Although technically this is now
-    // * vunerable to an sql injection attack, it seems moot as an attacker would have to have access to the JVM to
-    // * inject a malformed AuditEventType class name and if they had access to the JVM then sql injection is the
-    // * least of our worries. The real annoyance here is dealing with subclasses of event types.
-    // */
-    //
-    // List<String> classes = getEventTypeClassHierarchy( type.getClass(), session );
-    //
-    // final String queryString = "select event " + "from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
-    // + "inner join trail.events event inner join event.eventType et inner join fetch event.performer "
-    // + "where trail.id = :trail " + "and et.class in (" + StringUtils.join( classes, "," )
-    // + ") order by event.date desc ";
-    //
-    // org.hibernate.Query queryObject = session.createQuery( queryString );
-    // queryObject.setCacheable( true );
-    // queryObject.setCacheRegion( "auditEvents" );
-    //
-    // queryObject.setParameter( "trail", auditTrail.getId() );
-    // queryObject.setMaxResults( 1 );
-    //
-    // Collection<AuditEvent> results = queryObject.list();
-    //
-    // if ( results == null || results.isEmpty() ) return null;
-    //
-    // return results.iterator().next();
-    //
-    // }
-    //
-    // /**
-    // * @param auditable
-    // * @param type
-    // * @param session
-    // * @return
-    // * @throws java.lang.Exception
-    // */
-    // public static ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastAuditEvent( final Auditable auditable,
-    // AuditEventType type, Session session ) throws java.lang.Exception {
-    // return getLastAuditEvent( auditable.getAuditTrail(), type, session );
-    // }
+
+    /**
+     * Given gene ids, return map of of gene id -> probes for that gene.
+     * 
+     * @param genes
+     * @param session
+     * @return
+     */
+    public static Map<Long, Collection<Long>> getGene2CSMap( Collection<Long> genes, Session session ) {
+        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+
+        String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.addScalar( "csid", new LongType() );
+        queryObject.addScalar( "geneId", new LongType() );
+
+        queryObject.setParameterList( "geneIds", genes );
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+            Long csid = results.getLong( 0 );
+            Long geneId = results.getLong( 1 );
+
+            if ( !cs2genes.containsKey( geneId ) ) {
+                cs2genes.put( geneId, new HashSet<Long>() );
+            }
+            cs2genes.get( geneId ).add( csid );
+        }
+        results.close();
+
+        return cs2genes;
+    }
 
 }

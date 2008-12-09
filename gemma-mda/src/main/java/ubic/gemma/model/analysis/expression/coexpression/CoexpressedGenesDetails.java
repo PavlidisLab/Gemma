@@ -134,7 +134,10 @@ public class CoexpressedGenesDetails {
     }
 
     public void addTargetSpecificityInfo( Long eeID, Map<Long, Collection<Long>> probe2geneMap ) {
-        this.expressionExperimentProbe2GeneMaps.put( eeID, probe2geneMap );
+        if ( !this.expressionExperimentProbe2GeneMaps.containsKey( eeID ) ) {
+            this.expressionExperimentProbe2GeneMaps.put( eeID, new HashMap<Long, Collection<Long>>() );
+        }
+        this.expressionExperimentProbe2GeneMaps.get( eeID ).putAll( probe2geneMap );
     }
 
     public boolean containsKey( Long key ) {
@@ -326,7 +329,9 @@ public class CoexpressedGenesDetails {
      *         <p>
      *         If an EE has two (or more) probes that hit the same gene, and one probe is specific for the target gene,
      *         even if some of the other(s) are not, the EE is considered specific and will still be included.
+     * @deprecated
      */
+    @Deprecated
     public Map<Long, Collection<Long>> getExpressionExperimentsWithSpecificProbeForCoexpressedGenes() {
 
         Map<Long, Collection<Long>> result = new HashMap<Long, Collection<Long>>();
@@ -357,30 +362,30 @@ public class CoexpressedGenesDetails {
         return result;
     }
 
-    /**
-     * @return
-     */
-    private Collection<Long> getExpressionExperimentsWithSpecificProbeForQueryGene() {
-        assert !queryGeneExpressionExperimentProbe2GeneMaps.isEmpty();
-        Collection<Long> result = new HashSet<Long>();
-
-        for ( Long eeID : queryGeneExpressionExperimentProbe2GeneMaps.keySet() ) {
-
-            Map<Long, Collection<Long>> probe2geneMap = queryGeneExpressionExperimentProbe2GeneMaps.get( eeID );
-
-            for ( Long probeID : probe2geneMap.keySet() ) {
-                Collection<Long> genes = probe2geneMap.get( probeID );
-                Integer genecount = genes.size();
-                if ( genecount == 1 ) {
-                    result.add( eeID );
-                    break;
-                }
-            }
-        }
-
-        return result;
-
-    }
+    // /**
+    // * @return
+    // */
+    // private Collection<Long> getExpressionExperimentsWithSpecificProbeForQueryGene() {
+    // assert !queryGeneExpressionExperimentProbe2GeneMaps.isEmpty();
+    // Collection<Long> result = new HashSet<Long>();
+    //
+    // for ( Long eeID : queryGeneExpressionExperimentProbe2GeneMaps.keySet() ) {
+    //
+    // Map<Long, Collection<Long>> probe2geneMap = queryGeneExpressionExperimentProbe2GeneMaps.get( eeID );
+    //
+    // for ( Long probeID : probe2geneMap.keySet() ) {
+    // Collection<Long> genes = probe2geneMap.get( probeID );
+    // Integer genecount = genes.size();
+    // if ( genecount == 1 ) {
+    // result.add( eeID );
+    // break;
+    // }
+    // }
+    // }
+    //
+    // return result;
+    //
+    // }
 
     /**
      * This computes the support for each link, as well as updating information on specificity of probes. Terminology:
@@ -420,8 +425,6 @@ public class CoexpressedGenesDetails {
      * "query gene" might really be something else; likewise for the coexpressed gene. In other words, for most of the
      * above cases the concern is that the issue is not kept track of. Only two seriously problematic cases (2.1 and
      * 3.1) result in data removal.
-     * 
-     * @param querySpecificEE Expression experiments that have at least one probe specific for the query gene.
      */
     public void postProcess() {
 
@@ -430,12 +433,6 @@ public class CoexpressedGenesDetails {
          * DUE care. Case 1 does not require any special handling. Case 2.1 is partly handled earlier, when flags are
          * added to the coexpression objects for non-specific query gene probes.
          */
-
-        Map<Long, Collection<Long>> eesWithSpecificProbesForCoexpressedGenes = this
-                .getExpressionExperimentsWithSpecificProbeForCoexpressedGenes();
-
-        Collection<Long> eesWithSpecificProbeForQueryGene = this
-                .getExpressionExperimentsWithSpecificProbeForQueryGene();
 
         int positiveLinkCount = 0;
         int negativeLinkCount = 0;
@@ -447,8 +444,7 @@ public class CoexpressedGenesDetails {
          */
         coexp: for ( CoexpressionValueObject coExValObj : getCoexpressionData( 0 ) ) {
 
-            Collection<Long> eesWithNonspecificProbes = fillInNonspecificEEs( eesWithSpecificProbesForCoexpressedGenes,
-                    eesWithSpecificProbeForQueryGene, coExValObj );
+            Map<Long, Collection<ProbePair>> links = coExValObj.getLinks();
 
             Map<Long, Collection<Long>> queryProbeInfo = coExValObj.getQueryProbeInfo();
 
@@ -457,7 +453,9 @@ public class CoexpressedGenesDetails {
             // Fill in information about the other genes these probes hybridize to, if any.
 
             // For each experiment with coexpression data...
-            for ( Long eeID : eesWithNonspecificProbes ) {
+            for ( Long eeID : coExValObj.getExpressionExperiments() ) {
+
+                processLinksForSpecificity( coExValObj, links, eeID );
 
                 Collection<Long> queryProbes = queryProbeInfo.get( eeID );
 
@@ -487,9 +485,6 @@ public class CoexpressedGenesDetails {
                         for ( Long queryProbe : queryProbes ) {
                             Collection<Long> genesForQueryProbe = getGenesForProbe( eeID, queryProbe );
                             if ( genesForQueryProbe != null && genesForQueryProbe.contains( geneID ) ) {
-                                // if ( log.isDebugEnabled() )
-                                // log.info( "Query gene probe " + queryProbe + " crosshyb to target gene probe "
-                                // + coexpressedProbe );
                                 /*
                                  * Note: the coexpressedProbe is often the same as the queryID
                                  */
@@ -584,6 +579,52 @@ public class CoexpressedGenesDetails {
     }
 
     /**
+     * Fill in specificity information for this experiment, based on the pairs.
+     * 
+     * @param coExValObj
+     * @param links
+     * @param eeID
+     */
+    private void processLinksForSpecificity( CoexpressionValueObject coExValObj,
+            Map<Long, Collection<ProbePair>> links, Long eeID ) {
+        Collection<ProbePair> rawLinks = links.get( eeID );
+
+        if ( rawLinks == null || rawLinks.size() == 0 ) {
+            throw new IllegalStateException();
+        }
+
+        for ( ProbePair probePair : rawLinks ) {
+            Long queryProbeId = probePair.getQueryProbeId();
+            Collection<Long> genesForQueryProbe = getGenesForQueryProbe( eeID, queryProbeId );
+            if ( genesForQueryProbe == null ) {
+                /*
+                 * There could be probes for which no gene mapping exists any more.
+                 */
+                log.warn( "No genes for probe=" + queryProbeId + " in ee=" + eeID );
+                continue;
+            }
+            int numQueryGenesHit = genesForQueryProbe.size();
+
+            Long targetProbeId = probePair.getTargetProbeId();
+            assert targetProbeId != null;
+            Collection<Long> genesForProbe = getGenesForProbe( eeID, targetProbeId );
+            if ( genesForProbe == null ) {
+                log.warn( "No genes for probe=" + targetProbeId + " in ee=" + eeID );
+                continue;
+            }
+            int numTargetGenesHit = genesForProbe.size();
+            /*
+             * If a _single_ link is 'specific', then we count the ee. as 'specific'.
+             */
+            if ( numQueryGenesHit > 1 || numTargetGenesHit > 1 ) {
+                coExValObj.getNonspecificEE().add( eeID );
+            } else /* both == 1 */{
+                coExValObj.getNonspecificEE().remove( eeID );
+            }
+        }
+    }
+
+    /**
      * @param stringencyLinkCount the stringencyLinkCount to set
      */
     public void setNegativeStringencyLinkCount( int stringencyLinkCount ) {
@@ -608,46 +649,46 @@ public class CoexpressedGenesDetails {
         return buf.toString();
     }
 
-    /**
-     * The ids of expression experiments that had 'non-specific' probes (for either the query or target genes) are
-     * returned. It also updates the coExValObj with this list.
-     * 
-     * @param allSpecificEE Map of gene ids to EEs that had at least one specific probe for that gene.
-     * @param querySpecificEEs IDs of EEs which had probes specific for the query gene.
-     * @param coExValObj results for a single gene
-     * @return ids of expression experiments that had only non-specific probes to the given gene. An ee is considered
-     *         specific iff the ee has probes specific for both the query gene and the target gene. Therefore an EE is
-     *         considered 'non-specific' if NONE of the probes it contains are specific for EITHER the query or target
-     *         genes.
-     */
-    private Collection<Long> fillInNonspecificEEs(
-            Map<Long, Collection<Long>> eesWithSpecificProbesForCoexpressedGenes, Collection<Long> querySpecificEEs,
-            CoexpressionValueObject coExValObj ) {
-
-        Collection<Long> result = new HashSet<Long>();
-        Long geneId = coExValObj.getGeneId();
-        for ( Long eeId : coExValObj.getExpressionExperiments() ) {
-
-            boolean coexpressedProbeIsSpecific = eesWithSpecificProbesForCoexpressedGenes.containsKey( geneId )
-                    && eesWithSpecificProbesForCoexpressedGenes.get( geneId ).contains( eeId );
-
-            boolean queryProbeIsSpecific = querySpecificEEs.contains( eeId );
-
-            // if ( geneId == 15318 || geneId == 713 ) {
-            // log.info( "e=" + eeId + " q=" + this.queryGene.getId() + " spec=" + queryProbeIsSpecific + "; t="
-            // + geneId + " spec=" + coexpressedProbeIsSpecific );
-            // }
-
-            if ( coexpressedProbeIsSpecific && queryProbeIsSpecific ) {
-                // then it is specific for this gene pair.
-
-                continue;
-            }
-            result.add( eeId );
-        }
-        coExValObj.setNonspecificEEs( result );
-        return result;
-    }
+    // /**
+    // * The ids of expression experiments that had 'non-specific' probes (for either the query or target genes) are
+    // * returned. It also updates the coExValObj with this list.
+    // *
+    // * @param allSpecificEE Map of gene ids to EEs that had at least one specific probe for that gene.
+    // * @param querySpecificEEs IDs of EEs which had probes specific for the query gene.
+    // * @param coExValObj results for a single gene
+    // * @return ids of expression experiments that had only non-specific probes to the given gene. An ee is considered
+    // * specific iff the ee has probes specific for both the query gene and the target gene. Therefore an EE is
+    // * considered 'non-specific' if NONE of the probes it contains are specific for EITHER the query or target
+    // * genes.
+    // */
+    // private Collection<Long> fillInNonspecificEEs(
+    // Map<Long, Collection<Long>> eesWithSpecificProbesForCoexpressedGenes, Collection<Long> querySpecificEEs,
+    // CoexpressionValueObject coExValObj ) {
+    //
+    // Collection<Long> result = new HashSet<Long>();
+    // Long geneId = coExValObj.getGeneId();
+    // for ( Long eeId : coExValObj.getExpressionExperiments() ) {
+    //
+    // boolean coexpressedProbeIsSpecific = eesWithSpecificProbesForCoexpressedGenes.containsKey( geneId )
+    // && eesWithSpecificProbesForCoexpressedGenes.get( geneId ).contains( eeId );
+    //
+    // boolean queryProbeIsSpecific = querySpecificEEs.contains( eeId );
+    //
+    // // if ( geneId == 15318 || geneId == 713 ) {
+    // // log.info( "e=" + eeId + " q=" + this.queryGene.getId() + " spec=" + queryProbeIsSpecific + "; t="
+    // // + geneId + " spec=" + coexpressedProbeIsSpecific );
+    // // }
+    //
+    // if ( coexpressedProbeIsSpecific && queryProbeIsSpecific ) {
+    // // then it is specific for this gene pair.
+    //
+    // continue;
+    // }
+    // result.add( eeId );
+    // }
+    // coExValObj.setNonspecificEEs( result );
+    // return result;
+    // }
 
     /**
      * Counting up how many support-threshold exceeding links each data set contributed.

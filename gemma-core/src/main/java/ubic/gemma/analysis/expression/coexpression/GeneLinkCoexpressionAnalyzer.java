@@ -548,7 +548,7 @@ public class GeneLinkCoexpressionAnalyzer {
             if ( secondGene.equals( firstGene ) ) {
                 /*
                  * This is 'just in case'; they should have been removed earlier. These can leak in because we 1) there
-                 * can be two probes for the same genes that are coexpressed and 2) allow them in initial query results
+                 * can be two probes for the same genes that are coexpressed and 2) we allow them in initial query results
                  */
                 continue;
             }
