@@ -8,4 +8,5 @@
 # GEMMA_LIB is only used here, so it can be defined here if you prefer not to put it in your profile.
 # GEMMA_LIB="/spacef/grp/lib/Gemma"
 
-$JSHOMEDIR/bin/gsInstance.sh "/./remotingSpace?schema=default" `cat ${GEMMA_LIB}/CLASSPATH`
+nohup $JSHOMEDIR/bin/gsInstance.sh "/./remotingSpace?schema=default" `cat ${GEMMA_LIB}/CLASSPATH` > $JSHOMEDIR/logs/gigaspacesConsole.log &
+
