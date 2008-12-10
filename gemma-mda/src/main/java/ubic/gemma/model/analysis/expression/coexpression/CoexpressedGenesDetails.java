@@ -600,6 +600,7 @@ public class CoexpressedGenesDetails {
         }
 
         boolean isSpecific = false;
+        boolean warned = false;
         for ( ProbePair probePair : rawLinks ) {
 
             Long queryProbeId = probePair.getQueryProbeId();
@@ -616,7 +617,13 @@ public class CoexpressedGenesDetails {
             Long targetProbeId = probePair.getTargetProbeId();
             Collection<Long> genesForProbe = getGenesForProbe( eeID, targetProbeId );
             if ( genesForProbe == null ) {
-                log.warn( "No genes for probe=" + targetProbeId + " in ee=" + eeID );
+                if ( !warned ) {
+                    log.warn( "No genes for probe=" + targetProbeId + " in ee=" + eeID
+                            + " (Any additional warnings for this link will be at DEBUG level only)" );
+                } else if ( log.isDebugEnabled() ) {
+                    log.debug( "No genes for probe=" + targetProbeId + " in ee=" + eeID );
+                }
+                warned = true;
                 continue;
             }
             int numTargetGenesHit = genesForProbe.size();
