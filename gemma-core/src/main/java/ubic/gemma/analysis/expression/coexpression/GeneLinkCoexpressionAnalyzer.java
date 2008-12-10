@@ -404,7 +404,7 @@ public class GeneLinkCoexpressionAnalyzer {
                             totalLinks++;
                             System.out.println( co );
                         }
-                        log.info( usedLinks + " links for " + queryGene );
+                        if ( usedLinks > 0 ) log.info( usedLinks + " links for " + queryGene );
                     }
 
                 }
