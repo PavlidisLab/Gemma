@@ -60,7 +60,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 		Ext.apply(this, {
 					store : new Ext.data.Store({
 								proxy : new Ext.data.DWRProxy(ArrayDesignController.getArrayDesigns, {
-											baseParams : [[], true, true]
+											baseParams : [[], true, false]
 										}),
 								reader : new Ext.data.ListRangeReader({
 											id : "id"
