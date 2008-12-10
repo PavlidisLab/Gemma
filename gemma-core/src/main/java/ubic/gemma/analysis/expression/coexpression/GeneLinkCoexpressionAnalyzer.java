@@ -371,8 +371,12 @@ public class GeneLinkCoexpressionAnalyzer {
 
         try {
             for ( Gene queryGene : toUseGenes ) {
+
+                // Do it
                 CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis(
                         queryGene, expressionExperiments, stringency, knownGenesOnly, 0 );
+
+                // persist it or write out
                 if ( knownGenesOnly && coexpressions.getNumKnownGenes() > 0 ) {
                     StopWatch timer = new StopWatch();
                     if ( analysis != null ) {
@@ -391,6 +395,11 @@ public class GeneLinkCoexpressionAnalyzer {
                             if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
                                 continue;
                             }
+                            Gene secondGene = genesToAnalyzeMap.get( co.getGeneId() );
+                            if ( processedGenes.contains( secondGene ) ) {
+                                continue;
+                            }
+                            processedGenes.add( secondGene );
                             usedLinks++;
                             totalLinks++;
                             System.out.println( co );
