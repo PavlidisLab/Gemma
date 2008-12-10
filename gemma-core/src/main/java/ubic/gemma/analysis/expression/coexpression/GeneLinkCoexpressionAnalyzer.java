@@ -165,9 +165,10 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param knownGenesOnly if true, only 'known genes' (not predicted/PARs) will be used. Usually we set this to be
      *        true. (in fact 'false' is currently not supported)
      * @param analysisName Name of the analysis as it will appear in the system
+     * @param useDB If false, the results will not be saved to the database but written to stdout.
      */
     public void analyze( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
-            boolean knownGenesOnly, String analysisName ) {
+            boolean knownGenesOnly, String analysisName, boolean useDB ) {
 
         if ( !knownGenesOnly ) {
             throw new UnsupportedOperationException(
@@ -188,18 +189,22 @@ public class GeneLinkCoexpressionAnalyzer {
             genesToAnalyzeMap.put( g.getId(), g );
         }
 
+        GeneCoexpressionAnalysis analysis = null;
         Collection<GeneCoexpressionAnalysis> oldAnalyses = findExistingAnalysis( taxon );
+        if ( useDB ) {
 
-        GeneCoexpressionAnalysis analysis = intializeNewAnalysis( expressionExperiments, taxon, toUseGenes,
-                analysisName, stringency );
-        assert analysis != null;
+            analysis = intializeNewAnalysis( expressionExperiments, taxon, toUseGenes, analysisName, stringency );
+            assert analysis != null;
+        }
 
         doAnalysis( expressionExperiments, toUseGenes, stringency, knownGenesOnly, analysisName, genesToAnalyzeMap,
                 analysis );
 
-        // FIXME Small risk here: there may be two enabled analyses until the next call is completed. If it fails we
-        // definitely have a problem. Ideally there would be a transaction here...
-        disableOldAnalyses( oldAnalyses );
+        if ( useDB ) {
+            // FIXME Small risk here: there may be two enabled analyses until the next call is completed. If it fails we
+            // definitely have a problem. Ideally there would be a transaction here...
+            disableOldAnalyses( oldAnalyses );
+        }
         /*
          * Note that we don't delete the old analysis. That has to be done manually for now -- just in case we need it
          * for something.
@@ -351,7 +356,7 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param knownGenesOnly
      * @param analysisName
      * @param genesToAnalyzeMap
-     * @param analysis
+     * @param analysis if null, no results will be saved to the database.
      * @return genes that were processed.
      */
     private Collection<Gene> doAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
@@ -370,14 +375,29 @@ public class GeneLinkCoexpressionAnalyzer {
                         queryGene, expressionExperiments, stringency, knownGenesOnly, 0 );
                 if ( knownGenesOnly && coexpressions.getNumKnownGenes() > 0 ) {
                     StopWatch timer = new StopWatch();
-                    timer.start();
-                    Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene,
-                            coexpressions, analysis, genesToAnalyzeMap, processedGenes, stringency );
-                    timer.stop();
-                    if ( timer.getTime() > 1000 ) {
-                        log.info( "Persist links: " + timer.getTime() + "ms" );
+                    if ( analysis != null ) {
+                        timer.start();
+                        Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene,
+                                coexpressions, analysis, genesToAnalyzeMap, processedGenes, stringency );
+                        totalLinks += created.size();
+                        timer.stop();
+                        if ( timer.getTime() > 1000 ) {
+                            log.info( "Persist links: " + timer.getTime() + "ms" );
+                        }
+                    } else {
+                        List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
+                        int usedLinks = 0;
+                        for ( CoexpressionValueObject co : coexps ) {
+                            if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
+                                continue;
+                            }
+                            usedLinks++;
+                            totalLinks++;
+                            System.out.println( co );
+                        }
+                        log.info( usedLinks + " links for " + queryGene );
                     }
-                    totalLinks += created.size();
+
                 }
                 // FIXME support using other than known genes (though we really don't do that now).
 
@@ -386,14 +406,17 @@ public class GeneLinkCoexpressionAnalyzer {
                     log.info( "Processed " + processedGenes.size() + " genes..." );
                 }
             }
-            // All done...
-            analysis.setDescription( analysis.getDescription() + "; " + totalLinks + " gene pairs stored." );
-            analysis.setEnabled( true );
 
-            geneCoexpressionAnalysisService.update( analysis );
-            log.info( totalLinks + " gene pairs stored." );
+            if ( analysis != null ) {
+                // All done...
+                analysis.setDescription( analysis.getDescription() + "; " + totalLinks + " gene pairs stored." );
+                analysis.setEnabled( true );
 
-            securityService.makePublic( analysis );
+                geneCoexpressionAnalysisService.update( analysis );
+
+                securityService.makePublic( analysis );
+            }
+            log.info( totalLinks + " gene pairs processed." );
 
         } catch ( Exception e ) {
             log.error( "There was an error during analysis:" );
@@ -548,7 +571,8 @@ public class GeneLinkCoexpressionAnalyzer {
             if ( secondGene.equals( firstGene ) ) {
                 /*
                  * This is 'just in case'; they should have been removed earlier. These can leak in because we 1) there
-                 * can be two probes for the same genes that are coexpressed and 2) we allow them in initial query results
+                 * can be two probes for the same genes that are coexpressed and 2) we allow them in initial query
+                 * results
                  */
                 continue;
             }

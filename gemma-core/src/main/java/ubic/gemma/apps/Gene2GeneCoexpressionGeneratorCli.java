@@ -60,6 +60,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
     // private String toUseAnalysisName;
     private boolean knownGenesOnly = true;
+    private boolean useDB = true;
 
     @SuppressWarnings("static-access")
     @Override
@@ -76,6 +77,9 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         Option allGenesOption = OptionBuilder.withDescription( "Run on all genes, including predicted and PARs" )
                 .create( ALLGENES_OPTION );
 
+        Option noDBOption = OptionBuilder.withDescription( "Do not persist (print to stdout)" ).create( "nodb" );
+
+        addOption( noDBOption );
         addOption( geneFileOption );
         addOption( stringencyOption );
         addOption( allGenesOption );
@@ -98,11 +102,18 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         }
         assert this.taxon != null : "Please provide a taxon.";
 
-        String analysisName = "All " + taxon.getCommonName();
+        String analysisName = null;
+
+        if ( this.hasOption( 'g' ) ) {
+            analysisName = this.toUseGenes.size() + " genes read from " + this.getOptionValue( 'g' ) + " for "
+                    + this.taxon.getCommonName();
+        } else {
+            analysisName = "All " + taxon.getCommonName();
+        }
 
         log.info( "Using " + this.expressionExperiments.size() + " Expression Experiments." );
-        geneVoteAnalyzer
-                .analyze( this.expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly, analysisName );
+        geneVoteAnalyzer.analyze( this.expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly,
+                analysisName, useDB );
 
         return null;
     }
@@ -114,6 +125,11 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
     protected void processOptions() {
         super.processOptions();
         initSpringBeans();
+
+        if ( this.hasOption( "nodb" ) ) {
+            log.info( "Skipping database persisting of results" );
+            this.useDB = false;
+        }
 
         if ( this.hasOption( 'g' ) ) {
             if ( !this.hasOption( 't' ) ) {
