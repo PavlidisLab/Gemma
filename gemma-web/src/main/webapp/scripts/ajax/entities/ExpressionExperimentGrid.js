@@ -185,7 +185,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		if (this.showAnalysisInfo) {
 			this.columns.push({
 						id : 'analyses',
-						header : "Analysis",
+						header : "Diff.An.",
 						dataIndex : "differentialExpressionAnalysisId",
 						tooltip : "Indicates whether differential expression data is available for the study",
 						renderer : this.formatAnalysisInfo,
