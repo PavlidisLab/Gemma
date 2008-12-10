@@ -250,7 +250,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection compositeSequences ) throws Exception {
+    protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection<CompositeSequence> compositeSequences )
+            throws Exception {
         Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<CompositeSequence, Collection<Gene>>();
 
         if ( compositeSequences.size() == 0 ) return returnVal;

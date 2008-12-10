@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.expression.bioAssayData;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * @author Paul
  * @version $Id$
@@ -71,7 +73,7 @@ public interface DesignElementDataVectorService {
      * @param genes
      * @return
      */
-    public java.util.Map getPreferredVectors( java.util.Collection ees, java.util.Collection genes );
+    public java.util.Map getPreferredVectors( java.util.Collection<ExpressionExperiment> ees, java.util.Collection genes );
 
     /**
      * 

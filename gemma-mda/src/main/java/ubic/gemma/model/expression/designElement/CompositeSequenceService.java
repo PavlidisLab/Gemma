@@ -22,8 +22,17 @@
 //
 package ubic.gemma.model.expression.designElement;
 
+import java.util.Collection;
+import java.util.Map;
+
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+
 /**
- * 
+ * @author paul
+ * @version $Id$
  */
 public interface CompositeSequenceService {
 
@@ -35,7 +44,7 @@ public interface CompositeSequenceService {
     /**
      * 
      */
-    public java.util.Collection create( java.util.Collection compositeSequences );
+    public java.util.Collection<CompositeSequence> create( java.util.Collection<CompositeSequence> compositeSequences );
 
     /**
      * 
@@ -52,28 +61,29 @@ public interface CompositeSequenceService {
     /**
      * 
      */
-    public java.util.Collection findByBioSequence( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public java.util.Collection<CompositeSequence> findByBioSequence(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * 
      */
-    public java.util.Collection findByBioSequenceName( java.lang.String name );
+    public java.util.Collection<CompositeSequence> findByBioSequenceName( java.lang.String name );
 
     /**
      * 
      */
-    public java.util.Collection findByGene( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<CompositeSequence> findByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
      */
-    public java.util.Collection findByGene( ubic.gemma.model.genome.Gene gene,
+    public java.util.Collection<CompositeSequence> findByGene( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    public java.util.Collection findByName( java.lang.String name );
+    public java.util.Collection<CompositeSequence> findByName( java.lang.String name );
 
     /**
      * 
@@ -84,8 +94,8 @@ public interface CompositeSequenceService {
     /**
      * 
      */
-    public java.util.Collection findByNamesInArrayDesigns( java.util.Collection compositeSequenceNames,
-            java.util.Collection arrayDesigns );
+    public java.util.Collection<CompositeSequence> findByNamesInArrayDesigns(
+            java.util.Collection<String> compositeSequenceNames, java.util.Collection<ArrayDesign> arrayDesigns );
 
     /**
      * 
@@ -98,24 +108,28 @@ public interface CompositeSequenceService {
      * Given a Collection of composite sequences returns of map of a compositesequence to a collection of genes
      * </p>
      */
-    public java.util.Map getGenes( java.util.Collection sequences );
+    public java.util.Map<CompositeSequence, Collection<Gene>> getGenes(
+            java.util.Collection<CompositeSequence> sequences );
 
     /**
      * 
      */
-    public java.util.Collection getGenes( ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
+    public java.util.Collection<Gene> getGenes(
+            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
 
     /**
      * <p>
      * Returns a map of CompositeSequences to PhysicalLocation to BlatAssociations at each location.
      * </p>
      */
-    public java.util.Map getGenesWithSpecificity( java.util.Collection compositeSequences );
+    public java.util.Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> getGenesWithSpecificity(
+            java.util.Collection<CompositeSequence> compositeSequences );
 
     /**
      * 
      */
-    public java.util.Collection getRawSummary( java.util.Collection compositeSequences, java.lang.Integer numResults );
+    public java.util.Collection getRawSummary( java.util.Collection<CompositeSequence> compositeSequences,
+            java.lang.Integer numResults );
 
     /**
      * 
@@ -139,12 +153,12 @@ public interface CompositeSequenceService {
      * Load all compositeSequences specified by the given ids.
      * </p>
      */
-    public java.util.Collection loadMultiple( java.util.Collection ids );
+    public java.util.Collection<CompositeSequence> loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public void remove( java.util.Collection sequencesToDelete );
+    public void remove( java.util.Collection<CompositeSequence> sequencesToDelete );
 
     /**
      * 
@@ -154,7 +168,7 @@ public interface CompositeSequenceService {
     /**
      * 
      */
-    public void thaw( java.util.Collection compositeSequences );
+    public void thaw( java.util.Collection<CompositeSequence> compositeSequences );
 
     /**
      * 

@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.expression.designElement;
+
+import java.util.Collection;
 
 import ubic.gemma.model.genome.Gene;
 
@@ -48,19 +50,22 @@ public abstract class CompositeSequenceDaoBase extends
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<CompositeSequence> create( final int transform,
+            final java.util.Collection<CompositeSequence> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "CompositeSequence.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.expression.designElement.CompositeSequence ) entityIterator
-                            .next() );
-                }
-                return null;
-            }
-        } );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<CompositeSequence> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -107,15 +112,14 @@ public abstract class CompositeSequenceDaoBase extends
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.designElement.CompositeSequence"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.designElement.CompositeSequence"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.CompositeSequence ) result );
         return ( CompositeSequence ) result;
     }
@@ -124,7 +128,6 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#find(int,
      *      ubic.gemma.model.expression.designElement.CompositeSequence)
      */
-    @SuppressWarnings( { "unchecked" })
     public CompositeSequence find( final int transform,
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         return this
@@ -138,11 +141,9 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#find(java.lang.String,
      *      ubic.gemma.model.expression.designElement.CompositeSequence)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.designElement.CompositeSequence find( final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
-        return ( ubic.gemma.model.expression.designElement.CompositeSequence ) this.find( TRANSFORM_NONE, queryString,
-                compositeSequence );
+        return this.find( TRANSFORM_NONE, queryString, compositeSequence );
     }
 
     /**
@@ -150,8 +151,7 @@ public abstract class CompositeSequenceDaoBase extends
      */
     public ubic.gemma.model.expression.designElement.CompositeSequence find(
             ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
-        return ( ubic.gemma.model.expression.designElement.CompositeSequence ) this.find( TRANSFORM_NONE,
-                compositeSequence );
+        return this.find( TRANSFORM_NONE, compositeSequence );
     }
 
     /**
@@ -557,130 +557,10 @@ public abstract class CompositeSequenceDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.CompositeSequence ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#getMask(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.expression.designElement.CompositeSequence as compositeSequence where compositeSequence.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#getMask(ubic.gemma.model.common.Securable)
-     */
-
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#getMasks(int, java.lang.String,
-     *      java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.CompositeSequence ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#getMasks(int, java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.expression.designElement.CompositeSequence as compositeSequence where compositeSequence.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#getMasks(java.lang.String,
-     *      java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#getMasks(java.util.Collection)
-     */
-
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#getRawSummary(java.util.Collection,
      *      java.lang.Integer)
      */
-    public java.util.Collection getRawSummary( final java.util.Collection compositeSequences,
+    public java.util.Collection getRawSummary( final java.util.Collection<CompositeSequence> compositeSequences,
             final java.lang.Integer numResults ) {
         try {
             return this.handleGetRawSummary( compositeSequences, numResults );
@@ -725,8 +605,6 @@ public abstract class CompositeSequenceDaoBase extends
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#getRecipient(int, java.lang.Long)
      */
-
-    @SuppressWarnings( { "unchecked" })
     public Object getRecipient( final int transform, final java.lang.Long id ) {
         return this
                 .getRecipient(
@@ -775,7 +653,6 @@ public abstract class CompositeSequenceDaoBase extends
      *      java.lang.Long)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
         return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
     }
@@ -804,7 +681,7 @@ public abstract class CompositeSequenceDaoBase extends
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#load(java.util.Collection)
      */
-    public java.util.Collection load( final java.util.Collection ids ) {
+    public java.util.Collection<CompositeSequence> load( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoad( ids );
         } catch ( Throwable th ) {
@@ -827,7 +704,8 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll( final int transform ) {
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<CompositeSequence> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.designElement.CompositeSequenceImpl.class );
         this.transformEntities( transform, results );
@@ -842,8 +720,7 @@ public abstract class CompositeSequenceDaoBase extends
         if ( id == null ) {
             throw new IllegalArgumentException( "CompositeSequence.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.expression.designElement.CompositeSequence entity = ( ubic.gemma.model.expression.designElement.CompositeSequence ) this
-                .load( id );
+        ubic.gemma.model.expression.designElement.CompositeSequence entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -853,7 +730,7 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<CompositeSequence> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "CompositeSequence.remove - 'entities' can not be null" );
         }
@@ -873,7 +750,7 @@ public abstract class CompositeSequenceDaoBase extends
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#thaw(java.util.Collection)
      */
-    public void thaw( final java.util.Collection compositeSequences ) {
+    public void thaw( final java.util.Collection<CompositeSequence> compositeSequences ) {
         try {
             this.handleThaw( compositeSequences );
         } catch ( Throwable th ) {
@@ -887,18 +764,21 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<CompositeSequence> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "CompositeSequence.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.designElement.CompositeSequence ) entityIterator.next() );
-                }
-                return null;
-            }
-        } );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.expression.designElement.CompositeSequence ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**
@@ -919,38 +799,39 @@ public abstract class CompositeSequenceDaoBase extends
     /**
      * Performs the core logic for {@link #findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)}
      */
-    protected abstract java.util.Collection handleFindByBioSequence(
+    protected abstract java.util.Collection<CompositeSequence> handleFindByBioSequence(
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByBioSequenceName(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByBioSequenceName( java.lang.String name )
+    protected abstract java.util.Collection<CompositeSequence> handleFindByBioSequenceName( java.lang.String name )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getGenes(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetGenes( java.util.Collection compositeSequences )
-            throws java.lang.Exception;
+    protected abstract java.util.Map<CompositeSequence, Collection<Gene>> handleGetGenes(
+            java.util.Collection<CompositeSequence> compositeSequences ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getGenes(ubic.gemma.model.expression.designElement.CompositeSequence)}
      */
-    protected abstract java.util.Collection handleGetGenes(
+    protected abstract java.util.Collection<Gene> handleGetGenes(
             ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getGenesWithSpecificity(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetGenesWithSpecificity( java.util.Collection compositeSequences )
-            throws java.lang.Exception;
+    protected abstract java.util.Map handleGetGenesWithSpecificity(
+            java.util.Collection<CompositeSequence> compositeSequences ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getRawSummary(java.util.Collection, java.lang.Integer)}
      */
-    protected abstract java.util.Collection handleGetRawSummary( java.util.Collection compositeSequences,
-            java.lang.Integer numResults ) throws java.lang.Exception;
+    protected abstract java.util.Collection handleGetRawSummary(
+            java.util.Collection<CompositeSequence> compositeSequences, java.lang.Integer numResults )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for
@@ -971,12 +852,14 @@ public abstract class CompositeSequenceDaoBase extends
     /**
      * Performs the core logic for {@link #load(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoad( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection<CompositeSequence> handleLoad( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection compositeSequences ) throws java.lang.Exception;
+    protected abstract void handleThaw( java.util.Collection<CompositeSequence> compositeSequences )
+            throws java.lang.Exception;
 
     /**
      * Transforms a collection of entities using the
