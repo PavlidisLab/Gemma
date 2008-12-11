@@ -88,7 +88,7 @@ public class GeneCoexpressionService {
 
     private static Log log = LogFactory.getLog( GeneCoexpressionService.class.getName() );
     /**
-     * How many genes to fill in the "expression experiments tested in" and "go overlap" info for.
+     * How many genes to fill in the "go overlap" info for.
      */
     private static final int NUM_GENES_TO_DETAIL = 25;
 
@@ -192,8 +192,6 @@ public class GeneCoexpressionService {
                 /*
                  * FIXME: if there is an analysis that contains 'most' of the experiments, it may be performant to split
                  * it up: get the expression results for some datasets from gene2gene, and some via probe-level query.
-                 * This will be necessary to allow inclusion of 'new' data sets like ones uploaded by users, that aren't
-                 * included in the gene2gene analysis. (Bug 1398, 1399)
                  */
             }
         }
@@ -311,7 +309,7 @@ public class GeneCoexpressionService {
 
         CoexpressionMetaValueObject result = initValueObject( queryGenes, eevos, true );
 
-        Collection<CoexpressionValueObjectExt> ecvos = new ArrayList<CoexpressionValueObjectExt>();
+        List<CoexpressionValueObjectExt> ecvos = new ArrayList<CoexpressionValueObjectExt>();
 
         Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
 
@@ -344,12 +342,8 @@ public class GeneCoexpressionService {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
 
-                Collection<Gene> geneToThaw = new ArrayList<Gene>();
-                geneToThaw.add( foundGene );
+                // Gene thaw might be needed here -- beware.
 
-                // The thaw needs to be done here because building the value object
-                // calls methods that require the gene's info (setSortKey, hashCode)
-                // geneService.thaw( foundGene );
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
@@ -452,6 +446,7 @@ public class GeneCoexpressionService {
                 eevo.setExternalUri( AnchorTagUtil.getExpressionExperimentUrl( eevo.getId() ) );
             }
 
+            Collections.sort( ecvos );
             getGoOverlap( ecvos, queryGene );
         }
         timer.stop();
@@ -693,10 +688,10 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * @param ecvos
+     * @param ecvos (sorted)
      * @param queryGene
      */
-    private void getGoOverlap( Collection<CoexpressionValueObjectExt> ecvos, Gene queryGene ) {
+    private void getGoOverlap( List<CoexpressionValueObjectExt> ecvos, Gene queryGene ) {
         if ( !geneOntologyService.isGeneOntologyLoaded() ) {
             return;
         }
@@ -715,10 +710,12 @@ public class GeneCoexpressionService {
         }
         Map<Long, Collection<OntologyTerm>> goOverlap = geneOntologyService.calculateGoTermOverlap( queryGene,
                 overlapIds );
+        int i = 0;
         for ( CoexpressionValueObjectExt ecvo : ecvos ) {
             ecvo.setMaxGoSim( numQueryGeneGoTerms );
             Collection<OntologyTerm> overlap = goOverlap.get( ecvo.getFoundGene().getId() );
-            ecvo.setGoSim( overlap == null ? 0 : overlap.size() );
+            ecvo.setGoSim( overlap == null ? null : overlap.size() );
+            if ( ++i >= NUM_GENES_TO_DETAIL ) break;
         }
 
         if ( timer.getTime() > 1000 ) {

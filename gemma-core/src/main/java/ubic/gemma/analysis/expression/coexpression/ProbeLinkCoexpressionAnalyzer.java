@@ -56,7 +56,7 @@ import ubic.gemma.ontology.OntologyTerm;
 public class ProbeLinkCoexpressionAnalyzer {
 
     private static Log log = LogFactory.getLog( ProbeLinkCoexpressionAnalyzer.class.getName() );
-    private static final int MAX_GENES_TO_COMPUTE_GOOVERLAP = 100;
+    private static final int MAX_GENES_TO_COMPUTE_GOOVERLAP = 25;
     private static final int MAX_GENES_TO_COMPUTE_EESTESTEDIN = 200;
 
     private GeneService geneService;
@@ -114,7 +114,7 @@ public class ProbeLinkCoexpressionAnalyzer {
 
             // don't fill in the gene info etc if we're in batch mode.
             if ( limit > 0 ) {
-                filter( coexpressions, limit ); // remove excess
+                filter( coexpressions, limit, stringency ); // remove excess
                 fillInEEInfo( coexpressions ); // do first...
                 fillInGeneInfo( stringency, coexpressions );
                 computeGoStats( coexpressions, stringency );
@@ -177,7 +177,7 @@ public class ProbeLinkCoexpressionAnalyzer {
 
         // don't fill in the gene info etc if we're in batch mode.
         if ( limit > 0 ) {
-            filter( coexpressions, limit ); // remove excess
+            filter( coexpressions, limit, stringency ); // remove excess
             fillInEEInfo( coexpressions ); // do first...
             fillInGeneInfo( stringency, coexpressions );
             computeGoStats( coexpressions, stringency );
@@ -196,16 +196,17 @@ public class ProbeLinkCoexpressionAnalyzer {
     /**
      * @param coexpressions
      * @param limit
+     * @param stringency
      */
-    private void filter( CoexpressionCollectionValueObject coexpressions, int limit ) {
+    private void filter( CoexpressionCollectionValueObject coexpressions, int limit, int stringency ) {
         CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
-        coexps.filter( limit );
+        coexps.filter( limit, stringency );
 
         coexps = coexpressions.getPredictedGeneCoexpression();
-        coexps.filter( limit );
+        coexps.filter( limit, stringency );
 
         coexps = coexpressions.getProbeAlignedRegionCoexpression();
-        coexps.filter( limit );
+        coexps.filter( limit, stringency );
     }
 
     /**

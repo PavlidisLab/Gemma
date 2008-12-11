@@ -30,7 +30,7 @@ import ubic.gemma.model.genome.Gene;
  * @author luke
  * @version $Id$
  */
-public class CoexpressionValueObjectExt {
+public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueObjectExt> {
 
     private Gene queryGene;
     private Gene foundGene;
@@ -184,6 +184,10 @@ public class CoexpressionValueObjectExt {
 
     public void setContainsMyData( Boolean containsMyData ) {
         this.containsMyData = containsMyData;
+    }
+
+    public int compareTo( CoexpressionValueObjectExt arg0 ) {
+        return this.getSortKey().compareTo( arg0.getSortKey() );
     }
 
 }

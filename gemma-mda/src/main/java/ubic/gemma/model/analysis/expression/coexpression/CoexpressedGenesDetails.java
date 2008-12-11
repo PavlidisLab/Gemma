@@ -149,8 +149,9 @@ public class CoexpressedGenesDetails {
      * object!
      * 
      * @param limit
+     * @param stringency
      */
-    public void filter( int limit ) {
+    public void filter( int limit, int stringency ) {
         // remove from the coexpressionData
         int count = 0;
 
@@ -165,7 +166,7 @@ public class CoexpressedGenesDetails {
             }
 
             public int compareTo( Vk o ) {
-                return o.getV().compareTo( this.v ); // FIXME make sure descending.
+                return o.getV().compareTo( this.v );
             }
 
             public Long getI() {
@@ -179,20 +180,41 @@ public class CoexpressedGenesDetails {
 
         List<Vk> vks = new ArrayList<Vk>();
 
+        int revisedPosLinks = 0;
+        int revisedNegLinks = 0;
+
         for ( Long l : coexpressionData.keySet() ) {
-            vks.add( new Vk( l, coexpressionData.get( l ) ) );
+            CoexpressionValueObject link = coexpressionData.get( l );
+
+            vks.add( new Vk( l, link ) );
         }
+
         Collections.sort( vks );
         Collections.reverse( vks );
 
         for ( Vk vk : vks ) {
             if ( count > limit ) {
                 coexpressionData.remove( vk.getI() );
+            } else {
+                if ( vk.getV().getPositiveLinkSupport() >= stringency ) {
+                    revisedPosLinks++;
+                }
+                if ( vk.getV().getNegativeLinkSupport() >= stringency ) {
+                    revisedNegLinks++;
+                }
             }
             count++;
         }
 
-        // now repeat the postprocessing?
+        this.setPositiveStringencyLinkCount( revisedPosLinks );
+        this.setNegativeStringencyLinkCount( revisedNegLinks );
+
+        /*
+         * Note that it is possible for the sum to be greater than the limit, as links can have both + and - correlation
+         * support > threshold.
+         */
+        assert revisedPosLinks <= limit;
+        assert revisedNegLinks <= limit;
 
     }
 

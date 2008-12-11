@@ -551,8 +551,14 @@ public class GeneLinkCoexpressionAnalyzer {
     }
 
     /**
-     * @param toPersist
-     * @param alreadyPersisted
+     * @param eeIdOrder map for creating bit vector data.
+     * @param firstGene the query gene
+     * @param toPersist results to persist
+     * @param analysis Analysis object to associate with links
+     * @param genesToAnalyze list of genes to limit analysis for (links to other genes are ignored)
+     * @param alreadyPersisted to track genes we've already done, so we don't persist links in both directions
+     * @param stringency minimum support to store a link.
+     * @return
      */
     private Collection<Gene2GeneCoexpression> persistCoexpressions( Map<Long, Integer> eeIdOrder, Gene firstGene,
             CoexpressionCollectionValueObject toPersist, GeneCoexpressionAnalysis analysis,
