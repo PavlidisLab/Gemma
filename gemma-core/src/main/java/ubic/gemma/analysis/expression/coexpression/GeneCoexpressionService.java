@@ -342,8 +342,8 @@ public class GeneCoexpressionService {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
 
-                // Gene thaw might be needed here -- beware.
-
+                //Might cause duplicate gene in session error. Beware!               
+                geneService.thaw( foundGene );
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
