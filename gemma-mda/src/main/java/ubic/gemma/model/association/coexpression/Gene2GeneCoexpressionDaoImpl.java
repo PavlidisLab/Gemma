@@ -200,64 +200,14 @@ public class Gene2GeneCoexpressionDaoImpl extends
      *      Implementation note: we need the sourceAnalysis because although we normally have only one analysis per *
      *      taxon, when reanalyses are in progress there can be more than one temporarily.
      *      <p>
-     *      NOTE: this method is pretty redundant with the one that takes a collection of genes.
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
             int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 
-        /*
-         * TODO: we need to invalidate entries from old analyses.
-         */
-        GeneCached key = new GeneCached( gene.getId(), sourceAnalysis.getId() );
-
-        List<Gene2GeneCoexpression> results;
-
-        Element element = this.getGene2GeneCoexpressionCache().getCache().get( key );
-        if ( element != null ) {
-            results = ( List<Gene2GeneCoexpression> ) element.getValue();
-        } else {
-
-            String g2gClassName = getClassName( gene );
-
-            /*
-             * We do not use the stringency here, so we are guaranteed to be able to return cached values that are
-             * correct for any stringency.
-             */
-            final String queryStringFirstVector = "select g2g from " + g2gClassName
-                    + " as g2g where g2g.firstGene = :gene and g2g.sourceAnalysis = :sourceAnalysis";
-
-            final String queryStringSecondVector = "select g2g from " + g2gClassName
-                    + " as g2g where g2g.secondGene = :gene and g2g.sourceAnalysis = :sourceAnalysis";
-
-            results = new ArrayList<Gene2GeneCoexpression>();
-
-            results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
-                    new String[] { "gene", "sourceAnalysis" }, new Object[] { gene, sourceAnalysis } ) );
-            results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
-                    new String[] { "gene", "sourceAnalysis" }, new Object[] { gene, sourceAnalysis } ) );
-
-            Collections.sort( results, new SupportComparator() );
-
-            // cache the value.
-
-            this.getGene2GeneCoexpressionCache().getCache().put( new Element( key, results ) );
-
-        }
-
-        /*
-         * Filter the results as requested
-         */
-        int count = 0;
-        for ( Iterator<Gene2GeneCoexpression> it = results.iterator(); it.hasNext(); ) {
-            Gene2GeneCoexpression val = it.next();
-            if ( val.getNumDataSets() < stringency || ( maxResults > 0 && count > maxResults ) ) {
-                it.remove();
-            }
-            count++;
-        }
-        return results;
+        Collection<Gene> genes = new HashSet<Gene>();
+        genes.add( gene );
+        return this.handleFindCoexpressionRelationships( genes, stringency, maxResults, sourceAnalysis ).get( gene );
     }
 
     /*
@@ -322,8 +272,10 @@ public class Gene2GeneCoexpressionDaoImpl extends
      * @param object
      */
     protected void removeFromCache( Gene2GeneCoexpression object ) {
-        this.getGene2GeneCoexpressionCache().getCache().remove( object.getFirstGene().getId() );
-        this.getGene2GeneCoexpressionCache().getCache().remove( object.getSecondGene().getId() );
+        this.getGene2GeneCoexpressionCache().getCache().remove(
+                new GeneCached( object.getFirstGene().getId(), object.getSourceAnalysis().getId() ) );
+        this.getGene2GeneCoexpressionCache().getCache().remove(
+                new GeneCached( object.getFirstGene().getId(), object.getSourceAnalysis().getId() ) );
     }
 
     /**
@@ -376,9 +328,20 @@ public class Gene2GeneCoexpressionDaoImpl extends
         /*
          * Cache all values.
          */
+        Map<Gene, List<Gene2GeneCoexpression>> forCache = new HashMap<Gene, List<Gene2GeneCoexpression>>();
         for ( Gene2GeneCoexpression g2g : r ) {
+
+            if ( !forCache.containsKey( g2g.getFirstGene() ) ) {
+                forCache.put( g2g.getFirstGene(), new ArrayList<Gene2GeneCoexpression>() );
+            }
+
+            forCache.get( g2g.getFirstGene() ).add( g2g );
+
+        }
+
+        for ( Gene gene : forCache.keySet() ) {
             this.getGene2GeneCoexpressionCache().getCache().put(
-                    new Element( new GeneCached( g2g.getFirstGene().getId(), sourceAnalysis.getId() ), g2g ) );
+                    new Element( new GeneCached( gene.getId(), sourceAnalysis.getId() ), forCache.get( gene ) ) );
         }
 
         return r;
