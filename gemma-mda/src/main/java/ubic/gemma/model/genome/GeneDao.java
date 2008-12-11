@@ -384,4 +384,6 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      */
     public void thawLite( java.util.Collection<Gene> genes );
 
+    public void thawLite( Gene gene );
+
 }

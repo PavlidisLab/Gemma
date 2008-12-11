@@ -239,6 +239,11 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     public void thaw( ubic.gemma.model.genome.Gene gene );
 
     /**
+     * @param gene
+     */
+    public void thawLite( Gene gene );
+
+    /**
      * 
      */
     public void thawLite( java.util.Collection<Gene> genes );

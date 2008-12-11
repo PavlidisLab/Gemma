@@ -338,15 +338,19 @@ public class GeneCoexpressionService {
 
             List<Long> relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
 
-            Collection<Gene> toThaw = new HashSet<Gene>();
+            /*
+             * must use a list to avoid calls to hashcode, thanks!
+             */
+            List<Gene> toThaw = new ArrayList<Gene>();
+
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
-                CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
+                CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
 
                 toThaw.add( foundGene );
 
-                ecvo.setQueryGene( queryGene );
-                ecvo.setFoundGene( foundGene );
+                cvo.setQueryGene( queryGene );
+                cvo.setFoundGene( foundGene );
 
                 Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
                         positionToIDMap );
@@ -362,7 +366,7 @@ public class GeneCoexpressionService {
                 // necessary in case any were filtered out.
                 supportingDatasets.retainAll( filteredEeIds );
 
-                ecvo.setSupportingExperiments( supportingDatasets );
+                cvo.setSupportingExperiments( supportingDatasets );
 
                 Collection<Long> specificDatasets = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
                         positionToIDMap );
@@ -382,7 +386,7 @@ public class GeneCoexpressionService {
                 assert numTestingDatasets >= numSupportingDatasets;
                 assert numTestingDatasets <= eevos.size();
 
-                ecvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
+                cvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
                         relevantEEIdList ) );
 
                 /*
@@ -397,34 +401,34 @@ public class GeneCoexpressionService {
 
                 int supportFromSpecificProbes = specificDatasets.size();
                 if ( g2g.getEffect() < 0 ) {
-                    ecvo.setPosSupp( 0 );
-                    ecvo.setNegSupp( numSupportingDatasets );
+                    cvo.setPosSupp( 0 );
+                    cvo.setNegSupp( numSupportingDatasets );
                     if ( numSupportingDatasets != supportFromSpecificProbes )
-                        ecvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
+                        cvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
 
                     ++linksMetNegativeStringency;
                 } else {
-                    ecvo.setPosSupp( numSupportingDatasets );
+                    cvo.setPosSupp( numSupportingDatasets );
                     if ( numSupportingDatasets != supportFromSpecificProbes )
-                        ecvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
-                    ecvo.setNegSupp( 0 );
+                        cvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
+                    cvo.setNegSupp( 0 );
                     ++linksMetPositiveStringency;
                 }
-                ecvo.setSupportKey( Math.max( ecvo.getPosSupp(), ecvo.getNegSupp() ) );
-                ecvo.setNumTestedIn( numTestingDatasets );
+                cvo.setSupportKey( Math.max( cvo.getPosSupp(), cvo.getNegSupp() ) );
+                cvo.setNumTestedIn( numTestingDatasets );
 
                 for ( Long id : supportingDatasets ) {
                     supportCount.increment( id );
                 }
 
-                ecvo.setSortKey();
+                cvo.setSortKey();
 
                 /*
                  * This check prevents links from being shown twice when we do "among query genes". We don't skip
                  * entirely so we get the counts for the summary table populated correctly.
                  */
                 if ( !seen.contains( g2g ) ) {
-                    ecvos.add( ecvo );
+                    ecvos.add( cvo );
                 }
 
                 seen.add( g2g );
@@ -455,7 +459,7 @@ public class GeneCoexpressionService {
 
             timer.stop();
             if ( timer.getTime() > 1000 ) {
-                log.info( "Postprocess " + gg2gs.size() + " results for " + queryGene.getOfficialSymbol() + " :"
+                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + ": "
                         + timer.getTime() + "ms" );
             }
             timer.reset();

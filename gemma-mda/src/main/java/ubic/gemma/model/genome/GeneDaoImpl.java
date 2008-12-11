@@ -710,6 +710,22 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         } );
     }
 
+    public void thawLite( final Gene gene ) {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+
+                Gene g = ( Gene ) session.get( GeneImpl.class, gene.getId() );
+                Hibernate.initialize( g );
+                Taxon t = ( Taxon ) session.get( TaxonImpl.class, g.getTaxon().getId() );
+                Hibernate.initialize( t );
+
+                return null;
+            }
+        } );
+
+    }
+
     /**
      * @param coexpressions
      * @param eeID
