@@ -55,7 +55,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 
 	initComponent : function() {
 
-		var templ = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item">{shortName} - {name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>');
+		var templ = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item">{shortName} - {name}</div></tpl>');
 
 		Ext.apply(this, {
 					store : new Ext.data.Store({
