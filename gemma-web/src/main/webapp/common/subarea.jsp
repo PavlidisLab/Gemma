@@ -23,24 +23,26 @@
 </div>
 
 
-<div class="roundedcornr_box_777249" style="margin-bottom: 10px;">
-	<div class="roundedcornr_top_777249">
-		<div></div>
-	</div>
-	<div class="roundedcornr_content_777249" id="contact">
-		<div>
-			<strong>Get an account</strong>
-			<p class="emphasized" style="font-size: 0.90em">
-				Most features of Gemma are open to guests. However, to access some functionality, such as data upload, you'll need
-				an account.
-				<a href="<c:url value="/register.html"/>">Sign up</a>.
-			</p>
+<security:authorize ifNotGranted="user,admin" >
+	<div class="roundedcornr_box_777249" style="margin-bottom: 10px;">
+		<div class="roundedcornr_top_777249">
+			<div></div>
+		</div>
+		<div class="roundedcornr_content_777249" id="contact">
+			<div>
+				<strong>Get an account</strong>
+				<p class="emphasized" style="font-size: 0.90em">
+					Most features of Gemma are open to guests. However, to access some functionality, such as data upload, you'll need
+					an account.
+					<a href="<c:url value="/register.html"/>">Sign up</a>.
+				</p>
+			</div>
+		</div>
+		<div class="roundedcornr_bottom_777249">
+			<div></div>
 		</div>
 	</div>
-	<div class="roundedcornr_bottom_777249">
-		<div></div>
-	</div>
-</div>
+</security:authorize>
 
 <c:if test="${whatsNew != null}">
 	<div class="roundedcornr_box_777249" style="margin-bottom: 15px;">
