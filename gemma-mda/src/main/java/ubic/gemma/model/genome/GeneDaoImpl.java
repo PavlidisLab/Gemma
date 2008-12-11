@@ -704,6 +704,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     if ( t.getExternalDatabase() != null ) {
                         Hibernate.initialize( t.getExternalDatabase() );
                     }
+                    session.evict( gene );
                 }
                 return null;
             }
@@ -715,10 +716,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
 
-                Gene g = ( Gene ) session.get( GeneImpl.class, gene.getId() );
-                Hibernate.initialize( g );
-                Taxon t = ( Taxon ) session.get( TaxonImpl.class, g.getTaxon().getId() );
-                Hibernate.initialize( t );
+                session.lock( gene, LockMode.NONE );
+                Hibernate.initialize( gene );
+                session.evict( gene );
 
                 return null;
             }
