@@ -35,8 +35,9 @@ Ext.onReady(function() {
 					},
 					failure : function(form, action) {
 						var errMsg = '';
-						errMsg = "<font color='red'>" + action.result.message + "</font>";
-						Element.update('errorMessage', errMsg);
+						errMsg = Ext.util.JSON.decode(action.response.responseText);
+						var fontMsg = "<font color='red'>" + errMsg.message + "</font>"; 
+						Element.update('errorMessage', fontMsg);
 
 						signup.getForm().reset();
 						Ext.getCmp('my-status').clearStatus();
@@ -81,8 +82,9 @@ Ext.onReady(function() {
 					},
 					failure : function(form, action) {
 						var errMsg = '';
-						errMsg = "<font color='red'>" + action.result.message + "</font>";
-						Element.update('errorMessage', errMsg);
+						errMsg = Ext.util.JSON.decode(action.response.responseText);
+						var fontMsg = "<font color='red'>" + errMsg.message + "</font>"; 
+						Element.update('errorMessage', fontMsg);
 
 						signup.getForm().reset();
 						Ext.getCmp('my-status').clearStatus();
