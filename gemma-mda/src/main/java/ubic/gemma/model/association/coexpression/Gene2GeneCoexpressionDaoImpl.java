@@ -135,9 +135,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
         int CHUNK_SIZE = 10;
 
-        if ( genesNeeded.size() <= CHUNK_SIZE ) {
-            rawResults.addAll( getCoexpressionRelationshipsFromDB( genesNeeded, sourceAnalysis ) );
-        } else if ( genesNeeded.size() > 0 ) {
+        if ( genesNeeded.size() > 0 ) {
 
             // Potentially too many genes to put in one hibernate query.
             // Batch it up!
