@@ -313,13 +313,13 @@ public class GeneCoexpressionService {
 
         Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
 
-        StopWatch timer = new StopWatch();
-        timer.start();
-
         geneService.thawLite( gg2gs.keySet() );
 
         // populate the value objects.
+        StopWatch timer = new StopWatch();
+
         for ( Gene queryGene : gg2gs.keySet() ) {
+            timer.start();
 
             /*
              * For summary statistics
@@ -338,12 +338,13 @@ public class GeneCoexpressionService {
 
             List<Long> relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
 
+            Collection<Gene> toThaw = new HashSet<Gene>();
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
 
-                //Might cause duplicate gene in session error. Beware!               
-                geneService.thaw( foundGene );
+                toThaw.add( foundGene );
+
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
@@ -430,6 +431,7 @@ public class GeneCoexpressionService {
 
                 allSupportingDatasets.addAll( supportingDatasets );
                 allDatasetsWithSpecificProbes.addAll( specificDatasets );
+
             }
 
             CoexpressionSummaryValueObject summary = makeSummary( eevos, allTestedDataSets,
@@ -448,11 +450,17 @@ public class GeneCoexpressionService {
 
             Collections.sort( ecvos );
             getGoOverlap( ecvos, queryGene );
+
+            geneService.thawLite( toThaw );
+
+            timer.stop();
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Postprocess " + gg2gs.size() + " results for " + queryGene.getOfficialSymbol() + " :"
+                        + timer.getTime() + "ms" );
+            }
+            timer.reset();
         }
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Postprocess: " + timer.getTime() + "ms" );
-        }
+
         result.getKnownGeneResults().addAll( ecvos );
         return result;
     }
