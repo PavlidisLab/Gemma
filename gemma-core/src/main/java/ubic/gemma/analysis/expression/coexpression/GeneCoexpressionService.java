@@ -338,16 +338,11 @@ public class GeneCoexpressionService {
 
             List<Long> relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
 
-            /*
-             * must use a list to avoid calls to hashcode, thanks!
-             */
-            List<Gene> toThaw = new ArrayList<Gene>();
-
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
 
-                toThaw.add( foundGene );
+                geneService.thawLite( foundGene );
 
                 cvo.setQueryGene( queryGene );
                 cvo.setFoundGene( foundGene );
@@ -454,8 +449,6 @@ public class GeneCoexpressionService {
 
             Collections.sort( ecvos );
             getGoOverlap( ecvos, queryGene );
-
-            geneService.thawLite( toThaw );
 
             timer.stop();
             if ( timer.getTime() > 1000 ) {
