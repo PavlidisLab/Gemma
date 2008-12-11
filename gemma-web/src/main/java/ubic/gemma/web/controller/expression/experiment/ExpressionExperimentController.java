@@ -160,6 +160,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.util.concurrent.Callable#call()
          */
         public ModelAndView call() throws Exception {
@@ -935,11 +936,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         String sId = request.getParameter( "id" );
         String taxonId = request.getParameter( "taxonId" );
-        String showDetailsStr = request.getParameter( "details" );
-        boolean showDetails = false;
-        if ( StringUtils.isNotBlank( showDetailsStr ) ) {
-            showDetails = true;
-        }
+
         Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
         Collection<ExpressionExperimentValueObject> eeValObjectCol;
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
@@ -987,7 +984,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments,
                 new ExpressionExperimentValueObjectComparator() );
 
-        if ( SecurityService.isUserAdmin() && showDetails ) {
+        if ( SecurityService.isUserAdmin() ) {
             expressionExperimentReportService.fillEventInformation( expressionExperiments );
         }
 
