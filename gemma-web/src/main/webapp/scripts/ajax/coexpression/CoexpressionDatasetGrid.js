@@ -12,7 +12,6 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	style : "margin-top: 1em; margin-bottom: .5em;",
 	autoHeight : true,
 	stateful : false,
-	viewConfig : {forceFit : true},
 
 
 	record : Ext.data.Record.create([{
@@ -70,7 +69,7 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 								groupField : 'queryGene',
 								sortInfo : {
 									field : 'coexpressionLinkCount',
-									dir : 'ASC'
+									direction : 'DESC'
 								}
 							}),
 
