@@ -12,6 +12,8 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	style : "margin-top: 1em; margin-bottom: .5em;",
 	autoHeight : true,
 	stateful : false,
+	viewConfig : {forceFit : true},
+
 
 	record : Ext.data.Record.create([{
 				name : "id",
@@ -29,14 +31,11 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				name : "coexpressionLinkCount",
 				type : "int"
 			}, {
-				name : "hasProbeSpecificForQueryGene"
+				name : "probeSpecificForQueryGene"
 			}, {
 				name : "arrayDesignCount",
 				type : "int"
-			}, {
-				name : "externalUri",
-				type : "string"
-			}, {
+			},  {
 				name : "bioAssayCount",
 				type : "int"
 			}, {
@@ -71,7 +70,7 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 								groupField : 'queryGene',
 								sortInfo : {
 									field : 'coexpressionLinkCount',
-									dir : 'DESC'
+									dir : 'ASC'
 								}
 							}),
 
@@ -80,51 +79,61 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							}),
 
 					columns : [{
-						id : 'shortName',
+						id : ' shortName ',
 						header : "Dataset",
 						dataIndex : "shortName",
+						sortable : true,
 						tooltip : "Dataset common name"
 							// renderer : this.eeStyler.createDelegate(this)
 						}, {
 						id : 'name',
 						header : "Name",
 						dataIndex : "name",
-						tooltip : "Dataset Long Name"
+						tooltip : "Dataset Long Name",
+						sortable : true,
+						width : 230
+
 					}, {
-						id : 'queryGene',
+						id : ' queryGene ',
 						header : "Query Gene",
 						dataIndex : "queryGene",
-						hidden : true
+						hidden : true,					
+						sortable : true
+
 					}, {
-						header : "Raw Links",
+						header : " Raw Links ",
 						dataIndex : "rawCoexpressionLinkCount",
 						tooltip : "# of possible links for the query gene in this data set",
-						hidden : true
+						hidden : true,
+						align: 'center',
+						sortable : true
 					}, {
-						header : "Contributing Links",
+						header : " Contributing Links ",
 						dataIndex : "coexpressionLinkCount",
-						tooltip : "# contributions to confirmed links"
+						tooltip : "# contributions to confirmed links",			
+						align: 'center',
+						sortable : true
+
 					}, {
-						header : "Specific Probe",
-						dataIndex : "hasProbeSpecificForQueryGene",
+						header : " Specific Probe ",
+						dataIndex : "probeSpecificForQueryGene",
 						type : "boolean",
 						tooltip : "Does the dataset have a probe that is specific for the query gene?",
-						renderer : this.booleanStyler.createDelegate(this)
+						renderer : this.booleanStyler.createDelegate(this),
+						align: 'center',						
+						sortable : true
+
 					},
-							// , {
-							// id : 'arrays',
-							// header : "Arrays",
-							// dataIndex : "arrayDesignCount",
-							// tooltip : "# of Array Designs"
-							// },
-							{
-								id : 'assays',
-								header : "Assays",
-								dataIndex : "bioAssayCount",
-								tooltip : "# of Assays"
-								// renderer : this.assayCountStyler.createDelegate(this)
-							}]
-				});
+					{
+						id : 'assays',
+						header : " Assays ",
+						dataIndex : "bioAssayCount",
+						tooltip : "# of Assays",
+						align: 'center',
+						sortable : true
+						// renderer : this.assayCountStyler.createDelegate(this)
+					}
+				]});
 
 		Gemma.CoexpressionDatasetGrid.superclass.initComponent.call(this);
 
