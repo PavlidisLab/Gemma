@@ -36,10 +36,11 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#handleLoadAllRoles()
      */
     @Override
-    public Collection handleLoadAllRoles() {
+    public Collection<UserRole> handleLoadAllRoles() {
         return this.getUserRoleDao().loadAll();
     }
 
@@ -109,17 +110,17 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleFindByEmail(java.lang.String)
      */
     @Override
     protected User handleFindByEmail( String email ) throws Exception {
-        Contact c = this.getUserDao().findByEmail( email );
-        if ( c instanceof User ) return ( User ) c;
-        return null;
+        return this.getUserDao().findByEmail( email );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleFindByUserName(java.lang.String)
      */
     @Override
@@ -139,12 +140,13 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#getUsers(ubic.gemma.model.common.auditAndSecurity.User)
      */
     @Override
-    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+    protected java.util.Collection<User> handleLoadAll() throws java.lang.Exception {
         return this.getUserDao().loadAll();
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleUpdate(ubic.gemma.model.common.auditAndSecurity
      * .User)

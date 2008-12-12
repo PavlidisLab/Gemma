@@ -36,10 +36,10 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserDaoBase#find(ubic.gemma.model.common.auditAndSecurity.user)
      */
-    @Override
-    public User find( Contact contact ) {
+    public User find( User contact ) {
         try {
             assert contact instanceof User;
 

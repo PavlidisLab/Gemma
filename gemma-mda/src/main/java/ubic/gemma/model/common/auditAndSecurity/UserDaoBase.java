@@ -35,7 +35,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#create(int, java.util.Collection)
      */
 
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<User> create( final int transform, final java.util.Collection<User> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "User.create - 'entities' can not be null" );
         }
@@ -43,8 +43,8 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.common.auditAndSecurity.User ) entityIterator.next() );
+                        for ( java.util.Iterator<User> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform, entityIterator.next() );
                         }
                         return null;
                     }
@@ -56,20 +56,18 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.User)
      */
-    public Object create( final int transform, final ubic.gemma.model.common.auditAndSecurity.User user ) {
+    public User create( final int transform, final ubic.gemma.model.common.auditAndSecurity.User user ) {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.create - 'user' can not be null" );
         }
         this.getHibernateTemplate().save( user );
-        return this.transformEntity( transform, user );
+        return ( User ) this.transformEntity( transform, user );
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#create(java.util.Collection)
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<User> create( final java.util.Collection<User> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -81,127 +79,10 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#find(int, java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.Contact)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( contact );
-        argNames.add( "contact" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Contact"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.User ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#find(int, java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( person );
-        argNames.add( "person" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Person"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.User ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#find(int, ubic.gemma.model.common.auditAndSecurity.Contact)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        return this.find( transform,
-                "from ubic.gemma.model.common.auditAndSecurity.User as user where user.contact = :contact", contact );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#find(int, ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        return this.find( transform,
-                "from ubic.gemma.model.common.auditAndSecurity.User as user where user.person = :person", person );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#find(java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.Contact)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.auditAndSecurity.Contact find( final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.Contact ) this.find( TRANSFORM_NONE, queryString, contact );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#find(java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.auditAndSecurity.Person find( final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.Person ) this.find( TRANSFORM_NONE, queryString, person );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#find(ubic.gemma.model.common.auditAndSecurity.Contact)
-     */
-
-    public ubic.gemma.model.common.auditAndSecurity.Contact find(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.Contact ) this.find( TRANSFORM_NONE, contact );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#find(ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-
-    public ubic.gemma.model.common.auditAndSecurity.Person find( ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.Person ) this.find( TRANSFORM_NONE, person );
-    }
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByEmail(int, java.lang.String)
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object findByEmail( final int transform, final java.lang.String email ) {
-        return this.findByEmail( transform, "from ContactImpl c where c.email = :email", email );
+    public User findByEmail( final int transform, final java.lang.String email ) {
+        return this.findByEmail( transform, "from UserImpl c where c.email = :email", email );
     }
 
     /**
@@ -209,7 +90,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      */
 
     @SuppressWarnings( { "unchecked" })
-    public Object findByEmail( final int transform, final java.lang.String queryString, final java.lang.String email ) {
+    public User findByEmail( final int transform, final java.lang.String queryString, final java.lang.String email ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( email );
@@ -227,7 +108,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
             }
         }
         result = transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.User ) result );
-        return result;
+        return ( User ) result;
     }
 
     /**
@@ -239,28 +120,15 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByEmail(java.lang.String, java.lang.String)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.auditAndSecurity.Contact findByEmail( final java.lang.String queryString,
-            final java.lang.String email ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.Contact ) this.findByEmail( TRANSFORM_NONE, queryString,
-                email );
-    }
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByFirstAndLastName(int, java.lang.String,
      *      java.lang.String)
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByFirstAndLastName( final int transform, final java.lang.String name,
+    public java.util.Collection<User> findByFirstAndLastName( final int transform, final java.lang.String name,
             final java.lang.String secondName ) {
         return this
                 .findByFirstAndLastName(
                         transform,
-                        "from ubic.gemma.model.common.auditAndSecurity.User as user where user.name = :name and user.secondName = :secondName",
+                        "from ubic.gemma.model.common.auditAndSecurity.UserImpl as user where user.name = :name and user.secondName = :secondName",
                         name, secondName );
     }
 
@@ -268,9 +136,8 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByFirstAndLastName(int, java.lang.String,
      *      java.lang.String, java.lang.String)
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByFirstAndLastName( final int transform, final java.lang.String queryString,
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<User> findByFirstAndLastName( final int transform, final java.lang.String queryString,
             final java.lang.String name, final java.lang.String secondName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -288,7 +155,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByFirstAndLastName(java.lang.String, java.lang.String)
      */
 
-    public java.util.Collection findByFirstAndLastName( java.lang.String name, java.lang.String secondName ) {
+    public java.util.Collection<User> findByFirstAndLastName( java.lang.String name, java.lang.String secondName ) {
         return this.findByFirstAndLastName( TRANSFORM_NONE, name, secondName );
     }
 
@@ -296,9 +163,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByFirstAndLastName(java.lang.String, java.lang.String,
      *      java.lang.String)
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByFirstAndLastName( final java.lang.String queryString,
+    public java.util.Collection<User> findByFirstAndLastName( final java.lang.String queryString,
             final java.lang.String name, final java.lang.String secondName ) {
         return this.findByFirstAndLastName( TRANSFORM_NONE, queryString, name, secondName );
     }
@@ -308,7 +173,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      */
 
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByFullName( final int transform, final java.lang.String name,
+    public java.util.Collection<User> findByFullName( final int transform, final java.lang.String name,
             final java.lang.String secondName ) {
         return this.findByFullName( transform,
                 "from PersonImpl p where p.firstName=:firstName and p.lastName=:lastName and p.middleName=:middleName",
@@ -339,7 +204,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByFullName(java.lang.String, java.lang.String)
      */
 
-    public java.util.Collection findByFullName( java.lang.String name, java.lang.String secondName ) {
+    public java.util.Collection<User> findByFullName( java.lang.String name, java.lang.String secondName ) {
         return this.findByFullName( TRANSFORM_NONE, name, secondName );
     }
 
@@ -357,11 +222,8 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByLastName(int, java.lang.String)
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByLastName( final int transform, final java.lang.String lastName ) {
-        return this.findByLastName( transform,
-                "from ubic.gemma.model.common.auditAndSecurity.User as user where user.lastName = :lastName", lastName );
+    public java.util.Collection<User> findByLastName( final int transform, final java.lang.String lastName ) {
+        return this.findByLastName( transform, "from  UserImpl as user where user.lastName = :lastName", lastName );
     }
 
     /**
@@ -369,7 +231,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      */
 
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByLastName( final int transform, final java.lang.String queryString,
+    public java.util.Collection<User> findByLastName( final int transform, final java.lang.String queryString,
             final java.lang.String lastName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -385,23 +247,21 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByLastName(java.lang.String)
      */
 
-    public java.util.Collection findByLastName( java.lang.String lastName ) {
+    public java.util.Collection<User> findByLastName( java.lang.String lastName ) {
         return this.findByLastName( TRANSFORM_NONE, lastName );
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByLastName(java.lang.String, java.lang.String)
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByLastName( final java.lang.String queryString, final java.lang.String lastName ) {
+    public java.util.Collection<User> findByLastName( final java.lang.String queryString,
+            final java.lang.String lastName ) {
         return this.findByLastName( TRANSFORM_NONE, queryString, lastName );
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByUserName(int, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
     public User findByUserName( final int transform, final java.lang.String userName ) {
         return this.findByUserName( transform, "from UserImpl u where u.userName=:userName", userName );
     }
@@ -441,7 +301,6 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByUserName(java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.common.auditAndSecurity.User findByUserName( final java.lang.String queryString,
             final java.lang.String userName ) {
         return ( ubic.gemma.model.common.auditAndSecurity.User ) this.findByUserName( TRANSFORM_NONE, queryString,
@@ -449,129 +308,8 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findOrCreate(int, java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.Contact)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( contact );
-        argNames.add( "contact" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Contact"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.User ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findOrCreate(int, java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( person );
-        argNames.add( "person" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Person"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.User ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findOrCreate(int,
-     *      ubic.gemma.model.common.auditAndSecurity.Contact)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        return this.findOrCreate( transform,
-                "from ubic.gemma.model.common.auditAndSecurity.User as user where user.contact = :contact", contact );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findOrCreate(int,
-     *      ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        return this.findOrCreate( transform,
-                "from ubic.gemma.model.common.auditAndSecurity.User as user where user.person = :person", person );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.Contact)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.Contact ) this.findOrCreate( TRANSFORM_NONE, queryString,
-                contact );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.Person ) this.findOrCreate( TRANSFORM_NONE, queryString,
-                person );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)
-     */
-
-    public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.Contact ) this.findOrCreate( TRANSFORM_NONE, contact );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-
-    public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Person person ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.Person ) this.findOrCreate( TRANSFORM_NONE, person );
-    }
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#load(int, java.lang.Long)
      */
-
     public User load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "User.load - 'id' can not be null" );
@@ -592,9 +330,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#loadAll()
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+    public java.util.Collection<User> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -602,8 +338,9 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<User> loadAll( final int transform ) {
+        final java.util.Collection<User> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.auditAndSecurity.UserImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -627,7 +364,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<User> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "User.remove - 'entities' can not be null" );
         }
@@ -648,7 +385,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<User> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "User.update - 'entities' can not be null" );
         }
@@ -656,8 +393,8 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.common.auditAndSecurity.User ) entityIterator.next() );
+                        for ( java.util.Iterator<User> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }
@@ -686,6 +423,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @SuppressWarnings("unchecked")
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through

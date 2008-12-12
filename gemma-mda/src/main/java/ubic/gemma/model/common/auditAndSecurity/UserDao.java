@@ -68,4 +68,6 @@ public interface UserDao extends BaseDao<User> {
      */
     public ubic.gemma.model.common.auditAndSecurity.User findByUserName( String queryString, java.lang.String userName );
 
+    public User find( User contact );
+
 }
