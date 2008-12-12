@@ -54,6 +54,8 @@ public class JSONUtil {
      */
     public void writeToResponse( String jsonText ) throws IOException {
         HttpServletResponseWrapper responseWrapper = new HttpServletResponseWrapper( response );
+        responseWrapper.setContentType( "text/plain" );
+        responseWrapper.setContentLength( jsonText.getBytes().length );
         Writer out = responseWrapper.getWriter();
         out.write( jsonText );
         out.close();
