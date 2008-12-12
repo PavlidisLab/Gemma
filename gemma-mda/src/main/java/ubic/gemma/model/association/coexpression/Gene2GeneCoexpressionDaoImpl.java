@@ -122,7 +122,6 @@ public class Gene2GeneCoexpressionDaoImpl extends
         List<Gene2GeneCoexpression> rawResults = new ArrayList<Gene2GeneCoexpression>();
 
         Map<Gene, Collection<Gene2GeneCoexpression>> finalResult = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
-
         for ( Gene g : genes ) {
             Element e = this.getGene2GeneCoexpressionCache().getCache().get(
                     new GeneCached( g.getId(), sourceAnalysis.getId() ) );
@@ -329,11 +328,23 @@ public class Gene2GeneCoexpressionDaoImpl extends
         Map<Gene, List<Gene2GeneCoexpression>> forCache = new HashMap<Gene, List<Gene2GeneCoexpression>>();
         for ( Gene2GeneCoexpression g2g : r ) {
 
-            if ( !forCache.containsKey( g2g.getFirstGene() ) ) {
-                forCache.put( g2g.getFirstGene(), new ArrayList<Gene2GeneCoexpression>() );
+            Gene firstGene = g2g.getFirstGene();
+            if ( genes.contains( firstGene ) ) {
+                if ( !forCache.containsKey( firstGene ) ) {
+                    forCache.put( firstGene, new ArrayList<Gene2GeneCoexpression>() );
+                }
+
+                forCache.get( firstGene ).add( g2g );
             }
 
-            forCache.get( g2g.getFirstGene() ).add( g2g );
+            Gene secondGene = g2g.getSecondGene();
+            if ( genes.contains( secondGene ) ) {
+                if ( !forCache.containsKey( secondGene ) ) {
+                    forCache.put( secondGene, new ArrayList<Gene2GeneCoexpression>() );
+                }
+
+                forCache.get( secondGene ).add( g2g );
+            }
 
         }
 
