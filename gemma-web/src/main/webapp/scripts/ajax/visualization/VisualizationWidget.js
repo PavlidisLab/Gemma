@@ -473,7 +473,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 			tpl : new Gemma.ProfileTemplate(
 					'<tpl for="."><tpl for="eevo">',
-					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b>:  <i>{[sprintf("%.3e", values.minPvalue)]}  </i></div>',
+					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b>:  <i>{[(values.minPvalue < 1) ? sprintf("%.3e", values.minPvalue) : "-"]}  </i></div>',
 					'</tpl></tpl>'),
 
 			listeners : {
