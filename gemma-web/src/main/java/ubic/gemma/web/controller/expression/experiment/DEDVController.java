@@ -501,7 +501,7 @@ public class DEDVController extends BaseFormController {
 
     /**
      * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
-     * Currently removes multiple hits for same gene. Tries to pick best DEDV.
+     * Currently removes multiple hits for same gene. Tries to pick best DEDV. Organizes the experiments from lowest to higest p-value
      * 
      * @param dedvs
      * @param genes
