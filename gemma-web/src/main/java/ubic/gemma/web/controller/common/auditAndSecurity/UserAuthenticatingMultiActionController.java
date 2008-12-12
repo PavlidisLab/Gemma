@@ -38,7 +38,6 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.RequestUtil;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
 /**
@@ -182,7 +181,7 @@ public abstract class UserAuthenticatingMultiActionController extends BaseMultiA
             model.put( "username", user.getUserName() );
             model.put( "password", unencryptedPassword );
             model.put( "message", getText( "signup.email.message", locale ) );
-            model.put( "editProfileURL", RequestUtil.getAppURL( request ) + "/userProfile.html" );
+            model.put( "editProfileURL", ConfigUtils.getBaseUrl() + "/userProfile.html" );
             sendEmail( user, this.templateName, model );
             this.saveMessage( request, "signup.email.sent", user.getEmail(),
                     "You are now logged in. A confirmation email was sent with your temporary password." );

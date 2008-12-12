@@ -594,6 +594,10 @@ public class ConfigUtils {
         return getString( "gemma.admin.email" );
     }
 
+    public static String getBaseUrl() {
+        return getString( "gemma.base.url", "[URL to Gemma not configured]" );
+    }
+
     /**
      * The default value given if none is defined is AND.
      * 

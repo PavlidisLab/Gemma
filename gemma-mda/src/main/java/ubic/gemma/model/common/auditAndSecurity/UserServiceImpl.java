@@ -85,7 +85,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         }
 
         if ( this.findByEmail( user.getEmail() ) != null ) {
-            throw new UserExistsException( "A user with email address " + user.getEmail() + " already exists." );
+            throw new UserExistsException( "A user with email address '" + user.getEmail() + "' already exists." );
         }
 
         try {

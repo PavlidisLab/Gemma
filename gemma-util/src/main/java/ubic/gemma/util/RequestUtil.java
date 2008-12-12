@@ -231,7 +231,8 @@ public class RequestUtil {
     }
 
     /**
-     * Convenience method to get the application's URL based on request variables.
+     * Convenience method to get the application's URL based on request variables. NOTE: this is pretty useless if
+     * running behind a proxy.
      */
     public static String getAppURL( HttpServletRequest request ) {
         StringBuffer url = new StringBuffer();
