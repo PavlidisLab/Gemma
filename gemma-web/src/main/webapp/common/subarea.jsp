@@ -23,7 +23,7 @@
 </div>
 
 
-<security:authorize ifNotGranted="user,admin" >
+<security:authorize ifNotGranted="user,admin">
 	<div class="roundedcornr_box_777249" style="margin-bottom: 10px;">
 		<div class="roundedcornr_top_777249">
 			<div></div>
@@ -34,7 +34,9 @@
 				<p class="emphasized" style="font-size: 0.90em">
 					Most features of Gemma are open to guests. However, to access some functionality, such as data upload, you'll need
 					an account.
-					<a href="<c:url value="/register.html"/>">Sign up</a>.
+					<strong><a href="<c:url value="/register.html"/>">Sign up</a>
+					</strong>, or
+					<strong><a href="<c:url value="/login.jsp" />">log in</a> </strong> if you already have an account.
 				</p>
 			</div>
 		</div>
