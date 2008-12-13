@@ -584,7 +584,7 @@ public class GeneCoexpressionService {
         }
 
         for ( ExpressionExperimentValueObject eevo : eevos ) {
-            if ( !coexp.getExpressionExperimentIds().contains( eevo.getId() ) ) continue;
+            if ( !coexp.getExpressionExperimentIds().contains( eevo.getId()) || coexp.getLinkCountForEE( eevo.getId() ) == 0 ) continue;
             ExpressionExperimentValueObject coexpEevo = coexp.getExpressionExperiment( eevo.getId() );
             if ( coexpEevo == null ) continue;
             CoexpressionDatasetValueObject ecdvo = new CoexpressionDatasetValueObject();
