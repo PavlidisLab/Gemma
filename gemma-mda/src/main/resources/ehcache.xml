@@ -175,7 +175,7 @@
 	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.chemicals" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.description.CharacteristicImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.common.description.CharacteristicImpl" maxElementsInMemory="100000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.description.NotedReferenceImpl" maxElementsInMemory="10000" eternal="false"
@@ -491,7 +491,7 @@
 	<cache name="ubic.gemma.model.expression.designElement.ReporterImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.designElement.DesignElementImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.expression.designElement.DesignElementImpl" maxElementsInMemory="100000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" maxElementsInMemory="10000" eternal="false"
@@ -549,7 +549,7 @@
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterialImpl.characteristics" maxElementsInMemory="20000"
-		eternal="true" overflowToDisk="false" />
+		eternal="false" timeToIdleSeconds="100" timeToLiveSeconds="100" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.biomaterial.TreatmentImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
