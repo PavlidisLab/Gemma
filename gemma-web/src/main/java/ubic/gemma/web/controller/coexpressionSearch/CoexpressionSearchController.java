@@ -95,7 +95,19 @@ public class CoexpressionSearchController extends BaseFormController {
             throw new IllegalArgumentException( "Invalid gene id(s) - no genes found" );
         }
 
-        this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...s
+        this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...
+
+        /*
+         * Validation ...
+         */
+        if ( searchOptions.getTaxonId() != null ) {
+            for ( Gene gene : genes ) {
+                if ( gene.getTaxon().getId() != searchOptions.getTaxonId() ) {
+                    throw new IllegalArgumentException(
+                            "Search for gene from wrong taxon. Please check the genes match the selected taxon" );
+                }
+            }
+        }
 
         // Add the users datasets to the selected datasets
         if ( searchOptions.isUseMyDatasets() ) {
