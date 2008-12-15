@@ -1,12 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 <head>
-	<title><fmt:message key="characteristicBrowser.title" />
-	</title>
-	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
+	<title><fmt:message key="characteristicBrowser.title" /></title>
 	<security:authorize ifAnyGranted="admin">
 		<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 		<jwr:script src='/scripts/app/CharacteristicBrowser.js' />
