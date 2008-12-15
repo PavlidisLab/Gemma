@@ -883,7 +883,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     private Map<Long, String> getArrayToTaxonMap() {
         Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
         Collection<ArrayDesign> arrayDesigns = this.loadAll();
+        // Warning: this can run very slowly, so caching it is crucial.
         for ( ArrayDesign ad : arrayDesigns ) {
+
             final String csString = "select taxon from ArrayDesignImpl "
                     + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
                     + " where ad = :ad";
@@ -891,7 +893,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             csQueryObject.setParameter( "ad", ad );
             csQueryObject.setCacheable( true );
             csQueryObject.setMaxResults( 1 );
-            // the name of the cache region is configured in ehcache.xml.vsl
+            // the name of the cache region is configured in ehcache.xml
             csQueryObject.setCacheRegion( null );
 
             List csList = csQueryObject.list();
