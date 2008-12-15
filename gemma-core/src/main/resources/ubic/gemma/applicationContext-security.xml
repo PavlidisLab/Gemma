@@ -302,10 +302,10 @@
                 ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.sequenceAnalysis.BlastResultService.create=user,admin
                 ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService.create=user,admin
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadMultiple=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAllValueObjects=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAllValueObjects=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadValueObjects=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.update=user,admin
@@ -313,9 +313,10 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.delete=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByInvestigator=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByGene=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByAccession=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByShortName=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByName=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByShortName=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByFactorValue=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByQuantitationType=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByTaxon=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
@@ -331,17 +332,17 @@
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.create=user,admin
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.findOrCreate=user,admin
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.findByName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExperimentalDesignService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExperimentalDesignService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.update=user,admin
                 ubic.gemma.model.expression.experiment.ExperimentalDesignService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExperimentalFactorService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExperimentalFactorService.create=user,admin
-                ubic.gemma.model.expression.experiment.ExperimentalFactorService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExperimentalFactorService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.expression.experiment.FactorValueService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.FactorValueService.findOrCreate=user,admin 
                 ubic.gemma.model.expression.experiment.FactorValueService.delete=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.create=user,admin
                 ubic.gemma.model.expression.designElement.CompositeSequenceService.findOrCreate=user,admin
                 ubic.gemma.model.expression.designElement.CompositeSequenceService.remove=user,admin
@@ -396,7 +397,7 @@
                 ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.description.BibliographicReferenceService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.description.BibliographicReferenceService.findByTitle=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.BibliographicReferenceService.create=ACL_SECURABLE_EDIT,user,admin
+                ubic.gemma.model.common.description.BibliographicReferenceService.create=ACL_SECURABLE_EDIT,user,adminubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.description.BibliographicReferenceService.update=ACL_SECURABLE_EDIT,admin
                 ubic.gemma.model.common.description.BibliographicReferenceService.remove=ACL_SECURABLE_EDIT
                 ubic.gemma.model.common.description.BibliographicReferenceService.addPDF=user,admin 
@@ -420,7 +421,7 @@
                 ubic.gemma.model.common.description.LocalFileService.save=user,admin
                 ubic.gemma.model.common.description.LocalFileService.update=user,admin 
                 ubic.gemma.model.common.description.LocalFileService.findOrCreate=user,admin
-                ubic.gemma.model.common.description.DatabaseEntryService.find=user,admin,ROLE_ANONYMOUS 
+                ubic.gemma.model.common.description.DatabaseEntryService.find=user,admin,ROLE_ANONYMOUS ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.description.DatabaseEntryService.update=user,admin 
                 ubic.gemma.model.common.description.DatabaseEntryService.remove=user,admin
                 ubic.gemma.model.common.auditAndSecurity.PersonService.create=user,admin 
@@ -440,7 +441,7 @@
                 ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeAllForUser=user,admin
                 ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeOldForUser=user,admin
                 ubic.gemma.model.common.auditAndSecurity.UserQueryService.findByUser=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.findMostRecentForUser=user,admin
+                ubic.gemma.model.common.auditAndSecurity.UserQueryService.findMostRecentForUser=user,adminubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.auditAndSecurity.UserQueryService.load=user,admin
                 ubic.gemma.model.common.auditAndSecurity.UserQueryService.loadAll=admin
                 ubic.gemma.model.common.auditAndSecurity.UserQueryService.remove=user,admin
@@ -461,7 +462,7 @@
                 ubic.gemma.model.common.protocol.SoftwareService.findOrCreate=user,admin
                 ubic.gemma.model.common.protocol.SoftwareService.find=user,admin,ROLE_ANONYMOUS 
                 ubic.gemma.model.common.protocol.SoftwareService.update=user,admin
-                ubic.gemma.model.common.protocol.SoftwareService.remove=user,admin 
+                ubic.gemma.model.common.protocol.SoftwareService.remove=user,admin ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.findOrCreate=user,admin
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.update=user,admin
@@ -481,7 +482,7 @@
                 ubic.gemma.model.genome.gene.CandidateGeneListService.findByID=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.gene.CandidateGeneListService.findByListOwner=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.gene.CandidateGeneListService.findAll=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.genome.gene.CandidateGeneListService.setActor=user,admin
+                ubic.gemma.model.genome.gene.CandidateGeneListService.setActor=user,adminubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin 
                 ubic.gemma.model.genome.gene.GeneService.update=admin
                 ubic.gemma.model.genome.gene.GeneService.loadAll=user,admin,ROLE_ANONYMOUS 
@@ -509,6 +510,7 @@
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.delete=user,admin
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.findByName=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
+                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.create=admin
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.update=admin
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS

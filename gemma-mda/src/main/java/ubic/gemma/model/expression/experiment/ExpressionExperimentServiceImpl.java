@@ -589,13 +589,19 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadValueObjects(java.util.Collection
-     * )
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadValueObjects(java.util.Collection )
      */
     @Override
     protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection ids ) throws Exception {
-        return this.getExpressionExperimentDao().loadValueObjects( ids );
+        /* security will filter experiments */
+        Collection<ExpressionExperiment> filteredExperiments = this.loadMultiple( ids );
+
+        Collection<Long> filteredIds = new HashSet<Long>();
+        for ( ExpressionExperiment ee : filteredExperiments ) {
+            filteredIds.add( ee.getId() );
+        }
+        return this.getExpressionExperimentDao().loadValueObjects( filteredIds );
     }
 
     @Override

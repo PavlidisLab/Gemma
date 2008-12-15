@@ -91,6 +91,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -99,6 +100,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
      */
     public TaskResult execute( TaskCommand spacesCommand ) {
@@ -297,8 +299,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     public Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids ) {
         initDirectories( false );
 
-        Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( filteredIds );
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids );
         getStats( vos );
         return vos;
     }
@@ -319,6 +320,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
      */
     public String getTaskId() {
@@ -635,5 +637,4 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         }
         return filteredIds;
     }
-
 }

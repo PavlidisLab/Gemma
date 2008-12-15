@@ -613,22 +613,22 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-
-        if ( ee == null ) {
-            // possibly not permitted.
-            return null;
-        }
-
-        expressionExperimentService.thawLite( ee );
         Collection<Long> ids = new HashSet<Long>();
-        ids.add( ee.getId() );
+        ids.add( id );
 
         Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids );
+
+        if ( initialResults == null ) {
+            return null;
+        }
 
         getReportData( initialResults );
         ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
         ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject( initialResult );
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+
+        expressionExperimentService.thawLite( ee );
 
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         Collection<Long> adids = new HashSet<Long>();
