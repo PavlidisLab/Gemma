@@ -305,7 +305,7 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadMultiple=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAllValueObjects=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAllValueObjects=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadValueObjects=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.update=user,admin
@@ -431,11 +431,11 @@
                 ubic.gemma.model.common.auditAndSecurity.PersonService.findOrCreate=user,admin
                 ubic.gemma.model.common.auditAndSecurity.UserService.findByUserName=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.auditAndSecurity.UserService.findByEmail=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.auditAndSecurity.UserService.loadAll=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.common.auditAndSecurity.UserService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.common.auditAndSecurity.UserService.create=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.auditAndSecurity.UserService.delete=user,admin 
                 ubic.gemma.model.common.auditAndSecurity.UserService.addRole=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.common.auditAndSecurity.UserService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.common.auditAndSecurity.UserService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.common.auditAndSecurity.UserService.update=user,admin
                 ubic.gemma.model.common.auditAndSecurity.UserQueryService.create=user,admin
                 ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeAllForUser=user,admin
