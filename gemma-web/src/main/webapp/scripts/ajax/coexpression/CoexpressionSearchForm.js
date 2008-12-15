@@ -384,11 +384,11 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 							}, {
 								xtype : 'checkbox',
 								id : 'forceUseMyDatasets',
-								fieldLabel : 'use my data',
+								fieldLabel : 'Use my data',
 								disabled : !this.user,
 								hidden : !this.user,
 								hideLabel : !this.user,
-								tooltip : "Use my datasets in search"
+								tooltip : "Add your data sets to the search, if available (and for the selected taxon)"
 							}, {
 								xtype : 'checkbox',
 								id : 'querygenesonly',
