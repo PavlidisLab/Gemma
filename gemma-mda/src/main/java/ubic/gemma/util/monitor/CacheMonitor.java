@@ -79,12 +79,12 @@ public class CacheMonitor {
             long onDiskHits = statistics.getOnDiskHits();
             long evictions = statistics.getEvictionCount();
 
-            buf.append( "<td>" + hits + "</td>" );
-            buf.append( "<td>" + misses + "</td>" );
-            buf.append( "<td>" + objectCount + "</td>" );
-            buf.append( "<td>" + inMemoryHits + "</td>" );
-            buf.append( "<td>" + onDiskHits + "</td>" );
-            buf.append( "<td>" + evictions + "</td>" );
+            buf.append( "<td>" + ( hits > 0 ? hits : "" ) + "</td>" );
+            buf.append( "<td>" + ( misses > 0 ? misses : "" ) + "</td>" );
+            buf.append( "<td>" + ( objectCount > 0 ? objectCount : "" ) + "</td>" );
+            buf.append( "<td>" + ( inMemoryHits > 0 ? inMemoryHits : "" ) + "</td>" );
+            buf.append( "<td>" + ( onDiskHits > 0 ? onDiskHits : "" ) + "</td>" );
+            buf.append( "<td>" + ( evictions > 0 ? evictions : "" ) + "</td>" );
 
             CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
             boolean eternal = cacheConfiguration.isEternal();
