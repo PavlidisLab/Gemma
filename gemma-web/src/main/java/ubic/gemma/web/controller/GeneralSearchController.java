@@ -132,20 +132,22 @@ public class GeneralSearchController extends BaseFormController {
          */
         Map<Class, List<SearchResult>> searchResults = searchService.search( settings );
 
-        for ( Class clazz : searchResults.keySet() ) {
-            List<SearchResult> results = searchResults.get( clazz );
+        if ( searchResults != null ) {
+            for ( Class clazz : searchResults.keySet() ) {
+                List<SearchResult> results = searchResults.get( clazz );
 
-            if ( results.size() == 0 ) continue;
+                if ( results.size() == 0 ) continue;
 
-            log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "'s" );
+                log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "'s" );
 
-            /*
-             * Now put the valueObjects inside the SearchResults
-             */
-            fillValueObjects( clazz, results, settings );
+                /*
+                 * Now put the valueObjects inside the SearchResults
+                 */
+                fillValueObjects( clazz, results, settings );
 
-            mav.addObject( clazz.getSimpleName() + "_results", results );
-            mav.addObject( clazz.getSimpleName() + "_count", results.size() );
+                mav.addObject( clazz.getSimpleName() + "_results", results );
+                mav.addObject( clazz.getSimpleName() + "_count", results.size() );
+            }
         }
 
         return mav;
@@ -202,19 +204,23 @@ public class GeneralSearchController extends BaseFormController {
         watch.reset();
         watch.start();
 
-        for ( Class clazz : searchResults.keySet() ) {
-            List<SearchResult> results = searchResults.get( clazz );
+        if ( searchResults != null ) {
+            for ( Class clazz : searchResults.keySet() ) {
+                List<SearchResult> results = searchResults.get( clazz );
 
-            if ( results.size() == 0 ) continue;
+                if ( results.size() == 0 ) continue;
 
-            log.info( "Search for: " + settings + "; result: " + results.size() + " " + clazz.getSimpleName() + "s" );
+                log
+                        .info( "Search for: " + settings + "; result: " + results.size() + " " + clazz.getSimpleName()
+                                + "s" );
 
-            /*
-             * Now put the valueObjects inside the SearchResults in score order.
-             */
-            Collections.sort( results );
-            fillValueObjects( clazz, results, settings );
-            finalResults.addAll( results );
+                /*
+                 * Now put the valueObjects inside the SearchResults in score order.
+                 */
+                Collections.sort( results );
+                fillValueObjects( clazz, results, settings );
+                finalResults.addAll( results );
+            }
         }
 
         if ( watch.getTime() > 500 ) {

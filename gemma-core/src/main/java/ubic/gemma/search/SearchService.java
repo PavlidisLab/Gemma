@@ -74,7 +74,7 @@ import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
-import org.compass.core.engine.SearchEngineException; 
+import org.compass.core.engine.SearchEngineException;
 import org.springframework.beans.factory.InitializingBean;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
@@ -110,8 +110,8 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
- * This service is used for performing searches using free text or exact matches to items in the database. <h2>
- * Implementation notes</h2>
+ * This service is used for performing searches using free text or exact matches to items in the database.
+ * <h2> Implementation notes</h2>
  * <p>
  * Internally, there are generally two kinds of searches performed, percise database searches looking for exact matches
  * in the database and compass/lucene searches which look for matches in the stored index.
@@ -219,6 +219,7 @@ public class SearchService implements InitializingBean {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -258,7 +259,13 @@ public class SearchService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Map<Class, List<SearchResult>> search( SearchSettings settings ) {
-        return this.search( settings, true );
+        Map<Class, List<SearchResult>> searchResults = null;
+        try {
+            searchResults = this.search( settings, true );
+        } catch ( Exception e ) {
+            log.error( e.getMessage() );
+        }
+        return searchResults;
     }
 
     /**
