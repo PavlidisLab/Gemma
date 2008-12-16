@@ -28,17 +28,8 @@ version: $Id$
 </security:authorize>
 
 <div id="diff-wrap">
-	<div id="loading-mask"
-		style="width: 900%; height: 800px; background: #FFFFFF; position: absolute; z-index: 120000; left: 0; top: 0;">
-		<div id="loading">
-			<div>
-				<img src="/Gemma/images/default/tree/loading.gif" style="margin-right: 8px;" align="absmiddle" />
-				Loading interface...
-			</div>
-		</div>
-
-	</div>
-	<div id='diffExpression-messages' style='width: 100%; height: 1.2em; margin: 5px'></div>
+	
+	<div id='diffExpression-messages' style='width: 100%; height: 2.4em; margin: 5px'></div>
 	<div id='diffExpression-form' style='width: 500px; margin-bottom: 1em;'></div>
 	<div id='diffExpression-results'></div>
 

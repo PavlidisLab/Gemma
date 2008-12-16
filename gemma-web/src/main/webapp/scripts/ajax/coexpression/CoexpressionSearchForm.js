@@ -318,9 +318,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				numdatasets =  this.currentSet.get("expressionExperimentIds").length;
 		}else
 		 	numDatasets = datasets.length;
-	
 		
-		console.log(numDatasets);	
 		if (numDatasets != 0)
 			Ext.getCmp('stringencyfield').maxValue = numDatasets;
 		

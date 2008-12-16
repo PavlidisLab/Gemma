@@ -89,14 +89,6 @@ Ext.onReady(function() {
 
 	diffExGrid.on("cellclick", geneRowClickHandler, diffExGrid);
 
-	searchPanel.geneChooserPanel.toolbar.taxonCombo.on('ready', function() {
-				Ext.get('loading').remove();
-				Ext.get('loading-mask').fadeOut({
-							duration : 0.5,
-							remove : true
-						});
-			});
-
 	searchPanel.on("aftersearch", function(panel, result) {
 		var link = panel.getBookmarkableLink();
 		diffExGrid

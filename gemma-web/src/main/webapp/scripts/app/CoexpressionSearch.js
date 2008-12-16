@@ -146,8 +146,7 @@ Ext.onReady(function() {
 			});
 
 	var knownGeneDatasetGrid = new Gemma.CoexpressionDatasetGrid({
-				width : 800,
-				autoHeight : true,
+				width : 800,				
 				colspan : 2
 			});
 
@@ -172,8 +171,7 @@ Ext.onReady(function() {
 
 		predictedGeneDatasetGrid = new Gemma.CoexpressionDatasetGrid({
 					width : 800,
-					colspan : 2,
-					autoHeight : true,
+					colspan : 2,		
 					adjective : "predicted gene",
 					collapsed : true
 				});
@@ -190,7 +188,6 @@ Ext.onReady(function() {
 		probeAlignedDatasetGrid = new Gemma.CoexpressionDatasetGrid({
 					width : 800,
 					colspan : 2,
-					autoHeight : true,
 					id : 'par-dataset-grid',
 					adjective : "probe-aligned region",
 					collapsed : true

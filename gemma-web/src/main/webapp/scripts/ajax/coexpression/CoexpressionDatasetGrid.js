@@ -10,7 +10,8 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	hidden : true,
 	title : 'wow',
 	style : "margin-top: 1em; margin-bottom: .5em;",
-	autoHeight : true,
+	autoScroll : true,
+	height : 250, 
 	stateful : false,
 
 
