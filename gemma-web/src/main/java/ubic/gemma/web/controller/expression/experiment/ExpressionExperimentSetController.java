@@ -63,7 +63,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @param obj
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Long create( ExpressionExperimentSetValueObject obj ) {
 
         if ( obj.getId() != null && obj.getId() >= 0 ) {
@@ -106,14 +105,15 @@ public class ExpressionExperimentSetController extends BaseFormController {
     /**
      * @return all available sets that have at least 2 experiments.
      */
-    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSetValueObject> getAvailableExpressionExperimentSets() {
-        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAll(); // filtered by security.
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets(); // filtered
+        // by
+        // security.
         Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
         for ( ExpressionExperimentSet set : sets ) {
 
             int size = set.getExperiments().size();
-            if ( size < 2 ) continue; // Ignore sets of size = 1 because there are many!
+            assert size > 1; // should be due to the query.
 
             ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
             vo.setName( set.getName() );
@@ -157,6 +157,10 @@ public class ExpressionExperimentSetController extends BaseFormController {
         return eeids;
     }
 
+    /**
+     * @param id
+     * @return
+     */
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
         Collection<Long> eeids = getExperimentIdsInSet( id );
         Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids );
@@ -165,10 +169,11 @@ public class ExpressionExperimentSetController extends BaseFormController {
     }
 
     /**
-     * Delete a EEset from the system. NOTE this will fail if it has analyses associated with it.
+     * Delete a EEset from the system.
      * 
      * @param obj
      * @return true if it was deleted.
+     * @throw IllegalArgumentException it has analyses associated with it
      */
     public boolean remove( ExpressionExperimentSetValueObject obj ) {
         Long id = obj.getId();

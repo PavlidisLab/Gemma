@@ -86,7 +86,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     protected ExpressionExperiment handleCreate( ExpressionExperiment expressionExperiment ) throws Exception {
-        return ( ExpressionExperiment ) this.getExpressionExperimentDao().create( expressionExperiment );
+        return this.getExpressionExperimentDao().create( expressionExperiment );
     }
 
     /*
@@ -95,7 +95,6 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleDelete(ubic.gemma.model.expression
      *      .experiment.ExpressionExperiment)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected void handleDelete( ExpressionExperiment ee ) throws Exception {
 
@@ -603,8 +602,9 @@ public class ExpressionExperimentServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadValueObjects(java.util.Collection )
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadValueObjects(java.util.Collection
+     * )
      */
     @Override
     protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection ids ) throws Exception {

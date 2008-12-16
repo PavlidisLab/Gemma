@@ -114,7 +114,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<ExpressionExperimentSet> loadAll() {
         try {
             return this.handleLoadAll();
         } catch ( Throwable th ) {
@@ -127,12 +127,13 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<ExpressionExperimentSet> handleLoadAll() throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
      */
-    public java.util.Collection loadUserSets( final ubic.gemma.model.common.auditAndSecurity.User user ) {
+    public java.util.Collection<ExpressionExperimentSet> loadUserSets(
+            final ubic.gemma.model.common.auditAndSecurity.User user ) {
         try {
             return this.handleLoadUserSets( user );
         } catch ( Throwable th ) {
@@ -145,8 +146,8 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * Performs the core logic for {@link #loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)}
      */
-    protected abstract java.util.Collection handleLoadUserSets( ubic.gemma.model.common.auditAndSecurity.User user )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<ExpressionExperimentSet> handleLoadUserSets(
+            ubic.gemma.model.common.auditAndSecurity.User user ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#load(java.lang.Long)
@@ -170,7 +171,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
-    public java.util.Collection getAnalyses(
+    public java.util.Collection<ExpressionAnalysis> getAnalyses(
             final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
         try {
             return this.handleGetAnalyses( expressionExperimentSet );
@@ -184,14 +185,14 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * Performs the core logic for {@link #getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
      */
-    protected abstract java.util.Collection handleGetAnalyses(
+    protected abstract java.util.Collection<ExpressionAnalysis> handleGetAnalyses(
             ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
             throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#findByName(java.lang.String)
      */
-    public java.util.Collection findByName( final java.lang.String name ) {
+    public java.util.Collection<ExpressionExperimentSet> findByName( final java.lang.String name ) {
         try {
             return this.handleFindByName( name );
         } catch ( Throwable th ) {
@@ -204,7 +205,8 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * Performs the core logic for {@link #findByName(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByName( java.lang.String name ) throws java.lang.Exception;
+    protected abstract java.util.Collection<ExpressionExperimentSet> handleFindByName( java.lang.String name )
+            throws java.lang.Exception;
 
     /**
      * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
@@ -233,8 +235,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
      * 
      * @param key the key of the message in the messages.properties message bundle.
      * @param arguments any arguments to substitute when resolving the message.

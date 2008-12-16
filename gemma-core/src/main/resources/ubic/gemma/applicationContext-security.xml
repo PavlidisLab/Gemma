@@ -511,6 +511,7 @@
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.findByName=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
+                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAllMultiExperimentSets=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.create=admin
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.update=admin
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS

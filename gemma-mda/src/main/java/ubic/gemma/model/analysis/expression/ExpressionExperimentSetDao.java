@@ -47,6 +47,11 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
             ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
 
     /**
+     * @return ExpressionExperimentSets that have more than 1 experiment in them.
+     */
+    public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
+
+    /**
      * 
      */
     public java.util.Collection<ExpressionExperimentSet> findByName( java.lang.String name );

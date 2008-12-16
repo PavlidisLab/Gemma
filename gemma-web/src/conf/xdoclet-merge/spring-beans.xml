@@ -579,8 +579,7 @@
 						</bean>
 					</property>
 					<property name="includes">
-						<list>
-							<value>getAvailableExpressionExperimentSets</value>
+						<list> 
 							<value>getExperimentsInSet</value>
 							<value>getAvailableExpressionExperimentSets</value>
 							<value>update</value>
