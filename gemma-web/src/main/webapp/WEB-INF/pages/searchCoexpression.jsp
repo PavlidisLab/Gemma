@@ -28,19 +28,10 @@
 	<input type="hidden" name="hasUser" id="hasUser" value="" />
 </security:authorize>
 
-<div id='coexpression-messages' style='width: 100%; height: 1.2em; margin: 5px'></div>
+<div id='coexpression-messages' style='width: 100%; height: 2.2em; margin: 5px'></div>
 <div id='coexpression-experiments' class="x-hidden"></div>
 <div id='coexpression-genes' class="x-hidden"></div>
 
 <div id="coexpression-wrap">
-	<div id="loading-mask"
-		style="width: 900px; height: 900px; background: #FFFFFF; position: absolute; z-index: 120000; left: 0; top: 0;">
-		<div id="loading">
-			<div>
-				<img src="images/default/tree/loading.gif" style="margin-right: 8px;" align="absmiddle" />
-				Loading interface...
-			</div>
-		</div>
-	</div>
 	<div id='coexpression-all'></div>
 </div>
