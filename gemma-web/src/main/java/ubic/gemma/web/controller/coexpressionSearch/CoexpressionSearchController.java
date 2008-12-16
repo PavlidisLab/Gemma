@@ -102,7 +102,7 @@ public class CoexpressionSearchController extends BaseFormController {
          */
         if ( searchOptions.getTaxonId() != null ) {
             for ( Gene gene : genes ) {
-                if ( gene.getTaxon().getId() != searchOptions.getTaxonId() ) {
+                if ( !gene.getTaxon().getId().equals( searchOptions.getTaxonId() ) ) {
                     throw new IllegalArgumentException(
                             "Search for gene from wrong taxon. Please check the genes match the selected taxon" );
                 }
