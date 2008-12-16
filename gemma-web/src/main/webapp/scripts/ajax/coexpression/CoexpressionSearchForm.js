@@ -48,7 +48,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 		Ext.apply(this, {
 					loadMask : new Ext.LoadMask(this.getEl(), {
-								msg : "Please wait  ..."
+								msg : "Preparing Coexpression Interface  ..."
 							})
 				});
 		
@@ -60,6 +60,11 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			
 		if (this.eeSetReady && this.taxonComboReady){
 			this.loadMask.hide();
+			
+			this.loadMask = new Ext.LoadMask(this.getEl(), {
+								msg : "Searching for coexpressions ..."
+							});
+			
 			var queryStart = document.URL.indexOf("?");
 			if (queryStart > -1) {
 				this.initializeFromQueryString(document.URL.substr(queryStart + 1));
