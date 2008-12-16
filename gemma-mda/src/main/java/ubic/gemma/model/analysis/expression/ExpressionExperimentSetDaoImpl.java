@@ -23,6 +23,7 @@
 package ubic.gemma.model.analysis.expression;
 
 import java.util.Collection;
+import java.util.List;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
@@ -75,9 +76,11 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
 
     @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
-        return this.getHibernateTemplate().find(
-                "select ees from ExpressionExperimentSetImpl ees"
+         List result = this.getHibernateTemplate().find(
+                "select distinct ees from ExpressionExperimentSetImpl ees"
                         + " inner join ees.experiments where size(ees.experiments) > 1" );
+        // log.info(result.size());
+         return result;
     }
 
 }
