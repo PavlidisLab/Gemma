@@ -127,6 +127,11 @@ public class DEDVController extends BaseFormController {
         watch.stop();
         Long time = watch.getTime();
 
+        if ( dedvs.size() == 0 ) {
+            throw new IllegalArgumentException(
+                    "No expression profiles were available for the experiments and genes(s)" );
+        }
+
         if ( time > 1000 ) {
             log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + genes.size()
                     + " genes in " + time + " ms." );
@@ -290,7 +295,6 @@ public class DEDVController extends BaseFormController {
 
     /*
      * Handle case of text export of the results.
-     * 
      * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
@@ -501,7 +505,8 @@ public class DEDVController extends BaseFormController {
 
     /**
      * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
-     * Currently removes multiple hits for same gene. Tries to pick best DEDV. Organizes the experiments from lowest to higest p-value
+     * Currently removes multiple hits for same gene. Tries to pick best DEDV. Organizes the experiments from lowest to
+     * higest p-value
      * 
      * @param dedvs
      * @param genes
