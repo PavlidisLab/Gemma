@@ -226,14 +226,6 @@ Ext.onReady(function() {
 				enabled : false
 			});
 
-	searchPanel.geneChooserPanel.toolbar.taxonCombo.on('ready', function() {
-				Ext.get('loading').remove();
-				Ext.get('loading-mask').fadeOut({
-							duration : 0.5,
-							remove : true
-						});
-			});
-
 	var predictedGeneDatasetGrid;
 	var probeAlignedDatasetGrid;
 	var predictedGeneGrid;
