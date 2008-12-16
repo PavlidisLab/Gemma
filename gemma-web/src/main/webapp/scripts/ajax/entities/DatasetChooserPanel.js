@@ -225,12 +225,13 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	restoreState : function() {
+		//console.log("Restore state" + this.tmpState);
+		
 		if (this.tmpState) {
 			this.selectById(this.tmpState);
 			delete this.tmpState;
 			this.isReady = true;
 		}
-		// console.log("Restore state");
 		if (this.store.getSelected()) {
 
 			this.fireEvent('ready', this.store.getSelected().data);
@@ -313,7 +314,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 					this.store.setSelected(rec);
 				});
 
-		this.store.on("ready", this.restoreState, this);
+		this.store.on("load", this.restoreState, this);
 
 	}
 

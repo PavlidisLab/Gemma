@@ -22,6 +22,8 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
+	taxonComboReady : false,
+	eeSetReady : false,
 
 	// share state with main page...
 	stateId : "Gemma.CoexpressionSearch",
@@ -46,17 +48,24 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 		Ext.apply(this, {
 					loadMask : new Ext.LoadMask(this.getEl(), {
-								msg : "Searching  ..."
+								msg : "Please wait  ..."
 							})
 				});
+		
+		this.loadMask.show();
+		
 	},
 
 	restoreState : function() {
-		var queryStart = document.URL.indexOf("?");
-		if (queryStart > -1) {
-			this.initializeFromQueryString(document.URL.substr(queryStart + 1));
-		} else if (this.csc && queryStart < 0) {
-			this.initializeFromCoexpressionSearchCommand(this.csc);
+			
+		if (this.eeSetReady && this.taxonComboReady){
+			this.loadMask.hide();
+			var queryStart = document.URL.indexOf("?");
+			if (queryStart > -1) {
+				this.initializeFromQueryString(document.URL.substr(queryStart + 1));
+			} else if (this.csc && queryStart < 0) {
+				this.initializeFromCoexpressionSearchCommand(this.csc);
+			}
 		}
 
 	},
@@ -168,15 +177,13 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			this.geneChooserPanel.toolbar.taxonCombo.setState(csc.taxonId);
 		}
 
-		this.initializeGenes(csc, doSearch);
-
 		if (csc.eeSetId >= 0) {
 			this.eeSetChooserPanel.setState(csc.eeSetId);
 		} else if (csc.eeSetName) {
 			this.eeSetChooserPanel.setStateByName(csc.eeSetName);
-			this.updateDatasetsToBeSearched(csc.eeIds, csc.eeSetName, csc.dirty);
 		}
 
+		
 		if (csc.stringency) {
 			this.stringencyField.setValue(csc.stringency);
 		}
@@ -184,6 +191,9 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (csc.queryGenesOnly) {
 			this.queryGenesOnly.setValue(true);
 		}
+		
+		//Keep this last.  When done loading genes might start coexpression query
+		this.initializeGenes(csc, doSearch);
 	},
 
 	maybeDoSearch : function(csc, doit) {
@@ -295,8 +305,20 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	 *            eeSet The ExpressionExperimentSet that was used (if any) - it could be just as a starting point.
 	 */
 	updateDatasetsToBeSearched : function(datasets, eeSetName, dirty) {
-		var numDatasets = datasets.length;
-		Ext.getCmp('stringencyfield').maxValue = numDatasets;
+
+		var numDatasets = 0;
+	
+		if (!datasets){
+			if (this.currentSet)
+				numdatasets =  this.currentSet.get("expressionExperimentIds").length;
+		}else
+		 	numDatasets = datasets.length;
+	
+		
+		console.log(numDatasets);	
+		if (numDatasets != 0)
+			Ext.getCmp('stringencyfield').maxValue = numDatasets;
+		
 		Ext.getCmp('analysis-options').setTitle(String.format("Analysis options - Up to {0} datasets will be analyzed",
 				numDatasets));
 	},
@@ -340,7 +362,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 					this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
 				}.createDelegate(this));
 
-		this.eeSetChooserPanel.combo.on("ready", this.restoreState.createDelegate(this));
+		this.eeSetChooserPanel.combo.on("ready", function(){
+									this.eeSetReady = true; 
+									this.restoreState();
+								}.createDelegate(this));
 
 		Ext.apply(this, {
 
@@ -430,18 +455,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		/*
 		 * This horrible mess. We listen to taxon ready event and filter the presets on the taxon.
 		 */
-		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
-					if (taxon) {
-						if (this.eeSetChooserPanel.store.getRange().length > 0) {
-							this.eeSetChooserPanel.filterByTaxon(taxon);
-						} else {
-							this.eeSetChooserPanel.store.on("load", function() {
-										this.eeSetChooserPanel.filterByTaxon(taxon);
-									}, this);
-						}
-					}
-				}, this);
-
+		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {		
+				this.taxonComboReady = true;
+				this.restoreState(this);
+			}.createDelegate(this), this);
 	}
 
 });
