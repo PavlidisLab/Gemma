@@ -670,6 +670,7 @@ public class LinkAnalysisService {
         double subsetSize = la.getConfig().getSubsetSize();
         double fraction = subsetSize/links.size();
         
+        
         for ( int n = links.size(); i < n; i++ ) {
             if(la.getConfig().isSubset() && links.size() > subsetSize){
                 rand = generator.nextDouble();
@@ -731,8 +732,15 @@ public class LinkAnalysisService {
             }
 
         }
+        if(la.getConfig().isSubset() && links.size() > subsetSize){//subset option activated
+            log.info( "Done, " + numPrinted + "/" + links.size() + " links printed (subset printed with some filtered)" );
+            wr.write("# Amount of links before subsetting/after subsetting: " + links.size() + "/" + numPrinted + "\n" );
+        }
+        else{
+            log.info( "Done, " + numPrinted + "/" + links.size() + " links printed (some may have been filtered)" );
+        }
         wr.flush();
-        log.info( "Done, " + numPrinted + "/" + links.size() + " links printed (some may have been filtered)" );
+
     }
 
 }
