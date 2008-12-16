@@ -77,7 +77,7 @@ public class CoexpressionSearchController extends BaseFormController {
      */
     public CoexpressionMetaValueObject doSearch( CoexpressionSearchCommand searchOptions ) {
 
-        CoexpressionMetaValueObject result;
+        CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
         Collection<ExpressionExperiment> myEE = null;
 
         if ( searchOptions.getGeneIds() == null || searchOptions.getGeneIds().isEmpty() ) {
@@ -85,14 +85,16 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_QUERY ) {
-            throw new IllegalArgumentException( "Too many genes selected, please limit searches to "
-                    + MAX_GENES_PER_QUERY );
+            result.setErrorState("Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY );
+            return result;
         }
 
         Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
 
         if ( genes.size() == 0 ) {
-            throw new IllegalArgumentException( "Invalid gene id(s) - no genes found" );
+            result.setErrorState("Invalid gene id(s) - no genes found" );
+            return result;
+            
         }
 
         this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...
@@ -103,8 +105,8 @@ public class CoexpressionSearchController extends BaseFormController {
         if ( searchOptions.getTaxonId() != null ) {
             for ( Gene gene : genes ) {
                 if ( !gene.getTaxon().getId().equals( searchOptions.getTaxonId() ) ) {
-                    throw new IllegalArgumentException(
-                            "Search for gene from wrong taxon. Please check the genes match the selected taxon" );
+                    result.setErrorState( "Search for gene from wrong taxon. Please check the genes match the selected taxon");
+                    return result;
                 }
             }
         }
@@ -131,7 +133,9 @@ public class CoexpressionSearchController extends BaseFormController {
             if ( eeSets.size() == 1 ) {
                 eeSetId = eeSets.iterator().next().getId();
             } else {
-                throw new IllegalArgumentException( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
+                result.setErrorState(  "Unknown or ambiguous set name: " + searchOptions.getEeSetName());
+                return result;
+  
             }
         }
 
