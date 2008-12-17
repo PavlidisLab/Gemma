@@ -73,6 +73,13 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			},
 
 			selectByName : function(name) {
+
+				var i = 0;
+				while (this.store.getCount() == 0) {
+					if (++i % 1000 == 0)
+						console.log("waiting");
+				}
+
 				this.combo.suppressFiltering = true;
 				var index = this.store.findBy(function(record, i) {
 							return record.get("name").toLowerCase() == name.toLowerCase();
@@ -87,22 +94,10 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 					this.fireEvent("set-chosen", rec);
 					return rec;
 				} else {
-					console.log("Name not found in store.  Store not ready?");
-					// try again
-					index = this.store.findBy(function(record, i) {
-								return record.get("name").toLowerCase() == name.toLowerCase();
-
-							});
-					if (index >= 0) {
-						var rec = this.store.getAt(index);
-						this.combo.setValue(rec.get("id"));
-						this.store.setSelected(rec);
-						this.combo.suppressFiltering = false;
-						this.fireEvent("set-chosen", rec); 
-					} else {
-						console.log("DAMN");
-					}
-
+					Ext.Msg("Whoops",
+							"Sorry. Something went wrong in preparing the interface. Please reload the page and "
+									+ " if you have continuing problems <a href='gemma.ubic.ca'>notify us" + "</a>");
+					return null;
 				}
 			},
 
