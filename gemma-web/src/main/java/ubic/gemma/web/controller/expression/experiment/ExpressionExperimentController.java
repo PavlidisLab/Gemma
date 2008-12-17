@@ -160,7 +160,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         /*
          * (non-Javadoc)
-         * 
          * @see java.util.concurrent.Callable#call()
          */
         public ModelAndView call() throws Exception {
@@ -435,10 +434,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return showAll( request, response );
         }
 
-        Collection<SearchResult> searchResults = searchService.search(
-                SearchSettings.ExpressionExperimentSearch( searchString ) ).get( ExpressionExperiment.class );
+        Map<Class, List<SearchResult>> searchResultsMap = searchService.search(
+                SearchSettings.ExpressionExperimentSearch( searchString ) );
+        Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
 
-        if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
+        if ( searchResults == null || searchResults.size() == 0 ) {
             this.saveMessage( request, "Your search yielded no results." );
             return showAll( request, response );
         }
