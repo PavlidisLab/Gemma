@@ -46,6 +46,7 @@ import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -584,7 +585,8 @@ public class GeneCoexpressionService {
         }
 
         for ( ExpressionExperimentValueObject eevo : eevos ) {
-            if ( !coexp.getExpressionExperimentIds().contains( eevo.getId()) || coexp.getLinkCountForEE( eevo.getId() ) == 0 ) continue;
+            if ( !coexp.getExpressionExperimentIds().contains( eevo.getId() )
+                    || coexp.getLinkCountForEE( eevo.getId() ) == 0 ) continue;
             ExpressionExperimentValueObject coexpEevo = coexp.getExpressionExperiment( eevo.getId() );
             if ( coexpEevo == null ) continue;
             CoexpressionDatasetValueObject ecdvo = new CoexpressionDatasetValueObject();
@@ -819,8 +821,18 @@ public class GeneCoexpressionService {
      * @return
      */
     private List<ExpressionExperimentValueObject> getSortedEEvos( Collection<Long> eeIds ) {
+
+        /* security will filter experiments */
+        Collection<ExpressionExperiment> filteredExperiments = expressionExperimentService.loadMultiple( eeIds );
+
+        Collection<Long> filteredIds = new HashSet<Long>();
+        for ( ExpressionExperiment ee : filteredExperiments ) {
+            filteredIds.add( ee.getId() );
+        }
+
         List<ExpressionExperimentValueObject> eevos = new ArrayList<ExpressionExperimentValueObject>(
-                expressionExperimentService.loadValueObjects( eeIds ) );
+                expressionExperimentService.loadValueObjects( filteredIds ) );
+
         Collections.sort( eevos, new Comparator<ExpressionExperimentValueObject>() {
             public int compare( ExpressionExperimentValueObject eevo1, ExpressionExperimentValueObject eevo2 ) {
                 return eevo1.getId().compareTo( eevo2.getId() );

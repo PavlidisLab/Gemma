@@ -305,8 +305,6 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadMultiple=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAllValueObjects=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadValueObjects=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.update=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.create=user,admin
@@ -510,7 +508,7 @@
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.delete=user,admin
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.findByName=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
+                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.load=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAllMultiExperimentSets=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.create=admin
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.update=admin

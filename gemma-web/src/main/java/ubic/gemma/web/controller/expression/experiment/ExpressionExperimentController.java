@@ -160,6 +160,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.util.concurrent.Callable#call()
          */
         public ModelAndView call() throws Exception {
@@ -616,22 +617,22 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
 
-        Collection<Long> ids = new HashSet<Long>();
-        ids.add( id );
+        ExpressionExperiment ee = expressionExperimentService.load( id );
 
-        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids );
-
-        if ( initialResults == null ) {
+        if ( ee == null ) {
+            // possibly not permitted.
             return null;
         }
+
+        expressionExperimentService.thawLite( ee );
+        Collection<Long> ids = new HashSet<Long>();
+        ids.add( ee.getId() );
+
+        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids );
 
         getReportData( initialResults );
         ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
         ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject( initialResult );
-
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-
-        expressionExperimentService.thawLite( ee );
 
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         Collection<Long> adids = new HashSet<Long>();
