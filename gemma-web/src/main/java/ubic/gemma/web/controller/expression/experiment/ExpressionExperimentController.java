@@ -434,8 +434,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return showAll( request, response );
         }
 
-        Map<Class, List<SearchResult>> searchResultsMap = searchService.search(
-                SearchSettings.ExpressionExperimentSearch( searchString ) );
+        Map<Class, List<SearchResult>> searchResultsMap = searchService.search( SearchSettings
+                .ExpressionExperimentSearch( searchString ) );
+
+        assert searchResultsMap != null;
+
         Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
 
         if ( searchResults == null || searchResults.size() == 0 ) {
