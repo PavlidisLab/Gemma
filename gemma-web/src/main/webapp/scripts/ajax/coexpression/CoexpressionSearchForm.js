@@ -180,7 +180,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		}
 
 		if (csc.taxonId) {
-			this.geneChooserPanel.toolbar.taxonCombo.setState(csc.taxonId);
+			this.geneChooserPanel.toolbar.taxonCombo.setTaxon(csc.taxonId);
 		}
 
 		if (csc.eeSetId >= 0) {

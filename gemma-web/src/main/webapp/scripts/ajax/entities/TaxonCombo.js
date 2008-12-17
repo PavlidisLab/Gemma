@@ -59,9 +59,9 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	restoreState : function() {
 		if (this.tmpState) {
 			this.setTaxon(this.tmpState);
-			delete this.tmpState;
-			this.isReady = true;
+			delete this.tmpState;			
 		}
+		this.isReady = true;
 		if (this.getTaxon()) {
 			this.fireEvent('ready', this.getTaxon().data);
 		} else {
