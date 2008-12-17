@@ -110,8 +110,8 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
- * This service is used for performing searches using free text or exact matches to items in the database.
- * <h2> Implementation notes</h2>
+ * This service is used for performing searches using free text or exact matches to items in the database. <h2>
+ * Implementation notes</h2>
  * <p>
  * Internally, there are generally two kinds of searches performed, percise database searches looking for exact matches
  * in the database and compass/lucene searches which look for matches in the stored index.
@@ -219,7 +219,6 @@ public class SearchService implements InitializingBean {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -259,11 +258,11 @@ public class SearchService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Map<Class, List<SearchResult>> search( SearchSettings settings ) {
-        Map<Class, List<SearchResult>> searchResults = null;
+        Map<Class, List<SearchResult>> searchResults = new HashMap<Class, List<SearchResult>>();
         try {
             searchResults = this.search( settings, true );
         } catch ( Exception e ) {
-            log.error( e.getMessage() );
+            log.error( "Search error: " + e.getMessage() );
         }
         return searchResults;
     }
@@ -1002,7 +1001,6 @@ public class SearchService implements InitializingBean {
      * @return
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     private Collection<SearchResult> databaseArrayDesignSearch( SearchSettings settings ) {
 
         StopWatch watch = startTiming();
@@ -1061,7 +1059,6 @@ public class SearchService implements InitializingBean {
      * @return
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     private Collection<SearchResult> databaseCompositeSequenceSearch( final SearchSettings settings ) {
 
         StopWatch watch = startTiming();
