@@ -577,6 +577,7 @@ public class ExpressionExperimentServiceImpl extends
     protected Collection<ExpressionExperimentValueObject> handleLoadAllValueObjects() throws Exception {
 
         /* security will filter for us */
+        // FIXME I'm not sure if this filtering actually works. See note for handleLoadValueObjects.
         Collection<ExpressionExperiment> experiments = this.loadAll();
 
         Collection<Long> filteredIds = new HashSet<Long>();
