@@ -38,7 +38,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 					this.storedState = state;
 				}
 			},
-			
+
 			setStateByName : function(state) {
 				if (this.ready) {
 					return this.selectByName(state);
@@ -77,38 +77,34 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 				var index = this.store.findBy(function(record, i) {
 							return record.get("name").toLowerCase() == name.toLowerCase();
 						});
-				
-				if (index >= 0){
+
+				if (index >= 0) {
 					var rec = this.store.getAt(index);
 					this.combo.setValue(rec.get("id"));
 					this.store.setSelected(rec);
 					this.combo.suppressFiltering = false;
-					
+
 					this.fireEvent("set-chosen", rec);
 					return rec;
-				}
-				else{
+				} else {
 					console.log("Name not found in store.  Store not ready?");
-					//Put a delay in then Try again. HOW CRUFTY, i hate myselef for this!
-						var findRecord = function(){
-							this.store.findBy(function(record, i) {
-							return record.get("name").toLowerCase() == name.toLowerCase();
-						});
-						}
-						var idx = findRecord.defer(200, this); 
-				
-						if (idx >= 0){
-							var rec = this.store.getAt(idx);
-							this.combo.setValue(rec.get("id"));
-							this.store.setSelected(rec);
-							this.combo.suppressFiltering = false;
-							
-							this.fireEvent("set-chosen", rec);
-							return rec;
-						}	
-							
+					// try again
+					index = this.store.findBy(function(record, i) {
+								return record.get("name").toLowerCase() == name.toLowerCase();
+
+							});
+					if (index >= 0) {
+						var rec = this.store.getAt(index);
+						this.combo.setValue(rec.get("id"));
+						this.store.setSelected(rec);
+						this.combo.suppressFiltering = false;
+						this.fireEvent("set-chosen", rec); 
+					} else {
+						console.log("DAMN");
+					}
+
 				}
-				},
+			},
 
 			filterByTaxon : function(taxon) {
 				// side effect: grid is filtered too.
@@ -212,9 +208,9 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	lazyInit : false, // important!
 	emptyText : 'Select a search scope',
 	isReady : false,
-//	stateful : true,
-//	stateId : "Gemma.EESetCombo",
-//	stateEvents : ['select'],
+	// stateful : true,
+	// stateId : "Gemma.EESetCombo",
+	// stateEvents : ['select'],
 	suppressFiltering : false,
 
 	/**
@@ -249,14 +245,14 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	restoreState : function() {
-		//console.log("Restore state" + this.tmpState);
-		
+		// console.log("Restore state" + this.tmpState);
+
 		if (this.tmpState) {
 			this.selectById(this.tmpState);
 			delete this.tmpState;
 			this.isReady = true;
 		}
-		
+
 		if (this.store.getSelected()) {
 			this.fireEvent('ready', this.store.getSelected().data);
 		} else {
@@ -381,7 +377,7 @@ Gemma.ExpressionExperimentSetStore = function(config) {
 
 	this.addEvents('ready');
 
-	//  this.on("load", this.addFromCookie, this);
+	// this.on("load", this.addFromCookie, this);
 	this.load({
 				callback : this.addFromCookie
 			});
