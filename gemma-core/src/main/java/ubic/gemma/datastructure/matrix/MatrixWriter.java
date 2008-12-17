@@ -141,6 +141,7 @@ public class MatrixWriter<T> {
                 gn.add( gene.getOfficialName() );
             }
 
+            buf.append( "\t" );
             buf.append( StringUtils.join( gs.toArray(), '|' ) );
             buf.append( "\t" );
             buf.append( StringUtils.join( gn.toArray(), '|' ) );
