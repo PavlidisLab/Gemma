@@ -75,7 +75,7 @@ public class MatrixWriter<T> {
             buf.append( probeForRow.getName() );
             if ( writeSequence ) {
                 BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
-                if ( biologicalCharacteristic != null ) buf.append( "\t" + biologicalCharacteristic.getName() );
+                if ( biologicalCharacteristic != null ) buf.append( "\t" + biologicalCharacteristic.getName() + "\t" );
             }
 
             if ( writeGeneInfo ) {
@@ -140,8 +140,7 @@ public class MatrixWriter<T> {
                 gs.add( gene.getOfficialSymbol() );
                 gn.add( gene.getOfficialName() );
             }
-
-            buf.append( "\t" );
+            // tab has already been added before
             buf.append( StringUtils.join( gs.toArray(), '|' ) );
             buf.append( "\t" );
             buf.append( StringUtils.join( gn.toArray(), '|' ) );
