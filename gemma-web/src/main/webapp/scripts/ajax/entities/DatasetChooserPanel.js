@@ -41,7 +41,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			
 			setStateByName : function(state) {
 				if (this.ready) {
-					this.selectByName(state);
+					return this.selectByName(state);
 				} else {
 					this.storedNameState = state;
 				}
@@ -84,6 +84,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 				this.combo.suppressFiltering = false;
 				
 				this.fireEvent("set-chosen", rec);
+				return rec;
 			},
 
 			filterByTaxon : function(taxon) {
@@ -143,7 +144,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 							this.fireEvent('commit', sel);
 						}.createDelegate(this));
 
-				this.store.on("load", this.restoreState.createDelegate(this));
+				this.store.on("ready", this.restoreState.createDelegate(this));
 
 				this.addEvents("set-chosen", "commit");
 			},
@@ -188,9 +189,9 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	lazyInit : false, // important!
 	emptyText : 'Select a search scope',
 	isReady : false,
-	stateful : true,
-	stateId : "Gemma.EESetCombo",
-	stateEvents : ['select'],
+//	stateful : true,
+//	stateId : "Gemma.EESetCombo",
+//	stateEvents : ['select'],
 	suppressFiltering : false,
 
 	/**
@@ -232,8 +233,8 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 			delete this.tmpState;
 			this.isReady = true;
 		}
+		
 		if (this.store.getSelected()) {
-
 			this.fireEvent('ready', this.store.getSelected().data);
 		} else {
 			this.fireEvent('ready');
@@ -314,7 +315,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 					this.store.setSelected(rec);
 				});
 
-		this.store.on("load", this.restoreState, this);
+		this.store.on("ready", this.restoreState, this);
 
 	}
 
@@ -357,7 +358,7 @@ Gemma.ExpressionExperimentSetStore = function(config) {
 
 	this.addEvents('ready');
 
-	// this.on("load", this.addFromCookie, this);
+	//  this.on("load", this.addFromCookie, this);
 	this.load({
 				callback : this.addFromCookie
 			});
