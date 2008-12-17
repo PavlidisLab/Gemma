@@ -147,10 +147,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			csc.eeSetName = param.setName;
 		}
 
-		if (csc.eeSetName && csc.eeSetId == -1) {
-
-		}
-
 		return csc;
 	},
 
