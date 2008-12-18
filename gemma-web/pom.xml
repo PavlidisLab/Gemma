@@ -1,16 +1,15 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.2.1-SNAPSHOT</version>
+		<version>1.3</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-web</artifactId>
 	<packaging>war</packaging>
 	<name>Gemma web</name>
-	<version>1.2.1-SNAPSHOT</version>
+	<version>1.3</version>
 	<description>Gemma web application</description>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -70,18 +69,13 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<springdoclet destdir="${project.build.directory}/Gemma/WEB-INF" mergeDir="${basedir}/src/conf/xdoclet-merge"
-									force="false" validating="false">
+								<springdoclet destdir="${project.build.directory}/Gemma/WEB-INF" mergeDir="${basedir}/src/conf/xdoclet-merge" force="false" validating="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java" />
-									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true"
-										destDir="${project.build.directory}/Gemma/WEB-INF" destinationFile="action-servlet.xml" />
+									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true" destDir="${project.build.directory}/Gemma/WEB-INF" destinationFile="action-servlet.xml" />
 								</springdoclet>
-								<webdoclet destdir="${project.build.directory}/Gemma/WEB-INF" mergeDir="${basedir}/src/conf/xdoclet-merge"
-									force="false">
+								<webdoclet destdir="${project.build.directory}/Gemma/WEB-INF" mergeDir="${basedir}/src/conf/xdoclet-merge" force="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java" />
-									<jsptaglib taglibversion="1.0" xmlencoding="UTF-8" Jspversion="2.0" description="Custom tag library for Gemma"
-										shortname="Gemma" mergeDir="${basedir}/src/conf/xdoclet-merge" filename="Gemma.tld" validateXML="false"
-										destDir="${project.build.directory}/Gemma/WEB-INF" />
+									<jsptaglib taglibversion="1.0" xmlencoding="UTF-8" Jspversion="2.0" description="Custom tag library for Gemma" shortname="Gemma" mergeDir="${basedir}/src/conf/xdoclet-merge" filename="Gemma.tld" validateXML="false" destDir="${project.build.directory}/Gemma/WEB-INF" />
 									<springvalidationxml />
 								</webdoclet>
 							</tasks>
@@ -180,23 +174,23 @@
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-mda</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.3</version>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-testing</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.3</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-core</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.3</version>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.3</version>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>

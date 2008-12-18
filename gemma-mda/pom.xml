@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
 	<name>Gemma MDA</name>
@@ -7,18 +6,18 @@
 		<![CDATA[Model-driven architecture generated code and implementations.]]>
 	</description>
 	<artifactId>gemma-mda</artifactId>
-	<version>1.2.1-SNAPSHOT</version>
+	<version>1.3</version>
 	<parent>
 		<groupId>gemma</groupId>
 		<artifactId>gemma</artifactId>
-		<version>1.2.1-SNAPSHOT</version>
+		<version>1.3</version>
 	</parent>
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
-			<version>1.2.1-SNAPSHOT</version>
+			<version>1.3</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -216,11 +215,9 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<springdoclet destdir="${project.build.directory}/generated-sources/resources/ubic/gemma" force="false"
-									validating="false">
+								<springdoclet destdir="${project.build.directory}/generated-sources/resources/ubic/gemma" force="false" validating="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java/" />
-									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true"
-										destDir="${project.build.directory}/generated-sources/resources/ubic/gemma" destinationFile="applicationContext-persisterBeans.xml" />
+									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true" destDir="${project.build.directory}/generated-sources/resources/ubic/gemma" destinationFile="applicationContext-persisterBeans.xml" />
 								</springdoclet>
 							</tasks>
 						</configuration>
@@ -247,8 +244,7 @@
 							</classpath>
 						</taskdef>
 						<mkdir dir="target/schema" />
-						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
-							output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
+						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";" output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
 							<fileset dir="target/generated-sources/resources" includes="**/*.hbm.xml" />
 						</schemaexport>
 					</tasks>
