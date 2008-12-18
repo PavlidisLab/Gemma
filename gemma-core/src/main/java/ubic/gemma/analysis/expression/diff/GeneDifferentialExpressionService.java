@@ -37,6 +37,14 @@ import cern.colt.list.DoubleArrayList;
  */
 public class GeneDifferentialExpressionService {
 
+    /**
+     * p values smaller than this will be treated as this value in a meta-analysis. The reason is to avoid extremely low
+     * pvalues from driving meta-pvalues down too fast. This is suggested by the fact that very small pvalues presume an
+     * extremely high precision in agreement between the tails of the true null distribution and the analytic
+     * distribution used to compute the pvalues (e.g., F or t).
+     */
+    private static final double PVALUE_CLIP_THRESHOLD = 1e-8;
+
     private Log log = LogFactory.getLog( this.getClass() );
 
     private final int MAX_PVAL = 1;
@@ -123,7 +131,11 @@ public class GeneDifferentialExpressionService {
             ProbeAnalysisResult res = findMinPenalizedProbeResult( filteredResults );
 
             Double p = res.getPvalue();
-            pvaluesToCombine.add( p );
+
+            /*
+             * Moderate the pvalues by setting all values to be no smaller than PVALUE_CLIP_THRESHOLD
+             */
+            pvaluesToCombine.add( Math.max( p, PVALUE_CLIP_THRESHOLD ) );
 
             /* for each filtered result, set up a devo (contains only results with chosen factor) */
             for ( ProbeAnalysisResult r : filteredResults ) {
@@ -161,7 +173,7 @@ public class GeneDifferentialExpressionService {
             }
 
         }
-
+        // log.info( StringUtils.join( pvaluesToCombine.toList(), "," ) );
         double fisherPval = MetaAnalysis.fisherCombinePvalues( pvaluesToCombine );
         mavo.setFisherPValue( fisherPval );
         mavo.setGene( g );
