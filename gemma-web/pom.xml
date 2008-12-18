@@ -2,14 +2,14 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.3-SNAPSHOT</version>
+		<version>1.3</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-web</artifactId>
 	<packaging>war</packaging>
 	<name>Gemma web</name>
-	<version>1.3-SNAPSHOT</version>
+	<version>1.3</version>
 	<description>Gemma web application</description>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -174,23 +174,23 @@
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-mda</artifactId>
-			<version>1.3-SNAPSHOT</version>
+			<version>1.3</version>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-testing</artifactId>
-			<version>1.3-SNAPSHOT</version>
+			<version>1.3</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-core</artifactId>
-			<version>1.3-SNAPSHOT</version>
+			<version>1.3</version>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
-			<version>1.3-SNAPSHOT</version>
+			<version>1.3</version>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
