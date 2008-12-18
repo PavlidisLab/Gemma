@@ -4,24 +4,24 @@
 	<description>Utility classes used in testing Gemma</description>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-testing</artifactId>
-	<version>1.4-SNAPSHOT</version>
+	<version>1.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<parent>
 		<groupId>gemma</groupId>
 		<artifactId>gemma</artifactId>
-		<version>1.4-SNAPSHOT</version>
+		<version>1.3-SNAPSHOT</version>
 	</parent>
 	<dependencies>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
-			<version>1.4-SNAPSHOT</version>
+			<version>1.3-SNAPSHOT</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-mda</artifactId>
-			<version>1.4-SNAPSHOT</version>
+			<version>1.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.easymock</groupId>
