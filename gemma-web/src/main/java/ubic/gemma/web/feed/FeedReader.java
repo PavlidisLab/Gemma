@@ -74,6 +74,7 @@ public class FeedReader implements InitializingBean {
                  */
                 String title = k.getTitle();
                 title = title.replaceAll( "\\s\\(created\\)$", "" );
+                title = title.replaceAll( "\\s\\(updated\\)$", "" );
 
                 /*
                  * remove the date etc. crap
