@@ -73,7 +73,8 @@ public class GeneDifferentialExpressionService {
         /* a gene can have multiple probes that map to it, so store one diff value object for each probe */
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
 
-        int numMetThreshold = 0;
+        Collection<Long> eesThatMetThreshold = new HashSet<Long>();
+
         /* each gene will have a row, and each row will have a row expander with supporting datasets */
         for ( ExpressionExperiment ee : resultsMap.keySet() ) {
 
@@ -131,7 +132,9 @@ public class GeneDifferentialExpressionService {
                 Boolean metThreshold = r.getCorrectedPvalue() <= threshold ? true : false;
                 devo.setMetThreshold( metThreshold );
 
-                if ( metThreshold ) numMetThreshold++;
+                if ( metThreshold ) {
+                    eesThatMetThreshold.add( eevo.getId() );
+                }
 
                 Boolean fisherContribution = r.equals( res ) ? true : false;
                 devo.setFisherContribution( fisherContribution );
@@ -164,7 +167,7 @@ public class GeneDifferentialExpressionService {
         mavo.setGene( g );
         mavo.setActiveExperiments( activeExperiments );
         mavo.setProbeResults( devos );
-        mavo.setNumMetThreshold( numMetThreshold );
+        mavo.setNumMetThreshold( eesThatMetThreshold.size() );
         mavo.setSortKey();
         return mavo;
     }
