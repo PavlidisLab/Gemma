@@ -23,6 +23,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Methods to generate links and/or urls to common resources.
@@ -31,11 +32,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @version $Id$
  */
 public class LinkUtils {
-
-    /*
-     * FIXME This should be factored out.
-     */
-    public static final String GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
 
     public static final String UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
 
@@ -65,7 +61,7 @@ public class LinkUtils {
         }
 
         String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850" + "&db=" + database
-                + "&hgt.customText=" + GEMMA_BASE_URL + "blatTrack.html?id=";
+                + "&hgt.customText=" + ConfigUtils.getBaseUrl() + "blatTrack.html?id=";
         link += blatResult.getId();
 
         return link;

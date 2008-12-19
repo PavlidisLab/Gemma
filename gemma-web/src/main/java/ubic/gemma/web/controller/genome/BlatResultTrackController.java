@@ -33,13 +33,14 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.web.view.TextView;
 
 /**
- * See {@link  http://genome.ucsc.edu/goldenPath/help/customTrack.html}. This simply generates text that can be used to
+ * See {@link http://genome.ucsc.edu/goldenPath/help/customTrack.html}. This simply generates text that can be used to
  * view our alignments in the UCSC browser. For example, urls like the following would work:
  * <p>
- * http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://www.bioinformatics.ubc.ca/Gemma/blatTrack.html&id=2929
+ * http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://www.example.ca/Gemma/blatTrack. html&id=2929
  * </p>
  * <p>
- * Where the 'id' is the id in our system of the BLAT result to be views.
+ * Where the 'id' is the id in our system of the BLAT result to be views, and www.example.ca should be replaced with
+ * ConfigUtils.getBaseUrl() (configured with gemma.base.url)
  * 
  * @author pavlidis
  * @version $Id$

@@ -594,6 +594,9 @@ public class ConfigUtils {
         return getString( "gemma.admin.email" );
     }
 
+    /**
+     * @return the configured base url (e.g., http://www.bioinformatics.ubc.ca/Gemma) , or a warning if not configured.
+     */
     public static String getBaseUrl() {
         return getString( "gemma.base.url", "[URL to Gemma not configured]" );
     }
