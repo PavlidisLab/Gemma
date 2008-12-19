@@ -80,6 +80,8 @@ public class FileUploadController extends AbstractUrlViewController {
 
         Map<String, MultipartFile> fileMap = mrequest.getFileMap();
         try {
+            response.setContentType( "text/plain" );
+
             if ( fileMap.size() > 1 ) {
                 response.getWriter().write(
                         "{success : false, error: 'Sorry, can't upload more than one file at a time yet' }" );
@@ -121,7 +123,6 @@ public class FileUploadController extends AbstractUrlViewController {
      * HttpServletRequest)
      */
     @Override
-    @SuppressWarnings("unused")
     protected String getViewNameForRequest( HttpServletRequest request ) {
         return "uploadForm";
     }
