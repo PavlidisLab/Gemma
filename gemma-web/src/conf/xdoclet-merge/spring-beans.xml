@@ -775,6 +775,8 @@
 							<value>commonName</value>
 							<value>scientificName</value>
 							<value>ncbiId</value>
+							<!-- needed to make links to ucsc -->
+							<value>externalDatabase</value>
 						</list>
 					</property>
 				</bean>

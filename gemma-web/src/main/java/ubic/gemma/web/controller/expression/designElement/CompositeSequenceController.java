@@ -283,11 +283,13 @@ public class CompositeSequenceController extends BaseMultiActionController {
             Gene gene = geneProduct.getGene();
             BlatResult blatResult = blatAssociation.getBlatResult();
             if ( blatResult instanceof HibernateProxy ) {
+                // this code is reached.
                 blatResult = ( BlatResult ) ( ( HibernateProxy ) blatResult ).getHibernateLazyInitializer()
                         .getImplementation();
             }
 
-            blatResult.getQuerySequence().getTaxon(); // FIXME: Cruft or thaw attempt?
+            blatResult.getQuerySequence().getTaxon(); // FIXME: Cruft or thaw attempt? Tested and apparently not needed
+                                                      // (PP)
 
             if ( blatResults.containsKey( blatResult ) ) {
                 blatResults.get( blatResult ).addGene( geneProduct, gene );
