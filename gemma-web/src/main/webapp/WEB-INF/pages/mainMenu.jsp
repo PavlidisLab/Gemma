@@ -152,7 +152,7 @@
 </div>
 
 
-<div id="news-wrapper" style="width: 440; margin-top: 10px">
+<div id="news-wrapper" style="width: 470; margin-top: 10px">
 	<span style="font-size: 1.3em">News</span>
 	<div style="padding: 0 4 2 0px; margin: 0px;" id="newsfeed">
 	</div>
