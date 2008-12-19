@@ -10,10 +10,10 @@
  */
 Ext.namespace('Gemma.ProbeBrowser');
 
-// FIXME make this configurable
-
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
-Gemma.GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
+
+// FIXME make this configurable
+Gemma.GEMMA_BASE_URL = "http://www.chibi.ubc.ca/Gemma/";
 
 Gemma.UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
 Gemma.NCBI_ICON = "/Gemma/images/logo/ncbi.gif";
@@ -49,14 +49,14 @@ Gemma.ProbeBrowser.app = function() {
 		 */
 		initMainGrid : function(arrayDesignId, csIds) {
 			this.mainGrid = new Gemma.ProbeGrid({
-				csIds : csIds,
-				arrayDesignId : arrayDesignId,
-				detailsDataSource : this.detailsGrid.getStore(),
-				renderTo : "probe-grid",
-				pageSize : 20,
-				height : 350,
-				width : 630
-			});
+						csIds : csIds,
+						arrayDesignId : arrayDesignId,
+						detailsDataSource : this.detailsGrid.getStore(),
+						renderTo : "probe-grid",
+						pageSize : 20,
+						height : 350,
+						width : 630
+					});
 
 		},
 
@@ -66,10 +66,10 @@ Gemma.ProbeBrowser.app = function() {
 
 		initDetails : function() {
 			this.detailsGrid = new Gemma.ProbeDetailsGrid({
-				renderTo : "probe-details",
-				height : 100,
-				width : 620
-			});
+						renderTo : "probe-details",
+						height : 100,
+						width : 620
+					});
 		},
 
 		/**
@@ -82,12 +82,12 @@ Gemma.ProbeBrowser.app = function() {
 			// Get this id
 			var csId = dwr.util.getValue("cs");
 
-			//Load the details to be displayed. 
+			// Load the details to be displayed.
 			this.detailsGrid.getStore().load({
-				params : [{
-					id : csId
-				}]
-			});
+						params : [{
+									id : csId
+								}]
+					});
 
 		}
 	};
@@ -109,20 +109,20 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 	stateful : false,
 
 	record : Ext.data.Record.create([{
-		name : "identity",
-		type : "float"
-	}, {
-		name : "score",
-		type : "float"
-	}, {
-		name : "blatResult"
-	}, {
-		name : "compositeSequence"
-	}, {
-		name : "geneProductIdMap"
-	}, {
-		name : "geneProductIdGeneMap"
-	}]),
+				name : "identity",
+				type : "float"
+			}, {
+				name : "score",
+				type : "float"
+			}, {
+				name : "blatResult"
+			}, {
+				name : "compositeSequence"
+			}, {
+				name : "geneProductIdMap"
+			}, {
+				name : "geneProductIdGeneMap"
+			}]),
 
 	numberformat : function(d) {
 		return Math.round(d * 100) / 100;
@@ -177,57 +177,57 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	initComponent : function() {
 		Ext.apply(this, {
-			columns : [{
-				sortable : true,
-				id : "alignment",
-				header : "Alignment",
-				dataIndex : "blatResult",
-				renderer : this.blatResRender.createDelegate(this),
-				tooltip : "Alignments to the genome"
-			}, {
-				sortable : true,
-				id : "score",
-				header : "Score",
-				width : 60,
-				dataIndex : "score",
-				renderer : this.numberformat.createDelegate(this),
-				tooltip : "BLAT score"
-			}, {
-				sortable : true,
-				id : "identity",
-				header : "Identity",
-				width : 60,
-				dataIndex : "identity",
-				renderer : this.numberformat.createDelegate(this),
-				tooltip : "Sequence alignment identity"
-			}, {
-				sortable : true,
-				id : 'genes',
-				header : "Genes",
-				dataIndex : "geneProductIdGeneMap",
-				renderer : this.geneMapRender.createDelegate(this),
-				tooltip : "Genes at this genomic location"
-			}, {
-				sortable : true,
-				id : 'transcripts',
-				header : "Transcripts",
-				dataIndex : "geneProductIdMap",
-				renderer : this.gpMapRender.createDelegate(this),
-				tooltip : "Transcripts at this genomic location"
-			}],
-			store : new Ext.data.Store({
-				proxy : new Ext.data.DWRProxy(CompositeSequenceController.getBlatMappingSummary),
-				reader : new Ext.data.ListRangeReader({
-						// id : "blatResult" // don't use an id; let Ext define
-						// one for us.
-						}, this.record),
-				remoteSort : false,
-				sortInfo : {
-					field : "score",
-					direction : "DESC"
-				}
-			})
-		});
+					columns : [{
+								sortable : true,
+								id : "alignment",
+								header : "Alignment",
+								dataIndex : "blatResult",
+								renderer : this.blatResRender.createDelegate(this),
+								tooltip : "Alignments to the genome"
+							}, {
+								sortable : true,
+								id : "score",
+								header : "Score",
+								width : 60,
+								dataIndex : "score",
+								renderer : this.numberformat.createDelegate(this),
+								tooltip : "BLAT score"
+							}, {
+								sortable : true,
+								id : "identity",
+								header : "Identity",
+								width : 60,
+								dataIndex : "identity",
+								renderer : this.numberformat.createDelegate(this),
+								tooltip : "Sequence alignment identity"
+							}, {
+								sortable : true,
+								id : 'genes',
+								header : "Genes",
+								dataIndex : "geneProductIdGeneMap",
+								renderer : this.geneMapRender.createDelegate(this),
+								tooltip : "Genes at this genomic location"
+							}, {
+								sortable : true,
+								id : 'transcripts',
+								header : "Transcripts",
+								dataIndex : "geneProductIdMap",
+								renderer : this.gpMapRender.createDelegate(this),
+								tooltip : "Transcripts at this genomic location"
+							}],
+					store : new Ext.data.Store({
+								proxy : new Ext.data.DWRProxy(CompositeSequenceController.getBlatMappingSummary),
+								reader : new Ext.data.ListRangeReader({
+										// id : "blatResult" // don't use an id; let Ext define
+										// one for us.
+										}, this.record),
+								remoteSort : false,
+								sortInfo : {
+									field : "score",
+									direction : "DESC"
+								}
+							})
+				});
 
 		this.getStore().on("load", this.updateSequenceInfo.createDelegate(this));
 		Gemma.ProbeDetailsGrid.superclass.initComponent.call(this);
@@ -246,10 +246,10 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 			// a
 			// dummy record holding the sequence
 			dh.overwrite("probe-description", {
-				tag : 'li',
-				id : "probe-description",
-				html : "Probe description: " + "[unavailable]"
-			});
+						tag : 'li',
+						id : "probe-description",
+						html : "Probe description: " + "[unavailable]"
+					});
 			return;
 		}
 		var record = this.getStore().getAt(0);
@@ -261,29 +261,29 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 		if (cs !== null) {
 			var csDesc = cs.description !== null ? cs.description : "[None provided]";
 			dh.overwrite("probe-description", {
-				tag : 'li',
-				id : "probe-description",
-				html : "Probe description: " + csDesc,
-				"ext:qtip" : "Provider's description, may not be accurate"
-			});
+						tag : 'li',
+						id : "probe-description",
+						html : "Probe description: " + csDesc,
+						"ext:qtip" : "Provider's description, may not be accurate"
+					});
 		}
 
 		dh.append("sequence-info", {
-			tag : 'li',
-			html : "Length: " + seq.length,
-			"ext:qtip" : "Sequence length in bases"
-		});
+					tag : 'li',
+					html : "Length: " + seq.length,
+					"ext:qtip" : "Sequence length in bases"
+				});
 		dh.append("sequence-info", {
-			tag : 'li',
-			html : "Type: " + seq.type.value,
-			"ext:qtip" : "Sequence type as classified by Gemma"
-		});
+					tag : 'li',
+					html : "Type: " + seq.type.value,
+					"ext:qtip" : "Sequence type as classified by Gemma"
+				});
 		var repeatFrac = seq.fractionRepeats ? Math.round((seq.fractionRepeats * 1000) / 10) : 0;
 		dh.append("sequence-info", {
-			tag : 'li',
-			html : "Repeat-masked bases: " + repeatFrac + "%",
-			"ext:qtip" : "Percent bases masked by RepeatMasker"
-		});
+					tag : 'li',
+					html : "Repeat-masked bases: " + repeatFrac + "%",
+					"ext:qtip" : "Percent bases masked by RepeatMasker"
+				});
 
 		dh.append("sequence-info", {
 			tag : 'li',
@@ -293,15 +293,15 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		if (seq.sequenceDatabaseEntry) {
 			dh.append("probe-sequence-name", {
-				tag : 'a',
-				id : "ncbiLink",
-				target : "_blank",
-				title : "view at NCBI",
-				href : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term="
-						+ seq.sequenceDatabaseEntry.accession,
-				html : "<img src ='" + NCBI_ICON + "'/>",
-				"ext:qtip" : "View sequence at NCBI"
-			});
+						tag : 'a',
+						id : "ncbiLink",
+						target : "_blank",
+						title : "view at NCBI",
+						href : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term="
+								+ seq.sequenceDatabaseEntry.accession,
+						html : "<img src ='" + NCBI_ICON + "'/>",
+						"ext:qtip" : "View sequence at NCBI"
+					});
 		}
 	}
 
@@ -345,8 +345,8 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		if (this.paging) {
 			this.paging.getEl().unmask();
 			this.paging.getEl().select("input,a,button").each(function(e) {
-				e.dom.disabled = false;
-			});
+						e.dom.disabled = false;
+					});
 		}
 	},
 
@@ -394,38 +394,38 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	record : Ext.data.Record.create([{
-		name : "compositeSequenceId",
-		type : "int"
-	}, {
-		name : "compositeSequenceName",
-		type : "string"
-	}, {
-		name : "arrayDesignName",
-		type : "string"
-	}, {
-		name : "arrayDesignId",
-		type : "int"
-	}, {
-		name : "bioSequenceId",
-		type : "int"
-	}, {
-		name : "bioSequenceName",
-		type : "string"
-	}, {
-		name : "numBlatHits",
-		type : "int"
-	}, {
-		name : "bioSequenceNcbiId",
-		type : "string"
-	}, {
-		name : "genes"
-	}]),
+				name : "compositeSequenceId",
+				type : "int"
+			}, {
+				name : "compositeSequenceName",
+				type : "string"
+			}, {
+				name : "arrayDesignName",
+				type : "string"
+			}, {
+				name : "arrayDesignId",
+				type : "int"
+			}, {
+				name : "bioSequenceId",
+				type : "int"
+			}, {
+				name : "bioSequenceName",
+				type : "string"
+			}, {
+				name : "numBlatHits",
+				type : "int"
+			}, {
+				name : "bioSequenceNcbiId",
+				type : "string"
+			}, {
+				name : "genes"
+			}]),
 
 	initComponent : function() {
 
 		var reader = new Ext.data.ListRangeReader({
-			id : "compositeSequenceId"
-		}, this.record);
+					id : "compositeSequenceId"
+				}, this.record);
 
 		this.isArrayDesign = dwr.util.getValue("arrayDesignId");
 
@@ -441,100 +441,100 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		Ext.apply(this, {
 
 			columns : [{
-				sortable : true,
-				id : 'arraydesign',
-				header : "ArrayDesign",
-				width : 100,
-				dataIndex : "arrayDesignName",
-				renderer : this.arraylink.createDelegate(this),
-				tooltip : "Name of array design (click for details - leaves this page)"
-			}, {
-				sortable : true,
-				id : 'probe',
-				header : "Probe Name",
-				width : 130,
-				dataIndex : "compositeSequenceName",
-				tooltip : "Name of probe"
-			}, {
-				sortable : true,
-				id : 'sequence',
-				header : "Sequence",
-				width : 130,
-				dataIndex : "bioSequenceName",
-				renderer : this.sequencelink.createDelegate(this),
-				tooltip : "Name of sequence"
-			}, {
-				sortable : true,
-				id : 'hits',
-				header : "#Hits",
-				width : 50,
-				dataIndex : "numBlatHits",
-				tooltip : "Number of high-quality BLAT alignments"
+						sortable : true,
+						id : 'arraydesign',
+						header : "ArrayDesign",
+						width : 100,
+						dataIndex : "arrayDesignName",
+						renderer : this.arraylink.createDelegate(this),
+						tooltip : "Name of array design (click for details - leaves this page)"
+					}, {
+						sortable : true,
+						id : 'probe',
+						header : "Probe Name",
+						width : 130,
+						dataIndex : "compositeSequenceName",
+						tooltip : "Name of probe"
+					}, {
+						sortable : true,
+						id : 'sequence',
+						header : "Sequence",
+						width : 130,
+						dataIndex : "bioSequenceName",
+						renderer : this.sequencelink.createDelegate(this),
+						tooltip : "Name of sequence"
+					}, {
+						sortable : true,
+						id : 'hits',
+						header : "#Hits",
+						width : 50,
+						dataIndex : "numBlatHits",
+						tooltip : "Number of high-quality BLAT alignments"
 
-			}, {
-				sortable : true,
-				id : 'genes',
-				header : "Genes",
-				width : 200,
-				dataIndex : "genes",
-				tooltip : "Symbols of genes this probe potentially targets; if there are more than 3, the total count is provided in parentheses",
-				renderer : this.convertgenes.createDelegate(this)
-			}],
+					}, {
+						sortable : true,
+						id : 'genes',
+						header : "Genes",
+						width : 200,
+						dataIndex : "genes",
+						tooltip : "Symbols of genes this probe potentially targets; if there are more than 3, the total count is provided in parentheses",
+						renderer : this.convertgenes.createDelegate(this)
+					}],
 			store : new Gemma.PagingDataStore({
-				proxy : proxy,
-				reader : reader,
-				pageSize : this.pageSize
-			}),
+						proxy : proxy,
+						reader : reader,
+						pageSize : this.pageSize
+					}),
 			selModel : new Ext.grid.RowSelectionModel({
-				singleSelect : true
-			})
+						singleSelect : true
+					})
 
 		});
 
 		Ext.apply(this, {
-			bbar : new Gemma.PagingToolbar({
-				pageSize : this.pageSize,
-				store : this.store
-			})
-		});
+					bbar : new Gemma.PagingToolbar({
+								pageSize : this.pageSize,
+								store : this.store
+							})
+				});
 
 		if (this.isArrayDesign) {
 			Ext.apply(this, {
-				tbar : [{
-					xtype : 'textfield',
-					name : 'search-field',
-					emptyText : 'Search for probes',
-					id : 'search-field',
-					listeners : {
-						'specialkey' : {
-							fn : function(f, e) {
-								if (e.getKey() == e.ENTER) {
-									this.search();
-								}
-							}.createDelegate(this),
-							scope : this
-						}
-					},
-					width : 100
-				}, {
-					xtype : 'button',
-					name : 'Search',
-					text : 'Search',
-					tooltip : 'Search for probes on this array design',
-					id : 'search-button',
-					handler : this.search.createDelegate(this)
+						tbar : [{
+									xtype : 'textfield',
+									name : 'search-field',
+									emptyText : 'Search for probes',
+									id : 'search-field',
+									listeners : {
+										'specialkey' : {
+											fn : function(f, e) {
+												if (e.getKey() == e.ENTER) {
+													this.search();
+												}
+											}.createDelegate(this),
+											scope : this
+										}
+									},
+									width : 100
+								}, {
+									xtype : 'button',
+									name : 'Search',
+									text : 'Search',
+									tooltip : 'Search for probes on this array design',
+									id : 'search-button',
+									handler : this.search.createDelegate(this)
 
-				}, {
-					xtype : 'button',
-					name : 'Reset',
-					text : 'Reset',
-					id : 'reset-button',
-					tooltip : 'Return to full list',
-					handler : this.reset.createDelegate(this)
+								}, {
+									xtype : 'button',
+									name : 'Reset',
+									text : 'Reset',
+									id : 'reset-button',
+									tooltip : 'Return to full list',
+									handler : this.reset.createDelegate(this)
 
-				}]
+								}]
 
-			});
+					});
 		}
 
 		Gemma.ProbeGrid.superclass.initComponent.call(this);
@@ -542,10 +542,10 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.store.on("load", this.loadHandler.createDelegate(this));
 
 		this.getSelectionModel().on("rowselect", function() {
-			var sm = this.getSelectionModel();
-			var id = sm.getSelected().get("compositeSequenceId");
-			this.showDetails(id);
-		}.createDelegate(this));
+					var sm = this.getSelectionModel();
+					var id = sm.getSelected().get("compositeSequenceId");
+					this.showDetails(id);
+				}.createDelegate(this));
 
 	},
 
@@ -566,8 +566,8 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		var oldprox = this.getStore().proxy;
 		this.getStore().proxy = new Ext.data.DWRProxy(CompositeSequenceController.search);
 		this.getStore().load({
-			params : [query, id]
-		});
+					params : [query, id]
+				});
 		this.getStore().proxy = oldprox;
 	},
 
@@ -575,29 +575,29 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		// note how we pass the new array in directly, without wrapping it in an
 		// object first. We're not returning an object, just a bare array.
 		this.getStore().load({
-			params : [ids],
-			callback : function(r, options, success, scope) {
-				if (success) {
-					Ext.DomHelper.overwrite("messages", this.getCount() + " probes shown");
-				} else {
-					Ext.DomHelper.overwrite("messages", "There was an error.");
-				}
-			}
-		});
+					params : [ids],
+					callback : function(r, options, success, scope) {
+						if (success) {
+							Ext.DomHelper.overwrite("messages", this.getCount() + " probes shown");
+						} else {
+							Ext.DomHelper.overwrite("messages", "There was an error.");
+						}
+					}
+				});
 	},
 
 	showArrayDesignProbes : function(id) {
 		this.getStore().load({
-			params : [{
-				id : id,
-				classDelegatingFor : "ArrayDesignImpl"
-			}],
-			callback : function(r, options, success, scope) {
-				if (!success) {
-					Ext.DomHelper.overwrite("messages", "There was an error.");
-				}
-			}
-		});
+					params : [{
+								id : id,
+								classDelegatingFor : "ArrayDesignImpl"
+							}],
+					callback : function(r, options, success, scope) {
+						if (!success) {
+							Ext.DomHelper.overwrite("messages", "There was an error.");
+						}
+					}
+				});
 	},
 
 	/**
@@ -610,10 +610,10 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		var record = this.getStore().getById(id);
 
 		this.detailsDataSource.load({
-			params : [{
-				id : id
-			}]
-		});
+					params : [{
+								id : id
+							}]
+				});
 
 		if (record === undefined) {
 			return;
@@ -627,22 +627,22 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		var dh = Ext.DomHelper;
 		dh.overwrite("details-title", {
-			tag : 'h2',
-			html : "Details for probe: " + csname + arName
-		});
+					tag : 'h2',
+					html : "Details for probe: " + csname + arName
+				});
 		dh.append("details-title", {
-			tag : 'ul',
-			id : 'sequence-info',
-			children : [{
-				tag : 'li',
-				id : "probe-description",
-				html : "Probe description: " + "[pending]"
-			}, {
-				tag : 'li',
-				id : "probe-sequence-name",
-				html : "Sequence name: " + seqName + "&nbsp;"
-			}]
-		});
+					tag : 'ul',
+					id : 'sequence-info',
+					children : [{
+								tag : 'li',
+								id : "probe-description",
+								html : "Probe description: " + "[pending]"
+							}, {
+								tag : 'li',
+								id : "probe-sequence-name",
+								html : "Sequence name: " + seqName + "&nbsp;"
+							}]
+				});
 	},
 
 	/**
@@ -658,14 +658,14 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	handleLoadError : function(scope, b, message, exception) {
 		Ext.DomHelper.overwrite("messages", {
-			tag : 'img',
-			src : '/Gemma/images/iconWarning.gif'
-		});
+					tag : 'img',
+					src : '/Gemma/images/iconWarning.gif'
+				});
 		Ext.DomHelper.overwrite("messages", {
-			tag : 'span',
-			html : "There was an error while loading data: " + exception
-					+ "<br />. Try again or contact the webmaster."
-		});
+					tag : 'span',
+					html : "There was an error while loading data: " + exception
+							+ "<br />. Try again or contact the webmaster."
+				});
 	}
 
 });
