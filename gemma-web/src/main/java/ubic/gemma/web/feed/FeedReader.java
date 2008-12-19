@@ -61,7 +61,7 @@ public class FeedReader implements InitializingBean {
          * reformat the feed.
          */
         Pattern p = Pattern.compile( "<div.*?</div>", Pattern.DOTALL | Pattern.CASE_INSENSITIVE );
-
+        Pattern icons = Pattern.compile( "<img class=\"rendericon.*?/>", Pattern.DOTALL );
         List<NewsItem> result = new ArrayList<NewsItem>();
         try {
             SyndFeed feed = feedFetcher.retrieveFeed( new URL( feedUrl ) );
@@ -81,8 +81,13 @@ public class FeedReader implements InitializingBean {
                  */
                 String body = k.getDescription().getValue();
                 Matcher m = p.matcher( body );
-
                 body = m.replaceAll( "" );
+
+                /*
+                 * Remove icons on links (confluence-specific)
+                 */
+                Matcher iconm = icons.matcher( body );
+                body = iconm.replaceAll( "" );
 
                 n.setBody( body );
                 n.setTitle( title );
