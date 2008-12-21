@@ -156,5 +156,5 @@
 	<span style="font-size: 1.3em">News</span>
 	<div style="padding: 0 4 2 0px; margin: 0px;" id="newsfeed">
 	</div>
-	<a style="font-size: 0.90em" href="http://bioinformatics.ubc.ca/confluence/display/gemma/Gemma+blog">More news</a>
+	<a style="font-size: 0.90em" href="http://cs-02.chibi.ubc.ca/confluence/display/gemma/All+news">More news</a>
 </div>
