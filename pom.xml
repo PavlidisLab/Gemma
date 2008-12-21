@@ -22,8 +22,8 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>scm:cvs:ext:@broca.ubic.ca:local:/cvs:Gemma</connection>
-		<developerConnection>scm:cvs:ext:@broca.ubic.ca:/cvs:Gemma</developerConnection>
+		<connection>scm:cvs:ext:@137.82.196.193:local:/cvs:Gemma</connection>
+		<developerConnection>scm:cvs:ext:@137.82.196.193:/cvs:Gemma</developerConnection>
 		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
   </scm>
 	<issueManagement>

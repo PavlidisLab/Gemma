@@ -11,17 +11,17 @@
 	</bannerRight>
 	<body>
 		<links>
-			<item name="Gemma" href="http://bioinformatics.ubc.ca/Gemma/" />
-			<item name="Pavlidis lab" href="http://bioinformatics.ubc.ca/pavlidis/lab" />
+			<item name="Gemma" href="http://chibi.ubc.ca/Gemma/" />
+			<item name="Pavlidis lab" href="http://chibi.ubc.ca/faculty/pavlidis/lab" />
 		</links>
 		<menu name="Gemma" collapse="false">
-			<item name="Home" href="http://bioinformatics.ubc.ca/Gemma" />
-			<item name="Resource home" href="http://bioinformatics.ubc.ca/Gemma/resources" />
-			<item name="Downloads" href="/downloads.html" />
-			<item name="baseCode" href="http://bioinformatics.ubc.ca/pavlidis/lab/basecode/" />
-			<item name="Documentation" href="http://bioinformatics.ubc.ca/confluence/display/gemma" />
-			<item name="FAQ" href="http://bioinformatics.ubc.ca/confluence/display/gemma/FAQ" />
-			<item name="Credits" href="/thanks.html" />
+			<item name="Home" href="http://chibi.ubc.ca/Gemma" />
+			<item name="Resource home" href="http://chibi.ubc.ca/Gemma/resources" />
+			<item name="Downloads" href="downloads.html" />
+			<item name="baseCode" href="http://chibi.ubc.ca/faculty/pavlidis/basecode/" />
+			<item name="Documentation" href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma" />
+			<item name="FAQ" href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/FAQ" />
+			<item name="Credits" href="thanks.html" />
 		</menu>
 		<menu ref="modules" collapse="false" />
 		<menu ref="reports" collapse="false" />

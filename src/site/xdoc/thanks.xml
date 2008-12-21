@@ -8,9 +8,9 @@
 				<section name="Project lead">
 					<p>
 						Paul Pavlidis, Ph.D. (
-						<a style="font-size: 0.9em;" href="http://www.bioinformatics.ubc.ca/pavlidis">www</a>
+						<a style="font-size: 0.9em;" href="http://chibi.ubc.ca/faculty/pavlidis/">www</a>
 						). Visit the
-						<a href="http://www.bioinformatics.ubc.ca/pavlidis/lab">group home page</a>
+						<a href="http://chibi.ubc.ca/faculty/pavlidis/lab/">group home page</a>
 						to read more about the lab's interests.
 					</p>
 				</section>
@@ -75,7 +75,7 @@
 				<p>
 					We are indebted to the many researchers who have made data publicly available. A list of published
 					papers that relate to the data included in gemma is
-					<a href="http://localhost:8080/Gemma/bibRef/showAllEeBibRefs.html">here</a>
+					<a href="http://chibi.ubc.ca/Gemma/bibRef/showAllEeBibRefs.html">here</a>
 					. If your data is in Gemma, and your paper is not listed, please
 					<a href="mailto:gemma@bioinformatics.ubc.ca">let us know</a>
 					.
@@ -106,11 +106,11 @@
 					<a href="help.html">Help pages</a>
 				</li>
 				<li>
-					<a href="http://bioinformatics.ubc.ca/Gemma/resources/downloads.html">Downloads</a>
+					<a href="http://chibi.ubc.ca/Gemma/resources/downloads.html">Downloads</a>
 					of software and data.
 				</li>
 				<li>
-					<a href="http://bioinformatics.ubc.ca/Gemma/resources">Resources for developers</a>
+					<a href="http://chibi.ubc.ca/Gemma/resources">Resources for developers</a>
 					, including technical information about Gemma.
 				</li>
 			</ul>

@@ -15,12 +15,12 @@
 				If you want to
 				<em>use</em>
 				Gemma for analysis, please head over to the Gemma web interface
-				<a href="http://www.bioinformatics.ubc.ca/Gemma">here</a>
+				<a href="http://chibi.ubc.ca/Gemma">here</a>
 				.
 			</p>
 			<p>
 				Gemma is a project of the
-				<a href="http://bioinformatics.ubc.ca/pavlidis/lab">Pavlidis lab</a>
+				<a href="http://chibi.ubc.ca/faculty/pavlidis/lab/">Pavlidis lab</a>
 				at the
 				<a href="http://www.ubc.ca">University of British Columbia</a>
 				<a href="http://www.psychiatry.ubc.ca/">Department of Psychiatry</a> and <a href="http://www.chibi.ubc.ca">Centre for High-Throughput Biology</a>.
@@ -31,25 +31,9 @@
 				<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">
 					Gemma-announce mailing list
 				</a>
-				. For more documentation please visit the <a href="http://bioinformatics.ubc.ca/confluence/display/gemma">wiki</a>.
+				. For more documentation please visit the <a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">wiki</a>.
 			</p>
-			<subsection name="Gemma news">
-				<dl>
-					<dt>
-						<strong>April 23, 2008 - Gemma 1.1.1</strong>
-					</dt>
-					<dd>
-						Gemma 1.1.1 is a maintenance release. See the
-						<a href="downloads.html">downloads page</a>
-						for more details.
-					</dd>
-				</dl>
-				<p>
-					See the
-					<a href="news.html">news archive</a>
-					for past news.
-				</p>
-			</subsection>
+			 
 		</section>
 	</body>
 </document>

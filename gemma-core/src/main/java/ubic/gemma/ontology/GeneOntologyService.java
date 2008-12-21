@@ -28,9 +28,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.CacheManager;
+
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -57,36 +62,37 @@ import com.hp.hpl.jena.rdf.model.Resource;
  * @version $Id$
  * @spring.bean id="geneOntologyService"
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
+ * @spring.property name="cacheManager" ref="cacheManager"
  * @spring.property name="geneService" ref="geneService"
  */
-public class GeneOntologyService {
+public class GeneOntologyService implements InitializingBean {
 
     public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
 
-    private static final String LOAD_GENE_ONTOLOGY_OPTION = "load.geneOntology";
-
-    private final static String CC_URL = "http://www.berkeleybop.org/ontologies/obo-all/cellular_component/cellular_component.owl";
+    private static final String ALL_ROOT = BASE_GO_URI + "ALL";
 
     private final static String BP_URL = "http://www.berkeleybop.org/ontologies/obo-all/biological_process/biological_process.owl";
 
-    private final static String MF_URL = "http://www.berkeleybop.org/ontologies/obo-all/molecular_function/molecular_function.owl";
+    private final static String CC_URL = "http://www.berkeleybop.org/ontologies/obo-all/cellular_component/cellular_component.owl";
+
+    private static boolean enabled = true;
 
     private final static boolean LOAD_BY_DEFAULT = true;
 
+    private static final String LOAD_GENE_ONTOLOGY_OPTION = "load.geneOntology";
+
     private static Log log = LogFactory.getLog( GeneOntologyService.class.getName() );
 
-    // map of uris to terms
-    private static Map<String, OntologyTerm> terms;
+    private final static String MF_URL = "http://www.berkeleybop.org/ontologies/obo-all/molecular_function/molecular_function.owl";
 
     // private DirectedGraph graph = null;
 
+    private static final String PART_OF_URI = "http://purl.org/obo/owl/OBO_REL#OBO_REL_part_of";
     private static final AtomicBoolean ready = new AtomicBoolean( false );
     private static final AtomicBoolean running = new AtomicBoolean( false );
-    private static final String ALL_ROOT = BASE_GO_URI + "ALL";
 
-    private static final String PART_OF_URI = "http://purl.org/obo/owl/OBO_REL#OBO_REL_part_of";
-
-    private static boolean enabled = true;
+    // map of uris to terms
+    private static Map<String, OntologyTerm> terms;
 
     /**
      * @param term
@@ -171,9 +177,7 @@ public class GeneOntologyService {
         return BASE_GO_URI + uriTerm;
     }
 
-    private Gene2GOAssociationService gene2GOAssociationService;
-
-    private GeneService geneService;
+    private CacheManager cacheManager;
 
     /**
      * Cache of go term -> child terms
@@ -181,16 +185,43 @@ public class GeneOntologyService {
     private Map<String, Collection<OntologyTerm>> childrenCache = Collections
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
+    private Gene2GOAssociationService gene2GOAssociationService;
+
+    private GeneService geneService;
+
+    /**
+     * Cache of gene -> go terms.
+     */
+    private Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<Gene, Collection<OntologyTerm>>();
+
     /**
      * Cache of go term -> parent terms
      */
     private Map<String, Collection<OntologyTerm>> parentsCache = Collections
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
-    /**
-     * Cache of gene -> go terms.
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
-    private Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<Gene, Collection<OntologyTerm>>();
+    public void afterPropertiesSet() throws Exception {
+        // try {
+        //
+        // if ( cacheManager.cacheExists( WHATS_NEW_CACHE ) ) {
+        // return;
+        // }
+        //
+        // // last two values are timetolive and timetoidle.
+        // whatsNewCache = new Cache( WHATS_NEW_CACHE, 1500, false, false, 100000, 100000 );
+        //
+        // cacheManager.addCache( whatsNewCache );
+        // whatsNewCache = cacheManager.getCache( WHATS_NEW_CACHE );
+        //
+        // } catch ( CacheException e ) {
+        // throw new RuntimeException( e );
+        // }
+
+    }
 
     /**
      * <p>
@@ -238,18 +269,6 @@ public class GeneOntologyService {
     }
 
     /**
-     * @return a collection of all existing GO term ids
-     */
-    public Collection<String> getAllGOTermIds() {
-
-        Collection<String> goTermIds = terms.keySet();
-        goTermIds.remove( BASE_GO_URI + "GO_0008150" );
-        goTermIds.remove( BASE_GO_URI + "GO_0003674" );
-        goTermIds.remove( BASE_GO_URI + "GO_0005575" );
-        return goTermIds;
-    }
-
-    /**
      * @param queryGene1
      * @param queryGene2
      * @returns Collection<OntologyEntries>
@@ -292,6 +311,18 @@ public class GeneOntologyService {
      */
     public Collection<OntologyTerm> getAllChildren( OntologyTerm entry, boolean includePartOf ) {
         return getDescendants( entry, includePartOf );
+    }
+
+    /**
+     * @return a collection of all existing GO term ids
+     */
+    public Collection<String> getAllGOTermIds() {
+
+        Collection<String> goTermIds = terms.keySet();
+        goTermIds.remove( BASE_GO_URI + "GO_0008150" );
+        goTermIds.remove( BASE_GO_URI + "GO_0003674" );
+        goTermIds.remove( BASE_GO_URI + "GO_0005575" );
+        return goTermIds;
     }
 
     /**
@@ -424,7 +455,7 @@ public class GeneOntologyService {
      * 
      * @param entry
      * @return collection, because entries can have multiple parents. (only allroot is excluded)
-     */ 
+     */
     public Collection<OntologyTerm> getParents( OntologyTerm entry ) {
         return getParents( entry, false );
     }
@@ -490,6 +521,28 @@ public class GeneOntologyService {
         OntologyTerm t = getTermForId( goId );
         if ( t == null ) return "[Not available]"; // not ready yet?
         return t.getTerm();
+    }
+
+    /**
+     * 
+     */
+    public synchronized void init( boolean force ) {
+
+        if ( running.get() ) {
+            log.warn( "Gene Ontology initialization is already running" );
+            return;
+        }
+
+        boolean loadOntology = ConfigUtils.getBoolean( LOAD_GENE_ONTOLOGY_OPTION, LOAD_BY_DEFAULT );
+
+        if ( !force && !loadOntology ) {
+            log.info( "Loading Gene Ontology is disabled (force=" + force + ", " + LOAD_GENE_ONTOLOGY_OPTION + "="
+                    + loadOntology + ")" );
+            enabled = false;
+            return;
+        }
+
+        initilizeGoOntology();
     }
 
     /**
@@ -576,28 +629,6 @@ public class GeneOntologyService {
     }
 
     /**
-     * 
-     */
-    public synchronized void init( boolean force ) {
-
-        if ( running.get() ) {
-            log.warn( "Gene Ontology initialization is already running" );
-            return;
-        }
-
-        boolean loadOntology = ConfigUtils.getBoolean( LOAD_GENE_ONTOLOGY_OPTION, LOAD_BY_DEFAULT );
-
-        if ( !force && !loadOntology ) {
-            log.info( "Loading Gene Ontology is disabled (force=" + force + ", " + LOAD_GENE_ONTOLOGY_OPTION + "="
-                    + loadOntology + ")" );
-            enabled = false;
-            return;
-        }
-
-        initilizeGoOntology();
-    }
-
-    /**
      * Primarily here for testing.
      * 
      * @param is
@@ -617,6 +648,13 @@ public class GeneOntologyService {
         Collection<OntologyResource> terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url,
                 OntModelSpec.OWL_MEM ) );
         addTerms( terms );
+    }
+
+    /**
+     * @param cacheManager the cacheManager to set
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
     }
 
     private void addTerms( Collection<OntologyResource> newTerms ) {
