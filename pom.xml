@@ -22,14 +22,14 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>scm:cvs:ext:@137.82.196.193:local:/cvs:Gemma</connection>
-		<developerConnection>scm:cvs:ext:@137.82.196.193:/cvs:Gemma</developerConnection>
+		<connection>scm:cvs:ext:@krusty.chibi.ubc.ca:local:/cvs:Gemma</connection>
+		<developerConnection>scm:cvs:ext:@krusty.chibi.ubc.ca:/cvs:Gemma</developerConnection>
 		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
   </scm>
 	<issueManagement>
 		<system>Bugzilla</system>
 		<url>
-			http://www.bioinformatics.ubc.ca/pavlidis/lab/bugzilla/buglist.cgi?product=Gemma&amp;bug_status=__open__
+			http://chibi.ubc.ca/faculty/pavlidis/lab/bugs/buglist.cgi?product=Gemma&amp;bug_status=__open__
 		</url>
 	</issueManagement>
 	<ciManagement>
@@ -508,18 +508,18 @@
 		<site>
 			<id>website</id>
 			<url>
-				scp://hebb.ubic.ca:/spacef/gemmaData/gemma-devsite
+				scp://krusty.chibi.ubc.ca:/space/gemmaData/gemma-devsite
 			</url>
 		</site>
 		<repository>
 			<id>repo</id>
 			<name>Broca</name>
-			<url>scp://broca.ubic.ca:/www/maven2</url>
+			<url>scp://krusty.chibi.ubc.ca:/var/www/www.bioinformatics.ubc.ca/maven2</url>
 		</repository>
 		<snapshotRepository>
 			<id>repo</id>
 			<name>Broca</name>
-			<url>scp://broca.ubic.ca:/www/maven2</url>
+			<url>scp://krusty.chibi.ubc.ca:/var/www/www.bioinformatics.ubc.ca/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
 
