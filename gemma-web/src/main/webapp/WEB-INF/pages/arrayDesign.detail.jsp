@@ -348,15 +348,32 @@
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		<td>
-			<c:if test="${ noParentsAnnotationLink != null}">
-				<a class="annotationLink" href=${noParentsAnnotationLink } />Brief</a>&nbsp;&nbsp;
-			</c:if>
-			<c:if test="${ allParentsAnnotationLink != null}">
-				<a class="annotationLink" href=${allParentsAnnotationLink } />All parents</a>&nbsp;&nbsp;
-			</c:if>
-			<c:if test="${bioProcessAnnotationLink != null}">
-				<a class="annotationLink" href=${bioProcessAnnotationLink } />Biological Process only</a>&nbsp;&nbsp;
-			</c:if>
+			<c:choose>
+				<c:when test="${empty noParentsAnnotationLink}">
+					Unavailable&nbsp;&nbsp;
+				</c:when>
+				
+				<c:otherwise>
+					<a class="annotationLink" href=${noParentsAnnotationLink} />Brief</a>&nbsp;&nbsp;
+				</c:otherwise>
+			</c:choose>	
+			<c:choose>
+				<c:when test="${empty allParentsAnnotationLink}">
+					Unavailable&nbsp;&nbsp;
+				</c:when>	
+				<c:otherwise>
+					<a class="annotationLink" href=${allParentsAnnotationLink} />All parents</a>&nbsp;&nbsp;
+				</c:otherwise>
+			</c:choose>
+			<c:choose>
+				<c:when test="${empty bioProcessAnnotationLink}">
+					Unavailable&nbsp;&nbsp;
+				</c:when>	
+				<c:otherwise>
+					<a class="annotationLink" href=${bioProcessAnnotationLink} />Biological Process only</a>&nbsp;&nbsp;
+				</c:otherwise>
+			</c:choose>
+			
 		</td>
 	</tr>
 </table>
