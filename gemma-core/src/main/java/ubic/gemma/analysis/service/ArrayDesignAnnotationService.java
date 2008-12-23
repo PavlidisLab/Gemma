@@ -260,7 +260,7 @@ public class ArrayDesignAnnotationService {
             String geneDescriptionString = StringUtils.join( geneDescriptions, "|" );
             writeAnnotationLine( writer, cs.getName(), geneString, geneDescriptionString, goTerms );
 
-            if ( ++compositeSequencesProcessed % 500 == 0 && log.isInfoEnabled() ) {
+            if ( ++compositeSequencesProcessed % 2000 == 0 && log.isInfoEnabled() ) {
                 log.info( "Processed " + compositeSequencesProcessed + "/" + genesWithSpecificity.size()
                         + " compositeSequences " );
             }
