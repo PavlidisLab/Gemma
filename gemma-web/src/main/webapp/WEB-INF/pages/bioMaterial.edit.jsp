@@ -13,11 +13,11 @@
 	</c:if>
 </spring:bind>
 
-<title><fmt:message key="bioMaterial.editing" />
+<title><fmt:message key="bioMaterial.title" />
 </title>
 
 <h2>
-	<fmt:message key="bioMaterial.editing" />
+	<fmt:message key="bioMaterial.title" />
 </h2>
 <form method="post"
 	action="<c:url value="/bioMaterial/editBioMaterial.html"/>">
@@ -35,6 +35,16 @@
 			</td>
 		</tr>
 
-
+	</table>
+	
+	<table>
+		<tr>
+			<td>
+				<input type="submit" class="button" name="save"
+					value="<fmt:message key="button.save"/>" />
+				<input type="submit" class="button" name="cancel"
+					value="<fmt:message key="button.cancel"/>" />
+			</td>
+		</tr>
 	</table>
 </form>
