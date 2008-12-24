@@ -1,12 +1,15 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*"%>
-<%@ page import="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"%>
-<jsp:useBean id="arrayDesign" scope="request" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
+<%@ page
+	import="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"%>
+<jsp:useBean id="arrayDesign" scope="request"
+	class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
 
 <!DOCTYPE html PUBLIC "-//W3C//Dtd html 4.01 transitional//EN">
 <head>
-	<title><jsp:getProperty name="arrayDesign" property="shortName" /> - <jsp:getProperty name="arrayDesign"
-			property="name" /></title>
+	<title><jsp:getProperty name="arrayDesign" property="shortName" />
+		- <jsp:getProperty name="arrayDesign" property="name" />
+	</title>
 
 
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
@@ -35,16 +38,18 @@
 </head>
 
 <h2>
-	Details for: "<jsp:getProperty name="arrayDesign" property="name" />"
+	Details for: "
+	<jsp:getProperty name="arrayDesign" property="name" />
+	"
 	<c:if test="${ troubleEvent != null}">
 	&nbsp;
-	<img src='<c:url value="/images/icons/warning.png"/>' height='16' width='16' alt='trouble'
-			title='${ troubleEventDescription }' />
+	<img src='<c:url value="/images/icons/warning.png"/>' height='16'
+			width='16' alt='trouble' title='${ troubleEventDescription }' />
 	</c:if>
 	<c:if test="${ validatedEvent != null}">
 	&nbsp;
-	<img src='<c:url value="/images/icons/ok.png"/>' height='16' width='16' alt='validated'
-			title='${ validatedEventDescription }' />
+	<img src='<c:url value="/images/icons/ok.png"/>' height='16' width='16'
+			alt='validated' title='${ validatedEventDescription }' />
 	</c:if>
 </h2>
 
@@ -61,7 +66,8 @@
 		<tr>
 			<td>
 
-				<div id="arraySummary_${arrayDesign.id}" name="arraySummary_${arrayDesign.id}">
+				<div id="arraySummary_${arrayDesign.id}"
+					name="arraySummary_${arrayDesign.id}">
 					<table class='datasummary'>
 						<tr>
 							<td colspan=2 align=center>
@@ -144,7 +150,8 @@
 		<tr>
 			<td colspan="2">
 				<security:authorize ifAnyGranted="admin">
-					<input type="button" value="Refresh report" onClick="updateReport(${arrayDesign.id })" />
+					<input type="button" value="Refresh report"
+						onClick="updateReport(${arrayDesign.id })" />
 				</security:authorize>
 			</td>
 		</tr>
@@ -154,7 +161,9 @@
 		function doit(event) {showWideHelpTip(event,text); }
 		</script>
 			<td colspan="2">
-				<a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img src="/Gemma/images/help.png" /> </a>
+				<a class="helpLink" name="?" href=""
+					onclick="doit(event);return false;"> <img
+						src="/Gemma/images/help.png" /> </a>
 				<%--"<Gemma:help helpFile='sequenceAnalysisHelp.html'/>" --%>
 			</td>
 		</tr>
@@ -179,7 +188,8 @@
 		<td>
 			<span id="alternate-names">${alternateNames}</span>
 			<security:authorize ifAnyGranted="admin">&nbsp;
-			<a href="#" title="Add a new alternate name for this design" onClick="getAlternateName(${arrayDesign.id })"><img
+			<a href="#" title="Add a new alternate name for this design"
+					onClick="getAlternateName(${arrayDesign.id })"><img
 						src="/Gemma/images/icons/add.png" /> </a>
 			</security:authorize>
 		</td>
@@ -227,14 +237,16 @@
 	<tr>
 		<td class="label">
 			External accessions&nbsp;
-			<a class="helpLink" href="?" onclick="showHelpTip(event, 'References to this design in other databases'); return false"><img
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'References to this design in other databases'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		<td>
 			<%
 			if ( ( arrayDesign.getExternalReferences() ) != null && ( arrayDesign.getExternalReferences().size() > 0 ) ) {
 			%>
-			<c:forEach var="accession" items="${ arrayDesign.externalReferences }">
+			<c:forEach var="accession"
+				items="${ arrayDesign.externalReferences }">
 				<Gemma:databaseEntry databaseEntry="${accession}" />
 				<br />
 			</c:forEach>
@@ -306,7 +318,8 @@
 		<tr>
 			<td class="label">
 				Subsumed by
-				<a class="helpLink" href="?" onclick="showHelpTip(event, 'Array design that \'covers\' this one. '); return false"><img
+				<a class="helpLink" href="?"
+					onclick="showHelpTip(event, 'Array design that \'covers\' this one. '); return false"><img
 						src="/Gemma/images/help.png" /> </a>
 			</td>
 			<td>
@@ -331,7 +344,8 @@
 		<tr>
 			<td class="label">
 				Merged into
-				<a class="helpLink" href="?" onclick="showHelpTip(event, 'Array design this one is merged into.'); return false"><img
+				<a class="helpLink" href="?"
+					onclick="showHelpTip(event, 'Array design this one is merged into.'); return false"><img
 						src="/Gemma/images/help.png" /> </a>
 			</td>
 			<td>
@@ -349,39 +363,47 @@
 		</td>
 		<td>
 			<c:choose>
-				<c:when test="${empty noParentsAnnotationLink}">
+				<c:when test="${(empty noParentsAnnotationLink) && (empty allParentsAnnotationLink) && (empty bioProcessAnnotationLink)}">
 					Unavailable&nbsp;&nbsp;
 				</c:when>
-				
 				<c:otherwise>
-					<a class="annotationLink" href=${noParentsAnnotationLink} />Brief</a>&nbsp;&nbsp;
-				</c:otherwise>
-			</c:choose>	
-			<c:choose>
-				<c:when test="${empty allParentsAnnotationLink}">
-					Unavailable&nbsp;&nbsp;
-				</c:when>	
-				<c:otherwise>
-					<a class="annotationLink" href=${allParentsAnnotationLink} />All parents</a>&nbsp;&nbsp;
+					<c:choose>
+						<c:when test="${empty noParentsAnnotationLink}">
+							Unavailable&nbsp;&nbsp;
+						</c:when>
+
+						<c:otherwise>
+							<a class="annotationLink" href=${noParentsAnnotationLink } />Brief</a>&nbsp;&nbsp;
+						</c:otherwise>
+					</c:choose>
+					<c:choose>
+						<c:when test="${empty allParentsAnnotationLink}">
+							Unavailable&nbsp;&nbsp;
+						</c:when>
+						<c:otherwise>
+							<a class="annotationLink" href=${allParentsAnnotationLink } />All parents</a>&nbsp;&nbsp;
+						</c:otherwise>
+					</c:choose>
+					<c:choose>
+						<c:when test="${empty bioProcessAnnotationLink}">
+							Unavailable&nbsp;&nbsp;
+						</c:when>
+						<c:otherwise>
+							<a class="annotationLink" href=${bioProcessAnnotationLink } />Biological Process only</a>&nbsp;&nbsp;
+						</c:otherwise>
+					</c:choose>
 				</c:otherwise>
 			</c:choose>
-			<c:choose>
-				<c:when test="${empty bioProcessAnnotationLink}">
-					Unavailable&nbsp;&nbsp;
-				</c:when>	
-				<c:otherwise>
-					<a class="annotationLink" href=${bioProcessAnnotationLink} />Biological Process only</a>&nbsp;&nbsp;
-				</c:otherwise>
-			</c:choose>
-			
 		</td>
 	</tr>
 </table>
 
 <security:authorize ifAnyGranted="admin">
 	<div id="auditTrail"></div>
-	<input type="hidden" name="auditableId" id="auditableId" value="${arrayDesign.id}" />
-	<input type="hidden" name="auditableClass" id="auditableClass" value="${arrayDesign.class.name}" />
+	<input type="hidden" name="auditableId" id="auditableId"
+		value="${arrayDesign.id}" />
+	<input type="hidden" name="auditableClass" id="auditableClass"
+		value="${arrayDesign.class.name}" />
 </security:authorize>
 
 
@@ -395,14 +417,17 @@
 		<tr>
 			<td colspan="2">
 				<div align="left">
-					<input type="button" onclick="location.href='showAllArrayDesigns.html'" value="Show all array designs">
+					<input type="button"
+						onclick="location.href='showAllArrayDesigns.html'"
+						value="Show all array designs">
 				</div>
 			</td>
 			<security:authorize ifAnyGranted="admin">
 				<td COLSPAN="2">
 					<div align="left">
 						<input type="button"
-							onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=<%=request.getAttribute( "id" )%>'" value="Edit">
+							onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=<%=request.getAttribute( "id" )%>'"
+							value="Edit">
 					</div>
 				</td>
 			</security:authorize>
@@ -411,7 +436,8 @@
 </div>
 
 <div style="padding-top: 20px;">
-	<form name="ArrayDesignFilter" action="filterArrayDesigns.html" method="POST">
+	<form name="ArrayDesignFilter" action="filterArrayDesigns.html"
+		method="POST">
 		<h4>
 			Enter search criteria for finding another array design here
 		</h4>
