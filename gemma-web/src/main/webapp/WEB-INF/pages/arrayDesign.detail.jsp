@@ -373,25 +373,28 @@
 						</c:when>
 
 						<c:otherwise>
-							<a class="annotationLink" href=${noParentsAnnotationLink } />Brief</a>&nbsp;&nbsp;
+							<a class="annotationLink" href="${noParentsAnnotationLink }" />Brief</a> 
 						</c:otherwise>
 					</c:choose>
+					&nbsp;&nbsp;
 					<c:choose>
 						<c:when test="${empty allParentsAnnotationLink}">
 							Unavailable&nbsp;&nbsp;
 						</c:when>
 						<c:otherwise>
-							<a class="annotationLink" href=${allParentsAnnotationLink } />All parents</a>&nbsp;&nbsp;
+							<a class="annotationLink" href="${allParentsAnnotationLink }" />All parents</a>
 						</c:otherwise>
 					</c:choose>
+					&nbsp;&nbsp;
 					<c:choose>
 						<c:when test="${empty bioProcessAnnotationLink}">
-							Unavailable&nbsp;&nbsp;
+							Unavailable
 						</c:when>
 						<c:otherwise>
-							<a class="annotationLink" href=${bioProcessAnnotationLink } />Biological Process only</a>&nbsp;&nbsp;
+							<a class="annotationLink" href="${bioProcessAnnotationLink }" />Biological Process only</a> 
 						</c:otherwise>
 					</c:choose>
+					&nbsp;&nbsp;
 				</c:otherwise>
 			</c:choose>
 		</td>
