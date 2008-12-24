@@ -36,7 +36,7 @@ Ext.onReady(function() {
 					failure : function(form, action) {
 						var errMsg = '';
 						errMsg = Ext.util.JSON.decode(action.response.responseText);
-						var fontMsg = "<font color='red'>" + errMsg.message + "</font>"; 
+						var fontMsg = "<font color='red'>" + errMsg.message + "</font>";
 						Element.update('errorMessage', fontMsg);
 
 						signup.getForm().reset();
@@ -61,11 +61,21 @@ Ext.onReady(function() {
 			vtype : 'alphanum'
 		}, {
 			fieldLabel : 'Email',
+			id : 'email',
 			name : 'email',
 			allowBlank : false,
 			vtype : 'email',
 			validationDelay : 1500,
 			invalidText : "A valid email address is required"
+		}, {
+			fieldLabel : 'Confirm Email',
+			id : 'emailConfirm',
+			name : 'emailConfirm',
+			allowBlank : false,
+			vtype : 'email',
+			validator : function(value) {
+				return (value == document.getElementById("email").value) || "Your email addresses do not match";
+			}
 		}],
 
 		buttons : [{
@@ -83,7 +93,7 @@ Ext.onReady(function() {
 					failure : function(form, action) {
 						var errMsg = '';
 						errMsg = Ext.util.JSON.decode(action.response.responseText);
-						var fontMsg = "<font color='red'>" + errMsg.message + "</font>"; 
+						var fontMsg = "<font color='red'>" + errMsg.message + "</font>";
 						Element.update('errorMessage', fontMsg);
 
 						signup.getForm().reset();
