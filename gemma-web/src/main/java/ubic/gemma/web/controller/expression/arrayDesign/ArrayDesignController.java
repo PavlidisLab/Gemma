@@ -546,15 +546,15 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
         if ( fnp.exists() ) {
-            mav.addObject( "noParentsAnnotationLink", "arrays/downloadAnnotationFile.html?id="
+            mav.addObject( "noParentsAnnotationLink", "/arrays/downloadAnnotationFile.html?id="
                     + arrayDesign.getId() + "&fileType=noParents" );
         }
         if ( fap.exists() ) {
-            mav.addObject( "allParentsAnnotationLink", "arrays/downloadAnnotationFile.html?id="
+            mav.addObject( "allParentsAnnotationLink", "/arrays/downloadAnnotationFile.html?id="
                     + arrayDesign.getId() + "&fileType=allParents" );
         }
         if ( fbp.exists() ) {
-            mav.addObject( "bioProcessAnnotationLink", "arrays/downloadAnnotationFile.html?id="
+            mav.addObject( "bioProcessAnnotationLink", "/arrays/downloadAnnotationFile.html?id="
                     + arrayDesign.getId() + "&fileType=bioProcess" );
         }
 
