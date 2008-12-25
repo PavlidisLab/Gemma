@@ -228,7 +228,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         try {
             reader = new BufferedInputStream( new FileInputStream( f ) );
         } catch ( FileNotFoundException fnfe ) {
-            log.warn( "Annotation file " + fileName + " can't be found" );
+            log.warn( "Annotation file " + fileName + " can't be found at " + fnfe );
             return null;
         }
 
