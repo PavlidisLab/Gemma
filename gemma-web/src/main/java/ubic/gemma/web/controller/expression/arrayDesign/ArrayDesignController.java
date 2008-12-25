@@ -545,17 +545,18 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
+        // context here is Gemma/arrays
         if ( fnp.exists() ) {
-            mav.addObject( "noParentsAnnotationLink", "/arrays/downloadAnnotationFile.html?id="
-                    + arrayDesign.getId() + "&fileType=noParents" );
+            mav.addObject( "noParentsAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
+                    + "&fileType=noParents" );
         }
         if ( fap.exists() ) {
-            mav.addObject( "allParentsAnnotationLink", "/arrays/downloadAnnotationFile.html?id="
-                    + arrayDesign.getId() + "&fileType=allParents" );
+            mav.addObject( "allParentsAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
+                    + "&fileType=allParents" );
         }
         if ( fbp.exists() ) {
-            mav.addObject( "bioProcessAnnotationLink", "/arrays/downloadAnnotationFile.html?id="
-                    + arrayDesign.getId() + "&fileType=bioProcess" );
+            mav.addObject( "bioProcessAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
+                    + "&fileType=bioProcess" );
         }
 
         mav.addObject( "subsumer", subsumer );
