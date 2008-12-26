@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,9 +34,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.AbstractUrlViewController;
+import org.springframework.web.servlet.mvc.AbstractController;
 
 import ubic.gemma.web.util.upload.FileUploadUtil;
+import ubic.gemma.web.view.JSONView;
 
 /**
  * Controller class to upload Files.
@@ -46,7 +48,7 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * @version $Id$
  * @spring.bean id="fileUploadController"
  */
-public class FileUploadController extends AbstractUrlViewController {
+public class FileUploadController extends AbstractController {
 
     private static Log log = LogFactory.getLog( FileUploadController.class.getName() );
 
@@ -70,22 +72,24 @@ public class FileUploadController extends AbstractUrlViewController {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response ) {
+    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
+            throws Exception {
 
         if ( !( request instanceof MultipartHttpServletRequest ) ) {
-            return super.handleRequestInternal( request, response );
+            return super.handleRequest( request, response );
         }
 
         MultipartHttpServletRequest mrequest = ( MultipartHttpServletRequest ) request;
-
         Map<String, MultipartFile> fileMap = mrequest.getFileMap();
+
+        Map<String, Object> model = new HashMap<String, Object>();
+
         try {
-            response.setContentType( "text/plain" );
 
             if ( fileMap.size() > 1 ) {
-                response.getWriter().write(
-                        "{success : false, error: 'Sorry, can't upload more than one file at a time yet' }" );
-                return null;
+                log.error( "Attempted to upload multiple files, returning error" );
+                model.put( "success", false );
+                model.put( "error", "Sorry, can't upload more than one file at a time yet" );
             }
 
             for ( String key : fileMap.keySet() ) {
@@ -93,37 +97,30 @@ public class FileUploadController extends AbstractUrlViewController {
                 File copiedFile = null;
                 try {
                     copiedFile = FileUploadUtil.copyUploadedFile( multipartFile, request );
-                    log.info( "Uploaded file! " + copiedFile );
+                    log.info( "Uploaded file: " + copiedFile );
+                    model.put( "success", true );
+                    model.put( "localFile", StringEscapeUtils.escapeJava( copiedFile.getAbsolutePath() ) );
+                    model.put( "originalFile", multipartFile.getOriginalFilename() );
+                    model.put( "size", multipartFile.getSize() );
+
                 } catch ( Exception e ) {
-                    response.getWriter().write( "{success : false, error: '" + e.getMessage() + "'}" );
-                    return null;
+                    log.error( "Error in upload: " + e.getMessage() );
+                    model.put( "success", false );
+                    model.put( "error", e.getMessage() );
                 }
 
                 if ( copiedFile == null ) {
-                    response.getWriter().write( "{success : false, error : 'unknown problem getting file'  }" );
-                    return null;
+                    log.error( "Error in upload: unknown problem getting file" );
+                    model.put( "success", false );
+                    model.put( "error", "unknown problem getting file" );
                 }
 
-                response.getWriter().write(
-                        "{success : true,  localFile : '" + StringEscapeUtils.escapeJava( copiedFile.getAbsolutePath() )
-                                + "', originalFile : '" + multipartFile.getOriginalFilename() + "', size : "
-                                + multipartFile.getSize() + "}" );
-                response.getWriter().flush();
             }
+
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
 
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
-     * HttpServletRequest)
-     */
-    @Override
-    protected String getViewNameForRequest( HttpServletRequest request ) {
-        return "uploadForm";
+        return new ModelAndView( new JSONView(), model );
     }
 }
