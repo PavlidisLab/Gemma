@@ -30,10 +30,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.context.SecurityContextHolder;
+ 
 
 import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.util.progress.TaskRunningService; 
 
 /**
  * This is created when a multipart request is received (via the CommonsMultipartMonitoredResolver). It starts of a
@@ -74,16 +76,7 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#start()
      */
     public void start() {
-        /*
-         * This is equivalent to the 'run' method in the BackgroundProcessing controller, except the progress id has to
-         * be provided by the client.
-         */
-        this.taskId = this.request.getParameter( "taskId" );
-
-        if ( taskId == null ) {
-            log.fatal( "No task id" );
-            return;
-        }
+        this.taskId = TaskRunningService.generateTaskId();
 
         this.pJob = ProgressManager.createProgressJob( taskId, SecurityContextHolder.getContext().getAuthentication()
                 .getName(), "File Upload" );
