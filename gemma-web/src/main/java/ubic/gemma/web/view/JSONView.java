@@ -40,7 +40,7 @@ public class JSONView implements View {
      * @see org.springframework.web.servlet.View#getContentType()
      */
     public String getContentType() {
-        return "text/plain";
+        return "application/json;charset=UTF-8";
     }
 
     /*
@@ -52,7 +52,7 @@ public class JSONView implements View {
     public void render( Map map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
         JSONObject jso = JSONObject.fromObject( map );
         String string = WebUtils.toString( jso );
-        response.setContentLength( string.getBytes().length ); 
+        response.setContentLength( string.getBytes().length );
         Writer writer = response.getWriter();
         writer.write( string );
     }
