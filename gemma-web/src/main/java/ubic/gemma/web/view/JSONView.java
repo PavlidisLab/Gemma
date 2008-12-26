@@ -51,11 +51,9 @@ public class JSONView implements View {
     @SuppressWarnings("unchecked")
     public void render( Map map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
         JSONObject jso = JSONObject.fromObject( map );
-        response.setContentType( "text/plain" ); // this should already have been set, just checking.
-        Writer writer = response.getWriter();
         String string = WebUtils.toString( jso );
-        System.err.println( string );
-        response.setContentLength( string.getBytes().length );
+        response.setContentLength( string.getBytes().length ); 
+        Writer writer = response.getWriter();
         writer.write( string );
     }
 
