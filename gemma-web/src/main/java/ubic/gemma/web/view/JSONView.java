@@ -25,6 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONObject;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.View;
 
 /**
@@ -32,6 +35,8 @@ import org.springframework.web.servlet.View;
  * @version $Id$
  */
 public class JSONView implements View {
+
+    Log log = LogFactory.getLog( this.getClass() );
 
     private String docType = "text/plain";
 
@@ -59,6 +64,7 @@ public class JSONView implements View {
     public void render( Map map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
         JSONObject jso = JSONObject.fromObject( map );
         Writer writer = response.getWriter();
+        log.info( jso.toString() );
         jso.write( writer );
     }
 
