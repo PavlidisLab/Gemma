@@ -244,13 +244,14 @@ public class DEDVController extends BaseFormController {
 
     public VisualizationValueObject[] getDEDVForVisualization( Collection<Long> eeIds, Collection<Long> geneIds ) {
 
-        StopWatch watch = new StopWatch();
-        watch.start();
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
         if ( ees == null || ees.isEmpty() ) return null;
 
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
         if ( genes == null || genes.isEmpty() ) return null;
+
+        StopWatch watch = new StopWatch();
+        watch.start();
 
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
@@ -258,8 +259,10 @@ public class DEDVController extends BaseFormController {
         watch.stop();
         Long time = watch.getTime();
 
-        log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
-                + " genes in " + time + " ms." );
+        if ( time > 100 ) {
+            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
+                    + " genes in " + time + " ms (times <100ms not reported)." );
+        }
 
         return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), null );
 
@@ -493,7 +496,8 @@ public class DEDVController extends BaseFormController {
             if ( validatedProbes != null ) {
                 validatedProbeList = validatedProbes.get( ee.getId() );
             }
-            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee ), genes, validatedProbeList );
+            Collection<DoubleVectorValueObject> vectors = vvoMap.get( ee );
+            VisualizationValueObject vvo = new VisualizationValueObject( vectors, genes, validatedProbeList );
             result[i] = vvo;
             i++;
         }
@@ -539,7 +543,7 @@ public class DEDVController extends BaseFormController {
         watch = new StopWatch();
         watch.start();
 
-        class EE2PValue implements Comparable {
+        class EE2PValue implements Comparable<EE2PValue> {
             Long EEId;
             double pValue;
 
@@ -561,11 +565,10 @@ public class DEDVController extends BaseFormController {
                 return pValue;
             }
 
-            public int compareTo( Object o ) {
-                EE2PValue compareTo = ( EE2PValue ) o;
-                if ( this.pValue > compareTo.getPValue() )
+            public int compareTo( EE2PValue o ) {
+                if ( this.pValue > o.getPValue() )
                     return 1;
-                else if ( this.pValue > compareTo.getPValue() )
+                else if ( this.pValue > o.getPValue() )
                     return -1;
                 else
                     return 0;
