@@ -39,7 +39,7 @@ public class JSONView implements View {
      * @see org.springframework.web.servlet.View#getContentType()
      */
     public String getContentType() {
-        return "text/plain";
+        return "text/json";
     }
 
     /*
@@ -50,7 +50,7 @@ public class JSONView implements View {
     @SuppressWarnings("unchecked")
     public void render( Map map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
         JSONObject jso = JSONObject.fromMap( map );
-        response.setContentType( "text/plain" );
+        response.setContentType( "text/json" ); // this should already have been set, just checking.
         Writer writer = response.getWriter();
         String string = jso.toString();
         response.setContentLength( string.getBytes().length );
