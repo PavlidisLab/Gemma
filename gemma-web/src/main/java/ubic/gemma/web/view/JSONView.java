@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONObject;
+import net.sf.json.util.WebUtils;
 
 import org.springframework.web.servlet.View;
 
@@ -49,10 +50,11 @@ public class JSONView implements View {
      */
     @SuppressWarnings("unchecked")
     public void render( Map map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
-        JSONObject jso = JSONObject.fromMap( map );
+        JSONObject jso = JSONObject.fromObject( map );
         response.setContentType( "text/plain" ); // this should already have been set, just checking.
         Writer writer = response.getWriter();
-        String string = jso.toString();
+        String string = WebUtils.toString( jso );
+        System.err.println( string );
         response.setContentLength( string.getBytes().length );
         writer.write( string );
     }
