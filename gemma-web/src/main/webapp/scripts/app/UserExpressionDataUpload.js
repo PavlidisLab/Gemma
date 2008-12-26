@@ -276,7 +276,8 @@ Ext.onReady(function() {
 			collapsed : false,
 			frame : false,
 			border : true,
-			html : '<ul class="plainList" ><li>Complete all sections of the form, upload your data file, and click "Validate data"; once validation is complete you will be able to click "Submit data".</li>'
+			html : '<ul class="plainList" ><li>Complete all sections of the form, upload your data file (compress it first to speed things up)'
+					+ ', and click "Validate data"; once validation is complete you will be able to click "Submit data".</li>'
 					+ '<li>Most of the descriptive text you enter can be modified later. '
 					+ 'The taxon, array design and the data themselves cannot easily be altered after submission.</li>'
 					+ '<li>For help with the file data file format, see '
