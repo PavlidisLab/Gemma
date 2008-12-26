@@ -39,6 +39,7 @@ public class TextView extends AbstractView {
      */
     public static final String TEXT_PARAM = "text";
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void renderMergedOutputModel( Map model, HttpServletRequest request, HttpServletResponse response )
             throws Exception {

@@ -25,7 +25,7 @@
 		<connection>scm:cvs:ext:@krusty.chibi.ubc.ca:local:/cvs:Gemma</connection>
 		<developerConnection>scm:cvs:ext:@krusty.chibi.ubc.ca:/cvs:Gemma</developerConnection>
 		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
-  </scm>
+	</scm>
 	<issueManagement>
 		<system>Bugzilla</system>
 		<url>
@@ -283,9 +283,9 @@
 							<report>dependencies</report>
 							<report>dependency-convergence</report>
 							<!--	<report>index</report>
-								
+
 								<report>project-team</report>
-								
+
 								<report>cim</report>
 								<report>issue-tracking</report>
 								<report>license</report>
@@ -399,6 +399,22 @@
 			<name>PavLab</name>
 			<url>
 				http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2
+			</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</releases>
+		</repository>
+		<repository>
+			<id>ibiblio</id>
+			<name>ibiblio</name>
+			<url>
+				http://mirrors.ibiblio.org/pub/mirrors/maven2
 			</url>
 			<layout>default</layout>
 			<snapshots>
