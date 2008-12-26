@@ -25,8 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONObject;
-import net.sf.json.util.WebUtils;
-
 import org.springframework.web.servlet.View;
 
 /**
@@ -35,12 +33,21 @@ import org.springframework.web.servlet.View;
  */
 public class JSONView implements View {
 
+    private String docType = "text/plain";
+
+    /**
+     * @param docType e.g., text/html to switch from the default 'text/plain'.
+     */
+    public JSONView( String docType ) {
+        this.docType = docType;
+    }
+
     /*
      * (non-Javadoc)
      * @see org.springframework.web.servlet.View#getContentType()
      */
     public String getContentType() {
-        return "text/plain";
+        return this.docType;
     }
 
     /*

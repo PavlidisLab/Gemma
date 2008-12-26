@@ -121,6 +121,9 @@ public class FileUploadController extends AbstractController {
             throw new RuntimeException( e );
         }
 
-        return new ModelAndView( new JSONView(), model );
+        /*
+         * For ext-js, the doctype must be text/html. See: http://extjs.com/deploy/dev/docs/?class=Ext.form.BasicForm under 'fileUpload'.
+         */
+        return new ModelAndView( new JSONView( "text/html" ), model );
     }
 }

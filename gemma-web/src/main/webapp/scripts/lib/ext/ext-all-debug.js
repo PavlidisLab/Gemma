@@ -6832,13 +6832,13 @@ Ext.util.JSON = new (function() {
 	};
 
 	this.decode = function(json) {
-		/*
-		 * Act of desperation. This is certainly capable of having unexpected sideffects.
-		 */
-		json = json.replace("<p>{", "{");
-		json = json.replace("<pre>{", "{");
-		json = json.replace("}</p>", "}");
-		json = json.replace("}</pre", "}");
+		// /*
+		// * Act of desperation. This is certainly capable of having unexpected sideffects.
+		// */
+		// json = json.replace("<p>{", "{");
+		// json = json.replace("<pre>{", "{");
+		// json = json.replace("}</p>", "}");
+		// json = json.replace("}</pre", "}");
 		return eval("(" + json + ')');
 	};
 })();
