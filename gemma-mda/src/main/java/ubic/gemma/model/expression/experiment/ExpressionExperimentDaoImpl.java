@@ -258,6 +258,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                                 log.info( count + " design Element data vectors deleted" );
                             }
                         }
+                        count = 0;
                         designElementDataVectors.clear();
                         for ( ProcessedExpressionDataVector dv : processedVectors ) {
                             dims.add( dv.getBioAssayDimension() );
@@ -274,11 +275,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         }
                         processedVectors.clear();
 
+                        // this can take a while.
+                        log.info( "Flushing changes ..." );
                         session.flush();
                         session.clear();
                         session.update( toDelete );
 
-                        log.info( "Removing BioAssay Dimensions." );
+                        log.info( "Removing BioAssay Dimensions ..." );
                         for ( BioAssayDimension dim : dims ) {
                             dim.getBioAssays().clear();
                             session.update( dim );
@@ -287,7 +290,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         dims.clear();
                         session.flush();
 
-                        log.info( "Removing Bioassays and biomaterials" );
+                        log.info( "Removing Bioassays and biomaterials ..." );
                         Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
                         for ( BioAssay ba : toDelete.getBioAssays() ) {
                             // delete references to files on disk
