@@ -122,8 +122,10 @@ public class FileUploadController extends AbstractController {
         }
 
         /*
-         * For ext-js, the doctype must be text/html. See: http://extjs.com/deploy/dev/docs/?class=Ext.form.BasicForm under 'fileUpload'.
+         * For ext-js, the supposedly doctype must be text/html. See:
+         * http://extjs.com/deploy/dev/docs/?class=Ext.form.BasicForm under 'fileUpload'. However, I'm not sure this
+         * matters. Someone is still wrapping the json resonse in '<p>' or '<pre>' tags.
          */
-        return new ModelAndView( new JSONView( "text/html" ), model );
+        return new ModelAndView( new JSONView(), model );
     }
 }

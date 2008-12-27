@@ -44,7 +44,12 @@ public class JSONView implements View {
      * @param docType e.g., text/html to switch from the default 'text/plain'.
      */
     public JSONView( String docType ) {
+        this();
         this.docType = docType;
+    }
+
+    public JSONView() {
+        super();
     }
 
     /*
