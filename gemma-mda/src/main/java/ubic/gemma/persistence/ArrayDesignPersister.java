@@ -163,7 +163,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      * @param arrayDesign To add to the cache.
      * @see ExpressionPersister.fillInDesignElementDataVectorAssociations
      */
-    @SuppressWarnings("unchecked")
     protected void addToDesignElementCache( final ArrayDesign arrayDesign ) {
 
         assert !isTransient( arrayDesign );
@@ -190,8 +189,11 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                             designElementSequenceCache.put( seq.getName(), element );
                         }
                     }
-                    if ( ++count % 10000 == 0 ) {
+                    if ( ++count % 20000 == 0 ) {
                         log.info( "Cached " + count + " probes" );
+                    }
+                    if ( count % 100 == 0 ) {
+                        session.clear();
                     }
                 }
                 return null;
@@ -226,9 +228,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
         if ( arrayDesignCache.containsKey( ad.getName() ) ) {
             return arrayDesignCache.get( ad.getName() );
-        } else {
-            return arrayDesignCache.get( ad.getShortName() );
         }
+        return arrayDesignCache.get( ad.getShortName() );
+
     }
 
     /**
@@ -354,7 +356,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     /**
      * @param arrayDesign
      */
-    @SuppressWarnings("unchecked")
     private ArrayDesign persistArrayDesignCompositeSequenceAssociations( ArrayDesign arrayDesign ) {
         int numElements = arrayDesign.getCompositeSequences().size();
         if ( numElements == 0 ) return arrayDesign;
