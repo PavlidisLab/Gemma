@@ -938,15 +938,16 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @throws Exception
      */
     private void thaw( final ArrayDesign arrayDesign, final boolean deep ) throws Exception {
+
+        if ( deep ) {
+            throw new UnsupportedOperationException( "Are you sure you need to deeply thaw that ArrayDesign" );
+        }
+
         if ( arrayDesign == null ) return;
         if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         final int FETCH_SIZE = 400;
         templ.setFetchSize( FETCH_SIZE );
-
-        final String deepQuery = "select cs from CompositeSequenceImpl cs left outer join fetch cs.biologicalCharacteristic bs "
-                + "left outer join fetch bs.taxon left outer join fetch bs.bioSequence2GeneProduct bs2gp "
-                + " left outer join fetch bs2gp.geneProduct gp left outer join fetch gp.gene g left outer join fetch g.aliases where cs = :cs";
 
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
@@ -986,9 +987,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     log.info( "Must thaw " + ( deep ? " (deep) " : " (lite) " ) + numToDo
                             + " composite sequence associations ..." );
 
-                org.hibernate.Query queryObject = session.createQuery( deepQuery );
-                queryObject.setReadOnly( true );
-
                 StopWatch timer = new StopWatch();
                 timer.start();
                 int i = 0;
@@ -1010,16 +1008,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                             Hibernate.initialize( bs );
                         }
 
-                        if ( deep ) {
-                            throw new UnsupportedOperationException(
-                                    "Are you sure you need to deeply thaw that ArrayDesign" );
-                            /*
-                             * for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) { GeneProduct
-                             * geneProduct = bs2gp.getGeneProduct(); Gene g = geneProduct.getGene(); if ( g != null ) {
-                             * g.getAliases().size(); } } if ( bs.getSequenceDatabaseEntry() != null ) {
-                             * Hibernate.initialize( bs.getSequenceDatabaseEntry() ); }
-                             */
-                        }
                     }
                     session.evict( cs );
 
