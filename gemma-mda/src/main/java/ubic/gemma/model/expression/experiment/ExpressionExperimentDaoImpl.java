@@ -71,7 +71,10 @@ import ubic.gemma.util.CommonQueries;
  */
 public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
 
+    private static final String EXPRESSION_EXPERIMENT_QCACHE_REGION = "expressionExperiment-qc";
+
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
+
     private static final int BATCH_SIZE = 1000;
 
     public ExpressionExperiment expressionExperimentValueObjectToEntity(
@@ -196,14 +199,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         Collection<ExpressionExperiment> ees = null;
         final String queryString = "from ExpressionExperimentImpl";
         try {
-            Session session = this.getSession( false );
+            Session session = this.getSession();
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setReadOnly( true );
             queryObject.setCacheable( true );
+            queryObject.setCacheRegion( EXPRESSION_EXPERIMENT_QCACHE_REGION );
             StopWatch timer = new StopWatch();
             timer.start();
             ees = queryObject.list();
-            if ( timer.getTime() > 1000 ) {
+            if ( timer.getTime() > 100 ) {
                 log.info( "EEs loaded in " + timer.getTime() + "ms" );
             }
         } catch ( org.hibernate.HibernateException ex ) {
@@ -344,6 +348,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         // session.clear();
                         session.update( toDelete );
                         session.delete( toDelete );
+
+                        session.getSessionFactory().evictQueries( EXPRESSION_EXPERIMENT_QCACHE_REGION );
 
                         log.info( "Deleted " + toDelete );
                         return null;
