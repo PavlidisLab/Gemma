@@ -27,6 +27,10 @@
 	<cache name="org.hibernate.cache.StandardQueryCache" maxElementsInMemory="5000" eternal="false"
 		timeToLiveSeconds="60000" timeToIdleSeconds="0" overflowToDisk="false" />
 		
+	<!-- Cache for experiment queries, see EE DAO -->
+	<cache name="expressionExperiment-qc" maxElementsInMemory="5000" eternal="false"
+		timeToLiveSeconds="2000" timeToIdleSeconds="2000" overflowToDisk="false" />
+		
 	<cache name="auditEvents" maxElementsInMemory="50000" eternal="true"
 		timeToLiveSeconds="0" timeToIdleSeconds="0" overflowToDisk="false" />
 
