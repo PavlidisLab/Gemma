@@ -74,6 +74,12 @@ version: $Id$
 					allowBlank :false,
 					inputType :'password'
 				},{
+					fieldLabel : '<a href="<%=request.getContextPath()%>/passwordHint.html">Reset Password</a>',
+					name :'passwordHint',
+					id :'passwordHint',
+					labelSeparator:'',
+					hidden : true
+				},{
 					fieldLabel: 'Remember Me',
 					boxLabel : 'rememberMe',
 					name : 'rememberMe',

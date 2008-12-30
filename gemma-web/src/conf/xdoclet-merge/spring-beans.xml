@@ -24,6 +24,7 @@
 			<prop key="/signup.html">signupMultiActionController</prop>
 			<prop key="/loadUser.html">userFormMultiActionController</prop>
 			<prop key="/editUser.html">userFormMultiActionController</prop>
+			<prop key="/resetPassword.html">userFormMultiActionController</prop>
 			<prop key="/arrays/*">arrayDesignController</prop>
 			<prop key="/mainMenu.html">mainMenuController</prop>
 			<prop key="/uploadFile.html">fileUploadController</prop>
@@ -1504,6 +1505,7 @@
 <bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/flushCache.html /processProgress.html /activeUsers.html" />
 <bean id="registerController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/register.html" />
 <bean id="userProfileController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/userProfile.html" />
+<bean id="passwordHintController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/passwordHint.html" />
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
 	<!-- ==================================================== -->
@@ -1690,6 +1692,7 @@
 		<props>
 			<prop key="/loadUser.html">loadUser</prop>
 			<prop key="/editUser.html">onSubmit</prop>
+			<prop key="/resetPassword.html">resetPassword</prop>
 		</props>
 	</property>
 </bean>

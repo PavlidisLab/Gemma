@@ -23,11 +23,20 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.context.MessageSource;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.Authentication;
+import org.springframework.security.GrantedAuthority;
+import org.springframework.security.GrantedAuthorityImpl;
 import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.providers.UsernamePasswordAuthenticationToken;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.security.RunAsManager;
+import ubic.gemma.security.SecurityService;
+import ubic.gemma.util.RequestUtil;
 import ubic.gemma.web.util.JSONUtil;
 
 /**
@@ -35,106 +44,205 @@ import ubic.gemma.web.util.JSONUtil;
  * 
  * @author pavlidis
  * @author keshav
- * @version $Id: UserFormMultiActionController.java,v 1.4 2008/09/22 00:34:20
- *          keshav Exp $
+ * @version $Id$
  * @spring.bean id="userFormMultiActionController"
  * @spring.property name="userService" ref="userService"
  * @spring.property name="mailEngine" ref="mailEngine"
  * @spring.property name="mailMessage" ref="mailMessage"
+ * @spring.property name="messageSource" ref="messageSource"
  * @spring.property name="methodNameResolver" ref="editUserActions"
  */
-public class UserFormMultiActionController extends
-		UserAuthenticatingMultiActionController {
+public class UserFormMultiActionController extends UserAuthenticatingMultiActionController {
 
-	public void loadUser(HttpServletRequest request,
-			HttpServletResponse response) {
+    private static final int MIN_PASSWORD_LENGTH = 8;
+    private MessageSource messageSource = null;
 
-		Authentication authentication = SecurityContextHolder.getContext()
-				.getAuthentication();
-		boolean isAuthenticated = authentication.isAuthenticated();
+    /**
+     * AJAX entry point. Loads a user.
+     * 
+     * @param request
+     * @param response
+     */
+    public void loadUser( HttpServletRequest request, HttpServletResponse response ) {
 
-		if (!isAuthenticated) {
-			log.error("User not authenticated.  Cannot populate user data.");
-			return;
-		}
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAuthenticated = authentication.isAuthenticated();
 
-		String username = authentication.getPrincipal().toString();
-		User user = userService.findByUserName(username);
-		JSONUtil jsonUtil = new JSONUtil(request, response);
+        if ( !isAuthenticated ) {
+            log.error( "User not authenticated.  Cannot populate user data." );
+            return;
+        }
 
-		String jsonText = null;
-		try {
-			jsonText = "{success:true, data:{username:" + "\"" + username
-					+ "\"" + ",email:" + "\"" + user.getEmail() + "\"" + "}}";
+        String username = authentication.getPrincipal().toString();
+        User user = userService.findByUserName( username );
+        JSONUtil jsonUtil = new JSONUtil( request, response );
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			jsonText = "{success:false}";
-		} finally {
-			try {
-				jsonUtil.writeToResponse(jsonText);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+        String jsonText = null;
+        try {
+            jsonText = "{success:true, data:{username:" + "\"" + username + "\"" + ",email:" + "\"" + user.getEmail()
+                    + "\"" + "}}";
 
-	}
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            jsonText = "{success:false}";
+        } finally {
+            try {
+                jsonUtil.writeToResponse( jsonText );
+            } catch ( IOException e ) {
+                e.printStackTrace();
+            }
+        }
 
-	/**
-	 * AJAX entry point.
-	 * 
-	 * @param request
-	 * @param response
-	 * @throws Exception
-	 */
-	public void onSubmit(HttpServletRequest request,
-			HttpServletResponse response) {
+    }
 
-		String email = request.getParameter("email");
-		String firstname = request.getParameter("firstname");
-		String lastname = request.getParameter("lastname");
-		String password = request.getParameter("password");
-		String passwordConfirm = request.getParameter("passwordConfirm");
+    /**
+     * AJAX entry point.
+     * 
+     * @param request
+     * @param response
+     * @throws Exception
+     */
+    public void onSubmit( HttpServletRequest request, HttpServletResponse response ) {
 
-		/*
-		 * Pulling username out of security context to ensure users are logged
-		 * in and can only update themselves.
-		 */
-		String username = SecurityContextHolder.getContext()
-				.getAuthentication().getName();
+        String email = request.getParameter( "email" );
+        String firstname = request.getParameter( "firstname" );
+        String lastname = request.getParameter( "lastname" );
+        String password = request.getParameter( "password" );
+        String passwordConfirm = request.getParameter( "passwordConfirm" );
 
-		User user = userService.findByUserName(username);
-		if (!StringUtils.equals(password, passwordConfirm)) {
-			throw new RuntimeException("Passwords do not match.");
-		}
-		String encryptedPassword = super.encryptPassword(password, request);
-		user.setPassword(encryptedPassword);
+        /*
+         * Pulling username out of security context to ensure users are logged in and can only update themselves.
+         */
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-		if (StringUtils.isNotBlank(firstname)) {
-			user.setName(firstname);
-		}
+        User user = userService.findByUserName( username );
+        if ( !StringUtils.equals( password, passwordConfirm ) ) {
+            throw new RuntimeException( "Passwords do not match." );
+        }
+        String encryptedPassword = super.encryptPassword( password, request );
+        user.setPassword( encryptedPassword );
 
-		if (StringUtils.isNotBlank(lastname)) {
-			user.setName(lastname);
-		}
+        if ( StringUtils.isNotBlank( firstname ) ) {
+            user.setName( firstname );
+        }
 
-		user.setEmail(email);
+        if ( StringUtils.isNotBlank( lastname ) ) {
+            user.setName( lastname );
+        }
 
-		JSONUtil jsonUtil = new JSONUtil(request, response);
-		String jsonText = null;
-		try {
-			userService.update(user);
-			jsonText = "{success:true}";
-		} catch (Exception e) {
-			log.error(e.getLocalizedMessage());
-			jsonText = jsonUtil.getJSONErrorMessage(e);
-			log.info(jsonText);
-		} finally {
-			try {
-				jsonUtil.writeToResponse(jsonText);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+        user.setEmail( email );
+
+        JSONUtil jsonUtil = new JSONUtil( request, response );
+        String jsonText = null;
+        try {
+            userService.update( user );
+            jsonText = "{success:true}";
+        } catch ( Exception e ) {
+            log.error( e.getLocalizedMessage() );
+            jsonText = jsonUtil.getJSONErrorMessage( e );
+            log.info( jsonText );
+        } finally {
+            try {
+                jsonUtil.writeToResponse( jsonText );
+            } catch ( IOException e ) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Resets the password to a random alphanumeric (of length 8).
+     * 
+     * @param request
+     * @param response
+     */
+    public void resetPassword( HttpServletRequest request, HttpServletResponse response ) {
+        if ( log.isDebugEnabled() ) {
+            log.debug( "entering 'resetPassword' method..." );
+        }
+
+        MessageSourceAccessor text = new MessageSourceAccessor( messageSource, request.getLocale() );
+
+        String email = request.getParameter( "email" );
+        JSONUtil jsonUtil = new JSONUtil( request, response );
+        String txt = null;
+        String jsonText = null;
+
+        /* look up the user's information and reset password. */
+        try {
+
+            /* make sure the email has been sent */
+            if ( StringUtils.isEmpty( email ) ) {
+                txt = "Email not specified, notifying user that it's a required field.";
+                log.warn( txt );
+                throw new RuntimeException( txt );
+            }
+
+            User user = userService.findByEmail( email );
+
+            /* make sure user exists with email */
+            if ( user == null ) {
+                txt = "User with email " + email + " not found.";
+                log.warn( txt );
+                throw new RuntimeException( txt );
+            }
+
+            /*
+             * Must run as someone else to update user. Run as the user we are resetting the password for. First, save
+             * the current authentication.
+             */
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+            /* Create a new authentication for the user we are resetting password for. */
+            UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken( user.getUserName(),
+                    user.getPassword(), new GrantedAuthority[] { new GrantedAuthorityImpl(
+                            SecurityService.USER_AUTHORITY ) } );
+
+            RunAsManager r = new RunAsManager();
+            String recipient = user.getUserName();
+            Authentication runAs = r.buildRunAs( user, token, recipient );
+
+            SecurityContextHolder.getContext().setAuthentication( runAs );
+
+            /* Change the password. */
+            String pwd = RandomStringUtils.randomAlphanumeric( UserFormMultiActionController.MIN_PASSWORD_LENGTH );
+            String encryptedPwd = super.encryptPassword( pwd, request );
+            user.setPassword( encryptedPwd );
+            userService.update( user );
+
+            /* Set the context back */
+            SecurityContextHolder.getContext().setAuthentication( auth );
+
+            StringBuffer body = new StringBuffer();
+            body.append( "Your password is: " + pwd );
+            body.append( "\n\nLogin at: " + RequestUtil.getAppURL( request ) + "/login.jsp" );
+
+            mailMessage.setTo( user.getUserName() + "<" + user.getEmail() + ">" );
+            // mailMessage.setFrom( text )
+            String subject = text.getMessage( "webapp.prefix" ) + text.getMessage( "user.passwordHint" );
+            mailMessage.setSubject( subject );
+            mailMessage.setText( body.toString() );
+            log.info( mailMessage.toString() );
+            mailEngine.send( mailMessage );
+
+            saveMessage( request, text.getMessage( "login.passwordHint.sent", new Object[] { user.getUserName(),
+                    user.getEmail() } ) );
+
+            jsonText = "{success:true}";
+
+        } catch ( Exception e ) {
+            log.error( e, e );
+            jsonText = jsonUtil.getJSONErrorMessage( e );
+        } finally {
+            try {
+                jsonUtil.writeToResponse( jsonText );
+            } catch ( IOException e ) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setMessageSource( MessageSource messageSource ) {
+        this.messageSource = messageSource;
+    }
 }

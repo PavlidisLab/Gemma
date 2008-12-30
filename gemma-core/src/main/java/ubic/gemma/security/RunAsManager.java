@@ -31,10 +31,10 @@ import org.springframework.security.runas.RunAsManagerImpl;
 public class RunAsManager {
 
     /**
-     * Run as the recipient.
+     * Run as the recipient and return a replacement {@link Authentication}.
      * 
      * @param object The target object.
-     * @param authentication The authentication object.
+     * @param authentication The authentication object of the caller invoking the secure object.
      * @param recipient The user to run as.
      * @return Authentication
      */
@@ -47,5 +47,4 @@ public class RunAsManager {
 
         return runAsManager.buildRunAs( authentication, object, attributeDefinition );
     }
-
 }
