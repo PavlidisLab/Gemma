@@ -164,6 +164,8 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
         MessageSourceAccessor text = new MessageSourceAccessor( messageSource, request.getLocale() );
 
         String email = request.getParameter( "email" );
+        String username = request.getParameter( "username" );
+
         JSONUtil jsonUtil = new JSONUtil( request, response );
         String txt = null;
         String jsonText = null;
@@ -172,8 +174,8 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
         try {
 
             /* make sure the email has been sent */
-            if ( StringUtils.isEmpty( email ) ) {
-                txt = "Email not specified, notifying user that it's a required field.";
+            if ( StringUtils.isEmpty( email ) || StringUtils.isEmpty( username ) ) {
+                txt = "Email or username not specified.  These are required fields.";
                 log.warn( txt );
                 throw new RuntimeException( txt );
             }
@@ -183,6 +185,13 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
             /* make sure user exists with email */
             if ( user == null ) {
                 txt = "User with email " + email + " not found.";
+                log.warn( txt );
+                throw new RuntimeException( txt );
+            }
+
+            /* check the username matches that of the user */
+            if ( !StringUtils.equals( user.getUserName(), username ) ) {
+                txt = "User with username " + username + " not found.";
                 log.warn( txt );
                 throw new RuntimeException( txt );
             }

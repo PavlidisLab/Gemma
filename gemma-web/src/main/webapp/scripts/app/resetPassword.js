@@ -55,6 +55,11 @@ Ext.onReady(function() {
 		defaultType : 'textfield',
 
 		items : [{
+			fieldLabel : 'Username',
+			name : 'username',
+			allowBlank : false,
+			vtype : 'alphanum'
+		},{
 			fieldLabel : 'Email',
 			id : 'email',
 			name : 'email',
