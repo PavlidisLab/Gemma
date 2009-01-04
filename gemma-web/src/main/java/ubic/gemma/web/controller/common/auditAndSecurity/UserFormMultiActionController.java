@@ -173,7 +173,7 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
         /* look up the user's information and reset password. */
         try {
 
-            /* make sure the email has been sent */
+            /* make sure the email and username has been sent */
             if ( StringUtils.isEmpty( email ) || StringUtils.isEmpty( username ) ) {
                 txt = "Email or username not specified.  These are required fields.";
                 log.warn( txt );
@@ -227,7 +227,6 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
             body.append( "\n\nLogin at: " + RequestUtil.getAppURL( request ) + "/login.jsp" );
 
             mailMessage.setTo( user.getUserName() + "<" + user.getEmail() + ">" );
-            // mailMessage.setFrom( text )
             String subject = text.getMessage( "webapp.prefix" ) + text.getMessage( "user.passwordHint" );
             mailMessage.setSubject( subject );
             mailMessage.setText( body.toString() );
