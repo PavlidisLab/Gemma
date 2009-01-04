@@ -231,7 +231,6 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
             String subject = text.getMessage( "webapp.prefix" ) + text.getMessage( "user.passwordHint" );
             mailMessage.setSubject( subject );
             mailMessage.setText( body.toString() );
-            log.info( mailMessage.toString() );
             mailEngine.send( mailMessage );
 
             saveMessage( request, text.getMessage( "login.passwordHint.sent", new Object[] { user.getUserName(),
