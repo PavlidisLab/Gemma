@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -137,7 +138,9 @@ public class ExperimentalDesignWriter {
             }
             buf.append( " Type=" );
 
-            if ( ef.getFactorValues().iterator().next().getMeasurement() == null ) {
+            Iterator<FactorValue> factorValuesIt = ef.getFactorValues().iterator();
+            if ( factorValuesIt.hasNext()
+                    && factorValuesIt.next().getMeasurement() == null ) {
                 buf.append( "Categorical" );
             } else {
                 buf.append( "Continuous" );
