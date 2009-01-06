@@ -125,14 +125,6 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 			overwrite : function(el, values, ret) {
 				Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
 
-				if (!record.profiles) {
-					Ext.DomHelper.append(shortName + '_vizwrap', {
-								tag : 'span',
-								html : "Data unavailable"
-							});
-					return;f
-				}
-
 				for (var i = 0; i < values.length; i++) {
 					var record = values[i];
 					var shortName = record.eevo.shortName;
@@ -259,6 +251,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 				var coldGeneName = coordinateProfile[0].genes[0].name;
 				var coldIndex = 0, hotIndex = 0;
 
+				console.log(data);
 				for (var i = 0; i < coordinateProfile.size(); i++) {
 					var coordinateObject = coordinateProfile[i].points;
 
