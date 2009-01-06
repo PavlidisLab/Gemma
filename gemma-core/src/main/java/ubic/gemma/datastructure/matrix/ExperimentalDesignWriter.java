@@ -130,9 +130,11 @@ public class ExperimentalDesignWriter {
         ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, buf );
 
         for ( ExperimentalFactor ef : factors ) {
-            buf.append( ExperimentalDesignImporter.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR + " " );
-            buf.append( ef.getName() + " : " );
-            buf.append( "Category=" + ef.getCategory().getValue() );
+            buf.append( ExperimentalDesignImporter.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );
+            buf.append( ef.getName() + " :" );
+            if ( ef.getCategory() != null ) {
+                buf.append( " Category=" + ef.getCategory().getValue() );
+            }
             buf.append( " Type=" );
 
             if ( ef.getFactorValues().iterator().next().getMeasurement() == null ) {
