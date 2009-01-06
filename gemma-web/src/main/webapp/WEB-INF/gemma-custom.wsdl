@@ -813,7 +813,7 @@
 
     <!-- for production, use http://bioinformatics.ubc.ca/Gemma/ws -->
 
-    <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/>
+    <soap:address location="http://chibi.ubc.ca/Gemma/ws"/>
   
     </wsdl:port>
   </wsdl:service>
