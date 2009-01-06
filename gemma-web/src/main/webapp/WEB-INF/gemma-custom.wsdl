@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wsdl:definitions 
 	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
-	xmlns:schema="http://bioinformatics.ubc.ca/Gemma/ws" 
+	xmlns:schema="http://chibi.ubc.ca/Gemma/ws" 
 	xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
 	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	targetNamespace="http://bioinformatics.ubc.ca/Gemma/ws">
+	targetNamespace="http://chibi.ubc.ca/Gemma/ws">
   <wsdl:types>
     <schema xmlns="http://www.w3.org/2001/XMLSchema" 
-    xmlns:tns="http://bioinformatics.ubc.ca/Gemma/ws" 
+    xmlns:tns="http://chibi.ubc.ca/Gemma/ws" 
     attributeFormDefault="qualified" 
     elementFormDefault="qualified" 
-    targetNamespace="http://bioinformatics.ubc.ca/Gemma/ws">
+    targetNamespace="http://chibi.ubc.ca/Gemma/ws">
     <xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
     
     
@@ -580,226 +580,226 @@
     <wsdl:operation name="experimentIDbyTaxon">
       <soap:operation soapAction=""/>
       <wsdl:input name="experimentIDbyTaxonRequest">
-        <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+        <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="experimentIDbyTaxonResponse">
-        <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+        <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="dEDVfromEEIDGeneID">
       <soap:operation soapAction=""/>
       <wsdl:input name="dEDVfromEEIDGeneIDRequest">
-        <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+        <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="dEDVfromEEIDGeneIDResponse">
-        <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+        <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="arrayDesignUsed">
       <soap:operation soapAction=""/>
       <wsdl:input name="arrayDesignUsedRequest">
-         <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+         <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="arrayDesignUsedResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="experimentId">
       <soap:operation soapAction=""/>
       <wsdl:input name="experimentIdRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="experimentIdResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="arrayDesignIdentifierByName">
       <soap:operation soapAction=""/>
       <wsdl:input name="arrayDesignIdentifierByNameRequest">
-          <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="arrayDesignIdentifierByNameResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="experimentDEDV">
       <soap:operation soapAction=""/>
       <wsdl:input name="experimentDEDVRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="experimentDEDVResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="geneIDbyTaxon">
       <soap:operation soapAction=""/>
       <wsdl:input name="geneIDbyTaxonRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="geneIDbyTaxonResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="experimentName">
       <soap:operation soapAction=""/>
       <wsdl:input name="experimentNameRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="experimentNameResponse">
-          <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="geneId">
       <soap:operation soapAction=""/>
       <wsdl:input name="geneIdRequest">
-          <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="geneIdResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="geneName">
       <soap:operation soapAction=""/>
       <wsdl:input name="geneNameRequest">
-          <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="geneNameResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="experimentNumSamples">
       <soap:operation soapAction=""/>
       <wsdl:input name="experimentNumSamplesRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="experimentNumSamplesResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="physicalLocation">
       <soap:operation soapAction=""/>
       <wsdl:input name="physicalLocationRequest">
-        <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+        <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="physicalLocationResponse">
-        <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+        <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation> 
     <wsdl:operation name="goTerm2Gene">
       <soap:operation soapAction=""/>
       <wsdl:input name="goTerm2GeneRequest">
-        <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+        <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="goTerm2GeneResponse">
-       <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+       <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>   
     </wsdl:operation>
     <wsdl:operation name="gene2Go">
       <soap:operation soapAction=""/>
       <wsdl:input name="gene2GoRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="gene2GoResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="geneOverlap">
       <soap:operation soapAction=""/>
       <wsdl:input name="geneOverlapRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="geneOverlapResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="geneCoexpression">
       <soap:operation soapAction=""/>
       <wsdl:input name="geneCoexpressionRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="geneCoexpressionResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="experimentAnnotation">
       <soap:operation soapAction=""/>
       <wsdl:input name="experimentAnnotationRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="experimentAnnotationResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="probe2Gene">
       <soap:operation soapAction=""/>
       <wsdl:input name="probe2GeneRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="probe2GeneResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="gene2Probe">
       <soap:operation soapAction=""/>
       <wsdl:input name="gene2ProbeRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="gene2ProbeResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="expressionExperimentSetIDs">
       <soap:operation soapAction=""/>
       <wsdl:input name="expressionExperimentSetIDsRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="expressionExperimentSetIDsResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="dEDVRank">
       <soap:operation soapAction=""/>
       <wsdl:input name="dEDVRankRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="dEDVRankResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="geneByNCBIId">
       <soap:operation soapAction=""/>
       <wsdl:input name="geneByNCBIIdRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="geneByNCBIIdResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="nCBIIdByGeneID">
       <soap:operation soapAction=""/>
       <wsdl:input name="nCBIIdByGeneIDRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="nCBIIdByGeneIDResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="differentialExpressionProbeResult">
       <soap:operation soapAction=""/>
       <wsdl:input name="differentialExpressionProbeResultRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="differentialExpressionProbeResultResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
      <wsdl:operation name="gene2GOdescription">
       <soap:operation soapAction=""/>
       <wsdl:input name="gene2GOdescriptionRequest">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="gene2GOdescriptionResponse">
-           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           <soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
      
@@ -811,7 +811,7 @@
 
 	<!-- <soap:address location="http://137.82.157.182:8080/Gemma/ws"/> -->
 
-    <!-- for production, use http://bioinformatics.ubc.ca/Gemma/ws -->
+    <!-- for production, use http://chibi.ubc.ca/Gemma/ws -->
 
     <soap:address location="http://chibi.ubc.ca/Gemma/ws"/>
   
