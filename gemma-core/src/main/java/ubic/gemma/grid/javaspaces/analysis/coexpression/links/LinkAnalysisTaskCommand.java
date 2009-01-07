@@ -32,6 +32,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class LinkAnalysisTaskCommand extends TaskCommand {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+    /**
+     * 
+     */    
     private ExpressionExperiment expressionExperiment;
     private FilterConfig filterConfig;
     private LinkAnalysisConfig linkAnalysisConfig;

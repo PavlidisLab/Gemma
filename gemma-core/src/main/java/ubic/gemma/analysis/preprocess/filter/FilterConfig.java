@@ -28,6 +28,11 @@ import java.io.Serializable;
  */
 public class FilterConfig implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();

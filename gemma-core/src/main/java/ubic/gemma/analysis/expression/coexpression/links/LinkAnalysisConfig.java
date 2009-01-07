@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
+import java.io.Serializable;
+
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.common.protocol.Protocol;
 
@@ -27,7 +29,12 @@ import ubic.gemma.model.common.protocol.Protocol;
  * @author Paul
  * @version $Id$
  */
-public class LinkAnalysisConfig {
+public class LinkAnalysisConfig implements Serializable {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
 
     public enum NormalizationMethod {
         NONE, SPELL, SVD
