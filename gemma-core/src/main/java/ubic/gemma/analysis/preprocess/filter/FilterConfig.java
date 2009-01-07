@@ -18,13 +18,15 @@
  */
 package ubic.gemma.analysis.preprocess.filter;
 
+import java.io.Serializable;
+
 /**
  * Holds settings for filtering.
  * 
  * @author Paul
  * @version $Id$
  */
-public class FilterConfig {
+public class FilterConfig implements Serializable {
 
     @Override
     public String toString() {
