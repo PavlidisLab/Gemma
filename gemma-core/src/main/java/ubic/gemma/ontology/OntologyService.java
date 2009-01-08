@@ -61,21 +61,41 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  */
 public class OntologyService {
 
-    private static final String USED = " -USED- ";
+    // Private class for sorting Characteristics
+    class TermComparator implements Comparator<Characteristic> {
+
+        String comparator;
+
+        public TermComparator( String comparator ) {
+            super();
+            this.comparator = comparator;
+        }
+
+        public int compare( Characteristic o1, Characteristic o2 ) {
+            String term1 = o1.getValue();
+            String term2 = o2.getValue();
+
+            if ( term1.equals( term2 ) ) return 0;
+
+            if ( term1.equals( comparator ) ) return 1;
+
+            if ( term2.equals( comparator ) ) return -1;
+
+            if ( term1.startsWith( comparator ) ) {
+                if ( term2.startsWith( comparator ) ) return 0;
+                return 1;
+            } else if ( term2.startsWith( comparator ) ) {
+                return -1;
+            }
+
+            return 0;
+
+        }
+    }
 
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
 
-    private BirnLexOntologyService birnLexOntologyService;
-    private HumanDiseaseOntologyService diseaseOntologyService;
-    private FMAOntologyService fmaOntologyService;
-    private MgedOntologyService mgedOntologyService;
-    private ChebiOntologyService chebiOntologyService;
-    private BioMaterialService bioMaterialService;
-    private ExpressionExperimentService eeService;
-    private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
-
-    private CharacteristicService characteristicService;
-
+    private static final String USED = " -USED- ";
     /**
      * List the ontologies that are available in the jena database.
      * 
@@ -95,164 +115,18 @@ public class OntologyService {
         return ontologies;
 
     }
+    private BioMaterialService bioMaterialService;
+    private BirnLexOntologyService birnLexOntologyService;
+    private CharacteristicService characteristicService;
+    private ChebiOntologyService chebiOntologyService;
+    private HumanDiseaseOntologyService diseaseOntologyService;
+    private ExpressionExperimentService eeService;
 
-    /**
-     * @return the OntologyTerm for the specified URI. Exposed for AJAX.
-     */
-    public OntologyTerm getTerm( String uri ) {
-        for ( AbstractOntologyService ontology : ontologyServices ) {
-            OntologyTerm term = ontology.getTerm( uri );
-            if ( term != null ) return term;
-        }
-        return null;
-    }
+    private FMAOntologyService fmaOntologyService;
 
-    /**
-     * @return the OntologyResource for the specified URI
-     */
-    public OntologyResource getResource( String uri ) {
-        for ( AbstractOntologyService ontology : ontologyServices ) {
-            OntologyResource resource = ontology.getResource( uri );
-            if ( resource != null ) return resource;
-        }
-        return null;
-    }
+    private MgedOntologyService mgedOntologyService;
 
-    /**
-     * Given a collection of ontology terms converts them to a collection of VocabCharacteristics
-     * 
-     * @param terms
-     * @param filterTerm
-     * @return
-     */
-    private Collection<VocabCharacteristic> convert( final Collection<OntologyResource> resources ) {
-
-        Collection<VocabCharacteristic> converted = new HashSet<VocabCharacteristic>();
-
-        if ( ( resources == null ) || ( resources.isEmpty() ) ) return converted;
-
-        for ( OntologyResource res : resources ) {
-            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-
-            // If there is no URI we don't want to send it back (ie useless)
-            if ( ( res.getUri() == null ) || StringUtils.isEmpty( res.getUri() ) ) continue;
-
-            if ( res instanceof OntologyTerm ) {
-                OntologyTerm term = ( OntologyTerm ) res;
-                vc.setValue( term.getTerm() );
-                vc.setValueUri( term.getUri() );
-                vc.setDescription( term.getComment() );
-            }
-            if ( res instanceof OntologyIndividual ) {
-                OntologyIndividual indi = ( OntologyIndividual ) res;
-                vc.setValue( indi.getLabel() );
-                vc.setValueUri( indi.getUri() );
-                vc.setDescription( "Individual" );
-            }
-
-            converted.add( vc );
-        }
-
-        return converted;
-    }
-
-    /**
-     * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that
-     * match the search term. this a lucene backed search, is inexact and for general terms can return alot of results.
-     * 
-     * @param search
-     * @return a collection of VocabCharacteristics that are backed by the corresponding found OntologyTerm
-     */
-    public Collection<VocabCharacteristic> findTermAsCharacteristic( String search ) {
-
-        String query = OntologySearch.stripInvalidCharacters( search );
-        Collection<VocabCharacteristic> terms = new HashSet<VocabCharacteristic>();
-        Collection<OntologyTerm> results;
-
-        for ( AbstractOntologyService ontology : ontologyServices ) {
-            results = ontology.findTerm( query );
-            if ( results != null ) terms.addAll( convert( new HashSet<OntologyResource>( results ) ) );
-        }
-
-        return terms;
-    }
-
-    /**
-     * Given a search string will look through the loaded ontologies for terms that match the search term. this a lucene
-     * backed search, is inexact and for general terms can return a lot of results.
-     * 
-     * @param search
-     * @return returns a collection of ontologyTerm's
-     */
-    public Collection<OntologyTerm> findTerms( String search ) {
-
-        String query = OntologySearch.stripInvalidCharacters( search );
-        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
-
-        for ( AbstractOntologyService ontology : ontologyServices ) {
-            Collection<OntologyTerm> found = ontology.findTerm( query );
-            if ( found != null ) results.addAll( found );
-        }
-
-        return results;
-    }
-
-    /**
-     * @param search
-     * @return
-     */
-    public Collection<OntologyIndividual> findIndividuals( String givenSearch ) {
-
-        String query = OntologySearch.stripInvalidCharacters( givenSearch );
-        Collection<OntologyIndividual> results = new HashSet<OntologyIndividual>();
-
-        for ( AbstractOntologyService ontology : ontologyServices ) {
-            Collection<OntologyIndividual> found = ontology.findIndividuals( query );
-            if ( found != null ) results.addAll( found );
-        }
-
-        return results;
-    }
-
-    /**
-     * Given a collection of ontology terms will filter out all the terms that don't have the filter term in their
-     * label.
-     * 
-     * @param terms
-     * @param filterTerm
-     * @return
-     */
-    private Collection<VocabCharacteristic> filter( final Collection<OntologyResource> terms, final String filter ) {
-
-        Collection<VocabCharacteristic> filtered = new HashSet<VocabCharacteristic>();
-
-        if ( ( terms == null ) || ( terms.isEmpty() ) ) return filtered;
-
-        String caseInsensitiveFilter = filter.toLowerCase().trim();
-
-        for ( OntologyResource res : terms ) {
-            if ( StringUtils.isNotEmpty( res.getLabel() )
-                    && res.getLabel().toLowerCase().startsWith( caseInsensitiveFilter ) ) {
-                VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-                if ( res instanceof OntologyTerm ) {
-                    OntologyTerm term = ( OntologyTerm ) res;
-                    vc.setValue( term.getTerm() );
-                    vc.setValueUri( term.getUri() );
-                    vc.setDescription( term.getComment() );
-                } else if ( res instanceof OntologyIndividual ) {
-                    OntologyIndividual indi = ( OntologyIndividual ) res;
-                    vc.setValue( indi.getLabel() );
-                    vc.setValueUri( indi.getUri() );
-                    vc.setDescription( "Individual" );
-                }
-
-                filtered.add( vc );
-            }
-        }
-        log.debug( "returning " + filtered.size() + " terms after filter" );
-
-        return filtered;
-    }
+    private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
 
     /**
      * Given a search string will first look through the characterisc database for any entries that have a match. If a
@@ -343,6 +217,382 @@ public class OntologyService {
 
     }
 
+    /**
+     * @param search
+     * @return
+     */
+    public Collection<OntologyIndividual> findIndividuals( String givenSearch ) {
+
+        String query = OntologySearch.stripInvalidCharacters( givenSearch );
+        Collection<OntologyIndividual> results = new HashSet<OntologyIndividual>();
+
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            Collection<OntologyIndividual> found = ontology.findIndividuals( query );
+            if ( found != null ) results.addAll( found );
+        }
+
+        return results;
+    }
+
+    /**
+     * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that
+     * match the search term. this a lucene backed search, is inexact and for general terms can return alot of results.
+     * 
+     * @param search
+     * @return a collection of VocabCharacteristics that are backed by the corresponding found OntologyTerm
+     */
+    public Collection<VocabCharacteristic> findTermAsCharacteristic( String search ) {
+
+        String query = OntologySearch.stripInvalidCharacters( search );
+        Collection<VocabCharacteristic> terms = new HashSet<VocabCharacteristic>();
+        Collection<OntologyTerm> results;
+
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            results = ontology.findTerm( query );
+            if ( results != null ) terms.addAll( convert( new HashSet<OntologyResource>( results ) ) );
+        }
+
+        return terms;
+    }
+
+    /**
+     * Given a search string will look through the loaded ontologies for terms that match the search term. this a lucene
+     * backed search, is inexact and for general terms can return a lot of results.
+     * 
+     * @param search
+     * @return returns a collection of ontologyTerm's
+     */
+    public Collection<OntologyTerm> findTerms( String search ) {
+
+        String query = OntologySearch.stripInvalidCharacters( search );
+        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
+
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            Collection<OntologyTerm> found = ontology.findTerm( query );
+            if ( found != null ) results.addAll( found );
+        }
+
+        return results;
+    }
+
+    /**
+     * @return the OntologyResource for the specified URI
+     */
+    public OntologyResource getResource( String uri ) {
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            OntologyResource resource = ontology.getResource( uri );
+            if ( resource != null ) return resource;
+        }
+        return null;
+    }
+
+    /**
+     * @return the OntologyTerm for the specified URI. Exposed for AJAX.
+     */
+    public OntologyTerm getTerm( String uri ) {
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            OntologyTerm term = ontology.getTerm( uri );
+            if ( term != null ) return term;
+        }
+        return null;
+    }
+
+    /**
+     * Will persist the give vocab characteristic to each biomaterial id supplied in the list.
+     * 
+     * @param vc
+     * @param bmIdList
+     */
+    public void removeBioMaterialStatement( Collection<Long> characterIds, Collection<Long> bmIdList ) {
+
+        log.debug( "Vocab Characteristic: " + characterIds );
+        log.debug( "biomaterial ID List: " + bmIdList );
+
+        Collection<BioMaterial> bms = bioMaterialService.loadMultiple( bmIdList );
+
+        for ( BioMaterial bm : bms ) {
+
+            Collection<Characteristic> current = bm.getCharacteristics();
+            if ( current == null ) continue;
+
+            Collection<Characteristic> found = new HashSet<Characteristic>();
+
+            for ( Characteristic characteristic : current ) {
+                if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
+
+            }
+            if ( found.size() == 0 ) continue;
+
+            current.removeAll( found );
+            bm.setCharacteristics( current );
+            bioMaterialService.update( bm );
+
+        }
+
+        for ( Long id : characterIds ) {
+            characteristicService.delete( id );
+        }
+    }
+
+    /**
+     * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
+     * 
+     * @param vc
+     * @param bmIdList
+     */
+    public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> eeIdList ) {
+
+        log.debug( "Vocab Characteristic: " + characterIds );
+        log.debug( "Expression Experiment ID List: " + eeIdList );
+
+        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
+
+        for ( ExpressionExperiment ee : ees ) {
+            eeService.thawLite( ee );
+            Collection<Characteristic> current = ee.getCharacteristics();
+            if ( current == null ) continue;
+
+            Collection<Characteristic> found = new HashSet<Characteristic>();
+
+            for ( Characteristic characteristic : current ) {
+                if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
+
+            }
+            if ( found.size() == 0 ) continue;
+
+            current.removeAll( found );
+            ee.setCharacteristics( current );
+            eeService.update( ee );
+
+        }
+
+        for ( Long id : characterIds ) {
+            characteristicService.delete( id );
+        }
+    }
+
+    /**
+     * Will persist the give vocab characteristic to each biomaterial id supplied in the list. Exposed for AJAX.
+     * 
+     * @param vc
+     * @param bioMaterialIdList
+     */
+    public void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList ) {
+
+        log.debug( "Vocab Characteristic: " + vc );
+        log.debug( "Biomaterial ID List: " + bioMaterialIdList );
+
+        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
+        Set<Characteristic> chars = new HashSet<Characteristic>();
+        chars.add( vc );
+        Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
+
+        for ( BioMaterial bioM : biomaterials ) {
+
+            Collection<Characteristic> current = bioM.getCharacteristics();
+            if ( current == null )
+                current = new HashSet<Characteristic>( chars );
+            else
+                current.addAll( chars );
+
+            bioM.setCharacteristics( current );
+            bioMaterialService.update( bioM );
+
+        }
+
+    }
+
+    /**
+     * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
+     * 
+     * @param vc. If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * @param eeIds
+     */
+    public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> eeIds ) {
+
+        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIds );
+
+        for ( ExpressionExperiment ee : ees ) {
+            this.saveExpressionExperimentStatement( vc, ee );
+        }
+    }
+
+    /**
+     * Will persist the give vocab characteristic to the expression experiment.
+     * 
+     * @param vc. If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * @param ee
+     */
+    public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
+        if ( vc == null ) {
+            throw new IllegalArgumentException( "Null characteristic" );
+        }
+        if ( StringUtils.isBlank( vc.getCategory() ) ) {
+            throw new IllegalArgumentException( "Must provide a category" );
+        }
+
+        if ( StringUtils.isBlank( vc.getValue() ) ) {
+            throw new IllegalArgumentException( "Must provide a value" );
+
+        }
+
+        if ( vc.getEvidenceCode() == null ) {
+            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added characteristic
+        }
+
+        Set<Characteristic> chars = new HashSet<Characteristic>();
+        chars.add( vc );
+        eeService.thawLite( ee );
+        Collection<Characteristic> current = ee.getCharacteristics();
+        if ( current == null )
+            current = new HashSet<Characteristic>( chars );
+        else
+            current.addAll( chars );
+
+        ee.setCharacteristics( current );
+        eeService.update( ee );
+
+    }
+
+    /**
+     * @param bioMaterialService the bioMaterialService to set
+     */
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
+
+    /**
+     * @param birnLexOntologyService the birnLexOntologyService to set
+     */
+    public void setBirnLexOntologyService( BirnLexOntologyService birnLexOntologyService ) {
+        this.birnLexOntologyService = birnLexOntologyService;
+        ontologyServices.add( birnLexOntologyService );
+    }
+
+    /**
+     * @param characteristicService the characteristicService to set
+     */
+    public void setCharacteristicService( CharacteristicService characteristicService ) {
+        this.characteristicService = characteristicService;
+    }
+
+    /**
+     * @param chebiOntologyService the chebiOntologyService to set
+     */
+    public void setChebiOntologyService( ChebiOntologyService chebiOntologyService ) {
+        this.chebiOntologyService = chebiOntologyService;
+        ontologyServices.add( chebiOntologyService );
+    }
+
+    /**
+     * @param diseaseOntologyService the diseaseOntologyService to set
+     */
+    public void setDiseaseOntologyService( HumanDiseaseOntologyService diseaseOntologyService ) {
+        this.diseaseOntologyService = diseaseOntologyService;
+        ontologyServices.add( diseaseOntologyService );
+    }
+
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.eeService = expressionExperimentService;
+    }
+
+    /**
+     * @param fmaOntologyService the fmaOntologyService to set
+     */
+    public void setFmaOntologyService( FMAOntologyService fmaOntologyService ) {
+        this.fmaOntologyService = fmaOntologyService;
+        ontologyServices.add( fmaOntologyService );
+    }
+
+    /**
+     * @param mgedDiseaseOntologyService the mgedDiseaseOntologyService to set
+     */
+    public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
+        this.mgedOntologyService = mgedOntologyService;
+        ontologyServices.add( mgedOntologyService );
+    }
+
+    /**
+     * Given a collection of ontology terms converts them to a collection of VocabCharacteristics
+     * 
+     * @param terms
+     * @param filterTerm
+     * @return
+     */
+    private Collection<VocabCharacteristic> convert( final Collection<OntologyResource> resources ) {
+
+        Collection<VocabCharacteristic> converted = new HashSet<VocabCharacteristic>();
+
+        if ( ( resources == null ) || ( resources.isEmpty() ) ) return converted;
+
+        for ( OntologyResource res : resources ) {
+            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+
+            // If there is no URI we don't want to send it back (ie useless)
+            if ( ( res.getUri() == null ) || StringUtils.isEmpty( res.getUri() ) ) continue;
+
+            if ( res instanceof OntologyTerm ) {
+                OntologyTerm term = ( OntologyTerm ) res;
+                vc.setValue( term.getTerm() );
+                vc.setValueUri( term.getUri() );
+                vc.setDescription( term.getComment() );
+            }
+            if ( res instanceof OntologyIndividual ) {
+                OntologyIndividual indi = ( OntologyIndividual ) res;
+                vc.setValue( indi.getLabel() );
+                vc.setValueUri( indi.getUri() );
+                vc.setDescription( "Individual" );
+            }
+
+            converted.add( vc );
+        }
+
+        return converted;
+    }
+
+    /**
+     * Given a collection of ontology terms will filter out all the terms that don't have the filter term in their
+     * label.
+     * 
+     * @param terms
+     * @param filterTerm
+     * @return
+     */
+    private Collection<VocabCharacteristic> filter( final Collection<OntologyResource> terms, final String filter ) {
+
+        Collection<VocabCharacteristic> filtered = new HashSet<VocabCharacteristic>();
+
+        if ( ( terms == null ) || ( terms.isEmpty() ) ) return filtered;
+
+        String caseInsensitiveFilter = filter.toLowerCase().trim();
+
+        for ( OntologyResource res : terms ) {
+            if ( StringUtils.isNotEmpty( res.getLabel() )
+                    && res.getLabel().toLowerCase().startsWith( caseInsensitiveFilter ) ) {
+                VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+                if ( res instanceof OntologyTerm ) {
+                    OntologyTerm term = ( OntologyTerm ) res;
+                    vc.setValue( term.getTerm() );
+                    vc.setValueUri( term.getUri() );
+                    vc.setDescription( term.getComment() );
+                } else if ( res instanceof OntologyIndividual ) {
+                    OntologyIndividual indi = ( OntologyIndividual ) res;
+                    vc.setValue( indi.getLabel() );
+                    vc.setValueUri( indi.getUri() );
+                    vc.setDescription( "Individual" );
+                }
+
+                filtered.add( vc );
+            }
+        }
+        log.debug( "returning " + filtered.size() + " terms after filter" );
+
+        return filtered;
+    }
+
     private String foundValueKey( Characteristic c ) {
         StringBuffer buf = new StringBuffer( c.getValue() );
         if ( c instanceof VocabCharacteristic ) buf.append( ( ( VocabCharacteristic ) c ).getValueUri() );
@@ -405,252 +655,6 @@ public class OntologyService {
         sortedTerms.addAll( sortedResultsBottem );
 
         return sortedTerms;
-    }
-
-    // Private class for sorting Characteristics
-    class TermComparator implements Comparator<Characteristic> {
-
-        String comparator;
-
-        public TermComparator( String comparator ) {
-            super();
-            this.comparator = comparator;
-        }
-
-        public int compare( Characteristic o1, Characteristic o2 ) {
-            String term1 = o1.getValue();
-            String term2 = o2.getValue();
-
-            if ( term1.equals( term2 ) ) return 0;
-
-            if ( term1.equals( comparator ) ) return 1;
-
-            if ( term2.equals( comparator ) ) return -1;
-
-            if ( term1.startsWith( comparator ) ) {
-                if ( term2.startsWith( comparator ) ) return 0;
-                return 1;
-            } else if ( term2.startsWith( comparator ) ) {
-                return -1;
-            }
-
-            return 0;
-
-        }
-    }
-
-    /**
-     * Will persist the give vocab characteristic to each biomaterial id supplied in the list. Exposed for AJAX.
-     * 
-     * @param vc
-     * @param bioMaterialIdList
-     */
-    public void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList ) {
-
-        log.debug( "Vocab Characteristic: " + vc );
-        log.debug( "Biomaterial ID List: " + bioMaterialIdList );
-
-        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
-        Set<Characteristic> chars = new HashSet<Characteristic>();
-        chars.add( vc );
-        Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
-
-        for ( BioMaterial bioM : biomaterials ) {
-
-            Collection<Characteristic> current = bioM.getCharacteristics();
-            if ( current == null )
-                current = new HashSet<Characteristic>( chars );
-            else
-                current.addAll( chars );
-
-            bioM.setCharacteristics( current );
-            bioMaterialService.update( bioM );
-
-        }
-
-    }
-
-    /**
-     * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
-     * 
-     * @param vc
-     * @param eeIds
-     */
-    public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> eeIds ) {
-
-        if ( vc == null ) {
-            throw new IllegalArgumentException( "Null characteristic" );
-        }
-
-        if ( eeIds.size() == 0 ) {
-            log.warn( "No EE ids given" );
-            return;
-        }
-
-        if ( StringUtils.isBlank( vc.getCategory() ) ) {
-            throw new IllegalArgumentException( "Must provide a category" );
-        }
-
-        if ( StringUtils.isBlank( vc.getValue() ) ) {
-            throw new IllegalArgumentException( "Must provide a value" );
-
-        }
-
-        log.debug( "Vocab Characteristic: " + vc );
-        log.debug( "Expression Experiment ID List: " + eeIds );
-
-        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
-        Set<Characteristic> chars = new HashSet<Characteristic>();
-        chars.add( vc );
-        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIds );
-
-        for ( ExpressionExperiment ee : ees ) {
-            eeService.thawLite( ee );
-            Collection<Characteristic> current = ee.getCharacteristics();
-            if ( current == null )
-                current = new HashSet<Characteristic>( chars );
-            else
-                current.addAll( chars );
-
-            ee.setCharacteristics( current );
-            eeService.update( ee );
-
-        }
-    }
-
-    /**
-     * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
-     * 
-     * @param vc
-     * @param bmIdList
-     */
-    public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> eeIdList ) {
-
-        log.debug( "Vocab Characteristic: " + characterIds );
-        log.debug( "Expression Experiment ID List: " + eeIdList );
-
-        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
-
-        for ( ExpressionExperiment ee : ees ) {
-            eeService.thawLite( ee );
-            Collection<Characteristic> current = ee.getCharacteristics();
-            if ( current == null ) continue;
-
-            Collection<Characteristic> found = new HashSet<Characteristic>();
-
-            for ( Characteristic characteristic : current ) {
-                if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
-
-            }
-            if ( found.size() == 0 ) continue;
-
-            current.removeAll( found );
-            ee.setCharacteristics( current );
-            eeService.update( ee );
-
-        }
-
-        for ( Long id : characterIds ) {
-            characteristicService.delete( id );
-        }
-    }
-
-    /**
-     * Will persist the give vocab characteristic to each biomaterial id supplied in the list.
-     * 
-     * @param vc
-     * @param bmIdList
-     */
-    public void removeBioMaterialStatement( Collection<Long> characterIds, Collection<Long> bmIdList ) {
-
-        log.debug( "Vocab Characteristic: " + characterIds );
-        log.debug( "biomaterial ID List: " + bmIdList );
-
-        Collection<BioMaterial> bms = bioMaterialService.loadMultiple( bmIdList );
-
-        for ( BioMaterial bm : bms ) {
-
-            Collection<Characteristic> current = bm.getCharacteristics();
-            if ( current == null ) continue;
-
-            Collection<Characteristic> found = new HashSet<Characteristic>();
-
-            for ( Characteristic characteristic : current ) {
-                if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
-
-            }
-            if ( found.size() == 0 ) continue;
-
-            current.removeAll( found );
-            bm.setCharacteristics( current );
-            bioMaterialService.update( bm );
-
-        }
-
-        for ( Long id : characterIds ) {
-            characteristicService.delete( id );
-        }
-    }
-
-    /**
-     * @param birnLexOntologyService the birnLexOntologyService to set
-     */
-    public void setBirnLexOntologyService( BirnLexOntologyService birnLexOntologyService ) {
-        this.birnLexOntologyService = birnLexOntologyService;
-        ontologyServices.add( birnLexOntologyService );
-    }
-
-    /**
-     * @param fmaOntologyService the fmaOntologyService to set
-     */
-    public void setFmaOntologyService( FMAOntologyService fmaOntologyService ) {
-        this.fmaOntologyService = fmaOntologyService;
-        ontologyServices.add( fmaOntologyService );
-    }
-
-    /**
-     * @param diseaseOntologyService the diseaseOntologyService to set
-     */
-    public void setDiseaseOntologyService( HumanDiseaseOntologyService diseaseOntologyService ) {
-        this.diseaseOntologyService = diseaseOntologyService;
-        ontologyServices.add( diseaseOntologyService );
-    }
-
-    /**
-     * @param mgedDiseaseOntologyService the mgedDiseaseOntologyService to set
-     */
-    public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
-        this.mgedOntologyService = mgedOntologyService;
-        ontologyServices.add( mgedOntologyService );
-    }
-
-    /**
-     * @param chebiOntologyService the chebiOntologyService to set
-     */
-    public void setChebiOntologyService( ChebiOntologyService chebiOntologyService ) {
-        this.chebiOntologyService = chebiOntologyService;
-        ontologyServices.add( chebiOntologyService );
-    }
-
-    /**
-     * @param bioMaterialService the bioMaterialService to set
-     */
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.eeService = expressionExperimentService;
-    }
-
-    /**
-     * @param characteristicService the characteristicService to set
-     */
-    public void setCharacteristicService( CharacteristicService characteristicService ) {
-        this.characteristicService = characteristicService;
     }
 
 }
