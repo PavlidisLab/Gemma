@@ -10,8 +10,8 @@
 	</bannerRight>
 	<body>
 		<links>
-			<item name="Gemma" href="http://bioinformatics.ubc.ca/Gemma/" />
-			<item name="Pavlidis lab" href="http://bioinformatics.ubc.ca/pavlidis/lab" />
+			<item name="Gemma" href="http://chibi.ubc.ca/Gemma/" />
+			<item name="Pavlidis lab" href="http://chibi.ubc.ca/pavlidis/lab" />
 		</links>
 		<menu ref="reports" />
 		<menu ref="parent" />

@@ -38,7 +38,7 @@ import ubic.gemma.util.DateUtil;
 public class ExpressionDataWriterUtils {
 
     public static final String DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS = "___";
-    private static final String WEBSITE = "http://bioinformatics.ubc.ca/Gemma";
+    private static final String WEBSITE = "http://chibi.ubc.ca/Gemma";
 
     /**
      * Appends base header information (about the experiment) to a file.

@@ -51,7 +51,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     /**
      * Namespace of both request and response.
      */
-    public static final String NAMESPACE_URI = "http://bioinformatics.ubc.ca/Gemma/ws";
+    public static final String NAMESPACE_URI = "http://chibi.ubc.ca/Gemma/ws";
 
     private static Log log = LogFactory.getLog( AbstractGemmaEndpoint.class );
 

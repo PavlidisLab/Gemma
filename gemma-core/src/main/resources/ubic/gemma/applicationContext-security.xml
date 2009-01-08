@@ -274,7 +274,7 @@
 
 	<!-- Spring-Security serviceSecurityInterceptor. You must manually add objectDefinitionSource lines for methods in services. 
 		 If you don't add methods to this, the default is they can be invoked by anyone.  See
-		 http://www.bioinformatics.ubc.ca/pavlidis/lab/bugzilla/show_bug.cgi?id=1375
+		 http://www.chibi.ubc.ca/pavlidis/lab/bugzilla/show_bug.cgi?id=1375
 	-->
 	<!--  <bean id="serviceSecurityInterceptor" class="org.springframework.security.intercept.method.aopalliance.MethodSecurityInterceptor"> -->
 	<bean id="serviceSecurityInterceptor"

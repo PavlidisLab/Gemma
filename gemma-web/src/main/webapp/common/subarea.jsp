@@ -17,7 +17,7 @@
 	<p style="font-size: 0.9em">
 		More information about the project is
 		<a href="<c:url value="/static/about.html"/>">here</a>. Gemma also has a
-		<a href="http://bioinformatics.ubc.ca/confluence/display/gemma">Wiki</a> where you can read additional documentation,
+		<a href="http://chibi.ubc.ca/confluence/display/gemma">Wiki</a> where you can read additional documentation,
 		in addition to the in-line help.
 	</p>
 </div>
@@ -72,9 +72,9 @@
 			<strong>Contacting us</strong>
 			<p class="emphasized" style="font-size: 0.90em">
 				To get emails about updates to the Gemma software, subscribe to the
-				<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing
+				<a href="http://perutz.cmmt.ubc.ca/mailman/chibi.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing
 					list</a>. Please send bug reports or feature requests
-				<a href="mailto:gemma@bioinformatics.ubc.ca">here</a>.
+				<a href="mailto:gemma@chibi.ubc.ca">here</a>.
 			</p>
 		</div>
 	</div>
