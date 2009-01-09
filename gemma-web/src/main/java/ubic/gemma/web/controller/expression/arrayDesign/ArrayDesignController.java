@@ -533,15 +533,16 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesign> mergees = arrayDesign.getMergees();
         ArrayDesign merger = arrayDesign.getMergedInto();
 
-        File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName()
+        String mungedShortName = ArrayDesignAnnotationService.mungeFileName( arrayDesign.getShortName() );
+        File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
-        File fap = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName()
+        File fap = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
-        File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName()
+        File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
                 + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
@@ -772,14 +773,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         private ArrayDesignReportService arrayDesignReportService;
         private Long id;
 
-        @SuppressWarnings("unused")
         public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService ) {
             super( getMessageUtil() );
             this.arrayDesignReportService = arrayDesignReportService;
             id = null;
         }
 
-        @SuppressWarnings("unused")
         public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService, Long id ) {
             super( getMessageUtil() );
             this.arrayDesignReportService = arrayDesignReportService;
