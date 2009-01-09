@@ -63,7 +63,7 @@ create table GENE2CS (
 	INDEX USING HASH (GENE),
 	INDEX USING HASH (CS),
 	INDEX USING HASH (GTYPE)
-) ENGINE=MEMORY;
+) ENGINE=InnoDB;
 
 -- denormalize probe2probe coexpressions
 -- see init-triggers for triggers that populate these denormalized fields
