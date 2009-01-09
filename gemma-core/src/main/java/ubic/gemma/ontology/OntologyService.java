@@ -96,6 +96,7 @@ public class OntologyService {
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
 
     private static final String USED = " -USED- ";
+
     /**
      * List the ontologies that are available in the jena database.
      * 
@@ -115,6 +116,7 @@ public class OntologyService {
         return ontologies;
 
     }
+
     private BioMaterialService bioMaterialService;
     private BirnLexOntologyService birnLexOntologyService;
     private CharacteristicService characteristicService;
@@ -149,7 +151,8 @@ public class OntologyService {
 
         if ( queryString == null ) return null;
 
-        // TODO: this is poorly named. changed to findExactResource, add findExactIndividual Factor out common code
+        // TODO: this is poorly named. changed to findExactResource, add
+        // findExactIndividual Factor out common code
 
         Collection<OntologyResource> results;
 
@@ -165,14 +168,17 @@ public class OntologyService {
         List<Characteristic> alreadyUsedResults = new ArrayList<Characteristic>();
         Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
 
-        // remove duplicates, don't want to redefine == operator for Characteristics
+        // remove duplicates, don't want to redefine == operator for
+        // Characteristics
         // for this use consider if the value = then its a duplicate.
         Collection<String> foundValues = new HashSet<String>();
         if ( foundChars != null ) {
             for ( Characteristic characteristic : foundChars ) {
                 if ( !foundValues.contains( foundValueKey( characteristic ) ) ) {
-                    // Want to flag in the web interface that these are alrady used by Gemma
-                    // Didn't want to make a characteristic value object just to hold a boolean flag for used....
+                    // Want to flag in the web interface that these are alrady
+                    // used by Gemma
+                    // Didn't want to make a characteristic value object just to
+                    // hold a boolean flag for used....
                     characteristic.setDescription( USED + characteristic.getDescription() );
                     alreadyUsedResults.add( characteristic );
                     foundValues.add( foundValueKey( characteristic ) );
@@ -184,7 +190,11 @@ public class OntologyService {
 
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
-        queryString = OntologySearch.stripInvalidCharacters( givenQueryString ); // Strip out invalid characters so
+        queryString = OntologySearch.stripInvalidCharacters( givenQueryString ); // Strip
+        // out
+        // invalid
+        // characters
+        // so
         // that Jena doesn't
         // die parsing them
         // FIXME hard-coding of ontologies to search
@@ -405,25 +415,36 @@ public class OntologyService {
     /**
      * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
      * 
-     * @param vc. If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      * @param eeIds
      */
     public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> eeIds ) {
+        for ( Long id : eeIds ) {
+            this.saveExpressionExperimentStatement( vc, id );
+        }
+    }
 
-        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIds );
-
-        for ( ExpressionExperiment ee : ees ) {
-            this.saveExpressionExperimentStatement( vc, ee );
+    /**
+     * @param vcs
+     * @param ee
+     */
+    public void saveExpressionExperimentStatements( Collection<Characteristic> vcs, ExpressionExperiment ee ) {
+        for ( Characteristic characteristic : vcs ) {
+            this.saveExpressionExperimentStatement( characteristic, ee.getId() );
         }
     }
 
     /**
      * Will persist the give vocab characteristic to the expression experiment.
      * 
-     * @param vc. If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      * @param ee
      */
-    public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
+    public void saveExpressionExperimentStatement( Characteristic vc, Long id ) {
+        ExpressionExperiment ee = eeService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot load experiment with id=" + id );
+        }
         if ( vc == null ) {
             throw new IllegalArgumentException( "Null characteristic" );
         }
@@ -437,17 +458,19 @@ public class OntologyService {
         }
 
         if ( vc.getEvidenceCode() == null ) {
-            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added characteristic
+            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added
+            // characteristic
         }
 
         Set<Characteristic> chars = new HashSet<Characteristic>();
         chars.add( vc );
         eeService.thawLite( ee );
         Collection<Characteristic> current = ee.getCharacteristics();
-        if ( current == null )
+        if ( current == null ) {
             current = new HashSet<Characteristic>( chars );
-        else
+        } else {
             current.addAll( chars );
+        }
 
         ee.setCharacteristics( current );
         eeService.update( ee );
@@ -605,7 +628,8 @@ public class OntologyService {
 
         // Organize the list into 3 parts.
         // Want to get the exact match showing up on top
-        // But close matching individualResults and alreadyUsedResults should get
+        // But close matching individualResults and alreadyUsedResults should
+        // get
         // priority over jena's search results.
         // Each reasults shoulds order should be preserved.
 
