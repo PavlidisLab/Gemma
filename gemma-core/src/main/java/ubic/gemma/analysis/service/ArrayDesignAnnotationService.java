@@ -110,7 +110,8 @@ public class ArrayDesignAnnotationService {
      */
     public static Map<Long, Collection<Gene>> readAnnotationFile( ArrayDesign arrayDesign ) {
         Map<Long, Collection<Gene>> results = new HashMap<Long, Collection<Gene>>();
-        File f = new File( ANNOT_DATA_DIR + arrayDesign.getShortName() + STANDARD_FILE_SUFFIX + ANNOTATION_FILE_SUFFIX );
+        File f = new File( ANNOT_DATA_DIR + mungeFileName( arrayDesign.getShortName() ) + STANDARD_FILE_SUFFIX
+                + ANNOTATION_FILE_SUFFIX );
         if ( !f.canRead() ) {
             log.info( "Gene annotations are not available from " + f );
             return results;
