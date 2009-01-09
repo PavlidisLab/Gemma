@@ -36,6 +36,9 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class SimpleFastaCmdTest extends TestCase {
 
+    private static final String TEST_RESOURCE_PATH = ConfigUtils.getString( "gemma.home" )
+            + "/gemma-core/src/test/resources/data/loader/genome/blast";
+    private static final String TESTBLASTDB = "testblastdb";
     private static Log log = LogFactory.getLog( SimpleFastaCmdTest.class.getName() );
 
     /*
@@ -45,6 +48,16 @@ public class SimpleFastaCmdTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+
+        /*
+         * For reasons I don't understand, some tests fail the first time they are run; this is an attempt to 'warm up'
+         */
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        fastaCmd.getByIdentifier( 1435867, TESTBLASTDB, TEST_RESOURCE_PATH );
+        Collection<Integer> input = new ArrayList<Integer>();
+        input.add( 1435867 );
+        input.add( 1435868 );
+        fastaCmd.getBatchIdentifiers( input, TESTBLASTDB, TEST_RESOURCE_PATH );
     }
 
     /*
@@ -76,8 +89,7 @@ public class SimpleFastaCmdTest extends TestCase {
             return;
         }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-        BioSequence bs = fastaCmd.getByIdentifier( 1435867, "testblastdb", ConfigUtils.getString( "gemma.home" )
-                + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+        BioSequence bs = fastaCmd.getByIdentifier( 1435867, TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNotNull( bs );
         String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
                 + "GAGTAGGCTAGAAACCAGAGAGCTCCAAGCTCCATCTGTGGAGAGGTGCCATCCTTGGGCTGCAGAGAGAGGAGAATTTG"
@@ -98,9 +110,7 @@ public class SimpleFastaCmdTest extends TestCase {
         input.add( 1435867 );
         input.add( 1435868 );
 
-        Collection<BioSequence> bs = fastaCmd.getBatchIdentifiers( input, "testblastdb", ConfigUtils
-                .getString( "gemma.home" )
-                + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+        Collection<BioSequence> bs = fastaCmd.getBatchIdentifiers( input, TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNotNull( bs );
         assertEquals( 2, bs.size() );
     }
@@ -111,8 +121,7 @@ public class SimpleFastaCmdTest extends TestCase {
         }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
         String accession = "AA000002";
-        BioSequence bs = fastaCmd.getByAccession( accession, "testblastdb", ConfigUtils.getString( "gemma.home" )
-                + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+        BioSequence bs = fastaCmd.getByAccession( accession, TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNotNull( "fastacmd failed to find " + accession, bs );
         String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
                 + "GAGTAGGCTAGAAACCAGAGAGCTCCAAGCTCCATCTGTGGAGAGGTGCCATCCTTGGGCTGCAGAGAGAGGAGAATTTG"
@@ -128,8 +137,7 @@ public class SimpleFastaCmdTest extends TestCase {
             return;
         }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-        BioSequence bs = fastaCmd.getByAccession( "FAKE.1", "testblastdb", ConfigUtils.getString( "gemma.home" )
-                + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+        BioSequence bs = fastaCmd.getByAccession( "FAKE.1", TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNull( bs );
     }
 
@@ -143,9 +151,7 @@ public class SimpleFastaCmdTest extends TestCase {
         input.add( "AA000002.1" );
         input.add( "AA000003.1" );
 
-        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, "testblastdb", ConfigUtils
-                .getString( "gemma.home" )
-                + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNotNull( bs );
         assertEquals( 2, bs.size() );
     }
@@ -162,9 +168,7 @@ public class SimpleFastaCmdTest extends TestCase {
         input.add( "FAKE.1" );
         input.add( "AA000003.1" );
 
-        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, "testblastdb", ConfigUtils
-                .getString( "gemma.home" )
-                + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNotNull( bs );
         assertEquals( 2, bs.size() );
     }
