@@ -195,6 +195,7 @@
                 PATTERN_TYPE_APACHE_ANT 
                 /signup.html=admin,user,ROLE_ANONYMOUS
                 /securityManager.html=admin
+                /userManager.html=admin
 				/indexer.html=admin
 				/maintenanceMode.html=admin
 				/geneLinkAnalysisManager.html=admin

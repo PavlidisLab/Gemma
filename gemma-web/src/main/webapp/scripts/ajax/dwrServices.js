@@ -537,3 +537,11 @@ FeedReader._path = '/Gemma/dwr';
 FeedReader.getLatestNews = function(callback) {
 	dwr.engine._execute(FeedReader._path, 'FeedReader', 'getLatestNews', callback);
 }
+// ====================================================================================
+if (UserListController == null)
+	var UserListController = {};
+UserListController._path = '/Gemma/dwr';
+UserListController.getUsers = function(callback) {
+	dwr.engine._execute(UserListController._path, 'UserListController',
+			'getUsers', callback);
+}

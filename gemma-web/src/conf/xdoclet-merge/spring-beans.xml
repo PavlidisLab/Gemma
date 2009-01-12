@@ -292,21 +292,6 @@
 					</property>
 				</bean>
 			</entry>
-			<entry key="userService">
-				<bean class="org.directwebremoting.spring.CreatorConfig">
-					<property name="creator">
-						<bean class="org.directwebremoting.spring.BeanCreator">
-							<property name="bean" ref="userService" />
-						</bean>
-					</property>
-					<property name="includes">
-						<list>
-							<value>getUser</value>
-							<value>getUsers</value>
-						</list>
-					</property>
-				</bean>
-			</entry>
 			<entry key="SearchService">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">
@@ -665,6 +650,20 @@
 					<property name="includes">
 						<list>
 							<value>getLatestNews</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="UserListController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="userListController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getUsers</value>
 						</list>
 					</property>
 				</bean>
@@ -1306,10 +1305,11 @@
 			</entry>
 			<entry key="ubic.gemma.model.common.auditAndSecurity.User">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="hibernate3" />
+					<property name="type" value="bean" />
 					<property name="includes">
 						<list>
 							<value>userName</value>
+							<value>email</value>
 						</list>
 					</property>
 				</bean>
@@ -1506,6 +1506,7 @@
 <bean id="registerController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/register.html" />
 <bean id="userProfileController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/userProfile.html" />
 <bean id="passwordHintController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/passwordHint.html" />
+<bean id="userManagerController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/userManager.html" />
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
 	<!-- ==================================================== -->
