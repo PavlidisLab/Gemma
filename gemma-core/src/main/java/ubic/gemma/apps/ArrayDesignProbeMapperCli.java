@@ -45,7 +45,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -82,7 +81,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @SuppressWarnings("unchecked")
@@ -140,7 +138,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                 log.info( "============== Start processing: " + design + " ==================" );
                 try {
-                    // arrayDesignService.thaw( design );
+                    arrayDesignService.thawLite( design );
                     arrayDesignProbeMapperService.processArrayDesign( design );
                     successObjects.add( design.getName() );
                     audit( design, "Part of a batch job" );
