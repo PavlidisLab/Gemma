@@ -56,7 +56,13 @@ public class GeneExpressionProfile {
 
         double[] data = vector.standardize();
         int i = 0;
+        //Also test to make sure all the data isn't NAN
+        Boolean allNan = true;
         for ( Double d : data ) {
+            
+            if (d != Double.NaN)
+                allNan = false;
+            
             // TESTING: simulate missing data.
             // if ( RandomUtils.nextDouble() < 0.1 || i == 0) {
             // points.add( new DoublePoint( i, Double.NaN ) );
@@ -65,6 +71,9 @@ public class GeneExpressionProfile {
             // }
             i++;
         }
+        //If all nan change points to null;
+        if (allNan)
+            points = null;
     }
 
     public String getColor() {

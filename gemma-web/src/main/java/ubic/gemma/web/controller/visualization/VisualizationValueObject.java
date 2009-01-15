@@ -110,7 +110,9 @@ public class VisualizationValueObject {
             }
 
             GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid );
-            profiles.add( profile );
+
+            // If points is empty dont add
+            if ( profile.getPoints() != null ) profiles.add( profile );
 
         }
     }
