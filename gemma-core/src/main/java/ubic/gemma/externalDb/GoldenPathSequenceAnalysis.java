@@ -169,8 +169,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param geneProduct GeneProduct with which the overlap and distance is to be computed.
      * @param method
      * @return a ThreePrimeData object containing the results.
-     * @see getThreePrimeDistances
-     *      <p>
+     * @see getThreePrimeDistances <p>
      *      FIXME this should take a PhysicalLocation as an argument.
      */
     private BlatAssociation computeLocationInGene( String chromosome, Long queryStart, Long queryEnd, String starts,
@@ -622,13 +621,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return
      */
     public Collection<GeneProduct> findEnsemblGenesByLocation( String chromosome, Long start, Long end, String strand ) {
-
-        /*
-         * Mouse doesn't have ensembl tracks as of 1/2008.
-         */
-        if ( TaxonUtility.isMouse( this.getTaxon() ) ) {
-            return new HashSet<GeneProduct>();
-        }
 
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT r.name, kgXref.geneSymbol, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, 'Ensembl gene prediction' "
