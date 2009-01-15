@@ -43,10 +43,10 @@ Ext.onReady(function() {
 			name : "userName",
 			type : "string"
 		}, {
-			name : "lastName",
+			name : "email",
 			type : "string"
 		}, {
-			name : "email",
+			name : "role",
 			type : "string"
 		}, {
 			name : "enabled",
@@ -59,19 +59,29 @@ Ext.onReady(function() {
 	var emailEdit = new Ext.form.TextField({
 		vtype : 'email'
 	});
-	var roleEdit = new Ext.form.ComboBox({
-		typeAhead : true,
-		triggerAction : 'all',
-		mode : 'local',
-		store : 'roles',
-		displayField : 'role',
-		valueField : 'id'
-	});
 
 	var checkColumn = new Ext.grid.CheckColumn({
 		header : "Enabled?",
 		dataIndex : 'enabled',
 		width : 55
+	});
+
+	var possibleRoles = new Ext.data.Store({
+		data : [[1, "user"], [2, "admin"]],
+
+		reader : new Ext.data.ArrayReader({
+			id : 'id'
+		}, ['id', 'role'])
+
+	});
+
+	var roleEdit = new Ext.form.ComboBox({
+		typeAhead : true,
+		triggerAction : 'all',
+		mode : 'local',
+		store : possibleRoles,
+		displayField : 'role',
+		valueField : 'id'
 	});
 
 	var userGrid = new Ext.grid.EditorGridPanel({
@@ -90,13 +100,13 @@ Ext.onReady(function() {
 			dataIndex : 'userName',
 			sortable : true
 		}, {
-			header : "Last Name",
-			dataIndex : 'lastName',
-			sortable : true
-		}, {
 			header : "Email",
 			dataIndex : 'email',
 			editor : emailEdit
+		}, {
+			header : "Role",
+			dataIndex : 'role',
+			editor : roleEdit
 		}, checkColumn]),
 
 		viewConfig : {

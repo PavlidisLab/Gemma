@@ -1311,6 +1311,7 @@
 							<value>userName</value>
 							<value>email</value>
 							<value>enabled</value>
+							<value>roles</value>
 						</list>
 					</property>
 				</bean>
