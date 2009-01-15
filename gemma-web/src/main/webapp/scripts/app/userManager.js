@@ -56,7 +56,25 @@ Ext.onReady(function() {
 	});
 	store.load();
 
-	var userGrid = new Ext.grid.GridPanel({
+	var emailEdit = new Ext.form.TextField({
+		vtype : 'email'
+	});
+	var roleEdit = new Ext.form.ComboBox({
+		typeAhead : true,
+		triggerAction : 'all',
+		mode : 'local',
+		store : 'roles',
+		displayField : 'role',
+		valueField : 'id'
+	});
+
+	var checkColumn = new Ext.grid.CheckColumn({
+		header : "Enabled?",
+		dataIndex : 'enabled',
+		width : 55
+	});
+
+	var userGrid = new Ext.grid.EditorGridPanel({
 		renderTo : "userList",
 		title : "User Management",
 		frame : true,
@@ -64,6 +82,8 @@ Ext.onReady(function() {
 		width : 900,
 		store : store,
 		stripeRows : true,
+		clicksToEdit : 1,
+		plugins : checkColumn,
 
 		cm : new Ext.grid.ColumnModel([{
 			header : "Username",
@@ -75,11 +95,9 @@ Ext.onReady(function() {
 			sortable : true
 		}, {
 			header : "Email",
-			dataIndex : 'email'
-		}, {
-			header : "Account Enabled",
-			dataIndex : 'enabled'
-		}]),
+			dataIndex : 'email',
+			editor : emailEdit
+		}, checkColumn]),
 
 		viewConfig : {
 			forceFit : true
