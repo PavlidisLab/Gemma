@@ -1310,6 +1310,7 @@
 						<list>
 							<value>userName</value>
 							<value>email</value>
+							<value>enabled</value>
 						</list>
 					</property>
 				</bean>
