@@ -128,7 +128,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 .withArgName( "Generating all annotation files" )
                 .withDescription(
                         "Generates annotation files for all Array Designs (omits ones that are subsumed or merged) uses accession as annotation file name."
-                                + "Creates 3 zip files for each AD, no parents, parents, biological process. Overrides all other settings." )
+                                + "Creates 3 zip files for each AD, no parents, parents, biological process. Overrides all other settings except '--taxon'." )
                 .withLongOpt( "batch" ).create( 'b' );
 
         Option geneListFile = OptionBuilder.hasArg().withDescription(
@@ -136,10 +136,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 GENENAME_LISTFILE_OPTION );
         addOption( geneListFile );
 
-        Option taxonNameOption = OptionBuilder
-                .hasArg()
-                .withDescription(
-                        "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all known genes for the taxon" )
+        Option taxonNameOption = OptionBuilder.hasArg().withDescription(
+                "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
+                        + "known genes for the taxon, or with --all-arrays to process all arrays for the taxon." )
                 .create( "taxon" );
         addOption( taxonNameOption );
 
@@ -228,13 +227,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     /**
-     * Goes over all the AD's in the database and creates annotation 3 annotation files for each AD that is not merged
-     * into or subsumed by another AD. Uses the Accession ID (GPL???) for the name of the annotation file. Appends
-     * noparents, bioProcess, allParents to the file name.
+     * Goes over all the AD's in the database (possibly limited by taxon) and creates annotation 3 annotation files for
+     * each AD that is not merged into or subsumed by another AD. Uses the Accession ID (GPL???) for the name of the
+     * annotation file. Appends noparents, bioProcess, allParents to the file name.
      * 
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     protected void processAllADs() throws IOException {
 
         Collection<ArrayDesign> allADs = this.arrayDesignService.loadAll();
@@ -242,6 +240,23 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         this.includePredictedGenes = false;
 
         for ( ArrayDesign ad : allADs ) {
+            Taxon taxon = null;
+            if ( this.taxonName != null ) {
+                TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+                taxon = taxonService.findByCommonName( taxonName );
+                if ( taxon == null ) {
+                    throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
+                }
+            }
+
+            Taxon adTaxon = arrayDesignService.getTaxon( ad.getId() );
+
+            /*
+             * If using taxon, check it.
+             */
+            if ( taxon != null && ( adTaxon == null || !adTaxon.equals( taxon ) ) ) {
+                continue;
+            }
 
             if ( ad.getSubsumingArrayDesign() != null ) {
                 log.info( "Skipping  " + ad.getName() + "  because it is subsumed by "
@@ -260,7 +275,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     }
 
-    @SuppressWarnings("unchecked")
     private void processOneAD( ArrayDesign ad ) throws IOException {
         log.info( "Processing AD: " + ad.getName() );
 
@@ -304,7 +318,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      * @param outputType
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     protected boolean processAD( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType )
             throws IOException {
 
@@ -524,13 +537,16 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             this.geneFileName = this.getOptionValue( GENENAME_LISTFILE_OPTION );
             if ( !this.hasOption( "taxon" ) ) {
                 throw new IllegalArgumentException( "You must specify the taxon when using --genefile" );
-            } else {
-                this.taxonName = this.getOptionValue( "taxon" );
             }
+            this.taxonName = this.getOptionValue( "taxon" );
+
         }
 
         if ( this.hasOption( "taxon" ) ) {
             this.taxonName = this.getOptionValue( "taxon" );
+            if ( this.hasOption( 'b' ) ) {
+                log.info( "Will batch process array designs for " + this.taxonName );
+            }
         }
 
         if ( this.hasOption( 'g' ) ) processGenesIncluded( this.getOptionValue( 'g' ) );
