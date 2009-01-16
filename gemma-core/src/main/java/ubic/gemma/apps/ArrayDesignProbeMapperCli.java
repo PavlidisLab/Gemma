@@ -83,7 +83,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Array design mapping of probes to genes", args );
