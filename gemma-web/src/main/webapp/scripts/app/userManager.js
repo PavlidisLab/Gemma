@@ -32,30 +32,33 @@ Ext.onReady(function() {
 	//
 	// });
 
+	var record = Ext.data.Record.create([{
+		name : "id",
+		type : "int"
+	}, {
+		name : "userName",
+		type : "string"
+	}, {
+		name : "email",
+		type : "string"
+	}, {
+		name : "role",
+		type : "string"
+	}, {
+		name : "enabled",
+		type : "boolean"
+	}]);
+
 	var store = new Ext.data.Store({
 		proxy : new Ext.data.DWRProxy(UserListController.getUsers),
 		reader : new Ext.data.ListRangeReader({
 			id : 'id'
-		}, Ext.data.Record.create([{
-			name : "id",
-			type : "int"
-		}, {
-			name : "userName",
-			type : "string"
-		}, {
-			name : "email",
-			type : "string"
-		}, {
-			name : "role",
-			type : "string"
-		}, {
-			name : "enabled",
-			type : "boolean"
-		}])),
+		}, record),
 		remoteSort : false
 	});
 	store.load();
 
+	/* create editors for the grid */
 	var emailEdit = new Ext.form.TextField({
 		vtype : 'email'
 	});
@@ -66,6 +69,7 @@ Ext.onReady(function() {
 		width : 55
 	});
 
+	// the combo box editor needs a store
 	var possibleRoles = new Ext.data.Store({
 		data : [[1, "user"], [2, "admin"]],
 
@@ -77,6 +81,7 @@ Ext.onReady(function() {
 
 	var roleEdit = new Ext.form.ComboBox({
 		typeAhead : true,
+		lazyRender : true,
 		triggerAction : 'all',
 		mode : 'local',
 		store : possibleRoles,
@@ -84,6 +89,11 @@ Ext.onReady(function() {
 		valueField : 'id'
 	});
 
+	/* stylers */
+	// roleStyler = function(value, metadata, record, row, col, ds) {
+	// var r = record.get("role");
+	// return r;
+	// }
 	var userGrid = new Ext.grid.EditorGridPanel({
 		renderTo : "userList",
 		title : "User Management",
@@ -94,6 +104,7 @@ Ext.onReady(function() {
 		stripeRows : true,
 		clicksToEdit : 1,
 		plugins : checkColumn,
+		loadMask : true,
 
 		cm : new Ext.grid.ColumnModel([{
 			header : "Username",
@@ -107,7 +118,8 @@ Ext.onReady(function() {
 			header : "Role",
 			dataIndex : 'role',
 			editor : roleEdit
-		}, checkColumn]),
+				// ,renderer : roleEdit.setValue(roleStyler)
+				}, checkColumn]),
 
 		viewConfig : {
 			forceFit : true

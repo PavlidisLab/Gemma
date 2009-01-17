@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
@@ -67,14 +68,19 @@ public class UserListController implements Controller {
      * 
      * @return
      */
-    public Collection<User> getUsers() {
-        // TODO use a UserValueObject
+    public Collection<UserValueObject> getUsers() {
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'getUsers' method..." );
         }
 
-        return userService.loadAll();
+        Collection<UserValueObject> userValueObjects = new ArrayList<UserValueObject>();
 
+        Collection<User> users = userService.loadAll();
+        for ( User u : users ) {
+            UserValueObject uv = new UserValueObject( u );
+            userValueObjects.add( uv );
+        }
+        return userValueObjects;
     }
 
     /**
