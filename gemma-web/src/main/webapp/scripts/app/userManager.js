@@ -49,9 +49,6 @@ Ext.onReady(function() {
 		type : "boolean"
 	}]);
 
-	var thisRecord = this.record;
-	var r = record;
-
 	var userStore = new Ext.data.Store({
 		proxy : new Ext.data.DWRProxy(UserListController.getUsers),
 		reader : new Ext.data.ListRangeReader({
@@ -62,6 +59,10 @@ Ext.onReady(function() {
 	userStore.load();
 
 	/* create editors for the grid */
+	var userNameEdit = new Ext.form.TextField({
+		allowBlank : false
+	});
+
 	var emailEdit = new Ext.form.TextField({
 		vtype : 'email'
 	});
@@ -155,6 +156,7 @@ Ext.onReady(function() {
 		cm : new Ext.grid.ColumnModel([{
 			header : "Username",
 			dataIndex : 'userName',
+			editor : userNameEdit,
 			sortable : true
 		}, {
 			header : "Email",
