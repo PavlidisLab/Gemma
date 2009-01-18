@@ -131,7 +131,7 @@ Ext.onReady(function() {
 
 		{
 			text : 'Remove',
-			tooltip : 'Remove selected new user',
+			tooltip : 'Remove selected user',
 			icon : 'images/icons/delete.png',
 			cls : 'x-btn-text-icon',
 			handler : function() {
