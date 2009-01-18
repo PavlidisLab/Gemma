@@ -56,7 +56,6 @@ Ext.onReady(function() {
 		}, record),
 		remoteSort : false
 	});
-	store.load();
 
 	/* create editors for the grid */
 	var emailEdit = new Ext.form.TextField({
@@ -89,11 +88,6 @@ Ext.onReady(function() {
 		valueField : 'id'
 	});
 
-	/* stylers */
-	// roleStyler = function(value, metadata, record, row, col, ds) {
-	// var r = record.get("role");
-	// return r;
-	// }
 	var userGrid = new Ext.grid.EditorGridPanel({
 		renderTo : "userList",
 		title : "User Management",
@@ -105,6 +99,7 @@ Ext.onReady(function() {
 		clicksToEdit : 1,
 		plugins : checkColumn,
 		loadMask : true,
+		autoScroll : true,
 
 		cm : new Ext.grid.ColumnModel([{
 			header : "Username",
@@ -118,8 +113,7 @@ Ext.onReady(function() {
 			header : "Role",
 			dataIndex : 'role',
 			editor : roleEdit
-				// ,renderer : roleEdit.setValue(roleStyler)
-				}, checkColumn]),
+		}, checkColumn]),
 
 		viewConfig : {
 			forceFit : true
@@ -128,6 +122,8 @@ Ext.onReady(function() {
 		sm : new Ext.grid.RowSelectionModel({
 			singleSelect : true
 		})
-
 	});
+	/* load the data store with values from the server */
+	store.load();
+
 });
