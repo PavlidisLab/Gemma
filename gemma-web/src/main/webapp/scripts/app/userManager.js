@@ -92,9 +92,7 @@ Ext.onReady(function() {
 			}, ['id', 'role'])
 
 		}),
-
 		valueField : 'role'
-
 	});
 
 	var userGrid = new Ext.grid.EditorGridPanel({
@@ -117,7 +115,16 @@ Ext.onReady(function() {
 			text : 'Add',
 			tooltip : 'Add a new user',
 			icon : 'images/icons/add.png',
-			cls : 'x-btn-text-icon'
+			cls : 'x-btn-text-icon',
+			handler : function() {
+				userGrid.getStore().insert(0, new record({
+					userName : 'New User',
+					email : '',
+					role : 'Select Role',
+					enabled : true
+				}));
+				userGrid.startEditing(0, 0);
+			}
 		},
 
 		{
@@ -131,11 +138,11 @@ Ext.onReady(function() {
 				if (sm.hasSelection()) {
 					Ext.Msg.show({
 						title : 'Remove User',
-						buttons : Ext.MessageBox.YESNOCANCEL,
-						msg : 'Remove user ' + sel.data.userName + '?',
+						buttons : Ext.MessageBox.YESNO,
+						msg : 'Remove ' + sel.data.userName + '?',
 						fn : function(btn) {
 							if (btn == 'yes') {
-								grid.getStore().remove(sel);
+								userGrid.getStore().remove(sel);
 							}
 						}
 					});
