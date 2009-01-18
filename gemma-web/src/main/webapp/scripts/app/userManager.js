@@ -64,6 +64,7 @@ Ext.onReady(function() {
 	});
 
 	var emailEdit = new Ext.form.TextField({
+		allowBlank : false,
 		vtype : 'email'
 	});
 
