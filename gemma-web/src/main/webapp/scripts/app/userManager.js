@@ -49,13 +49,17 @@ Ext.onReady(function() {
 		type : "boolean"
 	}]);
 
-	var store = new Ext.data.Store({
+	var thisRecord = this.record;
+	var r = record;
+
+	var userStore = new Ext.data.Store({
 		proxy : new Ext.data.DWRProxy(UserListController.getUsers),
 		reader : new Ext.data.ListRangeReader({
 			id : 'id'
 		}, record),
 		remoteSort : false
-	});
+	})
+	userStore.load();
 
 	/* create editors for the grid */
 	var emailEdit = new Ext.form.TextField({
@@ -68,38 +72,78 @@ Ext.onReady(function() {
 		width : 55
 	});
 
-	// the combo box editor needs a store
-	var possibleRoles = new Ext.data.Store({
-		data : [[1, "user"], [2, "admin"]],
-
-		reader : new Ext.data.ArrayReader({
-			id : 'id'
-		}, ['id', 'role'])
-
-	});
+	// var d = userStore.data.items;
+	// var r = record.get("role").createDelegate(this);
 
 	var roleEdit = new Ext.form.ComboBox({
 		typeAhead : true,
 		lazyRender : true,
 		triggerAction : 'all',
 		mode : 'local',
-		store : possibleRoles,
+		selectOnFocus : true,
 		displayField : 'role',
-		valueField : 'id'
+
+		// the role (combo box) editor needs a store
+		store : new Ext.data.Store({
+			data : [[1, "user"], [2, "admin"]],
+
+			reader : new Ext.data.ArrayReader({
+				id : 'id'
+			}, ['id', 'role'])
+
+		}),
+
+		valueField : 'role'
+
 	});
 
 	var userGrid = new Ext.grid.EditorGridPanel({
+
 		renderTo : "userList",
 		title : "User Management",
 		frame : true,
 		height : 300,
 		width : 900,
-		store : store,
 		stripeRows : true,
 		clicksToEdit : 1,
 		plugins : checkColumn,
 		loadMask : true,
 		autoScroll : true,
+		store : userStore,
+
+		tbar : [
+
+		{
+			text : 'Add',
+			tooltip : 'Add a new user',
+			icon : 'images/icons/add.png',
+			cls : 'x-btn-text-icon'
+		},
+
+		{
+			text : 'Remove',
+			tooltip : 'Remove selected new user',
+			icon : 'images/icons/delete.png',
+			cls : 'x-btn-text-icon',
+			handler : function() {
+				var sm = userGrid.getSelectionModel();
+				var sel = sm.getSelected();
+				if (sm.hasSelection()) {
+					Ext.Msg.show({
+						title : 'Remove User',
+						buttons : Ext.MessageBox.YESNOCANCEL,
+						msg : 'Remove user ' + sel.data.userName + '?',
+						fn : function(btn) {
+							if (btn == 'yes') {
+								grid.getStore().remove(sel);
+							}
+						}
+					});
+				};
+			}
+		}
+
+		],
 
 		cm : new Ext.grid.ColumnModel([{
 			header : "Username",
@@ -122,8 +166,14 @@ Ext.onReady(function() {
 		sm : new Ext.grid.RowSelectionModel({
 			singleSelect : true
 		})
-	});
-	/* load the data store with values from the server */
-	store.load();
 
+			// listeners : {
+			// afteredit : function(e) {
+			// if (e.field == 'enabled' && e.value == false)
+			// Ext.Msg.alert(e.record);
+			// // e.record.commit();
+			// }
+			// }
+
+	});
 });
