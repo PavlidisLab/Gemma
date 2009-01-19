@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -33,6 +36,8 @@ import ubic.gemma.model.genome.Gene;
  */
 public class GeneExpressionProfile {
 
+    private static Log log = LogFactory.getLog( GeneExpressionProfile.class );
+
     /*
      * This is a collection because probes are not specific.
      */
@@ -41,7 +46,6 @@ public class GeneExpressionProfile {
     DesignElement probe;
     int factor;
     private String color = "black";
-    
 
     public GeneExpressionProfile( DoubleVectorValueObject vector, String color, int factor ) {
         this.genes = vector.getGenes();
@@ -56,11 +60,11 @@ public class GeneExpressionProfile {
 
         double[] data = vector.standardize();
         int i = 0;
-        //Also test to make sure all the data isn't NAN
+        // Also test to make sure all the data isn't NAN
         Boolean allNan = true;
         for ( Double d : data ) {
             
-            if (d != Double.NaN)
+            if (!d.equals( Double.NaN))
                 allNan = false;
             
             // TESTING: simulate missing data.
@@ -71,9 +75,11 @@ public class GeneExpressionProfile {
             // }
             i++;
         }
-        //If all nan change points to null;
-        if (allNan)
+        // If all nan change points to null;
+        if (allNan){
             points = null;
+            //log.info( "All Nan removed from: " + this.probe);
+        }
     }
 
     public String getColor() {

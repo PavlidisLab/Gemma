@@ -251,7 +251,6 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 				var coldGeneName = coordinateProfile[0].genes[0].name;
 				var coldIndex = 0, hotIndex = 0;
 
-				//console.log(data);
 				for (var i = 0; i < coordinateProfile.size(); i++) {
 					var coordinateObject = coordinateProfile[i].points;
 
