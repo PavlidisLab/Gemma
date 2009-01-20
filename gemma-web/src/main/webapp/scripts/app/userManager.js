@@ -105,7 +105,7 @@ Ext.onReady(function() {
 		height : 300,
 		width : 900,
 		stripeRows : true,
-		clicksToEdit : 1,
+		clicksToEdit : 2,
 		plugins : checkColumn,
 		loadMask : true,
 		autoScroll : true,
@@ -116,6 +116,7 @@ Ext.onReady(function() {
 		{
 			text : 'Add',
 			tooltip : 'Add a new user',
+			disabled : true,
 			icon : 'images/icons/add.png',
 			cls : 'x-btn-text-icon',
 			handler : function() {
@@ -131,6 +132,7 @@ Ext.onReady(function() {
 
 		{
 			text : 'Remove',
+			disabled : true,
 			tooltip : 'Remove selected user',
 			icon : 'images/icons/delete.png',
 			cls : 'x-btn-text-icon',
@@ -145,6 +147,34 @@ Ext.onReady(function() {
 						fn : function(btn) {
 							if (btn == 'yes') {
 								userGrid.getStore().remove(sel);
+							}
+						}
+					});
+				};
+			}
+		},
+
+		{
+			text : 'Save',
+			tooltip : 'Save the selected user',
+			icon : 'images/icons/database_save.png',
+			cls : 'x-btn-text-icon',
+			handler : function() {
+				var sm = userGrid.getSelectionModel();
+				var sel = sm.getSelected();
+				if (sm.hasSelection()) {
+					Ext.Msg.show({
+						title : 'Save User',
+						buttons : Ext.MessageBox.YESNO,
+						msg : 'Save ' + sel.data.userName + '?',
+						fn : function(btn) {
+							if (btn == 'yes') {
+								UserListController.saveUser({
+									userName : sel.data.userName,
+									email : sel.data.email,
+									enabled : sel.data.enabled,
+									role : sel.data.role
+								});
 							}
 						}
 					});
@@ -176,14 +206,6 @@ Ext.onReady(function() {
 		sm : new Ext.grid.RowSelectionModel({
 			singleSelect : true
 		})
-
-			// listeners : {
-			// afteredit : function(e) {
-			// if (e.field == 'enabled' && e.value == false)
-			// Ext.Msg.alert(e.record);
-			// // e.record.commit();
-			// }
-			// }
 
 	});
 });

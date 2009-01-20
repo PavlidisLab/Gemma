@@ -664,6 +664,7 @@
 					<property name="includes">
 						<list>
 							<value>getUsers</value>
+							<value>saveUser</value>
 						</list>
 					</property>
 				</bean>

@@ -18,6 +18,10 @@
  */
 package ubic.gemma.util;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.Authentication;
@@ -29,6 +33,7 @@ import org.springframework.security.userdetails.UserDetailsService;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserImpl;
+import ubic.gemma.model.common.auditAndSecurity.UserRole;
 
 /**
  * @author keshav
@@ -91,5 +96,30 @@ public class SecurityUtil {
         auth = new UsernamePasswordAuthenticationToken( user, user.getPassword(), authorities );
         SecurityContextHolder.getContext().setAuthentication( auth );
 
+    }
+
+    /**
+     * Adds a role to the user.
+     * 
+     * @param user
+     */
+    public static void addRole( User user, String role ) {
+
+        UserRole r = null;
+
+        SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" );
+        Calendar cal = Calendar.getInstance();
+        String message = "Added on " + sdf.format( cal.getTime() );
+
+        if ( StringUtils.equals( role, UserConstants.USER_ROLE ) ) {
+            r = UserRole.Factory.newInstance( user.getUserName(), UserConstants.USER_ROLE, message );
+        } else if ( StringUtils.equals( role, UserConstants.ADMIN_ROLE ) ) {
+            r = UserRole.Factory.newInstance( user.getUserName(), UserConstants.ADMIN_ROLE, message );
+        } else {
+            throw new RuntimeException( "Undefined role " + role + ".  Can't add this role to user "
+                    + user.getUserName() );
+        }
+
+        user.getRoles().add( r );
     }
 }

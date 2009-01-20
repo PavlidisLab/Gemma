@@ -31,7 +31,9 @@ import org.springframework.web.servlet.mvc.Controller;
 
 import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
+import ubic.gemma.util.SecurityUtil;
 
 /**
  * Simple class to retrieve a list of users from the database. From appfuse.
@@ -81,6 +83,36 @@ public class UserListController implements Controller {
             userValueObjects.add( uv );
         }
         return userValueObjects;
+    }
+
+    /**
+     * Save the user.
+     * 
+     * @param user
+     */
+    public void saveUser( UserValueObject user ) throws UserExistsException {
+
+        String userName = user.getUserName();
+        User u = userService.findByUserName( userName );
+        /* other fields */
+        String email = user.getEmail();
+        boolean enabled = user.isEnabled();
+        String role = user.getRole();
+        if ( u == null ) {
+            /* new user */
+            u = User.Factory.newInstance();
+            u.setUserName( userName );
+            u.setEmail( email );
+            u.setEnabled( enabled );
+            SecurityUtil.addRole( u, role );
+
+            userService.create( u );
+        } else {
+            /* update user */
+            userService.update( u );
+        }
+        // TODO when changing the roles (from user to say, admin), must also change the acl_permission's
+        // acl_object_identity and mask
     }
 
     /**

@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserRole;
+import ubic.gemma.util.SecurityUtil;
 import ubic.gemma.util.UserConstants;
 import ubic.gemma.web.util.JSONUtil;
 
@@ -71,7 +71,7 @@ public class SignupMultiActionController extends UserAuthenticatingMultiActionCo
         user.setUserName( username );
         user.setEmail( email );
         user.setEnabled( true );
-        addRole( user );
+        SecurityUtil.addRole( user, UserConstants.USER_ROLE );
 
         User savedUser;
         JSONUtil jsonUtil = new JSONUtil( request, response );
@@ -95,28 +95,5 @@ public class SignupMultiActionController extends UserAuthenticatingMultiActionCo
                 e.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Adds a role to the user.
-     * 
-     * @param user
-     */
-    private void addRole( User user ) {
-
-        // Set the default user role on this new user
-        UserRole role = null;
-
-        String message = "added by " + this.getClass().getName();
-
-        // TODO If setAsAdmin is true, sets the user as an administrator. This was from the old spring mvc
-        // boolean setAsAdmin = user.getAdminUser();
-        // if ( setAsAdmin ) {
-        // role = UserRole.Factory.newInstance( user.getUserName(), UserConstants.ADMIN_ROLE, message );
-        // } else {
-        role = UserRole.Factory.newInstance( user.getUserName(), UserConstants.USER_ROLE, message );
-        // }
-
-        user.getRoles().add( role );
     }
 }
