@@ -78,6 +78,25 @@ public class CustomAclDao {
     }
 
     /**
+     * Changes the acl_object_identity and mask on the given recipient's control node in the acl_permission table. This
+     * is called, for example, after changing the role of a user to make the pertinent changes to the acl permission
+     * table.
+     * <p>
+     * For example, a user="foo", has a control node with an acl_object_identity_2. When changing this from a "user" to
+     * an "admin", we must set the acl_object_identity=1 and mask=6.
+     * 
+     * @param aclObjectIdentity
+     * @param mask
+     * @param recipient
+     */
+    public void updateAclPermissionAclObjectIdentity( int aclObjectIdentity, int mask, String recipient ) {
+        String queryString = "update acl_permission set acl_object_identity=" + aclObjectIdentity + ", mask=" + mask
+                + "where recipient=" + recipient;
+        JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
+        jdbcTemplate.execute( queryString );
+    }
+
+    /**
      * @param dataSource
      */
     public void setDataSource( DataSource dataSource ) {
