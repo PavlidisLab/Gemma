@@ -116,7 +116,7 @@ Ext.onReady(function() {
 		{
 			text : 'Add',
 			tooltip : 'Add a new user',
-			disabled : true,
+			// disabled : true,
 			icon : 'images/icons/add.png',
 			cls : 'x-btn-text-icon',
 			handler : function() {
@@ -132,7 +132,7 @@ Ext.onReady(function() {
 
 		{
 			text : 'Remove',
-			disabled : true,
+			// disabled : true,
 			tooltip : 'Remove selected user',
 			icon : 'images/icons/delete.png',
 			cls : 'x-btn-text-icon',
