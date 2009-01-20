@@ -230,6 +230,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( Session session ) throws HibernateException {
 
+                        // At this point, the ee is probably still in the session, as the service already has gotten it
+                        // in this transaction.
+                        session.flush();
+                        session.clear();
+
                         session.lock( toDelete, LockMode.NONE );
 
                         Hibernate.initialize( toDelete.getBioAssayDataVectors() );
