@@ -126,9 +126,9 @@ public class DEDVController extends BaseFormController {
         watch.stop();
         Long time = watch.getTime();
 
-        if ( dedvs.size() == 0 ) {
-            throw new IllegalArgumentException(
-                    "No expression profiles were available for the experiments and genes(s)" );
+        if ( dedvs.size() == 0 ) {            
+           log.warn("No expression profiles (DEDVs) were available for the experiments:  " + eeIds + " and genes(s) " + queryGene.getOfficialSymbol() + ", " + coexpressedGene.getOfficialSymbol() );
+           return null;
         }
 
         if ( time > 1000 ) {

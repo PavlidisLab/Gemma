@@ -209,7 +209,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 		this.dv = new Ext.DataView({
 			autoHeight : true,
-			emptyText : 'No images to display',
+			emptyText : 'Unable to visualize missing data',
 			loadingText : 'Loading data ...',
 			store : new Gemma.VisualizationStore(),
 
@@ -466,7 +466,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	initComponent : function() {
 		this.dv = new Ext.DataView({
 			autoHeight : true,
-			emptyText : 'No images to display',
+			emptyText : 'Unable to visualize missing data',
 			loadingText : 'Loading data ...',
 			store : new Gemma.VisualizationStore({
 						readMethod : DEDVController.getDEDVForDiffExVisualization

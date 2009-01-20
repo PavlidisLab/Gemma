@@ -25,7 +25,7 @@ function handleStartSuccess(taskId) {
 				});
 		p.show();
 	} catch (e) {
-		console.log(e);
+		//console.log(e);
 		handleFailure(data, e);
 		return;
 	}
