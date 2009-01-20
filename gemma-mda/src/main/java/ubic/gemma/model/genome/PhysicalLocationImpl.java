@@ -78,13 +78,10 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
         return ( int ) overlap;
     }
 
-    public int binFromRange( int start, int end )
-    /* return bin that this start-end segment is in */
-    {
-        if ( end <= BINRANGE_MAXEND_512M )
-            return binFromRangeStandard( start, end );
-        else
-            return binFromRangeExtended( start, end );
+    /** return bin that this start-end segment is in */
+    public int binFromRange( int start, int end ) {
+        if ( end <= BINRANGE_MAXEND_512M ) return binFromRangeStandard( start, end );
+        return binFromRangeExtended( start, end );
     }
 
     /**
@@ -237,7 +234,10 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
         buf.append( this.getChromosome().getTaxon().getScientificName() + " chr " + this.getChromosome().getName() );
 
         if ( this.getNucleotide() != null ) buf.append( ":" + this.getNucleotide() );
-        buf.append( " on " + this.getStrand() + " strand" );
+        if ( this.getNucleotideLength() != 0 ) {
+            buf.append( "-" + ( this.getNucleotide() + this.getNucleotideLength() ) );
+        }
+        if ( this.getStrand() != null ) buf.append( " on " + this.getStrand() + " strand" );
 
         return buf.toString();
     }

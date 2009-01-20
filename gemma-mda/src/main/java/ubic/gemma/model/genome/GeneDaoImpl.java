@@ -136,7 +136,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * (non-Javadoc)
      * @see ubic.gemma.model.genome.GeneDao#findNearest(ubic.gemma.model.genome.PhysicalLocation)
      */
-    public Collection<Gene> findNearest( PhysicalLocation physicalLocation ) {
+    public RelativeLocationData findNearest( PhysicalLocation physicalLocation ) {
 
         if ( physicalLocation.getNucleotide() == null ) {
             throw new IllegalArgumentException( "Locations must have a nucleotide position" );
@@ -146,80 +146,130 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * Strategy: start with a small window, enlarge it until we decide enough is enough.
          */
         Chromosome chrom = physicalLocation.getChromosome();
-        Long targetStart = physicalLocation.getNucleotide();
-        Long targetEnd = physicalLocation.getNucleotide()
-                + ( physicalLocation.getNucleotideLength() == null ? 0 : physicalLocation.getNucleotideLength() );
+        final Long targetStart = physicalLocation.getNucleotide();
+        Integer nucleotideLength = physicalLocation.getNucleotideLength();
+        final Long targetEnd = targetStart + ( nucleotideLength == null ? 0 : nucleotideLength );
         final String strand = physicalLocation.getStrand();
         if ( log.isDebugEnabled() )
             log.debug( "Start Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
-        /*
-         * Start with the 'exact' location.
-         */
-        Collection<Gene> candidates = findByPosition( chrom, targetStart, targetEnd, strand );
-        if ( !candidates.isEmpty() ) {
-            if ( log.isDebugEnabled() ) log.debug( physicalLocation + ": overlaps " + candidates.size() + " gene(s)" );
-            return candidates;
-        }
+
+        // /*
+        // * Start with the 'exact' location.
+        // */
+        // Collection<Gene> candidates = findByPosition( chrom, targetStart, targetEnd, strand );
+        // if ( !candidates.isEmpty() ) {
+        // if ( log.isDebugEnabled() ) log.debug( physicalLocation + ": overlaps " + candidates.size() + " gene(s)" );
+        // return candidates;
+        // }
 
         /*
-         * Start enlarging the region. FIXME: find the nearest hit, not just the ones in the window.
+         * Start enlarging the region. Finds the nearest hit.
          */
-        int i = 1;
-        while ( targetStart >= 0 && targetEnd - targetStart < MAX_WINDOW ) {
-            targetStart = targetStart - i * WINDOW_INCREMENT;
+        int i = 0;
+        long windowStart = targetStart;
+        long windowEnd = targetEnd;
+        while ( windowStart >= 0 && windowEnd - windowStart < MAX_WINDOW ) {
+            windowStart = windowStart - i * WINDOW_INCREMENT;
 
-            if ( targetStart < 0 ) targetStart = 0L;
+            if ( targetStart < 0 ) windowStart = 0L;
 
-            targetEnd = targetEnd + i * WINDOW_INCREMENT;
+            windowEnd = windowEnd + i * WINDOW_INCREMENT;
+
             if ( log.isDebugEnabled() )
-                log.debug( "Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
+                log.debug( "Search: " + physicalLocation + " length=" + ( windowEnd - windowStart ) );
 
-            candidates = findByPosition( chrom, targetStart, targetEnd, strand );
+            Collection<Gene> candidates = findByPosition( chrom, windowStart, windowEnd, strand );
             if ( !candidates.isEmpty() ) {
                 if ( log.isDebugEnabled() )
                     log.debug( physicalLocation + ": " + candidates.size() + " nearby genes at window size " + i
                             * WINDOW_INCREMENT );
 
-                Collection<Gene> results = new HashSet<Gene>();
-                Gene closestGene = null;
-                int closestRange = ( int ) 1e10;
+                long closestRange = ( long ) 1e10;
+                RelativeLocationData result = null;
                 for ( Gene gene : candidates ) {
-                    this.thaw( gene ); // slow...
+                    this.thaw( gene );
                     for ( GeneProduct gp : gene.getProducts() ) {
                         PhysicalLocation genelocation = gp.getPhysicalLocation();
                         assert genelocation.getChromosome().equals( physicalLocation.getChromosome() );
-                        Long start = genelocation.getNucleotide();
-                        Long end = genelocation.getNucleotideLength() + start;
+                        Long geneStart = genelocation.getNucleotide();
+                        Long geneEnd = genelocation.getNucleotideLength() + geneStart;
 
-                        /*
-                         * FIXME This is bogus. Need to sort through cases properly.
-                         */
-                        long r1 = Math.abs( targetStart - start );
-                        long r2 = Math.abs( targetStart - end );
-                        long r3 = Math.abs( targetEnd - start );
-                        long r4 = Math.abs( targetEnd - end );
+                        RelativeLocationData candidate = new RelativeLocationData( physicalLocation, gene, gp,
+                                genelocation );
 
-                        if ( r1 < closestRange || r2 < closestRange || r3 < closestRange || r4 < closestRange ) {
-                            closestGene = gene;
+                        long range = 0;
+                        // note we use the 'real' location of the par, not the window.
+
+                        if ( geneStart > targetEnd ) {
+                            // g -------oooooo
+                            // t ooooo
+                            range = geneStart - targetEnd;
+                            if ( log.isDebugEnabled() )
+                                log.debug( gene + " is " + range + " from the right end of " + physicalLocation );
+                        } else if ( geneStart <= targetStart ) {
+                            if ( geneEnd >= targetEnd ) {
+                                // g oooooooooo
+                                // t --ooooo---
+                                candidate.setContainedWithinGene( true );
+                                candidate.setOverlapsGene( true );
+                                range = 0;
+                                if ( log.isDebugEnabled() ) log.debug( gene + " contains target " + physicalLocation );
+
+                            } else if ( geneEnd > targetStart ) {
+                                // g ooooooooo
+                                // t ----ooooooooo
+                                range = 0;
+                                candidate.setOverlapsGene( true );
+                                if ( log.isDebugEnabled() )
+                                    log.debug( gene + " overlaps left end of " + physicalLocation );
+
+                            } else {
+                                assert geneEnd < targetStart;
+                                // g ooooooo
+                                // t ---------ooooooo
+                                log.debug( gene + " is " + range + " from the left end of " + physicalLocation );
+                                range = targetStart - geneEnd;
+                            }
+                        } else {
+                            if ( geneEnd > targetEnd ) {
+                                // g ---oooooooo
+                                // t ooooooo
+                                if ( log.isDebugEnabled() )
+                                    log.debug( gene + " overlaps right end of " + physicalLocation );
+                                range = 0;
+                                candidate.setOverlapsGene( true );
+                            } else {
+                                assert geneEnd <= targetEnd;
+                                // g ----oooo----
+                                // t oooooooooooo
+                                range = 0;
+                                candidate.setOverlapsGene( true );
+                                if ( log.isDebugEnabled() )
+                                    log.debug( gene + " is contained within " + physicalLocation );
+                            }
+                        }
+
+                        assert range >= 0;
+
+                        if ( range < closestRange ) {
+                            result = candidate;
+                            result.setRange( range );
+                            closestRange = range;
                         }
 
                     }
 
                 }
 
-                assert closestGene != null;
-
-                results.add( closestGene );
-
-                return results;
+                return result;
             }
-            // log.info( "Widening search..." );
+            // log.debug( "Widening search..." );
             i++;
         }
 
         // nuthin'
         log.debug( "Nothing found" );
-        return new HashSet<Gene>();
+        return null;
 
     }
 

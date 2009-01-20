@@ -33,6 +33,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Qtl;
+import ubic.gemma.model.genome.RelativeLocationData;
 
 /**
  * 
@@ -108,7 +109,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * @param physicalLocation
      * @return
      */
-    public Collection<Gene> findNearest( PhysicalLocation physicalLocation );
+    public RelativeLocationData findNearest( PhysicalLocation physicalLocation );
 
     /**
      * 

@@ -216,7 +216,7 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      * @param physicalLocation
      * @return
      */
-    public Collection<Gene> findNearest( PhysicalLocation physicalLocation );
+    public RelativeLocationData findNearest( PhysicalLocation physicalLocation );
 
     /**
      * Converts an instance of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's entity.

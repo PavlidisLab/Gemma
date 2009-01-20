@@ -32,6 +32,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -42,9 +43,9 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
 
-    private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() ); 
+    private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
 
-    public Collection<Gene> findNearest( PhysicalLocation physicalLocation ) {
+    public RelativeLocationData findNearest( PhysicalLocation physicalLocation ) {
         return this.getGeneDao().findNearest( physicalLocation );
     }
 
@@ -305,11 +306,8 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         this.getGeneDao().update( gene );
     }
 
-   
-
     public void thawLite( Gene gene ) {
-        this.getGeneDao().thawLite(gene);
+        this.getGeneDao().thawLite( gene );
     }
- 
 
 }
