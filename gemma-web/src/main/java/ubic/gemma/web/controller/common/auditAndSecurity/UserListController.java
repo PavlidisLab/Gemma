@@ -119,10 +119,10 @@ public class UserListController implements Controller {
         SecurityUtil.addRole( u, role );
 
         /*
-         * When changing the roles (from user to say, admin), must first create new or update existing user and THEN
-         * change the acl_permission's acl_object_identity and mask. This must be done in two separate steps to first
-         * get the acl permissions added to the acl_permission and acl_object_identity tables when creating a new user.
-         * After being added, then these permissions can be changed.
+         * When changing the roles (from user to say, admin), we must first create a new or update an existing user,
+         * THEN change the acl_permission's acl_object_identity and mask. This must be done in two separate steps: first
+         * add the acl permissions to the acl_permission and acl_object_identity tables (when creating a new user), then
+         * change the permissions.
          */
 
         if ( newUser ) {
