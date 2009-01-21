@@ -7,6 +7,8 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
+Gemma.USER_PAGE_SIZE = 10;
+
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
@@ -49,12 +51,13 @@ Ext.onReady(function() {
 				type : "boolean"
 			}]);
 
-	var userStore = new Ext.data.Store({
+	var userStore = new Gemma.PagingDataStore({
 		proxy : new Ext.data.DWRProxy(UserListController.getUsers),
 		reader : new Ext.data.ListRangeReader({
 					id : 'id'
 				}, record),
-		remoteSort : false
+		remoteSort : false,
+		pageSize : Gemma.USER_PAGE_SIZE
 	})
 	userStore.load();
 
@@ -187,6 +190,11 @@ Ext.onReady(function() {
 				}
 
 		],
+
+		bbar : new Ext.PagingToolbar({
+			pageSize : Gemma.USER_PAGE_SIZE,
+			store : userStore
+		}),
 
 		cm : new Ext.grid.ColumnModel([{
 					header : "Username",
