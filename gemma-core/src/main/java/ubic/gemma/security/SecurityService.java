@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.engine.CascadeStyle;
@@ -31,15 +32,18 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.Authentication;
 import org.springframework.security.GrantedAuthority;
+import org.springframework.security.acl.basic.SimpleAclEntry;
 import org.springframework.security.context.SecurityContext;
 import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.security.userdetails.UserDetails;
 
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.SecurableDao;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.CrudUtils;
 import ubic.gemma.security.acl.basic.jdbc.CustomAclDao;
 import ubic.gemma.util.ReflectionUtil;
+import ubic.gemma.util.UserConstants;
 
 /**
  * @author keshav
@@ -317,6 +321,53 @@ public class SecurityService {
     }
 
     /**
+     * Change the permissions of the user by setting the acl_object_identity to that of the adminControlNode. This gives
+     * the user "admin" privileges.
+     * 
+     * @param user
+     */
+    private void setControlNodeAsAdmin( User user ) {
+        int mask = SimpleAclEntry.READ_WRITE;
+        int newObjectIdentity = Integer.parseInt( CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID );
+        int oldObjectIdentity = Integer.parseInt( CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID );
+        String recipient = user.getUserName();
+        customAclDao.updateControlNodeForRecipient( newObjectIdentity, oldObjectIdentity, mask, recipient );
+    }
+
+    /**
+     * Change the permissions of the user by setting the acl_object_identity to that of the publicControlNode. This
+     * gives the user "user" privileges.
+     * 
+     * @param user
+     */
+    private void setControlNodeAsUser( User user ) {
+        int mask = SimpleAclEntry.READ;
+        int newObjectIdentity = Integer.parseInt( CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID );
+        int oldObjectIdentity = Integer.parseInt( CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID );
+        String recipient = user.getUserName();
+        customAclDao.updateControlNodeForRecipient( newObjectIdentity, oldObjectIdentity, mask, recipient );
+    }
+
+    /**
+     * Change the control node this user points to based on the new role. That is, for each user in the system there is
+     * an acl_permission that does not have an associated acl_object_identity that is a {@link Securable}. Instead, the
+     * acl_object_identity in the acl_permission table points to one of the control nodes in the acl_object_identity
+     * table (like CustomAclDao.ADMIN_CONTROL_NODE or CustomAclDao.USER_CONTROL_NODE).
+     * 
+     * @param user
+     * @param role The new role
+     */
+    public void changeControlNode( User user, String role ) {
+        if ( StringUtils.equals( role, UserConstants.USER_ROLE ) ) {
+            setControlNodeAsUser( user );
+        } else if ( StringUtils.equals( role, UserConstants.ADMIN_ROLE ) ) {
+            setControlNodeAsAdmin( user );
+        } else {
+            throw new RuntimeException( "Role " + role + " does not exist in the system.  Cannot change control node." );
+        }
+    }
+
+    /**
      * @param securableDao the securableDao to set
      */
     public void setSecurableDao( SecurableDao securableDao ) {
@@ -361,6 +412,7 @@ public class SecurityService {
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.lang.Object#hashCode()
          */
         @Override
@@ -370,6 +422,7 @@ public class SecurityService {
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.lang.Object#equals(java.lang.Object)
          */
         @Override

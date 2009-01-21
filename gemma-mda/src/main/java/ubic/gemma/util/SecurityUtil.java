@@ -20,6 +20,8 @@ package ubic.gemma.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -120,6 +122,16 @@ public class SecurityUtil {
                     + user.getUserName() );
         }
 
-        user.getRoles().add( r );
+        // FIXME I don't love this, but it doesn't make sense to have more than one role per user since
+        // roles themselves are hierarchical ("admin" is an "annotator" is a "user"). For this reason,
+        // I'm only allowing one to be set. This still however keeps the old role in the database
+        // with the USER_FK = null.
+        Collection<UserRole> roles = user.getRoles();
+        if ( !roles.isEmpty() ) {
+            roles = new HashSet<UserRole>();
+        }
+        roles.add( r );
+
+        user.setRoles( roles );
     }
 }

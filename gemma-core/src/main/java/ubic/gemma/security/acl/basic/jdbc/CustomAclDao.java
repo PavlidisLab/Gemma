@@ -24,6 +24,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.acl.basic.AbstractBasicAclEntry;
 import org.springframework.security.acl.basic.BasicAclEntry;
 
+import ubic.gemma.model.common.Securable;
+
 /**
  * This Dao should be used to do things to the acl_permission and acl_object_identity tables that are not included as
  * part of the Acegi API. For example, {@link BasicAclEntry} (and the implementing {@link AbstractBasicAclEntry} do not
@@ -78,20 +80,26 @@ public class CustomAclDao {
     }
 
     /**
-     * Changes the acl_object_identity and mask on the given recipient's control node in the acl_permission table. This
-     * is called, for example, after changing the role of a user to make the pertinent changes to the acl permission
-     * table.
+     * Update the control node this recipient points to. That is, for each user in the system there is an acl_permission
+     * that does not have an associated acl_object_identity that is a {@link Securable}. Instead, the
+     * acl_object_identity in the acl_permission table points to one of the control nodes in the acl_object_identity
+     * table (like CustomAclDao.ADMIN_CONTROL_NODE or CustomAclDao.USER_CONTROL_NODE).
      * <p>
-     * For example, a user="foo", has a control node with an acl_object_identity_2. When changing this from a "user" to
-     * an "admin", we must set the acl_object_identity=1 and mask=6.
+     * This is called, for example, after changing the role of a user to make the pertinent changes to the acl
+     * permission table.
+     * <p>
+     * For example, a user="foo", has an acl_permission with an acl_object_identity=2. When changing this from a "user"
+     * to an "admin", we must set the acl_object_identity=1 (and mask=6).
      * 
-     * @param aclObjectIdentity
+     * @param newAclObjectIdentity The new control node to use (the new acl object identity id to use).
+     * @param oldAclObjectIdentity The old control node to use (the old acl object identity id to use).
      * @param mask
      * @param recipient
      */
-    public void updateAclPermissionAclObjectIdentity( int aclObjectIdentity, int mask, String recipient ) {
-        String queryString = "update acl_permission set acl_object_identity=" + aclObjectIdentity + ", mask=" + mask
-                + "where recipient=" + recipient;
+    public void updateControlNodeForRecipient( int newAclObjectIdentity, int oldObjectIdentity, int mask,
+            String recipient ) {
+        String queryString = "update acl_permission set acl_object_identity=" + newAclObjectIdentity + ", mask=" + mask
+                + " where recipient=\"" + recipient + "\" && acl_object_identity=" + oldObjectIdentity;
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
         jdbcTemplate.execute( queryString );
     }

@@ -33,6 +33,7 @@ import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.SecurityUtil;
 
 /**
@@ -43,10 +44,16 @@ import ubic.gemma.util.SecurityUtil;
  * @version $Id$
  * @spring.bean id="userListController"
  * @spring.property name="userService" ref="userService"
+ * @spring.property name="securityService" ref="securityService"
  */
 public class UserListController implements Controller {
     private transient final Log log = LogFactory.getLog( UserListController.class );
     private UserService userService = null;
+    private SecurityService securityService = null;
+
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
+    }
 
     /*
      * (non-Javadoc)
@@ -98,21 +105,34 @@ public class UserListController implements Controller {
         String email = user.getEmail();
         boolean enabled = user.isEnabled();
         String role = user.getRole();
+
+        boolean newUser = false;
         if ( u == null ) {
             /* new user */
             u = User.Factory.newInstance();
-            u.setUserName( userName );
-            u.setEmail( email );
-            u.setEnabled( enabled );
-            SecurityUtil.addRole( u, role );
+            newUser = true;
+        }
+        u.setUserName( userName );
+        u.setEmail( email );
+        u.setEnabled( enabled );
 
+        SecurityUtil.addRole( u, role );
+
+        /*
+         * When changing the roles (from user to say, admin), must first create new or update existing user and THEN
+         * change the acl_permission's acl_object_identity and mask. This must be done in two separate steps to first
+         * get the acl permissions added to the acl_permission and acl_object_identity tables when creating a new user.
+         * After being added, then these permissions can be changed.
+         */
+
+        if ( newUser ) {
             userService.create( u );
         } else {
-            /* update user */
             userService.update( u );
         }
-        // TODO when changing the roles (from user to say, admin), must also change the acl_permission's
-        // acl_object_identity and mask
+
+        securityService.changeControlNode( u, role );
+
     }
 
     /**
