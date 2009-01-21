@@ -51,13 +51,13 @@ Ext.onReady(function() {
 				type : "boolean"
 			}]);
 
-	var userStore = new Gemma.PagingDataStore({
+	var userStore = new Ext.data.Store({
 		proxy : new Ext.data.DWRProxy(UserListController.getUsers),
 		reader : new Ext.data.ListRangeReader({
 					id : 'id'
 				}, record),
-		remoteSort : false,
-		pageSize : Gemma.USER_PAGE_SIZE
+		remoteSort : false
+		// pageSize : Gemma.USER_PAGE_SIZE TODO make this a PagingDataStore before use this
 	})
 	userStore.load();
 
@@ -188,10 +188,10 @@ Ext.onReady(function() {
 
 		],
 
-		bbar : new Ext.PagingToolbar({
-			pageSize : Gemma.USER_PAGE_SIZE,
-			store : userStore
-		}),
+		// bbar : new Gemma.PagingToolbar({TODO add in when using the PagingDataStore
+		// pageSize : Gemma.USER_PAGE_SIZE,
+		// store : userStore
+		// }),
 
 		cm : new Ext.grid.ColumnModel([{
 					header : "Username",
