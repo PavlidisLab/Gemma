@@ -77,9 +77,6 @@ Ext.onReady(function() {
 		width : 55
 	});
 
-	// var d = userStore.data.items;
-	// var r = record.get("role").createDelegate(this);
-
 	var roleEdit = new Ext.form.ComboBox({
 		typeAhead : true,
 		lazyRender : true,
