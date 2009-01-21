@@ -20,20 +20,30 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventImpl;
 
 /**
- * @author pavlidis
+ * @author klc
  * @version $Id$
  */
-public class AuditEventValueObject extends AuditEventImpl {
+public class AuditEventValueObject implements java.io.Serializable {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     */
 
     public AuditEventValueObject() {
     }
 
+    private String performer;
+
     public AuditEventValueObject( AuditEvent ae ) {
-        this.setPerformer( ae.getPerformer() );
-        this.setAction( ae.getAction() );
+        this.setPerformer( ae.getPerformer().getName() );
+        this.setAction( ae.getAction().getValue() );
         this.setEventType( ae.getEventType() );
         this.setNote( ae.getNote() );
         this.setDate( ae.getDate() );
@@ -50,6 +60,96 @@ public class AuditEventValueObject extends AuditEventImpl {
 
     public String getEventTypeName() {
         return this.getEventType() == null ? "" : this.getEventType().getClass().getSimpleName();
+    }
+
+    public void setPerformer( String name ) {
+        this.performer = name;
+    }
+
+    public String getPerformer() {
+        return this.performer;
+    }
+
+    private java.util.Date date;
+
+    /**
+     * 
+     */
+    public java.util.Date getDate() {
+        return this.date;
+    }
+
+    public void setDate( java.util.Date date ) {
+        this.date = date;
+    }
+
+    private java.lang.String action;
+
+    /**
+     * 
+     */
+    public java.lang.String getAction() {
+        return this.action;
+    }
+
+    public void setAction( java.lang.String action ) {
+        this.action = action;
+    }
+
+    private java.lang.String note;
+
+    /**
+     * <p>
+     * <p>
+     * An annotation about the action taken.
+     * </p>
+     * </p>
+     */
+    public java.lang.String getNote() {
+        return this.note;
+    }
+
+    public void setNote( java.lang.String note ) {
+        this.note = note;
+    }
+
+    private java.lang.String detail;
+
+    /**
+     * 
+     */
+    public java.lang.String getDetail() {
+        return this.detail;
+    }
+
+    public void setDetail( java.lang.String detail ) {
+        this.detail = detail;
+    }
+
+    private java.lang.Long id;
+
+    /**
+     * 
+     */
+    public java.lang.Long getId() {
+        return this.id;
+    }
+
+    public void setId( java.lang.Long id ) {
+        this.id = id;
+    }
+
+    private ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType eventType;
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType getEventType() {
+        return this.eventType;
+    }
+
+    public void setEventType( ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType eventType ) {
+        this.eventType = eventType;
     }
 
 }

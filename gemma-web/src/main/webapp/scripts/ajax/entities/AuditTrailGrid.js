@@ -34,10 +34,6 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 						type : "string"
 					}]),
 
-			convertUser : function(d) {
-				return d.userName;
-			},
-
 			createEvent : function(obj) {
 				var cb = function() {
 					this.getStore().reload();
@@ -72,8 +68,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 									}, {
 										header : "Performer",
 										width : 100,
-										dataIndex : "performer",
-										renderer : this.convertUser
+										dataIndex : "performer"
 									}, {
 										header : "Event",
 										width : 120,
