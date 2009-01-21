@@ -33,27 +33,27 @@ Ext.onReady(function() {
 	// });
 
 	var record = Ext.data.Record.create([{
-		name : "id",
-		type : "int"
-	}, {
-		name : "userName",
-		type : "string"
-	}, {
-		name : "email",
-		type : "string"
-	}, {
-		name : "role",
-		type : "string"
-	}, {
-		name : "enabled",
-		type : "boolean"
-	}]);
+				name : "id",
+				type : "int"
+			}, {
+				name : "userName",
+				type : "string"
+			}, {
+				name : "email",
+				type : "string"
+			}, {
+				name : "role",
+				type : "string"
+			}, {
+				name : "enabled",
+				type : "boolean"
+			}]);
 
 	var userStore = new Ext.data.Store({
 		proxy : new Ext.data.DWRProxy(UserListController.getUsers),
 		reader : new Ext.data.ListRangeReader({
-			id : 'id'
-		}, record),
+					id : 'id'
+				}, record),
 		remoteSort : false
 	})
 	userStore.load();
@@ -90,8 +90,8 @@ Ext.onReady(function() {
 			data : [[1, "user"], [2, "admin"]],
 
 			reader : new Ext.data.ArrayReader({
-				id : 'id'
-			}, ['id', 'role'])
+						id : 'id'
+					}, ['id', 'role'])
 
 		}),
 		valueField : 'role'
@@ -113,91 +113,95 @@ Ext.onReady(function() {
 
 		tbar : [
 
-		{
-			text : 'Add',
-			tooltip : 'Add a new user',
-			disabled : true,
-			icon : 'images/icons/add.png',
-			cls : 'x-btn-text-icon',
-			handler : function() {
-				userGrid.getStore().insert(0, new record({
-					userName : 'New User',
-					email : '',
-					role : 'Select Role',
-					enabled : true
-				}));
-				userGrid.startEditing(0, 0);
-			}
-		},
+				{
+					text : 'Add',
+					tooltip : 'Add a new user',
+					disabled : true,
+					icon : 'images/icons/add.png',
+					cls : 'x-btn-text-icon',
+					handler : function() {
+						userGrid.getStore().insert(0, new record({
+									userName : 'New User',
+									email : '',
+									role : 'Select Role',
+									enabled : true
+								}));
+						userGrid.startEditing(0, 0);
+					}
+				},
 
-		{
-			text : 'Remove',
-			disabled : true,
-			tooltip : 'Remove selected user',
-			icon : 'images/icons/delete.png',
-			cls : 'x-btn-text-icon',
-			handler : function() {
-				var sm = userGrid.getSelectionModel();
-				var sel = sm.getSelected();
-				if (sm.hasSelection()) {
-					Ext.Msg.show({
-						title : 'Remove User',
-						buttons : Ext.MessageBox.YESNO,
-						msg : 'Remove ' + sel.data.userName + '?',
-						fn : function(btn) {
-							if (btn == 'yes') {
-								userGrid.getStore().remove(sel);
-							}
-						}
-					});
-				};
-			}
-		},
+				{
+					text : 'Remove',
+					disabled : true,
+					tooltip : 'Remove selected user',
+					icon : 'images/icons/delete.png',
+					cls : 'x-btn-text-icon',
+					handler : function() {
+						var sm = userGrid.getSelectionModel();
+						var sel = sm.getSelected();
+						if (sm.hasSelection()) {
+							Ext.Msg.show({
+								title : 'Remove User',
+								buttons : Ext.MessageBox.YESNO,
+								msg : 'Remove ' + sel.data.userName + '?',
+								fn : function(btn) {
+									if (btn == 'yes') {
+										userGrid.getStore().remove(sel);
+									}
+								}
+							});
+						};
+					}
+				},
 
-		{
-			text : 'Save',
-			tooltip : 'Save the selected user',
-			icon : 'images/icons/database_save.png',
-			cls : 'x-btn-text-icon',
-			handler : function() {
-				var sm = userGrid.getSelectionModel();
-				var sel = sm.getSelected();
-				if (sm.hasSelection()) {
-					Ext.Msg.show({
-						title : 'Save User',
-						buttons : Ext.MessageBox.YESNO,
-						msg : 'Save ' + sel.data.userName + '?',
-						fn : function(btn) {
-							if (btn == 'yes') {
-								UserListController.saveUser({
-									userName : sel.data.userName,
-									email : sel.data.email,
-									enabled : sel.data.enabled,
-									role : sel.data.role
-								});
-							}
-						}
-					});
-				};
-			}
-		}
+				{
+					text : 'Save',
+					tooltip : 'Save the selected user',
+					icon : 'images/icons/database_save.png',
+					cls : 'x-btn-text-icon',
+					handler : function() {
+						var sm = userGrid.getSelectionModel();
+						var sel = sm.getSelected();
+						if (sm.hasSelection()) {
+							Ext.Msg.show({
+								title : 'Save User',
+								buttons : Ext.MessageBox.YESNO,
+								msg : 'Save ' + sel.data.userName + '?',
+								fn : function(btn) {
+									if (btn == 'yes') {
+										UserListController.saveUser({
+													userName : sel.data.userName,
+													email : sel.data.email,
+													enabled : sel.data.enabled,
+													role : sel.data.role
+												}, {
+													callback : function() {
+														userGrid.getStore().reload();
+													}
+												});
+									}
+								}
+							});
+						};
+					}
+				}
 
 		],
 
 		cm : new Ext.grid.ColumnModel([{
-			header : "Username",
-			dataIndex : 'userName',
-			editor : userNameEdit,
-			sortable : true
-		}, {
-			header : "Email",
-			dataIndex : 'email',
-			editor : emailEdit
-		}, {
-			header : "Role",
-			dataIndex : 'role',
-			editor : roleEdit
-		}, checkColumn]),
+					header : "Username",
+					dataIndex : 'userName',
+					editor : userNameEdit,
+					sortable : true
+				}, {
+					header : "Email",
+					dataIndex : 'email',
+					editor : emailEdit
+				}, {
+					header : "Role",
+					dataIndex : 'role',
+					editor : roleEdit
+				}, checkColumn]),
 
 		viewConfig : {
 			forceFit : true

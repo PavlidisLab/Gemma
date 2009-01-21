@@ -21,7 +21,6 @@ package ubic.gemma.util;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -107,29 +106,35 @@ public class SecurityUtil {
      */
     public static void addRole( User user, String role ) {
 
-        UserRole r = null;
-
         SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" );
         Calendar cal = Calendar.getInstance();
-        String message = "Added on " + sdf.format( cal.getTime() );
 
-        if ( StringUtils.equals( role, UserConstants.USER_ROLE ) ) {
-            r = UserRole.Factory.newInstance( user.getUserName(), UserConstants.USER_ROLE, message );
-        } else if ( StringUtils.equals( role, UserConstants.ADMIN_ROLE ) ) {
-            r = UserRole.Factory.newInstance( user.getUserName(), UserConstants.ADMIN_ROLE, message );
+        // FIXME I don't love this, but it doesn't make sense to have more than one role per user since
+        // roles themselves are hierarchical ("admin" is an "annotator" is a "user"). For this reason,
+        // I'm only allowing one role to be set. This still however keeps the old role in the database
+        // with the USER_FK = null.
+
+        UserRole r = null;
+        Collection<UserRole> roles = user.getRoles();
+        if ( roles.isEmpty() ) {
+            r = UserRole.Factory.newInstance();
+            r.setDescription( "Added on " + sdf.format( cal.getTime() ) );
+        } else if ( roles.size() == 1 ) {
+            r = roles.iterator().next();
+            r.setDescription( "Changed on " + sdf.format( cal.getTime() ) );
+        } else {
+            throw new RuntimeException( "User " + user.getUserName()
+                    + " has more than one role, therefore unsure which role to update.  Not updating role." );
+        }
+
+        if ( StringUtils.equals( role, UserConstants.USER_ROLE ) || StringUtils.equals( role, UserConstants.ADMIN_ROLE ) ) {
+            r.setName( role );
+            r.setUserName( user.getUserName() );
         } else {
             throw new RuntimeException( "Undefined role " + role + ".  Can't add this role to user "
                     + user.getUserName() );
         }
 
-        // FIXME I don't love this, but it doesn't make sense to have more than one role per user since
-        // roles themselves are hierarchical ("admin" is an "annotator" is a "user"). For this reason,
-        // I'm only allowing one to be set. This still however keeps the old role in the database
-        // with the USER_FK = null.
-        Collection<UserRole> roles = user.getRoles();
-        if ( !roles.isEmpty() ) {
-            roles = new HashSet<UserRole>();
-        }
         roles.add( r );
 
         user.setRoles( roles );
