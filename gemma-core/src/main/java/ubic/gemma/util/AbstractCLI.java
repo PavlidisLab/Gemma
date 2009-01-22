@@ -20,6 +20,7 @@ package ubic.gemma.util;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,6 +61,7 @@ import org.apache.log4j.Logger;
  */
 public abstract class AbstractCLI {
 
+    protected static final String THREADS_OPTION = "threads";
     protected static final String AUTO_OPTION_NAME = "auto";
 
     public enum ErrorCode {
@@ -103,9 +105,10 @@ public abstract class AbstractCLI {
      */
     protected boolean autoSeek = false;
 
-    protected Collection<Object> errorObjects = new HashSet<Object>();
+    // needs to be concurrently modifiable.
+    protected Collection<Object> errorObjects = Collections.synchronizedSet( new HashSet<Object>() );
 
-    protected Collection<Object> successObjects = new HashSet<Object>();
+    protected Collection<Object> successObjects = Collections.synchronizedSet( new HashSet<Object>() );
     protected Option passwordOpt;
     protected Option usernameOpt;
 
@@ -398,6 +401,16 @@ public abstract class AbstractCLI {
 
         options.addOption( hostOpt );
         options.addOption( portOpt );
+    }
+
+    /**
+     * Convenience method to add an option for parallel processing option.
+     */
+    @SuppressWarnings("static-access")
+    protected void addThreadsOption() {
+        Option threadsOpt = OptionBuilder.withArgName( "numThreads" ).hasArg().withDescription(
+                "Number of threads to use for batch processing." ).create( THREADS_OPTION );
+        options.addOption( threadsOpt );
     }
 
     /**

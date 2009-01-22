@@ -23,6 +23,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -45,11 +47,14 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @version $Id$
  */
 public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
-    ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
 
-    String blatResultFile = null;
+    private int numThreads = 1;
 
-    Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
+    private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
+
+    private String blatResultFile = null;
+
+    private Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
 
     private TaxonService taxonService;
 
@@ -64,7 +69,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -76,7 +80,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 "Blat result file in PSL format (if supplied, BLAT will not be run); -t option overrides" )
                 .withLongOpt( "blatfile" ).create( 'b' );
 
-        Option blatScoreThreshold = OptionBuilder.hasArg().withArgName( "Blat score threshold" ).withDescription(
+        Option blatScoreThresholdOption = OptionBuilder.hasArg().withArgName( "Blat score threshold" ).withDescription(
                 "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold + "]" )
                 .withLongOpt( "scoreThresh" ).create( 's' );
 
@@ -89,7 +93,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         addOption( taxonOption );
 
-        addOption( blatScoreThreshold );
+        addOption( blatScoreThresholdOption );
         addOption( blatResultOption );
     }
 
@@ -107,10 +111,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine(
@@ -118,7 +120,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 args );
         if ( err != null ) return err;
 
-        Date skipIfLastRunLaterThan = getLimitingDate();
+        final Date skipIfLastRunLaterThan = getLimitingDate();
 
         if ( StringUtils.isNotBlank( this.arrayDesignName ) ) {
 
@@ -160,45 +162,87 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** " );
 
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
-            for ( ArrayDesign design : allArrayDesigns ) {
 
-                if ( taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
+            // split over multiple threads so we can multiplex. Put the array designs in a queue.
+            class Consumer implements Runnable {
+                private final BlockingQueue<ArrayDesign> queue;
 
-                    if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
-                        log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-                        // not really an error, but nice to get notification.
-                        errorObjects.add( design + ": " + "Skipped because it was last run after "
-                                + skipIfLastRunLaterThan );
-                        continue;
+                public Consumer( BlockingQueue<ArrayDesign> q ) {
+                    queue = q;
+                }
+
+                public void run() {
+                    while ( true ) {
+                        ArrayDesign ad = queue.poll();
+                        if ( ad == null ) {
+                            break;
+                        }
+                        consume( ad );
                     }
+                    // FIXME notify that we're done.
+                }
 
-                    if ( isSubsumedOrMerged( design ) ) {
-                        log.warn( design + " is subsumed or merged into another design, it will not be run." );
-                        // not really an error, but nice to get notification.
-                        errorObjects.add( design + ": "
-                                + "Skipped because it is subsumed by or merged into another design." );
-                        continue;
-                    }
-
-                    log.info( "============== Start processing: " + design + " ==================" );
-                    try {
-                        arrayDesignService.thawLite( design );
-                        arrayDesignSequenceAlignmentService.processArrayDesign( design );
-                        successObjects.add( design.getName() );
-                        audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
-                    } catch ( Exception e ) {
-                        errorObjects.add( design + ": " + e.getMessage() );
-                        log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-                        log.error( e, e );
-                    }
+                void consume( ArrayDesign x ) {
+                    processArrayDesign( skipIfLastRunLaterThan, x );
                 }
             }
-            summarizeProcessing();
+
+            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
+            for ( ArrayDesign ad : allArrayDesigns ) {
+                arrayDesigns.add( ad );
+            }
+
+            for ( int i = 0; i < this.numThreads; i++ ) {
+                Consumer c1 = new Consumer( arrayDesigns );
+                new Thread( c1 ).start();
+            }
+            //
+            // for ( ArrayDesign design : allArrayDesigns ) {
+            //
+            // if ( taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
+            // processArrayDesign( skipIfLastRunLaterThan, design );
+            // }
+            // }
+
+            // FIXME: wait, and summarize processing when all threads are done.
+            // summarizeProcessing();
         } else {
             bail( ErrorCode.MISSING_ARGUMENT );
         }
 
         return null;
+    }
+
+    /**
+     * @param skipIfLastRunLaterThan
+     * @param design
+     */
+    private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
+        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
+            log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+            return;
+        }
+
+        if ( isSubsumedOrMerged( design ) ) {
+            log.warn( design + " is subsumed or merged into another design, it will not be run." );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+            return;
+        }
+
+        log.info( "============== Start processing: " + design + " ==================" );
+        try {
+            arrayDesignService.thawLite( design );
+            arrayDesignSequenceAlignmentService.processArrayDesign( design );
+            successObjects.add( design.getName() );
+            audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
+        } catch ( Exception e ) {
+            errorObjects.add( design + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+            log.error( e, e );
+        }
     }
 
     /**
@@ -212,11 +256,11 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             log.error( "Cannot read from " + blatResultFile );
             bail( ErrorCode.INVALID_OPTION );
         }
-        Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+        Taxon arrayDesignTaxon = arrayDesignService.getTaxon( arrayDesign.getId() );
         log.info( "Reading blat results in from " + f.getAbsolutePath() );
         BlatResultParser parser = new BlatResultParser();
         parser.setScoreThreshold( this.blatScoreThreshold );
-        parser.setTaxon( taxon );
+        parser.setTaxon( arrayDesignTaxon );
         parser.parse( f );
         Collection<BlatResult> blatResults = parser.getResults();
         return blatResults;
@@ -237,6 +281,10 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         if ( hasOption( 'b' ) ) {
             this.blatResultFile = this.getOptionValue( 'b' );
+        }
+
+        if ( hasOption( THREADS_OPTION ) ) {
+            this.numThreads = this.getIntegerOptionValue( "threads" );
         }
 
         if ( hasOption( 's' ) ) {
