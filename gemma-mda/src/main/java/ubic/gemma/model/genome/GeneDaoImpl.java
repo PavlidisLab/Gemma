@@ -153,17 +153,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( log.isDebugEnabled() )
             log.debug( "Start Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
 
-        // /*
-        // * Start with the 'exact' location.
-        // */
-        // Collection<Gene> candidates = findByPosition( chrom, targetStart, targetEnd, strand );
-        // if ( !candidates.isEmpty() ) {
-        // if ( log.isDebugEnabled() ) log.debug( physicalLocation + ": overlaps " + candidates.size() + " gene(s)" );
-        // return candidates;
-        // }
-
         /*
-         * Start enlarging the region. Finds the nearest hit.
+         * Starting with exact location, look for genes, enlarging the region as needed. Finds the nearest hit.
          */
         int i = 0;
         long windowStart = targetStart;
