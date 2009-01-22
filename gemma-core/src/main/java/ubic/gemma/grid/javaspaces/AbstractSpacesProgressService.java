@@ -32,8 +32,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
-
-import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.grid.javaspaces.SpacesJobObserver;
 import ubic.gemma.util.grid.javaspaces.SpacesUtil;

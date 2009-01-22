@@ -543,9 +543,8 @@ public class Blat {
         File tmpdir = new File( ConfigUtils.getDownloadPath() );
         if ( StringUtils.isBlank( base ) ) {
             return File.createTempFile( "pattern", ".psl", tmpdir ).getPath();
-        } else {
-            return File.createTempFile( base, ".psl", tmpdir ).getPath();
         }
+        return File.createTempFile( base, ".psl", tmpdir ).getPath();
     }
 
     /**
