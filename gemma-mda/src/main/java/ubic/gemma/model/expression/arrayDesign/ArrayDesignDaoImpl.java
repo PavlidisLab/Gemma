@@ -305,7 +305,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         getHibernateTemplate().setMaxResults( 1 );
         List list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
         if ( list.size() == 0 ) {
-            log.warn( "Could not determine taxon for array design" + id + " (no sequences?)" );
+            log.warn( "Could not determine taxon for array design id=" + id + " (no sequences?)" );
             return null;
         }
         getHibernateTemplate().setMaxResults( 0 ); // restore to default.
