@@ -201,9 +201,7 @@ public class CharacteristicBrowserController extends BaseFormController {
 
             /*
              * at this point, cFromDatabase points to the class-corrected characteristic in the database that must be
-             * updated with the information coming from the client; at the moment, the only things that the client can
-             * change are the category, value and associated URIs. Updated the evidence code to reflect that the
-             * characteristic has been manually curated.
+             * updated with the information coming from the client.
              */
             cFromDatabase.setValue( cFromClient.getValue() );
             cFromDatabase.setCategory( cFromClient.getCategory() );
@@ -211,8 +209,17 @@ public class CharacteristicBrowserController extends BaseFormController {
                 vcFromDatabase = ( VocabCharacteristic ) cFromDatabase;
                 // FIXME: vcFromClient can be null here based on logic above.
                 if ( vcFromClient != null ) {
-                    vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
-                    vcFromDatabase.setCategoryUri( vcFromClient.getCategoryUri() );
+                    if ( !vcFromDatabase.getValueUri().equals( vcFromClient.getValueUri() ) ) {
+                        log.info( "Characteristic value update: " + vcFromDatabase + " " + vcFromDatabase.getValueUri()
+                                + " -> " + vcFromDatabase.getValueUri() );
+                        vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
+                    }
+
+                    if ( !vcFromDatabase.getCategoryUri().equals( vcFromClient.getCategoryUri() ) ) {
+                        log.info( "Characteristic category update: " + vcFromDatabase + " "
+                                + vcFromDatabase.getCategoryUri() + " -> " + vcFromDatabase.getCategoryUri() );
+                        vcFromDatabase.setCategoryUri( vcFromClient.getCategoryUri() );
+                    }
                 }
             }
 
