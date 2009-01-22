@@ -155,6 +155,10 @@ public class CoexpressionSearchController extends BaseFormController {
             addMyDataFlag( result, myEE );
         }
 
+        if (result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty()){
+            result.setErrorState(  "<b> Sorry, No genes are currently coexpressed under the selected search conditions </b>");
+            log.info( "No search results for query: " + searchOptions );
+        }
         return result;
 
     }
