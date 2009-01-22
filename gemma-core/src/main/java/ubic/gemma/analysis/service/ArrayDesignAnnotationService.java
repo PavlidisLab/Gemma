@@ -325,7 +325,6 @@ public class ArrayDesignAnnotationService {
         } else {
 
             File f = getFileName( fileBaseName );
-            log.info( "Attempting to create new annotation file " + f + " \n" );
 
             if ( f.exists() ) {
                 if ( overWrite ) {
@@ -334,6 +333,8 @@ public class ArrayDesignAnnotationService {
                 } else {
                     return null;
                 }
+            } else {
+                log.info( "Creating new annotation file " + f + " \n" );
             }
 
             File parentDir = f.getParentFile();
