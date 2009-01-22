@@ -37,60 +37,60 @@ Ext.namespace('Gemma');
 
 Gemma.AnnotationDataView = Ext.extend(Ext.DataView, {
 
-			readMethod : ExpressionExperimentController.getAnnotation,
-			
-			record : Ext.data.Record.create([{
-						name : "id",
-						type : "int"
-					}, {
-						name : "classUri",
-						type : "string"
-					}, {
-						name : "className",
-						type : "string"
-					}, {
-						name : "termUri",
-						type : "string"
-					}, {
-						name : "termName",
-						type : "string"
-					}, {
-						name : "evidenceCode",
-						type : "string"
-					}]),
+	readMethod : ExpressionExperimentController.getAnnotation,
 
-			getReadParams : function() {
-				return (typeof this.readParams == "function") ? this.readParams() : this.readParams;
-			},
+	record : Ext.data.Record.create([{
+				name : "id",
+				type : "int"
+			}, {
+				name : "classUri",
+				type : "string"
+			}, {
+				name : "className",
+				type : "string"
+			}, {
+				name : "termUri",
+				type : "string"
+			}, {
+				name : "termName",
+				type : "string"
+			}, {
+				name : "evidenceCode",
+				type : "string"
+			}]),
 
-			tpl : new Ext.XTemplate(
-					'<tpl for=".">',
-					'<span class="ann-wrap" ext:qtip="{className}" ><span  class="x-editable">'
-							+ '<a href="/Gemma/searcher.html?query={termName}&amp;scope=E" style="text-decoration:underline;">{termName}</a></span></span>&nbsp;&nbsp;',
-					'</tpl>'),
+	getReadParams : function() {
+		return (typeof this.readParams == "function") ? this.readParams() : this.readParams;
+	},
 
-			itemSelector : 'ann-wrap',
-			emptyText : 'No tags',
+	tpl : new Ext.XTemplate(
+			'<tpl for=".">',
+			'<span class="ann-wrap" ext:qtip="{className}" ><span  class="x-editable">'
+					+ '<a href="/Gemma/searcher.html?query={termName}&amp;scope=E" style="text-decoration:underline;">{termName}</a></span></span>&nbsp;&nbsp;',
+			'</tpl>'),
 
-			initComponent : function() {
+	itemSelector : 'ann-wrap',
+	emptyText : 'No tags',
 
-				Ext.apply(this, {
-							store : new Ext.data.Store({
-										proxy : new Ext.data.DWRProxy(this.readMethod),
-										reader : new Ext.data.ListRangeReader({
-													id : "id"
-												}, this.record)
-									})
-						});
+	initComponent : function() {
 
-				Gemma.AnnotationDataView.superclass.initComponent.call(this);
+		Ext.apply(this, {
+					store : new Ext.data.Store({
+								proxy : new Ext.data.DWRProxy(this.readMethod),
+								reader : new Ext.data.ListRangeReader({
+											id : "id"
+										}, this.record)
+							})
+				});
 
-				this.store.load({
-							params : this.getReadParams()
-						});
-			}
+		Gemma.AnnotationDataView.superclass.initComponent.call(this);
 
-		});
+		this.store.load({
+					params : this.getReadParams()
+				});
+	}
+
+});
 
 Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
@@ -174,7 +174,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var c = {
 					id : record.id,
 					category : record.className,
-					value : record.termName
+					value : record.termName,
+					evidenceCode : record.evidenceCode
 				};
 				/*
 				 * if we don't have a valueURI set, don't return URI fields or a VocabCharacteristic will be created
@@ -265,6 +266,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					var VALUE_COLUMN = 1;
 					var PARENT_COLUMN = 2;
 					var EVIDENCE_COLUMN = 3;
+
+					// Category setup
 					this.categoryCombo = new Gemma.MGEDCombo({
 								lazyRender : true,
 								termKey : this.mgedTermKey
@@ -275,6 +278,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							});
 					this.getColumnModel().setEditor(CATEGORY_COLUMN, categoryEditor);
 
+					// Value setup
 					this.valueCombo = new Gemma.CharacteristicCombo({
 								lazyRender : true
 							});
@@ -283,6 +287,16 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 								valueEditor.completeEdit();
 							});
 					this.getColumnModel().setEditor(VALUE_COLUMN, valueEditor);
+
+					// Evidence setup
+					this.evidenceCombo = new Gemma.EvidenceCodeCombo({
+								lazyRender : true
+							});
+					var evidenceEditor = new Ext.grid.GridEditor(this.evidenceCombo);
+					this.evidenceCombo.on("select", function(combo, record, index) {
+								evidenceEditor.completeEdit();
+							});
+					this.getColumnModel().setEditor(EVIDENCE_COLUMN, evidenceEditor);
 
 					this.on("beforeedit", function(e) {
 								var row = e.record.data;
@@ -313,6 +327,9 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 									var c = this.valueCombo.getCharacteristic.call(this.valueCombo);
 									e.record.set("termName", c.value);
 									e.record.set("termUri", c.valueUri);
+								} else if (col == EVIDENCE_COLUMN) {
+									var c = this.evidenceCombo.getCode.call(this.evidenceCombo);
+									e.record.set("evidenceCode", c.code);
 								}
 								this.getView().refresh();
 							});
