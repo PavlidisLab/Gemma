@@ -74,7 +74,6 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
     public Object parseOneLine( String line ) {
@@ -86,6 +85,11 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
         }
 
         NCBIGene2Accession currentAccession = processFields( fields );
+
+        if ( currentAccession == null ) {
+            return null;
+        }
+
         assert currentAccession != null;
 
         addResult( currentAccession ); // really doesn't serve much of a purpose
@@ -129,6 +133,14 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
     private NCBIGene2Accession processFields( String[] fields ) {
         NCBIGene2Accession newGene = new NCBIGene2Accession();
         try {
+
+            /*
+             * Skip lines that refer to locations in non-reference assemblies.
+             */
+            if ( fields[12].startsWith( "Alternate assembly" ) ) {
+                return null;
+            }
+
             newGene.setTaxId( Integer.parseInt( fields[0] ) );
             newGene.setGeneId( fields[1] );
             newGene.setStatus( fields[2].equals( "-" ) ? null : fields[2] );
@@ -208,7 +220,6 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
     /*
      * (non-Javadoc) This has been overriden to add postprocessing to the gene2accession file. This involves adding the
      * last gene that had accessions (if available) and adding the remaining genes without accessions
-     * 
      * @see ubic.gemma.loader.util.parser.BasicLineParser#parse(java.io.InputStream)
      */
     @Override
