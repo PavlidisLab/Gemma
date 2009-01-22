@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.compass.core.spi.InternalCompass;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.util.CompassUtils;
 
 /**
@@ -115,6 +114,7 @@ public class IndexerTaskImpl extends BaseSpacesTask implements IndexerTask {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
      */
     public IndexerResult execute( IndexerTaskCommand command ) {
