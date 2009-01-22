@@ -92,6 +92,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     private String taxonName;
 
+    private boolean doAllTypes = false;
+
     /*
      * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
@@ -112,7 +114,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 .create( 'g' );
 
         Option annotationType = OptionBuilder.hasArg().withArgName( "Type of annotation file" ).withDescription(
-                "Which GO terms to add to the annotation file:  short, long, or bioprocess "
+                "Which GO terms to add to the annotation file:  short, long, or bioprocess; 'all' to generate all 3 "
                         + "[Default=short (no parents)]. If you select bioprocess, parents are not included." )
                 .withLongOpt( "type" ).create( 't' );
 
@@ -196,11 +198,11 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                             "You must specify an array design, a taxon, gene file, or batch." );
                 }
                 ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
-                if ( type != null ) {
-                    processAD( arrayDesign, this.fileName, type );
-                } else {
+                if ( doAllTypes ) {
                     // make all three
                     processOneAD( arrayDesign );
+                } else {
+                    processAD( arrayDesign, this.fileName, type );
                 }
             }
 
@@ -522,7 +524,11 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
 
         if ( this.hasOption( 't' ) ) {
-            this.type = OutputType.valueOf( this.getOptionValue( 't' ).toUpperCase() );
+            if ( this.getOptionValue( 't' ).equalsIgnoreCase( "all" ) ) {
+                this.doAllTypes = true;
+            } else {
+                this.type = OutputType.valueOf( this.getOptionValue( 't' ).toUpperCase() );
+            }
         }
 
         if ( this.hasOption( 'l' ) ) {
