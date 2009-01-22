@@ -112,7 +112,6 @@ public class ProbeMapper {
      * @param goldenPathDb
      * @param blatResults
      * @return A map of sequence names to collections of blat associations for each sequence.
-     * @throws IOException
      */
     public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
             Collection<BlatResult> blatResults ) {
@@ -127,19 +126,12 @@ public class ProbeMapper {
         int skipped = 0;
         int skippedDueToRepeat = 0;
 
-        // group results together by BioSequence
-        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<BioSequence, Collection<BlatResult>>();
-
-        for ( BlatResult blatResult : blatResults ) {
-            if ( !biosequenceToBlatResults.containsKey( blatResult.getQuerySequence() ) ) {
-                biosequenceToBlatResults.put( blatResult.getQuerySequence(), new HashSet<BlatResult>() );
-            }
-            biosequenceToBlatResults.get( blatResult.getQuerySequence() ).add( blatResult );
-        }
+        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = groupBlatResultsByBioSequence( blatResults );
 
         // Do them one sequence at a time.
         for ( BioSequence sequence : biosequenceToBlatResults.keySet() ) {
             Collection<BlatResult> blatResultsForSequence = biosequenceToBlatResults.get( sequence );
+
             if ( log.isDebugEnabled() ) {
                 log.debug( blatResultsForSequence.size() + " Blat results for " + sequence );
             }
@@ -154,6 +146,7 @@ public class ProbeMapper {
 
             Collection<BlatAssociation> blatAssociationsForSequence = new HashSet<BlatAssociation>();
 
+            // map each blat result.
             for ( BlatResult blatResult : blatResultsForSequence ) {
                 assert blatResult.score() >= 0 : "Score was " + blatResult.score();
                 assert blatResult.identity() >= 0 : "Identity was " + blatResult.identity();
@@ -219,6 +212,25 @@ public class ProbeMapper {
         }
 
         return allRes;
+    }
+
+    /**
+     * group results together by BioSequence
+     * 
+     * @param blatResults
+     * @return
+     */
+    private Map<BioSequence, Collection<BlatResult>> groupBlatResultsByBioSequence( Collection<BlatResult> blatResults ) {
+
+        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<BioSequence, Collection<BlatResult>>();
+
+        for ( BlatResult blatResult : blatResults ) {
+            if ( !biosequenceToBlatResults.containsKey( blatResult.getQuerySequence() ) ) {
+                biosequenceToBlatResults.put( blatResult.getQuerySequence(), new HashSet<BlatResult>() );
+            }
+            biosequenceToBlatResults.get( blatResult.getQuerySequence() ).add( blatResult );
+        }
+        return biosequenceToBlatResults;
     }
 
     /**
