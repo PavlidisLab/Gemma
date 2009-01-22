@@ -32,15 +32,14 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- *Given a gene ID, will return the matching gene official symbol eg) 938103--> Grin1 
+ * Given a gene ID, will return the matching gene official symbol eg) 938103--> Grin1
  * 
  * @author klc, gavin
  * @version$Id$
  */
-
 public class GeneNameEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog(GeneNameEndpoint.class);
+    private static Log log = LogFactory.getLog( GeneNameEndpoint.class );
 
     private GeneService geneService;
 
@@ -64,39 +63,37 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( LOCAL_NAME );
         String geneId = "";
 
-        Collection<String> geneInput = getArrayValues( requestElement, "gene_ids" );  
+        Collection<String> geneInput = getArrayValues( requestElement, "gene_ids" );
         Collection<Long> geneIDs = new HashSet<Long>();
-        for (String id : geneInput)
-               geneIDs.add( Long.parseLong( id ) );
+        for ( String id : geneInput )
+            geneIDs.add( Long.parseLong( id ) );
 
-        log.info( "XML input read: "+geneInput.size()+" gene ids" );
-        
+        log.debug( "XML input read: " + geneInput.size() + " gene ids" );
+
         Collection<Gene> geneCol = geneService.loadMultiple( geneIDs );
 
-        if ( geneCol == null || geneCol.isEmpty()) {
-            String msg = "No gene with id, " + geneId + " can be found.";
+        if ( geneCol == null || geneCol.isEmpty() ) {
+            String msg = "No gene with id '" + geneId + "' can be found.";
             return buildBadResponse( document, msg );
         }
-
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
-        for (Gene gene : geneCol){
-            
+        for ( Gene gene : geneCol ) {
+
             Element e1 = document.createElement( "gene_id" );
             e1.appendChild( document.createTextNode( gene.getId().toString() ) );
             responseElement.appendChild( e1 );
-    
+
             Element e2 = document.createElement( "gene_official_symbol" );
             e2.appendChild( document.createTextNode( gene.getOfficialSymbol() ) );
             responseElement.appendChild( e2 );
@@ -104,7 +101,9 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for Gene name results built in " + time + "ms." );    
+        if ( time > 1000 ) {
+            log.info( "XML response for Gene name results built in " + time + "ms." );
+        }
 
         return responseWrapper;
     }

@@ -40,10 +40,11 @@ import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * @author gavin, klc Abstracts out the security and a few constants.
- * @version$Id$
+ * Abstracts out the security and a few constants.
+ * 
+ * @author gavin, klc
+ * @version $Id$
  */
-
 public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
     protected ManualAuthenticationProcessing manualAuthenticationProcessing;
@@ -162,23 +163,22 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         // array value
         value = new HashSet<String>();
         node = "";
-        if ( value == null || value.isEmpty() ) {
 
-            for ( int i = 1; i < children.getLength(); i = i + 2 ) {
+        for ( int i = 1; i < children.getLength(); i = i + 2 ) {
 
-                // need to go one more level down into the great-grandchildren
-                Node child = children.item( i ).getChildNodes().item( 0 );
-                // Node child = children.item(i).getFirstChild();
+            // need to go one more level down into the great-grandchildren
+            Node child = children.item( i ).getChildNodes().item( 0 );
+            // Node child = children.item(i).getFirstChild();
 
-                if ( child.getNodeType() == Node.TEXT_NODE ) {
-                    node = child.getNodeValue();
-                    value.add( node );
-                }
-                node = null;
+            if ( child.getNodeType() == Node.TEXT_NODE ) {
+                node = child.getNodeValue();
+                value.add( node );
             }
-            if ( value == null || value.isEmpty() ) {
-                throw new IllegalArgumentException( "Could not find request text node" );
-            }
+            node = null;
+        }
+
+        if ( value.isEmpty() ) {
+            throw new IllegalArgumentException( "Could not find request text node" );
         }
 
         return value;
@@ -225,7 +225,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
         responseElement.appendChild( document.createTextNode( msg ) );
 
-        log.error( localName + ": " + msg );
+        log.warn( localName + ": " + msg );
         return responseWrapper;
     }
 

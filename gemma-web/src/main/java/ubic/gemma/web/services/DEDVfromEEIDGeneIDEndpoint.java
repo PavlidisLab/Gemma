@@ -76,7 +76,6 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
