@@ -98,7 +98,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 								+ " than one factor will be shown here (or view all experiments)."
 								+ " Click on the factor field to get a menu for choosing among multiple possibilities. Use the 'hinting' "
 								+ "button to choose the type of factor most useful to you, to save manual work. For more help see <a target='_blank' "
-								+ "href='http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser#Datasetchooser-TheGemmaexperimentalfactorchooser'>this page</a>");
+								+ "href='http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Dataset+chooser#Datasetchooser-TheGemmaexperimentalfactorchooser'>this page</a>");
 
 	},
 

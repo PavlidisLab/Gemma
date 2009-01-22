@@ -593,7 +593,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			},
 
 			onHelp : function() {
-				window.open('http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser ',
+				window.open('http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Dataset+chooser',
 						'DataSetChooserHelp');
 			},
 

@@ -8,7 +8,7 @@
 	<description>
 		The Gemma Project for meta-analysis of genomics data
 	</description>
-	<url>http://www.bioinformatics.ubc.ca/Gemma</url>
+	<url>http://www.chibi.ubc.ca/Gemma</url>
 	<organization>
 		<name>UBC Centre for High-throughput Biology</name>
 		<url>http://www.chibi.ubc.ca/</url>
@@ -43,7 +43,7 @@
 				<sendOnSuccess>true</sendOnSuccess>
 				<sendOnWarning>true</sendOnWarning>
 				<configuration>
-					<address>paul@bioinformatics.ubc.ca</address>
+					<address>paul@chibi.ubc.ca</address>
 				</configuration>
 			</notifier>
 		</notifiers>
@@ -59,7 +59,7 @@
 		<developer>
 			<name>Paul Pavlidis</name>
 			<id>pavlidis</id>
-			<email>paul@bioinformatics.ubc.ca</email>
+			<email>paul@chibi.ubc.ca</email>
 			<organization>University of British Columbia</organization>
 		</developer>
 		<developer>
@@ -70,7 +70,7 @@
 		<developer>
 			<name>Kelsey Hamer</name>
 			<id>kelsey</id>
-			<email>kesley@bioinformatics.ubc.ca</email>
+			<email>klc@chibi.ubc.ca</email>
 			<organization>University of British Columbia</organization>
 		</developer>
 	</developers>
@@ -398,7 +398,7 @@
 			<id>pavlab</id>
 			<name>PavLab</name>
 			<url>
-				http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2
+				http://www.chibi.ubc.ca/maven2
 			</url>
 			<layout>default</layout>
 			<snapshots>
@@ -457,7 +457,7 @@
 			<id>pavlab</id>
 			<name>PavLab</name>
 			<url>
-				http://www.bioinformatics.ubc.ca/pavlidis/lab/maven2
+				http://www.chibi.ubc.ca/maven2
 			</url>
 			<layout>default</layout>
 			<snapshots>
