@@ -583,7 +583,8 @@ public class GeneLinkCoexpressionAnalyzer {
 
             Gene secondGene = genesToAnalyze.get( co.getGeneId() );
 
-            if ( secondGene.equals( firstGene ) ) {
+            // note we just check the id to avoid any problems with thaw etc.
+            if ( secondGene.getId().equals( firstGene.getId() ) ) {
                 /*
                  * This is 'just in case'; they should have been removed earlier. These can leak in because we 1) there
                  * can be two probes for the same genes that are coexpressed and 2) we allow them in initial query
