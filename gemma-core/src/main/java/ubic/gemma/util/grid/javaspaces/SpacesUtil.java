@@ -231,7 +231,7 @@ public class SpacesUtil implements ApplicationContextAware {
             IJSpace space = ( IJSpace ) SpaceFinder.find( url );
 
             count = space.count( new SpacesRegistrationEntry(), null );
-            log.info( "count: " + count );
+            log.debug( "count: " + count );
         } catch ( Exception e ) {
             log.error( "Could not check for workers registered.  Assuming 0 workers are registered." );
             e.printStackTrace();
@@ -328,10 +328,8 @@ public class SpacesUtil implements ApplicationContextAware {
 
         if ( serviceableTasks.contains( taskName ) ) {
             serviceable = true;
-            log.info( "Can service task with name " + taskName );
-        }
-
-        else {
+            log.debug( "Can service task with name " + taskName );
+        } else {
             log.error( "Cannot service task with name " + taskName );
         }
 
