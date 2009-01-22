@@ -44,11 +44,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AnchorTagUtil;
-import ubic.gemma.util.SecurityUtil;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 
 /**
+ * NOTE: Logging messages from this service are important for tracking changes to annotations.
+ * 
  * @author luke
  * @spring.bean id="characteristicBrowserController"
  * @spring.property name="formView" value="characteristics"

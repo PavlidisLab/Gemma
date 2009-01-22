@@ -487,6 +487,14 @@ OntologyService.saveExpressionExperimentStatement = function(p0, p1, callback) {
 	dwr.engine
 			._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentStatement', p0, p1, callback);
 }
+OntologyService.saveExpressionExperimentStatement = function(p0, p1, callback) {
+	dwr.engine
+			._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentStatementById', p0, p1, callback);
+}
+OntologyService.saveExpressionExperimentStatement = function(p0, p1, callback) {
+	dwr.engine
+			._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentsStatement', p0, p1, callback);
+}
 OntologyService.removeExpressionExperimentStatement = function(p0, p1, callback) {
 	dwr.engine._execute(OntologyService._path, 'OntologyService', 'removeExpressionExperimentStatement', p0, p1,
 			callback);

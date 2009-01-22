@@ -45,7 +45,8 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 /**
  * Has a static method for finding out which ontologies are loaded into the system and a general purpose find method
- * that delegates to the many ontology services
+ * that delegates to the many ontology services. NOTE: Logging messages from this service are important for tracking
+ * changes to annotations. Also NOTE that method names are not overloaded to avoid AJAX call confusion.
  * 
  * @author pavlidis
  * @version $Id$
@@ -334,6 +335,11 @@ public class OntologyService {
             if ( found.size() == 0 ) continue;
 
             current.removeAll( found );
+
+            for ( Characteristic characteristic : found ) {
+                log.info( "Removing characteristic from " + bm + " : " + characteristic );
+            }
+
             bm.setCharacteristics( current );
             bioMaterialService.update( bm );
 
@@ -370,6 +376,10 @@ public class OntologyService {
             }
             if ( found.size() == 0 ) continue;
 
+            for ( Characteristic characteristic : found ) {
+                log.info( "Removing characteristic  from " + ee + " : " + characteristic );
+            }
+
             current.removeAll( found );
             ee.setCharacteristics( current );
             eeService.update( ee );
@@ -405,6 +415,10 @@ public class OntologyService {
             else
                 current.addAll( chars );
 
+            for ( Characteristic characteristic : chars ) {
+                log.info( "Adding characteristic to " + bioM + " : " + characteristic );
+            }
+
             bioM.setCharacteristics( current );
             bioMaterialService.update( bioM );
 
@@ -418,19 +432,9 @@ public class OntologyService {
      * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      * @param eeIds
      */
-    public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> eeIds ) {
+    public void saveExpressionExperimentsStatement( Characteristic vc, Collection<Long> eeIds ) {
         for ( Long id : eeIds ) {
             this.saveExpressionExperimentStatement( vc, id );
-        }
-    }
-
-    /**
-     * @param vcs
-     * @param ee
-     */
-    public void saveExpressionExperimentStatements( Collection<Characteristic> vcs, ExpressionExperiment ee ) {
-        for ( Characteristic characteristic : vcs ) {
-            this.saveExpressionExperimentStatement( characteristic, ee.getId() );
         }
     }
 
@@ -471,6 +475,8 @@ public class OntologyService {
         } else {
             current.addAll( chars );
         }
+
+        log.info( "Adding characteristic to " + ee + " : " + vc );
 
         ee.setCharacteristics( current );
         eeService.update( ee );
