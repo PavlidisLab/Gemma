@@ -55,7 +55,8 @@ public class VocabCharacteristicImpl extends ubic.gemma.model.common.description
      */
     @Override
     public java.lang.String toString() {
-        return toString( 0 );
+        // return toString( 0 );
+        return super.toString() + " categoryUri=" + this.getCategoryUri() + " valueUri=" + this.getValueUri();
     }
 
     protected String toString( int indent ) {

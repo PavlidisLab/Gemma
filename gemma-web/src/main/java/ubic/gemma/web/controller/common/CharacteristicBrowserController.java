@@ -44,6 +44,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AnchorTagUtil;
+import ubic.gemma.util.SecurityUtil;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 
@@ -133,8 +134,10 @@ public class CharacteristicBrowserController extends BaseFormController {
         Map charToParent = characteristicService.getParents( chars );
         for ( Characteristic cFromClient : chars ) {
             Characteristic cFromDatabase = characteristicService.load( cFromClient.getId() );
-            removeFromParent( cFromDatabase, charToParent.get( cFromDatabase ) );
+            Object parent = charToParent.get( cFromDatabase );
+            removeFromParent( cFromDatabase, parent );
             characteristicService.delete( cFromDatabase );
+            log.info( "Characteristic deleted: " + cFromDatabase + " (associated with " + parent + ")" );
         }
     }
 
@@ -206,15 +209,28 @@ public class CharacteristicBrowserController extends BaseFormController {
             cFromDatabase.setCategory( cFromClient.getCategory() );
             if ( cFromDatabase instanceof VocabCharacteristic ) {
                 vcFromDatabase = ( VocabCharacteristic ) cFromDatabase;
-                vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
-                vcFromDatabase.setCategoryUri( vcFromClient.getCategoryUri() );
+                // FIXME: vcFromClient can be null here based on logic above.
+                if ( vcFromClient != null ) {
+                    vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
+                    vcFromDatabase.setCategoryUri( vcFromClient.getCategoryUri() );
+                }
             }
-            cFromDatabase.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
+
+            if ( cFromClient.getEvidenceCode() == null ) {
+                cFromDatabase.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
+            } else {
+                if ( !cFromDatabase.getEvidenceCode().equals( cFromClient.getEvidenceCode() ) ) {
+                    log.info( "Characteristic evidence code update: " + cFromDatabase + " "
+                            + cFromDatabase.getEvidenceCode() + " -> " + cFromClient.getEvidenceCode() );
+                }
+                cFromDatabase.setEvidenceCode( cFromClient.getEvidenceCode() ); // let them change it.
+            }
+
             characteristicService.update( cFromDatabase );
         }
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Done updating" );
+            log.info( "Update took: " + timer.getTime() );
         }
     }
 
