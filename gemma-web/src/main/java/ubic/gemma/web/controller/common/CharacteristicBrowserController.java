@@ -174,6 +174,7 @@ public class CharacteristicBrowserController extends BaseFormController {
              * class of the object, we have to delete the old characteristic and make a new one of the appropriate
              * class.
              */
+            Object parent = charToParent.get( cFromDatabase );
             if ( vcFromClient != null && vcFromDatabase == null ) {
                 vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( VocabCharacteristic.Factory
                         .newInstance( null, null, cFromDatabase.getValue(), cFromDatabase.getCategory(), cFromDatabase
@@ -183,7 +184,7 @@ public class CharacteristicBrowserController extends BaseFormController {
                          */
                         // cFromDatabase.getAuditTrail()
                         ) );
-                Object parent = charToParent.get( cFromDatabase );
+
                 removeFromParent( cFromDatabase, parent );
                 characteristicService.delete( cFromDatabase );
                 addToParent( vcFromDatabase, parent );
@@ -194,7 +195,6 @@ public class CharacteristicBrowserController extends BaseFormController {
                         .getName(), vcFromDatabase.getDescription(), null // don't copy AuditTrail to avoid cascade
                         // error... vcFromDatabase.getAuditTrail()
                         ) );
-                Object parent = charToParent.get( vcFromDatabase );
                 removeFromParent( vcFromDatabase, parent );
                 characteristicService.delete( vcFromDatabase );
                 addToParent( cFromDatabase, parent );
@@ -212,13 +212,14 @@ public class CharacteristicBrowserController extends BaseFormController {
                 if ( vcFromClient != null ) {
                     if ( !vcFromDatabase.getValueUri().equals( vcFromClient.getValueUri() ) ) {
                         log.info( "Characteristic value update: " + vcFromDatabase + " " + vcFromDatabase.getValueUri()
-                                + " -> " + vcFromDatabase.getValueUri() );
+                                + " -> " + vcFromDatabase.getValueUri() + " associated with " + parent );
                         vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
                     }
 
                     if ( !vcFromDatabase.getCategoryUri().equals( vcFromClient.getCategoryUri() ) ) {
                         log.info( "Characteristic category update: " + vcFromDatabase + " "
-                                + vcFromDatabase.getCategoryUri() + " -> " + vcFromDatabase.getCategoryUri() );
+                                + vcFromDatabase.getCategoryUri() + " -> " + vcFromDatabase.getCategoryUri()
+                                + " associated with " + parent );
                         vcFromDatabase.setCategoryUri( vcFromClient.getCategoryUri() );
                     }
                 }
