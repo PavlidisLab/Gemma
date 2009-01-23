@@ -75,6 +75,9 @@ public class GeneCoexpressionAnalysisDaoImpl extends
             }
         }
 
+        this.getHibernateTemplate().flush();
+
+        // this was failing?; added previous flush statement to fix (?)
         this.remove( geneCoexpressionAnalysis );
 
     }
