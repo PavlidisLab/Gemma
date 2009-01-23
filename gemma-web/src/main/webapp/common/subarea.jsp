@@ -17,7 +17,7 @@
 	<p style="font-size: 0.9em">
 		More information about the project is
 		<a href="<c:url value="/static/about.html"/>">here</a>. Gemma also has a
-		<a href="http://chibi.ubc.ca/confluence/display/gemma">Wiki</a> where you can read additional documentation,
+		<a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">Wiki</a> where you can read additional documentation,
 		in addition to the in-line help.
 	</p>
 </div>

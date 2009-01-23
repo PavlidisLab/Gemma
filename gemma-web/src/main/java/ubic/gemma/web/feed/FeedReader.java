@@ -46,7 +46,7 @@ public class FeedReader implements InitializingBean {
 
     private static final String GEMMA_HOME_FEEDURL_CONFIG_PARAM = "gemma.home.feedurl";
 
-    private static final String DEFAULT_FEED = "http://cs-02.chibi.ubc.ca/confluence/spaces/createrssfeed.action?types=blogpost&spaces=gemma&maxResults=1&title=Gemma+News&publicFeed=true&timeSpan=600";
+    private static final String DEFAULT_FEED = "http://www.chibi.ubc.ca/faculty/pavlidis/wiki/spaces/createrssfeed.action?types=blogpost&spaces=gemma&maxResults=1&title=Gemma+News&publicFeed=true&timeSpan=600";
 
     FeedFetcher feedFetcher;
     String feedUrl;
