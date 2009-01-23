@@ -22,9 +22,9 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>scm:cvs:ext:@krusty.chibi.ubc.ca:local:/cvs:Gemma</connection>
-		<developerConnection>scm:cvs:ext:@krusty.chibi.ubc.ca:/cvs:Gemma</developerConnection>
-		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
+		<connection>scm:cvs:ext:@krusty.chibi.ubc.ca:/space/cvs:Gemma</connection>
+		<developerConnection>scm:cvs:ext:@krusty.chibi.ubc.ca:/space/cvs:Gemma</developerConnection>
+		<url>http://www.chibi.ubc.ca/faculty/pavlidis/fisheye/browse/pavlab/Gemma</url>
 	</scm>
 	<issueManagement>
 		<system>Bugzilla</system>
@@ -529,13 +529,13 @@
 		</site>
 		<repository>
 			<id>repo</id>
-			<name>Broca</name>
-			<url>scp://krusty.chibi.ubc.ca:/var/www/www.bioinformatics.ubc.ca/maven2</url>
+			<name>Pavlab</name>
+			<url>scp://krusty.chibi.ubc.ca:/space/maven2</url>
 		</repository>
 		<snapshotRepository>
 			<id>repo</id>
-			<name>Broca</name>
-			<url>scp://krusty.chibi.ubc.ca:/var/www/www.bioinformatics.ubc.ca/maven2</url>
+			<name>Pavlab</name>
+			<url>scp://krusty.chibi.ubc.ca:/space/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
 

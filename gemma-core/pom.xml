@@ -80,6 +80,7 @@
 						<groupId>xdoclet</groupId>
 						<artifactId>xjavadoc</artifactId>
 						<version>1.1</version>
+						<classifier>j5-v4</classifier>
 					</dependency>
 					<dependency>
 						<groupId>xdoclet</groupId>

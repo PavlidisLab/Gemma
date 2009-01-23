@@ -3,7 +3,7 @@
 	<groupId>gemma</groupId>
 	<name>Gemma MDA</name>
 	<description>
-		<![CDATA[Model-driven architecture generated code and implementations.]]>
+	<![CDATA[Model-driven architecture generated code and implementations.]]>
 	</description>
 	<artifactId>gemma-mda</artifactId>
 	<version>1.4-SNAPSHOT</version>
@@ -229,6 +229,12 @@
 						<artifactId>ant</artifactId>
 						<version>1.6.5</version>
 					</dependency>
+					<dependency>
+						<groupId>xdoclet</groupId>
+						<artifactId>xjavadoc</artifactId>
+						<version>1.1</version>
+						<classifier>j5-v4</classifier>
+					</dependency>
 				</dependencies>
 			</plugin>
 			<plugin>
@@ -341,7 +347,7 @@
 									<url>${bootstrap.db.url}</url>
 									<autocommit>false</autocommit>
 									<sqlCommand>
-										<![CDATA[drop database if exists ${gemma.testdb.name}]]>
+									<![CDATA[drop database if exists ${gemma.testdb.name}]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
@@ -354,7 +360,7 @@
 								<configuration>
 									<url>${bootstrap.db.url}</url>
 									<sqlCommand>
-										<![CDATA[create database ${gemma.testdb.name}]]>
+									<![CDATA[create database ${gemma.testdb.name}]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
@@ -447,7 +453,7 @@
 									<url>${bootstrap.db.url}</url>
 									<autocommit>false</autocommit>
 									<sqlCommand>
-										<![CDATA[drop database if exists ${gemma.db.name}]]>
+									<![CDATA[drop database if exists ${gemma.db.name}]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
@@ -460,7 +466,7 @@
 								<configuration>
 									<url>${bootstrap.db.url}</url>
 									<sqlCommand>
-										<![CDATA[create database ${gemma.db.name}]]>
+									<![CDATA[create database ${gemma.db.name}]]>
 									</sqlCommand>
 								</configuration>
 							</execution>
