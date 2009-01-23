@@ -623,11 +623,24 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     public Collection<GeneProduct> findEnsemblGenesByLocation( String chromosome, Long start, Long end, String strand ) {
 
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT r.name, kgXref.geneSymbol, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, 'Ensembl gene prediction' "
-                + "FROM ensGene as r inner join knownToEnsembl on r.name = knownToEnsembl.value inner join kgXref on kgXref.kgID = knownToEnsembl.name "
+        /*
+         * Note: unlike refgene etc. queries, this requires a three table join. MUCH slower. This entire join is only
+         * required to get the known gene symbol that corresponds.
+         */
+        // String query =
+        // "SELECT r.name, kgXref.geneSymbol, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, 'Ensembl gene prediction' "
+        // +
+        // "FROM ensGene as r inner join knownToEnsembl on r.name = knownToEnsembl.value inner join kgXref on kgXref.kgID = knownToEnsembl.name "
+        // + "WHERE "
+        // + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
+        // + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
+        
+        // Using denormalized table.
+        String query = "SELECT r.name, r.kgSymbol, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, 'Ensembl gene prediction' "
+                + "FROM ensGene as r "
                 + "WHERE "
                 + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
-                + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
+                + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? and r.kgSymbol IS NOT NULL";
 
         if ( strand != null ) {
             query = query + " AND r.strand = ?  ";
