@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.visualization;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -29,6 +30,7 @@ import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * @author kelsey
@@ -41,14 +43,14 @@ public class GeneExpressionProfile {
     /*
      * This is a collection because probes are not specific.
      */
-    Collection<Gene> genes;
+    Collection<GeneValueObject> genes;
     List<DoublePoint> points;
     DesignElement probe;
     int factor;
     private String color = "black";
 
     public GeneExpressionProfile( DoubleVectorValueObject vector, String color, int factor ) {
-        this.genes = vector.getGenes();
+        this.genes = convert2GeneValueObjects(vector.getGenes());
         this.probe = vector.getDesignElement();
         this.probe.setArrayDesign( null );
         this.points = new ArrayList<DoublePoint>();
@@ -82,6 +84,15 @@ public class GeneExpressionProfile {
         }
     }
 
+    private Collection<GeneValueObject> convert2GeneValueObjects(Collection<Gene> genes){
+    
+        Collection<GeneValueObject> converted= new HashSet<GeneValueObject>();
+        for(Gene g : genes)
+            converted.add( new GeneValueObject(g.getId(),g.getName(),g.getNcbiId(),g.getOfficialSymbol(),g.getOfficialName(),g.getDescription()) );       
+        
+        return converted;
+    }
+    
     public String getColor() {
         return color;
     }
@@ -90,11 +101,11 @@ public class GeneExpressionProfile {
         this.color = color;
     }
 
-    public Collection<Gene> getGenes() {
+    public Collection<GeneValueObject> getGenes() {
         return genes;
     }
 
-    public void setGenes( Collection<Gene> genes ) {
+    public void setGenes( Collection<GeneValueObject> genes ) {
         this.genes = genes;
     }
 
