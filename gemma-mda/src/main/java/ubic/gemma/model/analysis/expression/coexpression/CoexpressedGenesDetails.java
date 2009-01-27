@@ -631,7 +631,13 @@ public class CoexpressedGenesDetails {
                 /*
                  * There could be probes for which no gene mapping exists any more.
                  */
-                log.warn( "No genes for probe=" + queryProbeId + " in ee=" + eeID );
+                if ( !warned ) {
+                    log.warn( "No genes for query probe=" + queryProbeId + " in ee=" + eeID
+                            + " (Any additional warnings for this link will be at DEBUG level only)" );
+                } else if ( log.isDebugEnabled() ) {
+                    log.debug( "No genes for query probe=" + queryProbeId + " in ee=" + eeID );
+                }
+                warned = true;
                 continue;
             }
             int numQueryGenesHit = genesForQueryProbe.size();
@@ -640,10 +646,10 @@ public class CoexpressedGenesDetails {
             Collection<Long> genesForProbe = getGenesForProbe( eeID, targetProbeId );
             if ( genesForProbe == null ) {
                 if ( !warned ) {
-                    log.warn( "No genes for probe=" + targetProbeId + " in ee=" + eeID
+                    log.warn( "No genes for target probe=" + targetProbeId + " in ee=" + eeID
                             + " (Any additional warnings for this link will be at DEBUG level only)" );
                 } else if ( log.isDebugEnabled() ) {
-                    log.debug( "No genes for probe=" + targetProbeId + " in ee=" + eeID );
+                    log.debug( "No genes for target probe=" + targetProbeId + " in ee=" + eeID );
                 }
                 warned = true;
                 continue;

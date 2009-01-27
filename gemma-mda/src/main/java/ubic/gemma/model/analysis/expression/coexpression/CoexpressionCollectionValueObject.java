@@ -416,7 +416,12 @@ public class CoexpressionCollectionValueObject {
             for ( Long probeID : probe2genes.keySet() ) {
                 Collection<Long> genes = probe2genes.get( probeID );
 
-                for ( Long g : probe2GeneMap.get( probeID ) ) {
+                Collection<Long> genesForProbe = probe2GeneMap.get( probeID );
+
+                // defensive; shouldn't happen.
+                if ( genesForProbe == null ) continue;
+
+                for ( Long g : genesForProbe ) {
                     genes.add( g );
                 }
 

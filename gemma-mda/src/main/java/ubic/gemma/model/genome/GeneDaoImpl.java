@@ -1330,16 +1330,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             Session session ) {
         assert csIdChunk.size() > 0;
 
-        // if ( csIdChunk.contains( 20110L ) ) {
-        // log.info( "got it" );
-        // }
-
         /*
          * Check the cache first.
          */
         Collection<Long> neededCs = new HashSet<Long>();
         for ( Long csid : csIdChunk ) {
-            if ( gene2CsCache.containsKey( csid ) ) {
+            if ( gene2CsCache.containsKey( csid ) && gene2CsCache.get( csid ) != null ) {
                 csId2geneIds.put( csid, gene2CsCache.get( csid ) );
             } else {
                 neededCs.add( csid );
@@ -1360,14 +1356,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
         while ( scroll.next() ) {
-            Long id = scroll.getLong( 0 );
+            Long csid = scroll.getLong( 0 );
             Long geneId = scroll.getLong( 1 );
-            Collection<Long> geneIds = csId2geneIds.get( id );
-            if ( geneIds == null ) {
-                geneIds = new HashSet<Long>();
-                csId2geneIds.put( id, geneIds );
+            if ( !csId2geneIds.containsKey( csid ) ) {
+                csId2geneIds.put( csid, new HashSet<Long>() );
             }
-            geneIds.add( geneId );
+            csId2geneIds.get( csid ).add( geneId );
         }
 
         /*
