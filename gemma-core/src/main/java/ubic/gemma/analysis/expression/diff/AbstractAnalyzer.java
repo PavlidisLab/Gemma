@@ -41,6 +41,7 @@ public abstract class AbstractAnalyzer {
      */
     public void connectToR() {
         rc = RConnectionFactory.getRConnection();
+        if ( rc == null ) throw new RuntimeException( "R connection was not established" );
     }
 
     /**
