@@ -438,14 +438,6 @@ public class ProbeMapper {
             return blatAssociations;
         }
 
-        // Gene nearestGene = goldenPathDb.findClosestGene( blatResult.getTargetChromosome().getName(), blatResult
-        // .getTargetStart(), blatResult.getTargetEnd(), strand, 50000 );
-
-        // if ( nearestGene != null ) {
-        // log.info( "Nearest gene to " + blatResult.getTargetChromosome().getName() + "(" + strand + "):"
-        // + blatResult.getTargetStart() + "-" + blatResult.getTargetEnd() + " is " + nearestGene );
-        // }
-
         // no genes, have to look for pre-existing probealignedregions that overlap.
 
         return findProbeAlignedRegionAssociations( blatResult, ignoreStrand );
