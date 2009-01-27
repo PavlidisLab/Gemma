@@ -51,6 +51,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     @Override
     protected void buildOptions() {
         super.buildOptions();
+        
+        requireLogin();
 
         Option taxonOption = OptionBuilder
                 .hasArg()
