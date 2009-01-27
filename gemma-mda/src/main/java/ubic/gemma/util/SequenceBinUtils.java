@@ -58,9 +58,8 @@ public class SequenceBinUtils {
     public static String addBinToQuery( String table, Long start, Long end ) {
         if ( end <= BINRANGE_MAXEND_512M ) {
             return hAddBinToQueryStandard( table, start, end, Boolean.TRUE );
-        } else {
-            return hAddBinToQueryExtended( table, start, end );
         }
+        return hAddBinToQueryExtended( table, start, end );
     }
 
     /**
@@ -71,10 +70,9 @@ public class SequenceBinUtils {
      * @return
      */
     public static int binFromRange( int start, int end ) {
-        if ( end <= BINRANGE_MAXEND_512M )
-            return binFromRangeStandard( start, end );
-        else
-            return binFromRangeExtended( start, end );
+        if ( end <= BINRANGE_MAXEND_512M ) return binFromRangeStandard( start, end );
+
+        return binFromRangeExtended( start, end );
     }
 
     /**
