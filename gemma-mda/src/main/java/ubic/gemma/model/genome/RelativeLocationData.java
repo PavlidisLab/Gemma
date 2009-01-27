@@ -28,6 +28,15 @@ public class RelativeLocationData {
 
     private boolean isContainedWithinGene = false;
     private boolean overlapsGene = false;
+    private boolean isOnSameStrand = false;
+
+    public boolean isOnSameStrand() {
+        return isOnSameStrand;
+    }
+
+    public void setOnSameStrand( boolean isOnSameStrand ) {
+        this.isOnSameStrand = isOnSameStrand;
+    }
 
     private long range = 0L;
 

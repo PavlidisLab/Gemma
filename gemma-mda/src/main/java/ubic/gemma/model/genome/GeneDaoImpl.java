@@ -154,7 +154,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             log.debug( "Start Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
 
         /*
-         * Starting with exact location, look for genes, enlarging the region as needed. Finds the nearest hit.
+         * Starting with exact location, look for genes, enlarging the region as needed -- ignoring strand.. Finds the
+         * nearest hit, but tracks if the strand is the same.
          */
         int i = 0;
         long windowStart = targetStart;
@@ -167,9 +168,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             windowEnd = windowEnd + i * WINDOW_INCREMENT;
 
             if ( log.isDebugEnabled() )
-                log.debug( "Search: " + physicalLocation + " length=" + ( windowEnd - windowStart ) );
+                log.debug( "Search: " + physicalLocation + " length=" + ( windowEnd - windowStart ) + " strand="
+                        + physicalLocation.getStrand() );
 
-            Collection<Gene> candidates = findByPosition( chrom, windowStart, windowEnd, strand );
+            // note that here we ignore the strand.
+            Collection<Gene> candidates = findByPosition( chrom, windowStart, windowEnd, null );
             if ( !candidates.isEmpty() ) {
                 if ( log.isDebugEnabled() )
                     log.debug( physicalLocation + ": " + candidates.size() + " nearby genes at window size " + i
@@ -181,12 +184,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     this.thaw( gene );
                     for ( GeneProduct gp : gene.getProducts() ) {
                         PhysicalLocation genelocation = gp.getPhysicalLocation();
+
+                        boolean onSameStrand = genelocation.getStrand().equals( strand );
+
                         assert genelocation.getChromosome().equals( physicalLocation.getChromosome() );
                         Long geneStart = genelocation.getNucleotide();
                         Long geneEnd = genelocation.getNucleotideLength() + geneStart;
 
                         RelativeLocationData candidate = new RelativeLocationData( physicalLocation, gene, gp,
                                 genelocation );
+                        candidate.setOnSameStrand( onSameStrand );
 
                         long range = 0;
                         // note we use the 'real' location of the par, not the window.
