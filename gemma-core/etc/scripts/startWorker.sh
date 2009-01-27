@@ -1,9 +1,10 @@
-# Example unix shell script to start workers
+ # Example unix shell script to start workers
 # $Id$
 
 # This script uses the following environment variables, which you must define here or in your profile.
 # GEMMA_LIB="/gemmaData/lib/Gemma"
 
+JSLIBDIR="/home/kelsey/apps/GigaSpacesCommunity5.2/lib"
 GEMMA_USER=administrator
 GEMMA_PWD=$1
 WORKER_CLASS=$2
@@ -19,7 +20,7 @@ JAVACMD="${JAVA_HOME}/bin/java"
 #JARS="${JSHOMEDIR}${CPS}${JSHOMEDIR}/lib/JSpaces.jar${CPS}${COMMON_JARS}${CPS}$CP"; export JARS
 
 $JAVACMD $VMARGS -Dcom.gs.home=$GEMMA_LIB -Dehcache.disk.store.dir=$HOME/scratch \
--classpath "${CP}" ubic.gemma.grid.javaspaces.worker.$WORKER_CLASS \
+-classpath "${CP}:/home/kelsey/apps/GigaSpacesCommunity5.2/lib/JSpaces.jar" ubic.gemma.grid.javaspaces.worker.$WORKER_CLASS \
 -u $GEMMA_USER -p $GEMMA_PWD -gigaspacesOn $APPARGS
 
 
