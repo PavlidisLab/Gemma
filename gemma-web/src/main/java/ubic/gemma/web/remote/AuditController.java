@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.AuditableService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -34,7 +35,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.web.controller.common.auditAndSecurity.AuditEventValueObject;
 
 /**
  * This is required soley for exposing auditables to remote services would try to marshall the abstract class Auditable.

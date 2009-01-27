@@ -45,6 +45,7 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
@@ -215,19 +216,19 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             if ( sampleRemovalEvents.containsKey( id ) ) {
                 Collection<AuditEvent> e = sampleRemovalEvents.get( id );
                 // we find we are getting lazy-load exceptions from this guy.
-                eeVo.setSampleRemovedFlags( e );
+                eeVo.setSampleRemovedFlagsFromAuditEvent( e );
             }
 
             if ( troubleEvents.containsKey( id ) ) {
                 AuditEvent trouble = troubleEvents.get( id );
                 // we find we are getting lazy-load exceptions from this guy.
                 auditEventService.thaw( trouble );
-                eeVo.setTroubleFlag( trouble );
+                eeVo.setTroubleFlag( new AuditEventValueObject(trouble) );
             }
             if ( validationEvents.containsKey( id ) ) {
                 AuditEvent validated = validationEvents.get( id );
                 auditEventService.thaw( validated );
-                eeVo.setValidatedFlag( validated );
+                eeVo.setValidatedFlag( new AuditEventValueObject(validated) );
             }
 
             ExpressionExperiment ee = eemap.get( id );

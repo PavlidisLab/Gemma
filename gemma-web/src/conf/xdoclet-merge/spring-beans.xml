@@ -1,4 +1,3 @@
-
 <!--
 		This document is a "merge file" used by XDoclet to automagically generate a spring beans configuration file for the
 		web application. The generated web-context will have the name action-servlet.xml (name is configured in the
@@ -1318,7 +1317,7 @@
 					</property>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.common.auditAndSecurity.AuditEventValueObject">
+			<entry key="ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 					<property name="includes">

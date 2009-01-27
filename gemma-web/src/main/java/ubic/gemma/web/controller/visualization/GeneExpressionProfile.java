@@ -84,6 +84,7 @@ public class GeneExpressionProfile {
         }
     }
 
+    //TODO move this to GeneValueObject
     private Collection<GeneValueObject> convert2GeneValueObjects(Collection<Gene> genes){
     
         Collection<GeneValueObject> converted= new HashSet<GeneValueObject>();
