@@ -83,7 +83,7 @@ public class ArrayDesignSequenceProcessingService {
      * When checking a BLAST database for sequences, we stop after checking Genbank accessions versions up to this value
      * (e.g, AA22930.1)
      */
-    private static final int MAX_VERSION_NUMBER = 10;
+    private static final int MAX_VERSION_NUMBER = 15;
 
     private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
 
