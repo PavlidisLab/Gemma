@@ -73,11 +73,23 @@ public class GeoRecordBrowserController extends BaseMultiActionController {
             }
         }
 
+        int skip = 0;
+
+        String skipSize = request.getParameter( "skip" );
+        if ( StringUtils.isNotBlank( skipSize ) ) {
+            try {
+                skip = Integer.parseInt( skipSize );
+            } catch ( NumberFormatException e ) {
+                //
+            }
+        }
+
         if ( next ) {
             start += count;
         } else if ( prev ) {
             start = Math.max( 0, start -= count );
         }
+        start = start + skip;
 
         Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( start, count );
 

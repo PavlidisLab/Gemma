@@ -24,6 +24,7 @@
 		<form action="<c:url value="/geoBrowser/showBatch.html" />" method="POST">
 			<input type="submit" name="prev" value="Show Last Batch" />
 			<input type="submit" name="next" value="Show Next Batch" />
+				Skip: <input type="text" name="skip"   width="100" />
 			<input type="hidden" name="start" value="${start}" />
 			<input type="hidden" name="count" value="50" />
 		</form>
