@@ -13,8 +13,8 @@
 			<subsection name="Binaries">
 				<ul>
 					<li>
-						<a href="http://chibi.ubc.ca/Gemma/resources/dist/Gemma-1.3.jar">Gemma-1.3.jar</a>
-						- The Gemma web application (this is a 'web archive' file).
+						<a href="http://chibi.ubc.ca/Gemma/resources/dist/Gemma-1.3.war">Gemma-1.3.war</a>
+						- The Gemma web application.
 					</li>
 					<li>
 						<a href="http://chibi.ubc.ca/Gemma/resources/dist/gemmaCli-1.3.jar">
@@ -56,7 +56,7 @@
 			<subsection name="Older versions">
 				<p>
 					Older versions will be available in the
-					<a href="http://chibi.ubc.ca/Gemma/resources/dist/">archives</a>
+					<a href="http://chibi.ubc.ca/Gemma/resources/dist/archives">archives</a>
 					.
 				</p>
 			</subsection>

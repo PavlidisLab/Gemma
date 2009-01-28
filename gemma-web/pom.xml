@@ -179,12 +179,6 @@
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
-			<artifactId>gemma-testing</artifactId>
-			<version>1.4-SNAPSHOT</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>gemma</groupId>
 			<artifactId>gemma-core</artifactId>
 			<version>1.4-SNAPSHOT</version>
 		</dependency>

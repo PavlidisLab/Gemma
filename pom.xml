@@ -34,7 +34,7 @@
 	</issueManagement>
 	<ciManagement>
 		<system>continuum</system>
-		<url>http://broca.ubic.ca/continuum/</url>
+		<url>http://chibi.ubc.ca/faculty/pavlidis/continuum</url>
 		<notifiers>
 			<notifier>
 				<type>mail</type>
