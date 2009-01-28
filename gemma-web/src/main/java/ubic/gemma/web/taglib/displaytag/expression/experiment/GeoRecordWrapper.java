@@ -43,15 +43,14 @@ public class GeoRecordWrapper extends TableDecorator {
         if ( record.getCorrespondingExperiments().size() == 0 ) {
             String accession = record.getGeoAccession();
             return "<input type=\"button\" value=\"Load\" " + "\" onClick=\"load('" + accession + "')\" >";
-        } else {
-            StringBuilder buf = new StringBuilder();
-            for ( ExpressionExperiment ee : record.getCorrespondingExperiments() ) {
-                buf.append( "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?" );
-                buf.append( "id=" + ee.getId() + "\">" + ee.getShortName() );
-                buf.append( "</a> " );
-            }
-            return buf.toString();
         }
+        StringBuilder buf = new StringBuilder();
+        for ( ExpressionExperiment ee : record.getCorrespondingExperiments() ) {
+            buf.append( "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?" );
+            buf.append( "id=" + ee.getId() + "\">" + ee.getShortName() );
+            buf.append( "</a> " );
+        }
+        return buf.toString();
     }
 
     public String getDetails() {
@@ -65,8 +64,8 @@ public class GeoRecordWrapper extends TableDecorator {
      */
     public String getGeoAccessionLink() {
         GeoRecord record = ( GeoRecord ) getCurrentRowObject();
-        return "<a href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + record.getGeoAccession() + "'>"
-                + record.getGeoAccession() + "</a>";
+        return "<a target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + record.getGeoAccession()
+                + "'>" + record.getGeoAccession() + "</a>";
     }
 
     public String getReleaseDateNoTime() {
