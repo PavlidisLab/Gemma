@@ -65,7 +65,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
 								msg : "Searching for differential expression ..."
 							});
-							
+				
 			var queryStart = document.URL.indexOf("?");
 			if (queryStart > -1) {
 				this.initializeFromQueryString(document.URL.substr(queryStart + 1));
@@ -191,13 +191,13 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.thresholdField = Ext.getCmp('thresholdField');
 
 		if (dsc.taxonId) {
-			this.geneChooserPanel.toolbar.taxonCombo.setState(dsc.taxonId);
+			this.geneChooserPanel.toolbar.taxonCombo.setTaxon(dsc.taxonId);
 		}
 
 		if (dsc.eeSetId >= 0) {
-			this.eeSetChooserPanel.setState(dsc.eeSetId);
+			this.eeSetChooserPanel.selectById(dsc.eeSetId);
 		} else if (dsc.eeSetName) {
-			this.eeSetChooserPanel.setState(dsc.eeSetName); // FIXME this won't
+			this.eeSetChooserPanel.selectByName(dsc.eeSetName); // FIXME this won't
 			// work, expects id.
 		}
 
