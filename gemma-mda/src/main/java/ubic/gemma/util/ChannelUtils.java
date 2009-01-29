@@ -64,10 +64,11 @@ public class ChannelUtils {
         return name.matches( "CH1(I)?_MEDIAN" ) || name.matches( "CH1(I)?_MEAN" ) || name.equals( "RAW_DATA" )
                 || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 1MEDIAN" )
                 || name.toLowerCase().matches( "ch1_smtm" ) || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
-                || name.equals( "ch1.Intensity" ) || name.equals( "CH1_SIG_MEAN" ) || name.equals( "CH1_ Median" )
-                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) || name.toUpperCase().matches( "NORM(.*)CH1" )
-                || name.equals( "CH1Mean" ) || name.equals( "CH1_SIGNAL" ) || name.equals( "\"log2(532), gN\"" )
-                || name.equals( "gProcessedSignal" );
+                || name.equals( "ch1.Intensity" ) || name.matches( "CH1_SIG_(MEAN|MEDIAN)" )
+                || name.equals( "CH1_ Median" ) || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" )
+                || name.toUpperCase().matches( "NORM(.*)CH1" ) || name.equals( "CH1Mean" )
+                || name.equals( "CH1_SIGNAL" ) || name.equals( "\"log2(532), gN\"" )
+                || name.equals( "gProcessedSignal" ) || name.equals( "CH1_SIG_MEDIAN" );
     }
 
     /**
@@ -81,9 +82,10 @@ public class ChannelUtils {
         return name.matches( "CH2(I)?_MEDIAN" ) || name.matches( "CH2(I)?_MEAN" ) || name.equals( "RAW_CONTROL" )
                 || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 2MEDIAN" )
                 || name.toLowerCase().matches( "ch2_smtm" ) || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
-                || name.equals( "ch2.Intensity" ) || name.equals( "CH2_SIG_MEAN" ) || name.equals( "CH2_ Median" )
-                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" )
-                || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
+                || name.equals( "ch2.Intensity" ) || name.matches( "CH2_SIG_(MEAN|MEDIAN)" )
+                || name.equals( "CH2_ Median" ) || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" )
+                || name.toUpperCase().matches( "NORM(.*)CH2" ) || name.equals( "CH2Mean" )
+                || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
                 || name.equals( "rProcessedSignal" );
     }
 
