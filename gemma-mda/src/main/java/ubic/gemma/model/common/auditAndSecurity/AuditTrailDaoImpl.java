@@ -59,7 +59,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         }
 
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 // session.lock( auditable, LockMode.NONE );
                 session.update( auditable );
@@ -70,7 +70,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 session.evict( auditable );
                 return null;
             }
-        }, false );
+        } );
 
         assert auditEvent.getId() != null;
         assert auditable.getAuditTrail().getEvents().size() > 0;
@@ -84,7 +84,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     protected void handleThaw( final Auditable auditable ) {
         if ( auditable == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( auditable );
                 if ( auditable.getAuditTrail() == null ) return null;
@@ -93,7 +93,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 session.evict( auditable );
                 return null;
             }
-        }, true );
+        } );
 
     }
 
@@ -103,7 +103,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     @Override
     protected void handleThaw( final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( auditTrail, LockMode.NONE );
                 Hibernate.initialize( auditTrail );
@@ -121,7 +121,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 session.evict( auditTrail );
                 return null;
             }
-        }, true );
+        } );
 
     }
 
@@ -144,6 +144,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     /**
      * @return
      */
+    @SuppressWarnings("unchecked")
     private User getUser() {
         String name = getPrincipalName();
         assert name != null; // might be anonymous
