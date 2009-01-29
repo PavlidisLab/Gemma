@@ -60,6 +60,25 @@
 			<%
 			}
 			%>
+			
+				<%
+			if ( (gene.getId() != null) && (gene.getOfficialSymbol() != null) && (gene.getTaxon() != null)  && (gene.getTaxon().getCommonName() != null) ) {
+			%>
+			&nbsp;&nbsp;
+				<a title="Do Coexpression Search with <%out.print(gene.getOfficialSymbol()); %>"
+				   href="/Gemma/searchCoexpression.html?g=<%out.print(gene.getId());%>&s=3&t=<%out.print(gene.getTaxon().getId());%>&an=All <%out.print(gene.getTaxon().getCommonName());%>">
+				   <img	src="<c:url value='/images/logo/gemmaTiny.gif'/>" /> </a>
+				   
+				   
+			&nbsp;&nbsp;
+				<a title="Do Differential Expression Search with <%out.print(gene.getOfficialSymbol()); %>"
+				   href="/Gemma/diff/diffExpressionSearch.html?g=<%out.print(gene.getId());%>&thres=0.01&t=<%out.print(gene.getTaxon().getId());%>&setName=All <%out.print(gene.getTaxon().getCommonName());%>">
+				   <img	src="<c:url value='/images/logo/gemmaTiny.gif'/>" /> </a>
+
+				   
+			<%
+			}
+			%>
 
 		</td>
 	</tr>
