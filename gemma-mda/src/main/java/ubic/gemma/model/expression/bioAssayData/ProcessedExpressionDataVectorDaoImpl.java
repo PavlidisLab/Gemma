@@ -204,7 +204,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
 
         final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
-                + " inner join fetch dedv.bioAssayDimension bd "
+                + " inner join dedv.bioAssayDimension bd "
                 + " inner join dedv.designElement de  "
                 + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
 
