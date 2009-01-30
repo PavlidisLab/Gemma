@@ -375,7 +375,7 @@
                 ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
                 ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataArrays=user,admin,ROLE_ANONYMOUS,AFTER_ACL_DATAVECTOR_COLLECTION_READ
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.createProcessedDataVectors=user,admin
-                ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getRanks=user,admin                
+                ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getRanks=user,admin,ROLE_ANONYMOUS              
                 ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate=user,admin
 				ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService.findOrCreate=user,admin
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.getBioMaterials=user,admin
