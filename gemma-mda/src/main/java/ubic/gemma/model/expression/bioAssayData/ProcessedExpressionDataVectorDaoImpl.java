@@ -203,7 +203,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             return new HashMap<ExpressionExperiment, Map<Gene, Collection<Double>>>();
         }
 
-        final String queryString = "select distinct ded.expressionExperiment, dedv.designElement, dedv.rankFromMean, dedv.rankFromMax from ProcessedExpressionDataVectorImpl dedv "
+        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
                 + " inner join fetch dedv.bioAssayDimension bd "
                 + " inner join dedv.designElement de  "
                 + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
@@ -262,7 +262,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             return new HashMap<Gene, Collection<Double>>();
         }
 
-        final String queryString = "select distinct dedv.designElement, dedv.rankFromMean, dedv.rankFromMax from ProcessedExpressionDataVectorImpl dedv "
+        final String queryString = "select distinct dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
                 + " inner join fetch dedv.bioAssayDimension bd "
                 + " inner join dedv.designElement de  "
                 + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment = ee ";
@@ -308,7 +308,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     @SuppressWarnings("unchecked")
     public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
-        final String queryString = "select dedv.designElement, dedv.rankFromMean, dedv.rankFromMax from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
+        final String queryString = "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
         List qr = this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
         Map<DesignElement, Double> result = new HashMap<DesignElement, Double>();
         for ( Object o : qr ) {
