@@ -30,8 +30,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	height : 330,
 	frame : true,
 	stateful : true,
-	stateEvents : ["beforesearch"],
-	stateId : "Gemma.DiffExpressionSearch",
+	stateEvents : ['beforesearch'],
+	stateId : "Gemma.DiffSearch",
 
 	applyState : function(state, config) {
 		if (state) {
@@ -40,10 +40,15 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	getState : function() {
-		return this.getDiffSearchCommand();
+		var currentState =  this.getDiffSearchCommand();
+		delete currentState.selectedFactors;
+		
+		return currentState;
 	},
 
 	onRender : function() {
+		
+			
 		Gemma.DiffExpressionSearchForm.superclass.onRender.apply(this, arguments);
 
 		Ext.apply(this, {
@@ -173,6 +178,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	initializeGenes : function(dsc, doSearch) {
+		
 		if (dsc.geneIds.length > 1) {
 			// load into table.
 			this.geneChooserPanel.loadGenes(dsc.geneIds, this.maybeDoSearch.createDelegate(this, [dsc, doSearch]));
@@ -186,7 +192,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	 * make the form look like it has the right values; this will happen asynchronously... so do the search after it is
 	 * done
 	 */
-	initializeFromDiffSearchCommand : function(dsc, doSearch) {
+	initializeFromDiffSearchCommand : function(dsc, doSearch) {		
 		this.geneChooserPanel = Ext.getCmp('gene-chooser-panel');
 		this.thresholdField = Ext.getCmp('thresholdField');
 
@@ -379,6 +385,12 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 					height : 100,
 					width : 230
 				});
+		
+		Ext.apply(this.geneChooserPanel.toolbar.taxonCombo, {
+			stateId : "",
+			stateful : false,
+			stateEvents : []
+		});
 
 		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
 					isAdmin : isAdmin
