@@ -20,8 +20,10 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -226,7 +228,7 @@ public class DifferentialExpressionAnalysisHelperService {
     }
 
     /**
-     * See if there are at least two samples for each factorvalue combination.
+     * See if there are at least two samples for each factor value combination.
      * 
      * @param expressionExperiment
      * @param factors
@@ -279,21 +281,28 @@ public class DifferentialExpressionAnalysisHelperService {
         Collection<Set<FactorValue>> factorValuePairings = generateFactorValuePairings( experimentalFactors );
 
         /* check to see if the biomaterial's factor value pairing is one of the possible combinations */
+        Map<Collection<FactorValue>, BioMaterial> seenPairings = new HashMap<Collection<FactorValue>, BioMaterial>();
         for ( BioMaterial m : biomaterials ) {
 
             Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
 
-            if ( factorValuesFromBioMaterial.size() < 2 ) {
-                log.warn( "Biomaterial must have more than 1 factor value." );
-                return false;
-            }
-
             if ( !factorValuePairings.contains( factorValuesFromBioMaterial ) ) {
-                log
-                        .warn( "Biomaterial does not have a factor value from one of the experimental factors.  Incomplete block design." );
+                throw new RuntimeException(
+                        "Biomaterial's factor value is not in one of the experimental factors.  Block design is neither complete or incomplete.  It is just incorrect." );
+            }
+
+            if ( factorValuesFromBioMaterial.size() < 2 ) {
+                log.warn( "Biomaterial must have more than 1 factor value.  Incomplete block design." );
                 return false;
             }
 
+            seenPairings.put( factorValuesFromBioMaterial, m );
+        }
+        if ( seenPairings.size() != factorValuePairings.size() ) {
+            log.warn( "Biomaterial not paired with all factor values for each experimental factor.  Found "
+                    + seenPairings.size() + " but should have " + factorValuePairings.size()
+                    + ".  Incomplete block design." );
+            return false;
         }
         return true;
 
