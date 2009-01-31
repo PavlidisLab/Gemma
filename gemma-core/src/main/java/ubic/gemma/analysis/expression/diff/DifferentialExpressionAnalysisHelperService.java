@@ -288,7 +288,7 @@ public class DifferentialExpressionAnalysisHelperService {
 
             if ( !factorValuePairings.contains( factorValuesFromBioMaterial ) ) {
                 throw new RuntimeException(
-                        "Biomaterial's factor value is not in one of the experimental factors.  Block design is neither complete or incomplete.  It is just incorrect." );
+                        "Biomaterial's factor values are not in one of the possible factor value pairings from the experimental factors.  Block design is neither complete or incomplete.  It is just incorrect." );
             }
 
             if ( factorValuesFromBioMaterial.size() < 2 ) {
