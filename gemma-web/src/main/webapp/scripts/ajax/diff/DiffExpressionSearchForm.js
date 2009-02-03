@@ -42,6 +42,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	getState : function() {
 		var currentState =  this.getDiffSearchCommand();
 		delete currentState.selectedFactors;
+		delete currentState.eeIds;
 		
 		return currentState;
 	},
