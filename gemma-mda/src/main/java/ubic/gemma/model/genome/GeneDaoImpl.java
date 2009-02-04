@@ -764,9 +764,14 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
 
-                session.lock( gene, LockMode.NONE );
-                Hibernate.initialize( gene );
-                session.evict( gene );
+                // FIXME: (klc) This was using session.lock before but was getting a Non-Unique Entity Error
+                // using session.get fixes but might not be correct for cases where g != gene but gene.id==g.id
+                // (different object in memory but actually same gene; ie same id)
+                //session.lock( gene, LockMode.NONE );
+                
+                Gene g = ( Gene ) session.get( GeneImpl.class, gene.getId() );
+                Hibernate.initialize( g );
+                session.evict( gene ); 
 
                 return null;
             }
