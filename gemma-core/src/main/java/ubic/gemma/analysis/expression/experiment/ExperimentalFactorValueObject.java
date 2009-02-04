@@ -38,7 +38,23 @@ public class ExperimentalFactorValueObject {
     private String description;
     private String category;
     private String categoryUri;
-    private String factorValues;
+    private String factorValues;  
+    private int numValues = 0;
+
+    /**
+     * @return the numValues
+     */
+    public int getNumValues() {
+        return this.numValues;
+    }
+
+    /**
+     * @param numValues the numValues to set
+     */
+    public void setNumValues( int numValues ) {
+        this.numValues = numValues;
+    }
+
     private String type = "Categorical"; // continuous or categorical.
 
     public String getType() {
@@ -66,13 +82,21 @@ public class ExperimentalFactorValueObject {
         this.setId( factor.getId() );
         this.setName( factor.getName() );
         this.setDescription( factor.getDescription() );
-        this.setCategory( getCategoryString( factor.getCategory() ) );
+        this.setCategory( factor.getCategory().getCategory() );
         this.setCategoryUri( getCategoryUri( factor.getCategory() ) );
 
         /*
          * Note: this code copied from the ExperimentalDesignController.
          */
         Collection<FactorValueValueObject> vals = new HashSet<FactorValueValueObject>();
+
+        if ( factor.getFactorValues() == null || factor.getFactorValues().isEmpty() ) {
+            return;
+        }
+
+        // Normally not reached?
+        this.numValues = factor.getFactorValues().size();
+
         for ( FactorValue value : factor.getFactorValues() ) {
 
             if ( value.getMeasurement() != null ) {
@@ -81,39 +105,24 @@ public class ExperimentalFactorValueObject {
                 this.type = "Categorical";
             }
 
-            Characteristic category = value.getExperimentalFactor().getCategory();
-            if ( category == null ) {
-                category = Characteristic.Factory.newInstance();
-                category.setValue( value.getExperimentalFactor().getName() );
+            Characteristic c = value.getExperimentalFactor().getCategory();
+            if ( c == null ) {
+                c = Characteristic.Factory.newInstance();
+                c.setValue( value.getExperimentalFactor().getCategory().getCategory() );
             }
-            vals.add( new FactorValueValueObject( value, category ) );
+            vals.add( new FactorValueValueObject( value, c ) );
         }
 
         this.setValues( vals );
     }
 
-    private String getCategoryString( Characteristic category ) {
-        if ( category == null ) return "no category";
-        StringBuffer buf = new StringBuffer();
-        if ( category.getCategory() != null ) {
-            buf.append( category.getCategory() );
-            if ( category.getValue() != null && !category.getValue().equals( category.getCategory() ) ) {
-                buf.append( " / " );
-                buf.append( category.getValue() );
-            }
-        } else if ( category.getValue() != null ) {
-            buf.append( category.getValue() );
+    private String getCategoryUri( Characteristic c ) {
+        if ( c instanceof VocabCharacteristic ) {
+            VocabCharacteristic vc = ( VocabCharacteristic ) c;
+            return vc.getCategoryUri();
         }
-        return buf.toString();
-    }
+        return null;
 
-    private String getCategoryUri( Characteristic category ) {
-        if ( category instanceof VocabCharacteristic ) {
-            VocabCharacteristic vc = ( VocabCharacteristic ) category;
-            return vc.getValueUri() == null ? vc.getCategoryUri() : vc.getValueUri();
-        } else {
-            return null;
-        }
     }
 
     public long getId() {
@@ -140,11 +149,11 @@ public class ExperimentalFactorValueObject {
         this.description = description;
     }
 
-    public String getCategory() {
+    public String getCategory() { 
         return category;
     }
 
-    public void setCategory( String category ) {
+    public void setCategory( String category ) { 
         this.category = category;
     }
 
@@ -160,6 +169,11 @@ public class ExperimentalFactorValueObject {
         return factorValues;
     }
 
+    /**
+     * Set a string which describes (in summary) the factor values
+     * 
+     * @param factorValues
+     */
     public void setFactorValues( String factorValues ) {
         this.factorValues = factorValues;
     }

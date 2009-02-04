@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
@@ -231,7 +232,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             return result;
         }
 
-        log.debug( "Getting factors for experiments with ids: " + securityFilteredIds.toString() );
+        log.debug( "Getting factors for experiments with ids: "
+                + StringUtils.abbreviate( securityFilteredIds.toString(), 100 ) );
 
         Collection<Long> filteredEeIds = new HashSet<Long>();
 
@@ -270,10 +272,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             result.add( eeefvo );
         }
-        log.info( "Filtered experiments.  Returning factors for experiments with ids: " + filteredEeIds.toString() );
+        log.info( "Filtered experiments.  Returning factors for experiments with ids: "
+                + StringUtils.abbreviate( filteredEeIds.toString(), 100 ) );
         return result;
     }
 
+    /**
+     * @param ids
+     * @return
+     */
     private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
         /*
          * Because this method returns the results, we have to screen.

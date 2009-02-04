@@ -31,9 +31,10 @@ import ubic.gemma.web.util.EntityNotFoundException;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="experimentalFactorController" 
+ * @spring.bean id="experimentalFactorController"
  * @spring.property name = "experimentalFactorService" ref="experimentalFactorService"
  * @spring.property name="methodNameResolver" ref="experimentalFactorActions"
+ * @deprecated This is no longer used and can probably be deleted (corresponding entry in spring config too)
  */
 public class ExperimentalFactorController extends BaseMultiActionController {
 
@@ -55,7 +56,6 @@ public class ExperimentalFactorController extends BaseMultiActionController {
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         Long id = Long.parseLong( request.getParameter( "id" ) );
@@ -80,53 +80,9 @@ public class ExperimentalFactorController extends BaseMultiActionController {
      * @param response
      * @return
      */
-    @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "experimentalFactors" ).addObject( "experimentalFactors", experimentalFactorService
                 .loadAll() );
     }
 
-    /**
-     * TODO add delete to the model
-     * 
-     * @param request
-     * @param response
-     * @return
-     */
-    // @SuppressWarnings("unused")
-    // public ModelAndView delete(HttpServletRequest request,
-    // HttpServletResponse response) {
-    // String name = request.getParameter("name");
-    //
-    // if (name == null) {
-    // // should be a validation error.
-    // throw new EntityNotFoundException("Must provide a name");
-    // }
-    //
-    // ExperimentalFactor experimentalFactor = experimentalFactorService
-    // .findByName(name);
-    // if (experimentalFactor == null) {
-    // throw new EntityNotFoundException(experimentalFactor
-    // + " not found");
-    // }
-    //
-    // return doDelete(request, experimentalFactor);
-    // }
-    /**
-     * TODO add doDelete to the model
-     * 
-     * @param request
-     * @param experimentalFactor
-     * @return
-     */
-    // private ModelAndView doDelete(HttpServletRequest request,
-    // ExperimentalFactor experimentalFactor) {
-    // experimentalFactorService.delete(experimentalFactor);
-    // log.info("Expression Experiment with name: "
-    // + experimentalFactor.getName() + " deleted");
-    // addMessage(request, "experimentalFactor.deleted",
-    // new Object[] { experimentalFactor.getName() });
-    // return new ModelAndView("experimentalFactors",
-    // "experimentalFactor", experimentalFactor);
-    // }
 }

@@ -83,23 +83,23 @@ public class FactorValueValueObject {
     }
 
     /**
-     * @param value
+     * @param fv
      * @return
      */
-    private String getSummaryString( FactorValue value ) {
+    private String getSummaryString( FactorValue fv ) {
         StringBuffer buf = new StringBuffer();
-        if ( value.getCharacteristics().size() > 0 ) {
-            for ( Iterator<Characteristic> iter = value.getCharacteristics().iterator(); iter.hasNext(); ) {
+        if ( fv.getCharacteristics().size() > 0 ) {
+            for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
                 Characteristic c = iter.next();
                 buf.append( c.getCategory() );
                 buf.append( ": " );
                 buf.append( c.getValue() == null ? "no value" : c.getValue() );
                 if ( iter.hasNext() ) buf.append( ", " );
             }
-        } else if ( value.getMeasurement() != null ) {
-            buf.append( value.getMeasurement().getValue() );
-        } else if ( StringUtils.isNotBlank( value.getValue() ) ) {
-            buf.append( value.getValue() );
+        } else if ( fv.getMeasurement() != null ) {
+            buf.append( fv.getMeasurement().getValue() );
+        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
+            buf.append( fv.getValue() );
         } else {
             buf.append( "?" );
         }

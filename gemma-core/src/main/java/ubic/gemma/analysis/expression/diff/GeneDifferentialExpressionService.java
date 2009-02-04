@@ -319,8 +319,9 @@ public class GeneDifferentialExpressionService {
         Characteristic category = ef.getCategory();
         if ( category != null ) {
             efvo.setCategory( category.getCategory() );
-            if ( category instanceof VocabCharacteristic )
+            if ( category instanceof VocabCharacteristic ) {
                 efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
+            }
         }
         Collection<FactorValue> fvs = ef.getFactorValues();
         String factorValuesAsString = StringUtils.EMPTY;

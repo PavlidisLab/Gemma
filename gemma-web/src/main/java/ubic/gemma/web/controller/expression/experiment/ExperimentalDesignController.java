@@ -56,6 +56,8 @@ import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
+ * Main entry point to editing and viewing experimental designs.
+ * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="experimentalDesignController"

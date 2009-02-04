@@ -9,8 +9,12 @@ Ext.namespace('Gemma');
  * @author keshav
  * @version $Id$
  */
-Gemma.SHOW_ALL_FACTORS = "Show all datasets";
-Gemma.HIDE_FACTORS = "Hide datasets with only 1 factor";
+
+// state when data is not filtered, button press will filter.
+Gemma.UNFILTERED_FACTORS_BUTTON_TEXT = "Unfiltered";
+
+// opposite...
+Gemma.FILTERED_FACTORS_BUTTON_TEXT = "Filtered";
 
 Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	id : 'factor-chooser',
@@ -113,8 +117,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 								items : [{
 											pressed : true,
 											enableToggle : true,
-											text : Gemma.SHOW_ALL_FACTORS,
-											tooltip : "Click to show/hide all experiments",
+											text : Gemma.FILTERED_FACTORS_BUTTON_TEXT,
+											tooltip : "Click to show/hide experiments that have only one factor",
 											id : 'single-factor-toggle',
 											cls : 'x-btn-text-icon details',
 											toggleHandler : this.toggleFactors.createDelegate(this)
@@ -158,7 +162,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	},
 
 	/**
-	 * Show a window with radio buttons to choose between OrganismPart, DiseaseState .. possibly others
+	 * Show a window with radio buttons to choose between OrganismPart, DiseaseState, SamplingTimePoint, Treatment;
+	 * others can be added.
 	 */
 	factorHinting : function(btn) {
 		var w = new Ext.Window({
@@ -169,7 +174,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 					resizable : false,
 					columns : 1,
 					autoHeight : true,
-					width : 300,
+					width : 530,
 					items : [{
 								xtype : 'radiogroup',
 								stateful : false,
@@ -195,12 +200,26 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 											inputValue : 2
 										}, {
 											stateful : true,
+											boxLabel : 'Time',
+											stateId : 'sampling-time-hint',
+											stateEvents : ['check'],
+											name : 'rb-hint',
+											inputValue : 3
+										}, {
+											stateful : true,
+											boxLabel : 'Treatment',
+											stateId : 'treatment-hint',
+											stateEvents : ['check'],
+											name : 'rb-hint',
+											inputValue : 4
+										}, {
+											stateful : true,
 											boxLabel : 'Any',
 											stateId : 'any-factor-hint',
 											stateEvents : ['check'],
 											name : 'rb-hint',
 											checked : true,
-											inputValue : 3
+											inputValue : 5
 										}]
 							}],
 					buttons : [{
@@ -230,6 +249,10 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		} else if (choice == '2') {
 			this.efGrid.getStore().filterBy(this.diseaseStateFilter, this);
 		} else if (choice == '3') {
+			this.efGrid.getStore().filterBy(this.samplingTimeFilter, this);
+		} else if (choice == '4') {
+			this.efGrid.getStore().filterBy(this.treatmentFilter, this);
+		} else if (choice == '5') {
 			// no filtering
 		} else {
 			// no filtering
@@ -238,13 +261,12 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	},
 
 	toggleFactors : function(btn, pressed) {
-		var buttonText = btn.getText();
-		if (buttonText == Gemma.SHOW_ALL_FACTORS) {
-			this.efGrid.getStore().clearFilter();
-			btn.setText(Gemma.HIDE_FACTORS);
-		} else {
+		if (pressed) {
 			this.efGrid.getStore().filterBy(this.filter, this, 0);
-			btn.setText(Gemma.SHOW_ALL_FACTORS);
+			btn.setText(Gemma.FILTERED_FACTORS_BUTTON_TEXT);
+		} else {
+			this.efGrid.getStore().clearFilter();
+			btn.setText(Gemma.UNFILTERED_FACTORS_BUTTON_TEXT);
 		}
 	},
 
@@ -263,29 +285,41 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		editor = this.efGrid.customEditors[id];
 
 		/*
-		 * Locate the matching factor, if any, and set the value in the store. No filtering is actually done here.
+		 * Locate the matching factor, if any, and set the value in the store. No filtering is actually done here; the
+		 * return value stops additional searching.
 		 */
-		editor.field.store.each(function(record) {
-					if (record.get('name').match(regex)) {
+		editor.field.store.each(function(record) { 
+					if (record.get('name').match(regex) || record.get('category').match(regex)) {
 						r.set('value', record.get('name'));
-						return false; // break the iteration.
+						return false; // break iteration
 					}
-					return true; // keep iterating.
+					return true; // keep iterating
 				});
 
-		// honor the other filter
-		if (Ext.getCmp('single-factor-toggle').pressed && editor.field.store.getTotalCount() > 1) {
-			return true;
+		// apply the multi-factor vs any filter. This is the actual filter, but just by number of factors.
+		if (Ext.getCmp('single-factor-toggle').pressed) {
+			// conditionally show it.
+			return this.filter(r, id);
 		}
-		return false;
+
+		// otherwise always show it
+		return true;
 	},
 
 	organismPartFilter : function(r, id) {
-		return this.filterByFactorNamePattern(r, id, "^OrganismPart");
+		return this.filterByFactorNamePattern(r, id, /^OrganismPart/i);
 	},
 
 	diseaseStateFilter : function(r, id) {
-		return this.filterByFactorNamePattern(r, id, "^DiseaseState");
+		return this.filterByFactorNamePattern(r, id, /^DiseaseState/i);
+	},
+
+	samplingTimeFilter : function(r, id) {
+		return this.filterByFactorNamePattern(r, id, /^SamplingTimePoint/i);
+	},
+
+	treatmentFilter : function(r, id) {
+		return this.filterByFactorNamePattern(r, id, /^Treatment/i);
 	},
 
 	filter : function(r, id) {

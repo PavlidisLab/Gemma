@@ -40,10 +40,16 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(Ext.grid.PropertyG
 												name : 'name',
 												type : 'string'
 											}, {
-												name : 'factorValues',
+												name : 'category', // e.g. DiseaseState
 												type : 'string'
 											}, {
-												name : 'numFactors',
+												name : 'categoryUri',
+												type : 'string'
+											}, {
+												name : 'factorValues', // string describing the factor values.
+												type : 'string'
+											}, {
+												name : 'numValues',
 												type : 'int'
 											}]
 								});
@@ -63,7 +69,7 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(Ext.grid.PropertyG
 						for (j in d.experimentalFactors) {
 							var f = d.experimentalFactors[j];
 							if (f.id) {
-								var row = [f.id, f.name, f.factorValues];
+								var row = [f.id, f.name, f.category, f.categoryUri, f.factorValues, f.numValues];
 								myData.push(row);
 							}
 						}
