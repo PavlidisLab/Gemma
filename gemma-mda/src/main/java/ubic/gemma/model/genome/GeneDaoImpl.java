@@ -764,10 +764,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 if ( !session.contains( gene ) ) {
-                    log.info( "not in session" );
                     session.lock( gene, LockMode.NONE );
                 } else {
-                    log.info( "already in session" );
+                    // foo
                 }
 
                 Hibernate.initialize( gene );
