@@ -128,7 +128,7 @@ Ext.onReady(function() {
 
 			var efPanel = new Ext.Panel({
 						layout : 'border',
-						height : 700,
+						height : 750,
 						width : 1000,
 						renderTo : "experimentalFactorPanel",
 						items : [experimentalFactorGrid, factorValueGrid]
@@ -136,7 +136,7 @@ Ext.onReady(function() {
 
 			var tabPanel = new Ext.TabPanel({
 						renderTo : "experimentalDesignPanel",
-						height : 700,
+						height : 800,
 						width : 1000,
 						defaults : {
 							layout : 'fit'
