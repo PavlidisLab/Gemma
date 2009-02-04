@@ -59,6 +59,7 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  */
 public class ExpressionExperimentQCController extends BaseMultiActionController {
 
+    private static final String DEFAULT_CONTENT_TYPE = "image/png";
     private static final int HISTOGRAM_IMAGE_SIZE = 200;
     private ExpressionExperimentService expressionExperimentService;
 
@@ -274,6 +275,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
         }
         assert idl != null;
 
+        
         ExpressionExperiment ee = expressionExperimentService.load( idl );
         if ( ee == null ) {
             log.warn( "No such experiment with id " + idl );
@@ -364,8 +366,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
         if ( !f.canRead() ) {
             return false;
         }
-        String contentType = "image/png";
-        writeToClient( response, f, contentType );
+        writeToClient( response, f, DEFAULT_CONTENT_TYPE );
         return true;
     }
 
@@ -387,6 +388,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
 
         OutputStream out = null;
         try {
+            response.setContentType( DEFAULT_CONTENT_TYPE );
             out = response.getOutputStream();
             ChartRenderingInfo info = new ChartRenderingInfo();
             chart.setBackgroundPaint( Color.white );
@@ -429,6 +431,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
 
         OutputStream out = null;
         try {
+            response.setContentType( DEFAULT_CONTENT_TYPE );
             out = response.getOutputStream();
             ChartRenderingInfo info = new ChartRenderingInfo();
             chart.setBackgroundPaint( Color.white );
@@ -461,6 +464,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
             out = response.getOutputStream();
 
             response.setContentType( contentType );
+            
             byte[] buf = new byte[1024];
             int len;
             while ( ( len = in.read( buf ) ) > 0 ) {
