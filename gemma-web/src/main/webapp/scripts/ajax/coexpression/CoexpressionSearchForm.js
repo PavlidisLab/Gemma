@@ -369,8 +369,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				return;
 
 			this.currentSet = eeSetRecord;
+			
 			this.updateDatasetsToBeSearched(eeSetRecord.get("expressionExperimentIds"), eeSetRecord);
-			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
+			this.geneChooserPanel.taxonChanged({id : this.currentSet.get("taxonId"),
+												name : this.currentSet.get("taxonName")});
 		}.createDelegate(this));
 
 		this.eeSetChooserPanel.combo.on("ready", function() { 

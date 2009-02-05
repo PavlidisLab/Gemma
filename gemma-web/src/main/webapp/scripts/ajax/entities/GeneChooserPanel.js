@@ -211,28 +211,30 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 			 *            taxon
 			 */
 			taxonChanged : function(taxon, updateTaxonCombo) {
+				
+				
 				if (!taxon) {
 					return;
 				}
-
-				var oldtax = this.geneCombo.getTaxon();
-
+				
 				// Update the genecombo and the table.
-				if (!oldtax || oldtax.id != taxon.id) {
+				if (!updateTaxonCombo) {
 					this.geneCombo.setTaxon(taxon);
-					this.fireEvent("taxonchanged", taxon);
-				}
-
-				// Update the taxon combo.
-				if (!this.taxonCombo.getTaxon() || this.taxonCombo.getTaxon().id != taxon.id) {
-					// Remove all the genes that are not from the correct taxon.
+					
+					//update genecombo list box
 					var all = this.getStore().getRange();
-					for (var i = 0; i < all.length; ++i) {
+					
+					for (var i = 0; i < all.length; ++i) {						
 						if (all[i].data.taxon.id != taxon.id) {
 							this.getStore().remove(all[i]);
 						}
 					}
-
+					
+					this.fireEvent("taxonchanged", taxon); 
+					
+				}
+				else{
+					// Update the taxon combo.
 					this.taxonCombo.setTaxon(taxon);
 				}
 
