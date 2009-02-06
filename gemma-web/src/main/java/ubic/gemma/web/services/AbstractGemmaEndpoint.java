@@ -20,10 +20,16 @@
 package ubic.gemma.web.services;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,6 +41,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 import ubic.gemma.util.ConfigUtils;
@@ -279,6 +286,61 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
+    }
+    
+    
+    /**
+     * uses the default path of gemmaData/datafile/xml/ to look for reports. 
+     * @param filename needs the xml suffix
+     * @return
+     * @throws IOException
+     */
+    protected Document readReport(String filename) throws IOException{
+        String path = HOME_DIR + File.separatorChar + "dataFiles" + File.separatorChar + "xml" + File.separatorChar;
+
+
+        return readReport(path, filename);
+        
+    }
+
+    /**
+     * Looks to parse a previously generated xml report that was saved to disk.  
+     * Returns null if it fails to do so.
+     * 
+     * @param the ffileName the name of the file we are looking for 
+     * @return An XML document
+     * @throws IOException
+     */
+    protected Document readReport(String path,  String fileName ) throws IOException {
+
+        File file = new File( path, fileName );
+
+        if ( !file.exists() ) return null;
+
+        //TODO:  only load file if it is not out of date
+        InputStream is = new FileInputStream( path + fileName );
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setIgnoringComments( true );
+        factory.setValidating( false );
+        Document document = null;
+        
+        try{
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            builder = factory.newDocumentBuilder();
+            document = builder.parse( is );
+        }catch(ParserConfigurationException pce){
+            log.error( "Could not configure parser for reading report.  Error is: " + pce );
+            throw(new RuntimeException(pce));
+        }
+        catch(SAXException se){
+            log.error( "Could not parse report " + path + fileName  + " Error is: " + se );
+            throw(new RuntimeException(se));
+            
+        }
+        
+        return document;
 
     }
 }

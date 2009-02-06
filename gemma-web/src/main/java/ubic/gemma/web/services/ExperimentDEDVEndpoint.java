@@ -45,6 +45,9 @@ import ubic.gemma.model.genome.Gene;
 
 public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 
+    private static final String DEFAULT_FILENAME = "DEDVforEE-";
+    private static final String DEFAULT_EXTENSION = ".xml";
+
     private static Log log = LogFactory.getLog( ExperimentDEDVEndpoint.class );
 
     private ExpressionExperimentService expressionExperimentService;
@@ -93,6 +96,21 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
             eeid = id;
         }
 
+        // Check to make sure we haven't already generated this EE report.
+        Document doc = readReport( DEFAULT_FILENAME + eeid + DEFAULT_EXTENSION );
+
+        if ( doc != null ) {
+            //Successfully got report from disk            
+            watch.stop();
+            Long time = watch.getTime();
+            log.info( "XML response for ee" + eeid + " retrieved from disk in " + time + "ms." );
+
+            return doc.getDocumentElement();
+            
+        }
+        
+               
+        
         // Build the matrix
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeid ) );
         expressionExperimentService.thawLite( ee );
@@ -139,10 +157,10 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        // log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for design element data vector result built in " + time + "ms." );
-        writeReport( responseWrapper, document, "DEDVforEE-" + eeid );
+        log.info( "XML response for ee:"+ eeid + " created from scratch in " + time + "ms." );
+        writeReport( responseWrapper, document, DEFAULT_FILENAME + eeid );
         return responseWrapper;
+
     }
 
 }
