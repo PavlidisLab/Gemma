@@ -168,6 +168,13 @@ public class LinkAnalysisConfig implements Serializable {
         buf.append( "# uppercut:" + this.getUpperTailCut() + "\n" );
         buf.append( "# lowercut:" + this.getLowerTailCut() + "\n" );
         buf.append( "# useDB:" + this.isUseDb() + "\n" );
+        buf.append( "# knownGenesOnly:" + this.isKnownGenesOnly() + "\n" );
+        buf.append( "# normalizationMethod:" + this.getNormalizationMethod() + "\n" );
+        buf.append( "# omitNegLinks:" + this.isOmitNegLinks() + "\n" );
+        if(this.isSubset()){
+            buf.append( "# subset:" + this.subsetSize + "\n" );
+        }
+        
         return buf.toString();
     }
 
