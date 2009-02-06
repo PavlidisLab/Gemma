@@ -72,10 +72,10 @@ public class MatrixWriter<T> {
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = ( CompositeSequence ) matrix.getDesignElementForRow( j );
-            buf.append( probeForRow.getName() );
+            buf.append( probeForRow.getName() + "\t");
             if ( writeSequence ) {
                 BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
-                if ( biologicalCharacteristic != null ) buf.append( "\t" + biologicalCharacteristic.getName() + "\t" );
+                if ( biologicalCharacteristic != null ) buf.append( biologicalCharacteristic.getName() + "\t" );
             }
 
             if ( writeGeneInfo ) {
@@ -85,7 +85,7 @@ public class MatrixWriter<T> {
             for ( BioMaterial bioMaterial : orderedBioMaterials ) {
                 int i = matrix.getColumnIndex( bioMaterial );
                 T val = matrix.get( j, i );
-                buf.append( "\t" + val );
+                buf.append( val + "\t" );
             }
 
             buf.append( "\n" );
@@ -144,6 +144,7 @@ public class MatrixWriter<T> {
             buf.append( StringUtils.join( gs.toArray(), '|' ) );
             buf.append( "\t" );
             buf.append( StringUtils.join( gn.toArray(), '|' ) );
+            buf.append( "\t" );
         } else {
             buf.append( "\t\t" );
         }
