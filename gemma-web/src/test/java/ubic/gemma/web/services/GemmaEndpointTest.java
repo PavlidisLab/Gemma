@@ -1,6 +1,7 @@
 package ubic.gemma.web.services;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import junit.framework.TestCase;
 
@@ -25,7 +26,9 @@ public class GemmaEndpointTest extends TestCase {
             }
 
             public Document readTest() throws IOException {
-                return this.readReport( "gemma-web/src/test/resources/data/", "DEDVforEE-159-test.xml" );
+                InputStream stream = GemmaEndpointTest.class.getResourceAsStream( "/data/DEDVforEE-159-test.xml" );
+                assert stream != null;
+                return this.readReport( stream );
             }
 
             @Override

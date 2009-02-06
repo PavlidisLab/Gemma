@@ -298,28 +298,39 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      */
     protected Document readReport(String filename) throws IOException{
         String path = HOME_DIR + File.separatorChar + "dataFiles" + File.separatorChar + "xml" + File.separatorChar;
-
-
         return readReport(path, filename);
         
     }
 
     /**
-     * Looks to parse a previously generated xml report that was saved to disk.  
-     * Returns null if it fails to do so.
-     * 
-     * @param the ffileName the name of the file we are looking for 
-     * @return An XML document
+     * @param path
+     * @param fileName
+     * @return xml document for the given path
      * @throws IOException
      */
-    protected Document readReport(String path,  String fileName ) throws IOException {
-
+    protected Document readReport(String path, String fileName) throws IOException{
+ 
         File file = new File( path, fileName );
 
         if ( !file.exists() ) return null;
 
         //TODO:  only load file if it is not out of date
         InputStream is = new FileInputStream( path + fileName );
+        
+        return readReport(is);
+    }
+    
+    /**
+     * Looks to parse a previously generated xml report that was saved to disk.  
+     * Returns null if it fails to do so.
+     * 
+     * @param InputStream from an existing xml file
+     * @return An XML document
+     * @throws IOException
+     */
+    protected Document readReport(InputStream is) throws IOException {
+
+
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringComments( true );
@@ -335,7 +346,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             throw(new RuntimeException(pce));
         }
         catch(SAXException se){
-            log.error( "Could not parse report " + path + fileName  + " Error is: " + se );
+            log.error( "Could not parse report Error is: " + se );
             throw(new RuntimeException(se));
             
         }
