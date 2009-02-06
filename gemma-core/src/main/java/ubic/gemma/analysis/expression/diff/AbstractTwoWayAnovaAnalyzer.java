@@ -24,6 +24,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
@@ -50,6 +53,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
+    private Log log = LogFactory.getLog( this.getClass() );
 
     private ExpressionExperiment ee = null;
 
@@ -62,8 +66,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results.
      * 
      * @param dmatrix
-     * @param filteredPvalues
-     * @param filteredFStatistics
+     * @param pvalues
+     * @param fStatistics
      * @param numResultsFromR
      * @param experimentalFactorA
      * @param experimentalFactorB
@@ -72,9 +76,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * @return
      */
     protected DifferentialExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
-            double[] filteredPvalues, double[] filteredFStatistics, int numResultsFromR,
-            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB,
-            QuantitationType quantitationType, boolean interactions ) {
+            double[] pvalues, double[] fStatistics, int numResultsFromR, ExperimentalFactor experimentalFactorA,
+            ExperimentalFactor experimentalFactorB, QuantitationType quantitationType, boolean interactions ) {
 
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
@@ -99,7 +102,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         List<DifferentialExpressionAnalysisResult> analysisResultsInteractionEffect = new ArrayList<DifferentialExpressionAnalysisResult>();
 
         /* q-value */
-        double[] qvalues = super.getQValues( filteredPvalues );
+        double[] qvalues = super.getQValues( pvalues );
 
         int k = 0;
         for ( int i = 0; i < dmatrix.rows(); i++ ) {
@@ -114,8 +117,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                 probeAnalysisResult.setProbe( cs );
                 probeAnalysisResult.setQuantitationType( quantitationType );
 
-                probeAnalysisResult.setPvalue( filteredPvalues[k] );
-                probeAnalysisResult.setScore( filteredFStatistics[k] );
+                probeAnalysisResult.setPvalue( pvalues[k] );
+                probeAnalysisResult.setScore( fStatistics[k] );
                 probeAnalysisResult.setCorrectedPvalue( qvalues[k] );
                 // probeAnalysisResult.setParameters( parameters );
 
@@ -181,9 +184,9 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, java.util.Collection)
+     * 
+     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     *      .ExpressionExperiment, java.util.Collection)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,

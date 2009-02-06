@@ -39,175 +39,184 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * An abstract differential expression analyzer to be extended by analyzers
- * which will make use of R. For example, see {@link OneWayAnovaAnalyzer}.
+ * An abstract differential expression analyzer to be extended by analyzers which will make use of R. For example, see
+ * {@link OneWayAnovaAnalyzer}.
  * 
  * @author keshav
- * @version $Id: AbstractDifferentialExpressionAnalyzer.java,v 1.14 2008/11/08
- *          22:04:20 paul Exp $
+ * @version $Id$
  */
-public abstract class AbstractDifferentialExpressionAnalyzer extends
-		AbstractAnalyzer {
+public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer {
 
-	private Log log = LogFactory.getLog(this.getClass());
+    private Log log = LogFactory.getLog( this.getClass() );
 
-	/**
-	 * Peform an analysis where the factors are determined (or guessed)
-	 * automatically. If this cannot be unambiguously determined, an exception
-	 * will be thrown.
-	 * 
-	 * @param expressionExperiment
-	 * @return ExpressionAnalysis
-	 */
-	public abstract DifferentialExpressionAnalysis run(
-			ExpressionExperiment expressionExperiment);
+    /**
+     * Peform an analysis where the factors are determined (or guessed) automatically. If this cannot be unambiguously
+     * determined, an exception will be thrown.
+     * 
+     * @param expressionExperiment
+     * @return ExpressionAnalysis
+     */
+    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment );
 
-	/**
-	 * Perform an analysis using the specified factor(s)
-	 * 
-	 * @param expressionExperiment
-	 * @param factors
-	 * @return
-	 */
-	public abstract DifferentialExpressionAnalysis run(
-			ExpressionExperiment expressionExperiment,
-			Collection<ExperimentalFactor> factors);
+    /**
+     * Perform an analysis using the specified factor(s)
+     * 
+     * @param expressionExperiment
+     * @param factors
+     * @return
+     */
+    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors );
 
-	/**
-	 * @param pvalues
-	 * @return returns the qvalues (false discovery rates) for the pvalues using
-	 *         the method of Storey and Tibshirani.
-	 */
-	protected double[] getQValues(double[] pvalues) {
+    /**
+     * Calls the Q value function in R. Filters out p-values that are Double.NaN.
+     * 
+     * @param pvalues
+     * @return returns the qvalues (false discovery rates) for the pvalues using the method of Storey and Tibshirani.
+     */
+    protected double[] getQValues( double[] pvalues ) {
 
-		if (pvalues == null || pvalues.length == 0) {
-			throw new IllegalArgumentException("No pvalues provided");
-		}
+        if ( pvalues == null || pvalues.length == 0 ) {
+            throw new IllegalArgumentException( "No pvalues provided" );
+        }
 
-		if (rc == null) {
-			connectToR();
-		}
-		boolean hasQValue = rc.loadLibrary("qvalue");
-		if (!hasQValue) {
-			throw new IllegalStateException(
-					"qvalue does not seem to be available");
-		}
+        if ( rc == null ) {
+            connectToR();
+        }
 
-		StringBuffer qvalueCommand = new StringBuffer();
-		String pvalsName = "pvals_" + RandomStringUtils.randomAlphabetic(10);
-		rc.assign(pvalsName, pvalues);
-		qvalueCommand.append("qvalue(" + pvalsName + ")$qvalues");
-		double[] qvalues = rc.doubleArrayEval(qvalueCommand.toString());
+        /* Create a list with only the p-values that are not Double.NaN */
+        ArrayList<Double> pvaluesList = new ArrayList<Double>();
+        for ( int i = 0; i < pvalues.length; i++ ) {
+            if ( Double.isNaN( pvalues[i] ) ) continue;
 
-		if (qvalues == null) {
-			throw new IllegalStateException("Null qvalues.  Check the R side.");
-		}
+            pvaluesList.add( pvalues[i] );
+        }
 
-		if (qvalues.length != pvalues.length) {
-			throw new IllegalStateException(
-					"Number of q values and p values must match.  Qvalues - "
-							+ qvalues.length + ": Pvalues - " + pvalues.length);
-		}
+        /* create a new pvalue array without the Double.NaN. */
+        double[] pvaluesToUse = new double[pvaluesList.size()];
+        int j = 0;
+        for ( Double d : pvaluesList ) {
+            pvaluesToUse[j] = d;
+            j++;
+        }
 
-		return qvalues;
-	}
+        boolean hasQValue = rc.loadLibrary( "qvalue" );
+        if ( !hasQValue ) {
+            throw new IllegalStateException( "qvalue does not seem to be available" );
+        }
 
-	/**
-	 * @param pvalues
-	 * @param expressionExperiment
-	 * @param effects
-	 *            ordered (for 2 way anova)
-	 */
-	protected void writePValuesHistogram(double[] pvalues,
-			ExpressionExperiment expressionExperiment,
-			ArrayList<ExperimentalFactor> effects) {
+        StringBuffer qvalueCommand = new StringBuffer();
+        String pvalsName = "pvals_" + RandomStringUtils.randomAlphabetic( 10 );
+        rc.assign( pvalsName, pvaluesToUse );
+        qvalueCommand.append( "qvalue(" + pvalsName + ")$qvalues" );
+        double[] qvaluesFromR = rc.doubleArrayEval( qvalueCommand.toString() );
 
-		File dir = DifferentialExpressionFileUtils
-				.getBaseDifferentialDirectory(expressionExperiment
-						.getShortName());
+        if ( qvaluesFromR == null ) {
+            throw new IllegalStateException( "Null qvalues.  Check the R side." );
+        }
 
-		FileTools.createDir(dir.toString());
+        if ( qvaluesFromR.length != pvaluesToUse.length ) {
+            throw new IllegalStateException( "Number of q values and p values must match.  Qvalues - "
+                    + qvaluesFromR.length + ": Pvalues - " + pvaluesToUse.length );
+        }
 
-		String histFileName = expressionExperiment.getShortName()
-				+ DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        /* Add the Double.NaN back in */
+        int k = 0;
+        double[] qvalues = new double[pvalues.length];
+        for ( int i = 0; i < qvalues.length; i++ ) {
+            if ( Double.isNaN( pvalues[i] ) ) {
+                qvalues[i] = Double.NaN;
+            } else {
+                qvalues[i] = qvaluesFromR[k];
+                k++;
+            }
+        }
+        return qvalues;
+    }
 
-		Collection<Histogram> hists = generateHistograms(histFileName, effects,
-				100, 0, 1, pvalues);
+    /**
+     * @param pvalues
+     * @param expressionExperiment
+     * @param effects ordered (for 2 way anova)
+     */
+    protected void writePValuesHistogram( double[] pvalues, ExpressionExperiment expressionExperiment,
+            ArrayList<ExperimentalFactor> effects ) {
 
-		if (hists == null || hists.isEmpty()) {
-			log.error("Could not generate histogram.  Not writing to file");
-			return;
-		}
+        File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
 
-		for (Histogram hist : hists) {
-			String path = dir + File.separator + hist.getName();
+        FileTools.createDir( dir.toString() );
 
-			File outputFile = new File(path); 
-			try {
-				FileWriter out = new FileWriter(outputFile, false); // false = clobber.
-				out.write("# Differential Expression distribution\n");
-				out.write("# date=" + (new Date()) + "\n");
-				out.write("# exp=" + expressionExperiment + " "
-						+ expressionExperiment.getShortName() + "\n");
-				out.write("Bin\tCount\n");
-				hist.writeToFile(out);
-				out.close();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-	}
+        String histFileName = expressionExperiment.getShortName() + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
-	/**
-	 * @param histFileName
-	 * @param effects
-	 *            ordered
-	 * @param numBins
-	 * @param min
-	 * @param max
-	 * @param pvalues
-	 * @return
-	 */
-	protected abstract Collection<Histogram> generateHistograms(
-			String histFileName, ArrayList<ExperimentalFactor> effects,
-			int numBins, int min, int max, double[] pvalues);
+        Collection<Histogram> hists = generateHistograms( histFileName, effects, 100, 0, 1, pvalues );
 
-	/**
-	 * Returns the preferred {@link QuantitationType}.
-	 * 
-	 * @param vectors
-	 * @return
-	 */
-	protected QuantitationType getPreferredQuantitationType(
-			Collection<DesignElementDataVector> vectors) {
-		// FIXME could be slow?
-		QuantitationType qt = null;
-		for (DesignElementDataVector vector : vectors) {
-			qt = vector.getQuantitationType();
-			if (qt.getIsPreferred()) {
-				return qt;
-			}
-		}
-		log
-				.error("Could not determine the preferred quantitation type.  Not sure what type to associate with the analysis result.");
-		return null;
-	}
+        if ( hists == null || hists.isEmpty() ) {
+            log.error( "Could not generate histogram.  Not writing to file" );
+            return;
+        }
 
-	/**
-	 * Creates the matrix using the vectors. Masks the data for two color
-	 * arrays.
-	 * 
-	 * @param vectorsToUse
-	 * @return
-	 */
-	protected ExpressionDataDoubleMatrix createMaskedMatrix(
-			Collection<DesignElementDataVector> vectorsToUse) {
+        for ( Histogram hist : hists ) {
+            String path = dir + File.separator + hist.getName();
 
-		ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder(
-				vectorsToUse);
+            File outputFile = new File( path );
+            try {
+                FileWriter out = new FileWriter( outputFile, false ); // false = clobber.
+                out.write( "# Differential Expression distribution\n" );
+                out.write( "# date=" + ( new Date() ) + "\n" );
+                out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
+                out.write( "Bin\tCount\n" );
+                hist.writeToFile( out );
+                out.close();
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+    }
 
-		ExpressionDataDoubleMatrix dmatrix = builder.getProcessedData();
+    /**
+     * @param histFileName
+     * @param effects ordered
+     * @param numBins
+     * @param min
+     * @param max
+     * @param pvalues
+     * @return
+     */
+    protected abstract Collection<Histogram> generateHistograms( String histFileName,
+            ArrayList<ExperimentalFactor> effects, int numBins, int min, int max, double[] pvalues );
 
-		return dmatrix;
-	}
+    /**
+     * Returns the preferred {@link QuantitationType}.
+     * 
+     * @param vectors
+     * @return
+     */
+    protected QuantitationType getPreferredQuantitationType( Collection<DesignElementDataVector> vectors ) {
+        // FIXME could be slow?
+        QuantitationType qt = null;
+        for ( DesignElementDataVector vector : vectors ) {
+            qt = vector.getQuantitationType();
+            if ( qt.getIsPreferred() ) {
+                return qt;
+            }
+        }
+        log
+                .error( "Could not determine the preferred quantitation type.  Not sure what type to associate with the analysis result." );
+        return null;
+    }
+
+    /**
+     * Creates the matrix using the vectors. Masks the data for two color arrays.
+     * 
+     * @param vectorsToUse
+     * @return
+     */
+    protected ExpressionDataDoubleMatrix createMaskedMatrix( Collection<DesignElementDataVector> vectorsToUse ) {
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
+
+        ExpressionDataDoubleMatrix dmatrix = builder.getProcessedData();
+
+        return dmatrix;
+    }
 }

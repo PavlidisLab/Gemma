@@ -28,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.TwoWayAnovaResult;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -60,16 +61,15 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaAnalyzer {
 
-    private static final int ACTUAL_NUM_RESULTS = 2;
+    private static final int NUM_RESULTS_FROM_R = 2;
 
-    private static final int NUM_RESULTS_FROM_R = ACTUAL_NUM_RESULTS + 1;
     private Log log = LogFactory.getLog( this.getClass() );
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     * java.util.ArrayList, int, int, int, double[])
+     * 
+     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     *      java.util.ArrayList, int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
@@ -150,60 +150,30 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         String matrixName = rc.assignMatrix( namedMatrix );
 
-        /* p-values */
+        /* p-values and F-statistics */
         StringBuffer command = new StringBuffer();
 
         command.append( "apply(" );
         command.append( matrixName );
-        command.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "))$Pr}" );
+        command.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "))}" );
         command.append( ")" );
 
         log.info( "Starting R analysis ... please wait!" );
         log.debug( command.toString() );
 
-        double[] pvalues = rc.doubleArrayEval( command.toString() );
-        if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
+        TwoWayAnovaResult anovaResult = rc.twoWayAnovaEval( command.toString() );
 
-        // removes NA row TODO R can do this for you with "[1,] or "[2,] in command"
-        double[] filteredPvalues = new double[( pvalues.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];
+        if ( anovaResult == null ) throw new IllegalStateException( "No pvalues returned" );
 
-        for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
-            if ( i % NUM_RESULTS_FROM_R < ACTUAL_NUM_RESULTS ) {
-                filteredPvalues[j] = pvalues[i];
-                j++;
-            }
-        }
-
-        /* write out pvalues to a file */
+        /* write out histogram */
         ArrayList<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
         effects.add( experimentalFactorA );
         effects.add( experimentalFactorB );
-        writePValuesHistogram( filteredPvalues, expressionExperiment, effects );
+        writePValuesHistogram( anovaResult.getPvalues(), expressionExperiment, effects );
 
-        /* F-statistics */
-        StringBuffer fstatisticCommand = new StringBuffer();
-
-        fstatisticCommand.append( "apply(" );
-        fstatisticCommand.append( matrixName );
-        fstatisticCommand.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "))$F}" );
-        fstatisticCommand.append( ")" );
-
-        log.debug( fstatisticCommand.toString() );
-
-        double[] fstatistics = rc.doubleArrayEval( fstatisticCommand.toString() );
-
-        // removes NA row
-        double[] filteredFStatistics = new double[( fstatistics.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];
-
-        for ( int i = 0, j = 0; j < filteredFStatistics.length; i++ ) {
-            if ( i % NUM_RESULTS_FROM_R < ACTUAL_NUM_RESULTS ) {
-                filteredFStatistics[j] = fstatistics[i];
-                j++;
-            }
-        }
         log.info( "R analysis done" );
-        return createExpressionAnalysis( dmatrix, filteredPvalues, filteredFStatistics, ACTUAL_NUM_RESULTS,
-                experimentalFactorA, experimentalFactorB, quantitationType, false );
+        return createExpressionAnalysis( dmatrix, anovaResult.getPvalues(), anovaResult.getStatistics(),
+                NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB, quantitationType, false );
     }
 
 }
