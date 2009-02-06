@@ -219,7 +219,7 @@ public class LinkAnalysisService {
 
             } else if ( linkAnalysisConfig.isTextOut() ) {
                 try {
-                    writeLinks( la, new PrintWriter( System.out ) );
+                    writeLinks( la, filterConfig, new PrintWriter( System.out ) );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
@@ -648,8 +648,9 @@ public class LinkAnalysisService {
      * @param la
      * @param wr
      */
-    private void writeLinks( final LinkAnalysis la, Writer wr ) throws IOException {
+    private void writeLinks( final LinkAnalysis la, FilterConfig filterConfig, Writer wr ) throws IOException {
         wr.write( la.getConfig().toString() );
+        wr.write(filterConfig.toString());
         Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
         NumberFormat nf = NumberFormat.getInstance();
@@ -734,7 +735,7 @@ public class LinkAnalysisService {
         }
         if(la.getConfig().isSubset() && links.size() > subsetSize){//subset option activated
             log.info( "Done, " + numPrinted + "/" + links.size() + " links printed (subset printed with some filtered)" );
-            wr.write("# Amount of links before subsetting/after subsetting: " + links.size() + "/" + numPrinted + "\n" );
+            //wr.write("# Amount of links before subsetting/after subsetting: " + links.size() + "/" + numPrinted + "\n" );
         }
         else{
             log.info( "Done, " + numPrinted + "/" + links.size() + " links printed (some may have been filtered)" );
