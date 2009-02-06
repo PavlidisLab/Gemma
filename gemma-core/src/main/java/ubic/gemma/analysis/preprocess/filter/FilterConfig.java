@@ -40,7 +40,7 @@ public class FilterConfig implements Serializable {
         buf.append( "# lowExpressionCut " + this.getLowExpressionCut() + "\n" );
         buf.append( "# minPresentFraction " + this.getMinPresentFraction() + "\n" );
         buf.append( "# lowVarianceCut " + this.getLowVarianceCut() + "\n" );
-        buf.append( "# knownGenesOnly " + this.isKnownGenesOnly() + "\n" );
+        //buf.append( "# knownGenesOnly " + this.isKnownGenesOnly() + "\n" );
         return buf.toString();
     }
 
