@@ -52,22 +52,15 @@ public class SequenceWriter {
     private static final int MAX_SEQ_IDENTIFIER_LENGTH = 50;
 
     /**
-     * Write a collection of sequences in FASTA format. TODO: move this somewhere more generally accessible.
+     * Write a collection of sequences in FASTA format
      * 
      * @param sequences
-     * @param querySequenceFile
-     * @return
+     * @param outputFile
+     * @return number of sequences written, excluding blanks and duplicates.
      * @throws IOException
      */
-    public static int writeSequencesToFile( Collection<BioSequence> sequences, File querySequenceFile )
-            throws IOException {
-        BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
-
-        /*
-         * Note this silliness. Often the sequences have been read in from a file in the first place. The problem is
-         * there are no easy hooks to gfClient that don't use a file. This could be changed at a later time. It would
-         * require customizing Kent's code (even more than we do).
-         */
+    public static int writeSequencesToFile( Collection<BioSequence> sequences, File outputFile ) throws IOException {
+        BufferedWriter out = new BufferedWriter( new FileWriter( outputFile ) );
 
         log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
         int count = 0;
@@ -94,7 +87,8 @@ public class SequenceWriter {
             }
         }
         out.close();
-        log.info( "Wrote " + count + " sequences( " + repeats + " repeated items were skipped)." );
+        log.info( "Wrote " + count + " sequences to " + outputFile
+                + ( repeats > 0 ? " ( " + repeats + " repeated items were skipped)." : "" ) );
         return count;
     }
 
