@@ -63,7 +63,6 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         String type = request.getParameter( "type" );
