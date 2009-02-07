@@ -50,6 +50,7 @@ public class LinkAnalysisConfig implements Serializable {
     private double subsetSize = 0.0;
 
     private boolean subset = false;
+    private boolean subsetUsed = false;
     private boolean knownGenesOnly = false;
     private boolean useDb = true;
     private boolean makeSampleCorrMatImages = true;
@@ -171,7 +172,7 @@ public class LinkAnalysisConfig implements Serializable {
         buf.append( "# knownGenesOnly:" + this.isKnownGenesOnly() + "\n" );
         buf.append( "# normalizationMethod:" + this.getNormalizationMethod() + "\n" );
         buf.append( "# omitNegLinks:" + this.isOmitNegLinks() + "\n" );
-        if(this.isSubset()){
+        if(this.isSubsetUsed()){
             buf.append( "# subset:" + this.subsetSize + "\n" );
         }
         
@@ -242,5 +243,13 @@ public class LinkAnalysisConfig implements Serializable {
 
     public boolean isSubset(){
         return subset;
+    }
+
+    public boolean isSubsetUsed() {
+        return subsetUsed;
+    }
+
+    public void setSubsetUsed( boolean subsetUsed ) {
+        this.subsetUsed = subsetUsed;
     }
 }
