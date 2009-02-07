@@ -240,7 +240,8 @@ public class BusinessKey {
             if ( StringUtils.isNotBlank( gene.getOfficialName() ) ) {
                 queryObject.add( Restrictions.eq( "officialName", gene.getOfficialName() ) );
             } else if ( gene.getPhysicalLocation() != null ) {
-                attachCriteria( queryObject, gene.getPhysicalLocation(), "physicalLocation" );
+                // This causes more problems than it is worth.
+                // attachCriteria( queryObject, gene.getPhysicalLocation(), "physicalLocation" );
             }
 
         } else {

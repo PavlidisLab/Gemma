@@ -267,7 +267,6 @@ abstract public class GenomePersister extends CommonPersister {
     /**
      * @param gene
      */
-    @SuppressWarnings("unchecked")
     protected Gene persistGene( Gene gene ) {
         if ( gene == null ) return null;
         if ( !isTransient( gene ) ) return gene;
