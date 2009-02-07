@@ -221,6 +221,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         getHibernateTemplate().deleteAll(
                 getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign ) );
         log.info( "Done deleting BlatAssociations for " + arrayDesign );
+
+        final String annotationAssociationQueryString = "select ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
+                + "inner join cs.biologicalCharacteristic bs, AnnotationAssociationImpl ba "
+                + "where ba.bioSequence = bs and ad=:arrayDesign";
+        getHibernateTemplate().deleteAll(
+                getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign ) );
+        log.info( "Done deleting AnnotationAssociations for " + arrayDesign );
     }
 
     @Override

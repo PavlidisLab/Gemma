@@ -19,6 +19,8 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnaly
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -50,6 +52,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private String taxonName;
     private Taxon taxon;
     private String directAnnotationInputFileName = null;
+    private ExternalDatabase sourceDatabase = null;
 
     /*
      * (non-Javadoc)
@@ -77,10 +80,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         Option directAnnotation = OptionBuilder.withDescription(
                 "Import annotations from a file rather than our own analysis. You must provide the taxon option" )
-                .withArgName( "file" ).create( "import" );
+                .hasArg().withArgName( "file" ).create( "import" );
 
         addOption( directAnnotation );
 
+        Option databaseOption = OptionBuilder.withDescription(
+                "Source database name (GEO etc); required if using -import" ).hasArg().withArgName( "dbname" ).create(
+                "source" );
+        addOption( databaseOption );
     }
 
     public static void main( String[] args ) {
@@ -106,7 +113,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         Date skipIfLastRunLaterThan = getLimitingDate();
 
-        if ( this.taxon != null ) {
+        if ( this.taxon != null && this.directAnnotationInputFileName == null ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
         }
 
@@ -126,7 +133,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     if ( !f.canRead() ) {
                         throw new IOException( "Cannot read from " + this.directAnnotationInputFileName );
                     }
-                    arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f );
+                    arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase );
                     audit( arrayDesign, "Imported from " + f, AnnotationBasedGeneMappingEvent.Factory.newInstance() );
                 } catch ( IOException e ) {
                     return e;
@@ -313,6 +320,16 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             if ( !this.hasOption( 't' ) ) {
                 throw new IllegalArgumentException( "You must provide the taxon when using the import option" );
             }
+            if ( !this.hasOption( "source" ) ) {
+                throw new IllegalArgumentException(
+                        "You must provide source database name when using the import option" );
+            }
+            String sourceDBName = this.getOptionValue( "source" );
+
+            ExternalDatabaseService eds = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
+
+            this.sourceDatabase = eds.find( sourceDBName );
+
             this.directAnnotationInputFileName = this.getOptionValue( "import" );
         }
         if ( this.hasOption( 't' ) ) {

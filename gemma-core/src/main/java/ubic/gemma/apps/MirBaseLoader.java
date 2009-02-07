@@ -29,6 +29,7 @@ import ubic.gemma.loader.genome.GffParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
@@ -43,6 +44,8 @@ public class MirBaseLoader extends AbstractSpringAwareCLI {
     private PersisterHelper persisterHelper;
     private String fileName;
     private TaxonService taxonService;
+
+    private GeneService geneService;
 
     private String taxonName = null;
 
@@ -72,7 +75,6 @@ public class MirBaseLoader extends AbstractSpringAwareCLI {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         try {
@@ -97,6 +99,19 @@ public class MirBaseLoader extends AbstractSpringAwareCLI {
             gffFileIs.close();
             Collection<Gene> res = parser.getResults();
 
+            geneService = ( GeneService ) this.getBean( "geneService" );
+            int numFound = 0;
+            int notFound = 0;
+            for ( Gene gene : res ) {
+                Gene found = geneService.find( gene );
+                if ( found != null ) {
+                    numFound++;
+                } else {
+                    notFound++;
+                }
+                gene.setDescription( "Imported from mirbase: micro RNA" );
+            }
+            log.info( "Found " + numFound + " didn't find " + notFound + " (seem to be new)" );
             persisterHelper.persist( res );
 
         } catch ( Exception e ) {

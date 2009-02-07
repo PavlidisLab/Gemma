@@ -38,6 +38,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.analysis.sequence.ProbeMapper;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -205,9 +206,11 @@ public class ArrayDesignProbeMapperService {
      * @param arrayDesign. If
      * @param taxon. We require this to ensure correct association of the sequences with the genes.
      * @param source
+     * @param sourceDB describes where the annotations came from. Can be null if you really don't know.
      * @throws IllegalStateException if the input file doesn't match the array design.
      */
-    public void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon, File source ) throws IOException {
+    public void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon, File source, ExternalDatabase sourceDB )
+            throws IOException {
 
         BufferedReader b = new BufferedReader( new FileReader( source ) );
         String line = null;
@@ -285,7 +288,7 @@ public class ArrayDesignProbeMapperService {
 
             assert bs.getId() != null;
 
-            geneService.thawLite( g );
+            geneService.thaw( g );
             if ( g.getProducts().size() == 0 ) {
                 log.warn( "There are no gene products for " + g + ", it cannot be mapped to probes. Skipping" );
                 numSkipped++;
@@ -295,6 +298,7 @@ public class ArrayDesignProbeMapperService {
                 AnnotationAssociation association = AnnotationAssociation.Factory.newInstance();
                 association.setBioSequence( bs );
                 association.setGeneProduct( gp );
+                association.setSource( sourceDB );
                 annotationAssociationService.create( association );
             }
 
