@@ -210,15 +210,16 @@ public class Blat {
     public Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon ) throws IOException {
         assert seqDir != null;
         // write the sequence to a temporary file.
-        File querySequenceFile = File.createTempFile( b.getName(), ".fa" );
+        String seqName = b.getName().replaceAll( " ", "_" );
+        File querySequenceFile = File.createTempFile( seqName, ".fa" );
 
         BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
         String trimmed = SequenceManipulation.stripPolyAorT( b.getSequence(), POLY_AT_THRESHOLD );
-        out.write( ">" + b.getName() + "\n" + trimmed );
+        out.write( ">" + seqName + "\n" + trimmed );
         out.close();
         log.info( "Wrote sequence to " + querySequenceFile.getPath() );
 
-        String outputPath = getTmpPslFilePath( b.getName() );
+        String outputPath = getTmpPslFilePath( seqName );
 
         Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
 
@@ -242,14 +243,14 @@ public class Blat {
             throws IOException {
         Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
 
-        File querySequenceFile = File.createTempFile( "pattern", ".fa" );
+        File querySequenceFile = File.createTempFile( "sequences-for-blat", ".fa" );
         int count = SequenceWriter.writeSequencesToFile( sequences, querySequenceFile );
         if ( count == 0 ) {
             querySequenceFile.delete();
             throw new IllegalArgumentException( "No sequences!" );
         }
 
-        String outputPath = getTmpPslFilePath( "process" );
+        String outputPath = getTmpPslFilePath( "blat-output" );
 
         Collection<BlatResult> rawresults = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
 
@@ -350,6 +351,11 @@ public class Blat {
      * @return processed results.
      */
     public Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
+
+        if ( inputStream.available() == 0 ) {
+            throw new IOException( "No data from the blat output file. Make sure the gfServer is running" );
+        }
+
         log.debug( "Processing " + inputStream );
         BlatResultParser brp = new BlatResultParser();
         brp.setTaxon( taxon );
@@ -542,7 +548,7 @@ public class Blat {
     private String getTmpPslFilePath( String base ) throws IOException {
         File tmpdir = new File( ConfigUtils.getDownloadPath() );
         if ( StringUtils.isBlank( base ) ) {
-            return File.createTempFile( "pattern", ".psl", tmpdir ).getPath();
+            return File.createTempFile( "blat-output", ".psl", tmpdir ).getPath();
         }
         return File.createTempFile( base, ".psl", tmpdir ).getPath();
     }
@@ -590,7 +596,10 @@ public class Blat {
         this.gfServerExe = ConfigUtils.getString( "gfServer.exe" );
 
         if ( gfServerExe == null ) {
-            log.warn( "You will not be able to start the server due to a configuration error." );
+            /*
+             * This won't ever really work -- it's left over from earlier iterations.
+             */
+            log.warn( "You will not be able to start the server: gfServer.exe is not set in config" );
         }
 
         if ( gfClientExe == null && os.startsWith( "windows" ) ) {
