@@ -56,9 +56,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#createProcessedDataVectors(ubic.gemma
-     *      .model.expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#createProcessedDataVectors(ubic.gemma
+     * .model.expression.experiment.ExpressionExperiment)
      */
     @SuppressWarnings("unchecked")
     public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
@@ -128,9 +128,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrices(java.util.
-     *      Collection)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrices(java.util.
+     * Collection)
      */
     public Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments ) {
@@ -140,9 +140,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrices(java.util.
-     *      Collection, java.util.Collection)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrices(java.util.
+     * Collection, java.util.Collection)
      */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
@@ -151,9 +151,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrix(ubic.gemma.model
-     *      .expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrix(ubic.gemma.model
+     * .expression.experiment.ExpressionExperiment)
      */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment ) {
         // FIXME implement
@@ -162,9 +162,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrix(ubic.gemma.model
-     *      .expression.experiment.ExpressionExperiment, java.util.Collection)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrix(ubic.gemma.model
+     * .expression.experiment.ExpressionExperiment, java.util.Collection)
      */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
             Collection<Gene> genes ) {
@@ -175,9 +175,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedVectors(ubic.gemma.model
-     *      .expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedVectors(ubic.gemma.model
+     * .expression.experiment.ExpressionExperiment)
      */
     @SuppressWarnings("unchecked")
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee ) {
@@ -190,9 +190,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getRanks(java.util.Collection,
-     *      java.util.Collection, ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
+     * java.util.Collection, ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
     @SuppressWarnings("unchecked")
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
@@ -248,10 +247,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getRanks(ubic.gemma.model.expression
-     *      .experiment.ExpressionExperiment, java.util.Collection,
-     *      ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getRanks(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment, java.util.Collection,
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
     @SuppressWarnings("unchecked")
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
@@ -301,10 +300,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getRanks(ubic.gemma.model.expression
-     *      .experiment.ExpressionExperiment,
-     *      ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getRanks(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment,
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
     @SuppressWarnings("unchecked")
     public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
@@ -458,9 +457,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                     log.warn( "No composite sequences found for genes" );
                     return new HashSet<DoubleVectorValueObject>();
                 }
-                else{                
-                    return results;
-                }
+                return results;
+
             }
 
             /*

@@ -1,5 +1,7 @@
 package ubic.gemma.apps;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -9,6 +11,8 @@ import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
@@ -32,6 +36,9 @@ import ubic.gemma.model.genome.TaxonService;
  * <li>ArrayDesignProbeMapperCli (this class); you must have the correct GoldenPath database installed and available as
  * configured in your properties files.
  * </ol>
+ * This can also allow directly associating probes with genes (via products) based on an input file, without any
+ * sequence analysis.
+ * <p>
  * TODO : allow tuning of parameters from the command line.
  * 
  * @author pavlidis
@@ -42,6 +49,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private TaxonService taxonService;
     private String taxonName;
     private Taxon taxon;
+    private String directAnnotationInputFileName = null;
 
     /*
      * (non-Javadoc)
@@ -51,7 +59,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        
+
         requireLogin();
 
         Option taxonOption = OptionBuilder
@@ -66,6 +74,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         Option force = OptionBuilder.withDescription( "Run no matter what" ).create( "force" );
 
         addOption( force );
+
+        Option directAnnotation = OptionBuilder.withDescription(
+                "Import annotations from a file rather than our own analysis. You must provide the taxon option" )
+                .withArgName( "file" ).create( "import" );
+
+        addOption( directAnnotation );
 
     }
 
@@ -106,9 +120,29 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             }
 
             unlazifyArrayDesign( arrayDesign );
-            arrayDesignProbeMapperService.processArrayDesign( arrayDesign );
-            audit( arrayDesign, "Run with default parameters" );
+            if ( directAnnotationInputFileName != null ) {
+                try {
+                    File f = new File( this.directAnnotationInputFileName );
+                    if ( !f.canRead() ) {
+                        throw new IOException( "Cannot read from " + this.directAnnotationInputFileName );
+                    }
+                    arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f );
+                    audit( arrayDesign, "Imported from " + f, AnnotationBasedGeneMappingEvent.Factory.newInstance() );
+                } catch ( IOException e ) {
+                    return e;
+                }
+            } else {
+                arrayDesignProbeMapperService.processArrayDesign( arrayDesign );
+                audit( arrayDesign, "Run with default parameters", AlignmentBasedGeneMappingEvent.Factory.newInstance() );
+            }
+
         } else if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
+
+            if ( directAnnotationInputFileName != null ) {
+                throw new IllegalStateException(
+                        "Sorry, you can't provide an input mapping file when doing multiple arrays at once" );
+            }
+
             // look at all array designs.
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
             for ( ArrayDesign design : allArrayDesigns ) {
@@ -140,9 +174,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 log.info( "============== Start processing: " + design + " ==================" );
                 try {
                     arrayDesignService.thawLite( design );
+
                     arrayDesignProbeMapperService.processArrayDesign( design );
                     successObjects.add( design.getName() );
-                    audit( design, "Part of a batch job" );
+                    ArrayDesignGeneMappingEvent eventType = AlignmentBasedGeneMappingEvent.Factory.newInstance();
+                    audit( design, "Part of a batch job", eventType );
+
                 } catch ( Exception e ) {
                     errorObjects.add( design + ": " + e.getMessage() );
                     log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
@@ -165,6 +202,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( this.hasOption( "force" ) ) {
+            return true;
+        }
+
+        if ( this.directAnnotationInputFileName != null ) {
             return true;
         }
 
@@ -268,6 +309,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .getBean( "arrayDesignProbeMapperService" );
         this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
+        if ( this.hasOption( "import" ) ) {
+            if ( !this.hasOption( 't' ) ) {
+                throw new IllegalArgumentException( "You must provide the taxon when using the import option" );
+            }
+            this.directAnnotationInputFileName = this.getOptionValue( "import" );
+        }
         if ( this.hasOption( 't' ) ) {
             this.taxonName = this.getOptionValue( 't' );
             this.taxon = taxonService.findByCommonName( this.taxonName );
@@ -281,9 +328,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     /**
      * @param arrayDesign
      */
-    private void audit( ArrayDesign arrayDesign, String note ) {
+    private void audit( ArrayDesign arrayDesign, String note, ArrayDesignGeneMappingEvent eventType ) {
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        AuditEventType eventType = ArrayDesignGeneMappingEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 

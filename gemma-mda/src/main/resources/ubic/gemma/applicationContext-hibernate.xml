@@ -251,6 +251,12 @@
 				ubic.gemma.model.genome.sequenceAnalysis.BlastResultService.find=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.sequenceAnalysis.BlastResultService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService.create=PROPAGATION_REQUIRED
+				ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService.create=PROPAGATION_REQUIRED
+				ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService.find=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService.thaw=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService.update=PROPAGATION_REQUIRED
+				ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService.load=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService.remove=PROPAGATION_REQUIRED
 				ubic.gemma.model.genome.biosequence.BioSequenceService.find=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.biosequence.BioSequenceService.remove=PROPAGATION_REQUIRED
 				ubic.gemma.model.genome.biosequence.BioSequenceService.findOrCreate=PROPAGATION_REQUIRED
@@ -381,11 +387,11 @@
 				ubic.gemma.model.common.auditAndSecurity.UserService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserService.delete=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserService.addRole=PROPAGATION_REQUIRED
-				ubic.gemma.model.common.auditAndSecurity.UserService.load=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.common.auditAndSecurity.UserService.findByUserName=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.common.auditAndSecurity.UserService.findByEmail=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.common.auditAndSecurity.UserService.load=PROPAGATION_REQUIRED
+				ubic.gemma.model.common.auditAndSecurity.UserService.findByUserName=PROPAGATION_REQUIRED
+				ubic.gemma.model.common.auditAndSecurity.UserService.findByEmail=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserService.update=PROPAGATION_REQUIRED
-				ubic.gemma.model.common.auditAndSecurity.UserService.loadAllRoles=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.common.auditAndSecurity.UserService.loadAllRoles=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserQueryService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeAllForUser=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeOldForUser=PROPAGATION_REQUIRED
@@ -762,6 +768,24 @@
 		</property>
 		<property name="proxyInterfaces">
 			<value>ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao
+			</value>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>hibernateInterceptor</value>
+			</list>
+		</property>
+	</bean>
+	<bean id="annotationAssociationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="target">
+			<bean class="ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDaoImpl">
+				<property name="sessionFactory">
+					<ref local="sessionFactory" />
+				</property>
+			</bean>
+		</property>
+		<property name="proxyInterfaces">
+			<value>ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao
 			</value>
 		</property>
 		<property name="interceptorNames">
@@ -3096,6 +3120,29 @@
 		</property>
 		<property name="proxyInterfaces">
 			<value>ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService
+			</value>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>serviceTransactionInterceptor</value>
+				<value>hibernateInterceptor</value>
+				<value>serviceSecurityInterceptor</value>
+				<value>auditInterceptor</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- AnnotationAssociationService Service Proxy with inner AnnotationAssociationService Service Implementation -->
+	<bean id="annotationAssociationService" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="target">
+			<bean class="ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationServiceImpl">
+				<property name="annotationAssociationDao">
+					<ref bean="annotationAssociationDao" />
+				</property>
+			</bean>
+		</property>
+		<property name="proxyInterfaces">
+			<value>ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService
 			</value>
 		</property>
 		<property name="interceptorNames">

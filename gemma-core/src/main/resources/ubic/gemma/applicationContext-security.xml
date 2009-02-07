@@ -300,6 +300,8 @@
                 ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.findOrCreate=user,admin
                 ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.create=user,admin
                 ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.find=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService.create=user,admin
+                ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.sequenceAnalysis.BlastResultService.create=user,admin
                 ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService.create=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
