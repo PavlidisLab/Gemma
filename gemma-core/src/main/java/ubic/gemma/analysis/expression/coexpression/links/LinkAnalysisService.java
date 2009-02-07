@@ -649,10 +649,14 @@ public class LinkAnalysisService {
      * @param wr
      */
     private void writeLinks( final LinkAnalysis la, FilterConfig filterConfig, Writer wr ) throws IOException {
-        wr.write( la.getConfig().toString() );
-        wr.write(filterConfig.toString());
         Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
+        double subsetSize = la.getConfig().getSubsetSize();        
+        if(la.getConfig().isSubset() && links.size() > subsetSize){
+            la.getConfig().setSubsetUsed( true );
+        }
+        wr.write( la.getConfig().toString() );
+        wr.write(filterConfig.toString());
         NumberFormat nf = NumberFormat.getInstance();
         nf.setMaximumFractionDigits( 4 );
 
@@ -668,12 +672,11 @@ public class LinkAnalysisService {
         int numPrinted = 0;
         Random generator = new Random();
         double rand = 0.0;
-        double subsetSize = la.getConfig().getSubsetSize();
         double fraction = subsetSize/links.size();
         
         
         for ( int n = links.size(); i < n; i++ ) {
-            if(la.getConfig().isSubset() && links.size() > subsetSize){
+            if(la.getConfig().isSubsetUsed()){
                 rand = generator.nextDouble();
                 if(rand > fraction) continue;
             }
