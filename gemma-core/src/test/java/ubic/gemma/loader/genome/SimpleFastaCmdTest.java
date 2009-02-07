@@ -90,21 +90,21 @@ public class SimpleFastaCmdTest extends TestCase {
         assertEquals( expected, bs.getSequence() );
     }
 
-    // Test disabled because it fails in continuum, sometimes (unpredictable)
-    // public void testGetMultiple() throws Exception {
-    // if ( !fastaCmdExecutableExists() ) {
-    // return;
-    // }
-    // SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-    //
-    // Collection<Integer> input = new ArrayList<Integer>();
-    // input.add( 1435867 );
-    // input.add( 1435868 );
-    //
-    // Collection<BioSequence> bs = fastaCmd.getBatchIdentifiers( input, TESTBLASTDB, TEST_RESOURCE_PATH );
-    // assertNotNull( bs );
-    // assertEquals( 2, bs.size() );
-    // }
+    // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
+    public void testGetMultiple() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+
+        Collection<Integer> input = new ArrayList<Integer>();
+        input.add( 1435867 );
+        input.add( 1435868 );
+
+        Collection<BioSequence> bs = fastaCmd.getBatchIdentifiers( input, TESTBLASTDB, TEST_RESOURCE_PATH );
+        assertNotNull( bs );
+        assertEquals( 2, bs.size() );
+    }
 
     public void testGetSingleAcc() throws Exception {
         if ( !fastaCmdExecutableExists() ) {
@@ -132,21 +132,21 @@ public class SimpleFastaCmdTest extends TestCase {
         assertNull( bs );
     }
 
-    // Test disabled because it fails in continuum, sometimes (unpredictable)
-    // public void testGetMultipleAcc() throws Exception {
-    // if ( !fastaCmdExecutableExists() ) {
-    // return;
-    // }
-    // SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-    //
-    // Collection<String> input = new ArrayList<String>();
-    // input.add( "AA000002.1" );
-    // input.add( "AA000003.1" );
-    //
-    // Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
-    // assertNotNull( bs );
-    // assertEquals( 2, bs.size() );
-    // }
+    // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
+    public void testGetMultipleAcc() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+
+        Collection<String> input = new ArrayList<String>();
+        input.add( "AA000002.1" );
+        input.add( "AA000003.1" );
+
+        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
+        assertNotNull( bs );
+        assertEquals( 2, bs.size() );
+    }
 
     public void testGetMultipleAccSomeNotFound() throws Exception {
         if ( !fastaCmdExecutableExists() ) {
