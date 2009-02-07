@@ -85,6 +85,10 @@ public class ExpressionExperimentBibRefFinderTest extends TestCase {
             log.warn( "Test skipped due to a 503 error from NCBI" );
             return;
         }
+        if ( e.getCause() instanceof IOException && e.getMessage().contains( "502" ) ) {
+            log.warn( "Test skipped due to a 502 error from NCBI" );
+            return;
+        }
         throw e;
 
     }
