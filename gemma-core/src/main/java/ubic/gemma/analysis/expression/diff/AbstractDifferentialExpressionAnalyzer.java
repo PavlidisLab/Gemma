@@ -69,7 +69,9 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             Collection<ExperimentalFactor> factors );
 
     /**
-     * Calls the Q value function in R. Filters out p-values that are Double.NaN.
+     * Calls the Q value function in R. Handles Double.NaN by filtering out p-values that are Double.NaN before passing
+     * the array to the qvalue function, then puts the Double.NaN values back in the resulting q-value array (in the
+     * correct position).
      * 
      * @param pvalues
      * @return returns the qvalues (false discovery rates) for the pvalues using the method of Storey and Tibshirani.
