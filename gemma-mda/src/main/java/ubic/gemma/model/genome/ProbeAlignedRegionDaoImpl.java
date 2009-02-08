@@ -81,8 +81,11 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
             final Long targetEnd, final String strand ) {
 
         // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
+        // FIXME : this query is a bit slow. In gene mapping of probes, it takes about as much time as all the other
+        // checks combined.
+
         String query = "select distinct par from ProbeAlignedRegionImpl as par inner join fetch par.physicalLocation pl "
-                + "inner join fetch par.products prod  "
+                + "inner join fetch par.products prod inner join fetch prod.exons inner join fetch pl.chromosome "
                 + "where ((pl.nucleotide >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end) "
                 + "OR (pl.nucleotide <= :start AND (pl.nucleotide + pl.nucleotideLength) >= :end) OR "
                 + "(pl.nucleotide >= :start  AND pl.nucleotide <= :end) "
