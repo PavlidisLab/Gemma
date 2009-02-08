@@ -66,18 +66,20 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results.
      * 
      * @param dmatrix
-     * @param pvalues
+     * @param mainEffectAPvalues
+     * @param mainEffectBPvalues
+     * @param interactionEffectPvalues
      * @param fStatistics
      * @param numResultsFromR
      * @param experimentalFactorA
      * @param experimentalFactorB
      * @param quantitationType
-     * @param interactions set to true if interactions were assayed.
      * @return
      */
     protected DifferentialExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
-            double[] pvalues, double[] fStatistics, int numResultsFromR, ExperimentalFactor experimentalFactorA,
-            ExperimentalFactor experimentalFactorB, QuantitationType quantitationType, boolean interactions ) {
+            double[] mainEffectAPvalues, double[] mainEffectBPvalues, double[] interactionEffectPvalues,
+            double[] fStatistics, int numResultsFromR, ExperimentalFactor experimentalFactorA,
+            ExperimentalFactor experimentalFactorB, QuantitationType quantitationType ) {
 
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
@@ -101,10 +103,19 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         /* Interaction effect */
         List<DifferentialExpressionAnalysisResult> analysisResultsInteractionEffect = new ArrayList<DifferentialExpressionAnalysisResult>();
 
-        /* q-value */
-        double[] qvalues = super.getQValues( pvalues );
+        /* q-values */
+        double[] mainEffectAQvalues = super.getQValues( mainEffectAPvalues );
+        double[] mainEffectBQvalues = super.getQValues( mainEffectBPvalues );
 
-        int k = 0;
+        double[] interactionEffectQvalues = null;
+        if ( interactionEffectPvalues != null ) {
+            interactionEffectQvalues = super.getQValues( interactionEffectPvalues );
+        }
+
+        int k = 0;// statistics
+        int l = 0;// main effect A
+        int m = 0;// main effect B
+        int n = 0;// interaction effect
         for ( int i = 0; i < dmatrix.rows(); i++ ) {
 
             DesignElement de = dmatrix.getDesignElementForRow( i );
@@ -117,17 +128,25 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                 probeAnalysisResult.setProbe( cs );
                 probeAnalysisResult.setQuantitationType( quantitationType );
 
-                probeAnalysisResult.setPvalue( pvalues[k] );
                 probeAnalysisResult.setScore( fStatistics[k] );
-                probeAnalysisResult.setCorrectedPvalue( qvalues[k] );
                 // probeAnalysisResult.setParameters( parameters );
 
-                if ( j % numResultsFromR == mainEffectAIndex ) analysisResultsMainEffectA.add( probeAnalysisResult );
-
-                if ( j % numResultsFromR == mainEffectBIndex ) analysisResultsMainEffectB.add( probeAnalysisResult );
-
-                if ( j % numResultsFromR == mainEffectInteractionIndex )
+                if ( j % numResultsFromR == mainEffectAIndex ) {
+                    probeAnalysisResult.setPvalue( mainEffectAPvalues[l] );
+                    probeAnalysisResult.setCorrectedPvalue( mainEffectAQvalues[l] );
+                    analysisResultsMainEffectA.add( probeAnalysisResult );
+                    l++;
+                } else if ( j % numResultsFromR == mainEffectBIndex ) {
+                    probeAnalysisResult.setPvalue( mainEffectBPvalues[m] );
+                    probeAnalysisResult.setCorrectedPvalue( mainEffectBQvalues[m] );
+                    analysisResultsMainEffectB.add( probeAnalysisResult );
+                    m++;
+                } else if ( j % numResultsFromR == mainEffectInteractionIndex ) {
+                    probeAnalysisResult.setPvalue( interactionEffectPvalues[n] );
+                    probeAnalysisResult.setCorrectedPvalue( interactionEffectQvalues[n] );
                     analysisResultsInteractionEffect.add( probeAnalysisResult );
+                    n++;
+                }
 
                 k++;
             }
@@ -146,6 +165,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                 expressionAnalysis, analysisResultsMainEffectB, mainB );
         resultSets.add( mainEffectResultSetB );
 
+        /* interaction effect */
         if ( numResultsFromR == maxResults ) {
             Collection<ExperimentalFactor> interAB = new HashSet<ExperimentalFactor>();
             interAB.add( experimentalFactorA );
@@ -158,9 +178,12 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         expressionAnalysis.setResultSets( resultSets );
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        if ( ee != null )
+        if ( ee != null ) {
+            boolean interactions = false;
+            if ( numResultsFromR == maxResults ) interactions = true;
             expressionAnalysis.setDescription( "Two-way ANOVA for " + experimentalFactorA + " and "
                     + experimentalFactorB + ( interactions ? " with " : " without " ) + "interactions" );
+        }
 
         return expressionAnalysis;
     }

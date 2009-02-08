@@ -162,8 +162,26 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         log.debug( command.toString() );
 
         TwoWayAnovaResult anovaResult = rc.twoWayAnovaEval( command.toString() );
-
         if ( anovaResult == null ) throw new IllegalStateException( "No pvalues returned" );
+
+        double[] pvalues = anovaResult.getPvalues();
+        double[] mainEffectAPvalues = new double[anovaResult.getPvalues().length / NUM_RESULTS_FROM_R];
+        double[] mainEffectBPvalues = new double[anovaResult.getPvalues().length / NUM_RESULTS_FROM_R];
+        int j = 0;
+        int k = 0;
+        for ( int i = 0; i < pvalues.length; i++ ) {
+            double p = pvalues[i];
+            if ( i % NUM_RESULTS_FROM_R == mainEffectAIndex ) {
+                mainEffectAPvalues[j] = p;
+                j++;
+            } else if ( i % NUM_RESULTS_FROM_R == mainEffectBIndex ) {
+                mainEffectBPvalues[k] = p;
+                k++;
+            } else {
+                throw new RuntimeException( "Too many pvalues for a given proble.  Should have " + NUM_RESULTS_FROM_R
+                        + " pvalues per proble." );
+            }
+        }
 
         /* write out histogram */
         ArrayList<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
@@ -172,8 +190,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         writePValuesHistogram( anovaResult.getPvalues(), expressionExperiment, effects );
 
         log.info( "R analysis done" );
-        return createExpressionAnalysis( dmatrix, anovaResult.getPvalues(), anovaResult.getStatistics(),
-                NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB, quantitationType, false );
+        return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, null, anovaResult
+                .getStatistics(), NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB, quantitationType );
     }
-
 }

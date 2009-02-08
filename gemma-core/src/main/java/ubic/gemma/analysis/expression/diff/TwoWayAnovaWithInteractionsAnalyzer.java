@@ -130,6 +130,30 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         TwoWayAnovaResult anovaResult = rc.twoWayAnovaEval( pvalueCommand.toString() );
         if ( anovaResult == null ) throw new IllegalStateException( "No pvalues returned" );
 
+        double[] pvalues = anovaResult.getPvalues();
+        double[] mainEffectAPvalues = new double[anovaResult.getPvalues().length / NUM_RESULTS_FROM_R];
+        double[] mainEffectBPvalues = new double[anovaResult.getPvalues().length / NUM_RESULTS_FROM_R];
+        double[] interactionEffectPvalues = new double[anovaResult.getPvalues().length / NUM_RESULTS_FROM_R];
+        int j = 0;
+        int k = 0;
+        int l = 0;
+        for ( int i = 0; i < pvalues.length; i++ ) {
+            double p = pvalues[i];
+            if ( i % NUM_RESULTS_FROM_R == mainEffectAIndex ) {
+                mainEffectAPvalues[j] = p;
+                j++;
+            } else if ( i % NUM_RESULTS_FROM_R == mainEffectBIndex ) {
+                mainEffectBPvalues[k] = p;
+                k++;
+            } else if ( i % NUM_RESULTS_FROM_R == mainEffectInteractionIndex ) {
+                interactionEffectPvalues[l] = p;
+                l++;
+            } else {
+                throw new RuntimeException( "Too many pvalues for a given proble.  Should have " + NUM_RESULTS_FROM_R
+                        + " pvalues per proble." );
+            }
+        }
+
         /* write out histogram */
         ArrayList<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
         effects.add( experimentalFactorA );
@@ -137,8 +161,9 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         writePValuesHistogram( anovaResult.getPvalues(), expressionExperiment, effects );
 
         log.info( "R analysis done" );
-        return createExpressionAnalysis( dmatrix, anovaResult.getPvalues(), anovaResult.getStatistics(),
-                NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB, quantitationType, true );
+        return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, interactionEffectPvalues,
+                anovaResult.getStatistics(), NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB,
+                quantitationType );
 
     }
 
