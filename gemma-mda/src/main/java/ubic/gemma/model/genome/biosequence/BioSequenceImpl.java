@@ -66,16 +66,16 @@ public class BioSequenceImpl extends ubic.gemma.model.genome.biosequence.BioSequ
 
         if ( this.getId() != null ) {
             return 29 * getId().hashCode();
-        } else {
-            int nameHash = this.getName() == null ? 0 : getName().hashCode();
-            int taxonHash = this.getTaxon() == null ? 0 : getTaxon().hashCode();
-            int lengthHash = this.getLength() == null ? 0 : getLength().hashCode();
-            int dbHash = this.getSequenceDatabaseEntry() == null ? 0 : getSequenceDatabaseEntry().hashCode();
-            int seqHash = 0;
-            if ( dbHash == 0 && nameHash == 0 && lengthHash == 0 && this.getSequence() != null )
-                seqHash = this.getSequence().hashCode();
-            hashCode = 29 * nameHash + seqHash + dbHash + taxonHash + lengthHash;
         }
+        int nameHash = this.getName() == null ? 0 : getName().hashCode();
+        int taxonHash = this.getTaxon() == null ? 0 : getTaxon().hashCode();
+        int lengthHash = this.getLength() == null ? 0 : getLength().hashCode();
+        int dbHash = this.getSequenceDatabaseEntry() == null ? 0 : getSequenceDatabaseEntry().hashCode();
+        int seqHash = 0;
+        if ( dbHash == 0 && nameHash == 0 && lengthHash == 0 && this.getSequence() != null )
+            seqHash = this.getSequence().hashCode();
+        hashCode = 29 * nameHash + seqHash + dbHash + taxonHash + lengthHash;
+
         return hashCode;
     }
 }
