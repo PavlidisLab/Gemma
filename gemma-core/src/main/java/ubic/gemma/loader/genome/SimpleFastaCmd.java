@@ -147,10 +147,11 @@ public class SimpleFastaCmd implements FastaCmd {
 
         try {
             int exitVal = pr.waitFor();
-            Thread.sleep( 200 ); // Makes sure results are flushed.
-            log.debug( "fastacmd exit value=" + exitVal ); // often nonzero if some sequences are not found.
             is.close();
             err.close();
+            Thread.sleep( 200 ); // Makes sure results are flushed.
+            log.debug( "fastacmd exit value=" + exitVal ); // often nonzero if some sequences are not found.
+
             return parser.getResults();
         } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
