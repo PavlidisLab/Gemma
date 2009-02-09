@@ -365,6 +365,7 @@ public class GeoFamilyParser implements Parser {
      * @param value
      */
     private void addTo( Object target, String property, Object value ) {
+
         try {
             if ( value == null ) {
                 log.warn( "Value is null for target=" + target + "property=" + property );
@@ -372,6 +373,7 @@ public class GeoFamilyParser implements Parser {
             }
             if ( target == null ) {
                 log.warn( "Target is null for value=" + value + "property=" + property );
+                return;
             }
             if ( property == null ) {
                 log.warn( "Property is null for value=" + value + "target=" + target );

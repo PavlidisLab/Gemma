@@ -34,7 +34,6 @@ import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
-import ubic.gemma.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -57,8 +56,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 public class GeoDatasetService extends AbstractGeoService {
 
     private static final String GEO_DB_NAME = "GEO";
-    ExpressionExperimentService expressionExperimentService;
     BioAssayService bioAssayService;
+    ExpressionExperimentService expressionExperimentService;
 
     /**
      * Given a GEO GSE or GDS (or GPL, but support might not be complete)
@@ -155,6 +154,8 @@ public class GeoDatasetService extends AbstractGeoService {
 
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
 
+        check( result );
+
         series = null; // hopefully free memory...
         parseResult = null;
 
@@ -169,74 +170,6 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
-     * Populate the series information based on the subseries.
-     * 
-     * @param superSeries
-     */
-    private void getSubSeriesInformation( GeoSeries superSeries ) {
-        for ( String subSeriesAccession : superSeries.getSubSeries() ) {
-            log.info( "Processing subseries " + subSeriesAccession );
-            geoDomainObjectGenerator.intialize();
-            Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( subSeriesAccession );
-            if ( parseResult.size() == 0 ) {
-                log.warn( "Got no results for " + subSeriesAccession );
-                continue;
-            }
-            log.debug( "Generated GEO domain objects for SubSeries " + subSeriesAccession );
-
-            Object obj = parseResult.iterator().next();
-            if ( !( obj instanceof GeoSeries ) ) {
-                throw new RuntimeException( "Got a " + obj.getClass().getName() + " instead of a "
-                        + GeoSeries.class.getName() + " (you may need to load platforms only)." );
-            }
-            GeoSeries subSeries = ( GeoSeries ) obj;
-
-            /*
-             * Copy basic information
-             */
-            superSeries.getKeyWords().addAll( subSeries.getKeyWords() );
-            superSeries.getContributers().addAll( subSeries.getContributers() );
-            superSeries.getPubmedIds().addAll( subSeries.getPubmedIds() );
-            String seriesSummary = superSeries.getSummaries();
-            seriesSummary = seriesSummary + "\nSummary from subseries " + subSeries.getGeoAccession() + ": "
-                    + subSeries.getSummaries();
-            superSeries.setSummaries( seriesSummary );
-
-            // The following code needs a test case: where the subseries have associated GDS but the superseries does
-            // not.
-            // /*
-            // * Get experimental design information, if available.
-            // */
-            // for ( GeoDataset ds : subSeries.getDatasets() ) {
-            // log.info( "Adding dataset to superseries: " + ds );
-            // superSeries.addDataSet( ds );
-            // }
-            // // Add variable information to the series
-            // // copy variable information to the samples
-            // for ( Integer k : subSeries.getVariables().keySet() ) {
-            // GeoVariable geoVariable = subSeries.getVariables().get( k );
-            // log.info( "Adding variable " + geoVariable + " with index " + k + " to superseries" );
-            // superSeries.getVariables().put( k, geoVariable );
-            // }
-            //
-            // for ( GeoSample subSeriesSample : subSeries.getSamples() ) {
-            // if ( subSeriesSample.getVariables().size() > 0 ) {
-            // // find the corresponding sample in the superseries.
-            // for ( GeoSample superSeriesSample : superSeries.getSamples() ) {
-            // if ( superSeriesSample.equals( subSeriesSample ) ) {
-            // for ( GeoVariable v : subSeriesSample.getVariables() ) {
-            // log.info( "Adding variable " + v + " to superseries sample " + superSeriesSample );
-            // superSeriesSample.addVariable( v );
-            // }
-            // break;
-            // }
-            // }
-            // }
-            // }
-        }
-    }
-
-    /**
      * @param bioAssayService
      */
     public void setBioAssayService( BioAssayService bioAssayService ) {
@@ -248,6 +181,24 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    private void check( Collection<ExpressionExperiment> result ) {
+        for ( ExpressionExperiment expressionExperiment : result ) {
+            check( expressionExperiment );
+        }
+    }
+
+    private void check( ExpressionExperiment ee ) {
+
+        if ( ee.getBioAssays().size() == 0 ) {
+            throw new IllegalStateException( "Experiment has no bioassays " + ee );
+        }
+
+        if ( ee.getRawExpressionDataVectors().size() == 0 ) {
+            throw new IllegalStateException( "Experiment has no data vectors " + ee );
+        }
+
     }
 
     /**
@@ -274,7 +225,6 @@ public class GeoDatasetService extends AbstractGeoService {
      * 
      * @param series
      */
-    @SuppressWarnings("unchecked")
     private void checkSamplesAreNew( GeoSeries series ) {
         Collection<BioAssay> bioAssays = null;
         Collection<GeoSample> toSkip = new HashSet<GeoSample>();
@@ -405,78 +355,6 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
-     * @param series
-     * @return
-     */
-    private Set<GeoPlatform> getPlatforms( GeoSeries series ) {
-        Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
-        if ( series.getDatasets().size() > 0 ) {
-            for ( GeoDataset dataset : series.getDatasets() ) {
-                platforms.add( dataset.getPlatform() );
-            }
-        } else {
-            for ( GeoSample sample : series.getSamples() ) {
-                platforms.addAll( sample.getPlatforms() );
-            }
-        }
-        return platforms;
-    }
-
-    /**
-     * @param result
-     */
-    private void getPubMedInfo( Collection<ExpressionExperiment> result ) {
-        for ( ExpressionExperiment experiment : result ) {
-            BibliographicReference pubmed = experiment.getPrimaryPublication();
-            if ( pubmed == null ) continue;
-            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
-            try {
-                pubmed = fetcher.retrieveByHTTP( Integer.parseInt( pubmed.getPubAccession().getAccession() ) );
-            } catch ( Exception e ) {
-                log.warn( "Filed to get data from pubmed, continuing without it." );
-                log.error( e, e );
-            }
-            if ( pubmed == null ) continue;
-            experiment.setPrimaryPublication( pubmed );
-
-        }
-    }
-
-    /**
-     * @param rawGEOPlatform
-     */
-    private void matchToExistingPlatform( GeoPlatform rawGEOPlatform ) {
-        // we have to populate this.
-        Map<String, String> probeNamesInGemma = rawGEOPlatform.getProbeNamesInGemma();
-
-        // do a partial conversion. We will throw this away;
-        ArrayDesign geoArrayDesign = ( ArrayDesign ) geoConverter.convert( rawGEOPlatform );
-
-        // find in our system
-        ArrayDesign existing = arrayDesignService.find( geoArrayDesign );
-
-        if ( existing == null ) {
-            log.info( rawGEOPlatform + " looks new to Gemma" );
-            for ( CompositeSequence cs : geoArrayDesign.getCompositeSequences() ) {
-                String geoProbeName = cs.getName();
-                probeNamesInGemma.put( geoProbeName, geoProbeName ); // no mapping needed. NB the converter fills
-                // this in already, we're just being defensive
-                // here.
-            }
-        } else {
-            log.info( "Platform " + rawGEOPlatform
-                    + " exists in Gemma, checking for correct probe names and re-matching if necessary ..." );
-            arrayDesignService.thawLite( existing );
-
-            String columnWithGeoNames = null;
-            columnWithGeoNames = getGEOIDColumnName( rawGEOPlatform, geoArrayDesign, columnWithGeoNames );
-
-            getGemmaIDColumnNameInGEO( rawGEOPlatform, existing, columnWithGeoNames );
-
-        }
-    }
-
-    /**
      * If the names in Gemma are not the same as the ID in GEO, we have to switch the new data over. This only works if
      * the new names are given in another column in the GEO data. It als happens that sometimes some names in Gemma
      * match multiple columns in GEO (for example, blank spots). We need to find the column with the unique match.
@@ -537,6 +415,146 @@ public class GeoDatasetService extends AbstractGeoService {
 
         throw new IllegalStateException( "Could not figure out which column the GEO probe names came from!" );
 
+    }
+
+    /**
+     * @param series
+     * @return
+     */
+    private Set<GeoPlatform> getPlatforms( GeoSeries series ) {
+        Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
+        if ( series.getDatasets().size() > 0 ) {
+            for ( GeoDataset dataset : series.getDatasets() ) {
+                platforms.add( dataset.getPlatform() );
+            }
+        } else {
+            for ( GeoSample sample : series.getSamples() ) {
+                platforms.addAll( sample.getPlatforms() );
+            }
+        }
+        return platforms;
+    }
+
+    /**
+     * @param result
+     */
+    private void getPubMedInfo( Collection<ExpressionExperiment> result ) {
+        for ( ExpressionExperiment experiment : result ) {
+            BibliographicReference pubmed = experiment.getPrimaryPublication();
+            if ( pubmed == null ) continue;
+            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+            try {
+                pubmed = fetcher.retrieveByHTTP( Integer.parseInt( pubmed.getPubAccession().getAccession() ) );
+            } catch ( Exception e ) {
+                log.warn( "Filed to get data from pubmed, continuing without it." );
+                log.error( e, e );
+            }
+            if ( pubmed == null ) continue;
+            experiment.setPrimaryPublication( pubmed );
+
+        }
+    }
+
+    /**
+     * Populate the series information based on the subseries.
+     * 
+     * @param superSeries
+     */
+    private void getSubSeriesInformation( GeoSeries superSeries ) {
+        for ( String subSeriesAccession : superSeries.getSubSeries() ) {
+            log.info( "Processing subseries " + subSeriesAccession );
+            geoDomainObjectGenerator.intialize();
+            Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( subSeriesAccession );
+            if ( parseResult.size() == 0 ) {
+                log.warn( "Got no results for " + subSeriesAccession );
+                continue;
+            }
+            log.debug( "Generated GEO domain objects for SubSeries " + subSeriesAccession );
+
+            Object obj = parseResult.iterator().next();
+            if ( !( obj instanceof GeoSeries ) ) {
+                throw new RuntimeException( "Got a " + obj.getClass().getName() + " instead of a "
+                        + GeoSeries.class.getName() + " (you may need to load platforms only)." );
+            }
+            GeoSeries subSeries = ( GeoSeries ) obj;
+
+            /*
+             * Copy basic information
+             */
+            superSeries.getKeyWords().addAll( subSeries.getKeyWords() );
+            superSeries.getContributers().addAll( subSeries.getContributers() );
+            superSeries.getPubmedIds().addAll( subSeries.getPubmedIds() );
+            String seriesSummary = superSeries.getSummaries();
+            seriesSummary = seriesSummary + "\nSummary from subseries " + subSeries.getGeoAccession() + ": "
+                    + subSeries.getSummaries();
+            superSeries.setSummaries( seriesSummary );
+
+            // The following code needs a test case: where the subseries have associated GDS but the superseries does
+            // not.
+            // /*
+            // * Get experimental design information, if available.
+            // */
+            // for ( GeoDataset ds : subSeries.getDatasets() ) {
+            // log.info( "Adding dataset to superseries: " + ds );
+            // superSeries.addDataSet( ds );
+            // }
+            // // Add variable information to the series
+            // // copy variable information to the samples
+            // for ( Integer k : subSeries.getVariables().keySet() ) {
+            // GeoVariable geoVariable = subSeries.getVariables().get( k );
+            // log.info( "Adding variable " + geoVariable + " with index " + k + " to superseries" );
+            // superSeries.getVariables().put( k, geoVariable );
+            // }
+            //
+            // for ( GeoSample subSeriesSample : subSeries.getSamples() ) {
+            // if ( subSeriesSample.getVariables().size() > 0 ) {
+            // // find the corresponding sample in the superseries.
+            // for ( GeoSample superSeriesSample : superSeries.getSamples() ) {
+            // if ( superSeriesSample.equals( subSeriesSample ) ) {
+            // for ( GeoVariable v : subSeriesSample.getVariables() ) {
+            // log.info( "Adding variable " + v + " to superseries sample " + superSeriesSample );
+            // superSeriesSample.addVariable( v );
+            // }
+            // break;
+            // }
+            // }
+            // }
+            // }
+        }
+    }
+
+    /**
+     * @param rawGEOPlatform
+     */
+    private void matchToExistingPlatform( GeoPlatform rawGEOPlatform ) {
+        // we have to populate this.
+        Map<String, String> probeNamesInGemma = rawGEOPlatform.getProbeNamesInGemma();
+
+        // do a partial conversion. We will throw this away;
+        ArrayDesign geoArrayDesign = ( ArrayDesign ) geoConverter.convert( rawGEOPlatform );
+
+        // find in our system
+        ArrayDesign existing = arrayDesignService.find( geoArrayDesign );
+
+        if ( existing == null ) {
+            log.info( rawGEOPlatform + " looks new to Gemma" );
+            for ( CompositeSequence cs : geoArrayDesign.getCompositeSequences() ) {
+                String geoProbeName = cs.getName();
+                probeNamesInGemma.put( geoProbeName, geoProbeName ); // no mapping needed. NB the converter fills
+                // this in already, we're just being defensive
+                // here.
+            }
+        } else {
+            log.info( "Platform " + rawGEOPlatform
+                    + " exists in Gemma, checking for correct probe names and re-matching if necessary ..." );
+            arrayDesignService.thawLite( existing );
+
+            String columnWithGeoNames = null;
+            columnWithGeoNames = getGEOIDColumnName( rawGEOPlatform, geoArrayDesign, columnWithGeoNames );
+
+            getGemmaIDColumnNameInGEO( rawGEOPlatform, existing, columnWithGeoNames );
+
+        }
     }
 
     /**
