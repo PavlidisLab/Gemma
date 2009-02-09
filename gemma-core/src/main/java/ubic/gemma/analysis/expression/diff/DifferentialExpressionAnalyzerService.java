@@ -91,7 +91,7 @@ public class DifferentialExpressionAnalyzerService {
         for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
             Long toDelete = de.getId();
 
-            log.info( "Deleting existing differential expression analysis for experiment "
+            log.info( "Deleting old differential expression analysis for experiment "
                     + expressionExperiment.getShortName() );
             differentialExpressionAnalysisService.delete( toDelete );
         }
@@ -153,9 +153,9 @@ public class DifferentialExpressionAnalyzerService {
      */
     public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment ) {
 
-        deleteOldAnalyses( expressionExperiment );
-
         DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment );
+
+        deleteOldAnalyses( expressionExperiment );
 
         return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
     }
