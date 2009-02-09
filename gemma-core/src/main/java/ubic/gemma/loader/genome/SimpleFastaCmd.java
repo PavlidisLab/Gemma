@@ -140,13 +140,14 @@ public class SimpleFastaCmd implements FastaCmd {
 
         final FastaParser parser = new FastaParser();
 
-        ParsingStreamConsumer sg = new ParsingStreamConsumer( parser, is );
+        ParsingStreamConsumer<BioSequence> sg = new ParsingStreamConsumer<BioSequence>( parser, is );
         GenericStreamConsumer gsc = new GenericStreamConsumer( err );
         sg.start();
         gsc.start();
 
         try {
             int exitVal = pr.waitFor();
+
             is.close();
             err.close();
             Thread.sleep( 200 ); // Makes sure results are flushed.

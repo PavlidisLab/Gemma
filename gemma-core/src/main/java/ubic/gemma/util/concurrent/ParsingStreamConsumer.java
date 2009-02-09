@@ -29,11 +29,11 @@ import ubic.gemma.loader.util.parser.Parser;
  * @author pavlidis
  * @version $Id$
  */
-public class ParsingStreamConsumer extends Thread {
+public class ParsingStreamConsumer<T> extends Thread {
     InputStream is;
-    Parser parser;
+    Parser<T> parser;
 
-    public ParsingStreamConsumer( Parser parser, InputStream is ) {
+    public ParsingStreamConsumer( Parser<T> parser, InputStream is ) {
         this.is = is;
         this.parser = parser;
     }
