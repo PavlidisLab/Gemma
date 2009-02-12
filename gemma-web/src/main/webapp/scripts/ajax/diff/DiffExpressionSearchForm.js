@@ -138,7 +138,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			dsc.eeIds = param.ees.split(',');
 		}
 
-		if (param.a) {
+		if (param.a >= 0) {
 			dsc.eeSetId = param.a;
 		} else {
 			dsc.eeSetId = -1;
@@ -201,13 +201,13 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			this.geneChooserPanel.toolbar.taxonCombo.setTaxon(dsc.taxonId);
 		}
 
-		if (dsc.eeSetId >= 0) {
+		if (dsc.eeSetName) {
+			this.eeSetChooserPanel.selectByName(dsc.eeSetName);
+			dsc.eeSetId = this.currentSet.get("id"); 
+				
+		}else if (dsc.eeSetId >= 0) {
 			this.eeSetChooserPanel.selectById(dsc.eeSetId);
-		} else if (dsc.eeSetName) {
-			this.eeSetChooserPanel.selectByName(dsc.eeSetName); // FIXME this won't
-			// work, expects id.
 		}
-
 		if (dsc.threshold) {
 			this.thresholdField.setValue(dsc.threshold);
 		}
@@ -253,13 +253,14 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		var url = queryStart > -1 ? document.URL.substr(0, queryStart) : document.URL;
 		url += String.format("?g={0}&thres={1}&t={2}", dsc.geneIds.join(","), dsc.threshold, dsc.taxonId);
 
-		if (dsc.eeSetId) {
+		if (dsc.eeSetId >=0) {
 			url += String.format("&a={0}", dsc.eeSetId);
 		}
 
-		if (dsc.eeIds) {
-			url += String.format("&ees={0}", dsc.eeIds.join(","));
-		}
+//Makes bookmarkable links somewhat unusable (too long)		
+//		if (dsc.eeIds) {
+//			url += String.format("&ees={0}", dsc.eeIds.join(","));
+//		}
 
 		if (dsc.eeSetName) {
 			url += String.format("&setName={0}", dsc.eeSetName);

@@ -40,7 +40,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	getState : function() {
-		return this.getCoexpressionSearchCommand();
+		var currentState =  this.getCoexpressionSearchCommand();
+		delete currentState.eeIds;
+		return currentState;
+
 	},
 
 	onRender : function() {
@@ -182,15 +185,14 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (csc.taxonId) {
 			this.geneChooserPanel.toolbar.taxonCombo.setTaxon(csc.taxonId);
 		}
-
-		if (csc.eeSetId >= 0) {
-			this.eeSetChooserPanel.selectById(csc.eeSetId);
-		} else if (csc.eeSetName) {
+		
+		if (csc.eeSetName) {
 			this.currentSet = this.eeSetChooserPanel.selectByName(csc.eeSetName);
-
 			csc.eeSetId = this.currentSet.get("id");
+		}else 	if (csc.eeSetId >= 0) {
+			this.eeSetChooserPanel.selectById(csc.eeSetId);
 		}
-
+		
 		if (csc.stringency) {
 			this.stringencyField.setValue(csc.stringency);
 		}
@@ -227,13 +229,16 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			url += "&q";
 		}
 
-		if (csc.eeSetId) {
+		if (csc.eeSetId >= 0) 
 			url += String.format("&a={0}", csc.eeSetId);
-		}
+		
+		if (csc.eeSetName)
+			url += String.format("&an={0}",csc.eeSetName);
 
-		if (csc.eeIds) {
-			url += String.format("&ees={0}", csc.eeIds.join(","));
-		}
+// Putting eeids in the bookmarkable link make them somewhat unusable. 
+//		if (csc.eeIds) {
+//			url += String.format("&ees={0}", csc.eeIds.join(","));
+//		}
 
 		if (csc.dirty) {
 			url += "&dirty=1";

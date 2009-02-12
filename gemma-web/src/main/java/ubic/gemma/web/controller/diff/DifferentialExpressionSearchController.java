@@ -35,6 +35,7 @@ import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisVal
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -62,6 +63,7 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name = "geneDifferentialExpressionService" ref="geneDifferentialExpressionService"
  * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name = "expressionExperimentSetService" ref="expressionExperimentSetService"
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
@@ -73,7 +75,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private GeneDifferentialExpressionService geneDifferentialExpressionService = null;
     private GeneService geneService = null;
     private ExpressionExperimentService expressionExperimentService = null;
-
+    private ExpressionExperimentSetService expressionExperimentSetService = null;
+    
     /**
      * 
      */
@@ -95,8 +98,22 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     public Collection<DifferentialExpressionMetaAnalysisValueObject> getDiffExpressionForGenes(
             DiffExpressionSearchCommand command ) {
 
+        
         Collection<Long> eeScopeIds = command.getEeIds();
-
+        int eeScopeSize = 0;
+        
+        if (eeScopeIds != null && !eeScopeIds.isEmpty()){            
+            eeScopeSize = eeScopeIds.size();
+        }
+        else{
+            if (command.getEeSetName() != null)
+                eeScopeSize = this.expressionExperimentSetService.findByName( command.getEeSetName() ).iterator().next().getExperiments().size();
+            
+            else if (command.getEeSetId() >= 0)
+                eeScopeSize = this.expressionExperimentSetService.load( command.getEeSetId() ).getExperiments().size();
+            
+        }
+        
         Collection<Long> geneIds = command.getGeneIds();
 
         if ( geneIds.size() > MAX_GENES_PER_QUERY ) {
@@ -117,7 +134,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 mavo.setNumSearchedExperiments( selectedFactors.size() );
             }
 
-            mavo.setNumExperimentsInScope( eeScopeIds.size() );
+            mavo.setNumExperimentsInScope( eeScopeSize );
 
             mavos.add( mavo );
 
@@ -405,6 +422,14 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     public void setGeneDifferentialExpressionService(
             GeneDifferentialExpressionService geneDifferentialExpressionService ) {
         this.geneDifferentialExpressionService = geneDifferentialExpressionService;
+    }
+
+    public ExpressionExperimentSetService getExpressionExperimentSetService() {
+        return expressionExperimentSetService;
+    }
+
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
     }
 
 }
