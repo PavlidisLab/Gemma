@@ -102,11 +102,11 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 				// factorValueValueObjects
 				for (fv in factor.values) {
-					if (!factor.values[fv].factorValueId) {
+					if (!factor.values[fv].id) {
 						continue;
 					}
-					var fvs = factor.values[fv].factorValueString;
-					var id = "fv" + factor.values[fv].factorValueId;
+					var fvs = factor.values[fv].factorValue;
+					var id = "fv" + factor.values[fv].id;
 					if (factorValues.indexOf(fvs < 0)) {
 						factorValues[id] = fvs;
 					}
@@ -122,9 +122,9 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				 * Define the column for this particular factor.
 				 */
 				columns.push({
-							id : factorId,
+							id : id,
 							header : factor.name,
-							dataIndex : factorId,
+							dataIndex : id,
 							renderer : rend,
 							editor : editor,
 							sortable : true
@@ -225,7 +225,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						var factorId = this.getColumnModel().getColumnId(e.column);
 						var combo = this.factorValueCombos[factorId];
 						var fvvo = combo.getFactorValue();
-						e.record.set(factorId, fvvo.factorValueId);
+						e.record.set(factorId, fvvo.id);
 						this.getTopToolbar().saveButton.enable();
 						this.getView().refresh();
 					}, this);
@@ -319,7 +319,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				name : "charId",
 				type : "int"
 			}, {
-				name : "factorValueId",
+				name : "id",
 				type : "string",
 				convert : function(v) {
 					return "fv" + v;
@@ -337,7 +337,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				name : "valueUri",
 				type : "string"
 			}, {
-				name : "factorValueString",
+				name : "factorValue",
 				type : "string"
 			}]),
 
@@ -350,7 +350,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				combo.setExperimentalFactor(combo.experimentalFactor.id, function(r, options, success) {
 							var fvs = {};
 							for (var i = 0; i < r.length; ++i) {
-								fvs["fv" + r[i].get("factorValueId")] = r[i].get("factorValueString");
+								fvs["fv" + r[i].get("id")] = r[i].get("factorValue");
 							}
 							var renderer = this.createValueRenderer(fvs);
 							column.renderer = renderer;

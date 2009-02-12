@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author luke
  * @author keshav
  * @version $Id$
+ * This is the "experimentalFActor" value object
  */
 public class ExperimentalFactorValueObject {
 

@@ -256,9 +256,9 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * 
      * @param fvvos a collection of FactorValueValueObjects containing the Characteristics to delete
      */
-    public void deleteFactorValueCharacteristics( Collection<FactorValueValueObject> fvvos ) {
-        for ( FactorValueValueObject fvvo : fvvos ) {
-            FactorValue fv = factorValueService.load( fvvo.getFactorValueId() );
+    public void deleteFactorValueCharacteristics( Collection<FactorValueObject> fvvos ) {
+        for ( FactorValueObject fvvo : fvvos ) {
+            FactorValue fv = factorValueService.load( fvvo.getId());
             Characteristic c = characteristicService.load( fvvo.getCharId() );
             fv.getCharacteristics().remove( c );
             characteristicService.delete( c );
@@ -341,18 +341,18 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * @param e an EntityDelegator representing an ExperimentalFactor
      * @return a collection of FactorValueValueObjects
      */
-    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
+    public Collection<FactorValueObject> getFactorValues( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
 
-        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
+        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
         for ( FactorValue value : ef.getFactorValues() ) {
             Characteristic category = value.getExperimentalFactor().getCategory();
             if ( category == null ) {
                 category = Characteristic.Factory.newInstance();
                 category.setValue( value.getExperimentalFactor().getName() );
             }
-            result.add( new FactorValueValueObject( value, category ) );
+            result.add( new FactorValueObject( value, category ) );
         }
         return result;
     }
@@ -364,15 +364,15 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * @param e an EntityDelegator representing an ExperimentalFactor
      * @return a collection of FactorValueValueObjects
      */
-    public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
+    public Collection<FactorValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
 
-        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
+        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
         for ( FactorValue value : ef.getFactorValues() ) {
             if ( value.getCharacteristics().size() > 0 ) {
                 for ( Characteristic c : value.getCharacteristics() ) {
-                    result.add( new FactorValueValueObject( value, c ) );
+                    result.add( new FactorValueObject( value, c ) );
                 }
             } else {
                 Characteristic category = value.getExperimentalFactor().getCategory();
@@ -380,7 +380,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
                     category = Characteristic.Factory.newInstance();
                     category.setValue( value.getExperimentalFactor().getName() );
                 }
-                result.add( new FactorValueValueObject( value, category ) );
+                result.add( new FactorValueObject( value, category ) );
             }
         }
         return result;
@@ -591,12 +591,12 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * 
      * @param efvos a collection of FactorValueValueObjects containing the updated values
      */
-    public void updateFactorValueCharacteristics( Collection<FactorValueValueObject> fvvos ) {
+    public void updateFactorValueCharacteristics( Collection<FactorValueObject> fvvos ) {
         /*
          * TODO have this use the same code in CharacteristicBrowserController.updateCharacteristics, probably moving
          * that code to CharacteristicService.
          */
-        for ( FactorValueValueObject fvvo : fvvos ) {
+        for ( FactorValueObject fvvo : fvvos ) {
             Characteristic c = characteristicService.load( fvvo.getCharId() );
             c.setCategory( fvvo.getCategory() );
             c.setValue( fvvo.getValue() );

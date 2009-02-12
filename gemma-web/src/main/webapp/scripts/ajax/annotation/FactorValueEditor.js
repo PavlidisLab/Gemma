@@ -11,7 +11,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				name : "charId",
 				type : "int"
 			}, {
-				name : "factorValueId",
+				name : "id",
 				type : "int"
 			}, {
 				name : "category",
@@ -29,7 +29,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				name : "valueUri",
 				type : "string"
 			}, {
-				name : "factorValueString",
+				name : "factorValue",
 				type : "string"
 			}]),
 
@@ -49,14 +49,14 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		this.columns = [{
 					header : "FactorValue",
-					dataIndex : "factorValueId"
+					dataIndex : "id"
 				}, {
 					header : "Category",
 					dataIndex : "category",
 					renderer : this.categoryStyler
 				}, {
 					header : "Value",
-					dataIndex : "value",
+					dataIndex : "factorValue",
 					renderer : this.valueStyler
 				}];
 
@@ -92,7 +92,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					reader : new Ext.data.ListRangeReader({
 								id : "charId"
 							}, this.record),
-					groupField : "factorValueId",
+					groupField : "id",
 					sortInfo : {
 						field : "category",
 						direction : "ASC"
@@ -104,9 +104,9 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		 * in. Clumsy but it works.
 		 */
 		var groupTextTpl = this.editable
-				? '<input id="{[ values.rs[0].data.factorValueId ]}" type="checkbox" name="selectedFactorValues" value="{[ values.rs[0].data.factorValueId ]}" />&nbsp;&nbsp; '
+				? '<input id="{[ values.rs[0].data.id ]}" type="checkbox" name="selectedFactorValues" value="{[ values.rs[0].data.id ]}" />&nbsp;&nbsp; '
 				: '';
-		groupTextTpl = groupTextTpl + '{[ values.rs[0].data.factorValueString ]}';
+		groupTextTpl = groupTextTpl + '{[ values.rs[0].data.factorValue ]}';
 
 		this.view = new Ext.grid.GroupingView({
 					enableGroupingMenu : false,
@@ -458,7 +458,7 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 						});
 
 				this.factorValueCombo.on("select", function(combo, record, index) {
-							this.factorValue.id = record.get("factorValueId");
+							this.factorValue.id = record.get("id");
 							this.mgedCombo.enable();
 						}.createDelegate(this));
 

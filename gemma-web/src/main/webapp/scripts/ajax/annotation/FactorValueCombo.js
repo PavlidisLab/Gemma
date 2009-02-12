@@ -1,7 +1,7 @@
 Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 
-	displayField : "factorValueString",
-	valueField : "factorValueId",
+	displayField : "factorValue",
+	valueField : "id",
 	editable : false,
 	mode : "local",
 	triggerAction : "all",
@@ -10,7 +10,7 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 		name : "charId",
 		type : "int"
 	}, {
-		name : "factorValueId",
+		name : "id",
 		type : "int"
 	}, {
 		name : "category",
@@ -28,7 +28,7 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 		name : "valueUri",
 		type : "string"
 	}, {
-		name : "factorValueString",
+		name : "factorValue",
 		type : "string"
 	}]),
 
@@ -67,11 +67,11 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 		this.store = new Ext.data.Store({
 			proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getFactorValues),
 			reader : new Ext.data.ListRangeReader({
-				id : "factorValueId"
+				id : "id"
 			}, this.record),
 			remoteSort : false,
 			sortInfo : {
-				field : "factorValueId"
+				field : "id"
 			}
 		});
 

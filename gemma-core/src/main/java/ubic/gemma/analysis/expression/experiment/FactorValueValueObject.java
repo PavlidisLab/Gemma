@@ -29,7 +29,9 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 /**
  * @author luke
  * @version $Id$
+ * @deprecated  USE FactorValueObject Instead
  */
+@Deprecated
 public class FactorValueValueObject {
 
     /*
