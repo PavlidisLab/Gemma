@@ -54,31 +54,12 @@
 			if ( gene.getNcbiId() != null ) {
 			%>
 			&nbsp;&nbsp;
-			<a title="NCBI"
+			<a title="NCBI Gene link"
 				href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=<%out.print(gene.getNcbiId()); %>">
-				<img alt="NCBI" src="<c:url value='/images/logo/ncbi.gif'/>" /> </a>
+				<img alt="NCBI Gene Link" src="<c:url value='/images/logo/ncbi.gif'/>" /> </a>
 			<%
 			}
-			%>
-			
-				<%
-			if ( (gene.getId() != null) && (gene.getOfficialSymbol() != null) && (gene.getTaxon() != null)  && (gene.getTaxon().getCommonName() != null) ) {
-			%>
-			&nbsp;&nbsp;
-				<a title="Do Coexpression Search with <%out.print(gene.getOfficialSymbol()); %>"
-				   href="/Gemma/searchCoexpression.html?g=<%out.print(gene.getId());%>&s=3&t=<%out.print(gene.getTaxon().getId());%>&an=All <%out.print(gene.getTaxon().getCommonName());%>">
-				   <img	src="<c:url value='/images/licons/co-ex.png'/>" /> </a>
-				   
-				   
-			&nbsp;&nbsp;
-				<a title="Do Differential Expression Search with <%out.print(gene.getOfficialSymbol()); %>"
-				   href="/Gemma/diff/diffExpressionSearch.html?g=<%out.print(gene.getId());%>&thres=0.01&t=<%out.print(gene.getTaxon().getId());%>&setName=All <%out.print(gene.getTaxon().getCommonName());%>">
-				   <img	src="<c:url value='/images/icons/diff-ex.png'/>" /> </a>
-
-				   
-			<%
-			}
-			%>
+			%>					
 
 		</td>
 	</tr>
@@ -162,12 +143,45 @@
 				onclick="showHelpTip(event, 'Number of probes for this gene on expression platforms in Gemma'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
-		<td valign="top">
+		<td valign="top">			
+			<a href="/Gemma/gene/showCompositeSequences.html?id=<%out.print(gene.getId());%>">
 			<c:out value="${compositeSequenceCount}" />
-			<a href="/Gemma/gene/showCompositeSequences.html?id=<%out.print(gene.getId());%>"><img
-					src="<c:url value='/images/magnifier.png'/>" /> </a>
+			<img src="<c:url value='/images/magnifier.png'/>" />   
+			</a>
 		</td>
 	</tr>
+	
+		<%
+			if ( (gene.getId() != null) && (gene.getOfficialSymbol() != null) && (gene.getTaxon() != null)  && (gene.getTaxon().getCommonName() != null) ) {
+		%>
+		
+	<tr>
+		<td align="right" valign="top">
+			<b>Run Analysis </b><a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'A quick link to using this gene in a coexpression or differential analysis'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+		</td>
+		<td valign="top">
+		 
+		 	&nbsp;&nbsp;
+				<a title="Do Coexpression Search with <%out.print(gene.getOfficialSymbol()); %>"
+				   href="/Gemma/searchCoexpression.html?g=<%out.print(gene.getId());%>&s=3&t=<%out.print(gene.getTaxon().getId());%>&an=All <%out.print(gene.getTaxon().getCommonName());%>">
+				   <img	src="<c:url value='/images/icons/co-ex.png'/>" /> </a>
+				   
+				   
+			&nbsp;&nbsp;
+				<a title="Do Differential Expression Search with <%out.print(gene.getOfficialSymbol()); %>"
+				   href="/Gemma/diff/diffExpressionSearch.html?g=<%out.print(gene.getId());%>&thres=0.01&t=<%out.print(gene.getTaxon().getId());%>&setName=All <%out.print(gene.getTaxon().getCommonName());%>">
+				   <img	src="<c:url value='/images/icons/diff-ex.png'/>" /> </a>
+
+				   
+		</td>
+	</tr>
+			<%
+			}
+			%>
+	
+		
 </table>
 
 
