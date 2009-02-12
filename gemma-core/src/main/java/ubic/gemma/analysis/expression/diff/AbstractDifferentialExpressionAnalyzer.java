@@ -20,6 +20,7 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -147,6 +148,15 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
 
         FileTools.createDir( dir.toString() );
+
+        File[] oldFiles = dir.listFiles( new FilenameFilter() {
+            public boolean accept( File d, String name ) {
+                return name.endsWith( DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
+            }
+        } );
+        for ( File file : oldFiles ) {
+            file.delete();
+        }
 
         String histFileName = expressionExperiment.getShortName() + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
