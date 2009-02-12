@@ -82,7 +82,11 @@ public class ExperimentalFactorValueObject {
         this.setId( factor.getId() );
         this.setName( factor.getName() );
         this.setDescription( factor.getDescription() );
-        this.setCategory( factor.getCategory().getCategory() );
+        
+        
+        if (factor.getCategory() != null)
+            this.setCategory( factor.getCategory().getCategory() );
+        
         this.setCategoryUri( getCategoryUri( factor.getCategory() ) );
 
         /*
@@ -108,7 +112,8 @@ public class ExperimentalFactorValueObject {
             Characteristic c = value.getExperimentalFactor().getCategory();
             if ( c == null ) {
                 c = Characteristic.Factory.newInstance();
-                c.setValue( value.getExperimentalFactor().getCategory().getCategory() );
+                if (value.getExperimentalFactor().getCategory() != null)
+                    c.setValue( value.getExperimentalFactor().getCategory().getCategory() );
             }
             vals.add( new FactorValueValueObject( value, c ) );
         }
