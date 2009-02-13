@@ -255,15 +255,18 @@ public class OntologyService {
     public Collection<VocabCharacteristic> findTermAsCharacteristic( String search ) {
 
         String query = OntologySearch.stripInvalidCharacters( search );
-        Collection<VocabCharacteristic> terms = new HashSet<VocabCharacteristic>();
-        Collection<OntologyTerm> results;
+        Collection<VocabCharacteristic> results = new HashSet<VocabCharacteristic>();
 
-        for ( AbstractOntologyService ontology : ontologyServices ) {
-            results = ontology.findTerm( query );
-            if ( results != null ) terms.addAll( convert( new HashSet<OntologyResource>( results ) ) );
+        if ( StringUtils.isBlank( query ) ) {
+            return results;
         }
 
-        return terms;
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            Collection<OntologyTerm> found = ontology.findTerm( query );
+            if ( found != null ) results.addAll( convert( new HashSet<OntologyResource>( found ) ) );
+        }
+
+        return results;
     }
 
     /**
@@ -276,7 +279,12 @@ public class OntologyService {
     public Collection<OntologyTerm> findTerms( String search ) {
 
         String query = OntologySearch.stripInvalidCharacters( search );
+
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
+
+        if ( StringUtils.isBlank( query ) ) {
+            return results;
+        }
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
             Collection<OntologyTerm> found = ontology.findTerm( query );
