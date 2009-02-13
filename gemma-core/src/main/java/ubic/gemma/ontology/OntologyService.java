@@ -438,6 +438,12 @@ public class OntologyService {
         }
     }
 
+    public void saveExpressionExperimentStatements( Collection<Characteristic> vc, Long id ) {
+        for ( Characteristic characteristic : vc ) {
+            saveExpressionExperimentStatement( characteristic, id );
+        }
+    }
+
     /**
      * Will persist the give vocab characteristic to the expression experiment.
      * 
