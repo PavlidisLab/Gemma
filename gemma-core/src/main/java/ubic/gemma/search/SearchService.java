@@ -735,6 +735,12 @@ public class SearchService implements InitializingBean {
              * getChildren can be very slow for 'high-level' classes like "neoplasm", so we use a cache.
              */
             Collection<OntologyTerm> children = null;
+            if ( StringUtils.isBlank( term.getUri() ) ) {
+                // shouldn't happen, but just in case
+                if ( log.isDebugEnabled() ) log.debug( "Blank uri for " + term );
+                continue;
+            }
+
             Element element = this.childTermCache.get( term.getUri() );
             // log.debug("Getting children of " + term);
             if ( element == null ) {
