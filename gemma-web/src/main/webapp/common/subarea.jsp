@@ -72,7 +72,7 @@
 			<strong>Contacting us</strong>
 			<p class="emphasized" style="font-size: 0.90em">
 				To get emails about updates to the Gemma software, subscribe to the
-				<a href="http://perutz.cmmt.ubc.ca/mailman/chibi.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing
+				<a href="http://lists.chibi.ubc.ca/mailman/listinfo/gemma-announce">Gemma-announce mailing
 					list</a>. Please send bug reports or feature requests
 				<a href="mailto:gemma@chibi.ubc.ca">here</a>.
 			</p>
