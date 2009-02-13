@@ -661,13 +661,14 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * Search for the query in ontologies.
+     * Search for the query in ontologies, including items that are associated with children of matching query terms.
+     * That is, 'brain' should return entities tagged as 'hippocampus'.
      * 
      * @param classes Classes of characteristic-bound entities. For example, to get matching characteristics of
      *        ExpressionExperiments, pass ExpressionExperiments.class in this collection parameter.
      * @param settings
      * @return SearchResults of CharcteristicObjects. Typically to be useful one needs to retrieve the 'parents'
-     *         (owners) of those Characteristics.
+     *         (entities which have been 'tagged' with the term) of those Characteristics
      */
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> characteristicSearchWithChildren( Collection<Class> classes,
@@ -680,12 +681,12 @@ public class SearchService implements InitializingBean {
         Collection<SearchResult> allResults = new HashSet<SearchResult>();
         Map<SearchResult, String> matchMap = new HashMap<SearchResult, String>();
 
-        for ( String o : rawTerms ) {
-            if ( StringUtils.isBlank( o ) ) {
+        for ( String rawTerm : rawTerms ) {
+            if ( StringUtils.isBlank( rawTerm ) ) {
                 continue;
             }
-            log.info( "Ontology search term:" + o );
-            allResults.addAll( characteristicSearchWord( classes, matchMap, o ) );
+            log.info( "Ontology search term:" + rawTerm );
+            allResults.addAll( characteristicSearchWord( classes, matchMap, rawTerm ) );
         }
 
         return postProcessCharacteristicResults( query, allResults, matchMap );
@@ -694,21 +695,20 @@ public class SearchService implements InitializingBean {
 
     /**
      * @param classes
-     * @param matches results are stored here.
-     * @param nextTok
+     * @param matches
+     * @param query
      * @return
      */
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> characteristicSearchWord( Collection<Class> classes,
-            Map<SearchResult, String> matches, String t ) {
-        String queryPart = t;
+            Map<SearchResult, String> matches, String query ) {
 
         StopWatch watch = startTiming();
         Collection<String> characteristicUris = new HashSet<String>();
 
-        Collection<OntologyIndividual> individuals = ontologyService.findIndividuals( queryPart );
+        Collection<OntologyIndividual> individuals = ontologyService.findIndividuals( query );
         if ( individuals.size() > 0 && watch.getTime() > 1000 ) {
-            log.info( "Found " + individuals.size() + " individuals matching '" + queryPart + "' in " + watch.getTime()
+            log.info( "Found " + individuals.size() + " individuals matching '" + query + "' in " + watch.getTime()
                     + "ms" );
         }
         watch.reset();
@@ -718,10 +718,10 @@ public class SearchService implements InitializingBean {
             characteristicUris.add( term.getUri() );
         }
 
-        Collection<OntologyTerm> matchingTerms = ontologyService.findTerms( queryPart );
+        Collection<OntologyTerm> matchingTerms = ontologyService.findTerms( query );
 
         if ( watch.getTime() > 1000 ) {
-            log.info( "Found " + matchingTerms.size() + " ontology classes matching '" + queryPart + "' in "
+            log.info( "Found " + matchingTerms.size() + " ontology classes matching '" + query + "' in "
                     + watch.getTime() + "ms" );
         }
 
@@ -729,30 +729,29 @@ public class SearchService implements InitializingBean {
         watch.start();
 
         for ( OntologyTerm term : matchingTerms ) {
-            characteristicUris.add( term.getUri() );
+            String uri = term.getUri();
+            characteristicUris.add( uri );
 
             /*
              * getChildren can be very slow for 'high-level' classes like "neoplasm", so we use a cache.
              */
             Collection<OntologyTerm> children = null;
-            if ( StringUtils.isBlank( term.getUri() ) ) {
+            if ( StringUtils.isBlank( uri ) ) {
                 // shouldn't happen, but just in case
                 if ( log.isDebugEnabled() ) log.debug( "Blank uri for " + term );
                 continue;
             }
 
-            Element element = this.childTermCache.get( term.getUri() );
+            Element cachedChildren = this.childTermCache.get( uri );
             // log.debug("Getting children of " + term);
-            if ( element == null ) {
+            if ( cachedChildren == null ) {
                 children = term.getChildren( false );
                 for ( OntologyTerm child : children ) {
                     characteristicUris.add( child.getUri() );
                 }
-                // possibly only put large ones in the cache. Small ones are fast enough.
-                childTermCache.put( new Element( term.getUri(), characteristicUris ) );
+                childTermCache.put( new Element( uri, children ) );
             } else {
-
-                characteristicUris = ( Collection<String> ) element.getValue();
+                characteristicUris = ( Collection<String> ) cachedChildren.getValue();
             }
         }
 
@@ -781,7 +780,7 @@ public class SearchService implements InitializingBean {
          * Add characteristics that have values matching the query; this pulls in items not associated with ontology
          * terms (free text). We do this here so we can apply the query logic to the matches.
          */
-        String dbQueryString = queryPart.replaceAll( "\\*", "" );
+        String dbQueryString = query.replaceAll( "\\*", "" );
         Collection<Characteristic> valueMatches = characteristicService.findByValue( dbQueryString + "%" );
         cs.addAll( valueMatches );
 
@@ -791,7 +790,7 @@ public class SearchService implements InitializingBean {
         Collection<SearchResult> matchingEntities = getAnnotatedEntities( classes, cs );
 
         if ( watch.getTime() > 1000 ) {
-            log.info( "Slow search: found " + matchingEntities.size() + " matches to characteristics for '" + queryPart
+            log.info( "Slow search: found " + matchingEntities.size() + " matches to characteristics for '" + query
                     + "' from " + characteristicUris.size() + " URIS in " + watch.getTime() + "ms" );
         }
 
@@ -799,9 +798,9 @@ public class SearchService implements InitializingBean {
 
         for ( SearchResult searchR : matchingEntities ) {
             if ( !matches.containsKey( searchR ) ) {
-                matches.put( searchR, queryPart );
+                matches.put( searchR, query );
             } else {
-                matches.put( searchR, matches.get( searchR ) + " " + queryPart );
+                matches.put( searchR, matches.get( searchR ) + " " + query );
             }
         }
         return matchingCharacteristics;
