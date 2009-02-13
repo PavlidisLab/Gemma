@@ -731,28 +731,7 @@ public class SearchService implements InitializingBean {
         for ( OntologyTerm term : matchingTerms ) {
             String uri = term.getUri();
             characteristicUris.add( uri );
-
-            /*
-             * getChildren can be very slow for 'high-level' classes like "neoplasm", so we use a cache.
-             */
-            Collection<OntologyTerm> children = null;
-            if ( StringUtils.isBlank( uri ) ) {
-                // shouldn't happen, but just in case
-                if ( log.isDebugEnabled() ) log.debug( "Blank uri for " + term );
-                continue;
-            }
-
-            Element cachedChildren = this.childTermCache.get( uri );
-            // log.debug("Getting children of " + term);
-            if ( cachedChildren == null ) {
-                children = term.getChildren( false );
-                for ( OntologyTerm child : children ) {
-                    characteristicUris.add( child.getUri() );
-                }
-                childTermCache.put( new Element( uri, children ) );
-            } else {
-                characteristicUris = ( Collection<String> ) cachedChildren.getValue();
-            }
+            addChildTerms( characteristicUris, term );
         }
 
         // int cacheHits = childTermCache.getStatistics().getCacheHits();
@@ -804,6 +783,36 @@ public class SearchService implements InitializingBean {
             }
         }
         return matchingCharacteristics;
+    }
+
+    /**
+     * @param characteristicUris
+     * @param term
+     */
+    @SuppressWarnings("unchecked")
+    private void addChildTerms( Collection<String> characteristicUris, OntologyTerm term ) {
+        String uri = term.getUri();
+        /*
+         * getChildren can be very slow for 'high-level' classes like "neoplasm", so we use a cache.
+         */
+        Collection<OntologyTerm> children = null;
+        if ( StringUtils.isBlank( uri ) ) {
+            // shouldn't happen, but just in case
+            if ( log.isDebugEnabled() ) log.debug( "Blank uri for " + term );
+        }
+
+        Element cachedChildren = this.childTermCache.get( uri );
+        // log.debug("Getting children of " + term);
+        if ( cachedChildren == null ) {
+            children = term.getChildren( false );
+            childTermCache.put( new Element( uri, children ) );
+        } else {
+            children = ( Collection<OntologyTerm> ) cachedChildren.getValue();
+        }
+
+        for ( OntologyTerm child : children ) {
+            characteristicUris.add( child.getUri() );
+        }
     }
 
     /**
