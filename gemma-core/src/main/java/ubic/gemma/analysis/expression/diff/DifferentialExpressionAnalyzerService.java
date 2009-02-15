@@ -366,6 +366,13 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
+     * Disconnect from R.
+     */
+    public void disconnectR() {
+        differentialExpressionAnalyzer.disconnectR();
+    }
+
+    /**
      * Generates a histogram for the given results.
      * 
      * @param histFileName

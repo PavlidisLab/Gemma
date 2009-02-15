@@ -252,6 +252,31 @@ public class DifferentialExpressionAnalyzer {
     }
 
     /**
+     * Disconnect from R.
+     */
+    public void disconnectR() {
+
+        if ( studenttTestAnalyzer == null && oneWayAnovaAnalyzer == null
+                && twoWayAnovaWithoutInteractionsAnalyzer == null && twoWayAnovaWithInteractionsAnalyzer == null ) {
+            throw new RuntimeException( "No analyzer was specified.  Could not try to terminate R connection." );
+        }
+
+        /* disconnect all analyzers */
+        if ( studenttTestAnalyzer != null ) {
+            studenttTestAnalyzer.disconnectR();
+        }
+        if ( oneWayAnovaAnalyzer != null ) {
+            oneWayAnovaAnalyzer.disconnectR();
+        }
+        if ( twoWayAnovaWithoutInteractionsAnalyzer != null ) {
+            twoWayAnovaWithoutInteractionsAnalyzer.disconnectR();
+        }
+        if ( twoWayAnovaWithInteractionsAnalyzer != null ) {
+            twoWayAnovaWithInteractionsAnalyzer.disconnectR();
+        }
+    }
+
+    /**
      * @param col
      * @return
      */

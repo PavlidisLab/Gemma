@@ -76,6 +76,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -98,6 +99,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             }
             processExperiment( ( ExpressionExperiment ) ee );
         }
+
+        differentialExpressionAnalyzerService.disconnectR();
+
         summarizeProcessing();
 
         return null;
@@ -175,6 +179,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -215,6 +220,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
      */
     @Override
@@ -268,6 +274,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override

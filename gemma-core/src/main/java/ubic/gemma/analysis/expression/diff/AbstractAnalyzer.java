@@ -18,6 +18,9 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.util.RClient;
 import ubic.basecode.util.RConnectionFactory;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
@@ -31,17 +34,28 @@ import ubic.gemma.analysis.service.ExpressionDataMatrixService;
  */
 public abstract class AbstractAnalyzer {
 
+    private Log log = LogFactory.getLog( this.getClass() );
+
     protected RClient rc = null;
 
     protected ExpressionDataMatrixService expressionDataMatrixService = null;
 
     /**
-     * 
-     *
+     * Connect to R.
      */
     public void connectToR() {
         rc = RConnectionFactory.getRConnection();
         if ( rc == null ) throw new RuntimeException( "R connection was not established" );
+    }
+
+    /**
+     * Disconnect from R.
+     */
+    public void disconnectR() {
+        if ( rc != null ) {
+            log.info( "Disconnecting R." );
+            rc.disconnect();
+        }
     }
 
     /**
