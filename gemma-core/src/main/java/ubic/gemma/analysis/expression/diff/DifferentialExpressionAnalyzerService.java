@@ -121,9 +121,10 @@ public class DifferentialExpressionAnalyzerService {
      */
     public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
-        deleteOldAnalyses( expressionExperiment );
         DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment,
                 factors );
+
+        deleteOldAnalyses( expressionExperiment );
 
         return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
     }
@@ -138,9 +139,11 @@ public class DifferentialExpressionAnalyzerService {
      */
     public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
-        deleteOldAnalyses( expressionExperiment );
+
         DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment,
                 factors, type );
+
+        deleteOldAnalyses( expressionExperiment );
 
         return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
     }
