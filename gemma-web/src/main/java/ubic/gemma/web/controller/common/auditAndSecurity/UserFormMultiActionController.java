@@ -227,12 +227,12 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
             body.append( "\n\nLogin at: " + RequestUtil.getAppURL( request ) + "/login.jsp" );
 
             mailMessage.setTo( user.getUserName() + "<" + user.getEmail() + ">" );
-            String subject = text.getMessage( "webapp.prefix" ) + text.getMessage( "user.passwordHint" );
+            String subject = text.getMessage( "webapp.prefix" ) + text.getMessage( "user.passwordReset" );
             mailMessage.setSubject( subject );
             mailMessage.setText( body.toString() );
             mailEngine.send( mailMessage );
 
-            saveMessage( request, text.getMessage( "login.passwordHint.sent", new Object[] { user.getUserName(),
+            saveMessage( request, text.getMessage( "login.passwordReset", new Object[] { user.getUserName(),
                     user.getEmail() } ) );
 
             jsonText = "{success:true}";
