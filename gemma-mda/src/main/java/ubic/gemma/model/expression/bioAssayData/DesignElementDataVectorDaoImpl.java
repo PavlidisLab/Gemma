@@ -70,8 +70,26 @@ public class DesignElementDataVectorDaoImpl extends
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "quantitationType", quantitationType );
-            queryObject.setParameterList( "desEls", arrayDesign.getCompositeSequences() );
-            return queryObject.list();
+
+            Collection<DesignElement> batch = new HashSet<DesignElement>();
+            Collection<DesignElementDataVector> result = new HashSet<DesignElementDataVector>();
+            int batchSize = 2000;
+            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                batch.add( cs );
+
+                if ( batch.size() >= batchSize ) {
+                    queryObject.setParameterList( "desEls", batch );
+                    result.addAll( queryObject.list() );
+                    batch.clear();
+                }
+            }
+
+            if ( batch.size() > 0 ) {
+                queryObject.setParameterList( "desEls", batch );
+                result.addAll( queryObject.list() );
+            }
+
+            return result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -249,8 +267,7 @@ public class DesignElementDataVectorDaoImpl extends
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries
-                .getCs2GeneMap( genes, this.getSession() );
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
         watch.stop();
 
         if ( cs2gene.keySet().size() == 0 ) {
