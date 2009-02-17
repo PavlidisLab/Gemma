@@ -217,7 +217,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					// if (this.title) {
 					// this.setTitle(this.title + " - " + records.length + " items");
 					// }
-					this.doLayout();
+					this.doLayout.createDelegate(this);
 				}, this);
 
 	},
