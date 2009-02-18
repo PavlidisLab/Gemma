@@ -37,10 +37,12 @@ import org.springframework.security.AccessDeniedException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.analysis.expression.experiment.FactorValueValueObject;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -160,7 +162,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         /*
          * (non-Javadoc)
-         * 
          * @see java.util.concurrent.Callable#call()
          */
         public ModelAndView call() throws Exception {
@@ -435,7 +436,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return showAll( request, response );
         }
 
-        Map<Class, List<SearchResult>> searchResultsMap = searchService.search( SearchSettings
+        Map<Class<? extends Describable>, List<SearchResult>> searchResultsMap = searchService.search( SearchSettings
                 .ExpressionExperimentSearch( searchString ) );
 
         assert searchResultsMap != null;
@@ -570,19 +571,19 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param eeId
      * @return a collectino of factor value objects that represent the factors of a given experiment
      */
-    public Collection<FactorValueObject> getExperimentalFactors( EntityDelegator e ) {
+    public Collection<FactorValueValueObject> getExperimentalFactors( EntityDelegator e ) {
 
         if ( e == null || e.getId() == null ) return null;
 
         ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
-        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
+        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
 
         if ( ee.getExperimentalDesign() == null ) return null;
 
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         for ( ExperimentalFactor factor : factors )
-            result.add( new FactorValueObject( factor ) );
+            result.add( new FactorValueValueObject( factor ) );
 
         return result;
     }
@@ -593,18 +594,18 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param id of an experimental factor
      * @return A collection of factor value objects for the specified experimental factor
      */
-    public Collection<FactorValueObject> getFactorValues( EntityDelegator e ) {
+    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
 
         if ( e == null || e.getId() == null ) return null;
 
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
         if ( ef == null ) return null;
 
-        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
+        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
 
         Collection<FactorValue> values = ef.getFactorValues();
         for ( FactorValue value : values ) {
-            result.add( new FactorValueObject( value ) );
+            result.add( new FactorValueValueObject( value ) );
         }
 
         return result;

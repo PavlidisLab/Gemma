@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -43,7 +44,6 @@ import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
-import ubic.gemma.web.controller.expression.experiment.FactorValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -220,17 +220,17 @@ public class BioMaterialController extends BaseMultiActionController {
      * @param bm
      * @return
      */
-    public Collection<FactorValueObject> getFactorValues( EntityDelegator bm ) {
+    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator bm ) {
 
         if ( bm == null || bm.getId() == null ) return null;
 
         BioMaterial bioM = bioMaterialService.load( bm.getId() );
 
-        Collection<FactorValueObject> results = new HashSet<FactorValueObject>();
+        Collection<FactorValueValueObject> results = new HashSet<FactorValueValueObject>();
         Collection<FactorValue> factorValues = bioM.getFactorValues();
 
         for ( FactorValue value : factorValues )
-            results.add( new FactorValueObject( value ) );
+            results.add( new FactorValueValueObject( value ) );
 
         return results;
 

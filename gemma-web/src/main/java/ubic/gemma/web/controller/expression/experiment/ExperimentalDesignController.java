@@ -256,9 +256,9 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * 
      * @param fvvos a collection of FactorValueValueObjects containing the Characteristics to delete
      */
-    public void deleteFactorValueCharacteristics( Collection<FactorValueObject> fvvos ) {
-        for ( FactorValueObject fvvo : fvvos ) {
-            FactorValue fv = factorValueService.load( fvvo.getId());
+    public void deleteFactorValueCharacteristics( Collection<FactorValueValueObject> fvvos ) {
+        for ( FactorValueValueObject fvvo : fvvos ) {
+            FactorValue fv = factorValueService.load( fvvo.getId() );
             Characteristic c = characteristicService.load( fvvo.getCharId() );
             fv.getCharacteristics().remove( c );
             characteristicService.delete( c );
@@ -341,18 +341,18 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * @param e an EntityDelegator representing an ExperimentalFactor
      * @return a collection of FactorValueValueObjects
      */
-    public Collection<FactorValueObject> getFactorValues( EntityDelegator e ) {
+    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
 
-        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
+        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
         for ( FactorValue value : ef.getFactorValues() ) {
             Characteristic category = value.getExperimentalFactor().getCategory();
             if ( category == null ) {
                 category = Characteristic.Factory.newInstance();
                 category.setValue( value.getExperimentalFactor().getName() );
             }
-            result.add( new FactorValueObject( value, category ) );
+            result.add( new FactorValueValueObject( value, category ) );
         }
         return result;
     }
@@ -364,15 +364,15 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * @param e an EntityDelegator representing an ExperimentalFactor
      * @return a collection of FactorValueValueObjects
      */
-    public Collection<FactorValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
+    public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
 
-        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
+        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
         for ( FactorValue value : ef.getFactorValues() ) {
             if ( value.getCharacteristics().size() > 0 ) {
                 for ( Characteristic c : value.getCharacteristics() ) {
-                    result.add( new FactorValueObject( value, c ) );
+                    result.add( new FactorValueValueObject( value, c ) );
                 }
             } else {
                 Characteristic category = value.getExperimentalFactor().getCategory();
@@ -380,7 +380,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
                     category = Characteristic.Factory.newInstance();
                     category.setValue( value.getExperimentalFactor().getName() );
                 }
-                result.add( new FactorValueObject( value, category ) );
+                result.add( new FactorValueValueObject( value, category ) );
             }
         }
         return result;
@@ -532,26 +532,33 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     /**
      * Updates the specified BioMaterials's factor values. This completely removes any pre-existing factor values.
      * 
-     * @param efvos a collection of BioMaterialValueObjects containing the updated values
+     * @param bmvos a collection of BioMaterialValueObjects containing the updated values
      */
     public void updateBioMaterials( Collection<BioMaterialValueObject> bmvos ) {
         for ( BioMaterialValueObject bmvo : bmvos ) {
-            BioMaterial bm = bioMaterialService.load( bmvo.getId() );
-            bm.getFactorValues().clear();
-            for ( String fvIdString : bmvo.getFactorIdToFactorValueId().values() ) {
-                if ( fvIdString.matches( "fv\\d+" ) ) {
-                    long fvId = Long.parseLong( fvIdString.substring( 2 ) );
-                    FactorValue fv = factorValueService.load( fvId );
-                    if ( fv == null ) {
-                        log.warn( "Illegal request" );
-                        throw new EntityNotFoundException( "No such factorValue with id=" + fvId );
-                    }
-                    bm.getFactorValues().add( fv );
-                }
-            }
-            bioMaterialService.update( bm );
-            log.debug( bm );
+            updateBioMaterial( bmvo );
         }
+    }
+
+    /**
+     * Update the factor values for a single biomaterial. Old factor values are removed.
+     * 
+     * @param bmvo
+     */
+    private void updateBioMaterial( BioMaterialValueObject bmvo ) {
+        BioMaterial bm = bioMaterialService.load( bmvo.getId() );
+        bm.getFactorValues().clear();
+        for ( String fvIdString : bmvo.getFactorIdToFactorValueId().values() ) {
+            if ( fvIdString.matches( "fv\\d+" ) ) {
+                long fvId = Long.parseLong( fvIdString.substring( 2 ) );
+                FactorValue fv = factorValueService.load( fvId );
+                if ( fv == null ) {
+                    throw new EntityNotFoundException( "No such factorValue with id=" + fvId );
+                }
+                bm.getFactorValues().add( fv );
+            }
+        }
+        bioMaterialService.update( bm );
     }
 
     /**
@@ -591,22 +598,36 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * 
      * @param efvos a collection of FactorValueValueObjects containing the updated values
      */
-    public void updateFactorValueCharacteristics( Collection<FactorValueObject> fvvos ) {
+    public void updateFactorValueCharacteristics( Collection<FactorValueValueObject> fvvos ) {
         /*
          * TODO have this use the same code in CharacteristicBrowserController.updateCharacteristics, probably moving
          * that code to CharacteristicService.
          */
-        for ( FactorValueObject fvvo : fvvos ) {
-            Characteristic c = characteristicService.load( fvvo.getCharId() );
-            c.setCategory( fvvo.getCategory() );
-            c.setValue( fvvo.getValue() );
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                vc.setCategoryUri( fvvo.getCategoryUri() );
-                vc.setValueUri( fvvo.getValueUri() );
+        for ( FactorValueValueObject fvvo : fvvos ) {
+
+            Long charId = fvvo.getCharId();
+
+            if ( charId != null ) {
+
+                Characteristic c = characteristicService.load( charId );
+
+                if ( c == null ) {
+                    /*
+                     * This shouldn't happen but just in case...
+                     */
+                    throw new IllegalStateException( "No characteristic with id " + fvvo.getCharId() );
+                }
+
+                c.setCategory( fvvo.getCategory() );
+                c.setValue( fvvo.getValue() );
+                if ( c instanceof VocabCharacteristic ) {
+                    VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                    vc.setCategoryUri( fvvo.getCategoryUri() );
+                    vc.setValueUri( fvvo.getValueUri() );
+                }
+                c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
+                characteristicService.update( c );
             }
-            c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
-            characteristicService.update( c );
         }
     }
 

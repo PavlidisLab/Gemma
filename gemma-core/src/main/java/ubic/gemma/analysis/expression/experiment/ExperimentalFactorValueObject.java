@@ -29,8 +29,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 /**
  * @author luke
  * @author keshav
- * @version $Id$
- * This is the "experimentalFActor" value object
+ * @version $Id$ This is the "experimentalFActor"
+ *          value object
  */
 public class ExperimentalFactorValueObject {
 
@@ -39,7 +39,7 @@ public class ExperimentalFactorValueObject {
     private String description;
     private String category;
     private String categoryUri;
-    private String factorValues;  
+    private String factorValues;
     private int numValues = 0;
 
     /**
@@ -83,11 +83,9 @@ public class ExperimentalFactorValueObject {
         this.setId( factor.getId() );
         this.setName( factor.getName() );
         this.setDescription( factor.getDescription() );
-        
-        
-        if (factor.getCategory() != null)
-            this.setCategory( factor.getCategory().getCategory() );
-        
+
+        if ( factor.getCategory() != null ) this.setCategory( factor.getCategory().getCategory() );
+
         this.setCategoryUri( getCategoryUri( factor.getCategory() ) );
 
         /*
@@ -113,7 +111,7 @@ public class ExperimentalFactorValueObject {
             Characteristic c = value.getExperimentalFactor().getCategory();
             if ( c == null ) {
                 c = Characteristic.Factory.newInstance();
-                if (value.getExperimentalFactor().getCategory() != null)
+                if ( value.getExperimentalFactor().getCategory() != null )
                     c.setValue( value.getExperimentalFactor().getCategory().getCategory() );
             }
             vals.add( new FactorValueValueObject( value, c ) );
@@ -155,11 +153,11 @@ public class ExperimentalFactorValueObject {
         this.description = description;
     }
 
-    public String getCategory() { 
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory( String category ) { 
+    public void setCategory( String category ) {
         this.category = category;
     }
 

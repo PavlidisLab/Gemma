@@ -25,7 +25,6 @@ Gemma.BioMaterialEditor = function(config) {
 						};
 						Ext.apply(config, this.originalConfig);
 
-						// construct the grid.
 						this.grid = new Gemma.BioMaterialGrid(config);
 						this.grid.init = this.init.createDelegate(this);
 					}.createDelegate(this));
@@ -43,17 +42,13 @@ Gemma.BioMaterialEditor = function(config) {
 
 			}
 
-			// first ajax call.
-			ExperimentalDesignController.getBioMaterials(this.expressionExperiment, this.firstCallback.createDelegate(
-							this, [], true));
+			ExperimentalDesignController.getBioMaterials(this.expressionExperiment, this.firstCallback
+							.createDelegate(this));
 		}
 	};
 };
 
 Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
-	// viewConfig : {
-	// forceFit : true
-	// },
 
 	loadMask : true,
 	autoExpandColumn : 'bm',
@@ -79,58 +74,53 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}];
 
 		this.factorValueCombos = [];
-		for (f in factors) {
-			var factor = factors[f];
-			// f is the id.
-			if (factor.id) {
-				var factorId = "factor" + factor.id;
+		for (var i = 0; i < factors.length; i++) {
+			var factor = factors[i];
+			var factorId = "factor" + factor.id;
 
-				// Create one factorValueCombo per factor. It contains all the
-				// factor values.
-				this.factorValueCombos[factorId] = new Gemma.FactorValueCombo({
-							efId : factor.id,
-							lazyInit : false,
-							lazyRender : true,
-							record : this.fvRecord
-						});
-				var editor;
-				if (this.editable) {
-					editor = this.factorValueCombos[factorId];
-				}
+			/*
+			 * Create one factorValueCombo per factor. It contains all the factor values.
+			 */
+			this.factorValueCombos[factorId] = new Gemma.FactorValueCombo({
+						lazyInit : false,
+						lazyRender : true,
+						record : this.fvRecord,
+						data : factor.values
+					});
 
-				var factorValues = [];
-
-				// factorValueValueObjects
-				for (fv in factor.values) {
-					if (!factor.values[fv].id) {
-						continue;
-					}
-					var fvs = factor.values[fv].factorValue;
-					var id = "fv" + factor.values[fv].id;
-					if (factorValues.indexOf(fvs < 0)) {
-						factorValues[id] = fvs;
-					}
-				}
-
-				/*
-				 * Generate a function to render the factor values as displayed in the cells. At this point factorValue
-				 * contains all the possible values for this factor.
-				 */
-				var rend = this.createValueRenderer(factorValues);
-
-				/*
-				 * Define the column for this particular factor.
-				 */
-				columns.push({
-							id : id,
-							header : factor.name,
-							dataIndex : id,
-							renderer : rend,
-							editor : editor,
-							sortable : true
-						});
-
+			var editor;
+			if (this.editable) {
+				editor = this.factorValueCombos[factorId];
 			}
+
+			var fvMap = {};
+			// factorValueValueObjects
+			if (factor.values) {
+				for (var j = 0; j < factor.values.length; j++) {
+					fv = factor.values[j];
+					var fvs = fv.factorValue; // descriptive string
+					fvMap["fv" + fv.id] = fvs;
+				}
+			}
+
+			/*
+			 * Generate a function to render the factor values as displayed in the cells. At this point factorValue
+			 * contains all the possible values for this factor.
+			 */
+			var rend = this.createValueRenderer(fvMap);
+
+			/*
+			 * Define the column for this particular factor.
+			 */
+			columns.push({
+						id : factorId,
+						header : factor.name,
+						dataIndex : factorId,
+						renderer : rend,
+						editor : editor,
+						sortable : true
+					});
+
 		}
 		return columns;
 	},
@@ -142,7 +132,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	 * @param biomaterial
 	 *            A template so we know how the records will be laid out.
 	 */
-	createRecord : function(biomaterial) {
+	createRecord : function(factors) {
 
 		var fields = [{
 					name : "id",
@@ -164,18 +154,16 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					type : "string"
 				}];
 
-		// Add one slot per factor. The name of the fields will be like
-		// 'factor428'. This must be used as the dataIndex for the columnModel.
-		if (biomaterial.factors) {
-			for (factorId in biomaterial.factors) {
-				if (factorId.indexOf("factor") >= 0) {
-					var o = {
-						name : factorId, // the dataIndex, used in the
-						// columnModel to access this.
-						type : "string"
-					};
-					fields.push(o);
-				}
+		// Add one slot in the record per factor. The name of the fields will be like
+		// 'factor428' to ensure uniqueness. This must be used as the dataIndex for the columnModel.
+		if (factors) {
+			for (var i = 0; i < factors.length; i++) {
+				var factor = factors[i];
+				var o = {
+					name : "factor" + factor.id, // used to access this later
+					type : "string"
+				};
+				fields.push(o);
 			}
 		}
 		var record = Ext.data.Record.create(fields);
@@ -184,9 +172,9 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	initComponent : function() {
 
-		var data = this.transformData(this.bioMaterials);
+		this.record = this.createRecord(this.factors);
 
-		this.record = this.createRecord(this.bioMaterials[0]);
+		var data = this.transformData(this.bioMaterials);
 
 		Ext.apply(this, {
 					plugins : this.rowExpander,
@@ -221,6 +209,9 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}, this);
 
 		if (this.editable) {
+			/**
+			 * Editing of a specific record fires this.
+			 */
 			this.on("afteredit", function(e) {
 						var factorId = this.getColumnModel().getColumnId(e.column);
 						var combo = this.factorValueCombos[factorId];
@@ -230,6 +221,9 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						this.getView().refresh();
 					}, this);
 
+			/**
+			 * Bulk update biomaterial -> factorvalue associations (must click save to persist)
+			 */
 			this.getTopToolbar().on("apply", function(factor, factorValue) {
 						var selected = this.getSelectionModel().getSelections();
 						for (var i = 0; i < selected.length; ++i) {
@@ -238,11 +232,12 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						this.getView().refresh();
 					}, this);
 
-			/*
+			/**
 			 * Save edited records to the db.
 			 */
 			this.getTopToolbar().on("save", function() {
 						// console.log("Saving ...");
+						this.loadMask.show();
 						var edited = this.getEditedRecords();
 						var bmvos = [];
 						for (var i = 0; i < edited.length; ++i) {
@@ -268,10 +263,6 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						ExperimentalDesignController.updateBioMaterials(bmvos, callback);
 					}.createDelegate(this), this);
 
-			this.on("afteredit", function(model) {
-						this.getTopToolbar().saveButton.enable();
-					}.createDelegate(this));
-
 			this.getSelectionModel().on("selectionchange", function(model) {
 						var selected = model.getSelections();
 						this.getTopToolbar().revertButton.disable();
@@ -290,9 +281,13 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			this.getTopToolbar().on("undo", this.revertSelected, this);
 		}
 
-		this.getStore().load(/*
-								 * { params : {}, callback : function() { this.sort("bmName"); } }
-								 */);
+		this.getStore().load({
+					params : {},
+					callback : function() {
+						this.getStore().sort("bmName");
+					},
+					scope : this
+				});
 	},
 
 	/**
@@ -302,19 +297,25 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		var data = [];
 		for (var i = 0; i < incoming.length; ++i) {
 			var bmvo = incoming[i];
-			var factors = incoming[i].factors;
+
+			/*
+			 * This order must match the record!
+			 */
 			data[i] = [bmvo.id, bmvo.name, bmvo.description, bmvo.characteristics, bmvo.assayName,
 					bmvo.assayDescription];
 
-			for (factorId in factors) {
-				if (factorId.indexOf("factor") >= 0) {
-					data[i].push(incoming[i].factorIdToFactorValueId[factorId]);
-				}
+			var factors = bmvo.factors;
+
+			for (var factorId in factors) {
+				data[i].push(bmvo.factorIdToFactorValueId[factorId]);
 			}
 		}
 		return data;
 	},
 
+	/**
+	 * Represents a FactorValueValueObject; used in the Store for the ComboBoxes.
+	 */
 	fvRecord : Ext.data.Record.create([{
 				name : "charId",
 				type : "int"
@@ -337,7 +338,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				name : "valueUri",
 				type : "string"
 			}, {
-				name : "factorValue",
+				name : "factorValue", // human-readable string
 				type : "string"
 			}]),
 
@@ -350,7 +351,8 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				combo.setExperimentalFactor(combo.experimentalFactor.id, function(r, options, success) {
 							var fvs = {};
 							for (var i = 0; i < r.length; ++i) {
-								fvs["fv" + r[i].get("id")] = r[i].get("factorValue");
+								var rec = r[i];
+								fvs["fv" + rec.get("id")] = rec.get("factorValue");
 							}
 							var renderer = this.createValueRenderer(fvs);
 							column.renderer = renderer;
@@ -363,7 +365,15 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	createValueRenderer : function(factorValues) {
 		return function(value, metadata, record, row, col, ds) {
-			return factorValues[value] ? factorValues[value] : value;
+			/*
+			 * If we have the factor values map already, return the descriptive string. Otherwise we display 'fv123'
+			 * etc. However, there is a race condition so the factorValues are not always set up?
+			 */
+
+			var k = factorValues[value];
+			// console.log(value + " -> " + k);
+			return k ? k : value;
+
 		};
 	},
 

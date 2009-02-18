@@ -1364,21 +1364,6 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<!-- ExperimentalFactorValueObject is the same thing! Please resolve -->
-			<entry key="ubic.gemma.web.controller.expression.experiment.FactorValueObject">
-				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="bean" />
-					<property name="includes">
-						<list>
-							<value>id</value>
-							<value>factorValue</value>
-							<value>category</value>
-							<value>description</value>
-							<value>categoryCharacteristic</value>
-						</list>
-					</property>
-				</bean>
-			</entry>
 			<entry key="ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
