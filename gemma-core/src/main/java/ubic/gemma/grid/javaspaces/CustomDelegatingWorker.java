@@ -35,6 +35,7 @@ import org.springmodules.javaspaces.JavaSpaceTemplate;
 import org.springmodules.javaspaces.entry.AbstractMethodCallEntry;
 import org.springmodules.javaspaces.entry.MethodResultEntry;
 
+import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesRegistrationEntry;
 
 /**
@@ -151,7 +152,7 @@ public class CustomDelegatingWorker implements Runnable {
                     
 
                     // custom
-                    js.take( spacesRegistrationEntry, null, 600000000 );
+                    js.take( spacesRegistrationEntry, null, SpacesUtil.VERY_BIG_NUMBER_FOR_SOME_REASON );
                     try {
                         Object[] args = call.getArguments();
 
@@ -169,7 +170,7 @@ public class CustomDelegatingWorker implements Runnable {
                         MethodResultEntry result = invokeMethod( call, delegate );
                         // push the result back to the JavaSpace
                         js.write( result, transaction, Lease.FOREVER );
-                        js.write( spacesRegistrationEntry, null, 600000000 );
+                        js.write( spacesRegistrationEntry, null, SpacesUtil.VERY_BIG_NUMBER_FOR_SOME_REASON );
                     } catch ( Exception ex ) {
                         // TODO fix me, should translate to JavaSpaceException
                         // hierarchy

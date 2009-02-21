@@ -59,7 +59,7 @@ public class SpacesUtil implements ApplicationContextAware {
     /**
      * FIXME Document me
      */
-    private static final int VERY_BIG_NUMBER_FOR_SOME_REASON = 600000000;
+    public static final int VERY_BIG_NUMBER_FOR_SOME_REASON = 600000000;
 
     private static final String GIGASPACES_TEMPLATE = "gigaspacesTemplate";
 
@@ -229,7 +229,6 @@ public class SpacesUtil implements ApplicationContextAware {
 
         try {
             IJSpace space = ( IJSpace ) SpaceFinder.find( url );
-
             count = space.count( new SpacesRegistrationEntry(), null );
             log.debug( "count: " + count );
         } catch ( Exception e ) {
