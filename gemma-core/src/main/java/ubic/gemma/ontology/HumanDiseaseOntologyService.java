@@ -18,6 +18,8 @@
  */
 package ubic.gemma.ontology;
 
+import ubic.gemma.util.ConfigUtils;
+
 import com.hp.hpl.jena.ontology.OntModel;
 
 /**
@@ -29,6 +31,7 @@ import com.hp.hpl.jena.ontology.OntModel;
  */
 public class HumanDiseaseOntologyService extends AbstractOntologyService {
 
+    private static final String DISEASE_ONTOLOGY_URL = "url.diseaseOntology";
     /*
      * (non-Javadoc)
      * 
@@ -41,8 +44,7 @@ public class HumanDiseaseOntologyService extends AbstractOntologyService {
 
     @Override
     protected String getOntologyUrl() {
-        return "http://www.berkeleybop.org/ontologies/obo-all/disease_ontology/disease_ontology.owl";
-        // http://purl.org/obo/owl/DOID
+        return ConfigUtils.getString( DISEASE_ONTOLOGY_URL );            
     }
 
     @Override

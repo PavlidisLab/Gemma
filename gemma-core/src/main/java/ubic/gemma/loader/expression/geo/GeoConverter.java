@@ -71,7 +71,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
@@ -150,7 +149,7 @@ public class GeoConverter implements Converter {
     private ExternalDatabase genbank;
 
     private boolean splitIncompatiblePlatforms = false;
-
+    
     /**
      * The scientific name used for rat species. FIXME this should be updated elsewhere; avoid this hardcoding.
      */
@@ -313,7 +312,7 @@ public class GeoConverter implements Converter {
             sourceChar.setDescription( "GEO Sample source" );
             String characteristic = trimString( channel.getSourceName() );
             sourceChar.setCategory( "BioSource" );
-            sourceChar.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#BioSource" );
+            sourceChar.setCategoryUri(  MgedOntologyService.MGED_ONTO_BASE_URL  + "#BioSource" );
             sourceChar.setValue( characteristic );
             sourceChar.setEvidenceCode( GOEvidenceCode.IEA );
             bioMaterial.getCharacteristics().add( sourceChar );

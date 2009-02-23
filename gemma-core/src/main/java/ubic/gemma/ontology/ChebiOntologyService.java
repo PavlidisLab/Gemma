@@ -19,6 +19,8 @@
 
 package ubic.gemma.ontology;
 
+import ubic.gemma.util.ConfigUtils;
+
 import com.hp.hpl.jena.ontology.OntModel;
 
 /**
@@ -30,6 +32,8 @@ import com.hp.hpl.jena.ontology.OntModel;
  */
 public class ChebiOntologyService extends AbstractOntologyService {
 
+    
+    private static final String CHEBI_ONTOLOGY_URL = "url.chibiOntology";
     /*
      * (non-Javadoc)
      * 
@@ -48,7 +52,8 @@ public class ChebiOntologyService extends AbstractOntologyService {
      */
     @Override
     protected String getOntologyUrl() {
-        return "http://www.berkeleybop.org/ontologies/owl/CHEBI.owl";
+        return ConfigUtils.getString( CHEBI_ONTOLOGY_URL );       
+        
     }
 
     /*

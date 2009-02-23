@@ -19,6 +19,8 @@
 
 package ubic.gemma.ontology;
 
+import ubic.gemma.util.ConfigUtils;
+
 import com.hp.hpl.jena.ontology.OntModel;
 
 /**
@@ -32,6 +34,7 @@ import com.hp.hpl.jena.ontology.OntModel;
 
 public class BirnLexOntologyService extends AbstractOntologyService {
 
+    private static final String BIRNLEX_ONTOLOGY_URL = "url.birnlexOntology";
     /*
      * (non-Javadoc)
      * 
@@ -48,8 +51,9 @@ public class BirnLexOntologyService extends AbstractOntologyService {
     }
 
     @Override
-    protected String getOntologyUrl() {
-        return "http://purl.org/nbirn/birnlex/ontology/birnlex.owl";
+    protected String getOntologyUrl() {      
+        return ConfigUtils.getString( BIRNLEX_ONTOLOGY_URL );       
     }
+    
 
 }

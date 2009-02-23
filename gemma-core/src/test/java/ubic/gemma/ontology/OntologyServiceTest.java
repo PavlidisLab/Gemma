@@ -32,14 +32,21 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        MgedOntologyService mgo = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
-        if ( !mgo.isOntologyLoaded() ) mgo.init( true ); // force load.
-        while ( !mgo.isOntologyLoaded() ) {
-            Thread.sleep( 1000 );
-            log.info( "Waiting for Ontology to load" );
-        }
+        loadOntology("mgedOntologyService");
+        loadOntology("birnLexOntologyService");
     }
 
+    private void loadOntology(String ontology) throws Exception{
+        AbstractOntologyService os = ( AbstractOntologyService ) this.getBean(ontology );
+        if ( !os.isOntologyLoaded() ) os.init( true ); // force load.
+        while ( !os.isOntologyLoaded() ) {
+            Thread.sleep( 1000 );
+            log.info( "Waiting for Ontology to load" );                                  
+        }
+
+        
+    }
+    
     /*
      * This test can fail if the db isn't initialized public void testListAvailableOntologies() throws Exception {
      * Collection<Ontology> name = OntologyService.listAvailableOntologies(); assertTrue( name.size() > 0 ); }
@@ -52,5 +59,20 @@ public class OntologyServiceTest extends BaseSpringContextTest {
                 "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex" );
         assertEquals( 1, name.size() );
     }
+    
+
+    public final void testFindTerm() throws Exception {
+
+        OntologyService os = ( OntologyService ) this.getBean( "ontologyService" );
+        Collection<OntologyTerm> terms = os.findTerms( "liver");
+
+        for(OntologyTerm term : terms){          
+            if (term.getLabel().contains( "Organ" )){    
+                assertTrue( false );
+            }
+        }
+    }
+
+    
 
 }

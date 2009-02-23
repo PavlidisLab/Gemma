@@ -19,6 +19,8 @@
 
 package ubic.gemma.ontology;
 
+import ubic.gemma.util.ConfigUtils;
+
 import com.hp.hpl.jena.ontology.OntModel;
 
 /**
@@ -31,10 +33,11 @@ import com.hp.hpl.jena.ontology.OntModel;
 
 public class FMAOntologyService extends AbstractOntologyService {
 
+    private static final String FMA_ONTOLOGY_URL = "url.fmaOntology";
     @Override
     protected String getOntologyUrl() {
-        return "http://www.berkeleybop.org/ontologies/obo-all/fma_lite/fma_lite.owl";
-        // http://purl.org/obo/owl/FMA
+        return ConfigUtils.getString( FMA_ONTOLOGY_URL );       
+   
     }
 
     @Override

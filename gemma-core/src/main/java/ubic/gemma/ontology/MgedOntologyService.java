@@ -36,6 +36,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.util.ConfigUtils;
+
 import com.hp.hpl.jena.ontology.OntModel;
 
 /**
@@ -49,7 +51,10 @@ import com.hp.hpl.jena.ontology.OntModel;
 
 public class MgedOntologyService extends AbstractOntologyService {
 
-    public static final String MGED_ONTO_BASE_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
+    public static final String MGED_ONTOLOGY_URL = "url.mgedOntology";
+    
+    public static final String MGED_ONTO_BASE_URL = ConfigUtils.getString( MgedOntologyService.MGED_ONTOLOGY_URL );
+
 
     private static final Collection<String> TermsToRemove = Collections.synchronizedList( Arrays.asList( new String[] {
             "BioMaterialPackage", "BioMaterialCharacteristics", "BioMaterial", "BiologicalProperty",
@@ -110,13 +115,13 @@ public class MgedOntologyService extends AbstractOntologyService {
         results = Collections.synchronizedCollection( results );
 
         // A bunch of terms not in the biomaterial package that we need. (special cases)
-        OntologyTerm term = terms.get( MGED_ONTO_BASE_URL + "#ExperimentPackage" );
+        OntologyTerm term = terms.get( ontology_URL + "#ExperimentPackage" );
         results.addAll( getAllTerms( term ) );
 
-        term = terms.get( MGED_ONTO_BASE_URL + "#MeasurementPackage" );
+        term = terms.get( ontology_URL + "#MeasurementPackage" );
         results.addAll( getAllTerms( term ) );
         
-        term = terms.get( MGED_ONTO_BASE_URL + "#MGEDExtendedOntology" );
+        term = terms.get( ontology_URL + "#MGEDExtendedOntology" );
         results.addAll( getAllTerms( term ) );
 
         // trim some terms out:
@@ -243,12 +248,12 @@ public class MgedOntologyService extends AbstractOntologyService {
     }
 
     protected String getOntologyStartingPoint() {
-        return MGED_ONTO_BASE_URL + "#BioMaterialPackage";
+        return ontology_URL + "#BioMaterialPackage";
     }
 
     @Override
     protected String getOntologyUrl() {
-        return MGED_ONTO_BASE_URL;
+        return ConfigUtils.getString( MGED_ONTOLOGY_URL );
     }
 
 }

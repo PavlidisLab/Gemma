@@ -29,6 +29,10 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  */
 public class OntologyTermImpl extends AbstractOntologyResource implements OntologyTerm {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private static final String NOTHING = "http://www.w3.org/2002/07/owl#Nothing";
     private static final String HAS_ALTERNATE_ID = "http://www.geneontology.org/formats/oboInOwl#hasAlternativeId";
     OntClass ontResource = null;
