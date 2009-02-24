@@ -44,7 +44,7 @@ public interface ChromosomeDao {
      * objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
+    public java.util.Collection<Chromosome> create( int transform, java.util.Collection<Chromosome> entities );
 
     /**
      * <p>
@@ -64,7 +64,7 @@ public interface ChromosomeDao {
      * @param entities the collection of ubic.gemma.model.genome.Chromosome instances to create.
      * @return the created instances.
      */
-    public java.util.Collection create( java.util.Collection entities );
+    public java.util.Collection<Chromosome> create( java.util.Collection<Chromosome> entities );
 
     /**
      * Creates an instance of ubic.gemma.model.genome.Chromosome and adds it to the persistent store.
@@ -164,7 +164,7 @@ public interface ChromosomeDao {
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<Chromosome> loadAll();
 
     /**
      * <p>
@@ -178,7 +178,7 @@ public interface ChromosomeDao {
      * @param transform the flag indicating what transformation to use.
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<Chromosome> loadAll( final int transform );
 
     /**
      * Removes the instance of ubic.gemma.model.genome.Chromosome having the given <code>identifier</code> from the
@@ -189,7 +189,7 @@ public interface ChromosomeDao {
     /**
      * Removes all entities in the given <code>entities<code> collection.
      */
-    public void remove( java.util.Collection entities );
+    public void remove( java.util.Collection<Chromosome> entities );
 
     /**
      * Removes the instance of ubic.gemma.model.genome.Chromosome from the persistent store.
@@ -199,11 +199,20 @@ public interface ChromosomeDao {
     /**
      * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public void update( java.util.Collection entities );
+    public void update( java.util.Collection<Chromosome> entities );
 
     /**
      * Updates the <code>chromosome</code> instance in the persistent store.
      */
     public void update( ubic.gemma.model.genome.Chromosome chromosome );
+
+    /**
+     * Find a chromosome by name and taxon
+     * 
+     * @param name
+     * @param taxon
+     * @return
+     */
+    public Chromosome find( String name, Taxon taxon );
 
 }

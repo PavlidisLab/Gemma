@@ -22,8 +22,10 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 
 import ubic.gemma.util.BusinessKey;
@@ -82,4 +84,22 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         return buf.toString();
     }
 
+    public Chromosome find( String name, Taxon taxon ) {
+        if ( StringUtils.isBlank( name ) ) {
+            throw new IllegalArgumentException( "Name cannot be blank" );
+
+        }
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Taxon cannot be blank" );
+        }
+        String q = "from ChromosomeImpl c where c.name=:n and c.taxon=:t";
+        List result = this.getHibernateTemplate().findByNamedParam( q, new String[] { "n", "t" },
+                new Object[] { name, taxon } );
+        if ( result.size() == 1 ) {
+            return ( Chromosome ) result.get( 0 );
+        } else if ( result.size() > 1 ) {
+            throw new IllegalStateException( "Multiple chromosomes match '" + name + "' in " + taxon );
+        }
+        return null;
+    }
 }

@@ -46,4 +46,8 @@ public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeSer
 
     }
 
+    public Chromosome find( String name, Taxon taxon ) {
+        return this.getChromosomeDao().find( name, taxon );
+    }
+
 }

@@ -37,4 +37,12 @@ public interface ChromosomeService {
      */
     public ubic.gemma.model.genome.Chromosome findOrCreate( ubic.gemma.model.genome.Chromosome chromosome );
 
+    /**
+     * Locate by name e.g. 'X'.
+     * 
+     * @param name
+     * @return
+     */
+    public Chromosome find( String name, Taxon taxon );
+
 }
