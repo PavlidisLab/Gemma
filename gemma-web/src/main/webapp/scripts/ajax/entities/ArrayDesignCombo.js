@@ -114,6 +114,10 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	applyFilter : function(taxon) {
+		
+		if (taxon === undefined)
+			return;
+			
 		this.store.filterBy(function(record, id) {
 					if (!record.data.taxon) {
 						return false;
