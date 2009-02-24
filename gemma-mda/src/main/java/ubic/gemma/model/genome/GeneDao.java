@@ -69,6 +69,15 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public Gene find( int transform, ubic.gemma.model.genome.Gene gene );
 
     /**
+     * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
+     * region. If strand is non-null, only genes on the same strand are returned.
+     * 
+     * @param physicalLocation
+     * @return
+     */
+    public Collection<Gene> find( PhysicalLocation physicalLocation );
+
+    /**
      * <p>
      * Does the same thing as {@link #find(ubic.gemma.model.genome.Gene)} with an additional argument called
      * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
@@ -219,27 +228,6 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation );
 
     /**
-     * Converts an instance of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's entity.
-     */
-    public ubic.gemma.model.genome.Gene geneValueObjectToEntity(
-            ubic.gemma.model.genome.gene.GeneValueObject geneValueObject );
-
-    /**
-     * Copies the fields of {@link ubic.gemma.model.genome.gene.GeneValueObject} to the specified entity.
-     * 
-     * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
-     *        TRUE, it will be copied regardless of its value.
-     */
-    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject sourceVO,
-            ubic.gemma.model.genome.Gene targetEntity, boolean copyIfNull );
-
-    /**
-     * Converts a Collection of instances of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's
-     * entity.
-     */
-    public void geneValueObjectToEntityCollection( java.util.Collection<Gene> instances );
-
-    /**
      * <p>
      * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.Gene)} with an additional argument
      * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
@@ -274,13 +262,25 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
 
     /**
-     * <p>
-     * Function to get coexpressed genes given a gene and a collection of expressionExperiments. The return value is a
-     * CoexpressionCollectionValueObject.
-     * </p>
+     * Converts an instance of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's entity.
      */
-    public CoexpressionCollectionValueObject getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly );
+    public ubic.gemma.model.genome.Gene geneValueObjectToEntity(
+            ubic.gemma.model.genome.gene.GeneValueObject geneValueObject );
+
+    /**
+     * Copies the fields of {@link ubic.gemma.model.genome.gene.GeneValueObject} to the specified entity.
+     * 
+     * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
+     *        TRUE, it will be copied regardless of its value.
+     */
+    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject sourceVO,
+            ubic.gemma.model.genome.Gene targetEntity, boolean copyIfNull );
+
+    /**
+     * Converts a Collection of instances of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's
+     * entity.
+     */
+    public void geneValueObjectToEntityCollection( java.util.Collection<Gene> instances );
 
     /**
      * Function to get coexpressed genes given a set of genes and a collection of expressionExperiments. The return
@@ -297,6 +297,15 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes(
             Collection<ubic.gemma.model.genome.Gene> genes, java.util.Collection<? extends BioAssaySet> ees,
             java.lang.Integer stringency, boolean knownGenesOnly, boolean interGeneOnly );
+
+    /**
+     * <p>
+     * Function to get coexpressed genes given a gene and a collection of expressionExperiments. The return value is a
+     * CoexpressionCollectionValueObject.
+     * </p>
+     */
+    public CoexpressionCollectionValueObject getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly );
 
     /**
      * 
@@ -329,36 +338,17 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public java.util.Collection<Gene> getMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
+     * 
+     */
+    public java.util.Collection<Gene> load( java.util.Collection<Long> ids );
+
+    /**
      * <p>
      * Returns a collection of genes for the specified taxon (not all genes, ie not probe aligned regions and predicted
      * genes)
      * </p>
      */
     public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * Converts this DAO's entity to an object of type {@link ubic.gemma.model.genome.gene.GeneValueObject}.
-     */
-    public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject( ubic.gemma.model.genome.Gene entity );
-
-    /**
-     * Copies the fields of the specified entity to the target value object. This method is similar to
-     * toGeneValueObject(), but it does not handle any attributes in the target value object that are "read-only" (as
-     * those do not have setter methods exposed).
-     */
-    public void toGeneValueObject( ubic.gemma.model.genome.Gene sourceEntity,
-            ubic.gemma.model.genome.gene.GeneValueObject targetVO );
-
-    /**
-     * Converts this DAO's entity to a Collection of instances of type
-     * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
-     */
-    public void toGeneValueObjectCollection( java.util.Collection<Gene> entities );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> load( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -379,11 +369,30 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      */
     public void thaw( ubic.gemma.model.genome.Gene gene );
 
+    public void thawLite( Gene gene );
+
     /**
      * 
      */
     public void thawLite( java.util.Collection<Gene> genes );
 
-    public void thawLite( Gene gene );
+    /**
+     * Converts this DAO's entity to an object of type {@link ubic.gemma.model.genome.gene.GeneValueObject}.
+     */
+    public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject( ubic.gemma.model.genome.Gene entity );
+
+    /**
+     * Copies the fields of the specified entity to the target value object. This method is similar to
+     * toGeneValueObject(), but it does not handle any attributes in the target value object that are "read-only" (as
+     * those do not have setter methods exposed).
+     */
+    public void toGeneValueObject( ubic.gemma.model.genome.Gene sourceEntity,
+            ubic.gemma.model.genome.gene.GeneValueObject targetVO );
+
+    /**
+     * Converts this DAO's entity to a Collection of instances of type
+     * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
+     */
+    public void toGeneValueObjectCollection( java.util.Collection<Gene> entities );
 
 }

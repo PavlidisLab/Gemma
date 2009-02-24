@@ -64,7 +64,6 @@ import ubic.gemma.util.TaxonUtility;
  * @version $Id$
  * @see ubic.gemma.model.genome.Gene
  */
-
 public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
@@ -119,12 +118,22 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.genome.GeneDao#find(ubic.gemma.model.genome.PhysicalLocation)
+     */
+    public Collection<Gene> find( PhysicalLocation physicalLocation ) {
+        return findByPosition( physicalLocation.getChromosome(), physicalLocation.getNucleotide(), physicalLocation
+                .getNucleotide()
+                + physicalLocation.getNucleotideLength(), physicalLocation.getStrand() );
+    }
+
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(int, java.lang.String)
      */
     @SuppressWarnings( { "unchecked" })
     @Override
-    public java.util.Collection findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
+    public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
         final String query = "from GeneImpl g where g.officialSymbol like :officialSymbol order by g.officialSymbol";
         org.hibernate.Query queryObject = this.getSession( false ).createQuery( query );
         queryObject.setParameter( "officialSymbol", officialSymbol );
@@ -767,11 +776,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 // FIXME: (klc) This was using session.lock before but was getting a Non-Unique Entity Error
                 // using session.get fixes but might not be correct for cases where g != gene but gene.id==g.id
                 // (different object in memory but actually same gene; ie same id)
-                //session.lock( gene, LockMode.NONE );
-                
+                // session.lock( gene, LockMode.NONE );
+
                 Gene g = ( Gene ) session.get( GeneImpl.class, gene.getId() );
                 Hibernate.initialize( g );
-                session.evict( gene ); 
+                session.evict( gene );
 
                 return null;
             }

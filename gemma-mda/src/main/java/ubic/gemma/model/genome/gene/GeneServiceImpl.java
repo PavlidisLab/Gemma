@@ -210,7 +210,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     }
 
     @Override
-    protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
+    protected Collection<Gene> handleGetGenesByTaxon( Taxon taxon ) throws Exception {
         return this.getGeneDao().getGenesByTaxon( taxon );
     }
 
@@ -308,6 +308,10 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
 
     public void thawLite( Gene gene ) {
         this.getGeneDao().thawLite( gene );
+    }
+
+    public Collection<Gene> find( PhysicalLocation physicalLocation ) {
+        return this.getGeneDao().find( physicalLocation );
     }
 
 }

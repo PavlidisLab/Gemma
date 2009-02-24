@@ -112,6 +112,15 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation );
 
     /**
+     * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
+     * region. If strand is non-null, only genes on the same strand are returned.
+     * 
+     * @param physicalLocation
+     * @return
+     */
+    public Collection<Gene> find( PhysicalLocation physicalLocation );
+
+    /**
      * 
      */
     public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
