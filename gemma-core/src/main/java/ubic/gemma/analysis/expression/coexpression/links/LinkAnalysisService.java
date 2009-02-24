@@ -425,7 +425,7 @@ public class LinkAnalysisService {
     private ExpressionDataDoubleMatrix normalize( ExpressionDataDoubleMatrix datamatrix, LinkAnalysisConfig config ) {
         ExpressionDataSVD svd;
         switch ( config.getNormalizationMethod() ) {
-            case NONE:
+            case none:
                 return datamatrix;
             case SVD:
                 log.info( "SVD normalizing" );

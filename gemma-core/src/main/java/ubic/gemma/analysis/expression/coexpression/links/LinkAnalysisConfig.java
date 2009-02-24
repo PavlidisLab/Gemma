@@ -37,7 +37,7 @@ public class LinkAnalysisConfig implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public enum NormalizationMethod {
-        NONE, SPELL, SVD
+        none, SPELL, SVD
     }
 
     private double upperTailCut = 0.01;
@@ -55,7 +55,7 @@ public class LinkAnalysisConfig implements Serializable {
     private boolean useDb = true;
     private boolean makeSampleCorrMatImages = true;
 
-    private NormalizationMethod normalizationMethod = NormalizationMethod.NONE;
+    private NormalizationMethod normalizationMethod = NormalizationMethod.none;
 
     /*
      * Remove negative correlated values at the end.
