@@ -36,10 +36,10 @@ public class FilterConfig implements Serializable {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        buf.append( "# highExpressionCut " + this.getHighExpressionCut() + "\n" );
-        buf.append( "# lowExpressionCut " + this.getLowExpressionCut() + "\n" );
-        buf.append( "# minPresentFraction " + this.getMinPresentFraction() + "\n" );
-        buf.append( "# lowVarianceCut " + this.getLowVarianceCut() + "\n" );
+        buf.append( "# highExpressionCut:" + this.getHighExpressionCut() + "\n" );
+        buf.append( "# lowExpressionCut:" + this.getLowExpressionCut() + "\n" );
+        buf.append( "# minPresentFraction:" + this.getMinPresentFraction() + "\n" );
+        buf.append( "# lowVarianceCut:" + this.getLowVarianceCut() + "\n" );
         //buf.append( "# knownGenesOnly " + this.isKnownGenesOnly() + "\n" );
         return buf.toString();
     }
