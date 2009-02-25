@@ -130,7 +130,7 @@ public class FileUploadController extends AbstractController {
          * leaveing as nothing, not explicitly setting works locally but not on production
          * the production envrioment will insert the html tags if the content is null so must set to something
          */
-        //response.setContentType( "text/html");
+        response.setContentType( "text/html");
         //log.info("Content type: " + response.getContentType() );
 
         return new ModelAndView( new JSONView("text/html; charset=utf-8"), model );
