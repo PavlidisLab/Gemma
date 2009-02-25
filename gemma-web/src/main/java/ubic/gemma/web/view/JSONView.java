@@ -71,7 +71,9 @@ public class JSONView implements View {
         response.setContentType( this.docType );
         log.debug( jso.toString() );
         Writer writer = response.getWriter();
-        jso.write( writer );
+        writer.write( "<html><body>"  + jso.toString() + "</body></html>" );
+        writer.close();
+        //jso.write( writer );
     }
 
 }
