@@ -68,8 +68,9 @@ public class JSONView implements View {
     @SuppressWarnings("unchecked")
     public void render( Map map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
         JSONObject jso = JSONObject.fromObject( map );
+        response.setContentType( this.docType );
+        log.debug( jso.toString() );
         Writer writer = response.getWriter();
-        log.info( jso.toString() );
         jso.write( writer );
     }
 

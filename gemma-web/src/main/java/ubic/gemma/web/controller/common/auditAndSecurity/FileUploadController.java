@@ -125,7 +125,14 @@ public class FileUploadController extends AbstractController {
          * For ext-js, the supposedly doctype must be text/html. See:
          * http://extjs.com/deploy/dev/docs/?class=Ext.form.BasicForm under 'fileUpload'. However, I'm not sure this
          * matters. Someone is still wrapping the json resonse in '<p>' or '<pre>' tags.
+         * 
+         * Setting to text/html, text/plain, text/x-json, text/json, application/json, application/xml, text/xml doesn't work.  on production or locally. 
+         * leaveing as nothing, not explicitly setting works locally but not on production
+         * the production envrioment will insert the html tags if the content is null so must set to something
          */
-        return new ModelAndView( new JSONView(), model );
+        //response.setContentType( "text/html");
+        //log.info("Content type: " + response.getContentType() );
+
+        return new ModelAndView( new JSONView("text/html; charset=utf-8"), model );
     }
 }
