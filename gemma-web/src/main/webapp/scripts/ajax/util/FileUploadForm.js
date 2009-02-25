@@ -23,9 +23,15 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 							frame : true,
 
 							items : [new Ext.form.FormPanel({
-										id : 'uploadform',
+										id : 'uploadform',								
 										labelWidth : 50,
 										fileUpload : true,
+									    header:false,
+   										method: 'POST',
+   										frame: true,
+   										url : '/Gemma/expressionExperiment/uploadFile.html',
+   										enctype : 'multipart/form-data',
+      									timeout:    15000,
 										defaults : {
 											anchor : '95%',
 											allowBlank : false,
@@ -61,20 +67,20 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 											handler : function() {
 												var taskId = parseInt(Math.random() * 1e12, 12);
 												this.taskId = taskId;
+
 												var form = Ext.getCmp('uploadform').getForm();
 												if (form.isValid()) {
-													form.submit({
-																url : '/Gemma/uploadFile.html',
+													form.submit({																																	
 																waitMsg : 'Uploading your file ...',
 																success : function(form, a) {
-																	var m = a.result;
+																	var m = a.result;																	var m = a.result;
 																	Ext.getCmp('messages')
 																			.setText("File uploaded: " + m.originalFile
 																					+ "; " + m.size + " bytes");
 																	this.fireEvent('finish', m);
 
 																}.createDelegate(this),
-																failure : function(form, a) {
+																failure : function(form, a) {																
 																	Ext.Msg.alert('Failure',
 																			'Problem with processing of file "'
 																					+ a.result.originalFile
