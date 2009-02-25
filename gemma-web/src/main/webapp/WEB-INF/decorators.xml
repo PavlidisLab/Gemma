@@ -21,7 +21,7 @@
      -->
     
     <decorator name="ajax">
-        <pattern>/expressionExperiment/uploadFile*</pattern>
+        <pattern>/uploadFile*</pattern>
     </decorator>
 
     

@@ -29,8 +29,7 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 									    header:false,
    										method: 'POST',
    										frame: true,
-   										url : '/Gemma/expressionExperiment/uploadFile.html',
-   										enctype : 'multipart/form-data',
+   										url : '/Gemma/uploadFile.html',
       									timeout:    15000,
 										defaults : {
 											anchor : '95%',
