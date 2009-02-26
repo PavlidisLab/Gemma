@@ -215,7 +215,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 			tpl : new Gemma.ProfileTemplate(
 					'<tpl for="."><tpl for="eevo">',
-					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName} </b></div>',
+					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
 					'</tpl></tpl>'),
 
 			listeners : {
@@ -377,7 +377,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 					displayWindow : function(eevo, profiles) {
 
-						this.setTitle("Visualization of probes in dataset:  " + eevo.shortName);
+						this.setTitle("<a href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +eevo.id+ " '> " + eevo.shortName + "</a>: "  +eevo.name);
 
 						if (!this.isVisible()) {
 							this.setVisible(true);
@@ -474,7 +474,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 			tpl : new Gemma.ProfileTemplate(
 					'<tpl for="."><tpl for="eevo">',
-					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b>:  <i>{[(values.minPvalue < 1) ? sprintf("%.3e", values.minPvalue) : "-"]}  </i></div>',
+					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}</b>: <small> {[sprintf("%.35s",values.name)]} </small> <i> {[(values.minPvalue < 1) ? sprintf("%.3e", values.minPvalue) : "-"]}  </i></div>',
 					'</tpl></tpl>'),
 
 			listeners : {
@@ -632,7 +632,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 					displayWindow : function(eevo, profiles) {
 
-						this.setTitle("Probes in dataset " + eevo.shortName);
+						this.setTitle("<a href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +eevo.id+ " '> " + eevo.shortName + "</a>: " + eevo.name);
 
 						if (!this.isVisible()) {
 							this.setVisible(true);
@@ -655,7 +655,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 	displayWindow : function(eeIds, gene, threshold, factorMap) {
 
-		this.setTitle("Visualization of gene: " + gene.officialSymbol);
+		this.setTitle("Visualization of gene: <a href='/Gemma/gene/showGene.html?id=" + gene.id + "'> " + gene.officialSymbol + "</a>");
 
 		this.thumbnailPanel.setTitle(gene.officialSymbol);
 
