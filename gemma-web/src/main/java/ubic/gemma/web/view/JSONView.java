@@ -38,7 +38,7 @@ public class JSONView implements View {
 
     Log log = LogFactory.getLog( this.getClass() );
 
-    private String docType = "text/plain";
+    private String docType = "text/html";
 
     /**
      * @param docType e.g., text/html to switch from the default 'text/plain'.
@@ -67,13 +67,20 @@ public class JSONView implements View {
      */
     @SuppressWarnings("unchecked")
     public void render( Map map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
+
         JSONObject jso = JSONObject.fromObject( map );
         response.setContentType( this.docType );
-        log.debug( jso.toString() );
         Writer writer = response.getWriter();
+        
+        //Need to wrap json in html tags or the proxy server will wrap in <p></p> tags. 
+        //will work in test enviroment (with or without wrapping json)
+        //only problematic on production (no proxy in test enviroment)      
+        //This is specifically for extjs and uploading a file.
+        //Other frameworks might not like this. 
+        
         writer.write( "<html><body>"  + jso.toString() + "</body></html>" );
         writer.close();
-        //jso.write( writer );
+
     }
 
 }
