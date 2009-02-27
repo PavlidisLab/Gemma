@@ -57,7 +57,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
         OntologyService os = ( OntologyService ) this.getBean( "ontologyService" );
         Collection<Characteristic> name = os.findExactTerm( "male",
                 "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex" );
-        assertEquals( 6, name.size() );
+        assertEquals( 1, name.size() );
     }
     
 
