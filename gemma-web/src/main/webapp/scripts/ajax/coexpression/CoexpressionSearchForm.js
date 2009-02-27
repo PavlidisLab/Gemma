@@ -117,7 +117,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	getCoexpressionSearchCommandFromQuery : function(query) {
 		var param = Ext.urlDecode(query);
 		var eeQuery = param.eeq || "";
-
+		
 		var csc = {
 			geneIds : param.g ? param.g.split(',') : [],
 			stringency : param.s || Gemma.MIN_STRINGENCY,
@@ -174,7 +174,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	 */
 	initializeFromCoexpressionSearchCommand : function(csc, doSearch) {
 		this.geneChooserPanel = Ext.getCmp('gene-chooser-panel');
-		this.stringencyField = Ext.getCmp('stringencyfield');
 
 		if (csc.dirty) {
 			/*
@@ -193,12 +192,11 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			this.eeSetChooserPanel.selectById(csc.eeSetId);
 		}
 		
-		if (csc.stringency) {
-			this.stringencyField.setValue(csc.stringency);
+		if (csc.stringency) {			
+			Ext.getCmp('stringencyfield').setValue(csc.stringency);
 		}
-
 		if (csc.queryGenesOnly) {
-			this.queryGenesOnly.setValue(true);
+			Ext.getCmp("querygenesonly").setValue(true);
 		}
 
 		// Keep this last. When done loading genes might start coexpression query
