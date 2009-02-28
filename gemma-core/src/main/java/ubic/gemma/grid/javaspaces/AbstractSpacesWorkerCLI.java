@@ -59,6 +59,8 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
 
     protected SpacesBusyEntry busyEntry = null;
 
+    protected SpacesCancellationEntry cancellationEntry = null;
+
     protected Long workerRegistrationId = null;
 
     protected ApplicationContext updatedContext = null;
@@ -109,25 +111,32 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
         if ( !updatedContext.containsBean( "gigaspacesTemplate" ) )
             throw new RuntimeException( "GemmaSpaces beans could not be loaded. Cannot start worker." );
 
-        template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
-
-        template.addNotifyDelegatorListener( this, new SpacesCancellationEntry(), null, true, Lease.FOREVER,
-                NotifyModifiers.NOTIFY_ALL );
-
-        space = ( IJSpace ) template.getSpace();
-
-        /* set up the registration entry */
+        /* set up the registration entry for this worker */
         registrationEntry = new SpacesRegistrationEntry();
         setRegistrationEntryTask();
         workerRegistrationId = RandomUtils.nextLong();
         registrationEntry.registrationId = workerRegistrationId;
         worker.setGemmaSpacesRegistrationEntry( registrationEntry );
 
-        /* set up the busy entry */
+        /* set up the busy entry for this worker */
         busyEntry = new SpacesBusyEntry();
         busyEntry.message = registrationEntry.message;
         busyEntry.registrationId = registrationEntry.registrationId;
         worker.setGemmaSpacesBusyEntry( busyEntry );
+
+        /* set up the cancellation entry for this worker */
+        cancellationEntry = new SpacesCancellationEntry();
+        // FIXME The cancellationEnty is not being used at the moment since there is no "cancel" button in the extjs
+        // user interface (my gemma). When wiring this into the front end, you'll have to expose a cancel method in the
+        // AbstractSpacesController that first calls spacesUtil.cancel(taskId) and then
+        // taskRunningService.cancel(taskId);
+
+        template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
+
+        template.addNotifyDelegatorListener( this, cancellationEntry, null, true, Lease.FOREVER,
+                NotifyModifiers.NOTIFY_ALL );
+
+        space = ( IJSpace ) template.getSpace();
 
         Lease lease = space.write( registrationEntry, null, SpacesUtil.VERY_BIG_NUMBER_FOR_SOME_REASON );
         log.info( this.getClass().getSimpleName() + " registered with space " + template.getUrl() );
