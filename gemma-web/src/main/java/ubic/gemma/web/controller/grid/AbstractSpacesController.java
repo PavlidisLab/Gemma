@@ -28,8 +28,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.mvc.AbstractUrlViewController;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import com.j_spaces.core.client.NotifyModifiers;
-
 import ubic.gemma.grid.javaspaces.SpacesHelper;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.grid.javaspaces.SpacesJobObserver;
@@ -37,6 +35,8 @@ import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesProgressEntry;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
+
+import com.j_spaces.core.client.NotifyModifiers;
 
 /**
  * Subclasses implement getRunner() and getSpaceRunner()
@@ -128,6 +128,7 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
 
             GigaSpacesTemplate template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
 
+            /* set the type of object this spaces client of */
             template.addNotifyDelegatorListener( javaSpacesJobObserver, new SpacesProgressEntry(), null, true,
                     Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
 
