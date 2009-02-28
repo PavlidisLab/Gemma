@@ -34,8 +34,8 @@ import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithInteractionsAnalyzer;
 import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithoutInteractionsAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask;
 import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -309,7 +309,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         cmd.setFactors( factors );
 
         return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
-                .getName(), true );
+                .getName(), false );
     }
 
     /**
@@ -330,7 +330,7 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
 
         return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
-                .getName(), true );
+                .getName(), false );
     }
 
     public void setDifferentialExpressionAnalyzer( DifferentialExpressionAnalyzer differentialExpressionAnalyzer ) {
