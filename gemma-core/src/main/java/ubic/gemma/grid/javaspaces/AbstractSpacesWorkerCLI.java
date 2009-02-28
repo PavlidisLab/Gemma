@@ -32,6 +32,7 @@ import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.grid.javaspaces.SpacesUtil;
+import ubic.gemma.util.grid.javaspaces.entry.SpacesBusyEntry;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesCancellationEntry;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesRegistrationEntry;
 
@@ -55,6 +56,8 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
     protected IJSpace space = null;
 
     protected SpacesRegistrationEntry registrationEntry = null;
+
+    protected SpacesBusyEntry busyEntry = null;
 
     protected Long workerRegistrationId = null;
 
@@ -113,12 +116,20 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
 
         space = ( IJSpace ) template.getSpace();
 
+        /* set up the registration entry */
         registrationEntry = new SpacesRegistrationEntry();
         setRegistrationEntryTask();
         workerRegistrationId = RandomUtils.nextLong();
         registrationEntry.registrationId = workerRegistrationId;
         worker.setGemmaSpacesRegistrationEntry( registrationEntry );
-        Lease lease = space.write( registrationEntry, null, 600000000 );
+
+        /* set up the busy entry */
+        busyEntry = new SpacesBusyEntry();
+        busyEntry.message = registrationEntry.message;
+        busyEntry.registrationId = registrationEntry.registrationId;
+        worker.setGemmaSpacesBusyEntry( busyEntry );
+
+        Lease lease = space.write( registrationEntry, null, SpacesUtil.VERY_BIG_NUMBER_FOR_SOME_REASON );
         log.info( this.getClass().getSimpleName() + " registered with space " + template.getUrl() );
         if ( lease == null ) log.error( "Null Lease returned" );
 
@@ -157,6 +168,7 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
             if ( space != null ) {
                 try {
                     space.clear( registrationEntry, null );
+                    space.clear( busyEntry, null );
                 } catch ( Exception e ) {
 
                     log.error( "Error clearing the generic entry " + registrationEntry + "for task "

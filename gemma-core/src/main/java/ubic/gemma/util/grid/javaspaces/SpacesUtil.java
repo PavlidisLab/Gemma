@@ -34,6 +34,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.util.SpringContextUtil;
+import ubic.gemma.util.grid.javaspaces.entry.SpacesBusyEntry;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesCancellationEntry;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesGenericEntry;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesRegistrationEntry;
@@ -216,23 +217,52 @@ public class SpacesUtil implements ApplicationContextAware {
     }
 
     /**
+     * Returns the number of idle workers.
+     * 
      * @param url
      * @return int
      */
-    public int numWorkersRegistered( String url ) {
+    public int numIdleWorkers( String url ) {
         int count = 0;
 
         if ( !isSpaceRunning( url ) ) {
-            log.error( "Space not started at " + url + ". Returning a count of 0 (workers registered)." );
+            log.error( "Space not started at " + url + ". Returning a count of 0 (idle workers)." );
             return count;
         }
 
         try {
             IJSpace space = ( IJSpace ) SpaceFinder.find( url );
             count = space.count( new SpacesRegistrationEntry(), null );
-            log.debug( "count: " + count );
+            log.debug( "Number of idle workers: " + count );
         } catch ( Exception e ) {
-            log.error( "Could not check for workers registered.  Assuming 0 workers are registered." );
+            log.error( "Could not check for idle workers.  Assuming 0 workers are idle." );
+            e.printStackTrace();
+            return 0;
+        }
+
+        return count;
+    }
+
+    /**
+     * Returns the number of busy workers.
+     * 
+     * @param url
+     * @return
+     */
+    public int numBusyWorkers( String url ) {
+        int count = 0;
+
+        if ( !isSpaceRunning( url ) ) {
+            log.error( "Space not started at " + url + ". Returning a count of 0 (busy workers)." );
+            return count;
+        }
+
+        try {
+            IJSpace space = ( IJSpace ) SpaceFinder.find( url );
+            count = space.count( new SpacesBusyEntry(), null );
+            log.debug( "Number of busy workers: " + count );
+        } catch ( Exception e ) {
+            log.error( "Could not check for busy workers.  Assuming 0 workers are busy." );
             e.printStackTrace();
             return 0;
         }
@@ -271,19 +301,63 @@ public class SpacesUtil implements ApplicationContextAware {
         return workerEntries;
     }
 
+    public List<SpacesBusyEntry> getBusyWorkers( String url ) {
+
+        List<SpacesBusyEntry> workerEntries = null;
+        if ( !isSpaceRunning( url ) ) {
+            log.error( "Space not started at " + url + ". Returning a count of 0 (workers registered)." );
+            return null;
+        }
+
+        try {
+            IJSpace space = ( IJSpace ) SpaceFinder.find( url );
+
+            Object[] commandObjects = space.readMultiple( new SpacesBusyEntry(), null, 120000 );
+
+            workerEntries = new ArrayList<SpacesBusyEntry>();
+            for ( int i = 0; i < commandObjects.length; i++ ) {
+                SpacesBusyEntry entry = ( SpacesBusyEntry ) commandObjects[i];
+                workerEntries.add( entry );
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            return null;
+        }
+        return workerEntries;
+    }
+
     /**
-     * Returns true if workers are registered with the space at the given url.
+     * Returns true there exist idle workers. A worker with a {@link SpacesRegistrationEntry} in the space is considered
+     * idle (when workers are busy, they take the {@link SpacesRegistrationEntry} from the space and write a
+     * {@link SpacesBusyEntry} in the space).
      * 
      * @param url
      * @return boolean
      */
-    public boolean areWorkersRegistered( String url ) {
+    public boolean areWorkersIdle( String url ) {
         boolean registered = false;
 
-        if ( numWorkersRegistered( url ) > 0 ) registered = true;
+        if ( numIdleWorkers( url ) > 0 ) {
+            registered = true;
+        }
 
         return registered;
 
+    }
+
+    /**
+     * Returns true if there are workers registered with the space but busy.
+     * 
+     * @param url
+     * @return
+     */
+    public boolean areWorkersBusy( String url ) {
+        boolean registered = false;
+
+        if ( numBusyWorkers( url ) > 0 ) {
+            registered = true;
+        }
+        return registered;
     }
 
     /**
@@ -297,15 +371,15 @@ public class SpacesUtil implements ApplicationContextAware {
 
         List<String> taskNames = new ArrayList<String>();
 
-        if ( !this.areWorkersRegistered( url ) ) {
-            log.error( "No workers are registered with space at " + url + ".  Currently no tasks can be serviced." );
+        if ( !this.areWorkersIdle( url ) ) {
+            log.info( "No idle workers registered with space at " + url + ".  No tasks can be serviced right now." );
         }
 
         else {
             List<SpacesRegistrationEntry> workerEntries = this.getRegisteredWorkers( url );
             for ( SpacesGenericEntry entry : workerEntries ) {
                 String taskName = entry.getMessage();
-                log.debug( taskName );
+                log.debug( "Can service task " + taskName + " now." );
                 taskNames.add( taskName );
             }
         }
@@ -314,7 +388,30 @@ public class SpacesUtil implements ApplicationContextAware {
     }
 
     /**
-     * Returns true if the task can be serviced by the space at the given url.
+     * Returns a list of tasks that can be serviced later (are currently busy).
+     * 
+     * @param url
+     * @return
+     */
+    public List<String> tasksThatCanBeServicedLater( String url ) {
+        List<String> taskNames = new ArrayList<String>();
+
+        if ( !this.areWorkersBusy( url ) ) {
+            log.info( "No busy entries in the space at " + url + " (so no tasks will be queued)." );
+        }
+
+        List<SpacesBusyEntry> busyEntries = this.getBusyWorkers( url );
+        for ( SpacesBusyEntry entry : busyEntries ) {
+            String taskName = entry.getMessage();
+            log.debug( "Can service task " + taskName + " later." );
+            taskNames.add( taskName );
+        }
+        return taskNames;
+    }
+
+    /**
+     * Returns true if the task can be serviced by the space at the given url. The task may be serviced now or later,
+     * depending on whether or not it is busy.
      * 
      * @param taskName The name of the task to be serviced.
      * @param url The space url.
@@ -325,11 +422,17 @@ public class SpacesUtil implements ApplicationContextAware {
 
         List<String> serviceableTasks = this.tasksThatCanBeServiced( url );
 
+        List<String> busyTasks = this.tasksThatCanBeServicedLater( url );
+
         if ( serviceableTasks.contains( taskName ) ) {
             serviceable = true;
-            log.debug( "Can service task with name " + taskName );
+            log.info( "Can service task with name " + taskName );
+        } else if ( busyTasks.contains( taskName ) ) {
+            log.info( "Cannot service task with name " + taskName
+                    + " at this time but can service later.  Task will be queued." );
+            serviceable = true;
         } else {
-            log.error( "Cannot service task with name " + taskName );
+            log.warn( "Cannot service task " + taskName + " at this time." );
         }
 
         return serviceable;

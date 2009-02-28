@@ -90,7 +90,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     }
 
     /**
-     * Tests the areWorkersRegistered functinality.
+     * Tests the areWorkersIdle functionality.
      */
     public void testAreWorkersRegistered() {
 
@@ -103,7 +103,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
          */
         boolean workersRunning = false;
 
-        workersRunning = gigaspacesUtil.areWorkersRegistered( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        workersRunning = gigaspacesUtil.areWorkersIdle( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
         if ( workersRunning == false )
             assertFalse( workersRunning );
 
@@ -112,13 +112,13 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     }
 
     /**
-     * Tests the number of workers registered.
+     * Tests the number of idle workers.
      */
-    public void testNumWorkersRegistered() {
+    public void testNumIdle() {
         SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
         gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
-        int count = gigaspacesUtil.numWorkersRegistered( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        int count = gigaspacesUtil.numIdleWorkers( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
         assertTrue( count >= 0 );
 
     }

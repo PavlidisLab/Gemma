@@ -36,6 +36,7 @@ import org.springmodules.javaspaces.entry.AbstractMethodCallEntry;
 import org.springmodules.javaspaces.entry.MethodResultEntry;
 
 import ubic.gemma.util.grid.javaspaces.SpacesUtil;
+import ubic.gemma.util.grid.javaspaces.entry.SpacesBusyEntry;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesRegistrationEntry;
 
 /**
@@ -67,6 +68,8 @@ public class CustomDelegatingWorker implements Runnable {
     private Object taskId = null;
 
     private SpacesRegistrationEntry spacesRegistrationEntry = null;
+
+    private SpacesBusyEntry spacesBusyEntry = null;
 
     /**
      * Candidate that will match only this interface
@@ -146,13 +149,13 @@ public class CustomDelegatingWorker implements Runnable {
                     }
 
                     log.info( "Received method call entry.  Will execute task." );
-                    log.debug("Call:   " + call);
-                    log.debug("MethodCallEntryTemplate:   " + methodCallEntryTemplate);
-                    log.debug("SpacesRegistrationEntry:   " + spacesRegistrationEntry);
-                    
+                    log.debug( "Call:   " + call );
+                    log.debug( "MethodCallEntryTemplate:   " + methodCallEntryTemplate );
+                    log.debug( "SpacesRegistrationEntry:   " + spacesRegistrationEntry );
 
                     // custom
                     js.take( spacesRegistrationEntry, null, SpacesUtil.VERY_BIG_NUMBER_FOR_SOME_REASON );
+                    js.write( spacesBusyEntry, null, SpacesUtil.VERY_BIG_NUMBER_FOR_SOME_REASON );
                     try {
                         Object[] args = call.getArguments();
 
@@ -170,6 +173,9 @@ public class CustomDelegatingWorker implements Runnable {
                         MethodResultEntry result = invokeMethod( call, delegate );
                         // push the result back to the JavaSpace
                         js.write( result, transaction, Lease.FOREVER );
+                        // take the busy entry from the space
+                        js.take( spacesBusyEntry, null, SpacesUtil.VERY_BIG_NUMBER_FOR_SOME_REASON );
+                        // write the registration entry to the space
                         js.write( spacesRegistrationEntry, null, SpacesUtil.VERY_BIG_NUMBER_FOR_SOME_REASON );
                     } catch ( Exception ex ) {
                         // TODO fix me, should translate to JavaSpaceException
@@ -212,5 +218,9 @@ public class CustomDelegatingWorker implements Runnable {
      */
     public void setGemmaSpacesRegistrationEntry( SpacesRegistrationEntry spacesRegistrationEntry ) {
         this.spacesRegistrationEntry = spacesRegistrationEntry;
+    }
+
+    public void setGemmaSpacesBusyEntry( SpacesBusyEntry spacesBusyEntry ) {
+        this.spacesBusyEntry = spacesBusyEntry;
     }
 }
