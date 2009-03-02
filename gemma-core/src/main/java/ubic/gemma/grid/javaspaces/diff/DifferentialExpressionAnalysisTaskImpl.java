@@ -41,8 +41,6 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
 
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
-    private long counter = 0;
-
     /*
      * (non-Javadoc)
      * @seeubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid.javaspaces.diff.
@@ -57,10 +55,8 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
         TaskResult result = new TaskResult();
         result.setAnswer( results );
 
-        counter++;
-        result.setTaskID( counter );
-        log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
-                + result.getTaskID() );
+        result.setTaskID( super.taskId );
+        log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
         return result;
     }
 

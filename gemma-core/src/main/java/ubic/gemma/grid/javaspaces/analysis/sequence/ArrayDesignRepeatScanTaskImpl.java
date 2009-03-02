@@ -40,8 +40,6 @@ public class ArrayDesignRepeatScanTaskImpl extends BaseSpacesTask implements Arr
 
     private Log log = LogFactory.getLog( ArrayDesignRepeatScanTaskImpl.class );
 
-    private long counter = 0;
-
     /*
      * (non-Javadoc)
      * @see
@@ -62,10 +60,8 @@ public class ArrayDesignRepeatScanTaskImpl extends BaseSpacesTask implements Arr
 
         result.setAnswer( altered );
 
-        counter++;
-        result.setTaskID( counter );
-        log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
-                + result.getTaskID() );
+        result.setTaskID( super.taskId );
+        log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
         return result;
     }
 

@@ -28,8 +28,6 @@ import ubic.gemma.grid.javaspaces.TaskResult;
  */
 public class LinkAnalysisTaskImpl extends BaseSpacesTask implements LinkAnalysisTask {
 
-    private long counter = 0;
-
     private LinkAnalysisService linkAnalysisService = null;
 
     public void setLinkAnalysisService( LinkAnalysisService linkAnalysisService ) {
@@ -52,8 +50,7 @@ public class LinkAnalysisTaskImpl extends BaseSpacesTask implements LinkAnalysis
             throw new RuntimeException( e );
         }
 
-        counter++;
-        result.setTaskID( counter );
+        result.setTaskID( super.taskId );
 
         return result;
 

@@ -25,7 +25,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -39,7 +38,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements ExpressionExperimentLoadTask {
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
-    private long counter = 0;
     private GeoDatasetService geoDatasetService = null;
     ArrayExpressLoadService arrayExpressLoadService;
 
@@ -73,10 +71,8 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
                     doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
             result.setAnswer( datasets );
         }
-        counter++;
-        result.setTaskID( counter );
-        log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
-                + result.getTaskID() );
+        result.setTaskID( super.taskId );
+        log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
         return result;
     }
 

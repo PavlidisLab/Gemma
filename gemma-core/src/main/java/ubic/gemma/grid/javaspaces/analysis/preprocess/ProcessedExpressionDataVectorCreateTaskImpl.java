@@ -42,8 +42,6 @@ public class ProcessedExpressionDataVectorCreateTaskImpl extends BaseSpacesTask 
 
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService = null;
 
-    private long counter = 0;
-
     /*
      * (non-Javadoc)
      * @see
@@ -59,11 +57,8 @@ public class ProcessedExpressionDataVectorCreateTaskImpl extends BaseSpacesTask 
         Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
         result.setAnswer( processedVectors );
-
-        counter++;
-        result.setTaskID( counter );
-        log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
-                + result.getTaskID() );
+        result.setTaskID( super.taskId );
+        log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
         return result;
     }
 

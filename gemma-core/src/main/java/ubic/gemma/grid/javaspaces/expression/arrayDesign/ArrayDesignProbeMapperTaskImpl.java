@@ -23,7 +23,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -38,8 +37,6 @@ public class ArrayDesignProbeMapperTaskImpl extends BaseSpacesTask implements Ar
     private Log log = LogFactory.getLog( ArrayDesignProbeMapperTaskImpl.class );
 
     private ArrayDesignProbeMapperService arrayDesignProbeMapperService = null;
-
-    private long counter = 0;
 
     /*
      * (non-Javadoc)
@@ -59,10 +56,8 @@ public class ArrayDesignProbeMapperTaskImpl extends BaseSpacesTask implements Ar
 
         result.setAnswer( ad.getName() );
 
-        counter++;
-        result.setTaskID( counter );
-        log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
-                + result.getTaskID() );
+        result.setTaskID( super.taskId );
+        log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
         return result;
     }
 
