@@ -18,12 +18,12 @@
  */
 package ubic.gemma.grid.javaspaces;
 
-import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.springframework.security.context.SecurityContextHolder;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.util.progress.TaskRunningService;
@@ -75,7 +75,7 @@ public abstract class BaseSpacesTask implements SpacesTask {
      * @param clazz
      */
     public void initProgressAppender( Class clazz ) {
-        log.info( "Executing task " + clazz.getSimpleName() );
+        log.info( "Executing task " + clazz.getSimpleName() + " with id " + this.taskId );
 
         log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
                 + SecurityContextHolder.getContext().getAuthentication() );
