@@ -37,6 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
@@ -77,7 +78,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @spring.property name="securityService" ref="securityService"
  * @version $Id$
  */
-public class ExpressionExperimentReportService implements ExpressionExperimentReportTask {
+public class ExpressionExperimentReportService extends BaseSpacesTask implements ExpressionExperimentReportTask {
     private AuditEventService auditEventService;
 
     private AuditTrailService auditTrailService;
@@ -223,12 +224,12 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 AuditEvent trouble = troubleEvents.get( id );
                 // we find we are getting lazy-load exceptions from this guy.
                 auditEventService.thaw( trouble );
-                eeVo.setTroubleFlag( new AuditEventValueObject(trouble) );
+                eeVo.setTroubleFlag( new AuditEventValueObject( trouble ) );
             }
             if ( validationEvents.containsKey( id ) ) {
                 AuditEvent validated = validationEvents.get( id );
                 auditEventService.thaw( validated );
-                eeVo.setValidatedFlag( new AuditEventValueObject(validated) );
+                eeVo.setValidatedFlag( new AuditEventValueObject( validated ) );
             }
 
             ExpressionExperiment ee = eemap.get( id );

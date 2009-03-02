@@ -18,6 +18,8 @@
  */
 package ubic.gemma.util.grid.javaspaces.entry;
 
+import net.jini.core.event.RemoteEventListener;
+
 /**
  * Used to log information on the compute server. This type of entry is written to the java space, and received by a
  * {@link RemoteEventListener} as a notification.
@@ -31,5 +33,25 @@ public class SpacesProgressEntry extends SpacesGenericEntry {
      * 
      */
     private static final long serialVersionUID = 1L;
+
+    public String taskId = null;
+
+    /**
+     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
+     * 
+     * @return
+     */
+    public String getTaskId() {
+        return taskId;
+    }
+
+    /**
+     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
+     * 
+     * @param taskId
+     */
+    public void setTaskId( String taskId ) {
+        this.taskId = taskId;
+    }
 
 }

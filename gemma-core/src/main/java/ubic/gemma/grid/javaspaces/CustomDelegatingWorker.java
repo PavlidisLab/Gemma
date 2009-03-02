@@ -161,7 +161,9 @@ public class CustomDelegatingWorker implements Runnable {
 
                         if ( args[0] instanceof TaskCommand ) {
                             TaskCommand javaSpacesCommand = ( TaskCommand ) args[0];
+                            /* set the id of the worker to that of the master */
                             taskId = javaSpacesCommand.getTaskId();
+                            ( ( SpacesTask ) delegate ).setTaskId( taskId.toString() );
                         }
 
                     } catch ( Exception e ) {

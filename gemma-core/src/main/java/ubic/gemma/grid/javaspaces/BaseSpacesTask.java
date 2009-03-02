@@ -52,8 +52,20 @@ public abstract class BaseSpacesTask implements SpacesTask {
         this.taskId = TaskRunningService.generateTaskId();
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
+     */
     public String getTaskId() {
-        return taskId;
+        return this.taskId;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#setTaskId(java.lang.String)
+     */
+    public void setTaskId( String taskId ) {
+        this.taskId = taskId;
     }
 
     /**
@@ -74,7 +86,7 @@ public abstract class BaseSpacesTask implements SpacesTask {
         if ( gigaSpacesTemplate == null )
             throw new RuntimeException( "Will not be able to log information for the task " + clazz.getSimpleName() );
 
-        SpacesProgressAppender javaSpacesAppender = new SpacesProgressAppender( gigaSpacesTemplate );
+        SpacesProgressAppender javaSpacesAppender = new SpacesProgressAppender( gigaSpacesTemplate, taskId );
         if ( !logger.isAttached( javaSpacesAppender ) ) {
             logger.addAppender( javaSpacesAppender );
         }

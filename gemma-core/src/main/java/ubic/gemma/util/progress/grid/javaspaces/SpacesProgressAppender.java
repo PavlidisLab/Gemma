@@ -29,8 +29,8 @@ import ubic.gemma.util.progress.ProgressAppender;
 
 /**
  * This appender is used to send progress notifications to the space. The information for these notifications is
- * retrieved from the {@link LoggingEvent}. This information comes from the logging statement inlined in the source
- * code (ie. log.info("the text")).
+ * retrieved from the {@link LoggingEvent}. This information comes from the logging statement inlined in the source code
+ * (ie. log.info("the text")).
  * 
  * @author keshav
  * @version $Id$
@@ -41,13 +41,15 @@ public class SpacesProgressAppender extends ProgressAppender {
 
     private GigaSpacesTemplate gigaSpacesTemplate = null;
 
-    public SpacesProgressAppender( GigaSpacesTemplate gigaSpacesTemplate ) {
+    private String taskId = null;
+
+    public SpacesProgressAppender( GigaSpacesTemplate gigaSpacesTemplate, String taskId ) {
         this.gigaSpacesTemplate = gigaSpacesTemplate;
+        this.taskId = taskId;
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.progress.ProgressAppender#append(org.apache.log4j.spi.LoggingEvent)
      */
     @Override
@@ -60,8 +62,9 @@ public class SpacesProgressAppender extends ProgressAppender {
         if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null ) {
             if ( entry == null ) {
                 entry = new SpacesProgressEntry();
+                entry.taskId = taskId;
                 entry.message = "Logging Server Task";
-                gigaSpacesTemplate.clear(entry);
+                gigaSpacesTemplate.clear( entry );
                 gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
             } else {
                 try {

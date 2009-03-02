@@ -30,4 +30,6 @@ public interface SpacesTask extends InitializingBean {
 
     public String getTaskId();
 
+    public void setTaskId( String taskId );
+
 }
