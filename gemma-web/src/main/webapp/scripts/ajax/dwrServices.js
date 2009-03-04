@@ -52,11 +52,11 @@ AuditController._path = '/Gemma/dwr';
 AuditController.addAuditEvent = function(p0, p1, p2, p3, callback) {
 	dwr.engine._execute(AuditController._path, 'AuditController', 'addAuditEvent', p0, p1, p2, p3, callback);
 }
-AuditController.getAuditable = function(p0 , callback) {
-	dwr.engine._execute(AuditController._path, 'AuditController', 'getAuditable', p0 , callback);
+AuditController.getAuditable = function(p0, callback) {
+	dwr.engine._execute(AuditController._path, 'AuditController', 'getAuditable', p0, callback);
 }
-AuditController.getEvents = function(p0 , callback) {
-	dwr.engine._execute(AuditController._path, 'AuditController', 'getEvents', p0 , callback);
+AuditController.getEvents = function(p0, callback) {
+	dwr.engine._execute(AuditController._path, 'AuditController', 'getEvents', p0, callback);
 }
 // ====================================================================================
 if (BibliographicReferenceController == null)
@@ -488,12 +488,12 @@ OntologyService.saveExpressionExperimentStatement = function(p0, p1, callback) {
 			._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentStatement', p0, p1, callback);
 }
 OntologyService.saveExpressionExperimentStatement = function(p0, p1, callback) {
-	dwr.engine
-			._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentStatementById', p0, p1, callback);
+	dwr.engine._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentStatementById', p0, p1,
+			callback);
 }
 OntologyService.saveExpressionExperimentStatement = function(p0, p1, callback) {
-	dwr.engine
-			._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentsStatement', p0, p1, callback);
+	dwr.engine._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentsStatement', p0, p1,
+			callback);
 }
 OntologyService.removeExpressionExperimentStatement = function(p0, p1, callback) {
 	dwr.engine._execute(OntologyService._path, 'OntologyService', 'removeExpressionExperimentStatement', p0, p1,
@@ -513,6 +513,18 @@ ProcessedExpressionDataVectorCreateController.run = function(p0, callback) {
 ProcessedExpressionDataVectorCreateController.run = function(p0, callback) {
 	dwr.engine._execute(ProcessedExpressionDataVectorCreateController._path,
 			'ProcessedExpressionDataVectorCreateController', 'run', p0, callback);
+}
+// ====================================================================================
+if (TwoChannelMissingValueController == null)
+	var TwoChannelMissingValueController = {};
+TwoChannelMissingValueController._path = '/Gemma/dwr';
+TwoChannelMissingValueController.run = function(p0, callback) {
+	dwr.engine
+			._execute(TwoChannelMissingValueController._path, 'TwoChannelMissingValueController', 'run', p0, callback);
+}
+TwoChannelMissingValueController.run = function(p0, callback) {
+	dwr.engine
+			._execute(TwoChannelMissingValueController._path, 'TwoChannelMissingValueController', 'run', p0, callback);
 }
 // ====================================================================================
 if (ProgressStatusService == null)
@@ -550,10 +562,8 @@ if (UserListController == null)
 	var UserListController = {};
 UserListController._path = '/Gemma/dwr';
 UserListController.getUsers = function(callback) {
-	dwr.engine._execute(UserListController._path, 'UserListController',
-			'getUsers', callback);
+	dwr.engine._execute(UserListController._path, 'UserListController', 'getUsers', callback);
 }
-UserListController.saveUser = function(p0,callback) {
-	dwr.engine._execute(UserListController._path, 'UserListController',
-			'saveUser', p0, callback);
+UserListController.saveUser = function(p0, callback) {
+	dwr.engine._execute(UserListController._path, 'UserListController', 'saveUser', p0, callback);
 }

@@ -50,10 +50,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingCLI {
 
     private static final String MISSING_VALUE_OPTION = "mvind";
+
     /**
      * 
      */
-    private static final double DEFAULT_SIGNAL_TO_NOISE_THRESHOLD = 2.0;
 
     /**
      * @param args
@@ -76,7 +76,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     private ProcessedExpressionDataVectorCreateService pedvs;
 
-    private double s2n = DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
+    private double s2n = TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
 
     private Collection<Double> extraMissingValueIndicators = new HashSet<Double>();
 
@@ -98,7 +98,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         Option signal2noiseOption = OptionBuilder.hasArg().withArgName( "Signal-to-noise" ).withDescription(
                 "Signal to noise ratio, below which values are considered missing; default="
-                        + DEFAULT_SIGNAL_TO_NOISE_THRESHOLD ).withLongOpt( "signal2noise" ).create( 's' );
+                        + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD ).withLongOpt( "signal2noise" )
+                .create( 's' );
 
         addOption( signal2noiseOption );
 
@@ -196,7 +197,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
      * @param ee
      * @param ad
      */
-    @SuppressWarnings("unchecked")
     private void processExperiment( ExpressionExperiment ee, ArrayDesign ad ) {
 
         Collection<QuantitationType> types = eeService.getQuantitationTypes( ee );

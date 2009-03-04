@@ -184,8 +184,8 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
          * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.web.controller.BaseCommand)
          */
         @Override
-        protected Boolean processJob( TaskCommand command ) {
-            ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateTaskCommand ) command );
+        protected Boolean processJob( TaskCommand c ) {
+            ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateTaskCommand ) c );
 
             ExpressionExperiment ee = vectorCommand.getExpressionExperiment();
             // expressionExperimentService.thawLite( ee );
@@ -210,7 +210,6 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
      */
     @Override
     protected String getViewNameForRequest( HttpServletRequest arg0 ) {
-        // TODO Auto-generated method stub
         return null;
     }
 

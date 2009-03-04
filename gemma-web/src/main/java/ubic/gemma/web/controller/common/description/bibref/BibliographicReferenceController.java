@@ -26,6 +26,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
@@ -66,14 +67,12 @@ public class BibliographicReferenceController extends BaseMultiActionController 
      * @param response
      * @return
      */
-    @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "accession" );
 
         // FIXME: allow use of the primary key as well.
 
-        if ( pubMedId == null ) {
-            // should be a validation error, on 'submit'.
+        if ( StringUtils.isBlank( pubMedId ) ) {
             throw new EntityNotFoundException( "Must provide a PubMed Id" );
         }
 
@@ -86,13 +85,14 @@ public class BibliographicReferenceController extends BaseMultiActionController 
             }
         }
 
+        boolean isIncomplete = bibRef.getPublicationDate() == null;
         addMessage( request, "object.found", new Object[] { messagePrefix, pubMedId } );
         return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef ).addObject(
-                "existsInSystem", Boolean.TRUE );
+                "existsInSystem", Boolean.TRUE ).addObject( "incompleteEntry", isIncomplete );
     }
 
     /**
-     * For AJAX calls.
+     * For AJAX calls. Refresh the Gemma entry based on information from PubMed.
      * 
      * @param id
      */
@@ -105,6 +105,18 @@ public class BibliographicReferenceController extends BaseMultiActionController 
         String pubMedId = bibRef.getPubAccession().getAccession();
         BibliographicReference fresh = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
 
+        if ( fresh == null || fresh.getPublicationDate() == null ) {
+            throw new IllegalStateException( "Unable to retrive record from pubmed for id=" + pubMedId );
+        }
+
+        assert fresh.getPubAccession().getAccession().equals( pubMedId );
+
+        bibRef.setPublicationDate( fresh.getPublicationDate() );
+        bibRef.setAuthorList( fresh.getAuthorList() );
+        bibRef.setAbstractText( fresh.getAbstractText() );
+        bibRef.setIssue( fresh.getIssue() );
+        bibRef.setCitation( fresh.getCitation() );
+        bibRef.setPublication( fresh.getPublication() );
         bibRef.setMeshTerms( fresh.getMeshTerms() );
         bibRef.setChemicals( fresh.getChemicals() );
         bibRef.setKeywords( fresh.getKeywords() );
@@ -113,6 +125,8 @@ public class BibliographicReferenceController extends BaseMultiActionController 
     }
 
     /**
+     * Add or update a record.
+     * 
      * @param request
      * @param response
      * @return
@@ -131,9 +145,15 @@ public class BibliographicReferenceController extends BaseMultiActionController 
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
             }
             bibRef = ( BibliographicReference ) persisterHelper.persist( bibRef );
+            saveMessage( request, "Added " + pubMedId + " to the system." );
+        } else if ( StringUtils.isNotBlank( request.getParameter( "refresh" ) ) ) {
+
+            this.update( bibRef.getId() );
+            bibRef = bibliographicReferenceService.load( bibRef.getId() );
+
+            saveMessage( request, "Updated record for pubmed id " + pubMedId );
         }
 
-        saveMessage( request, "Added " + pubMedId + " to the system." );
         return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef ).addObject(
                 "existsInSystem", Boolean.TRUE );
     }
@@ -143,7 +163,7 @@ public class BibliographicReferenceController extends BaseMultiActionController 
      * @param response
      * @return
      */
-    @SuppressWarnings( { "unused", "unchecked" })
+    @SuppressWarnings( { "unchecked" })
     public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ) {
         Collection<BibliographicReference> allExperimentLinkedReferences = bibliographicReferenceService
                 .getAllExperimentLinkedReferences();
@@ -165,7 +185,6 @@ public class BibliographicReferenceController extends BaseMultiActionController 
      * @param response
      * @return
      */
-    @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "acc" );
 
@@ -192,7 +211,7 @@ public class BibliographicReferenceController extends BaseMultiActionController 
      * @param error
      * @return
      */
-    @SuppressWarnings( { "unchecked", "unused" })
+    @SuppressWarnings( { "unchecked" })
     public ModelAndView notFoundError( HttpServletRequest request, HttpServletResponse response,
             EntityNotFoundException error ) {
         List<String> errors = ( List<String> ) request.getAttribute( "errors" );
@@ -227,7 +246,6 @@ public class BibliographicReferenceController extends BaseMultiActionController 
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.web.servlet.mvc.multiaction.MultiActionController#newCommandObject(java.lang.Class)
      */
     @SuppressWarnings("unchecked")

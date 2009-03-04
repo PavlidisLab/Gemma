@@ -89,6 +89,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  */
 public class TwoChannelMissingValues {
 
+    public static final double DEFAULT_SIGNAL_TO_NOISE_THRESHOLD = 2.0;
+
     private static Log log = LogFactory.getLog( TwoChannelMissingValues.class.getName() );
 
     private AuditTrailService auditTrailService;

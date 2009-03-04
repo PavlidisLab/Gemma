@@ -188,7 +188,7 @@ public class AssayViewTag extends TagSupport {
 
             Map<ArrayDesign, Collection<BioAssay>> assayMap = bioAssayMap.get( material );
 
-            String image = "&nbsp;&nbsp;&nbsp;<img height=16 width=16 src='/Gemma/images/icons/arrow_switch.png' />";
+            String image = "&nbsp;&nbsp;&nbsp;<img height=16 width=16 src='/Gemma/images/icons/arrow_switch.png' />&nbsp;&nbsp;&nbsp;";
             for ( ArrayDesign design : designs ) {
                 if ( assayMap.containsKey( design ) ) {
                     Collection<BioAssay> assays = assayMap.get( design );
@@ -210,19 +210,20 @@ public class AssayViewTag extends TagSupport {
                     } else {
 
                         /*
-                         * Each bioassay has a unique id; the div it sits in is identified by the class. See
+                         * Each bioassay has a unique id; the div it sits in is identified by the class 'dragitem'. See
                          * expressionExperiment.edit.jsp.
                          */
 
                         BioAssay assay = ( ( ArrayList<BioAssay> ) assayMap.get( design ) ).get( 0 );
                         String shortDesc = StringUtils.abbreviate( assay.getDescription(), 60 );
-                        String link = "<a title='" + shortDesc + "' href='/Gemma/bioAssay/showBioAssay.html?id="
-                                + assay.getId() + "'>" + assay.getName() + "</a>";
+                        String link = "<a target=\"_blank\" title='" + shortDesc
+                                + "' href='/Gemma/bioAssay/showBioAssay.html?id=" + assay.getId() + "'>"
+                                + assay.getName() + "</a>";
                         String editAttributes = " align='left' class='dragItem' id='bioassay." + assay.getId()
                                 + "' material='" + material.getId() + "' assay='" + assay.getId() + "' arrayDesign='"
                                 + design.getId() + "'";
                         if ( edit && designs.size() > 1 ) {
-                            buf.append( "\n<td><div " + editAttributes + ">" + link + image );
+                            buf.append( "\n<td><div " + editAttributes + ">" + image + link );
                         } else {
                             buf.append( "\n<td ><div>" + link + "&nbsp;" );
                         }

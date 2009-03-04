@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE beans PUBLIC
-    "-//SPRING//DTD BEAN//EN"
-    "http://www.springframework.org/dtd/spring-beans.dtd">
+	"-//SPRING//DTD BEAN//EN"
+	"http://www.springframework.org/dtd/spring-beans.dtd">
 <!-- 
 	author: keshav   
 	$Id$ 
@@ -105,6 +105,20 @@
 		</property>
 	</bean>
 	
+	<bean id="twoChannelMissingValueWorker"
+		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+		singleton="false">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="twoChannelMissingValueTask" />
+		</property>
+		<property name="businessInterface">
+			<value>
+				ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTask
+			</value>
+		</property>
+	</bean>
+	
 	<bean id="linkAnalysisWorker"
 		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
@@ -155,37 +169,37 @@
 			<value>true</value>
 		</property>
 		<!--
-			The master will take the result from the space when it is available.  This
-			sets the time the master will wait for a result before timing out.
-			
-			This has been set to an extremely large value to make the effects negligible.  
-			That is, the master will never time out based on this setting.  Instead, the 
-			master should terminate itself programmatically after receiving the result. 
-		-->
+				The master will take the result from the space when it is available.  This
+				sets the time the master will wait for a result before timing out.
+
+				This has been set to an extremely large value to make the effects negligible.  
+				That is, the master will never time out based on this setting.  Instead, the 
+				master should terminate itself programmatically after receiving the result. 
+			-->
 		<property name="timeoutMillis">
 			<value>600000000</value>
 		</property>
 
 		<!--
-			Comment out this property for "service seeking" behavior 
-			where the endpoint is assumed to host a service to invoke.
-		-->
+				Comment out this property for "service seeking" behavior 
+				where the endpoint is assumed to host a service to invoke.
+			-->
 		<!--
-			<property name="serializableTarget" ref="taskBean">
-			</property>
-		-->
+				<property name="serializableTarget" ref="taskBean">
+				</property>
+			-->
 	</bean>
 	<!--
-		This is the client-side proxy to which task interfaces are added to.
-	-->
+			This is the client-side proxy to which task interfaces are added to.
+		-->
 	<bean id="proxy"
 		class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="interceptorNames">
 			<list>
 				<value>javaSpaceInterceptor</value>
 				<!--
-					<value>PerformanceMonitorInterceptor</value>
-				-->
+						<value>PerformanceMonitorInterceptor</value>
+					-->
 			</list>
 		</property>
 		<property name="proxyInterfaces">
@@ -204,6 +218,9 @@
 				</value>
 				<value>
 					ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask
+				</value>
+				<value>
+					ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTask
 				</value>
 				<value>
 					ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTask
@@ -241,11 +258,21 @@
 			<ref bean="gigaspacesTemplate" />
 		</property>
 	</bean>
-	
+	 
 	<bean id="processedExpressionDataVectorCreateTask"
 		class="ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskImpl">
 		<property name="processedExpressionDataVectorCreateService">
 			<ref bean="processedExpressionDataVectorCreateService" />
+		</property>
+		<property name="gigaSpacesTemplate">
+			<ref bean="gigaspacesTemplate" />
+		</property>
+	</bean>
+	
+	<bean id="twoChannelMissingValueTask"
+		class="ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTaskImpl">
+		<property name="twoChannelMissingValues">
+			<ref bean="twoChannelMissingValues" />
 		</property>
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />

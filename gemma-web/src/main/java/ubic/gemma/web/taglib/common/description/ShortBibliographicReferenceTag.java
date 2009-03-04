@@ -1,9 +1,25 @@
-/**
+/*
+ * The Gemma project.
  * 
+ * Copyright (c) 2006-2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package ubic.gemma.web.taglib.common.description;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 
 import javax.servlet.jsp.JspException;
@@ -22,12 +38,10 @@ import ubic.gemma.model.common.description.BibliographicReference;
  */
 public class ShortBibliographicReferenceTag extends TagSupport {
 
-
     /**
      * 
      */
     private static final long serialVersionUID = -7325678534991860679L;
-    
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -37,13 +51,12 @@ public class ShortBibliographicReferenceTag extends TagSupport {
      * @jsp.attribute description="BibliographicReference record for citation" required="true" rtexprvalue="true"
      * @param citation
      */
-    public void setCitation(BibliographicReference citation  ) {
+    public void setCitation( BibliographicReference citation ) {
         this.citation = citation;
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
@@ -56,7 +69,6 @@ public class ShortBibliographicReferenceTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
@@ -68,30 +80,51 @@ public class ShortBibliographicReferenceTag extends TagSupport {
         if ( this.citation == null ) {
             buf.append( "No accession" );
         } else {
-            String[] authors = StringUtils.split( citation.getAuthorList(), ";");
-            // if there are authors, only display the first author
-            if (authors.length == 0) {
-                
+
+            String authorList = citation.getAuthorList();
+
+            if ( authorList != null ) {
+                String[] authors = StringUtils.split( authorList, ";" );
+                // if there are authors, only display the first author
+                if ( authors.length == 0 ) {
+
+                } else if ( authors.length == 1 ) {
+                    buf.append( authors[0] + " " );
+                } else {
+                    buf.append( authors[0] + " et al. " );
+                }
+            } else {
+                buf.append( "Null author list" );
             }
-            else if (authors.length == 1) {
-                buf.append( authors[0] + " " );
+
+            // display the publication year
+            Calendar pubDate = new GregorianCalendar();
+            Date publicationDate = citation.getPublicationDate();
+
+            if ( publicationDate != null ) {
+                pubDate.setTime( publicationDate );
+                buf.append( "(" + pubDate.get( Calendar.YEAR ) + ") " );
+            } else {
+                buf.append( "Null publication date" );
             }
-            else {
-                buf.append( authors[0] + " et al. " );     
-            }
-            
-            // display the publish year
-            Calendar pubDate =  new GregorianCalendar();
-            pubDate.setTime( citation.getPublicationDate() );
-            buf.append( "(" + pubDate.get( Calendar.YEAR ) + ") ");
-            
+
             // add pubmed link
-            if (citation.getPubAccession() != null ) {
+            if ( citation.getPubAccession() != null ) {
                 String pubMedId = citation.getPubAccession().getAccession();
-                if (StringUtils.isNotBlank( pubMedId) ) {
-                    String link = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids="+ pubMedId + "&query_hl=2&itool=pubmed_docsum";
-            
-                    buf.append( "<a target='_blank' href='" + link + "' ><img src='/Gemma/images/pubmed.gif' /> </a>" );          
+                if ( StringUtils.isNotBlank( pubMedId ) ) {
+                    String link = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids="
+                            + pubMedId + "&query_hl=2&itool=pubmed_docsum";
+
+                    buf.append( "<a target='_blank' href='" + link
+                            + "' ><img src='/Gemma/images/pubmed.gif' /> </a>&nbsp;" );
+
+                    /*
+                     * Add link to edit page within Gemma
+                     */
+
+                    buf.append( "<a target='_blank' href='/Gemma/bibRef/bibRefView.html?accession=" + pubMedId
+                            + "'><img src='/Gemma/images/magnifier.png' /></a>" );
+
                 }
             }
 

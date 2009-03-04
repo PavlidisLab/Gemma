@@ -19,6 +19,7 @@
 package ubic.gemma.web.taglib.common.description;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -56,7 +57,6 @@ public class BibliographicReferenceTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
@@ -81,7 +81,13 @@ public class BibliographicReferenceTag extends TagSupport {
 
             buf.append( "</td> </tr> <tr> <td valign=\"top\"><b>Year</B></td><td>&nbsp;</td><td valign=\"top\">" );
             SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
-            buf.append( sdf.format( bibliographicReference.getPublicationDate() ) );
+            Date publicationDate = bibliographicReference.getPublicationDate();
+
+            if ( publicationDate != null ) {
+                buf.append( sdf.format( publicationDate ) );
+            } else {
+                buf.append( "Publication date is null. " );
+            }
 
             buf.append( "</td> </tr> <tr> <td valign=\"top\"><b>Title</B></td><td>&nbsp;</td><td valign=\"top\">" );
             buf.append( bibliographicReference.getTitle() );
@@ -148,7 +154,6 @@ public class BibliographicReferenceTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.BodyTagSupport#doEndTag()
      */
     @SuppressWarnings("unused")

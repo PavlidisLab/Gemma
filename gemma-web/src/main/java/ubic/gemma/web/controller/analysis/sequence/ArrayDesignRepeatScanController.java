@@ -59,7 +59,7 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController<Mo
         /* this 'run' method is exported in the spring-beans.xml */
 
         ArrayDesign ad = arrayDesignService.load( id );
-        arrayDesignService.thaw( ad );
+        arrayDesignService.thawLite( ad );
 
         ArrayDesignRepeatScanTaskCommand cmd = new ArrayDesignRepeatScanTaskCommand( ad );
 

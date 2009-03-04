@@ -6,21 +6,27 @@
 <jsp:useBean id="bibliographicReference" scope="request"
 	class="ubic.gemma.model.common.description.BibliographicReferenceImpl"></jsp:useBean>
 
-<title>Bibliographic Reference Search Results</title>
+<title>Bibliographic Reference record</title>
 
 
 <h2>
-	Bibliographic Reference Search Results
+	Bibliographic Reference record
 </h2>
+<security:authorize ifAnyGranted="admin">
+	<c:if test="${!requestScope.existsInSystem}">
+		<p>
+			This reference was obtained from PubMed; it is not in the Gemma system. You can add it to Gemma by clicking the
+			button on the bottom of the page, or do a
+			<a href="<c:url value="/bibRef/bibRefSearch.html"/>">new search</a>.
+		</p>
+	</c:if>
 
-<c:if test="${!requestScope.existsInSystem}">
-	<p>
-		This reference was obtained from PubMed; it is not in the Gemma
-		system. You can add it to Gemma by clicking the button on the bottom
-		of the page, or do a
-		<a href="<c:url value="/bibRef/bibRefSearch.html"/>">new search</a>.
-	</p>
-</c:if>
+	<c:if test="${requestScope.incompleteEntry}">
+		<p>
+			The entry is incomplete. You can attempt to complete it from pubmed by clicking the 'add' button below.
+		</p>
+	</c:if>
+</security:authorize>
 
 <spring:hasBindErrors name="bibliographicReference">
 	<div class="error">
@@ -28,8 +34,7 @@
 		<ul>
 			<c:forEach var="errMsgObj" items="${errors.allErrors}">
 				<li>
-					<spring:message code="${errMsgObj.code}"
-						text="${errMsgObj.defaultMessage}" />
+					<spring:message code="${errMsgObj.code}" text="${errMsgObj.defaultMessage}" />
 				</li>
 			</c:forEach>
 		</ul>
@@ -39,23 +44,34 @@
 <Gemma:bibref bibliographicReference="${bibliographicReference}" />
 
 <br />
-<table>
-	<tr>
-		<td align="left">
-			<c:if test="${!requestScope.existsInSystem}">
-				<div align="left">
-					<form method="GET" action="<c:url value="/bibRef/bibRefAdd.html"/>"
-						<input type="hidden" name="acc"
+<security:authorize ifAnyGranted="admin">
+	<table>
+		<tr>
+			<td align="left">
+				<c:if test="${!requestScope.existsInSystem}">
+					<div align="left">
+						<form method="GET" action="<c:url value="/bibRef/bibRefAdd.html"/>"
+							<input type="hidden" name="acc"
 							value="${bibliographicReference.pubAccession.accession}">
 						<input type="submit" value="Add to Gemma Database">
 					</form>
 				</div>
 			</c:if>
 		</td>
-
+		<td align="left">
+			<c:if test="${requestScope.incompleteEntry}">
+				<div align="left">
+					<form method="GET" action="<c:url value="/bibRef/bibRefAdd.html"/>"
+						<input type="hidden" name="acc"
+							value="${bibliographicReference.pubAccession.accession}">
+							<input type="hidden" name="refresh" value="1">
+						<input type="submit" value="Add to Gemma Database">
+					</form>
+				</div>
+			</c:if>
+		</td>
 		<td>
-			<c:if test="${requestScope.existsInSystem}">
-				<security:authorize ifAnyGranted="admin">
+			<c:if test="${requestScope.existsInSystem}"> 
 					<div align="right">
 						<form method="GET" action="<c:url value="/bibRefEdit.html"/>">
 							<input type="submit" value="Edit" />
@@ -63,13 +79,12 @@
 								value="${bibliographicReference.id}">
 						</form>
 					</div>
-				</security:authorize>
+				 
 			</c:if>
 		</td>
 		
 		<td>
-			<c:if test="${requestScope.existsInSystem}">
-				<security:authorize ifAnyGranted="admin">
+			<c:if test="${requestScope.existsInSystem}"> 
 					<div align="right">
 						<form method="get"
 							action="<c:url value="/bibRef/deleteBibRef.html"/>" 
@@ -77,19 +92,11 @@
 							<input type="submit"  
 										value="Delete" /></form>
 					</div>
-				</security:authorize>
+			
 			</c:if>
 		</td>
 
 	</tr>
-
-
-
+ 
 </table>
-
-<div align="left">
-	<br/>
-	<a href="<c:url value="/searcher.html"/>">New Search</a>
-</div>
-
-
+</security:authorize>

@@ -259,7 +259,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											Ext.Msg.alert("Missing value analysis failed", error);
 										}.createDelegate(this)
 									});
-							ArrayDesignRepeatScanController.run.apply(this, callParams);
+							TwoChannelMissingValueController.run.apply(this, callParams);
 						}
 					},
 					scope : this,

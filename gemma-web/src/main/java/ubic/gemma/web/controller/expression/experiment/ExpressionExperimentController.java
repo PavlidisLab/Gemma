@@ -42,7 +42,6 @@ import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -1235,7 +1234,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             pubDate.setTime( citation.getPublicationDate() );
             buf.append( "(" + pubDate.get( Calendar.YEAR ) + ") " );
         } else {
-            buf.append( "[Unkonwn date]" );
+            buf.append( "[Unknown date]" );
         }
 
         buf.append( citation.getTitle() + "; " + citation.getPublication() + ", " + citation.getVolume() + ": "
