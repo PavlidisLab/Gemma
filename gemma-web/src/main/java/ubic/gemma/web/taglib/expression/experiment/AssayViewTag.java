@@ -44,7 +44,8 @@ import com.sdicons.json.mapper.JSONMapper;
 import com.sdicons.json.mapper.MapperException;
 
 /**
- * Used to display table of biomaterials and bioassays.
+ * Used to display table of biomaterials and bioassays. In edit mode this displays allows dragging bioassays around to
+ * match up across platforms.
  * 
  * @jsp.tag name="assayView" body-content="empty"
  * @author joseph
@@ -88,7 +89,6 @@ public class AssayViewTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
@@ -98,7 +98,6 @@ public class AssayViewTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @SuppressWarnings("unchecked")
@@ -182,13 +181,14 @@ public class AssayViewTag extends TagSupport {
             } else {
                 buf.append( "<tr class='odd' align=justify>" );
             }
-            
-            String bmLink = "<a href='/Gemma/bioMaterial/showBioMaterial.html?id=" + material.getId() + "'> " + material.getName() + "</a>";
+
+            String bmLink = "<a href='/Gemma/bioMaterial/showBioMaterial.html?id=" + material.getId() + "'> "
+                    + material.getName() + "</a>";
             buf.append( "<td>" + bmLink + "</td>" );
 
             Map<ArrayDesign, Collection<BioAssay>> assayMap = bioAssayMap.get( material );
 
-            String image = "<img height=10 width=10 src='/Gemma/images/arrow_out.png' />";
+            String image = "&nbsp;&nbsp;&nbsp;<img height=16 width=16 src='/Gemma/images/icons/arrow_switch.png' />";
             for ( ArrayDesign design : designs ) {
                 if ( assayMap.containsKey( design ) ) {
                     Collection<BioAssay> assays = assayMap.get( design );
@@ -208,6 +208,12 @@ public class AssayViewTag extends TagSupport {
                                         + "</td>\n" );
 
                     } else {
+
+                        /*
+                         * Each bioassay has a unique id; the div it sits in is identified by the class. See
+                         * expressionExperiment.edit.jsp.
+                         */
+
                         BioAssay assay = ( ( ArrayList<BioAssay> ) assayMap.get( design ) ).get( 0 );
                         String shortDesc = StringUtils.abbreviate( assay.getDescription(), 60 );
                         String link = "<a title='" + shortDesc + "' href='/Gemma/bioAssay/showBioAssay.html?id="
@@ -252,9 +258,9 @@ public class AssayViewTag extends TagSupport {
             buf.append( "<input type='hidden' id='assayToMaterialMap' name='assayToMaterialMap' value='"
                     + jsonSerialization + "'/>" );
         }
-        
+
         buf.append( "</div>" );
-        
+
         try {
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {

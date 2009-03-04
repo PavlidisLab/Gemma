@@ -18,8 +18,7 @@
 	</c:if>
 </spring:bind>
 
-<title><fmt:message key="expressionExperiment.title" />
-</title>
+<title><fmt:message key="expressionExperiment.title" /></title>
 <form method="post" action="<c:url value="/expressionExperiment/editExpressionExperiment.html"/>">
 
 
@@ -371,11 +370,15 @@
 	</security:authorize>
 
 	<script language="JavaScript" type="text/javascript">
+
+	// all the bioassays
 	var dragItems = document.getElementsByClassName('dragItem');
+	
 	var windowIdArray = new Array(dragItems.length);
 	for (j = 0; j < dragItems.length; j++) {
 		windowIdArray[j] = dragItems[j].id;
 	}
+	
 	for (i = 0; i < windowIdArray.length; i++) {
 		var windowId = windowIdArray[i];
 		//set to be draggable
@@ -383,7 +386,8 @@
 			revert :true,
 			ghosting :true
 		});
-		//set to be droppable
+		
+		//set to be droppable, using scriptaculous framework, see dragdrop.js
 		Droppables
 				.add(
 						windowId,
@@ -410,7 +414,7 @@
 								// retrieve the JSON object and parse it
 								var materialString = document
 										.getElementById('assayToMaterialMap').value;
-								var materialMap = materialString.parseJSON();
+								var materialMap = Ext.util.JSON.decode( materialString );
 
 								// write the new values into the materialMap
 								materialMap[element.getAttribute('assay')]
@@ -445,8 +449,7 @@
 										.getAttribute('assay')].splice(k, 1);
 
 								// serialize the JSON object
-								document.getElementById('assayToMaterialMap').value = materialMap
-										.toJSONString();
+								document.getElementById('assayToMaterialMap').value = Ext.util.JSON.encode(materialMap);
 
 								// swap inner HTML
 								var content1 = element.innerHTML;
