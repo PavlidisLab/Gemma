@@ -204,9 +204,8 @@ public class DatasetCombiner {
     }
 
     /**
-     * @param associatedDatasetAccessions
      * @param seriesAccession
-     * @return GDSs that correspond to the given series.
+     * @return GDSs that correspond to the given series. It will be empty if there is no GDS matching.
      */
     public static Collection<String> findGDSforGSE( String seriesAccession ) {
         URL url = null;
@@ -214,6 +213,7 @@ public class DatasetCombiner {
         try {
 
             Pattern pat = Pattern.compile( "(GDS\\d+)\\srecord" );
+            Pattern errorPat = Pattern.compile( "error", Pattern.CASE_INSENSITIVE );
             url = new URL( ENTREZ_GEO_QUERY_URL_BASE + seriesAccession + ENTREZ_GEO_QUERY_URL_SUFFIX );
 
             URLConnection conn = url.openConnection();
@@ -227,6 +227,16 @@ public class DatasetCombiner {
                 if ( mat.find() ) {
                     String capturedAccession = mat.group( 1 );
                     associatedDatasetAccessions.add( capturedAccession );
+                } else {
+                    Matcher errorMat = errorPat.matcher( line );
+                    /*
+                     * In case NCBI is alive, but busted, html is returned but with an error.
+                     */
+                    if ( errorMat.find() ) {
+                        // throw new IOException( "Error from NCBI: " + line );
+                        // until we know what errors look like.
+                        log.error( "Error from NCBI? '" + line + "'" );
+                    }
                 }
             }
             is.close();
@@ -495,7 +505,7 @@ public class DatasetCombiner {
                                     / Math.max( targetSecondaryTitle.length(), testSecondaryTitle.length() );
                         }
 
-                        if ( !meetsMinimalThreshold( testAcc, trimmedTest, trimmedTarget, distance, normalizedDistance ) ) {
+                        if ( !meetsMinimalThreshold( normalizedDistance ) ) {
                             continue;
                         }
 
@@ -733,11 +743,8 @@ public class DatasetCombiner {
         return shouldTest;
     }
 
-    private boolean meetsMinimalThreshold( String testAcc, String trimmedTest, String trimmedTarget, double distance,
-            double normalizedDistance ) {
+    private boolean meetsMinimalThreshold( double normalizedDistance ) {
         if ( normalizedDistance > SIMILARITY_THRESHOLD ) {
-            // log.debug( testAcc + " Didn't meet threshold, score for '" + trimmedTest + "' vs '" + trimmedTarget
-            // + "' was " + normalizedDistance );
             return false;
         }
         return true;
