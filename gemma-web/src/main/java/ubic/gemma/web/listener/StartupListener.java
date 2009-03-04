@@ -19,6 +19,7 @@
 package ubic.gemma.web.listener;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -105,7 +106,6 @@ public class StartupListener extends ContextLoaderListener {
      * 
      * @param context
      */
-    @SuppressWarnings("unchecked")
     public static void populateDropDowns( ServletContext context ) {
         log.debug( "Populating drop-downs..." );
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
@@ -299,7 +299,9 @@ public class StartupListener extends ContextLoaderListener {
         }
 
         Collection<File> copiedJars = new HashSet<File>();
-        // TODO: clear out old jars.
+
+        clearOldJars( targetLibdir );
+
         for ( File sourceJar : jars ) {
             try {
                 File targetJar = new File( targetLibdir, sourceJar.getName() );
@@ -324,6 +326,27 @@ public class StartupListener extends ContextLoaderListener {
         }
 
         log.info( copiedJars.size() + " jar files copied to " + targetLibdir + " for grid configuration" );
+    }
+
+    /**
+     * Remove old jars from the dir.
+     * 
+     * @param targetLibdir
+     */
+    private void clearOldJars( File targetLibdir ) {
+        File[] oldJars = targetLibdir.listFiles( new FilenameFilter() {
+            public boolean accept( File dir, String name ) {
+                if ( name.endsWith( ".jar" ) ) {
+                    return true;
+                }
+                return false;
+            }
+        } );
+        for ( File jar : oldJars ) {
+            if ( !jar.delete() ) {
+                log.warn( "Unable to delete: " + jar );
+            }
+        }
     }
 
     /**
