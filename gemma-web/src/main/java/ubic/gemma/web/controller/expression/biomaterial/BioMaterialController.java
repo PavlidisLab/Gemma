@@ -89,7 +89,6 @@ public class BioMaterialController extends BaseMultiActionController {
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         log.debug( request.getParameter( "id" ) );

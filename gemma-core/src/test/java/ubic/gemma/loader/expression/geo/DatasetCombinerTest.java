@@ -63,7 +63,7 @@ public class DatasetCombinerTest extends TestCase {
      */
     public void testFindGDSGrouping() throws Exception {
         try {
-            Collection result = DatasetCombiner.findGDSforGSE( "GSE674" );
+            Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674" );
             assertTrue( result.contains( "GDS472" ) && result.contains( "GDS473" ) );
         } catch ( RuntimeException e ) {
             if ( e.getCause() instanceof java.net.UnknownHostException ) {

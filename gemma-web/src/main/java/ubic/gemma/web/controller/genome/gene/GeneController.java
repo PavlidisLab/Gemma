@@ -82,7 +82,7 @@ public class GeneController extends BaseMultiActionController {
         g.setId( geneDelegator.getId() );
         Collection<Gene2GOAssociation> associations = gene2GOAssociationService.findAssociationByGene( g );
         Collection<AnnotationValueObject> ontos = new HashSet<AnnotationValueObject>();
-        
+
         for ( Gene2GOAssociation assoc : associations ) {
 
             if ( assoc.getOntologyEntry() == null ) continue;
@@ -216,10 +216,9 @@ public class GeneController extends BaseMultiActionController {
     /**
      * @param request
      * @param response
-     * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings( { "unused", "unchecked" })
+    @SuppressWarnings("unchecked")
     public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
 
         // gene id.

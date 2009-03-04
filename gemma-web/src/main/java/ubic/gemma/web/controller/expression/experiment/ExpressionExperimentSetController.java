@@ -221,7 +221,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
     /**
      * @param obj
      */
-    @SuppressWarnings("unchecked")
     public void update( ExpressionExperimentSetValueObject obj ) {
 
         if ( obj.getId() == null ) {
@@ -304,7 +303,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @throws IllegalArgumentException if the set cannot be modified becasue it is is associated with an analysis
      *         object.
      */
-    @SuppressWarnings("unchecked")
     private boolean updateExperimentsInSet( ExpressionExperimentSetValueObject obj, ExpressionExperimentSet toUpdate ) {
 
         Collection<Long> idsInExistingSet = this.getExperimentIdsInSet( obj.getId() );
@@ -321,23 +319,22 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         if ( membersAreTheSame ) {
             return false;
-        } else {
-            Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( obj
-                    .getExpressionExperimentIds() );
-            toUpdate.getExperiments().retainAll( datasetsAnalyzed );
-            toUpdate.getExperiments().addAll( datasetsAnalyzed );
-            /*
-             * Check that all the datasets match the given taxon.
-             */
-            for ( BioAssaySet ee : toUpdate.getExperiments() ) {
-                Taxon t = expressionExperimentService.getTaxon( ee.getId() );
-                if ( !t.equals( toUpdate.getTaxon() ) ) {
-                    throw new IllegalArgumentException( "You cannot add a " + t.getCommonName() + " dataset to a "
-                            + toUpdate.getTaxon().getCommonName() + " set" );
-                }
-            }
-            return true;
         }
+        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( obj
+                .getExpressionExperimentIds() );
+        toUpdate.getExperiments().retainAll( datasetsAnalyzed );
+        toUpdate.getExperiments().addAll( datasetsAnalyzed );
+        /*
+         * Check that all the datasets match the given taxon.
+         */
+        for ( BioAssaySet ee : toUpdate.getExperiments() ) {
+            Taxon t = expressionExperimentService.getTaxon( ee.getId() );
+            if ( !t.equals( toUpdate.getTaxon() ) ) {
+                throw new IllegalArgumentException( "You cannot add a " + t.getCommonName() + " dataset to a "
+                        + toUpdate.getTaxon().getCommonName() + " set" );
+            }
+        }
+        return true;
     }
 
 }

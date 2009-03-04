@@ -138,7 +138,6 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @param arrayDesign
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<CompositeSequenceMapValueObject> search( String searchString, String arrayDesignId ) {
 
         if ( StringUtils.isBlank( searchString ) ) {
@@ -191,7 +190,6 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unchecked")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         CompositeSequence cs = compositeSequenceService.load( id );
@@ -289,7 +287,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
             }
 
             blatResult.getQuerySequence().getTaxon(); // FIXME: Cruft or thaw attempt? Tested and apparently not needed
-                                                      // (PP)
+            // (PP)
 
             if ( blatResults.containsKey( blatResult ) ) {
                 blatResults.get( blatResult ).addGene( geneProduct, gene );
