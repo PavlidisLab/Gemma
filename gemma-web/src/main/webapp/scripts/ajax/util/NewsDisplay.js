@@ -23,7 +23,11 @@ Gemma.NewsDisplay = Ext.extend(Ext.Panel, {
 												name : "title"
 											}, {
 												name : "date",
-												type : "date"
+												type : "date",
+												//dateFormat : "%d %m %Y",
+												convert : function(v, rec) {
+													return Ext.util.Format.date(v, "M d y");
+												}
 											}, {
 												name : "body"
 											}, {
@@ -34,7 +38,7 @@ Gemma.NewsDisplay = Ext.extend(Ext.Panel, {
 
 				tpl : new Ext.XTemplate(' <tpl for="."><div class="news"><div class="roundedcornr_box_962327">'
 						+ '<div class="roundedcornr_top_962327"> <div></div>	</div> <div class="roundedcornr_content_962327">'
-						+ '<h3>{title}</h3>{body}	<div class="roundedcornr_bottom_962327"> <div></div> </div></div></tpl>')
+						+ '<h3>{title}</h3>{body}<div style="font-size:smaller">Posted: {date}</div><div class="roundedcornr_bottom_962327"> <div></div> </div></div></tpl>')
 
 			})
 		});
