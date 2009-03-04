@@ -18,6 +18,7 @@
  */
 package ubic.gemma.grid.javaspaces.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
@@ -61,15 +62,50 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
         if ( jsEeLoadCommand.isArrayExpress() ) {
             ExpressionExperiment dataset = arrayExpressLoadService.load( accession, jsEeLoadCommand
                     .getArrayDesignName() );
-            result.setAnswer( dataset );
+            ExpressionExperiment minimalDataset = null;
+            if ( dataset != null ) {
+                /* Don't send the full experiment to the space. Instead, create a minimal result. */
+                minimalDataset = ExpressionExperiment.Factory.newInstance();
+                minimalDataset.setId( dataset.getId() );
+                minimalDataset.setName( dataset.getName() );
+                minimalDataset.setDescription( dataset.getDescription() );
+            }
+            result.setAnswer( minimalDataset );
         } else if ( loadPlatformOnly ) {
             Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accession, true, doSampleMatching,
                     aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
-            result.setAnswer( arrayDesigns );
+            ArrayList<ArrayDesign> minimalDesigns = null;
+            if ( arrayDesigns != null ) {
+                /* Don't send the full array designs to space. Instead, create a minimal result. */
+                minimalDesigns = new ArrayList<ArrayDesign>();
+                for ( ArrayDesign ad : arrayDesigns ) {
+                    ArrayDesign minimalDesign = ArrayDesign.Factory.newInstance();
+                    minimalDesign.setId( ad.getId() );
+                    minimalDesign.setName( ad.getName() );
+                    minimalDesign.setDescription( ad.getDescription() );
+
+                    minimalDesigns.add( minimalDesign );
+                }
+            }
+            result.setAnswer( minimalDesigns );
         } else {
             Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( accession, loadPlatformOnly,
                     doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
-            result.setAnswer( datasets );
+
+            ArrayList<ExpressionExperiment> minimalDatasets = null;
+            if ( datasets != null ) {
+                /* Don't send the full experiments to space. Instead, create a minimal result. */
+                minimalDatasets = new ArrayList<ExpressionExperiment>();
+                for ( ExpressionExperiment ee : datasets ) {
+                    ExpressionExperiment minimalDataset = ExpressionExperiment.Factory.newInstance();
+                    minimalDataset.setId( ee.getId() );
+                    minimalDataset.setName( ee.getName() );
+                    minimalDataset.setDescription( ee.getDescription() );
+
+                    minimalDatasets.add( minimalDataset );
+                }
+            }
+            result.setAnswer( minimalDatasets );
         }
         result.setTaskID( super.taskId );
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
