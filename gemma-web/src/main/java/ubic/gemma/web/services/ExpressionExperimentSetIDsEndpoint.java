@@ -66,7 +66,6 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         authenticate();
         StopWatch watch = new StopWatch();
@@ -91,7 +90,7 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
         // return buildBadResponse( document, msg );
         // }
 
-        Collection<ExpressionExperimentSet> eesCol = expressionExperimentSetService.loadAll();
+        Collection<ExpressionExperimentSet> eesCol = expressionExperimentSetService.loadAllMultiExperimentSets();
 
         // retain expression experiment sets that have a name assigned
         Collection<ExpressionExperimentSet> eesColToUse = new HashSet<ExpressionExperimentSet>();
@@ -122,17 +121,17 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
             Element e3 = document.createElement( "datasets" );
             e3.appendChild( document.createTextNode( encode( eeIds.toArray() ) ) );
             responseElement.appendChild( e3 );
-            
-            //taxon not populate
-//            Element e4 = document.createElement( "taxon" );
-//            e4.appendChild( document.createTextNode( ees.getTaxon().getId().toString() ) );
-//            responseElement.appendChild( e4 );
-            
+
+            // taxon not populate
+            // Element e4 = document.createElement( "taxon" );
+            // e4.appendChild( document.createTextNode( ees.getTaxon().getId().toString() ) );
+            // responseElement.appendChild( e4 );
+
         }
 
         watch.stop();
         Long time = watch.getTime();
-        //log.info( "Finished generating result. Sending response to client." );
+        // log.info( "Finished generating result. Sending response to client." );
         log.info( "XML response for Experiment Set IDs results built in " + time + "ms." );
         return responseWrapper;
 

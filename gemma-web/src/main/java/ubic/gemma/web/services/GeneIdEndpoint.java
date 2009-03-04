@@ -34,7 +34,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * Given the official symbolic of a gene, will return the matching gene ID.
+ * Given the official symbol and taxon of a gene, will return the matching gene ID.
  * 
  * @author klc, gavin
  * @version$Id$
@@ -42,7 +42,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 public class GeneIdEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog(GeneIdEndpoint.class);
+    private static Log log = LogFactory.getLog( GeneIdEndpoint.class );
 
     private GeneService geneService;
     private TaxonService taxonService;
@@ -58,7 +58,7 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
     public void setGeneService( GeneService geneS ) {
         this.geneService = geneS;
     }
-    
+
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
     }
@@ -71,11 +71,10 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( GENE_LOCAL_NAME );
         String geneName = "";
         String taxString = "";
@@ -89,26 +88,26 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
         for ( String tax : taxonResults ) {
             taxString = tax;
         }
-       
-        log.info( "XML input read: gene symbol, "+geneName+" & taxon id, "+taxString );
-        //Collection<Gene> genes = geneService.findByOfficialSymbolInexact( geneName );
+
+        log.info( "XML input read: gene symbol, " + geneName + " & taxon id, " + taxString );
+        // Collection<Gene> genes = geneService.findByOfficialSymbolInexact( geneName );
         Taxon taxon = taxonService.load( Long.parseLong( taxString ) );
         Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
 
         if ( gene == null ) {
-            String msg = "No gene with official symbol, " + geneName + ", and taxon, "+taxString+", can be found.";
+            String msg = "No gene with official symbol, " + geneName + ", and taxon, " + taxString + ", can be found.";
             return buildBadResponse( document, msg );
         }
 
-        //build results in the form of a collection
+        // build results in the form of a collection
         Collection<String> gIDs = new HashSet<String>();
         gIDs.add( gene.getId().toString() );
 
         Element wrapper = buildWrapper( document, gIDs, "gene_id" );
-        
+
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for gene id result (from gene symbol) built in " + time + "ms." );   
+        log.info( "XML response for gene id result (from gene symbol) built in " + time + "ms." );
         return wrapper;
 
     }
