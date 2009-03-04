@@ -60,7 +60,7 @@ public class FeedReader implements InitializingBean {
         /*
          * reformat the feed.
          */
-        Pattern authorP = Pattern.compile( "<p>.*?News Item.*?<b>edited</b>.*?by.*?<a.*?</p>", Pattern.DOTALL
+        Pattern authorP = Pattern.compile( "<p>.*?News Item.*?<b>(edited|added)</b>.*?by.*?<a.*?</p>", Pattern.DOTALL
                 | Pattern.CASE_INSENSITIVE );
         Pattern footerP = Pattern.compile( "<div style=.?padding: 10px 0;.*?View Online</a>.*?</div>", Pattern.DOTALL
                 | Pattern.CASE_INSENSITIVE );
