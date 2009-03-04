@@ -53,7 +53,7 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
         DifferentialExpressionAnalysis results = doAnalysis( command );
 
         TaskResult result = new TaskResult();
-        result.setAnswer( results );
+        result.setAnswer( results.getId() );
 
         result.setTaskID( super.taskId );
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );

@@ -58,7 +58,7 @@ public class ArrayDesignRepeatScanTaskImpl extends BaseSpacesTask implements Arr
         RepeatScan scanner = new RepeatScan();
         Collection<BioSequence> altered = scanner.repeatScan( sequences );
 
-        result.setAnswer( altered );
+        result.setAnswer( altered.size() );
 
         result.setTaskID( super.taskId );
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );

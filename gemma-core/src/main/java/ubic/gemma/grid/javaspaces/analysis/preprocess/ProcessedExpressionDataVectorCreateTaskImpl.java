@@ -56,7 +56,7 @@ public class ProcessedExpressionDataVectorCreateTaskImpl extends BaseSpacesTask 
         TaskResult result = new TaskResult();
         Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
-        result.setAnswer( processedVectors );
+        result.setAnswer( processedVectors.size() );
         result.setTaskID( super.taskId );
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
         return result;
