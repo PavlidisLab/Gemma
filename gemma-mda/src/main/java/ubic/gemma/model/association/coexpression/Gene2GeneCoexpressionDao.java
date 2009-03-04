@@ -98,7 +98,7 @@ public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.G
 
     /**
      * <p>
-     * Returns a collection of gene2geneCoexpression objects
+     * Returns a collection of gene2geneCoexpression objects. Set maxResults to 0 to remove limits.
      * </p>
      */
     public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships(
@@ -106,7 +106,7 @@ public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.G
 
     /**
      * <p>
-     * Returns a map of genes to coexpression results.
+     * Returns a map of genes to coexpression results. Set maxResults to 0 to remove limits.
      * </p>
      */
     public java.util.Map findCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency,

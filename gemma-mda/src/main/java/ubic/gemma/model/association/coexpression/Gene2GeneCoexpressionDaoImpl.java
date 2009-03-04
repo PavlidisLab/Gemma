@@ -24,9 +24,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Element;
 
@@ -44,6 +47,8 @@ import ubic.gemma.util.TaxonUtility;
  */
 public class Gene2GeneCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase {
+
+    private static Log log = LogFactory.getLog( Gene2GeneCoexpressionDaoImpl.class );
 
     /**
      * For storing information about gene results that are cached.
@@ -171,7 +176,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
                 if ( !finalResult.containsKey( firstGene ) ) {
                     finalResult.put( firstGene, new HashSet<Gene2GeneCoexpression>() );
-                } else if ( finalResult.get( firstGene ).size() >= maxResults ) {
+                } else if ( maxResults > 0 && finalResult.get( firstGene ).size() >= maxResults ) {
                     continue;
                 }
                 finalResult.get( firstGene ).add( g2g );
@@ -180,7 +185,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
                 if ( !finalResult.containsKey( secondGene ) ) {
                     finalResult.put( secondGene, new HashSet<Gene2GeneCoexpression>() );
-                } else if ( finalResult.get( secondGene ).size() >= maxResults ) {
+                } else if ( maxResults > 0 && finalResult.get( secondGene ).size() >= maxResults ) {
                     continue;
                 }
                 finalResult.get( secondGene ).add( g2g );
@@ -224,29 +229,54 @@ public class Gene2GeneCoexpressionDaoImpl extends
         // we assume the genes are from the same taxon.
         String g2gClassName = getClassName( genes.iterator().next() );
 
-        final String queryString = "select g2g from "
-                + g2gClassName
-                + " as g2g where g2g.firstGene in (:genes) and g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
+        Collection<Gene> unseen = new HashSet<Gene>();
+        unseen.addAll( genes );
 
-        Collection<Gene2GeneCoexpression> r = this.getHibernateTemplate().findByNamedParam( queryString,
-                new String[] { "genes", "stringency", "sourceAnalysis" },
-                new Object[] { genes, stringency, sourceAnalysis } );
-
-        List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
-        Collections.sort( lr, new SupportComparator() );
+        /*
+         * Note: doing this using 'in' clauses with many genes is very slow -- it can take minutes to complete a query!
+         * Doing it the dumb way is shockingly fast. For just a few genes it probably doesn't matter.
+         */
 
         Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+
         for ( Gene g : genes ) {
             result.put( g, new HashSet<Gene2GeneCoexpression>() );
         }
-        int count = 0;
-        for ( Gene2GeneCoexpression g2g : r ) {
-            // all the genes are guaranteed to be in the query list. But we want them listed both ways so we count them
-            // up right later.
-            result.get( g2g.getFirstGene() ).add( g2g );
-            result.get( g2g.getSecondGene() ).add( g2g );
-            count++;
+
+        for ( Gene queryGene : genes ) {
+
+            log.debug( queryGene );
+
+            final String firstQueryString = "select g2g from "
+                    + g2gClassName
+                    + " as g2g where g2g.firstGene = :qgene and g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
+
+            final String secondQueryString = "select g2g from "
+                    + g2gClassName
+                    + " as g2g where g2g.secondGene = :qgene and g2g.firstGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
+
+            Collection<Gene2GeneCoexpression> r = this.getHibernateTemplate().findByNamedParam( firstQueryString,
+                    new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
+                    new Object[] { queryGene, unseen, stringency, sourceAnalysis } );
+
+            r.addAll( this.getHibernateTemplate().findByNamedParam( secondQueryString,
+                    new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
+                    new Object[] { queryGene, unseen, stringency, sourceAnalysis } ) );
+
+            List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
+            Collections.sort( lr, new SupportComparator() );
+
+            for ( Gene2GeneCoexpression g2g : r ) {
+                /*
+                 * all the genes are guaranteed to be in the query list. But we want them listed both ways so we count
+                 * them up right later.
+                 */
+                result.get( g2g.getFirstGene() ).add( g2g );
+                result.get( g2g.getSecondGene() ).add( g2g );
+            }
+
         }
+
         return result;
 
     }
