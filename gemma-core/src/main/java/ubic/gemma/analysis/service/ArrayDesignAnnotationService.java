@@ -196,8 +196,19 @@ public class ArrayDesignAnnotationService {
     };
 
     /**
+     * Format details:
+     * <p>
+     * There is a one-line header. The columns are:
+     * <ol>
+     * <li>Probe name
+     * <li>Gene symbol. Genes located at different genome locations are delimited by "|"; multiple genes at the same
+     * location are delimited by ",". Both can happen simultaneously.
+     * <li>Gene name, delimited as for the symbol except '$' is used instead of ','.
+     * <li>GO terms, delimited by '|'; multiple genes are not handled specially (for compatibility with ermineJ)
+     * </ol>
+     * 
      * @param writer
-     * @param compositeSequences
+     * @param genesWithSpecificity map of cs ->* physical location ->* ( blat association ->* gene product -> gene)
      * @param ty whether to include parents (OutputType.LONG); only use biological process (OutputType.BIOPROCESS) or
      *        'standard' output (OutputType.SHORT).
      * @param knownGenesOnly Whether output should include PARs and predicted genes. If true, they will be excluded.
@@ -247,6 +258,7 @@ public class ArrayDesignAnnotationService {
                     clusterGoTerms.addAll( getGoTerms( g, ty ) );
                 }
 
+                // This will break if gene symbols contain ",".
                 genes.add( StringUtils
                         .join( new TransformIterator( retained.iterator(), officialSymbolExtractor ), "," ) );
 

@@ -44,6 +44,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * @author pavlidis
@@ -633,9 +634,10 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     }
 
     /**
-     * @param batch
-     * @param results
+     * @param batch of composite sequences to process
+     * @param results - adding to this
      */
+    @SuppressWarnings("unchecked")
     private void batchGetGenesWithSpecificity( Collection<CompositeSequence> batch,
             Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> results ) {
 
@@ -652,7 +654,20 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             Object[] oa = ( Object[] ) o;
             CompositeSequence csa = ( CompositeSequence ) oa[0];
             BlatAssociation ba = ( BlatAssociation ) oa[1];
-            PhysicalLocation pl = ba.getBlatResult().getTargetAlignedRegion();
+            BlatResult blatResult = ba.getBlatResult();
+            PhysicalLocation pl = blatResult.getTargetAlignedRegion();
+
+            /*
+             * We didn't always used to fill in the targetAlignedRegion ... this is just in case.
+             */
+            if ( pl == null ) {
+                pl = PhysicalLocation.Factory.newInstance();
+                pl.setChromosome( blatResult.getTargetChromosome() );
+                pl.setNucleotide( blatResult.getTargetStart() );
+                pl.setNucleotideLength( blatResult.getTargetEnd().intValue() - blatResult.getTargetStart().intValue() );
+                pl.setStrand( blatResult.getStrand() );
+            }
+
             if ( !results.containsKey( csa ) ) {
                 results.put( csa, new HashMap<PhysicalLocation, Collection<BlatAssociation>>() );
             }
@@ -662,5 +677,4 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             results.get( csa ).get( pl ).add( ba );
         }
     }
-
 }

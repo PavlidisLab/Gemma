@@ -86,7 +86,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      */
     boolean overWrite = false;
 
-    OutputType type;
+    OutputType type = OutputType.SHORT;
 
     private String geneFileName;
 
@@ -288,7 +288,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         File af = ArrayDesignAnnotationService.getFileName( allparFileBaseName );
 
         if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {
-            log.info( "Files exist already, will not overwrite (use -overwrite option to override)" );
+            log.info( "Files exist already, will not overwrite (use --overwrite option to override)" );
             return;
         }
 
