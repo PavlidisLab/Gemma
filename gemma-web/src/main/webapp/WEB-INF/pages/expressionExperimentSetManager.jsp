@@ -26,19 +26,19 @@
 <security:authorize ifAnyGranted="admin">
 	<script type="text/javascript">
 	Ext.namespace('Gemma');
-	Ext.onReady(function() {
-	Ext.QuickTips.init();
-	
-	
-	 var eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
-			isAdmin : true,
-			store : new Gemma.ExpressionExperimentSetStore()
-	});
-	
-	eeSetChooserPanel.render('EESetManager');
-	eeSetChooserPanel.expand();
-	
-});
+	Ext.onReady( function() {
+		Ext.QuickTips.init();
+
+		var eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel( {
+			renderTo : 'EESetManager',
+			isAdmin :true,
+			store :new Gemma.ExpressionExperimentSetStore()
+		});
+
+		// eeSetChooserPanel.render('EESetManager');
+			// eeSetChooserPanel.expand();
+
+		});
 </script>
 </security:authorize>
 

@@ -3,7 +3,8 @@
  * 
  * At the top, the available ExpressionExperimentSets are shown. At the bottom left, searching for experiments; at the
  * bottom right, the experiments that are in the set. If the user is an admin, they can save new
- * ExpressionExperimentSets to the database; otherwise they are saved for the user in a cookie.
+ * ExpressionExperimentSets to the database; otherwise they are saved for the user in a cookie (latter mechanism may be
+ * changed)
  * 
  * @author Paul
  * 
@@ -629,6 +630,14 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 					this.on("show", function() {
 								this.eeSetGrid.getSelectionModel().selectRecords([config.selected]);
 								this.eeSetGrid.getView().focusRow(this.eeSetGrid.getStore().indexOf(config.selected));
+
+								this.eeSetGrid.getSelectionModel().on('rowselect', function(model, rowindex, record) {
+											this.sourceDatasetsGrid.getTopToolbar().eeSearchField.taxonChanged({
+														id : record.get("taxonId")
+													});
+
+										}.createDelegate(this));
+
 							}, this, {
 								single : true
 							}, config);
@@ -718,6 +727,17 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 				this.eeSetGrid.getTopToolbar().on("delete-set", function(rec) {
 							this.eeSetMembersGrid.setTitle('Set members');
 							this.fireEvent('delete-set');
+						}.createDelegate(this));
+
+				/*
+				 * Set the taxon for the search field when the ee set is chosen.
+				 */
+				this.eeSetGrid.getSelectionModel().on('rowselect', function(model, rowindex, record) {
+							// console.log(record);
+							this.sourceDatasetsGrid.getTopToolbar().eeSearchField.taxonChanged({
+										id : record.get("taxonId")
+									});
+
 						}.createDelegate(this));
 
 			},
