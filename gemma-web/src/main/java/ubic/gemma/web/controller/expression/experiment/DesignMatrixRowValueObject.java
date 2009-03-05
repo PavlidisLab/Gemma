@@ -38,6 +38,8 @@ import ubic.gemma.util.CountingMap;
 import ubic.gemma.util.FactorValueVector;
 
 /**
+ * For the display of a summary table about experimental design.
+ * 
  * @author luke
  * @version $Id$
  */
@@ -79,7 +81,12 @@ public class DesignMatrixRowValueObject implements Serializable {
         StringBuffer buf = new StringBuffer();
         if ( !factorValue.getCharacteristics().isEmpty() ) {
             for ( Iterator<Characteristic> i = factorValue.getCharacteristics().iterator(); i.hasNext(); ) {
-                buf.append( i.next() );
+                Characteristic characteristic = i.next();
+
+                /*
+                 * Note we don't use toString here because it includes the category, uri, etc.
+                 */
+                buf.append( characteristic.getValue() );
                 if ( i.hasNext() ) buf.append( ", " );
             }
         } else if ( !StringUtils.isEmpty( factorValue.getValue() ) ) {

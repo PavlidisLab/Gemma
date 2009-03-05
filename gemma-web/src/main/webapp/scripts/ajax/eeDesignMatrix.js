@@ -1,3 +1,10 @@
+/**
+ * Displays summary of an experimental design
+ * 
+ * @version $Id$
+ * @author Luke, Paul
+ * @type
+ */
 var DesignMatrix = {
 	build : function(rows) {
 
