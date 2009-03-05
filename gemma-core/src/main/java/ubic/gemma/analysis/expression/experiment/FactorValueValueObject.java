@@ -216,8 +216,8 @@ public class FactorValueValueObject implements Serializable {
         if ( fv.getCharacteristics().size() > 0 ) {
             for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
                 Characteristic c = iter.next();
-                buf.append( c.getCategory() );
-                buf.append( ": " );
+                // buf.append( c.getCategory() );
+                // buf.append( ": " );
                 buf.append( c.getValue() == null ? "no value" : c.getValue() );
                 if ( iter.hasNext() ) buf.append( ", " );
             }

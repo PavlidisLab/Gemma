@@ -52,6 +52,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	loadMask : true,
 	autoExpandColumn : 'bm',
+	fvMap : {},
 
 	/**
 	 * See ExperimentalDesignController.getExperimentalFactors and ExperimentalFactorValueObject AND
@@ -93,21 +94,23 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				editor = this.factorValueCombos[factorId];
 			}
 
-			var fvMap = {};
+			// var fvMap = {};
 			// factorValueValueObjects
 			if (factor.values) {
 				for (var j = 0; j < factor.values.length; j++) {
 					fv = factor.values[j];
-					var fvs = fv.factorValue; // descriptive string
-					fvMap["fv" + fv.id] = fvs;
+					var fvs = fv.factorValue; // descriptive string formed on server side.
+					this.fvMap["fv" + fv.id] = fvs;
 				}
 			}
+
+			// console.log(fvMap);
 
 			/*
 			 * Generate a function to render the factor values as displayed in the cells. At this point factorValue
 			 * contains all the possible values for this factor.
 			 */
-			var rend = this.createValueRenderer(fvMap);
+			var rend = this.createValueRenderer();
 
 			/*
 			 * Define the column for this particular factor.
@@ -349,32 +352,32 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var combo = this.factorValueCombos[factorId];
 				var column = this.getColumnModel().getColumnById(factorId);
 				combo.setExperimentalFactor(combo.experimentalFactor.id, function(r, options, success) {
-							var fvs = {};
+							this.fvMap = {};
 							for (var i = 0; i < r.length; ++i) {
 								var rec = r[i];
-								fvs["fv" + rec.get("id")] = rec.get("factorValue");
+								this.fvMap["fv" + rec.get("id")] = rec.get("factorValue");
 							}
-							var renderer = this.createValueRenderer(fvs);
+							var renderer = this.createValueRenderer();
 							column.renderer = renderer;
 							this.getView().refresh();
-						});
+						}.createDelegate(this));
 			}
 		}
 		this.getTopToolbar().factorValueCombo.store.reload();
 	},
 
-	createValueRenderer : function(factorValues) {
+	createValueRenderer : function() {
+
 		return function(value, metadata, record, row, col, ds) {
 			/*
-			 * If we have the factor values map already, return the descriptive string. Otherwise we display 'fv123'
-			 * etc. However, there is a race condition so the factorValues are not always set up?
+			 * If we have the factor values map already (should!), return the descriptive string. Otherwise we display
+			 * 'fv123' etc.
 			 */
 
-			var k = factorValues[value];
-			// console.log(value + " -> " + k);
+			var k = this.fvMap[value];
 			return k ? k : value;
 
-		};
+		}.createDelegate(this);
 	},
 
 	rowExpander : new Ext.grid.RowExpander({
