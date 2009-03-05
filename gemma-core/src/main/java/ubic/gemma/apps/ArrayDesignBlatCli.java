@@ -164,45 +164,45 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
 
             // split over multiple threads so we can multiplex. Put the array designs in a queue.
-            class Consumer implements Runnable {
-                private final BlockingQueue<ArrayDesign> queue;
-
-                public Consumer( BlockingQueue<ArrayDesign> q ) {
-                    queue = q;
-                }
-
-                public void run() {
-                    while ( true ) {
-                        ArrayDesign ad = queue.poll();
-                        if ( ad == null ) {
-                            break;
-                        }
-                        consume( ad );
-                    }
-                    // FIXME notify that we're done.
-                }
-
-                void consume( ArrayDesign x ) {
-                    processArrayDesign( skipIfLastRunLaterThan, x );
-                }
-            }
-
-            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
-            for ( ArrayDesign ad : allArrayDesigns ) {
-                arrayDesigns.add( ad );
-            }
-
-            for ( int i = 0; i < this.numThreads; i++ ) {
-                Consumer c1 = new Consumer( arrayDesigns );
-                new Thread( c1 ).start();
-            }
+//            class Consumer implements Runnable {
+//                private final BlockingQueue<ArrayDesign> queue;
+//
+//                public Consumer( BlockingQueue<ArrayDesign> q ) {
+//                    queue = q;
+//                }
+//
+//                public void run() {
+//                    while ( true ) {
+//                        ArrayDesign ad = queue.poll();
+//                        if ( ad == null ) {
+//                            break;
+//                        }
+//                        consume( ad );
+//                    }
+//                    // FIXME notify that we're done.
+//                }
+//
+//                void consume( ArrayDesign x ) {
+//                    processArrayDesign( skipIfLastRunLaterThan, x );
+//                }
+//            }
+//
+//            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
+//            for ( ArrayDesign ad : allArrayDesigns ) {
+//                arrayDesigns.add( ad );
+//            }
+//
+//            for ( int i = 0; i < this.numThreads; i++ ) {
+//                Consumer c1 = new Consumer( arrayDesigns );
+//                new Thread( c1 ).start();
+//            }
             //
-            // for ( ArrayDesign design : allArrayDesigns ) {
-            //
-            // if ( taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
-            // processArrayDesign( skipIfLastRunLaterThan, design );
-            // }
-            // }
+            for ( ArrayDesign design : allArrayDesigns ) {
+
+                if ( taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
+                    processArrayDesign( skipIfLastRunLaterThan, design );
+                }
+            }
 
             // FIXME: wait, and summarize processing when all threads are done.
             // summarizeProcessing();
