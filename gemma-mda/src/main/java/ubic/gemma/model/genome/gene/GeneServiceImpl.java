@@ -45,8 +45,8 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
 
     private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
 
-    public RelativeLocationData findNearest( PhysicalLocation physicalLocation ) {
-        return this.getGeneDao().findNearest( physicalLocation );
+    public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
+        return this.getGeneDao().findNearest( physicalLocation, useStrand );
     }
 
     @Override

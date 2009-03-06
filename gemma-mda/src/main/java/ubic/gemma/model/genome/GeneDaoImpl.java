@@ -145,7 +145,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * (non-Javadoc)
      * @see ubic.gemma.model.genome.GeneDao#findNearest(ubic.gemma.model.genome.PhysicalLocation)
      */
-    public RelativeLocationData findNearest( PhysicalLocation physicalLocation ) {
+    public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
 
         if ( physicalLocation.getNucleotide() == null ) {
             throw new IllegalArgumentException( "Locations must have a nucleotide position" );
@@ -181,7 +181,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                         + physicalLocation.getStrand() );
 
             // note that here we ignore the strand.
-            Collection<Gene> candidates = findByPosition( chrom, windowStart, windowEnd, null );
+            Collection<Gene> candidates = findByPosition( chrom, windowStart, windowEnd, useStrand ? strand : null );
             if ( !candidates.isEmpty() ) {
                 if ( log.isDebugEnabled() )
                     log.debug( physicalLocation + ": " + candidates.size() + " nearby genes at window size " + i
