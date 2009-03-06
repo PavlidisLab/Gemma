@@ -89,6 +89,7 @@ public abstract class AbstractCLI {
     private int verbosity = DEFAULT_VERBOSITY; // corresponds to "Error".
     private Map<Logger, Level> originalLoggingLevels = new HashMap<Logger, Level>();
 
+    protected int numThreads = 1;
     protected String host = DEFAULT_HOST;
     protected int port = DEFAULT_PORT;
     protected String username;

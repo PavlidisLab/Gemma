@@ -21,14 +21,19 @@ package ubic.gemma.apps;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.security.context.SecurityContext;
+import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.genome.BlatResultParser;
@@ -47,8 +52,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @version $Id$
  */
 public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
-
-    private int numThreads = 1;
 
     private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
 
@@ -92,7 +95,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .create( 't' );
 
         addOption( taxonOption );
-
+        addThreadsOption();
         addOption( blatScoreThresholdOption );
         addOption( blatResultOption );
     }
@@ -162,50 +165,80 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** " );
 
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
+            final SecurityContext context = SecurityContextHolder.getContext();
 
             // split over multiple threads so we can multiplex. Put the array designs in a queue.
-//            class Consumer implements Runnable {
-//                private final BlockingQueue<ArrayDesign> queue;
-//
-//                public Consumer( BlockingQueue<ArrayDesign> q ) {
-//                    queue = q;
-//                }
-//
-//                public void run() {
-//                    while ( true ) {
-//                        ArrayDesign ad = queue.poll();
-//                        if ( ad == null ) {
-//                            break;
-//                        }
-//                        consume( ad );
-//                    }
-//                    // FIXME notify that we're done.
-//                }
-//
-//                void consume( ArrayDesign x ) {
-//                    processArrayDesign( skipIfLastRunLaterThan, x );
-//                }
-//            }
-//
-//            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
-//            for ( ArrayDesign ad : allArrayDesigns ) {
-//                arrayDesigns.add( ad );
-//            }
-//
-//            for ( int i = 0; i < this.numThreads; i++ ) {
-//                Consumer c1 = new Consumer( arrayDesigns );
-//                new Thread( c1 ).start();
-//            }
-            //
-            for ( ArrayDesign design : allArrayDesigns ) {
 
-                if ( taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
-                    processArrayDesign( skipIfLastRunLaterThan, design );
+            /*
+             * Here is our task runner.
+             */
+            class Consumer implements Runnable {
+                private final BlockingQueue<ArrayDesign> queue;
+
+                public Consumer( BlockingQueue<ArrayDesign> q ) {
+                    queue = q;
+                }
+
+                public void run() {
+                    SecurityContextHolder.setContext( context );
+                    while ( true ) {
+                        ArrayDesign ad = queue.poll();
+                        if ( ad == null ) {
+                            break;
+                        }
+                        consume( ad );
+                    }
+                }
+
+                void consume( ArrayDesign x ) {
+                    if ( taxon.equals( arrayDesignService.getTaxon( x.getId() ) ) ) {
+                        processArrayDesign( skipIfLastRunLaterThan, x );
+                    }
+
                 }
             }
 
-            // FIXME: wait, and summarize processing when all threads are done.
-            // summarizeProcessing();
+            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
+            for ( ArrayDesign ad : allArrayDesigns ) {
+                arrayDesigns.add( ad );
+            }
+
+            /*
+             * Start the threads
+             */
+            Collection<Thread> threads = new ArrayList<Thread>();
+            for ( int i = 0; i < this.numThreads; i++ ) {
+                Consumer c1 = new Consumer( arrayDesigns );
+                Thread k = new Thread( c1 );
+                threads.add( k );
+                k.start();
+            }
+
+            /*
+             * Wait for completion.
+             */
+            while ( true ) {
+                boolean anyAlive = false;
+                for ( Thread k : threads ) {
+                    if ( k.isAlive() ) {
+                        anyAlive = true;
+                    }
+                }
+                if ( !anyAlive ) {
+                    break;
+                }
+                try {
+                    Thread.sleep( 1000 );
+                } catch ( InterruptedException e ) {
+                    e.printStackTrace();
+                }
+            }
+
+            /*
+             * All done
+             */
+            summarizeProcessing();
+
         } else {
             bail( ErrorCode.MISSING_ARGUMENT );
         }
