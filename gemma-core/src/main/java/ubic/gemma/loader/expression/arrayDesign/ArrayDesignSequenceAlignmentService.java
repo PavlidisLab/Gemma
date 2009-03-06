@@ -36,6 +36,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
@@ -170,6 +171,7 @@ public class ArrayDesignSequenceAlignmentService {
             result.setSearchedDatabase( searchedDatabase );
             result.getTargetChromosome().setTaxon( taxon );
             result.getTargetChromosome().getSequence().setTaxon( taxon );
+
         }
 
         if ( toSkip.size() > 0 ) {
@@ -363,6 +365,18 @@ public class ArrayDesignSequenceAlignmentService {
             assert taxon != null;
             br.getTargetChromosome().setTaxon( taxon );
             br.getTargetChromosome().getSequence().setTaxon( taxon );
+
+            PhysicalLocation pl = br.getTargetAlignedRegion();
+            if ( pl == null ) {
+                pl = PhysicalLocation.Factory.newInstance();
+                pl.setChromosome( br.getTargetChromosome() );
+                pl.setNucleotide( br.getTargetStart() );
+                assert br.getTargetEnd() != null && br.getTargetStart() != null;
+                pl.setNucleotideLength( br.getTargetEnd().intValue() - br.getTargetStart().intValue() );
+                pl.setStrand( br.getStrand() );
+                br.setTargetAlignedRegion( pl );
+            }
+
         }
         return ( Collection<BlatResult> ) persisterHelper.persist( brs );
     }
