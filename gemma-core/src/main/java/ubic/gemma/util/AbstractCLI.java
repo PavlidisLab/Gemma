@@ -631,6 +631,29 @@ public abstract class AbstractCLI {
     }
 
     /**
+     * Wait for completion.
+     */
+    protected void waitForThreadPoolCompletion( Collection<Thread> threads ) {
+
+        while ( true ) {
+            boolean anyAlive = false;
+            for ( Thread k : threads ) {
+                if ( k.isAlive() ) {
+                    anyAlive = true;
+                }
+            }
+            if ( !anyAlive ) {
+                break;
+            }
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * Implement this to provide processing of options. It is called at the end of processCommandLine.
      */
     protected abstract void processOptions();

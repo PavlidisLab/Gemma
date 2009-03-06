@@ -25,9 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.BlockingQueue; 
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -214,25 +212,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 k.start();
             }
 
-            /*
-             * Wait for completion.
-             */
-            while ( true ) {
-                boolean anyAlive = false;
-                for ( Thread k : threads ) {
-                    if ( k.isAlive() ) {
-                        anyAlive = true;
-                    }
-                }
-                if ( !anyAlive ) {
-                    break;
-                }
-                try {
-                    Thread.sleep( 1000 );
-                } catch ( InterruptedException e ) {
-                    e.printStackTrace();
-                }
-            }
+            waitForThreadPoolCompletion( threads );
 
             /*
              * All done

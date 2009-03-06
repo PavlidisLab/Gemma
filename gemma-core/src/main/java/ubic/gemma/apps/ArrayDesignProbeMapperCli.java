@@ -2,12 +2,17 @@ package ubic.gemma.apps;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.springframework.security.context.SecurityContext;
+import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -88,6 +93,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 "Source database name (GEO etc); required if using -import" ).hasArg().withArgName( "dbname" ).create(
                 "source" );
         addOption( databaseOption );
+
+        super.addThreadsOption();
     }
 
     public static void main( String[] args ) {
@@ -111,7 +118,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         Exception err = processCommandLine( "Array design mapping of probes to genes", args );
         if ( err != null ) return err;
 
-        Date skipIfLastRunLaterThan = getLimitingDate();
+        final Date skipIfLastRunLaterThan = getLimitingDate();
 
         if ( this.taxon != null && this.directAnnotationInputFileName == null ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
@@ -152,53 +159,112 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             // look at all array designs.
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
-            for ( ArrayDesign design : allArrayDesigns ) {
 
-                if ( taxon != null && !taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
-                    continue;
+            final SecurityContext context = SecurityContextHolder.getContext();
+
+            // split over multiple threads so we can multiplex. Put the array designs in a queue.
+
+            /*
+             * Here is our task runner.
+             */
+            class Consumer implements Runnable {
+                private final BlockingQueue<ArrayDesign> queue;
+
+                public Consumer( BlockingQueue<ArrayDesign> q ) {
+                    queue = q;
                 }
 
-                if ( isSubsumedOrMerged( design ) ) {
-                    log.warn( design + " is subsumed or merged into another design, it will not be run." );
-                    // not really an error, but nice to get notification.
-                    errorObjects.add( design + ": "
-                            + "Skipped because it is subsumed by or merged into another design." );
-                    continue;
-                }
-
-                if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
-                    if ( skipIfLastRunLaterThan != null ) {
-                        log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-                        errorObjects.add( design + ": " + "Skipped because it was last run after "
-                                + skipIfLastRunLaterThan );
-                    } else {
-                        log.warn( design + " seems to be up to date or is not ready to run" );
-                        errorObjects.add( design + " seems to be up to date or is not ready to run" );
+                public void run() {
+                    SecurityContextHolder.setContext( context );
+                    while ( true ) {
+                        ArrayDesign ad = queue.poll();
+                        if ( ad == null ) {
+                            break;
+                        }
+                        consume( ad );
                     }
-                    continue;
                 }
 
-                log.info( "============== Start processing: " + design + " ==================" );
-                try {
-                    arrayDesignService.thawLite( design );
+                void consume( ArrayDesign x ) {
+                    if ( taxon.equals( arrayDesignService.getTaxon( x.getId() ) ) ) {
+                        processArrayDesign( skipIfLastRunLaterThan, x );
+                    }
 
-                    arrayDesignProbeMapperService.processArrayDesign( design );
-                    successObjects.add( design.getName() );
-                    ArrayDesignGeneMappingEvent eventType = AlignmentBasedGeneMappingEvent.Factory.newInstance();
-                    audit( design, "Part of a batch job", eventType );
-
-                } catch ( Exception e ) {
-                    errorObjects.add( design + ": " + e.getMessage() );
-                    log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-                    log.error( e, e );
                 }
             }
+
+            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
+            for ( ArrayDesign ad : allArrayDesigns ) {
+                arrayDesigns.add( ad );
+            }
+
+            /*
+             * Start the threads
+             */
+            log.info( this.numThreads + " threads" );
+            Collection<Thread> threads = new ArrayList<Thread>();
+            for ( int i = 0; i < this.numThreads; i++ ) {
+                Consumer c1 = new Consumer( arrayDesigns );
+                Thread k = new Thread( c1 );
+                threads.add( k );
+                k.start();
+            }
+
+            waitForThreadPoolCompletion( threads );
+
+            /*
+             * All done
+             */
             summarizeProcessing();
+
         } else {
             return new IllegalArgumentException( "Seems you did not set options to get anything to happen." );
         }
 
         return null;
+    }
+
+    /**
+     * @param skipIfLastRunLaterThan
+     * @param design
+     */
+    private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
+        if ( taxon != null && !taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
+            return;
+        }
+
+        if ( isSubsumedOrMerged( design ) ) {
+            log.warn( design + " is subsumed or merged into another design, it will not be run." );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+            return;
+        }
+
+        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
+            if ( skipIfLastRunLaterThan != null ) {
+                log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+                errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+            } else {
+                log.warn( design + " seems to be up to date or is not ready to run" );
+                errorObjects.add( design + " seems to be up to date or is not ready to run" );
+            }
+            return;
+        }
+
+        log.info( "============== Start processing: " + design + " ==================" );
+        try {
+            arrayDesignService.thawLite( design );
+
+            arrayDesignProbeMapperService.processArrayDesign( design );
+            successObjects.add( design.getName() );
+            ArrayDesignGeneMappingEvent eventType = AlignmentBasedGeneMappingEvent.Factory.newInstance();
+            audit( design, "Part of a batch job", eventType );
+
+        } catch ( Exception e ) {
+            errorObjects.add( design + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+            log.error( e, e );
+        }
     }
 
     /*
@@ -315,6 +381,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
         this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
+
+        if ( hasOption( THREADS_OPTION ) ) {
+            this.numThreads = this.getIntegerOptionValue( "threads" );
+        }
 
         if ( this.hasOption( "import" ) ) {
             if ( !this.hasOption( 't' ) ) {
