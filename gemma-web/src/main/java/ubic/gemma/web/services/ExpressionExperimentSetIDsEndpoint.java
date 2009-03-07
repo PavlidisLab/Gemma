@@ -72,23 +72,6 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
         watch.start();
 
         setLocalName( LOCAL_NAME );
-        // no input is used since I can't properly filter using the taxon
-        // TODO include taxon as input and use it to filter the analyses returned.
-        // String taxString = "";
-        //
-        // Collection<String> taxonInput = getNodeValues( requestElement, "taxon_id" );
-        // for ( String tax : taxonInput ) {
-        // taxString = tax;
-        // }
-        //
-        // log.info( "XML input read: taxon, " + taxString);
-        // //Collection<Gene> genes = geneService.findByOfficialSymbolInexact( geneName );
-        // Taxon taxon = taxonService.load( Long.parseLong( taxString ) );
-        //
-        // if ( taxon == null ) {
-        // String msg = "Taxon, " + taxon + "can't be found.";
-        // return buildBadResponse( document, msg );
-        // }
 
         Collection<ExpressionExperimentSet> eesCol = expressionExperimentSetService.loadAllMultiExperimentSets();
 
@@ -122,10 +105,10 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
             e3.appendChild( document.createTextNode( encode( eeIds.toArray() ) ) );
             responseElement.appendChild( e3 );
 
-            // taxon not populate
-            // Element e4 = document.createElement( "taxon" );
-            // e4.appendChild( document.createTextNode( ees.getTaxon().getId().toString() ) );
-            // responseElement.appendChild( e4 );
+            Element e4 = document.createElement( "taxon" );
+
+            e4.appendChild( document.createTextNode( ees.getTaxon().getId().toString() ) );
+            responseElement.appendChild( e4 );
 
         }
 
