@@ -38,13 +38,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class TwoChannelMissingValueTaskImpl extends BaseSpacesTask implements TwoChannelMissingValueTask {
 
     private static Log log = LogFactory.getLog( TwoChannelMissingValueTaskImpl.class.getName() );
-    private TwoChannelMissingValues twoChannelMissingValueService;
+    private TwoChannelMissingValues twoChannelMissingValues;
 
     /**
-     * @param twoChannelMissingValueService the twoChannelMissingValueService to set
+     * @param twoChannelMissingValues
      */
-    public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
-        this.twoChannelMissingValueService = twoChannelMissingValueService;
+    public void setTwoChannelMissingValues( TwoChannelMissingValues twoChannelMissingValues ) {
+        this.twoChannelMissingValues = twoChannelMissingValues;
     }
 
     public TaskResult execute( TwoChannelMissingValueTaskCommand command ) {
@@ -53,8 +53,8 @@ public class TwoChannelMissingValueTaskImpl extends BaseSpacesTask implements Tw
         ExpressionExperiment ee = command.getExpressionExperiment();
 
         TaskResult result = new TaskResult();
-        Collection<DesignElementDataVector> missingValueVectors = twoChannelMissingValueService.computeMissingValues(
-                ee, command.getS2n(), command.getExtraMissingValueIndicators() );
+        Collection<DesignElementDataVector> missingValueVectors = twoChannelMissingValues.computeMissingValues( ee,
+                command.getS2n(), command.getExtraMissingValueIndicators() );
         result.setAnswer( missingValueVectors.size() );
         result.setTaskID( super.taskId );
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
