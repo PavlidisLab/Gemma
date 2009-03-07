@@ -40,6 +40,20 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	// time in ms between updates
 	BAR_UPDATE_INTERVAL : 4000,
 
+	/**
+	 * Used to handle failures of responses...
+	 * 
+	 * @param {}
+	 *            data
+	 * @param {}
+	 *            e
+	 */
+	handleResponseFailure : function(data, e) {
+		/*
+		 * keep trying...
+		 */
+	},
+
 	handleFailure : function(data, e) {
 		this.stopProgress();
 		var messageArea = Ext.get("messages");
@@ -106,7 +120,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 		}
 		var callParams = [];
 		var callback = this.updateProgress.createDelegate(this);
-		var errorHandler = this.handleFailure.createDelegate(this);
+		var errorHandler = this.handleResponseFailure.createDelegate(this);
 		callParams.push(callback);
 		callParams.push(errorHandler);
 		var f = this.refreshProgress.createDelegate(this, callParams, false);
