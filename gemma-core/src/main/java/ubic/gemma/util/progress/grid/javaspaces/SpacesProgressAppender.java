@@ -24,6 +24,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesProgressEntry;
 import ubic.gemma.util.progress.ProgressAppender;
 
@@ -65,12 +66,12 @@ public class SpacesProgressAppender extends ProgressAppender {
                 entry.taskId = taskId;
                 entry.message = "Logging Server Task";
                 gigaSpacesTemplate.clear( entry );
-                gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );
+                gigaSpacesTemplate.write( entry, Lease.FOREVER, 5000 );// FIXME use UpdateModifiers.WRITE_ONLY?
             } else {
                 try {
-                    entry = ( SpacesProgressEntry ) gigaSpacesTemplate.read( entry, 1000 );
+                    entry = ( SpacesProgressEntry ) gigaSpacesTemplate.read( entry, SpacesUtil.WAIT_TIMEOUT );
                     entry.setMessage( event.getMessage().toString() );
-                    gigaSpacesTemplate.update( entry, Lease.FOREVER, 1000 );
+                    gigaSpacesTemplate.update( entry, Lease.FOREVER, SpacesUtil.WAIT_TIMEOUT );
                 } catch ( Exception e ) {
                     e.printStackTrace();
                 }
