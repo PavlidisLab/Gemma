@@ -48,7 +48,7 @@ public class BlatResult2Psl {
         buf.append( blatResult.getTargetGapCount() + " " );
         buf.append( blatResult.getTargetGapBases() + " " );
         buf.append( blatResult.getStrand() + " " );
-        buf.append( blatResult.getQuerySequence().getName() + " " );
+        buf.append( "\"" + blatResult.getQuerySequence().getName() + "\" " );
         buf.append( blatResult.getQuerySequence().getLength() + " " );
         buf.append( blatResult.getQueryStart() + " " );
         buf.append( blatResult.getQueryEnd() + " " );
@@ -87,7 +87,7 @@ public class BlatResult2Psl {
         buf.append( "chr" + blatResult.getTargetChromosome().getName() + ":" );
         buf.append( ( blatResult.getTargetStart() - EXTRA_WINDOW ) + "-" );
         buf.append( ( blatResult.getTargetEnd() + EXTRA_WINDOW ) + "\n" );
-        buf.append( "track name=" + blatResult.getQuerySequence().getName() );
+        buf.append( "track name=\"" + blatResult.getQuerySequence().getName() + "\"" );
         buf.append( " description=\"Gemma BLAT alignment\" visibility=2 useScore=1\n" );
 
         buf.append( blatResult2Psl( blatResult ) + "\n" );
