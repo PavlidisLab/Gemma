@@ -57,10 +57,11 @@ import com.j_spaces.core.filters.StatisticsContext;
  */
 public class SpacesUtil implements ApplicationContextAware {
 
-    /**
-     * FIXME Document me
-     */
+    /** The amount of time an entry will stay in the space (forever) */
     public static final int VERY_BIG_NUMBER_FOR_SOME_REASON = 600000000;
+
+    /** The amount of time to wait for an entry before timing out */
+    public static final int WAIT_TIMEOUT = 1000;
 
     private static final String GIGASPACES_TEMPLATE = "gigaspacesTemplate";
 

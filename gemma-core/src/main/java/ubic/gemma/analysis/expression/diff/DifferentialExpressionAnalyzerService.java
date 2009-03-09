@@ -130,7 +130,7 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
-     * Run the differential expression analysis. First deletes the old differential expression analysis, if any.
+     * Runs the differential expression analysis, then deletes the old differential expression analysis (if any).
      * 
      * @param expressionExperiment
      * @param factors
