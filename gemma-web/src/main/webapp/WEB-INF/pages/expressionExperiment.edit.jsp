@@ -367,6 +367,11 @@
 		<h3>
 			Biomaterials and Assays
 		</h3>
+
+		<a
+			href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%>">
+			Click for details and QC</a>
+
 		<Gemma:assayView expressionExperiment="${expressionExperiment}" edit="true"></Gemma:assayView>
 	</security:authorize>
 

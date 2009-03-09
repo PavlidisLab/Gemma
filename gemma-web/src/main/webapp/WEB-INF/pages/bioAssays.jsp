@@ -2,7 +2,6 @@
 
 <title><fmt:message key="bioAssays.title" /></title>
 
-<script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
 <h2>
 	<fmt:message key="bioAssays.title" />
 	for
@@ -13,6 +12,8 @@
 	<a href='<c:url value="/experimentalDesign/showExperimentalDesign.html?id=${expressionExperiment.id }" />'>Experimental
 		design</a>
 </p>
+
+<Gemma:expressionQC ee="${expressionExperiment.id}" />
 
 <display:table name="bioAssays" class="list"
 	requestURI="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html" id="bioAssayList" sort="list"
