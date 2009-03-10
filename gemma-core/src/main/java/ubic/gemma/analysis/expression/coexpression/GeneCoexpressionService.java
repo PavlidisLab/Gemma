@@ -267,10 +267,11 @@ public class GeneCoexpressionService {
      * @param stringency
      * @param maxResults
      * @param queryGenesOnly
+     * @param specificProbesOnly if true, limit query to results from specific probes.
      * @return
      */
     public Collection<CoexpressionValueObjectExt> coexpressionSearchQuick( Long eeSetId, Collection<Gene> queryGenes,
-            int stringency, int maxResults, boolean queryGenesOnly ) {
+            int stringency, int maxResults, boolean queryGenesOnly, boolean specificProbesOnly ) {
 
         ExpressionExperimentSet baseSet = expressionExperimentSetService.load( eeSetId );
 
@@ -327,6 +328,12 @@ public class GeneCoexpressionService {
                  */
                 Collection<Long> supportingDatasets = GeneLinkCoexpressionAnalyzer.getSupportingExperimentIds( g2g,
                         positionToIDMap );
+
+                if ( specificProbesOnly ) {
+                    Collection<Long> specificDatasets = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
+                            positionToIDMap );
+                    supportingDatasets.retainAll( specificDatasets );
+                }
 
                 int numSupportingDatasets = supportingDatasets.size();
 

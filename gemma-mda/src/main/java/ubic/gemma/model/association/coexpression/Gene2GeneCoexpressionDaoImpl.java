@@ -236,6 +236,20 @@ public class Gene2GeneCoexpressionDaoImpl extends
          * Note: doing this using 'in' clauses with many genes is very slow -- it can take minutes to complete a query!
          * Doing it the dumb way is shockingly fast. For just a few genes it probably doesn't matter.
          */
+        List<Gene2GeneCoexpression> rawResults = new ArrayList<Gene2GeneCoexpression>();
+        Collection<Gene> genesNeeded = new HashSet<Gene>();
+        for ( Gene g : genes ) {
+            Element e = this.getGene2GeneCoexpressionCache().getCache().get(
+                    new GeneCached( g.getId(), sourceAnalysis.getId() ) );
+            if ( e != null ) {
+                /*
+                 * FIXME findi results for the cached result that include the second gene at the appropriate stringency.
+                 */
+                rawResults.addAll( ( List<Gene2GeneCoexpression> ) e.getValue() );
+            } else {
+                genesNeeded.add( g );
+            }
+        }
 
         Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
 
@@ -243,17 +257,33 @@ public class Gene2GeneCoexpressionDaoImpl extends
             result.put( g, new HashSet<Gene2GeneCoexpression>() );
         }
 
-        for ( Gene queryGene : genes ) {
+        /*
+         * Filter the raw results
+         */
+        if ( rawResults.size() > 0 ) {
+            Collections.sort( rawResults, new SupportComparator() );
+            for ( Gene2GeneCoexpression g2g : rawResults ) {
+                if ( g2g.getNumDataSets() < stringency ) continue;
+                Gene firstGene = g2g.getFirstGene();
+                Gene secondGene = g2g.getSecondGene();
+
+                if ( genes.contains( firstGene ) && genes.contains( secondGene ) ) {
+                    result.get( secondGene ).add( g2g );
+                }
+            }
+        }
+
+        final String firstQueryString = "select g2g from " + g2gClassName
+                + " as g2g where g2g.firstGene = :qgene and g2g.secondGene in (:genes) "
+                + "and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
+
+        final String secondQueryString = "select g2g from " + g2gClassName
+                + " as g2g where g2g.secondGene = :qgene and g2g.firstGene in (:genes) "
+                + "and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
+
+        for ( Gene queryGene : genesNeeded ) {
 
             log.debug( queryGene );
-
-            final String firstQueryString = "select g2g from "
-                    + g2gClassName
-                    + " as g2g where g2g.firstGene = :qgene and g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
-
-            final String secondQueryString = "select g2g from "
-                    + g2gClassName
-                    + " as g2g where g2g.secondGene = :qgene and g2g.firstGene in (:genes) and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
             Collection<Gene2GeneCoexpression> r = this.getHibernateTemplate().findByNamedParam( firstQueryString,
                     new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
@@ -275,6 +305,10 @@ public class Gene2GeneCoexpressionDaoImpl extends
                 result.get( g2g.getSecondGene() ).add( g2g );
             }
 
+            /*
+             * DO NOT populate the cache with these results, as they are limited by stringency and the second gene
+             * choice.
+             */
         }
 
         return result;
