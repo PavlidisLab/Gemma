@@ -103,7 +103,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * @return a collection contain one string element
      */
     /*
-     * TODO return value should be single string object. Note that many services will be affected shouldwe make this
+     * TODO return value should be single string object. Note that many services will be affected should we make this
      * change.
      */
     protected Collection<String> getSingleNodeValue( Element requestElement, String tagName ) {
@@ -124,7 +124,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             node = null;
         }
         if ( value.isEmpty() ) {
-            throw new IllegalArgumentException( "Could not find request text node" );
+            // throw new IllegalArgumentException( "Could not find request text node" );
         }
         return value;
     }
@@ -288,18 +288,18 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         }
 
     }
-    
-    
+
     /**
-     * uses the default path of gemmaData/datafile/xml/ to look for reports. 
+     * uses the default path of gemmaData/datafile/xml/ to look for reports.
+     * 
      * @param filename needs the xml suffix
      * @return
      * @throws IOException
      */
-    protected Document readReport(String filename) throws IOException{
+    protected Document readReport( String filename ) throws IOException {
         String path = HOME_DIR + File.separatorChar + "dataFiles" + File.separatorChar + "xml" + File.separatorChar;
-        return readReport(path, filename);
-        
+        return readReport( path, filename );
+
     }
 
     /**
@@ -308,49 +308,45 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * @return xml document for the given path
      * @throws IOException
      */
-    protected Document readReport(String path, String fileName) throws IOException{
- 
+    protected Document readReport( String path, String fileName ) throws IOException {
+
         File file = new File( path, fileName );
 
         if ( !file.exists() ) return null;
 
-        //TODO:  only load file if it is not out of date
+        // TODO: only load file if it is not out of date
         InputStream is = new FileInputStream( path + fileName );
-        
-        return readReport(is);
+
+        return readReport( is );
     }
-    
+
     /**
-     * Looks to parse a previously generated xml report that was saved to disk.  
-     * Returns null if it fails to do so.
+     * Looks to parse a previously generated xml report that was saved to disk. Returns null if it fails to do so.
      * 
      * @param InputStream from an existing xml file
      * @return An XML document
      * @throws IOException
      */
-    protected Document readReport(InputStream is) throws IOException {
-
-
+    protected Document readReport( InputStream is ) throws IOException {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringComments( true );
         factory.setValidating( false );
         Document document = null;
-        
-        try{
+
+        try {
             DocumentBuilder builder = factory.newDocumentBuilder();
             builder = factory.newDocumentBuilder();
             document = builder.parse( is );
-        }catch(ParserConfigurationException pce){
+        } catch ( ParserConfigurationException pce ) {
             log.error( "Could not configure parser for reading report.  Error is: " + pce );
-            throw(new RuntimeException(pce));
-        }
-        catch(SAXException se){
+            throw ( new RuntimeException( pce ) );
+        } catch ( SAXException se ) {
             log.error( "Could not parse report Error is: " + se );
-            throw(new RuntimeException(se));
-            
+            throw ( new RuntimeException( se ) );
+
         }
-        
+
         return document;
 
     }
