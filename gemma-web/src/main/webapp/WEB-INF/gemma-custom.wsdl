@@ -828,12 +828,12 @@
 
 			<!-- <soap:address location="http://137.82.157.182:8080/Gemma/ws"/> -->
 
-			<!-- for production, use http://chibi.ubc.ca/Gemma/ws 
+			<!-- for production, use http://chibi.ubc.ca/Gemma/ws -->
 
-				<soap:address location="http://chibi.ubc.ca/Gemma/ws"/>-->
+				<soap:address location="http://chibi.ubc.ca/Gemma/ws"/>
     
-			<!-- for local machine -->
-			<soap:address location="http://localhost:8080/Gemma/ws"/>
+			<!-- for local machine 
+			<soap:address location="http://localhost:8080/Gemma/ws"/>-->
   
 		</wsdl:port>
 	</wsdl:service>
