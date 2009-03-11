@@ -222,13 +222,29 @@
 			<complexType name="ncbiResult">
 				<sequence>
 					<element name="gene_id" type="xsd:string" />
-					<element name="ncbi_id" type="xsd:string" />     		      		     			 
+					<element name="ncbi_id" type="xsd:string" />
 				</sequence>
 			</complexType>
 			<complexType name="ArrayOfncbiResult">
 				<complexContent>
 					<restriction base="soapenc:Array">
 						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:ncbiResult[]"/>
+					</restriction>
+				</complexContent>
+			</complexType>
+			
+			<complexType name="geneDetailsResult">
+				<sequence>
+					element name="gene_id" type="xsd:string" />
+					<element name="ncbi_id" type="xsd:string" />
+					<element name="official_symbol" type="xsd:string"></element>
+					<element name="official_name" type="xsd:string"></element>
+				</sequence>
+			</complexType>
+			<complexType name="ArrayOfGeneDeatilsResult">
+				<complexContent>
+					<restriction base="soapenc:Array">
+						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:geneDetailsResult[]"/>
 					</restriction>
 				</complexContent>
 			</complexType>
@@ -399,11 +415,11 @@
 	<wsdl:message name="geneByNCBIIdResponse">
 		<wsdl:part name="gene_ncbi_results" type="schema:ArrayOfncbiResult" />
 	</wsdl:message>
-	<wsdl:message name="nCBIIdByGeneIDRequest">
+	<wsdl:message name="geneDetailsByGeneIDRequest">
 		<wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />   
 	</wsdl:message>
-	<wsdl:message name="nCBIIdByGeneIDResponse">
-		<wsdl:part name="gene_ncbi_results" type="schema:ArrayOfncbiResult" />
+	<wsdl:message name="geneDetailsByGeneIDResponse">
+		<wsdl:part name="gene_details_results" type="schema:ArrayOfGeneDeatilsResult" />
 	</wsdl:message>
 	<wsdl:message name="differentialExpressionProbeResultRequest">
 		<wsdl:part name="expression_experiment_set_id" type="xsd:integer" /> 
@@ -556,10 +572,10 @@
 			<wsdl:output message="schema:geneByNCBIIdResponse" name="geneByNCBIIdResponse">
 			</wsdl:output>
 		</wsdl:operation> 
-		<wsdl:operation name="nCBIIdByGeneID">
-			<wsdl:input message="schema:nCBIIdByGeneIDRequest" name="nCBIIdByGeneIDRequest">
+		<wsdl:operation name="geneDetailsByGeneID">
+			<wsdl:input message="schema:geneDetailsByGeneIDRequest" name="geneDetailsByGeneIDRequest">
 			</wsdl:input>
-			<wsdl:output message="schema:nCBIIdByGeneIDResponse" name="nCBIIdByGeneIDResponse">
+			<wsdl:output message="schema:geneDetailsByGeneIDResponse" name="geneDetailsByGeneIDResponse">
 			</wsdl:output>
 		</wsdl:operation> 
 		<wsdl:operation name="differentialExpressionProbeResult">
@@ -776,12 +792,12 @@
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</wsdl:output>
 		</wsdl:operation>
-		<wsdl:operation name="nCBIIdByGeneID">
+		<wsdl:operation name="geneDetailsByGeneID">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="nCBIIdByGeneIDRequest">
+			<wsdl:input name="geneDetailsByGeneIDRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</wsdl:input>
-			<wsdl:output name="nCBIIdByGeneIDResponse">
+			<wsdl:output name="geneDetailsByGeneIDResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</wsdl:output>
 		</wsdl:operation>
@@ -808,13 +824,16 @@
 	<wsdl:service name="gemmaService">
 		<wsdl:port binding="schema:gemmaBinding" name="gemmaPort">
     
-			<!-- for local machine, use localhost instead -->
+		
 
 			<!-- <soap:address location="http://137.82.157.182:8080/Gemma/ws"/> -->
 
-			<!-- for production, use http://chibi.ubc.ca/Gemma/ws -->
+			<!-- for production, use http://chibi.ubc.ca/Gemma/ws 
 
-    <soap:address location="http://chibi.ubc.ca/Gemma/ws"/>
+				<soap:address location="http://chibi.ubc.ca/Gemma/ws"/>-->
+    
+			<!-- for local machine -->
+			<soap:address location="http://localhost:8080/Gemma/ws"/>
   
 		</wsdl:port>
 	</wsdl:service>

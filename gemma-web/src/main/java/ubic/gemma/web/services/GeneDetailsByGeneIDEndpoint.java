@@ -32,23 +32,23 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- *Given a collection of Gemma gene IDs, will return the matching NCBI Ids.  The result 
- *is a 2D array mapping the gene IDs to the NCBI IDs. 
+ *Given a collection of Gemma gene IDs, will return the matching NCBI Ids. The result is a 2D array mapping the gene
+ * IDs to the NCBI IDs.
  * 
  * @author gavin
  * @version$Id$
  */
 
-public class NCBIIdByGeneIDEndpoint extends AbstractGemmaEndpoint {
+public class GeneDetailsByGeneIDEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( NCBIIdByGeneIDEndpoint.class );
+    private static Log log = LogFactory.getLog( GeneDetailsByGeneIDEndpoint.class );
 
     private GeneService geneService;
 
     /**
      * The local name of the expected Request/Response.
      */
-    public static final String GENE_LOCAL_NAME = "nCBIIdByGeneID";
+    public static final String GENE_LOCAL_NAME = "geneDetailsByGeneID";
 
     /**
      * Sets the "business service" to delegate to.
@@ -65,7 +65,6 @@ public class NCBIIdByGeneIDEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -77,9 +76,11 @@ public class NCBIIdByGeneIDEndpoint extends AbstractGemmaEndpoint {
         for ( String gene : geneInput )
             geneLongInput.add( Long.parseLong( gene ) );
 
-        log.info( "XML input read: " + geneInput.size() + " gene ids read" );
+        log.debug( "XML input read: " + geneInput.size() + " gene ids read" );
 
         Collection<Gene> geneCol = geneService.loadMultiple( geneLongInput );
+
+        geneService.thawLite( geneCol );
 
         if ( geneCol == null || geneCol.isEmpty() ) {
             String msg = "No genes can be found.";
@@ -97,18 +98,25 @@ public class NCBIIdByGeneIDEndpoint extends AbstractGemmaEndpoint {
             responseElement.appendChild( e1 );
 
             String ncbiId = gene.getNcbiId();
-            if (ncbiId == null)
-                ncbiId = "NaN";
-            
+            if ( ncbiId == null ) ncbiId = "NaN";
+
             Element e2 = document.createElement( "ncbi_id" );
             e2.appendChild( document.createTextNode( ncbiId ) );
             responseElement.appendChild( e2 );
+
+            Element e3 = document.createElement( "official_name" );
+            e3.appendChild( document.createTextNode( gene.getOfficialName() ) );
+            responseElement.appendChild( e3 );
+
+            Element e4 = document.createElement( "official_symbol" );
+            e4.appendChild( document.createTextNode( gene.getOfficialSymbol() ) );
+            responseElement.appendChild( e4 );
 
         }
         watch.stop();
         Long time = watch.getTime();
 
-        log.info( "XML response for NCBI id result built in " + time + "ms." );
+        log.debug( "XML response for gene details id result built in " + time + "ms." );
         return responseWrapper;
 
     }
