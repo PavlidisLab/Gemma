@@ -620,7 +620,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         mav.addObject( "numArrayDesigns", numArrayDesigns );
         mav.addObject( "summary", summary );
 
-        log.info( "ArrayDesign.showall took: " + overallWatch.getTime() + "ms" );
+        log.info( "ArrayDesign.showall took: " + overallWatch.getTime() + "ms for " + numArrayDesigns );
 
         return mav;
     }

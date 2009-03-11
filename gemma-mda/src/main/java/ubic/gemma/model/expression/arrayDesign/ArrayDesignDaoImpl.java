@@ -412,7 +412,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     protected Collection handleLoadAllValueObjects() throws Exception {
 
         // get the expression experiment counts
-        Map eeCounts = this.getExpressionExperimentCountMap();
+        Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap();
 
         Collection<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
@@ -443,7 +443,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     if ( color != null ) v.setColor( color.getValue() );
                     v.setDescription( list.getString( 4 ) );
                     v.setTaxon( arrayToTaxon.get( v.getId() ) );
-                    v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
+
+                    if ( !eeCounts.containsKey( v.getId() ) ) {
+                        v.setExpressionExperimentCount( 0L );
+                    } else {
+                        v.setExpressionExperimentCount( eeCounts.get( v.getId() ).longValue() );
+                    }
                     v.setDateCreated( list.getDate( 5 ) );
                     result.add( v );
                 }
@@ -924,16 +929,16 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @return Map
      */
     @SuppressWarnings("unchecked")
-    private Map getExpressionExperimentCountMap() {
+    private Map<Long, Integer> getExpressionExperimentCountMap() {
         final String queryString = "select ad.id, count(distinct ee) from ArrayDesignImpl ad, "
-                + "BioAssayImpl ba, ExpressionExperimentImpl ee inner join ee.bioAssays bas where "
-                + "ba.arrayDesignUsed=ad and bas=ba group by ad";
+                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas where "
+                + "bas.arrayDesignUsed=ad group by ad";
 
-        Map<Long, Long> eeCount = new HashMap<Long, Long>();
+        Map<Long, Integer> eeCount = new HashMap<Long, Integer>();
         List<Object[]> list = getHibernateTemplate().find( queryString );
         for ( Object[] o : list ) {
             Long id = ( Long ) o[0];
-            Long count = ( Long ) o[1];
+            Integer count = ( ( Long ) o[1] ).intValue();
             eeCount.put( id, count );
         }
         return eeCount;
@@ -1003,6 +1008,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 && timer.getTime() > 5000 ) {
                         log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo
                                 + " ... (" + timer.getTime() / 1000 + "s elapsed)" );
+                        // /////
+                        session.flush();
+                        session.clear();
                     }
 
                     if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
