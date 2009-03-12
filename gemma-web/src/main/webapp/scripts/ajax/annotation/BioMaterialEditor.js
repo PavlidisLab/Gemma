@@ -75,6 +75,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}];
 
 		this.factorValueCombos = [];
+
 		for (var i = 0; i < factors.length; i++) {
 			var factor = factors[i];
 			var factorId = "factor" + factor.id;

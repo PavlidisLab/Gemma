@@ -1,7 +1,10 @@
 Ext.namespace('Gemma');
 
 /**
+ * Forms the bottom panel of the experimental design editor.
  * 
+ * @author Luke, Paul
+ * @version $Id$
  */
 Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 

@@ -1,5 +1,6 @@
 /**
- * Combobox to show factor values for a given factor.
+ * Combobox to show factor values for a given factor. The factor values can be loaded from the server or passed in
+ * directly from JSON (JsonReader, not ArrayReader)
  * 
  * @class Gemma.FactorValueCombo
  * @extends Ext.form.ComboBox
@@ -68,13 +69,13 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 			initComponent : function() {
 
 				/*
-				 * Option to pass in data directly.
+				 * Option to pass in data directly from JSON (JsonReader, not ArrayReader)
 				 */
 				if (this.data) {
+
 					this.store = new Ext.data.Store({
 								proxy : new Ext.data.MemoryProxy(this.data),
-								data : this.data,
-								reader : new Ext.data.ArrayReader({}, this.record)
+								reader : new Ext.data.JsonReader({}, this.record)
 							});
 				} else {
 					this.store = new Ext.data.Store({
@@ -90,6 +91,10 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 				}
 
 				Gemma.FactorValueCombo.superclass.initComponent.call(this);
+
+				// this.store.on("load", function() {
+				// console.log(this.store);
+				// }.createDelegate(this));
 
 				if (this.efId) {
 					this.store.load({
