@@ -540,7 +540,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 v.setTechnologyType( color );
                 if ( color != null ) v.setColor( color.getValue() );
                 v.setDescription( list.getString( 4 ) );
-                v.setExpressionExperimentCount( eeCounts.get( v.getId() ).longValue() );
+                Integer eecount = eeCounts.get( v.getId() );
+                if ( eecount == null ) eecount = 0;
+                v.setExpressionExperimentCount( eecount.longValue() );
                 v.setDateCreated( list.getDate( 5 ) );
 
                 vo.add( v );
