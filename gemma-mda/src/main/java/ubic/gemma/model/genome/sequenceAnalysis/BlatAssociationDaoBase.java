@@ -179,7 +179,6 @@ public abstract class BlatAssociationDaoBase extends HibernateDaoSupport impleme
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#load(int, java.lang.Long)
      */
-    @Override
     public Object load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BlatAssociation.load - 'id' can not be null" );
@@ -192,7 +191,6 @@ public abstract class BlatAssociationDaoBase extends HibernateDaoSupport impleme
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#load(java.lang.Long)
      */
-    @Override
     public ubic.gemma.model.association.Relationship load( java.lang.Long id ) {
         return ( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation ) this.load( TRANSFORM_NONE, id );
     }
@@ -200,7 +198,6 @@ public abstract class BlatAssociationDaoBase extends HibernateDaoSupport impleme
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#loadAll()
      */
-    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
@@ -209,7 +206,6 @@ public abstract class BlatAssociationDaoBase extends HibernateDaoSupport impleme
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#loadAll(int)
      */
-    @Override
     public java.util.Collection<BlatAssociation> loadAll( final int transform ) {
         final java.util.Collection<BlatAssociation> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationImpl.class );
@@ -220,7 +216,6 @@ public abstract class BlatAssociationDaoBase extends HibernateDaoSupport impleme
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#remove(java.lang.Long)
      */
-    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BlatAssociation.remove - 'id' can not be null" );
@@ -235,7 +230,6 @@ public abstract class BlatAssociationDaoBase extends HibernateDaoSupport impleme
     /**
      * @see ubic.gemma.model.association.RelationshipDao#remove(java.util.Collection)
      */
-    @Override
     public void remove( java.util.Collection<BlatAssociation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlatAssociation.remove - 'entities' can not be null" );
