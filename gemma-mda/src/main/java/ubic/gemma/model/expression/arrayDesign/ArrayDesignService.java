@@ -176,7 +176,11 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
     public java.lang.Integer getReporterCount( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
+     * Return the taxon for the array design. This can be misleading if the array uses multiple taxa: this method will
+     * return the first one found.
      * 
+     * @param id The id of the array design
+     * @return The taxon
      */
     public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long id );
 
