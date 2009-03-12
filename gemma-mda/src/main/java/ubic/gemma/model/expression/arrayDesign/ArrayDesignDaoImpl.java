@@ -519,7 +519,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
 
         // get the expression experiment counts
-        Map eeCounts = this.getExpressionExperimentCountMap();
+        Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap();
 
         // FIXME is it necessary to order this query?
         final String queryString = "select ad.id as id, " + "ad.name as name, " + "ad.shortName as shortName, "
@@ -540,7 +540,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 v.setTechnologyType( color );
                 if ( color != null ) v.setColor( color.getValue() );
                 v.setDescription( list.getString( 4 ) );
-                v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
+                v.setExpressionExperimentCount( eeCounts.get( v.getId() ).longValue() );
                 v.setDateCreated( list.getDate( 5 ) );
 
                 vo.add( v );
