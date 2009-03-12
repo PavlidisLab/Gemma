@@ -147,7 +147,7 @@ public class SimpleFastaCmd implements FastaCmd {
 
         try {
             int exitVal = pr.waitFor();
-
+            Thread.sleep( 200 ); // Makes sure results are flushed.
             is.close();
             err.close();
             Thread.sleep( 200 ); // Makes sure results are flushed.
