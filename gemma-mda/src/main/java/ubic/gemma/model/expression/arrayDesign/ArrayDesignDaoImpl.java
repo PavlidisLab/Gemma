@@ -1011,8 +1011,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo
                                 + " ... (" + timer.getTime() / 1000 + "s elapsed)" );
                         // /////
-                        session.flush();
-                        session.clear();
+                        // session.flush();
+                        // session.clear();
                     }
 
                     if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
