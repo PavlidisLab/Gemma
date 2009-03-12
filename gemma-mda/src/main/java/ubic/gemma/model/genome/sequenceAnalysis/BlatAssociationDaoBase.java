@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.genome.sequenceAnalysis;
+
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
  * <p>
@@ -26,25 +28,28 @@ package ubic.gemma.model.genome.sequenceAnalysis;
  * 
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation
  */
-public abstract class BlatAssociationDaoBase extends ubic.gemma.model.association.BioSequence2GeneProductDaoImpl
-        implements ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao {
+public abstract class BlatAssociationDaoBase extends HibernateDaoSupport implements
+        ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao {
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<BlatAssociation> create( final int transform,
+            final java.util.Collection<BlatAssociation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlatAssociation.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation ) entityIterator
-                            .next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<BlatAssociation> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -152,22 +157,22 @@ public abstract class BlatAssociationDaoBase extends ubic.gemma.model.associatio
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#find(java.lang.String,
      *      ubic.gemma.model.genome.Gene)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection find( final java.lang.String queryString, final ubic.gemma.model.genome.Gene gene ) {
+    public java.util.Collection<BlatAssociation> find( final java.lang.String queryString,
+            final ubic.gemma.model.genome.Gene gene ) {
         return this.find( TRANSFORM_NONE, queryString, gene );
     }
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    public java.util.Collection find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         return this.find( TRANSFORM_NONE, bioSequence );
     }
 
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#find(ubic.gemma.model.genome.Gene)
      */
-    public java.util.Collection find( ubic.gemma.model.genome.Gene gene ) {
+    public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.Gene gene ) {
         return this.find( TRANSFORM_NONE, gene );
     }
 
@@ -205,8 +210,8 @@ public abstract class BlatAssociationDaoBase extends ubic.gemma.model.associatio
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#loadAll(int)
      */
     @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<BlatAssociation> loadAll( final int transform ) {
+        final java.util.Collection<BlatAssociation> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -231,7 +236,7 @@ public abstract class BlatAssociationDaoBase extends ubic.gemma.model.associatio
      * @see ubic.gemma.model.association.RelationshipDao#remove(java.util.Collection)
      */
     @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<BlatAssociation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlatAssociation.remove - 'entities' can not be null" );
         }
@@ -251,7 +256,7 @@ public abstract class BlatAssociationDaoBase extends ubic.gemma.model.associatio
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao#thaw(java.util.Collection)
      */
-    public void thaw( final java.util.Collection blatAssociations ) {
+    public void thaw( final java.util.Collection<BlatAssociation> blatAssociations ) {
         try {
             this.handleThaw( blatAssociations );
         } catch ( Throwable th ) {
@@ -277,19 +282,21 @@ public abstract class BlatAssociationDaoBase extends ubic.gemma.model.associatio
     /**
      * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
      */
-    @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<BlatAssociation> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlatAssociation.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<BlatAssociation> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( ( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**
@@ -305,7 +312,8 @@ public abstract class BlatAssociationDaoBase extends ubic.gemma.model.associatio
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection blatAssociations ) throws java.lang.Exception;
+    protected abstract void handleThaw( java.util.Collection<BlatAssociation> blatAssociations )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
@@ -326,8 +334,7 @@ public abstract class BlatAssociationDaoBase extends ubic.gemma.model.associatio
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
      */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<BlatAssociation> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

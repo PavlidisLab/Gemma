@@ -6,6 +6,11 @@ package ubic.gemma.model.genome;
  */
 public interface PhysicalLocationService {
 
+    /**
+     * Thaw a physicalLocation entity
+     * 
+     * @param physicalLocation
+     */
     public void thaw( PhysicalLocation physicalLocation );
 
 }

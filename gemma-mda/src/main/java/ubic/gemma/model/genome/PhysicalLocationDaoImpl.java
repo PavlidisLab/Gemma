@@ -32,6 +32,8 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 public class PhysicalLocationDaoImpl extends ubic.gemma.model.genome.PhysicalLocationDaoBase {
 
     public void thaw( final PhysicalLocation physicalLocation ) {
+        if ( physicalLocation == null ) return;
+        if ( physicalLocation.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {

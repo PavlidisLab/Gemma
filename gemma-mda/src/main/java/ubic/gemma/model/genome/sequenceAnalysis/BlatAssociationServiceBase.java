@@ -52,7 +52,7 @@ public abstract class BlatAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    public java.util.Collection find( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    public java.util.Collection<BlatAssociation> find( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         try {
             return this.handleFind( bioSequence );
         } catch ( Throwable th ) {
@@ -65,7 +65,7 @@ public abstract class BlatAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#find(ubic.gemma.model.genome.Gene)
      */
-    public java.util.Collection find( final ubic.gemma.model.genome.Gene gene ) {
+    public java.util.Collection<BlatAssociation> find( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFind( gene );
         } catch ( Throwable th ) {
@@ -85,7 +85,7 @@ public abstract class BlatAssociationServiceBase implements
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#thaw(java.util.Collection)
      */
-    public void thaw( final java.util.Collection blatAssociations ) {
+    public void thaw( final java.util.Collection<BlatAssociation> blatAssociations ) {
         try {
             this.handleThaw( blatAssociations );
         } catch ( Throwable th ) {
@@ -186,18 +186,20 @@ public abstract class BlatAssociationServiceBase implements
     /**
      * Performs the core logic for {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)}
      */
-    protected abstract java.util.Collection handleFind( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<BlatAssociation> handleFind(
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #find(ubic.gemma.model.genome.Gene)}
      */
-    protected abstract java.util.Collection handleFind( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
+    protected abstract java.util.Collection<BlatAssociation> handleFind( ubic.gemma.model.genome.Gene gene )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection blatAssociations ) throws java.lang.Exception;
+    protected abstract void handleThaw( java.util.Collection<BlatAssociation> blatAssociations )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}

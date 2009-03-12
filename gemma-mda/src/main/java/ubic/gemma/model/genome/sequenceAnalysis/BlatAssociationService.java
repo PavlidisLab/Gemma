@@ -36,17 +36,17 @@ public interface BlatAssociationService {
     /**
      * 
      */
-    public java.util.Collection find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * 
      */
-    public java.util.Collection find( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
      */
-    public void thaw( java.util.Collection blatAssociations );
+    public void thaw( java.util.Collection<BlatAssociation> blatAssociations );
 
     /**
      * 

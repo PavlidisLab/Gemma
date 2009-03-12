@@ -715,6 +715,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     @Override
     protected void handleThaw( final Gene gene ) throws Exception {
+        if ( gene.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
@@ -748,6 +749,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Gene gene : ( Collection<Gene> ) genes ) {
+
+                    if ( gene.getId() == null ) continue;
 
                     // FIXME: (klc) This was using session.lock before but was getting a Non-Unique Entity Error
                     // using session.get fixes but might not be correct for cases where g != gene but gene.id==g.id

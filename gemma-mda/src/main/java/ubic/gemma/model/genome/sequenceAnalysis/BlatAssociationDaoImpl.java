@@ -27,6 +27,8 @@ import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
@@ -110,7 +112,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
     }
 
     @Override
-    protected void handleThaw( final Collection blatAssociations ) throws Exception {
+    protected void handleThaw( final Collection<BlatAssociation> blatAssociations ) throws Exception {
         if ( blatAssociations == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
@@ -119,6 +121,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
                     BlatAssociation blatAssociation = ( BlatAssociation ) object;
                     if ( ( blatAssociation ).getId() == null ) continue;
                     thawBlatAssociation( session, blatAssociation );
+                    session.evict( blatAssociation );
                 }
 
                 return null;
@@ -128,13 +131,15 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
     }
 
     private void thawBlatAssociation( org.hibernate.Session session, BlatAssociation blatAssociation ) {
-        session.update( blatAssociation );
-        session.update( blatAssociation.getBioSequence() );
-        session.update( blatAssociation.getGeneProduct() );
-        session.update( blatAssociation.getGeneProduct().getGene() );
-        session.update( blatAssociation.getGeneProduct().getGene().getPhysicalLocation() );
-        blatAssociation.getGeneProduct().getGene().getProducts().size();
-        session.update( blatAssociation.getBioSequence() );
-        blatAssociation.getBioSequence().getSequenceDatabaseEntry();
+        session.lock( blatAssociation, LockMode.NONE );
+        Hibernate.initialize( blatAssociation.getBioSequence() );
+        Hibernate.initialize( blatAssociation.getGeneProduct() );
+        Hibernate.initialize( blatAssociation.getBlatResult() );
+        Hibernate.initialize( blatAssociation.getBlatResult().getTargetChromosome() );
+        // Hibernate.initialize( blatAssociation.getGeneProduct().getGene() );
+        // Hibernate.initialize( blatAssociation.getGeneProduct().getGene().getPhysicalLocation() );
+        // Hibernate.initialize( blatAssociation.getGeneProduct().getGene().getProducts() );
+        // Hibernate.initialize( blatAssociation.getBioSequence() );
+        // Hibernate.initialize( blatAssociation.getBioSequence().getSequenceDatabaseEntry() );
     }
 }

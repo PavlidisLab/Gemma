@@ -25,7 +25,10 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation
  */
-public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequence2GeneProductDao {
+public interface BlatAssociationDao {
+
+    public final static int TRANSFORM_NONE = 0;
+
     /**
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)} with an
@@ -35,7 +38,7 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
      * (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
+    public java.util.Collection<BlatAssociation> create( int transform, java.util.Collection<BlatAssociation> entities );
 
     /**
      * <p>
@@ -55,7 +58,7 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
      * @param entities the collection of ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation instances to create.
      * @return the created instances.
      */
-    public java.util.Collection create( java.util.Collection entities );
+    public java.util.Collection<BlatAssociation> create( java.util.Collection<BlatAssociation> entities );
 
     /**
      * Creates an instance of ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation and adds it to the persistent
@@ -71,7 +74,7 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
      * string defined in {@link #find(int, ubic.gemma.model.genome.biosequence.BioSequence bioSequence)}.
      * </p>
      */
-    public java.util.Collection find( int transform, String queryString,
+    public java.util.Collection<BlatAssociation> find( int transform, String queryString,
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
@@ -81,7 +84,8 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
      * in {@link #find(int, ubic.gemma.model.genome.Gene gene)}.
      * </p>
      */
-    public java.util.Collection find( int transform, String queryString, ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<BlatAssociation> find( int transform, String queryString,
+            ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
@@ -92,7 +96,8 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection find( int transform, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public java.util.Collection<BlatAssociation> find( int transform,
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * <p>
@@ -103,7 +108,7 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection find( int transform, ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<BlatAssociation> find( int transform, ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
@@ -112,7 +117,8 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
      * defined in {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)}.
      * </p>
      */
-    public java.util.Collection find( String queryString, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public java.util.Collection<BlatAssociation> find( String queryString,
+            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * <p>
@@ -121,17 +127,17 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
      * in {@link #find(ubic.gemma.model.genome.Gene)}.
      * </p>
      */
-    public java.util.Collection find( String queryString, ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<BlatAssociation> find( String queryString, ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
      */
-    public java.util.Collection find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * 
      */
-    public java.util.Collection find( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.Gene gene );
 
     /**
      * <p>
@@ -157,7 +163,7 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<BlatAssociation> loadAll();
 
     /**
      * <p>
@@ -171,7 +177,7 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
      * @param transform the flag indicating what transformation to use.
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<BlatAssociation> loadAll( final int transform );
 
     /**
      * Removes the instance of ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation having the given
@@ -182,7 +188,7 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
     /**
      * Removes all entities in the given <code>entities<code> collection.
      */
-    public void remove( java.util.Collection entities );
+    public void remove( java.util.Collection<BlatAssociation> entities );
 
     /**
      * Removes the instance of ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation from the persistent store.
@@ -192,7 +198,7 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
     /**
      * 
      */
-    public void thaw( java.util.Collection blatAssociations );
+    public void thaw( java.util.Collection<BlatAssociation> blatAssociations );
 
     /**
      * 
@@ -202,7 +208,7 @@ public interface BlatAssociationDao extends ubic.gemma.model.association.BioSequ
     /**
      * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public void update( java.util.Collection entities );
+    public void update( java.util.Collection<BlatAssociation> entities );
 
     /**
      * Updates the <code>blatAssociation</code> instance in the persistent store.
