@@ -23,7 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A {@link Thread} that logs the elapsed time of an R analysis.
+ * A {@link Thread} that logs the elapsed time of an R analysis (every minute).
  * 
  * @author keshav
  * @version $Id$
@@ -43,13 +43,17 @@ public class RLoggingThread extends Thread {
     public void run() {
         StopWatch watch = new StopWatch();
         watch.start();
-        long previous = 0;
+
+        int count = 1;
         while ( !done ) {
-            long current = watch.getTime();
-            if ( ( current - previous ) > ONE_MIN_IN_MILLISEC ) {
-                log.info( ( current / ONE_MIN_IN_MILLISEC ) + " min elapsed" );
-                previous = current;
+            try {
+                Thread.sleep( ONE_MIN_IN_MILLISEC );
+            } catch ( InterruptedException e ) {
+                log.debug( "Thread interrupted.  R Analysis must have finished." );
+                break;
             }
+            log.info( "R is still running.  " + count + " min elapsed." );
+            count++;
         }
         watch.stop();
         return;
@@ -61,6 +65,7 @@ public class RLoggingThread extends Thread {
      * @param done
      */
     public void done() {
+        this.interrupt();
         this.done = true;
     }
 }

@@ -19,7 +19,7 @@
 package ubic.gemma.analysis.expression.diff;
 
 /**
- * Creates and starts threads {@link RLoggingThread}s, which log the elapsed time of R analyses.
+ * Creates and starts {@link RLoggingThread}s, which log the elapsed time of R analyses.
  * 
  * @author keshav
  * @version $Id$
