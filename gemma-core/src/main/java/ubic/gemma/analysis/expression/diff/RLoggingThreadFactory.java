@@ -27,7 +27,7 @@ package ubic.gemma.analysis.expression.diff;
 public class RLoggingThreadFactory {
 
     /**
-     * Creates and starts a {@link RLoggingThread}. The thread is set as a daemon.
+     * Creates and starts an {@link RLoggingThread}. The thread is set as a daemon.
      * 
      * @return the {@link RLoggingThread}.
      */
