@@ -20,7 +20,7 @@ package ubic.gemma.analysis.expression.diff;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
-import org.mortbay.log.LogFactory;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A {@link Thread} that logs the elapsed time of an R analysis.
