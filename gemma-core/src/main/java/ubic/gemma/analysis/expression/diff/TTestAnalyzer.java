@@ -156,7 +156,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         String matrixName = rc.assignMatrix( namedMatrix );
 
-        log.info( "Starting R analysis ... please wait!" );
+        /*
+         * FIXME this runs the analysis twice (for the p values and t-statistics). Wasteful.
+         */
 
         /* handle the p-values */
         StringBuffer pvalueCommand = new StringBuffer();
@@ -165,9 +167,14 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         pvalueCommand.append( ", 1, function(x) {t.test(x ~ " + factor + ")$p.value}" );
         pvalueCommand.append( ")" );
 
+        log.info( "Starting R analysis ... please wait!" );
         log.debug( pvalueCommand.toString() );
 
+        RLoggingThread rLoggingPValThread = RLoggingThreadFactory.createRLoggingThread();
+
         double[] pvalues = rc.doubleArrayEval( pvalueCommand.toString() );
+
+        rLoggingPValThread.done();
 
         /* write out histogram */
         writePValuesHistogram( pvalues, expressionExperiment, null );
@@ -181,7 +188,11 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         log.debug( tstatisticCommand.toString() );
 
+        RLoggingThread rLoggingTStatThread = RLoggingThreadFactory.createRLoggingThread();
+
         double[] tstatistics = rc.doubleArrayEval( tstatisticCommand.toString() );
+
+        rLoggingTStatThread.done();
 
         /* q-value */
         double[] qvalues = super.getQValues( pvalues );
@@ -201,7 +212,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         for ( int i = 0; i < dmatrix.rows(); i++ ) {
             DesignElement de = dmatrix.getDesignElementForRow( i );
-            // FIXME maybe ProbeAnalysisResult should have a DesignElement to avoid typecasting
+            // FIXME maybe ProbeAnalysisResult should have a DesignElement to avoid type-casting
             CompositeSequence cs = ( CompositeSequence ) de;
 
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();

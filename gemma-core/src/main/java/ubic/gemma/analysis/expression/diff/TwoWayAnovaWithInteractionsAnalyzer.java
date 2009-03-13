@@ -46,9 +46,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * R Call:
  * <p>
- * apply(matrix,1,function(x){anova(aov(x~farea+ftreat+farea*ftreat))$Pr})
- * <p>
- * apply(matrix,1,function(x){anova(aov(x~farea+ftreat+farea*ftreat))$F})
+ * apply(matrix,1,function(x){anova(aov(x~farea+ftreat+farea*ftreat))})
  * <p>
  * where area and treat are first transposed and then factor is called on each to give farea and ftreat.
  * <p>
@@ -114,8 +112,6 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
         String matrixName = rc.assignMatrix( namedMatrix );
 
-        log.info( "Starting R analysis ... please wait!" );
-
         /* p-values */
         StringBuffer pvalueCommand = new StringBuffer();
 
@@ -125,9 +121,15 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
                 + factorB + "))}" );
         pvalueCommand.append( ")" );
 
+        log.info( "Starting R analysis ... please wait!" );
         log.debug( pvalueCommand.toString() );
 
+        RLoggingThread rLoggingThread = RLoggingThreadFactory.createRLoggingThread();
+
         TwoWayAnovaResult anovaResult = rc.twoWayAnovaEval( pvalueCommand.toString() );
+
+        rLoggingThread.done();
+
         if ( anovaResult == null ) throw new IllegalStateException( "No pvalues returned" );
 
         double[] pvalues = anovaResult.getPvalues();
@@ -169,9 +171,9 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      java.util.ArrayList, int, int, int, double[])
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     * java.util.ArrayList, int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,

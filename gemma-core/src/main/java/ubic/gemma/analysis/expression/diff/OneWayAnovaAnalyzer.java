@@ -248,10 +248,8 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         String matrixName = rc.assignMatrix( filteredNamedMatrix );
 
         /*
-         * FIXME this runs the analysis twice. Wasteful.
+         * FIXME this runs the analysis twice (for the p values and f-statistics). Wasteful.
          */
-
-        log.info( "Starting R analysis ... please wait!" );
 
         /* p-values */
         StringBuffer pvalueBuf = new StringBuffer();
@@ -263,7 +261,14 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         String pvalueCmd = pvalueBuf.toString() + "[1,]";
 
+        log.info( "Starting R analysis ... please wait!" );
+        log.debug( pvalueCmd.toString() );
+
+        RLoggingThread rLoggingPValThread = RLoggingThreadFactory.createRLoggingThread();
+
         double[] pvalues = rc.doubleArrayEval( pvalueCmd );
+
+        rLoggingPValThread.done();
 
         if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
@@ -283,7 +288,11 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         String fStatisticCmd = fStatisticBuf.toString() + "[1,]";
         log.debug( fStatisticCmd.toString() );
 
+        RLoggingThread rLoggingFStatThread = RLoggingThreadFactory.createRLoggingThread();
+
         double[] fstatistics = rc.doubleArrayEval( fStatisticCmd );
+
+        rLoggingFStatThread.done();
 
         /* q-value */
         double[] qvalues = super.getQValues( pvalues );
@@ -333,5 +342,4 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         return expressionAnalysis;
 
     }
-
 }
