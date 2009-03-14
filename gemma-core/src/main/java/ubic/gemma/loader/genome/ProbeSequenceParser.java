@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -51,7 +52,6 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
 
     /*
      * (non-Javadoc)
-     * 
      * @see baseCode.io.reader.BasicLineMapParser#parseOneLine(java.lang.String)
      */
     @Override
@@ -62,8 +62,9 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
                     "FASTA format not supported - please use the tabular format for oligonucleotides" );
         }
 
-        String[] sArray = line.split( "\t" );
-        if ( sArray.length == 0 ) throw new IllegalArgumentException( "Line format is not valid" );
+        String[] sArray = StringUtils.splitPreserveAllTokens( "\t" );
+        if ( sArray.length == 0 )
+            throw new IllegalArgumentException( "Line format is not valid, expected at least two fields." );
 
         String probeId = sArray[0].trim();
 
@@ -72,7 +73,12 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
         String sequenceName = sArray[1].trim();
 
         String sequence = sArray[2].trim();
-        if ( sequence == null || sequence.length() == 0 ) throw new IllegalArgumentException( "Sequence is invalid" );
+        if ( sequence == null || sequence.length() == 0 ) {
+            /*
+             * No sequence.
+             */
+            return null;
+        }
 
         BioSequence seq = BioSequence.Factory.newInstance();
         seq.setSequence( sequence );
@@ -119,7 +125,6 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
 
     /*
      * (non-Javadoc)
-     * 
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
     @Override
