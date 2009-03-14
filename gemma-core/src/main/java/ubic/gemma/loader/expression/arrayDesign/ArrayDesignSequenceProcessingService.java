@@ -358,7 +358,7 @@ public class ArrayDesignSequenceProcessingService {
      * @param arrayDesign An existing ArrayDesign that already has compositeSequences filled in.
      * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
      * @throws IOException
-     */ 
+     */
     public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
             Taxon taxon ) throws IOException {
 
@@ -515,14 +515,14 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
-     * The sequence file <em>must</em> provide an unambiguous way to associate the sequences with design elements on
-     * the array.
+     * The sequence file <em>must</em> provide an unambiguous way to associate the sequences with design elements on the
+     * array.
      * <p>
      * If the SequenceType is AFFY_PROBE, the sequences will be treated as probes in probe sets, in Affymetrix 'tabbed'
      * format. Otherwise the format of the file is assumed to be FASTA, with one CompositeSequence per FASTA element;
      * there is further assumed to be just one Reporter per CompositeSequence (that is, they are the same thing). The
-     * FASTA file must use a standard defline format (as described at
-     * {@link http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
+     * FASTA file must use a standard defline format (as described at {@link http
+     * ://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
      * <p>
      * For FASTA files, the match-up of the sequence with the design element is done using the following tests, until
      * one passes:
@@ -583,8 +583,8 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
-     * The sequence file <em>must</em> provide an unambiguous way to associate the sequences with design elements on
-     * the array. If probe does not have a match to a sequence in the input file, the sequence for that probe will be
+     * The sequence file <em>must</em> provide an unambiguous way to associate the sequences with design elements on the
+     * array. If probe does not have a match to a sequence in the input file, the sequence for that probe will be
      * nulled.
      * <p>
      * If the SequenceType is AFFY_PROBE, the sequences will be treated as probes in probe sets, in Affymetrix 'tabbed'
@@ -595,8 +595,8 @@ public class ArrayDesignSequenceProcessingService {
      * <p>
      * Otherwise the format of the file is assumed to be FASTA, with one CompositeSequence per FASTA element; there is
      * further assumed to be just one Reporter per CompositeSequence (that is, they are the same thing). The FASTA file
-     * must use a standard defline format (as described at
-     * {@link http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
+     * must use a standard defline format (as described at {@link http
+     * ://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
      * <p>
      * For FASTA files, the match-up of the sequence with the design element is done using the following tests, until
      * one passes:
@@ -729,10 +729,10 @@ public class ArrayDesignSequenceProcessingService {
 
     /**
      * @param arrayDesign
-     * @param sequenceFile
+     * @param sequenceFile; the expected format is described in {@link ProbeSequenceParser}
      * @param taxon
      * @return
-     * @return
+     * @see ProbeSequenceParser
      */
     private Collection<BioSequence> processOligoDesign( ArrayDesign arrayDesign, InputStream sequenceFile, Taxon taxon )
             throws IOException {
