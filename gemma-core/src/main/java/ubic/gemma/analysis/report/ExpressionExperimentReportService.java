@@ -137,14 +137,16 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
      * Fills in event and security information from the database. This will only retrieve the latest event (if any).
      * This is rather slow so should be avoided if the information isn't needed.
      * 
-     * @return the filled out value objects
+     * @return Map of EE ids to the most recent update.
      */
-    public void fillEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
+    public Map<Long, Date> fillEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
             ids.add( eeVo.getId() );
         }
+
+        Map<Long, Date> results = new HashMap<Long, Date>();
 
         // do this ahead to avoid round trips.
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
@@ -155,7 +157,7 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
         }
 
         if ( ees.size() == 0 ) {
-            return;
+            return results;
         }
         // This is substantially faster than expressionExperimentService.getLastLinkAnalysis( ids ).
         Map<Long, AuditEvent> linkAnalysisEvents = getEvents( ees, LinkAnalysisEvent.Factory.newInstance() );
@@ -172,13 +174,21 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
 
         Map<Securable, Boolean> privacyInfo = securityService.arePrivate( ees );
 
+        Date mostRecentDate = new Date( 0 );
+
         // add in the last events of interest for all eeVos
         for ( ExpressionExperimentValueObject eeVo : vos ) {
             Long id = eeVo.getId();
             if ( linkAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = linkAnalysisEvents.get( id );
                 if ( event != null ) {
-                    eeVo.setDateLinkAnalysis( event.getDate() );
+                    Date date = event.getDate();
+                    eeVo.setDateLinkAnalysis( date );
+
+                    if ( date.after( mostRecentDate ) ) {
+                        mostRecentDate = date;
+                    }
+
                     eeVo.setLinkAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
@@ -186,7 +196,13 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
             if ( missingValueAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = missingValueAnalysisEvents.get( id );
                 if ( event != null ) {
-                    eeVo.setDateMissingValueAnalysis( ( event.getDate() ) );
+                    Date date = event.getDate();
+                    eeVo.setDateMissingValueAnalysis( date );
+
+                    if ( date.after( mostRecentDate ) ) {
+                        mostRecentDate = date;
+                    }
+
                     eeVo.setMissingValueAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
@@ -194,7 +210,13 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
             if ( rankComputationEvents.containsKey( id ) ) {
                 AuditEvent event = rankComputationEvents.get( id );
                 if ( event != null ) {
-                    eeVo.setDateProcessedDataVectorComputation( event.getDate() );
+                    Date date = event.getDate();
+                    eeVo.setDateProcessedDataVectorComputation( date );
+
+                    if ( date.after( mostRecentDate ) ) {
+                        mostRecentDate = date;
+                    }
+
                     eeVo.setProcessedDataVectorComputationEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
@@ -202,22 +224,34 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
             if ( arrayDesignEvents.containsKey( id ) ) {
                 AuditEvent event = arrayDesignEvents.get( id );
                 if ( event != null ) {
-                    eeVo.setDateArrayDesignLastUpdated( event.getDate() );
+                    Date date = event.getDate();
+
+                    if ( date.after( mostRecentDate ) ) {
+                        mostRecentDate = date;
+                    }
+
+                    eeVo.setDateArrayDesignLastUpdated( date );
                 }
             }
 
             if ( differentialAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = differentialAnalysisEvents.get( id );
                 if ( event != null ) {
-                    eeVo.setDateDifferentialAnalysis( event.getDate() );
+                    Date date = event.getDate();
+                    eeVo.setDateDifferentialAnalysis( date );
+
+                    if ( date.after( mostRecentDate ) ) {
+                        mostRecentDate = date;
+                    }
                     eeVo.setDifferentialAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
 
             if ( sampleRemovalEvents.containsKey( id ) ) {
-                Collection<AuditEvent> e = sampleRemovalEvents.get( id );
+                Collection<AuditEvent> removalEvents = sampleRemovalEvents.get( id );
                 // we find we are getting lazy-load exceptions from this guy.
-                eeVo.setSampleRemovedFlagsFromAuditEvent( e );
+                eeVo.setSampleRemovedFlagsFromAuditEvent( removalEvents );
+
             }
 
             if ( troubleEvents.containsKey( id ) ) {
@@ -225,10 +259,19 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
                 // we find we are getting lazy-load exceptions from this guy.
                 auditEventService.thaw( trouble );
                 eeVo.setTroubleFlag( new AuditEventValueObject( trouble ) );
+
+                if ( trouble.getDate().after( mostRecentDate ) ) {
+                    mostRecentDate = trouble.getDate();
+                }
             }
             if ( validationEvents.containsKey( id ) ) {
                 AuditEvent validated = validationEvents.get( id );
                 auditEventService.thaw( validated );
+
+                if ( validated.getDate().after( mostRecentDate ) ) {
+                    mostRecentDate = validated.getDate();
+                }
+
                 eeVo.setValidatedFlag( new AuditEventValueObject( validated ) );
             }
 
@@ -236,16 +279,22 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
             if ( privacyInfo.containsKey( ee ) ) {
                 eeVo.setIsPublic( !privacyInfo.get( ee ) );
             }
+
+            results.put( ee.getId(), mostRecentDate );
         }
         log.debug( "processed events" );
+
+        return results;
     }
 
     /**
-     * @return the filled out value objects fills the link statistics from the cache. If it is not in the cache, the
-     *         values will be null.
+     * Fills in link analysis and other info from the report.
+     * 
+     * @return map of when the objects were most recently updated (or created)
      */
-    public void fillLinkStatsFromCache( Collection<ExpressionExperimentValueObject> vos ) {
+    public Map<Long, Date> fillLinkStatsFromCache( Collection<ExpressionExperimentValueObject> vos ) {
         StopWatch timer = new StopWatch();
+        Map<Long, Date> result = new HashMap<Long, Date>();
         timer.start();
         for ( ExpressionExperimentValueObject eeVo : vos ) {
             ExpressionExperimentValueObject cacheVo = retrieveValueObject( eeVo.getId() );
@@ -256,12 +305,21 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
                 eeVo.setDateCached( cacheVo.getDateCached() );
                 eeVo.setDateCreated( cacheVo.getDateCreated() );
                 eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
+
+                if ( eeVo.getDateLastUpdated() != null ) {
+                    result.put( eeVo.getId(), eeVo.getDateLastUpdated() );
+                } else {
+                    result.put( eeVo.getId(), eeVo.getDateCreated() );
+                }
+
             }
         }
         timer.stop();
         if ( timer.getTime() > 1000 ) {
             log.info( "Link stats read from cache in " + timer.getTime() + "ms" );
         }
+
+        return result;
     }
 
     /**
