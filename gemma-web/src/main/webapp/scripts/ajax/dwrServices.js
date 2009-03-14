@@ -306,9 +306,9 @@ ExpressionExperimentController.loadExpressionExperiments = function(p0, callback
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'loadExpressionExperiments', p0, callback);
 }
-ExpressionExperimentController.loadStatusSummaries = function(p0, callback) {
+ExpressionExperimentController.loadStatusSummaries = function(p0, p1, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadStatusSummaries',
-			p0, callback);
+			p0, p1, callback);
 }
 ExpressionExperimentController.removePrimaryPublication = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',

@@ -7,7 +7,6 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-		
 	manager = new Gemma.EEManager({
 				editable : true,
 				id : 'eemanager'
@@ -45,21 +44,22 @@ Ext.onReady(function() {
 	var dateRenderer = new Ext.util.Format.dateRenderer("y/M/d");
 
 	var adminRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
-		var adminLink =  '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
+		var adminLink = '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
 				+ value
 				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></a>';
-				// + '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
-				// + value
-				// + '" target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this
-				// experiment" title="edit"/></a>'
-								
-				var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
-				if (isAdmin){
-					adminLink = adminLink + '&nbsp;&nbsp;&nbsp;<a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
+		// + '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
+		// + value
+		// + '" target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this
+		// experiment" title="edit"/></a>'
+
+		var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
+		if (isAdmin) {
+			adminLink = adminLink
+					+ '&nbsp;&nbsp;&nbsp;<a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
 					+ value
 					+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></a>&nbsp;';
-				}
-				return adminLink;
+		}
+		return adminLink;
 	};
 
 	var shortNameRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
@@ -301,9 +301,8 @@ Ext.onReady(function() {
 				renderer : adminRenderer
 			}];
 
-	store.load({
-				params : [null]
-			});
+	/* FIXME - perhaps make this adjustable */
+	var limit = 100;
 
 	var tpl = new Ext.XTemplate('<tpl for="."><div class="itemwrap" id="{shortName}">',
 			'<p>{id} {name} {shortName} {externalUri} {[this.log(values.id)]}</p>', "</div></tpl>", {
@@ -312,17 +311,48 @@ Ext.onReady(function() {
 				}
 			});
 
+	/*
+	 * FIXME. Only show this control if the user is admin? Or has at least _limit_ studies (hard to know in advance...)
+	 */
+	var controlForm = new Ext.form.FormPanel({
+				renderTo : 'controls',
+				border : false,
+				bodyBorder : false,
+				items : [{
+					xtype : 'checkbox',
+					boxLabel : 'Show all [Default: show only up to ' + limit
+							+ ' most recently changed (ties may result in more)]',
+					hideLabel : true,
+					handler : function(chbx, checked) {
+						if (checked) {
+							store.load({
+										params : [null, -1]
+									});
+						} else {
+							store.load({
+										params : [null, limit]
+									});
+						}
+					}.createDelegate(this),
+					checked : false
+				}]
+			});
+
 	var manager = new Gemma.EEReportPanel({
 				renderTo : 'eemanage',
 				store : store,
 				loadMask : true,
 				autoHeight : true,
-				minHeight : 70,
+				minHeight : 100,
 				width : 1250,
 				columns : columns,
 				rowExpander : rowExpander,
 				plugins : rowExpander
 
+			});
+
+	store.load({
+				params : [null, limit]
 			});
 
 });

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
@@ -360,9 +361,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     private ExpressionExperimentReportService expressionExperimentReportService = null;
 
-    private ExpressionExperimentService expressionExperimentService = null;
-
     private ExpressionExperimentSecureService expressionExperimentSecureService = null;
+
+    private ExpressionExperimentService expressionExperimentService = null;
 
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
 
@@ -631,6 +632,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids );
 
         getReportData( initialResults );
+
         ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
         ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject( initialResult );
 
@@ -672,23 +674,22 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * AJAX
+     * AJAX. Data summarizing the status of experiments.
      * 
      * @param sId
+     * @param limit If >0, get the most recently updated N experiments, where N <= limit.
      * @return
      */
-    public Collection<ExpressionExperimentValueObject> loadStatusSummaries( String sId ) {
+    public Collection<ExpressionExperimentValueObject> loadStatusSummaries( String sId, Integer limit ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        // if no IDs are specified, then load all expressionExperiments.
-        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
         Collection<ExpressionExperimentValueObject> eeValObjectCol = null;
 
         boolean filterDataByUser = false;
 
         if ( SecurityService.isUserAdmin() ) {
-            /* do nothing */
+            /* proceed, just being transparent */
         } else if ( SecurityService.isUserLoggedIn() ) {
             filterDataByUser = true;
         } else {
@@ -701,28 +702,26 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         } else { // if ids are specified, then display only those
             // expressionExperiments
             Collection<Long> ids = parseIdParameterString( sId );
-
             if ( ids.size() == 0 ) {
                 eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, filterDataByUser );
             } else {
                 eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids, false );
             }
-
         }
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Phase 1 done in " + timer.getTime() + "ms" );
         }
 
-        expressionExperiments.addAll( eeValObjectCol );
+        Map<Long, Date> recentDateInfo = getReportData( eeValObjectCol );
 
-        getReportData( expressionExperiments );
+        List<ExpressionExperimentValueObject> result = getRecentlyUpdated( recentDateInfo, eeValObjectCol, limit );
 
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Ready with link reports in " + timer.getTime() + "ms" );
+            log.info( "Ready with " + result.size() + " EE reports in " + timer.getTime() + "ms; limit=" + limit );
         }
-        return expressionExperiments;
+        return result;
     }
 
     /**
@@ -772,6 +771,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     public void setExpressionExperimentReportService(
             ExpressionExperimentReportService expressionExperimentReportService ) {
         this.expressionExperimentReportService = expressionExperimentReportService;
+    }
+
+    public void setExpressionExperimentSecureService(
+            ExpressionExperimentSecureService expressionExperimentSecureService ) {
+        this.expressionExperimentSecureService = expressionExperimentSecureService;
     }
 
     /**
@@ -1006,22 +1010,35 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @return ModelAndView
      */
     public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
-        String sId = request.getParameter( "id" );
+        // String sId = request.getParameter( "id" );
+        //
+        // String limitS = request.getParameter( "limit" );
+        //
+        // int limit = -1;
+        // if ( StringUtils.isNotBlank( limitS ) ) {
+        // try {
+        // limit = Integer.parseInt( limitS );
+        // } catch ( NumberFormatException e ) {
+        // throw new RuntimeException( "Invalid format for 'limit', it must be an integer" );
+        // }
+        // }
+        //
+        // Collection<ExpressionExperimentValueObject> expressionExperiments = loadStatusSummaries( sId, limit );
+        // Long numExpressionExperiments = new Long( expressionExperiments.size() );
+        // ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
+        //
+        // if ( expressionExperiments.size() == 0 ) {
+        // this.saveMessage( request, "There are no datasets to display." );
+        // } else {
+        // this.saveMessage( request, "Displaying " + expressionExperiments.size() + " datasets" );
+        // }
+        //
+        // mav.addObject( "expressionExperiments", expressionExperiments );
+        // mav.addObject( "numExpressionExperiments", numExpressionExperiments );
+        //
+        // return mav;
 
-        Collection<ExpressionExperimentValueObject> expressionExperiments = loadStatusSummaries( sId );
-        Long numExpressionExperiments = new Long( expressionExperiments.size() );
-        ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
-
-        if ( expressionExperiments.size() == 0 ) {
-            this.saveMessage( request, "There are no datasets to display." );
-        } else {
-            this.saveMessage( request, "Displaying " + expressionExperiments.size() + " datasets" );
-        }
-
-        mav.addObject( "expressionExperiments", expressionExperiments );
-        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
-
-        return mav;
+        return new ModelAndView( "expressionExperimentLinkSummary" );
 
     }
 
@@ -1372,10 +1389,82 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return auditTrailService.getLastValidationEvent( ee );
     }
 
-    private void getReportData( Collection<ExpressionExperimentValueObject> expressionExperiments ) {
-        expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
-        expressionExperimentReportService.fillEventInformation( expressionExperiments );
+    /**
+     * @param recentDateInfo
+     * @param expressionExperiments
+     * @param limit Only this many will be returned (ties at the cutoff date will result in more)
+     * @return
+     */
+    private List<ExpressionExperimentValueObject> getRecentlyUpdated( Map<Long, Date> recentDateInfo,
+            Collection<ExpressionExperimentValueObject> expressionExperiments, int limit ) {
+
+        List<ExpressionExperimentValueObject> results = new ArrayList<ExpressionExperimentValueObject>();
+
+        if ( limit <= 0 || expressionExperiments.size() < limit ) {
+            log.debug( "Too few studies to filter, returning all" );
+            results.addAll( expressionExperiments );
+            return results;
+        }
+
+        List<Date> dates = new ArrayList<Date>();
+        dates.addAll( recentDateInfo.values() );
+        Collections.sort( dates );
+
+        Date cutoff = null;
+        int j = 0;
+        for ( int i = dates.size() - 1; i >= 0; i-- ) {
+            cutoff = dates.get( i );
+            if ( ++j > limit ) {
+                log.info( "Cutoff: " + cutoff + " at " + j );
+                break;
+            }
+        }
+
+        Collection<Long> keepers = new HashSet<Long>();
+        j = 0;
+        for ( Long v : recentDateInfo.keySet() ) {
+            Date d = recentDateInfo.get( v );
+            if ( d.after( cutoff ) || d.equals( cutoff ) ) {
+                keepers.add( v );
+            }
+        }
+
+        for ( ExpressionExperimentValueObject vo : expressionExperiments ) {
+            if ( keepers.contains( vo.getId() ) ) {
+                results.add( vo );
+            }
+        }
+
+        return results;
+
+    }
+
+    /**
+     * Updates the value objects with event information.
+     * 
+     * @param expressionExperiments
+     * @return most recently changed information
+     */
+    private Map<Long, Date> getReportData( Collection<ExpressionExperimentValueObject> expressionExperiments ) {
+
+        /*
+         * This is only populated with experiments that have reports available on disk.
+         */
+        Map<Long, Date> lastUpdated = expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
+
         expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
+        Map<Long, Date> eventDates = expressionExperimentReportService.fillEventInformation( expressionExperiments );
+
+        for ( Long k : eventDates.keySet() ) {
+            if ( lastUpdated.containsKey( k ) ) {
+                if ( lastUpdated.get( k ).after( eventDates.get( k ) ) ) {
+                    eventDates.put( k, lastUpdated.get( k ) );
+                }
+            }
+        }
+
+        assert eventDates.size() == expressionExperiments.size();
+        return eventDates;
     }
 
     /**
@@ -1439,11 +1528,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ModelAndView redirectToList( HttpServletRequest request ) {
         this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
-    }
-
-    public void setExpressionExperimentSecureService(
-            ExpressionExperimentSecureService expressionExperimentSecureService ) {
-        this.expressionExperimentSecureService = expressionExperimentSecureService;
     }
 
 }

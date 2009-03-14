@@ -27,8 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
 /**
  * @author kelsey
- * @version 
- * 
+ * @version
  */
 public class ExpressionExperimentValueObject implements java.io.Serializable {
     /**
@@ -44,19 +43,18 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             java.lang.String accession, long bioAssayCount, java.lang.String taxon, java.lang.Long bioMaterialCount,
             long designElementDataVectorCount, long arrayDesignCount, java.lang.String shortName,
             java.lang.String linkAnalysisEventType, java.util.Date dateArrayDesignLastUpdated,
-            AuditEventValueObject validatedFlag, java.lang.String technologyType,
-            boolean hasBothIntensities, java.lang.Integer numAnnotations, java.lang.Integer numPopulatedFactors,
+            AuditEventValueObject validatedFlag, java.lang.String technologyType, boolean hasBothIntensities,
+            java.lang.Integer numAnnotations, java.lang.Integer numPopulatedFactors,
             java.util.Date dateDifferentialAnalysis, java.lang.String differentialAnalysisEventType,
             java.util.Collection sampleRemovedFlags, boolean isPublic, java.lang.String clazz,
             java.lang.Long sourceExperiment, java.lang.Long differentialExpressionAnalysisId,
             java.lang.Integer pubmedId, java.lang.String investigators, java.lang.String owner,
-            java.util.Date dateCreated, AuditEventValueObject troubleFlag,
-            java.lang.Long coexpressionLinkCount, java.lang.String processedDataVectorComputationEventType,
-            java.lang.String missingValueAnalysisEventType, java.util.Date dateLinkAnalysis,
-            java.lang.Long rawCoexpressionLinkCount, java.util.Date dateProcessedDataVectorComputation,
-            java.util.Date dateMissingValueAnalysis, java.lang.Long processedExpressionVectorCount,
-            java.util.Date dateLastUpdated, java.util.Date dateCached, java.lang.Boolean hasProbeSpecificForQueryGene,
-            java.lang.Double minPvalue ) {
+            java.util.Date dateCreated, AuditEventValueObject troubleFlag, java.lang.Long coexpressionLinkCount,
+            java.lang.String processedDataVectorComputationEventType, java.lang.String missingValueAnalysisEventType,
+            java.util.Date dateLinkAnalysis, java.lang.Long rawCoexpressionLinkCount,
+            java.util.Date dateProcessedDataVectorComputation, java.util.Date dateMissingValueAnalysis,
+            java.lang.Long processedExpressionVectorCount, java.util.Date dateLastUpdated, java.util.Date dateCached,
+            java.lang.Boolean hasProbeSpecificForQueryGene, java.lang.Double minPvalue ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -471,18 +469,19 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         return this.sampleRemovedFlags;
     }
 
-
     public void setSampleRemovedFlags( java.util.Collection<AuditEventValueObject> sampleRemovedFlags ) {
 
         this.sampleRemovedFlags = sampleRemovedFlags;
     }
 
-    
+    /**
+     * @param sampleRemovedFlags
+     */
     public void setSampleRemovedFlagsFromAuditEvent( java.util.Collection<AuditEvent> sampleRemovedFlags ) {
         Collection<AuditEventValueObject> converted = new HashSet<AuditEventValueObject>();
-        
-        for(AuditEvent ae : sampleRemovedFlags){
-            converted.add( new AuditEventValueObject(ae) );
+
+        for ( AuditEvent ae : sampleRemovedFlags ) {
+            converted.add( new AuditEventValueObject( ae ) );
         }
 
         this.sampleRemovedFlags = converted;
