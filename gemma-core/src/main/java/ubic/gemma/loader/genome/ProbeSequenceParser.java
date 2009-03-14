@@ -62,7 +62,7 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
                     "FASTA format not supported - please use the tabular format for oligonucleotides" );
         }
 
-        String[] sArray = StringUtils.splitPreserveAllTokens( "\t" );
+        String[] sArray = StringUtils.splitPreserveAllTokens( line );
         if ( sArray.length == 0 ) {
             return null;
         }
