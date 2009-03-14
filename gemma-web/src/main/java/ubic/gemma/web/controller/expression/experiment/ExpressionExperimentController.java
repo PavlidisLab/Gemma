@@ -1415,7 +1415,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         for ( int i = dates.size() - 1; i >= 0; i-- ) {
             cutoff = dates.get( i );
             if ( ++j > limit ) {
-                log.info( "Cutoff: " + cutoff + " at " + j );
+                // log.info( "Cutoff: " + cutoff + " at " + j );
                 break;
             }
         }
