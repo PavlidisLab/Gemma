@@ -63,17 +63,20 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
         }
 
         String[] sArray = StringUtils.splitPreserveAllTokens( "\t" );
-        if ( sArray.length == 0 )
-            throw new IllegalArgumentException( "Line format is not valid, expected at least two fields." );
+        if ( sArray.length == 0 ) {
+            return null;
+        }
 
         String probeId = sArray[0].trim();
 
-        if ( probeId == null || probeId.length() == 0 ) throw new IllegalArgumentException( "Probe id invalid" );
+        if ( StringUtils.isBlank( probeId ) ) {
+            return null;
+        }
 
         String sequenceName = sArray[1].trim();
 
         String sequence = sArray[2].trim();
-        if ( sequence == null || sequence.length() == 0 ) {
+        if ( StringUtils.isBlank( sequence ) ) {
             /*
              * No sequence.
              */
