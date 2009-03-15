@@ -62,7 +62,12 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
                     "FASTA format not supported - please use the tabular format for oligonucleotides" );
         }
 
+        if ( StringUtils.isBlank( line ) ) {
+            return null;
+        }
+
         String[] sArray = StringUtils.splitPreserveAllTokens( line );
+
         if ( sArray.length == 0 ) {
             return null;
         }
@@ -77,9 +82,6 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
 
         String sequence = sArray[2].trim();
         if ( StringUtils.isBlank( sequence ) ) {
-            /*
-             * No sequence.
-             */
             return null;
         }
 
@@ -90,6 +92,9 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
         seq.setIsApproximateLength( false );
         seq.setName( sequenceName );
 
+        if ( this.results.containsKey( probeId ) ) {
+            log.warn( "Duplicated probe id: " + probeId );
+        }
         put( probeId, seq );
 
         return seq;
@@ -108,15 +113,15 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
 
             BioSequence newItem = parseOneLine( line );
 
-            if ( newItem == null ) {
-                nullLines++;
-                continue;
-            }
-
             if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
                 String message = "Parsed " + linesParsed + " lines ";
                 ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, message ) );
                 log.info( message );
+            }
+
+            if ( newItem == null ) {
+                nullLines++;
+                continue;
             }
 
         }
