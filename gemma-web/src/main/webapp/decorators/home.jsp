@@ -8,7 +8,8 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" />
+		</title>
 
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
@@ -74,18 +75,26 @@
 				<jsp:include page="/common/footer.jsp" />
 			</div>
 		</div>
-<c:if test='${ appConfig["ga.tracker"] != null}'>
-	<script type="text/javascript">
-	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-		document.write(unescape("%3Cscript src='"
+		<c:if test='${ appConfig["ga.tracker"] != null}'>
+			<script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl."
+			: "http://www.");
+	document
+			.write(unescape("%3Cscript src='"
 					+ gaJsHost
 					+ "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+			<script type="text/javascript">
+	try {
+		var pageTracker = _gat._getTracker('${appConfig["ga.tracker"]}');
+		pageTracker._trackPageview();
+	} catch (err) {
+	}
+</script>
 
-	var pageTracker = _gat._getTracker('${appConfig["ga.tracker"]}');
-	pageTracker._initData();
-	pageTracker._trackPageview();
-	</script>
-</c:if>
+		</c:if>
+		>
+		</c:if>
 	</body>
 </html>
 
