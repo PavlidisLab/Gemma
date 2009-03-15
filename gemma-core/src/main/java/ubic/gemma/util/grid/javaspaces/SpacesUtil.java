@@ -421,19 +421,55 @@ public class SpacesUtil implements ApplicationContextAware {
     public boolean canServiceTask( String taskName, String url ) {
         boolean serviceable = false;
 
-        List<String> serviceableTasks = this.tasksThatCanBeServiced( url );
-
-        List<String> busyTasks = this.tasksThatCanBeServicedLater( url );
-
-        if ( serviceableTasks.contains( taskName ) ) {
-            serviceable = true;
+        if ( canServiceTaskNow( taskName, url ) ) {
             log.info( "Can service task with name " + taskName );
-        } else if ( busyTasks.contains( taskName ) ) {
+            serviceable = true;
+        } else if ( canServiceTaskLater( taskName, url ) ) {
             log.info( "Cannot service task with name " + taskName
                     + " at this time but can service later.  Task will be queued." );
             serviceable = true;
         } else {
             log.warn( "Cannot service task " + taskName + " at this time." );
+        }
+
+        return serviceable;
+    }
+
+    /**
+     * Can service the task with taskName now.
+     * 
+     * @param taskName
+     * @param url
+     * @return
+     */
+    public boolean canServiceTaskNow( String taskName, String url ) {
+
+        boolean serviceable = false;
+
+        List<String> serviceableTasks = this.tasksThatCanBeServiced( url );
+
+        if ( serviceableTasks.contains( taskName ) ) {
+            serviceable = true;
+        }
+
+        return serviceable;
+    }
+
+    /**
+     * Can service the task with taskName later.
+     * 
+     * @param taskName
+     * @param url
+     * @return
+     */
+    public boolean canServiceTaskLater( String taskName, String url ) {
+
+        boolean serviceable = false;
+
+        List<String> busyTasks = this.tasksThatCanBeServicedLater( url );
+
+        if ( busyTasks.contains( taskName ) ) {
+            serviceable = true;
         }
 
         return serviceable;
