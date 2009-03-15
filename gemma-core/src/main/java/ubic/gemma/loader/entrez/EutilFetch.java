@@ -46,7 +46,6 @@ public class EutilFetch {
     static DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
     /**
-     * 
      * @param db e.g., gds.
      * @param searchString
      * @param limit - Maximum number of records to return.
@@ -93,6 +92,9 @@ public class EutilFetch {
             String line = null;
             while ( ( line = br.readLine() ) != null ) {
                 buf.append( line );
+                if ( !line.endsWith( " " ) ) {
+                    buf.append( " " );
+                }
             }
             return buf.toString();
 

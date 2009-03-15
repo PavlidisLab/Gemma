@@ -21,6 +21,8 @@ package ubic.gemma.loader.expression.geo.service;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ubic.gemma.loader.entrez.EutilFetch;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
@@ -41,6 +43,7 @@ import ubic.gemma.model.genome.TaxonService;
  * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
  */
 public class GeoBrowserService {
+    private static final int MIN_SAMPLES = 5;
     ExpressionExperimentService expressionExperimentService;
     TaxonService taxonService;
     ExternalDatabaseService externalDatabaseService;
@@ -57,6 +60,10 @@ public class GeoBrowserService {
         Collection<GeoRecord> toRemove = new HashSet<GeoRecord>();
         assert geo != null;
         rec: for ( GeoRecord record : records ) {
+
+            if ( record.getNumSamples() < MIN_SAMPLES ) {
+                toRemove.add( record );
+            }
 
             Collection<String> organisms = record.getOrganisms();
             if ( organisms == null || organisms.size() == 0 ) {
@@ -121,6 +128,10 @@ public class GeoBrowserService {
         /*
          * TODO: parse this into something easier to read /htmlize.
          */
+        Pattern accPatt = Pattern.compile( "(G(PL|SE|SM|DS)[0-9]+)" );
+        Matcher matcher = accPatt.matcher( details );
+        details = matcher.replaceAll( "<br /><strong>$1</strong>" );
+
         return details;
     }
 

@@ -63,6 +63,7 @@ public class GeoBrowser {
      * @param numberToFetch how many, from the most recent, to fetch.
      * @return List of GeoRecords with data on the experiments, most recent first.
      */
+    @SuppressWarnings("null")
     public List<GeoRecord> getRecentGeoRecords( int startPoint, int numberToFetch ) {
         Pattern pat = Pattern.compile( GEO_TABLE_CELL_REGEXP );
         Pattern simpleUrlPat = Pattern.compile( "<.+?>(.+?)</.+?>" );
