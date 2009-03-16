@@ -19,10 +19,9 @@
 
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
-
-import net.sf.ehcache.Cache;
 
 import org.apache.commons.lang.RandomStringUtils;
 
@@ -98,28 +97,33 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
 
         Collection<ExpressionExperiment> ees = getDataset();
 
+        if ( ees == null ) {
+            log.error( "Test skipped because of failure to fetch data." );
+            return;
+        }
+
         Collection<Gene> genes = getGeneAssociatedWithEe();
         processedDataVectorDao.createProcessedDataVectors( ees.iterator().next() );
         Collection<DoubleVectorValueObject> v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
         assertEquals( 40, v.size() );
     }
 
-//    public void testGetProcessedDataCache() {
-//        endTransaction();
-//        Collection<ExpressionExperiment> ees = getDataset();
-//        Collection<Gene> genes = getGeneAssociatedWithEe();
-//        Collection<DoubleVectorValueObject> v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
-//        assertEquals( 40, v.size() );
-//        Cache cache = this.processedDataVectorDao.getProcessedDataVectorCache().getCache( ees.iterator().next() );
-//        cache.clearStatistics();
-//        processedDataVectorDao.getProcessedDataArrays( ees, genes );
-//        v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
-//        assertEquals( 40, v.size() );
-//        long hits = cache.getStatistics().getCacheHits();
-//
-//        // It really should be 86!
-//        assertTrue( hits > 80 );
-//    }
+    // public void testGetProcessedDataCache() {
+    // endTransaction();
+    // Collection<ExpressionExperiment> ees = getDataset();
+    // Collection<Gene> genes = getGeneAssociatedWithEe();
+    // Collection<DoubleVectorValueObject> v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
+    // assertEquals( 40, v.size() );
+    // Cache cache = this.processedDataVectorDao.getProcessedDataVectorCache().getCache( ees.iterator().next() );
+    // cache.clearStatistics();
+    // processedDataVectorDao.getProcessedDataArrays( ees, genes );
+    // v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
+    // assertEquals( 40, v.size() );
+    // long hits = cache.getStatistics().getCacheHits();
+    //
+    // // It really should be 86!
+    // assertTrue( hits > 80 );
+    // }
 
     /**
      * @return
@@ -142,6 +146,10 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
             // No masked preferred computation.
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();
+        } catch ( Exception e ) {
+            if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
+                return null;
+            }
         }
 
         this.expressionExperimentService.thawLite( newee );

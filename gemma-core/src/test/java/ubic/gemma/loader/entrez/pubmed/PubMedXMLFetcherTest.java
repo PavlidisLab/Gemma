@@ -89,6 +89,9 @@ public class PubMedXMLFetcherTest extends TestCase {
         } else if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
             log.warn( "Test skipped due to a 503 error from NCBI" );
             return;
+        } else if ( e.getCause() instanceof IOException && e.getMessage().contains( "502" ) ) {
+            log.warn( "Test skipped due to a 502 error from NCBI" );
+            return;
         } else {
             throw ( e );
         }
