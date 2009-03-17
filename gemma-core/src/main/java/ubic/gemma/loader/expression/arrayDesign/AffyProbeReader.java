@@ -107,7 +107,7 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
 
         String probeSetId = sArray[0];
         if ( probeSetId.startsWith( "Probe" ) ) {
-            if ( sArray[1].equals( "Probe Set ID" ) ) {
+            if ( sArray[1].equals( "Probe Set ID" ) || sArray[1].equals( "Transcript Cluster ID" ) ) {
                 log.info( "Exon array format detected" );
                 sequenceField = 9;
             }
@@ -132,7 +132,7 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
         } else if ( sequenceField == 9 ) {
             // Exon array
             probeSetId = sArray[1];
-            startInSequence = sArray[7];
+            startInSequence = sArray[6]; // 7 is end, 8 is strand, 9 is sequence
             xcoord = sArray[2];
             ycoord = sArray[3];
 
