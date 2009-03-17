@@ -34,15 +34,54 @@ import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
- * Reads Affymetrix Probe files.
+ * Reads Affymetrix Probe files, including exon arrays.
  * <p>
- * Expected format is tabbed, NOT FASTA, for example:
- * <p>
- * <code>1494_f_at 1 325 359 1118 TCCCCATGAGTTTGGCCCGCAGAGT Antisense</code>.
+ * Expected format is tabbed, NOT FASTA. A one-line header starting with the word "Probe" is REQUIRED. In later versions
+ * of the format the second field of the file (column) is omitted.
  * </p>
  * <p>
- * A one-line header starting with the word "Probe" is permitted. In later versions of the format the second field
- * (column) is omitted.
+ * For 3' arrays, here is an example:
+ *</p>
+ * 
+ * <pre>
+ * 1494_f_at 1 325 359 1118 TCCCCATGAGTTTGGCCCGCAGAGT Antisense
+ * </pre>
+ * <p>
+ * For exon arrays, the format is described in the README files that come with the sequence Zips. As in the 3' array
+ * files, the probes are arranged 5' -> 3' so 'collapsing' can proceed as it does for the 3' arrays.
+ * </p>
+ * 
+ * <pre>
+ *    The probe tabular data file contains all probe sequences from the
+ *    array in tab-delimited format. Column headers are indicated in the
+ *    first line.
+ * 
+ *    I.B.1. Column header line
+ * 
+ *       Column Name                        Description
+ *     -----------------       ------------------------------------------
+ *       Probe ID               Probe identifier (integer)
+ *       Probe Set ID           Probe set identifier (integer)
+ *       probe x                X coordinate for probe location on array
+ *       probe y                Y coordinate for probe location on array
+ *       assembly               Genome assembly version from array design time
+ *       seqname                Sequence name for genomic location of probe 
+ *       start                  Starting coordinate of probe genomic location (1-based)
+ *       stop                   Ending coordinate of probe genomic location (1-based)
+ *       strand                 Sequence strand of probe genomic location (+ or -)
+ *       probe sequence         Probe sequence
+ *       target strandedness    Strandedness of the target which the probe detects
+ *       category               Array design category of the probe (described below)
+ * 
+ * 
+ *    I.B.2. Example entry
+ * 
+ *    Shown is an example column header line and data line from the human
+ *    exon array. 
+ * 
+ * Probe ID    Probe Set ID    probe x probe y assembly    seqname start   stop    strand  probe sequence  target strandedness category
+ * 494998  2315101 917 193 build-34/hg16   chr1    1788    1812    +   CACGGGAAGTCTGGGCTAAGAGACA   Sense   main
+ * </pre>
  * 
  * @author pavlidis
  * @version $Id$
@@ -57,7 +96,6 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
 
     /*
      * (non-Javadoc)
-     * 
      * @see baseCode.io.reader.BasicLineParser#parseOneLine(java.lang.String)
      */
     @Override
@@ -67,24 +105,42 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
         if ( sArray.length == 0 )
             throw new IllegalArgumentException( "Line format is not valid (not tab-delimited or no fields found)" );
 
+        String probeSetId = sArray[0];
+        if ( probeSetId.startsWith( "Probe" ) ) {
+            if ( sArray[1].equals( "Probe Set ID" ) ) {
+                log.info( "Exon array format detected" );
+                sequenceField = 9;
+            }
+            // skip header row.
+            return null;
+        }
+
         if ( sArray.length < sequenceField + 1 ) {
             throw new IllegalArgumentException( "Too few fields in line, expected at least " + ( sequenceField + 1 )
                     + " but got " + sArray.length );
         }
 
-        String probeSetId = sArray[0];
-        if ( probeSetId.startsWith( "Probe" ) ) return null;
         String sequence = sArray[sequenceField];
         String xcoord;
         String ycoord;
+        String startInSequence;
         String index = null;
         if ( sequenceField == 4 ) {
             xcoord = sArray[1];
             ycoord = sArray[2];
+            startInSequence = sArray[3];
+        } else if ( sequenceField == 9 ) {
+            // Exon array
+            probeSetId = sArray[1];
+            startInSequence = sArray[7];
+            xcoord = sArray[2];
+            ycoord = sArray[3];
+
         } else {
             index = sArray[1];
             xcoord = sArray[2];
             ycoord = sArray[3];
+            startInSequence = sArray[sequenceField - 1];
         }
 
         Reporter reporter = Reporter.Factory.newInstance();
@@ -92,13 +148,21 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
         try {
             reporter.setRow( Integer.parseInt( xcoord ) );
             reporter.setCol( Integer.parseInt( ycoord ) );
-            reporter.setStartInBioChar( Long.parseLong( sArray[sequenceField - 1] ) );
+
         } catch ( NumberFormatException e ) {
-            log.warn( "Invalid row: could not parse coordinates." );
+            log.warn( "Invalid row: could not parse coordinates: " + xcoord + ", " + ycoord );
             return null;
         }
 
-        reporter.setName( probeSetId + ( index == null ? "" : "#" + index ) + ":" + xcoord + ":" + ycoord );
+        try {
+            reporter.setStartInBioChar( Long.parseLong( startInSequence ) );
+        } catch ( NumberFormatException e ) {
+            log.warn( "Invalid row: could not parse start in sequence: " + startInSequence );
+            return null;
+        }
+
+        String reporterName = probeSetId + ( index == null ? "" : "#" + index ) + ":" + xcoord + ":" + ycoord;
+        reporter.setName( reporterName );
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
         immobChar.setIsApproximateLength( false );
@@ -110,9 +174,14 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
 
         CompositeSequence probeSet = get( probeSetId );
 
-        if ( probeSet == null ) probeSet = CompositeSequence.Factory.newInstance();
+        if ( probeSet == null ) {
+            probeSet = CompositeSequence.Factory.newInstance();
+        }
         probeSet.setName( probeSetId );
-        if ( probeSet.getComponentReporters() == null ) probeSet.setComponentReporters( new HashSet() );
+
+        if ( probeSet.getComponentReporters() == null ) {
+            probeSet.setComponentReporters( new HashSet() );
+        }
 
         reporter.setCompositeSequence( probeSet );
         probeSet.getComponentReporters().add( reporter );
@@ -122,7 +191,6 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
 
     /*
      * (non-Javadoc)
-     * 
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
     @Override

@@ -27,6 +27,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
 
@@ -72,10 +73,42 @@ public class AffyProbeReaderTest extends TestCase {
         assertTrue( "CompositeSequence was null", cs != null );
 
         boolean foundIt = false;
-        for ( Iterator iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
-            Reporter element = ( Reporter ) iter.next();
+        for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
+            Reporter element = iter.next();
             log.info( element.getName() );
             if ( element.getName().equals( "1000_at:617:349" ) ) {
+                String actualValue = element.getImmobilizedCharacteristic().getSequence();
+
+                assertEquals( expectedValue, actualValue );
+                foundIt = true;
+                break;
+            }
+        }
+        assertTrue( "Didn't find the probe ", foundIt );
+    }
+
+    /*
+     * Class under test for Map read(InputStream)
+     */
+    public final void testReadExonArrayInputStream() throws Exception {
+
+        assertTrue( "InputStream was null", is != null );
+
+        is = AffyProbeReaderTest.class
+                .getResourceAsStream( "/data/loader/expression/arrayDesign/HuEx-1_0.sample.probe.tab" );
+
+        apr.parse( is );
+
+        String expectedValue = "CGGTGCTGGGTCAGGGATCGACTGA";
+        CompositeSequence cs = apr.get( "2315108" );
+
+        assertTrue( "CompositeSequence was null", cs != null );
+
+        boolean foundIt = false;
+        for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
+            Reporter element = iter.next();
+            log.info( element.getName() );
+            if ( element.getName().equals( "2315108:814:817" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
 
                 assertEquals( expectedValue, actualValue );
@@ -101,8 +134,8 @@ public class AffyProbeReaderTest extends TestCase {
         assertTrue( "CompositeSequence was null", cs != null );
 
         boolean foundIt = false;
-        for ( Iterator iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
-            Reporter element = ( Reporter ) iter.next();
+        for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
+            Reporter element = iter.next();
             log.info( element.getName() );
             if ( element.getName().equals( "1004_at#2:557:275" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
