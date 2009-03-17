@@ -90,28 +90,6 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     }
 
     /**
-     * Tests the areWorkersIdle functionality.
-     */
-    public void testAreWorkersRegistered() {
-
-        SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
-        gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
-
-        /*
-         * NOTE: These assertions do not test anything ... I've added them for the sake of the unit test. This test
-         * checks the areWorkersRegistered code in GigaSpacesUtil.
-         */
-        boolean workersRunning = false;
-
-        workersRunning = gigaspacesUtil.areWorkersIdle( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
-        if ( workersRunning == false )
-            assertFalse( workersRunning );
-
-        else
-            assertTrue( workersRunning );
-    }
-
-    /**
      * Tests the number of idle workers.
      */
     public void testNumIdle() {
