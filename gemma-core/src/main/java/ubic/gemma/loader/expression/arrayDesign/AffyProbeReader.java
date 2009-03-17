@@ -83,6 +83,9 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * 494998  2315101 917 193 build-34/hg16   chr1    1788    1812    +   CACGGGAAGTCTGGGCTAAGAGACA   Sense   main
  * </pre>
  * 
+ * Because AFFX controls have no 'start' and 'end' sequences recorded in Exon array files, they are skipped by the
+ * parser.
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -157,7 +160,15 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
         try {
             reporter.setStartInBioChar( Long.parseLong( startInSequence ) );
         } catch ( NumberFormatException e ) {
-            log.warn( "Invalid row: could not parse start in sequence: " + startInSequence );
+
+            if ( startInSequence.equals( "---" ) ) {
+                /*
+                 * Controls have no start/end information. We really have to bail on these.
+                 */
+                log.debug( "Control sequence" );
+            } else {
+                log.warn( "Invalid row: could not parse start in sequence: " + startInSequence );
+            }
             return null;
         }
 
