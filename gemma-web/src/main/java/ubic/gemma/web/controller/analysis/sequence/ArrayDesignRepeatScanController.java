@@ -20,18 +20,16 @@ package ubic.gemma.web.controller.analysis.sequence;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask;
 import ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
@@ -143,14 +141,13 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController<Mo
         }
 
         public ModelAndView call() throws Exception {
-            SecurityContextHolder.setContext( securityContext );
 
             ArrayDesignRepeatScanTaskCommand repeatScanCommand = ( ( ArrayDesignRepeatScanTaskCommand ) command );
 
-            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Loading " + repeatScanCommand.getArrayDesign().getShortName() );
+            super.initializeProgressJob( repeatScanCommand.getArrayDesign().getShortName() );
 
             return processJob( repeatScanCommand );
+
         }
 
         /*

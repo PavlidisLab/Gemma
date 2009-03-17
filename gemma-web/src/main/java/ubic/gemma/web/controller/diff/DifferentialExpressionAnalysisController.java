@@ -23,8 +23,6 @@ import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.security.context.SecurityContextHolder;
-
 import ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
@@ -43,7 +41,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
@@ -74,13 +71,8 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         }
 
         public DifferentialExpressionAnalysis call() throws Exception {
-            SecurityContextHolder.setContext( securityContext );
-
             DifferentialExpressionAnalysisTaskCommand diffAnalysisCommand = ( ( DifferentialExpressionAnalysisTaskCommand ) command );
-
-            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Loading " + diffAnalysisCommand.getExpressionExperiment().getShortName() );
-
+            super.initializeProgressJob( diffAnalysisCommand.getExpressionExperiment().getShortName() );
             return processJob( diffAnalysisCommand );
         }
 

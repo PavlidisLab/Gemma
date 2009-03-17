@@ -19,12 +19,15 @@
 package ubic.gemma.web.controller;
 
 import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * @author keshav
  * @version $Id$
  */
 public abstract class BaseControllerJob<T> extends BackgroundControllerJob<T> {
+
+    protected boolean spacesTaskQueued = false;
 
     public BaseControllerJob( String taskId, Object commandObj ) {
         super( taskId, commandObj );
@@ -35,5 +38,29 @@ public abstract class BaseControllerJob<T> extends BackgroundControllerJob<T> {
      * @return
      */
     protected abstract T processJob( TaskCommand c );
+
+    /**
+     * Creates the progress job and initializes it with the proper progress status.
+     * 
+     * @param name
+     */
+    protected void initializeProgressJob( String name ) {
+        super.init();
+
+        ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(), "Loading "
+                + name );
+
+        if ( spacesTaskQueued ) {
+            ProgressManager.updateJob( this.taskId, "Queued task " + this.taskId );
+        }
+
+    }
+
+    /**
+     * @param queued True if the the spaces task has been queued.
+     */
+    public void setSpacesTaskQueued( boolean queued ) {
+        this.spacesTaskQueued = queued;
+    }
 
 }

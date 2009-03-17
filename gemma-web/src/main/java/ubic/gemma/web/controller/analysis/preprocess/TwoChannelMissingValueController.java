@@ -22,8 +22,6 @@ import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.security.context.SecurityContextHolder;
-
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
@@ -33,7 +31,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
@@ -56,12 +53,10 @@ public class TwoChannelMissingValueController extends AbstractSpacesController<B
         }
 
         public Boolean call() throws Exception {
-            SecurityContextHolder.setContext( securityContext );
 
             TwoChannelMissingValueTaskCommand tc = ( ( TwoChannelMissingValueTaskCommand ) command );
 
-            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Processing " + tc.getExpressionExperiment().getShortName() );
+            super.initializeProgressJob( tc.getExpressionExperiment().getShortName() );
 
             return processJob( tc );
         }

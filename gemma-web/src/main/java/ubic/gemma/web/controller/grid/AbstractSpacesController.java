@@ -35,6 +35,7 @@ import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesProgressEntry;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
+import ubic.gemma.web.controller.BaseControllerJob;
 
 import com.j_spaces.core.client.NotifyModifiers;
 
@@ -135,6 +136,10 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
                     NotifyModifiers.NOTIFY_ALL );
 
             job = getSpaceRunner( taskId, command );
+
+            if ( !spacesUtil.canServiceTaskNow( taskName, spaceUrl ) ) {
+                ( ( BaseControllerJob<T> ) job ).setSpacesTaskQueued( true );
+            }
         } else if ( !runInWebapp ) {
             throw new RuntimeException(
                     "This task must be run on the compute server, but the space is not running. Please try again later" );

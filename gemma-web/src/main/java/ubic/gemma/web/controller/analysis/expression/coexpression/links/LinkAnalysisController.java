@@ -20,21 +20,19 @@ package ubic.gemma.web.controller.analysis.expression.coexpression.links;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTask;
 import ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
@@ -165,12 +163,10 @@ public class LinkAnalysisController extends AbstractSpacesController<ModelAndVie
          * @see java.util.concurrent.Callable#call()
          */
         public ModelAndView call() throws Exception {
-            SecurityContextHolder.setContext( securityContext );
 
             LinkAnalysisTaskCommand linkAnalyisCommand = ( LinkAnalysisTaskCommand ) command;
 
-            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Loading " + linkAnalyisCommand.getExpressionExperiment().getShortName() );
+            super.initializeProgressJob( linkAnalyisCommand.getExpressionExperiment().getShortName() );
 
             return processJob( linkAnalyisCommand );
         }

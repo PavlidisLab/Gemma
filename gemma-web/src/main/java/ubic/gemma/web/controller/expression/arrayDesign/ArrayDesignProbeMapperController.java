@@ -20,19 +20,17 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.TaskCommand;
+import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapTaskCommand;
 import ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTask;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
@@ -156,12 +154,10 @@ public class ArrayDesignProbeMapperController extends AbstractSpacesController<M
         }
 
         public ModelAndView call() throws Exception {
-            SecurityContextHolder.setContext( securityContext );
 
             ArrayDesignProbeMapTaskCommand pmCommand = ( ( ArrayDesignProbeMapTaskCommand ) command );
 
-            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Loading " + pmCommand.getArrayDesign().getShortName() );
+            super.initializeProgressJob( pmCommand.getArrayDesign().getShortName() );
 
             return processJob( pmCommand );
         }
