@@ -22,16 +22,15 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskCommand;
@@ -42,9 +41,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
+import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
 
 /**
@@ -165,7 +164,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @return
          */
         private TaskResult process( ExpressionExperimentLoadTaskCommand command ) {
-            log.info( "Putting job in space" );
             command.setTaskId( this.taskId );
             try {
                 TaskResult result = eeTaskProxy.execute( command );
@@ -203,7 +201,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
     /**
      * Regular job.
      */
-    private class LoadJob extends BackgroundControllerJob<ModelAndView> {
+    private class LoadJob extends BaseControllerJob<ModelAndView> {
 
         /**
          * @param taskId
@@ -225,12 +223,22 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          */
         public ModelAndView call() throws Exception {
 
-            SecurityContextHolder.setContext( securityContext );
-
             ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand = ( ( ExpressionExperimentLoadTaskCommand ) command );
 
-            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Loading " + expressionExperimentLoadCommand.getAccession() );
+            super.initializeProgressJob( expressionExperimentLoadCommand.getAccession() );
+
+            return processJob( expressionExperimentLoadCommand );
+
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.grid.javaspaces.TaskCommand)
+         */
+        @Override
+        protected ModelAndView processJob( TaskCommand c ) {
+
+            ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand = ( ExpressionExperimentLoadTaskCommand ) c;
 
             if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
                 return processPlatformOnlyJob( expressionExperimentLoadCommand );
@@ -239,6 +247,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
             } else /* GEO */{
                 return processGEODataJob( expressionExperimentLoadCommand );
             }
+
         }
 
         /**
