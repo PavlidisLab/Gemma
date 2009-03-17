@@ -21,6 +21,7 @@ package ubic.gemma.loader.expression.mage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -62,7 +63,6 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
     public Collection<Object> convert( Collection objects ) {
@@ -97,7 +97,8 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
         }
 
         // fillInBioMaterialFactorValues( convertedResult );
-        fillInExpressionExperimentQuantitationTypes( convertedResult );
+        fillInExpressionExperimentQuantitationTypes();
+        cleanupBioAssays();
         this.isConverted = true;
         return convertedResult;
     }
@@ -145,10 +146,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
     // return null;
     // }
 
-    /**
-     * @param convertedResult2
-     */
-    private void fillInExpressionExperimentQuantitationTypes( Collection<Object> convertedResult2 ) {
+    private void fillInExpressionExperimentQuantitationTypes() {
         ExpressionExperiment ee = null;
         for ( Object object : convertedResult ) {
             if ( object instanceof ExpressionExperiment ) {
@@ -165,10 +163,39 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
 
     }
 
+    private void cleanupBioAssays() {
+        ExpressionExperiment ee = null;
+        for ( Object object : convertedResult ) {
+            if ( object instanceof ExpressionExperiment ) {
+                if ( ee != null )
+                    throw new IllegalStateException( "Can't convert more than one EE from MAGE-ML at a time." );
+                ee = ( ExpressionExperiment ) object;
+            }
+        }
+        assert ee != null;
+
+        Collection<BioAssay> toRemove = new HashSet<BioAssay>();
+        Collection<String> topLevelBioAssayIdentifiers = this.mageConverterHelper.getTopLevelBioAssayIdentifiers();
+        if ( topLevelBioAssayIdentifiers.size() > 0 ) {
+
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                if ( !topLevelBioAssayIdentifiers.contains( ba.getName() ) ) {
+                    log.info( "Removing bioassay with id=" + ba.getName() + ", it is not listed as being 'top level'" );
+                    toRemove.add( ba );
+                }
+
+            }
+        }
+
+        ee.getBioAssays().removeAll( toRemove );
+
+    }
+
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.expression.mage.MageMLConverter#getBioAssayQuantitationTypeDimension(org.biomage.BioAssay.BioAssay)
+     * @see
+     * ubic.gemma.loader.expression.mage.MageMLConverter#getBioAssayQuantitationTypeDimension(org.biomage.BioAssay.BioAssay
+     * )
      */
     public List<ubic.gemma.model.common.quantitationtype.QuantitationType> getBioAssayQuantitationTypeDimension(
             BioAssay bioAssay ) {
@@ -238,7 +265,6 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     public Object convert( Object mageObject ) {
@@ -248,7 +274,6 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.expression.mage.MageMLConverterHelper#getBioAssayDimensions()
      */
     public BioAssayDimensions getBioAssayDimensions() {

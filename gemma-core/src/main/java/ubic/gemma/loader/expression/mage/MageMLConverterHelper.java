@@ -58,6 +58,7 @@ import org.biomage.BioAssay.MeasuredBioAssay;
 import org.biomage.BioAssay.PhysicalBioAssay;
 import org.biomage.BioAssayData.BioAssayData;
 import org.biomage.BioAssayData.BioAssayDimension;
+import org.biomage.BioAssayData.BioAssayMap;
 import org.biomage.BioAssayData.BioDataCube;
 import org.biomage.BioAssayData.BioDataTuples;
 import org.biomage.BioAssayData.BioDataValues;
@@ -150,8 +151,8 @@ import ubic.gemma.util.ReflectionUtil;
  * 'convertXXXXAssociations' to handle the associations. Special cases (outlined below) have additional methods to map
  * MAGE associations to Gemma objects.
  * </p>
- * <h2>Zoo of packages that have references between them, but don't map directly to Gemma</h2>
- * <h3>DesignElement_package and ArrayDesign_package</h3>
+ * <h2>Zoo of packages that have references between them, but don't map directly to Gemma</h2> <h3>DesignElement_package
+ * and ArrayDesign_package</h3>
  * <p>
  * DesignElement Contains the ReporterCompositeMap (and the FeatureReporterMap). This allows us to fill in the map in
  * the CompositeSequence.
@@ -186,8 +187,6 @@ import ubic.gemma.util.ReflectionUtil;
 @SuppressWarnings("unchecked")
 public class MageMLConverterHelper {
 
-    private static final String ARRAY_EXPRESS_LOCAL_DATAFILE_BASEPATH = "arrayExpress.local.datafile.basepath";
-
     /**
      * Used to indicate that a MAGE list should be converted to a Gemma list (or collection)
      */
@@ -198,6 +197,12 @@ public class MageMLConverterHelper {
      */
     public static final boolean CONVERT_FIRST_ONLY = true;
 
+    private static final String ARRAY_EXPRESS_LOCAL_DATAFILE_BASEPATH = "arrayExpress.local.datafile.basepath";
+
+    private static final String[] DATE_FORMATS = new String[] { "yyyy-MM-dd HH:mm:ss" };
+
+    private static Log log = LogFactory.getLog( MageMLConverterHelper.class.getName() );
+
     /**
      * 
      */
@@ -205,19 +210,28 @@ public class MageMLConverterHelper {
 
     private static final String MGED_ONTOLOGY_URL = MgedOntologyService.MGED_ONTO_BASE_URL;
 
-    private static final String[] DATE_FORMATS = new String[] { "yyyy-MM-dd HH:mm:ss" };
-
-    private static Log log = LogFactory.getLog( MageMLConverterHelper.class.getName() );
-
     /**
      * Different ways to refer to the MAGE Ontology
      */
     public Set<String> mgedOntologyAliases;
 
+    ExternalDatabase arrayExpress = null;
+
+    Map<String, Collection<FactorValue>> bioAssayFactors = new HashMap<String, Collection<FactorValue>>();
+
+    Map<String, FactorValue> fvMap = new HashMap<String, FactorValue>();
+
+    Set<String> missingFiles = new HashSet<String>();
+
     /**
      * Stores the dimension information for the bioassays
      */
     private BioAssayDimensions bioAssayDimensions;
+
+    /*
+     * This is a global variable.
+     */
+    private boolean haveInitializedMgedOntologyHelper = false;
 
     /**
      * Places where, according to the current configuration, local MAGE bioDataCube external files are stored.
@@ -231,9 +245,10 @@ public class MageMLConverterHelper {
      */
     private OntologyHelper mgedOntologyHelper;
 
-    Set<String> missingFiles = new HashSet<String>();
-
-    ExternalDatabase arrayExpress = null;
+    /**
+     * MAGE IDs of the bioassays we should retain.
+     */
+    private Collection<String> topLevelBioAssayIdentifiers = new HashSet<String>();
 
     /**
      * Constructor
@@ -464,7 +479,9 @@ public class MageMLConverterHelper {
         result.setRemoteURL( null );
         result.setLocalURL( null );
 
-        if ( data instanceof BioDataCube ) {
+        if ( data == null ) {
+            return null;
+        } else if ( data instanceof BioDataCube ) {
             DataExternal dataExternal = ( ( BioDataCube ) data ).getDataExternal();
             if ( dataExternal == null ) {
                 log.warn( "BioDataCube with no external data" );
@@ -493,7 +510,7 @@ public class MageMLConverterHelper {
             log.error( "Not ready to deal with BioDataTuples from Mage" );
             return null;
         } else {
-            throw new IllegalArgumentException( "Unkonwn BioDataValue class" );
+            throw new IllegalArgumentException( "Unknown BioDataValue class: " + data.getClass() );
         }
 
         return result;
@@ -553,6 +570,8 @@ public class MageMLConverterHelper {
             } else if ( ded instanceof ReporterDimension ) {
                 if ( log.isDebugEnabled() ) log.debug( "Got a reporter dimension: " + ded.getIdentifier() );
                 designElements = ( ( ReporterDimension ) ded ).getReporters();
+            } else {
+                throw new UnsupportedOperationException( "Unrecognized class: " + ded.getClass() );
             }
 
             List<DesignElement> convertedDesignElements = new ArrayList<DesignElement>();
@@ -581,6 +600,8 @@ public class MageMLConverterHelper {
     }
 
     /**
+     * Convert a MAGE-OM BioAssayDimension into a Gemma one.
+     * 
      * @param bad
      * @return
      */
@@ -600,6 +621,9 @@ public class MageMLConverterHelper {
                 resultBioAssay = convertMeasuredBioAssay( ( MeasuredBioAssay ) sample );
 
             } else if ( sample instanceof DerivedBioAssay ) {
+                /*
+                 * Note that this is the bioassaydimension we actually want, if the "measured" bioassay is also present.
+                 */
                 resultBioAssay = convertDerivedBioAssay( ( DerivedBioAssay ) sample );
 
             } else {
@@ -1163,16 +1187,18 @@ public class MageMLConverterHelper {
     }
 
     /**
+     * Some data sets use this for the actual data.
+     * 
      * @param mageObj
      * @return
      */
     public ubic.gemma.model.expression.bioAssay.BioAssay convertDerivedBioAssay( DerivedBioAssay mageObj ) {
-        // if ( mageObj == null ) return null;
-        // ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
-        //
-        // // Attempt to get the array design for this bioassay. ( so far this hasn't worked - the information isn't
-        // linked
-        // // to the derived bioassay!)
+        if ( mageObj == null ) return null;
+
+        ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
+
+        // Attempt to get the array design for this bioassay. ( so far this hasn't worked - the information isn't
+        // linked to the derived bioassay!)
         // List map = mageObj.getDerivedBioAssayMap();
         // if ( map.size() > 0 ) {
         // BioAssayMap dbap = ( BioAssayMap ) map.get( 0 );
@@ -1196,9 +1222,9 @@ public class MageMLConverterHelper {
         // }
         // }
         // }
-        // convertAssociations( mageObj, result );
-        // return result;
-        return null;
+        convertAssociations( mageObj, result );
+        return result;
+        // return null;
     }
 
     /**
@@ -1235,8 +1261,6 @@ public class MageMLConverterHelper {
         }
     }
 
-    Map<String, Collection<FactorValue>> bioAssayFactors = new HashMap<String, Collection<FactorValue>>();
-
     /**
      * An Affymetrix CHP file is considered DerivedBioAssayData.
      * 
@@ -1254,17 +1278,6 @@ public class MageMLConverterHelper {
      */
     public ubic.gemma.model.common.quantitationtype.QuantitationType convertDerivedSignal( DerivedSignal mageObj ) {
         return convertQuantitationType( mageObj );
-    }
-
-    public Collection<ubic.gemma.model.common.quantitationtype.QuantitationType> convertQuantitationTypeDimension(
-            QuantitationTypeDimension mageObj ) {
-        Collection<QuantitationType> types = mageObj.getQuantitationTypes();
-        Collection<ubic.gemma.model.common.quantitationtype.QuantitationType> result = new ArrayList<ubic.gemma.model.common.quantitationtype.QuantitationType>();
-        for ( QuantitationType type : types ) {
-            ubic.gemma.model.common.quantitationtype.QuantitationType convertedType = convertQuantitationType( type );
-            result.add( convertedType );
-        }
-        return result;
     }
 
     /**
@@ -1414,6 +1427,7 @@ public class MageMLConverterHelper {
             if ( ( ( List ) associatedObject ).size() > 0 && log.isDebugEnabled() ) {
                 log.debug( "Converting Experiment-->BioAssays" );
             }
+            log.info( "Adding bioassays!" );
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "Providers" ) ) {
             assert associatedObject instanceof List;
@@ -1451,16 +1465,6 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * For whatever reason, the name is plura when inferred from the MAGE objects
-     * 
-     * @param mageObjs
-     * @return
-     */
-    public ExperimentalDesign convertExperimentDesigns( ExperimentDesign mageObj ) {
-        return convertExperimentDesign( mageObj );
-    }
-
-    /**
      * @param mageObj
      * @param gemmaObj
      */
@@ -1483,13 +1487,34 @@ public class MageMLConverterHelper {
             // not supported as an association
         } else if ( associationName.equals( "TopLevelBioAssays" ) ) {
             assert associatedObject instanceof List;
-            // we don't have this in our model --- check
+
+            /*
+             * This is useful information: it's the ACTUAL bioassays they use. We don't use it in our experimental
+             * design, really, but it can help us figure out which bioassays we should be paying attention to (measured
+             * vs. derived etc).
+             */
+            Collection c = mageObj.getTopLevelBioAssays();
+            for ( Object o : c ) {
+                BioAssay ba = ( BioAssay ) o;
+                topLevelBioAssayIdentifiers.add( ba.getIdentifier() );
+            }
+
         } else if ( associationName.equals( "Types" ) ) {
             assert associatedObject instanceof List;
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
+    }
+
+    /**
+     * For whatever reason, the name is plura when inferred from the MAGE objects
+     * 
+     * @param mageObjs
+     * @return
+     */
+    public ExperimentalDesign convertExperimentDesigns( ExperimentDesign mageObj ) {
+        return convertExperimentDesign( mageObj );
     }
 
     /**
@@ -1530,12 +1555,11 @@ public class MageMLConverterHelper {
         String identifier = mageObj.getIdentifier();
         if ( fvMap.containsKey( identifier ) ) {
             return fvMap.get( identifier );
-        } else {
-            FactorValue result = FactorValue.Factory.newInstance();
-            convertAssociations( mageObj, result );
-            fvMap.put( identifier, result );
-            return result;
         }
+        FactorValue result = FactorValue.Factory.newInstance();
+        convertAssociations( mageObj, result );
+        fvMap.put( identifier, result );
+        return result;
     }
 
     /**
@@ -1563,7 +1587,6 @@ public class MageMLConverterHelper {
      * @param feature
      * @return
      */
-    @SuppressWarnings("unused")
     public DesignElement convertFeature( Feature feature ) {
         // I think we just have to ignore this.
         return null;
@@ -1747,6 +1770,7 @@ public class MageMLConverterHelper {
      */
     public ubic.gemma.model.expression.bioAssay.BioAssay convertMeasuredBioAssay( MeasuredBioAssay mageObj ) {
         if ( mageObj == null ) return null;
+
         ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
 
         specialConvertAssociationsForPhysicalBioAssay( mageObj.getFeatureExtraction().getPhysicalBioAssaySource(),
@@ -1756,13 +1780,6 @@ public class MageMLConverterHelper {
         return result;
 
     }
-
-    Map<String, FactorValue> fvMap = new HashMap<String, FactorValue>();
-
-    /*
-     * This is a global variable.
-     */
-    private boolean haveInitializedMgedOntologyHelper = false;
 
     /**
      * @param mageObj
@@ -1859,18 +1876,6 @@ public class MageMLConverterHelper {
         log.error( "Unknown measurement type: " + type.getName() );
         return null;
     }
-
-    // /**
-    // * @param list
-    // * @param gemmaObj
-    // */
-    // private void specialConvertExperimentBioAssayDataAssociations( List<BioAssayData> bioAssayData,
-    // ExpressionExperiment gemmaObj ) {
-    // for ( BioAssayData data : bioAssayData ) {
-    // LocalFile file = convertBioAssayData( data );
-    // // need to attachi this to
-    // }
-    // }
 
     /**
      * OntologyEntry is a subclass of DatabaseEntry in Gemma, but not in MAGE. Instead, a MAGE object has an
@@ -2006,6 +2011,18 @@ public class MageMLConverterHelper {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
     }
+
+    // /**
+    // * @param list
+    // * @param gemmaObj
+    // */
+    // private void specialConvertExperimentBioAssayDataAssociations( List<BioAssayData> bioAssayData,
+    // ExpressionExperiment gemmaObj ) {
+    // for ( BioAssayData data : bioAssayData ) {
+    // LocalFile file = convertBioAssayData( data );
+    // // need to attachi this to
+    // }
+    // }
 
     /**
      * @param mageObj
@@ -2375,6 +2392,17 @@ public class MageMLConverterHelper {
         }
     }
 
+    public Collection<ubic.gemma.model.common.quantitationtype.QuantitationType> convertQuantitationTypeDimension(
+            QuantitationTypeDimension mageObj ) {
+        Collection<QuantitationType> types = mageObj.getQuantitationTypes();
+        Collection<ubic.gemma.model.common.quantitationtype.QuantitationType> result = new ArrayList<ubic.gemma.model.common.quantitationtype.QuantitationType>();
+        for ( QuantitationType type : types ) {
+            ubic.gemma.model.common.quantitationtype.QuantitationType convertedType = convertQuantitationType( type );
+            result.add( convertedType );
+        }
+        return result;
+    }
+
     /**
      * @param mageObj
      * @return
@@ -2696,6 +2724,17 @@ public class MageMLConverterHelper {
         return bioAssayDimensions.getQuantitationTypeDimension( bioAssay );
     }
 
+    public Collection<ubic.gemma.model.expression.bioAssay.BioAssay> getQuantitationTypeBioAssays() {
+        return this.bioAssayDimensions.getQuantitationTypeBioAssays();
+    }
+
+    /**
+     * @return the topLevelBioAssayIdentifiers
+     */
+    public Collection<String> getTopLevelBioAssayIdentifiers() {
+        return topLevelBioAssayIdentifiers;
+    }
+
     /**
      * Special case: Convert a ReporterCompositeMaps (list) to a Collection of Reporters.
      * 
@@ -2764,6 +2803,21 @@ public class MageMLConverterHelper {
             break; // only take the first one;
         }
         return result;
+    }
+
+    /**
+     * This is provided for tests.
+     * 
+     * @param path
+     */
+    protected void addLocalExternalDataPath( String path ) {
+        localExternalDataPaths.add( path );
+    }
+
+    private void addFactorValuesToBioMaterial( BioMaterial biomaterial, Collection<FactorValue> factorValues ) {
+        if ( factorValues == null || factorValues.isEmpty() ) return;
+        if ( biomaterial.getFactorValues() == null ) biomaterial.setFactorValues( new HashSet<FactorValue>() );
+        biomaterial.getFactorValues().addAll( factorValues );
     }
 
     /**
@@ -2845,10 +2899,9 @@ public class MageMLConverterHelper {
 
         if ( mageObj == null ) return null;
         Object convertedGemmaObj = null;
-        Method gemmaConverter = null;
+        Method gemmaConverter = findConverter( mageObj );
+        if ( gemmaConverter == null ) return null;
         try {
-            gemmaConverter = findConverter( mageObj );
-            if ( gemmaConverter == null ) return null;
             convertedGemmaObj = gemmaConverter.invoke( this, new Object[] { mageObj } );
         } catch ( IllegalArgumentException e ) {
             log.error( e, e );
@@ -3277,6 +3330,21 @@ public class MageMLConverterHelper {
      *        the Mage object list to take just the first one.
      * @param actualGemmaAssociationName - for example, a BioSequence hasa "SequenceDatabaseEntry", not a
      *        "DatabaseEntry". If null, the name is inferred.
+     */
+    private void simpleFillIn( List<Object> associatedList, Object gemmaObj, Method getter, boolean onlyTakeOne,
+            String actualGemmaAssociationName ) {
+        simpleFillIn( associatedList, gemmaObj, getter, onlyTakeOne, actualGemmaAssociationName, null );
+    }
+
+    /**
+     * Generic method to fill in a Gemma object where the association in Mage has cardinality of >1.
+     * 
+     * @param associatedList - The result of the Getter call.
+     * @param gemmObj - The Gemma object in which to place the converted Mage object(s). This might be a collection.
+     * @param onlyTakeOne - This indicates that the cardinality in the Gemma object is at most 1. Therefore we pare down
+     *        the Mage object list to take just the first one.
+     * @param actualGemmaAssociationName - for example, a BioSequence hasa "SequenceDatabaseEntry", not a
+     *        "DatabaseEntry". If null, the name is inferred.
      * @param actualArgumentClass For example, we might get a VocabCharacteristic but method will only match
      *        Characteristic. Only used if onlyTakeOne = true.
      */
@@ -3356,21 +3424,6 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * Generic method to fill in a Gemma object where the association in Mage has cardinality of >1.
-     * 
-     * @param associatedList - The result of the Getter call.
-     * @param gemmObj - The Gemma object in which to place the converted Mage object(s). This might be a collection.
-     * @param onlyTakeOne - This indicates that the cardinality in the Gemma object is at most 1. Therefore we pare down
-     *        the Mage object list to take just the first one.
-     * @param actualGemmaAssociationName - for example, a BioSequence hasa "SequenceDatabaseEntry", not a
-     *        "DatabaseEntry". If null, the name is inferred.
-     */
-    private void simpleFillIn( List<Object> associatedList, Object gemmaObj, Method getter, boolean onlyTakeOne,
-            String actualGemmaAssociationName ) {
-        simpleFillIn( associatedList, gemmaObj, getter, onlyTakeOne, actualGemmaAssociationName, null );
-    }
-
-    /**
      * Generic method to fill in a Gemma object's association with a Mage object where the name might be predicted from
      * the associated object type. E.g., the Gemma object with an association to "BioSequence" has a "bioSequence"
      * property; sometimes instead we have things like ImmobilizedCharacteristic.
@@ -3394,7 +3447,8 @@ public class MageMLConverterHelper {
      * @param getter
      * @param actualGemmaAssociationName
      * @param actualArgumentClass - example, sometimes we get a VocabCharacteristic but setter wants a Characteristic.
-     * @see simpleFillIn( Object associatedMageObject, Object gemmaObj, Method getter, String actualGemmaAssociationName )
+     * @see simpleFillIn( Object associatedMageObject, Object gemmaObj, Method getter, String actualGemmaAssociationName
+     *      )
      */
     private void simpleFillIn( Object associatedMageObject, Object gemmaObj, Method getter,
             String actualGemmaAssociationName, Class actualArgumentClass ) {
@@ -3466,12 +3520,6 @@ public class MageMLConverterHelper {
 
         result.setSamplesUsed( biomaterials );
 
-    }
-
-    private void addFactorValuesToBioMaterial( BioMaterial biomaterial, Collection<FactorValue> factorValues ) {
-        if ( factorValues == null || factorValues.isEmpty() ) return;
-        if ( biomaterial.getFactorValues() == null ) biomaterial.setFactorValues( new HashSet<FactorValue>() );
-        biomaterial.getFactorValues().addAll( factorValues );
     }
 
     /**
@@ -3614,19 +3662,6 @@ public class MageMLConverterHelper {
             break;
         }
 
-    }
-
-    /**
-     * This is provided for tests.
-     * 
-     * @param path
-     */
-    protected void addLocalExternalDataPath( String path ) {
-        localExternalDataPaths.add( path );
-    }
-
-    public Collection<ubic.gemma.model.expression.bioAssay.BioAssay> getQuantitationTypeBioAssays() {
-        return this.bioAssayDimensions.getQuantitationTypeBioAssays();
     }
 
 }

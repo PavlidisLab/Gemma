@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.ConfigUtils;
 
@@ -48,14 +49,58 @@ public class MageMLConverterTest extends AbstractMageTest {
         this.mageMLParser = mageMLParser;
     }
 
+    @SuppressWarnings("null")
+    public final void testWithDerivedBioAssays() throws Exception {
+        /* invoke mageMLParser */
+        InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
+                + "jml_projID_4_E-HGMP-2.part.xml" );
+
+        assert mageMLParser != null;
+
+        mageMLParser.parse( istMageExamples );
+
+        /* get results from parsing step */
+        log.info( "Tally:\n" + mageMLParser );
+        Collection<Object> mageObjects = mageMLParser.getResults();
+        log.debug( "number of SDOs: " + mageObjects.size() );
+
+        istMageExamples.close();
+
+        /* CONVERTING */
+        log.info( "***** CONVERTING ***** " );
+
+        ExpressionExperiment expressionExperiment = null;
+        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        log.debug( "number of GDOs: " + gemmaObjects.size() );
+
+        int numExpExp = 0;
+        for ( Object obj : gemmaObjects ) {
+            if ( obj instanceof ExpressionExperiment ) {
+                expressionExperiment = ( ExpressionExperiment ) obj;
+                numExpExp++;
+            }
+            if ( log.isDebugEnabled() ) {
+                log.debug( obj.getClass() + ": " + obj );
+            }
+        }
+
+        assertNotNull( expressionExperiment );
+        assertEquals( 1, numExpExp );
+        assertEquals( 32, expressionExperiment.getBioAssays().size() );
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            assertTrue( ba.getName().contains( "DBA" ) );
+        }
+
+    }
+
     public void testConvertCollection() throws Exception {
 
         /* PARSING */
         log.info( "***** PARSING *****  " );
 
         /* invoke mageMLParser */
-        InputStream istMageExamples = MageMLConverterTest.class
-                .getResourceAsStream( MAGE_DATA_RESOURCE_PATH + "E-MEXP-955.xml" );
+        InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
+                + "E-MEXP-955.xml" );
 
         assert mageMLParser != null;
 
