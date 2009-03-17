@@ -38,6 +38,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated because this is normally not needed; we do this step automagically during Affy probe analysis.
  */
 public class AffyProbeCollapser {
 
