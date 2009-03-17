@@ -70,9 +70,6 @@ public class MageMLConverterTest extends AbstractMageTest {
 
         istMageExamples.close();
 
-        /* CONVERTING */
-        log.info( "***** CONVERTING ***** " );
-
         ExpressionExperiment expressionExperiment = null;
         Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
         log.debug( "number of GDOs: " + gemmaObjects.size() );
@@ -94,6 +91,70 @@ public class MageMLConverterTest extends AbstractMageTest {
 
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             assertTrue( ba.getName().contains( "DBA" ) );
+            assertEquals( 1, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertEquals( 1, bm.getBioAssaysUsedIn().size() );
+                assertEquals( 1, bm.getFactorValues().size() );
+            }
+        }
+
+        /*
+         * This study has one factor, tissue type.
+         */
+        assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+
+        for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+            assertTrue( factor.getFactorValues().size() > 0 );
+            for ( FactorValue fv : factor.getFactorValues() ) {
+                assertTrue( fv.getCharacteristics().size() > 0 );
+                for ( Characteristic c : fv.getCharacteristics() ) {
+                    assertNotNull( c.getValue() );
+                }
+
+            }
+        }
+
+    }
+
+    @SuppressWarnings("null")
+    public final void testWithDerivedBioAssays2() throws Exception {
+        /* invoke mageMLParser */
+        InputStream istMageExamples = MageMLConverterTest.class
+                .getResourceAsStream( MAGE_DATA_RESOURCE_PATH
+                        + "HeCESbilaterals__intra-individual_differences_between_asymptomatic_and_symptomatic_carotid_plaques.part.xml" );
+
+        assert mageMLParser != null;
+
+        mageMLParser.parse( istMageExamples );
+
+        /* get results from parsing step */
+        log.info( "Tally:\n" + mageMLParser );
+        Collection<Object> mageObjects = mageMLParser.getResults();
+        log.debug( "number of SDOs: " + mageObjects.size() );
+
+        istMageExamples.close();
+
+        ExpressionExperiment expressionExperiment = null;
+        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        log.debug( "number of GDOs: " + gemmaObjects.size() );
+
+        int numExpExp = 0;
+        for ( Object obj : gemmaObjects ) {
+            if ( obj instanceof ExpressionExperiment ) {
+                expressionExperiment = ( ExpressionExperiment ) obj;
+                numExpExp++;
+            }
+            if ( log.isDebugEnabled() ) {
+                log.debug( obj.getClass() + ": " + obj );
+            }
+        }
+
+        assertNotNull( expressionExperiment );
+        assertEquals( 1, numExpExp );
+        assertEquals( 8, expressionExperiment.getBioAssays().size() );
+
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            assertTrue( "Got: " + ba.getName(), ba.getName().contains( "HeCES" ) );
             assertEquals( 1, ba.getSamplesUsed().size() );
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );

@@ -93,8 +93,8 @@ public class ArrayExpressLoadService {
 
         log.info( "Fetching processed data" );
         Collection<LocalFile> pdFiles = pdFetcher.fetch( accession );
-        LocalFile pdFile = pdFetcher.getProcessedDataFile( pdFiles );
-        if ( pdFile == null ) {
+        Collection<LocalFile> filesToUse = pdFetcher.getProcessedDataFile( pdFiles );
+        if ( filesToUse.size() == 0 ) {
             log.error( "There is no processed data for " + accession + ", halting processing" );
             return null;
         }
@@ -137,10 +137,13 @@ public class ArrayExpressLoadService {
 
             log.info( "Parsing processed data" );
             /*
-             * FIXME: handle case of multiple files.
+             * Handle case of multiple files.
              */
-            InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( pdFile.getLocalURL().getPath() );
-            pdParser.parse( is );
+            for ( LocalFile file : filesToUse ) {
+                InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( file.getLocalURL().getPath() );
+                // results accumulate here.
+                pdParser.parse( is );
+            }
 
             log.info( "Merging processed data with expression experiment from MAGE-ML" );
             Collection<QuantitationType> qts = locateQuantitationTypesInMageResults( result );

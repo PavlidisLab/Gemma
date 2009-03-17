@@ -20,6 +20,7 @@ package ubic.gemma.loader.expression.arrayExpress;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.configuration.ConfigurationException;
 
@@ -45,13 +46,14 @@ public class ProcessedDataFetcher extends FtpArchiveFetcher {
      * @param files
      * @return
      */
-    public LocalFile getProcessedDataFile( Collection<LocalFile> files ) {
+    public Collection<LocalFile> getProcessedDataFile( Collection<LocalFile> files ) {
+        Collection<LocalFile> result = new HashSet<LocalFile>();
         for ( LocalFile file : files ) {
             if ( file.getLocalURL().toString().contains( "processed-data" ) ) {
-                return file;
+                result.add( file );
             }
         }
-        return null;
+        return result;
     }
 
     @Override
