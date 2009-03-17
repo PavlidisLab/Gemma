@@ -27,7 +27,6 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.util.FileTools;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
 
@@ -59,7 +58,7 @@ public class AffyProbeReaderTest extends TestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
         apr = null;
-        is.close();
+        if ( is != null ) is.close();
     }
 
     public final void testReadInputStreamNew() throws Exception {
