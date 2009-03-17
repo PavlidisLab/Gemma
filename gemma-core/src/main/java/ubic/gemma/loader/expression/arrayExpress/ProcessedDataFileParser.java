@@ -30,9 +30,9 @@ import ubic.gemma.loader.util.parser.LineMapParser;
 
 /**
  * Parses the "Processed data" files from ArrayExpress. The file format is part of as MAGE-TAB, I found a description a
- * {@link http://tab2mage.sourceforge.net/docs/magetab_docs.html#datamatrix}, see also
- * {@link http://www.mged.org/mage-tab/}. The first row names the hybridizations. The second row names the quantitation
- * types. Subsequent rows contain the data.
+ * {@link http://tab2mage.sourceforge.net/docs/magetab_docs.html#datamatrix}, see also {@link http
+ * ://www.mged.org/mage-tab/}. The first row names the hybridizations. The second row names the quantitation types.
+ * Subsequent rows contain the data.
  * <p>
  * Note that the current format easier to handle than an earlier version, check out version 1.3 of this parser to see
  * how it used to (not) work.
@@ -99,7 +99,11 @@ public class ProcessedDataFileParser extends LineMapParser<String, Map<String, L
         compositeSequenceName = subFields[subFields.length - 1];
 
         if ( results.containsKey( compositeSequenceName ) ) {
-            throw new IllegalStateException( "Duplicate compositeSequencename" );
+            /*
+             * This is actually okay. We're sometimes parsing multiple files, so the second one + will have the same
+             * names. FIXME we can add a check per file.
+             */
+            // throw new IllegalStateException( "Duplicate compositeSequencename" );
         }
 
         Map<String, List<String>> csData = new HashMap<String, List<String>>();

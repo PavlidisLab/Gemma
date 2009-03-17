@@ -78,6 +78,11 @@ public class ProcessedDataMerger {
             if ( ad != null && !ad.equals( baAd ) ) {
                 throw new IllegalStateException( "Sorry, can't handle multiple array design experiments" );
             }
+
+            if ( assay.getSamplesUsed().size() == 0 ) {
+                throw new IllegalStateException( "Bioassays must have at least one biomaterial" );
+            }
+
             ad = baAd;
         }
 
