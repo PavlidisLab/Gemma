@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -33,7 +34,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -73,6 +73,7 @@ public class ProcessedDataMerger {
         ArrayDesign ad = null;
         for ( BioAssay assay : bioAssays ) {
             nameMap.put( assay.getName(), assay );
+            log.info( assay.getName() );
             ArrayDesign baAd = assay.getArrayDesignUsed();
             if ( ad != null && !ad.equals( baAd ) ) {
                 throw new IllegalStateException( "Sorry, can't handle multiple array design experiments" );
@@ -106,6 +107,10 @@ public class ProcessedDataMerger {
 
         Collection<QuantitationType> usedQuantitationTypes = new HashSet<QuantitationType>();
         int count = 0;
+
+        boolean warnedAboutMissingQt = false;
+        boolean warnedAboutLackOfData = false;
+
         for ( String csName : processedData.keySet() ) {
             Map<String, List<String>> data = processedData.get( csName );
             CompositeSequence cs = csNameMap.get( csName );
@@ -117,13 +122,26 @@ public class ProcessedDataMerger {
             for ( String qtName : data.keySet() ) {
                 QuantitationType type = qtNameMap.get( qtName );
                 if ( type == null ) {
-                    throw new IllegalStateException( "QuantitationType name in Processed data " + qtName
-                            + " does not match anything in the MAGE-ML" );
+                    if ( !warnedAboutMissingQt ) {
+                        log.warn( "QuantitationType name in Processed data '" + qtName
+                                + "' does not match anything in the MAGE-ML; valid choices are: "
+                                + StringUtils.join( qtNameMap.keySet(), ',' ) + "; additional warnings suppressed" );
+                        warnedAboutMissingQt = true;
+                    }
+                    continue;
                 }
 
                 usedQuantitationTypes.add( type );
-
                 List<String> rawData = data.get( qtName );
+
+                if ( rawData == null ) {
+                    if ( !warnedAboutLackOfData ) {
+                        log.warn( "No raw data for quantitation type name '" + qtName + "' at cs=" + csName
+                                + "; additional warnings suppressed" );
+                        warnedAboutLackOfData = true;
+                    }
+                    continue;
+                }
 
                 RawExpressionDataVector dv = RawExpressionDataVector.Factory.newInstance();
                 dv.setExpressionExperiment( mageMlResult );
@@ -132,10 +150,14 @@ public class ProcessedDataMerger {
                 dv.setBioAssayDimension( bad );
 
                 byte[] dat = convertData( rawData, type );
+
+                if ( dat == null || dat.length == 0 ) {
+                    continue;
+                }
+
                 dv.setData( dat );
 
                 mageMlResult.getRawExpressionDataVectors().add( dv );
-
             }
 
             if ( ++count % 5000 == 0 ) {
@@ -144,13 +166,18 @@ public class ProcessedDataMerger {
 
         }
 
+        if ( mageMlResult.getRawExpressionDataVectors().size() == 0 ) {
+            throw new IllegalStateException( "No data vectors were found. Check the logs for warnings." );
+        }
+
         /*
          * Remove quantitation types that aren't used for anything (they showed up in the MAGE-ML but weren't in the
          * processed data).
          */
         mageMlResult.getQuantitationTypes().retainAll( usedQuantitationTypes );
 
-        log.info( "Processed data for " + count + " composite sequences" );
+        log.info( "Processed data for " + count + " composite sequences, got "
+                + mageMlResult.getRawExpressionDataVectors().size() + " raw data vectors." );
     }
 
     /**

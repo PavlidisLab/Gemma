@@ -182,6 +182,10 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
                 if ( !topLevelBioAssayIdentifiers.contains( ba.getName() ) ) {
                     log.info( "Removing bioassay with id=" + ba.getName() + ", it is not listed as being 'top level'" );
                     toRemove.add( ba );
+                } else {
+                    if ( ba.getSamplesUsed().size() == 0 ) {
+                        throw new IllegalStateException( "Retained bioassay has no biomaterials: " + ba );
+                    }
                 }
 
             }

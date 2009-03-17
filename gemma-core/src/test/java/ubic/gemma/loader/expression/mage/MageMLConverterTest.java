@@ -22,8 +22,12 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -87,8 +91,30 @@ public class MageMLConverterTest extends AbstractMageTest {
         assertNotNull( expressionExperiment );
         assertEquals( 1, numExpExp );
         assertEquals( 32, expressionExperiment.getBioAssays().size() );
+
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             assertTrue( ba.getName().contains( "DBA" ) );
+            assertEquals( 1, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertEquals( 1, bm.getBioAssaysUsedIn().size() );
+                assertEquals( 1, bm.getFactorValues().size() );
+            }
+        }
+
+        /*
+         * This study has one factor, tissue type.
+         */
+        assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+
+        for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+            assertTrue( factor.getFactorValues().size() > 0 );
+            for ( FactorValue fv : factor.getFactorValues() ) {
+                assertTrue( fv.getCharacteristics().size() > 0 );
+                for ( Characteristic c : fv.getCharacteristics() ) {
+                    assertNotNull( c.getValue() );
+                }
+
+            }
         }
 
     }

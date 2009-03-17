@@ -136,6 +136,9 @@ public class ArrayExpressLoadService {
             }
 
             log.info( "Parsing processed data" );
+            /*
+             * FIXME: handle case of multiple files.
+             */
             InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( pdFile.getLocalURL().getPath() );
             pdParser.parse( is );
 
