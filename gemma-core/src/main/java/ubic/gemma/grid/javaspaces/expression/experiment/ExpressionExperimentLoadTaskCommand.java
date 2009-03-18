@@ -38,6 +38,8 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
      */
     private boolean aggressiveQtRemoval;
 
+    private boolean allowArrayExpressDesign = false;
+
     private boolean allowSuperSeriesLoad = true;
 
     private String arrayDesignName = null;
@@ -87,6 +89,13 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
         return aggressiveQtRemoval;
     }
 
+    /**
+     * @return the allowArrayExpressDesign
+     */
+    public boolean isAllowArrayExpressDesign() {
+        return allowArrayExpressDesign;
+    }
+
     public boolean isAllowSuperSeriesLoad() {
         return this.allowSuperSeriesLoad;
     }
@@ -120,6 +129,13 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
 
     public void setAggressiveQtRemoval( boolean aggressiveQtRemoval ) {
         this.aggressiveQtRemoval = aggressiveQtRemoval;
+    }
+
+    /**
+     * @param allowArrayExpressDesign the allowArrayExpressDesign to set
+     */
+    public void setAllowArrayExpressDesign( boolean allowArrayExpressDesign ) {
+        this.allowArrayExpressDesign = allowArrayExpressDesign;
     }
 
     /**

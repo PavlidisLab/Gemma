@@ -97,6 +97,22 @@
 			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 		</td>
 	</tr>
+	
+	
+	<tr>
+		<th>
+			<Gemma:label key="expressionExperimentLoad.allowArrayExpressDesign" />
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'When loading from ArrayExpress, allow the array design to be imported. It must not be an array design already in Gemma!'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+		</th>
+		<td align="left">
+			<input type="hidden" name="_<c:out value="${status.expression}"/>">
+			<input checked id="allowArrayExpressDesign" align="left" type="checkbox" name="<c:out value="${status.expression}"/>"
+				value="false" <c:if test="${status.value}">checked</c:if> />
+			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+		</td>
+	</tr>
 
 	<tr>
 		<th>

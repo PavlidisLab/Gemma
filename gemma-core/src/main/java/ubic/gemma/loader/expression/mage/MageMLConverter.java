@@ -28,6 +28,7 @@ import java.util.Map;
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -99,6 +100,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
         // fillInBioMaterialFactorValues( convertedResult );
         fillInExpressionExperimentQuantitationTypes();
         cleanupBioAssays();
+
+        validate();
+
         this.isConverted = true;
         return convertedResult;
     }
@@ -163,6 +167,45 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
 
     }
 
+    private void validate() {
+        ExpressionExperiment ee = null;
+        for ( Object object : convertedResult ) {
+            if ( object instanceof ExpressionExperiment ) {
+                if ( ee != null )
+                    throw new IllegalStateException( "Can't convert more than one EE from MAGE-ML at a time." );
+                ee = ( ExpressionExperiment ) object;
+            }
+
+            if ( ee != null ) {
+
+                if ( ee.getSource() == null ) {
+                    throw new IllegalStateException( "Should be source" );
+                }
+
+                if ( ee.getBioAssays().size() == 0 ) {
+                    throw new IllegalStateException( "No bioassays" );
+                }
+                for ( BioAssay ba : ee.getBioAssays() ) {
+                    if ( ba.getSamplesUsed().size() == 0 ) {
+                        throw new IllegalStateException( "No biomaterials for bioassay " + ba );
+                    }
+                }
+
+                if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 0 ) {
+                    for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+                        if ( ef.getFactorValues().size() == 0 ) {
+                            /*
+                             * Let it go ...
+                             */
+                            log.warn( "Factor with no factor values: " + ef );
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
     private void cleanupBioAssays() {
         ExpressionExperiment ee = null;
         for ( Object object : convertedResult ) {
@@ -176,18 +219,16 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
 
         Collection<BioAssay> toRemove = new HashSet<BioAssay>();
         Collection<String> topLevelBioAssayIdentifiers = this.mageConverterHelper.getTopLevelBioAssayIdentifiers();
-        if ( topLevelBioAssayIdentifiers.size() > 0 ) {
 
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                if ( !topLevelBioAssayIdentifiers.contains( ba.getName() ) ) {
-                    log.info( "Removing bioassay with id=" + ba.getName() + ", it is not listed as being 'top level'" );
-                    toRemove.add( ba );
-                } else {
-                    if ( ba.getSamplesUsed().size() == 0 ) {
-                        throw new IllegalStateException( "Retained bioassay has no biomaterials: " + ba );
-                    }
-                }
-
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( topLevelBioAssayIdentifiers.size() > 0 && !topLevelBioAssayIdentifiers.contains( ba.getName() ) ) {
+                log.info( "Removing bioassay with id=" + ba.getName() + ", it is not listed as being 'top level'" );
+                toRemove.add( ba );
+            } else if ( ba.getSamplesUsed().size() == 0 ) {
+                log.warn( "Removing bioassay with no biomaterials: " + ba );
+                toRemove.add( ba );
+            } else {
+                // keeper
             }
         }
 

@@ -281,7 +281,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
 
             String accession = getAccession( expressionExperimentLoadCommand );
             ExpressionExperiment result = arrayExpressLoadService.load( accession, expressionExperimentLoadCommand
-                    .getArrayDesignName() );
+                    .getArrayDesignName(), expressionExperimentLoadCommand.isAllowArrayExpressDesign() );
 
             return processArrayExpressResult( result );
         }
@@ -291,7 +291,10 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @return
          */
         protected ModelAndView processArrayExpressResult( ExpressionExperiment result ) {
-            this.saveMessage( "Successfully loaded " + result.getName() );
+            if ( result == null ) {
+                throw new IllegalStateException( "Loading failed" );
+            }
+            this.saveMessage( "Successfully loaded " + result );
             Map<Object, Object> model = new HashMap<Object, Object>();
             model.put( "expressionExperiment", result );
             return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="

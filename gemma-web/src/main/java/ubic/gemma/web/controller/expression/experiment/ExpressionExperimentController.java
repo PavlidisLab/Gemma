@@ -621,8 +621,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         ExpressionExperiment ee = expressionExperimentService.load( id );
 
         if ( ee == null ) {
-            // possibly not permitted.
-            return null;
+            throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
         }
 
         expressionExperimentService.thawLite( ee );
@@ -630,6 +629,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         ids.add( ee.getId() );
 
         Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids );
+
+        if ( initialResults.size() == 0 ) {
+            return null;
+        }
 
         getReportData( initialResults );
 

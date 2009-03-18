@@ -61,7 +61,7 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
         TaskResult result = new TaskResult();
         if ( jsEeLoadCommand.isArrayExpress() ) {
             ExpressionExperiment dataset = arrayExpressLoadService.load( accession, jsEeLoadCommand
-                    .getArrayDesignName() );
+                    .getArrayDesignName(), jsEeLoadCommand.isAllowArrayExpressDesign() );
             ExpressionExperiment minimalDataset = null;
             if ( dataset != null ) {
                 /* Don't send the full experiment to the space. Instead, create a minimal result. */

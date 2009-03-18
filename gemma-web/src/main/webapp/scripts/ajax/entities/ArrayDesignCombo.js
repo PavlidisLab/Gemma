@@ -14,7 +14,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 	loadingText : "Loading ...",
 	listWidth : 450,
 	forceSelection : true,
-	mode : 'local',
+	mode : 'remote',
 	triggerAction : 'all',
 	emptyText : 'Select an array design',
 
@@ -59,13 +59,17 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 
 		Ext.apply(this, {
 					store : new Ext.data.Store({
+								sortInfo : {
+									field : 'name',
+									direction : 'ASC'
+								},
 								proxy : new Ext.data.DWRProxy(ArrayDesignController.getArrayDesigns, {
 											baseParams : [[], true, false]
 										}),
 								reader : new Ext.data.ListRangeReader({
 											id : "id"
 										}, this.record),
-								remoteSort : true
+								remoteSort : false
 							}),
 					tpl : templ
 				});
@@ -114,10 +118,10 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	applyFilter : function(taxon) {
-		
+
 		if (taxon === undefined)
 			return;
-			
+
 		this.store.filterBy(function(record, id) {
 					if (!record.data.taxon) {
 						return false;

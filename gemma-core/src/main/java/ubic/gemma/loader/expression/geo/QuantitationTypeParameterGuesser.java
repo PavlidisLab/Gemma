@@ -278,6 +278,7 @@ public class QuantitationTypeParameterGuesser {
         isPreferredNamePatterns.add( "value" );
         isPreferredNamePatterns.add( "rma" );
         isPreferredNamePatterns.add( "dchip" );
+        isPreferredNamePatterns.add( "CHPSignal" );
 
     }
 
@@ -560,6 +561,8 @@ public class QuantitationTypeParameterGuesser {
         }
 
         if ( name.matches( "detection" ) ) return false;
+
+        if ( name.matches( "CHPDetection" ) ) return false;
 
         return true;
     }

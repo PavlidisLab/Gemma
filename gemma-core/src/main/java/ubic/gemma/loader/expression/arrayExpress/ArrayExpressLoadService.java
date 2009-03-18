@@ -59,7 +59,7 @@ public class ArrayExpressLoadService {
     ArrayDesignService arrayDesignService;
 
     public ExpressionExperiment load( String accession ) {
-        return this.load( accession, null );
+        return this.load( accession, null, false );
     }
 
     /**
@@ -67,9 +67,11 @@ public class ArrayExpressLoadService {
      * 
      * @param accession e.g. E-AFMX-4
      * @param adAccession accession for the array design, either short name or name.
+     * @param allowArrayExpressDesign if true, the array design will be loaded from ArrayExpress. Should only be used if
+     *        the array design isn't in Gemma or GEO.
      * @return
      */
-    public ExpressionExperiment load( String accession, String adAccession ) {
+    public ExpressionExperiment load( String accession, String adAccession, boolean allowArrayExpressDesign ) {
         DataFileFetcher dfFetcher = new DataFileFetcher();
         ProcessedDataFetcher pdFetcher = new ProcessedDataFetcher();
         ProcessedDataFileParser pdParser = new ProcessedDataFileParser();
@@ -87,6 +89,8 @@ public class ArrayExpressLoadService {
                         + ", halting processing" );
                 return null;
             }
+        } else if ( allowArrayExpressDesign ) {
+            log.info( "Attempting to get array design from ArrayExpress" );
         }
 
         MageMLParser mlp = new MageMLParser();
@@ -120,6 +124,7 @@ public class ArrayExpressLoadService {
 
             ExpressionExperiment ee = locateExpressionExperimentInMageResults( result );
             ee.setShortName( accession );
+
             Collection<BioAssay> bioAssays = ee.getBioAssays();
             assert bioAssays != null && bioAssays.size() > 0;
 
@@ -128,8 +133,13 @@ public class ArrayExpressLoadService {
             // If we made it this far, and selectedAd is null we know an AD was never specified so go ahead and
             // use the AD given by mage
             if ( selectedAd == null ) {
-                log.info( "Filling in array design information" );
-                processArrayDesignInfo( bioAssays );
+                if ( allowArrayExpressDesign ) {
+                    log.info( "Filling in array design information" );
+                    processArrayDesignInfo( bioAssays );
+                } else {
+                    throw new IllegalStateException(
+                            "You must provide a valid array design from Gemma, or allow loader to get it from ArrayExpress" );
+                }
             } else { // the user selected an AD in the system, make sure all the bioAssays point to it.
                 log.info( "Using specified Array Design: " + selectedAd.getShortName() );
                 processArrayDesignInfo( bioAssays, selectedAd );
@@ -154,7 +164,8 @@ public class ArrayExpressLoadService {
 
             pdMerger.merge( ee, qts, pdParser.getMap(), pdParser.getSamples() );
 
-            return ( ExpressionExperiment ) persisterHelper.persist( ee );
+          //  return ( ExpressionExperiment ) persisterHelper.persist( ee );
+            return null;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

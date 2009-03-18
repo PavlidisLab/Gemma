@@ -77,7 +77,8 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
     @Override
     public java.lang.String toString() {
         StringBuilder buf = new StringBuilder();
-        buf.append( this.getExperimentalFactor().getName() + ":" );
+        // this can be null in tests or with half-setup transient objects
+        if ( this.getExperimentalFactor() != null ) buf.append( this.getExperimentalFactor().getName() + ":" );
         if ( this.getCharacteristics().size() > 0 ) {
             for ( Characteristic c : this.getCharacteristics() ) {
                 buf.append( c.getValue() );

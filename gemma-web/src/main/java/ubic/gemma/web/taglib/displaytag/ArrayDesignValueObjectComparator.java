@@ -24,25 +24,15 @@ import java.util.Comparator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 /**
- * @author klc
- *
- *
- * Compares
+ * @author klc Compares
  */
-public class ArrayDesignValueObjectComparator implements Comparator {
+public class ArrayDesignValueObjectComparator implements Comparator<ArrayDesignValueObject> {
 
-    
-    
-    public int compare( Object arg0, Object arg1 ) {
-        
-        ArrayDesignValueObject advo0 = (ArrayDesignValueObject) arg0;
-        ArrayDesignValueObject advo1 = (ArrayDesignValueObject) arg1;
-        
-        if ((advo0.getDateCreated() == null) || (advo1.getDateCreated() == null))
-                return 0;
-        
-        return  (advo0.getDateCreated().compareTo( advo1.getDateCreated() ) * -1);
-     }
-     
-    
+    public int compare( ArrayDesignValueObject arg0, ArrayDesignValueObject arg1 ) {
+
+        if ( ( arg0.getDateCreated() == null ) || ( arg1.getDateCreated() == null ) ) return 0;
+
+        return ( arg0.getDateCreated().compareTo( arg1.getDateCreated() ) * -1 );
+    }
+
 }

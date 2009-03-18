@@ -36,4 +36,11 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
         assertNotNull( experiment );
     }
 
+    final public void testLoadWithAEDesign() throws Exception {
+        endTransaction();
+        ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
+        ExpressionExperiment experiment = svc.load( "E-MEXP-297", null, true );
+        assertNotNull( experiment );
+    }
+
 }

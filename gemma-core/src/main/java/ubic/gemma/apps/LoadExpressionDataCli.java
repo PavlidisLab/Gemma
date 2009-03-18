@@ -77,7 +77,6 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -150,7 +149,6 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @SuppressWarnings("unchecked")
@@ -253,7 +251,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     protected void processAEAccession( ArrayExpressLoadService aeService, String accession ) {
 
         try {
-            ExpressionExperiment aeExperiment = aeService.load( accession, adName );
+            ExpressionExperiment aeExperiment = aeService.load( accession, adName, false );
             successObjects.add( ( ( Describable ) aeExperiment ).getName() + " (" + ( aeExperiment ).getShortName()
                     + ")" );
 

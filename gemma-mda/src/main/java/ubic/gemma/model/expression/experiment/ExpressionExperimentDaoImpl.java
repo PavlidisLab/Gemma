@@ -1323,8 +1323,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "eventCreated.date as createdDate, "
                 + "AD.technologyType, ee.class "
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA left join ee.auditTrail atr left join atr.events as eventCreated "
-                + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
-                + "inner join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
+                + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
+                + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
                 + " where eventCreated.action='C' and ee.id in (:ids) " + " group by ee order by ee.name";
 
         try {

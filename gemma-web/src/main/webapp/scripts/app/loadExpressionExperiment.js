@@ -1,11 +1,25 @@
-var uploadButton;
-
+/**
+ * Loading of data from GEO or ArrayExpress
+ * @author paul
+ * @version $Id$ 
+ */
+ 
+ var uploadButton;
+var arrayDesignCombo;
 Ext.onReady(function() {
-			uploadButton = new Ext.Button("upload-button", {
+			uploadButton = new Ext.Button({
+						renderTo : "upload-button",
 						text : "Start loading",
 						width : 100
 
 					});
+
+			arrayDesignCombo = new Gemma.ArrayDesignCombo({
+						renderTo : 'arrayDesignCombo',
+						id : 'arrayDesign',
+						width : 200
+					});
+
 			uploadButton.on("click", submitForm);
 		});
 
@@ -18,7 +32,12 @@ function submitForm() {
 	var splitByPlatform = Ext.get("splitByPlatform").dom.checked;
 	var allowSuperSeriesLoad = Ext.get("allowSuperSeriesLoad").dom.checked;
 	var arrayExpress = Ext.get("arrayExpress").dom.checked;
-	var arrayDesign = Ext.get("arrayDesign").dom.value;
+	var allowArrayExpressDesign = Ext.get("allowArrayExpressDesign").dom.checked;
+	var arrayDesign = arrayDesignCombo.getArrayDesign();
+	var arrayDesignName = null;
+	if (arrayDesign) {
+		arrayDesignName = arrayDesign.get("shortName");
+	}
 
 	var callParams = [];
 
@@ -29,7 +48,8 @@ function submitForm() {
 		splitByPlatform : splitByPlatform,
 		arrayExpress : arrayExpress,
 		allowSuperSeriesLoad : allowSuperSeriesLoad,
-		arrayDesignName : arrayDesign
+		arrayDesignName : arrayDesignName,
+		allowArrayExpressDesign : allowArrayExpressDesign
 	};
 
 	callParams.push(commandObj);
@@ -45,7 +65,7 @@ function submitForm() {
 	// this should return quickly, with the task id.
 	Ext.DomHelper.overwrite("messages", {
 				tag : 'img',
-				src : '/Gemma/images/default/tree/loading.gif'
+				src : '/Gemma/images/loading.gif'
 			});
 	Ext.DomHelper.append("messages", "&nbsp;Submitting job...");
 

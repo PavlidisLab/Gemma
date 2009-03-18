@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.util.Collection;
 
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -53,6 +54,11 @@ public class MageMLConverterTest extends AbstractMageTest {
         this.mageMLParser = mageMLParser;
     }
 
+    /**
+     * E-MEXP-268
+     * 
+     * @throws Exception
+     */
     @SuppressWarnings("null")
     public final void testWithDerivedBioAssays() throws Exception {
         /* invoke mageMLParser */
@@ -88,7 +94,8 @@ public class MageMLConverterTest extends AbstractMageTest {
         assertNotNull( expressionExperiment );
         assertEquals( 1, numExpExp );
         assertEquals( 32, expressionExperiment.getBioAssays().size() );
-
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             assertTrue( ba.getName().contains( "DBA" ) );
             assertEquals( 1, ba.getSamplesUsed().size() );
@@ -98,15 +105,20 @@ public class MageMLConverterTest extends AbstractMageTest {
             }
         }
 
+        assertEquals( 6, expressionExperiment.getQuantitationTypes().size() );
+        for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
+            log.info( qt );
+        }
+
         /*
          * This study has one factor, tissue type.
          */
         assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
 
         for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
-            assertTrue( factor.getFactorValues().size() > 0 );
+            assertEquals( 26, factor.getFactorValues().size() );
             for ( FactorValue fv : factor.getFactorValues() ) {
-                assertTrue( fv.getCharacteristics().size() > 0 );
+                assertTrue( fv.getCharacteristics().size() == 1 );
                 for ( Characteristic c : fv.getCharacteristics() ) {
                     assertNotNull( c.getValue() );
                 }
@@ -116,8 +128,14 @@ public class MageMLConverterTest extends AbstractMageTest {
 
     }
 
+    /**
+     * This test is NOT redundant with the others one, because it has a different MAGE-ML format -- it exercises a
+     * variant path to populating the objects. E-HGMP-2
+     * 
+     * @throws Exception
+     */
     @SuppressWarnings("null")
-    public final void testWithDerivedBioAssays2() throws Exception {
+    public final void testConvert2() throws Exception {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLConverterTest.class
                 .getResourceAsStream( MAGE_DATA_RESOURCE_PATH
@@ -152,7 +170,12 @@ public class MageMLConverterTest extends AbstractMageTest {
         assertNotNull( expressionExperiment );
         assertEquals( 1, numExpExp );
         assertEquals( 8, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
 
+        /*
+         * One factor, two factor values.
+         */
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             assertTrue( "Got: " + ba.getName(), ba.getName().contains( "HeCES" ) );
             assertEquals( 1, ba.getSamplesUsed().size() );
@@ -163,20 +186,142 @@ public class MageMLConverterTest extends AbstractMageTest {
         }
 
         /*
-         * This study has one factor, tissue type.
+         * This study has one factor, diagnosis, with two factor values, each of which has two characteristics
          */
         assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
 
         for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
-            assertTrue( factor.getFactorValues().size() > 0 );
+            assertEquals( 2, factor.getFactorValues().size() );
             for ( FactorValue fv : factor.getFactorValues() ) {
-                assertTrue( fv.getCharacteristics().size() > 0 );
+                assertEquals( 2, fv.getCharacteristics().size() );
                 for ( Characteristic c : fv.getCharacteristics() ) {
                     assertNotNull( c.getValue() );
+                    assertTrue( c.getCategory().startsWith( "Disease" ) ); // state or staging.
                 }
 
             }
         }
+
+    }
+
+    /**
+     * Yet another case that breaks our parser -- biomaterials not associated. There are four DerivedBioAssays
+     * associated with each DerivedBioAssay. E-MEXP-297
+     * <p>
+     * OK, I confess I have no idea how we would be able to parse this.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("null")
+    public final void testConvert3() throws Exception {
+        /* invoke mageMLParser */
+        InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
+                + "E-MEXP-297_fixed.part.xml" );
+
+        assert mageMLParser != null;
+
+        mageMLParser.parse( istMageExamples );
+
+        /* get results from parsing step */
+        log.info( "Tally:\n" + mageMLParser );
+        Collection<Object> mageObjects = mageMLParser.getResults();
+        log.debug( "number of SDOs: " + mageObjects.size() );
+
+        istMageExamples.close();
+
+        ExpressionExperiment expressionExperiment = null;
+        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        log.debug( "number of GDOs: " + gemmaObjects.size() );
+
+        int numExpExp = 0;
+        for ( Object obj : gemmaObjects ) {
+            if ( obj instanceof ExpressionExperiment ) {
+                expressionExperiment = ( ExpressionExperiment ) obj;
+                numExpExp++;
+            }
+            if ( log.isDebugEnabled() ) {
+                log.debug( obj.getClass() + ": " + obj );
+            }
+        }
+
+        assertNotNull( expressionExperiment );
+        assertEquals( 1, numExpExp );
+        assertEquals( 28, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
+        //
+        // /*
+        // * One factor, two factor values.
+        // */
+        // for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+        // assertTrue( "Got: " + ba.getName(), ba.getName().contains( "HeCES" ) );
+        // assertEquals( 1, ba.getSamplesUsed().size() );
+        // for ( BioMaterial bm : ba.getSamplesUsed() ) {
+        // assertEquals( 1, bm.getBioAssaysUsedIn().size() );
+        // assertEquals( 1, bm.getFactorValues().size() );
+        // }
+        // }
+        //
+        // /*
+        // * This study has one factor, diagnosis, with two factor values, each of which has two characteristics
+        // */
+        // assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+        //
+        // for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+        // assertEquals( 2, factor.getFactorValues().size() );
+        // for ( FactorValue fv : factor.getFactorValues() ) {
+        // assertEquals( 2, fv.getCharacteristics().size() );
+        // for ( Characteristic c : fv.getCharacteristics() ) {
+        // assertNotNull( c.getValue() );
+        // assertTrue( c.getCategory().startsWith( "Disease" ) ); // state or staging.
+        // }
+        // }
+        // }
+
+    }
+
+    /**
+     * This dataset has factors but not associated with any of the samples. E-NCMF-4
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("null")
+    public final void testConvert4() throws Exception {
+        /* invoke mageMLParser */
+        InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
+                + "export3_part.xml" );
+
+        assert mageMLParser != null;
+
+        mageMLParser.parse( istMageExamples );
+
+        /* get results from parsing step */
+        log.info( "Tally:\n" + mageMLParser );
+        Collection<Object> mageObjects = mageMLParser.getResults();
+        log.debug( "number of SDOs: " + mageObjects.size() );
+
+        istMageExamples.close();
+
+        ExpressionExperiment expressionExperiment = null;
+        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        log.debug( "number of GDOs: " + gemmaObjects.size() );
+
+        int numExpExp = 0;
+        for ( Object obj : gemmaObjects ) {
+            if ( obj instanceof ExpressionExperiment ) {
+                expressionExperiment = ( ExpressionExperiment ) obj;
+                numExpExp++;
+            }
+            if ( log.isDebugEnabled() ) {
+                log.debug( obj.getClass() + ": " + obj );
+            }
+        }
+
+        assertNotNull( expressionExperiment );
+        assertEquals( 1, numExpExp );
+        assertEquals( 18, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
 
     }
 

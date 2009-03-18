@@ -280,7 +280,15 @@ public class MageMLConverterHelper {
      * @return
      */
     public ubic.gemma.model.common.description.Characteristic convertAction( OntologyEntry mageObj ) {
-        return convertOntologyEntry( mageObj );
+        Collection<Characteristic> results = convertOntologyEntry( mageObj );
+        if ( results == null || results.isEmpty() ) {
+            return null;
+        }
+
+        if ( results.size() > 1 ) {
+            log.warn( "Multiple resulting characteristics for " + mageObj );
+        }
+        return results.iterator().next();
     }
 
     /**
@@ -621,7 +629,6 @@ public class MageMLConverterHelper {
 
             if ( sample instanceof MeasuredBioAssay ) {
                 resultBioAssay = convertMeasuredBioAssay( ( MeasuredBioAssay ) sample );
-
             } else if ( sample instanceof DerivedBioAssay ) {
                 /*
                  * Note that this is the bioassaydimension we actually want, if the "measured" bioassay is also present.
@@ -875,7 +882,15 @@ public class MageMLConverterHelper {
      * @return
      */
     public ubic.gemma.model.common.description.Characteristic convertCategory( OntologyEntry mageObj ) {
-        return convertOntologyEntry( mageObj );
+        Collection<Characteristic> results = convertOntologyEntry( mageObj );
+        if ( results == null || results.isEmpty() ) {
+            return null;
+        }
+
+        if ( results.size() > 1 ) {
+            log.warn( "Multiple resulting characteristics for " + mageObj );
+        }
+        return results.iterator().next();
     }
 
     /**
@@ -1201,7 +1216,7 @@ public class MageMLConverterHelper {
         ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
 
         /*
-         * Fill in the biomaterials, because this is only linked to the 'MeasuredBioAssay'.
+         * Fill in the biomaterials, because this is only linked to the 'MeasuredBioAssay'...sometimes (varies)
          */
         List map = mageObj.getDerivedBioAssayMap();
         if ( map.size() == 0 ) {
@@ -1221,6 +1236,10 @@ public class MageMLConverterHelper {
                 if ( bioAssay instanceof MeasuredBioAssay ) {
                     specialConvertAssociationsForPhysicalBioAssay( ( ( MeasuredBioAssay ) bioAssay )
                             .getFeatureExtraction().getPhysicalBioAssaySource(), result );
+                } else if ( bioAssay instanceof DerivedBioAssay ) {
+                    /*
+                     * Don't worry about it. We will it through the measuredbioassays, I hope.
+                     */
                 } else {
                     log.error( "What kind of bioassay is associated?: " + bioAssay.getClass() );
                 }
@@ -1229,6 +1248,20 @@ public class MageMLConverterHelper {
 
         convertAssociations( mageObj, result );
         return result;
+    }
+
+    Map<String, Collection<BioAssay>> bioAssayMap = new HashMap<String, Collection<BioAssay>>();
+
+    public void convertBioAssayMap( BioAssayMap map ) {
+
+        String identifier = map.getIdentifier();
+        if ( !bioAssayMap.containsKey( identifier ) ) {
+            bioAssayMap.put( identifier, new HashSet<BioAssay>() );
+        }
+
+        bioAssayMap.get( identifier ).add( map.getBioAssayMapTarget() );
+        bioAssayMap.get( identifier ).addAll( map.getSourceBioAssays() );
+
     }
 
     /**
@@ -1253,11 +1286,12 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "BioAssayFactorValues" ) ) {
 
             if ( !bioAssayFactors.containsKey( gemmaObj.getName() ) ) {
-                bioAssayFactors.put( gemmaObj.getName(), new HashSet<FactorValue>( 0 ) );
+                bioAssayFactors.put( gemmaObj.getName(), new HashSet<FactorValue>() );
             }
 
             for ( org.biomage.Experiment.FactorValue magefv : ( Collection<org.biomage.Experiment.FactorValue> ) mageObj
                     .getBioAssayFactorValues() ) {
+
                 FactorValue factorValue = convertFactorValue( magefv );
 
                 /*
@@ -1330,8 +1364,13 @@ public class MageMLConverterHelper {
             descBuf.append( " " );
             List<OntologyEntry> annotations = description.getAnnotations();
             for ( OntologyEntry element : annotations ) {
-                ubic.gemma.model.common.description.Characteristic ontologyEntry = convertOntologyEntry( element );
-                log.debug( "Got association for describable: " + ontologyEntry.getValue() );
+                Collection<ubic.gemma.model.common.description.Characteristic> ontologyEntries = convertOntologyEntry( element );
+                if ( ontologyEntries != null ) {
+                    for ( Characteristic c : ontologyEntries ) {
+                        log.debug( "Got association for describable: " + c.getValue() );
+                    }
+                }
+
                 // gemmaObj.addAnnotation( ontologyEntry );
             }
         }
@@ -1390,7 +1429,15 @@ public class MageMLConverterHelper {
     public ExpressionExperiment convertExperiment( Experiment mageObj ) {
         if ( mageObj == null ) return null;
         ExpressionExperiment result = ExpressionExperiment.Factory.newInstance();
-        result.setSource( "Imported from MAGE-ML" );
+        result.setSource( "Imported via MAGE-ML " + mageObj.getIdentifier() );
+
+        /*
+         * Assuming ArrayExpress...
+         */
+        DatabaseEntry acc = DatabaseEntry.Factory.newInstance();
+        acc.setAccession( mageObj.getIdentifier() );
+        acc.setExternalDatabase( this.getArrayExpressReference() );
+        result.setAccession( acc );
 
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
@@ -1799,7 +1846,15 @@ public class MageMLConverterHelper {
      * @see convertOntologyEntry
      */
     public ubic.gemma.model.common.description.Characteristic convertMaterialType( OntologyEntry mageObj ) {
-        return convertOntologyEntry( mageObj );
+        Collection<Characteristic> results = convertOntologyEntry( mageObj );
+        if ( results == null || results.isEmpty() ) {
+            return null;
+        }
+
+        if ( results.size() > 1 ) {
+            log.warn( "Multiple resulting characteristics for " + mageObj );
+        }
+        return results.iterator().next();
     }
 
     /**
@@ -1932,9 +1987,9 @@ public class MageMLConverterHelper {
      * @param mageObj
      * @return
      */
-    public ubic.gemma.model.common.description.Characteristic convertOntologyEntry( OntologyEntry mageObj ) {
+    public Collection<ubic.gemma.model.common.description.Characteristic> convertOntologyEntry( OntologyEntry mageObj ) {
         if ( mageObj == null ) return null;
-
+        Collection<Characteristic> results = new HashSet<Characteristic>();
         String category = mageObj.getCategory();
         String value = mageObj.getValue();
         org.biomage.Description.DatabaseEntry ontologyReference = mageObj.getOntologyReference();
@@ -1955,12 +2010,9 @@ public class MageMLConverterHelper {
 
         /**
          * <pre>
-         *       Cases:
-         *       
+         * Cases: 
          *       - Category is a MO term
          *       - Value is a MO instance
-         * 
-         * 
          * </pre>
          */
 
@@ -1973,30 +2025,67 @@ public class MageMLConverterHelper {
             result.setValue( value );
             result.setCategory( category );
             result.setDescription( genericDescription + ": Non-MGED Ontology class" );
-            return result;
+            results.add( result );
         } else if ( category.equals( value ) ) {
-            /*
-             * This is the case where associated "has_*" objects hold the actual information. Example is "Age". This
-             * implementation effectively ignores those cases and you end up with Age=Age. In the past we tried to
-             * extract all the information with the help of MAGE-simplify.xsl, but this proved to be far more trouble
-             * than it is worth.
+            /**
+             * This is the case where associated "has_*" objects hold the actual information. Example is "Age". In the
+             * past we tried to extract all the information with the help of MAGE-simplify.xsl, but this proved to be
+             * more trouble than it is worth. This could be handled with recursion, but this direct loop is easier for
+             * the moment as we don't have to handle deeper associations in general.
+             * <ul>
+             * <li>DiseaseState -> has_value -> Stenosis</li>
+             * <li>has_disease_staging -> DiseaseStaging -> has_value -> Symptomatic</li>
+             * </ul>
              */
-            VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
 
-            String uri;
-            if ( ontologyReference != null ) {
-                uri = ontologyReference.getURI();
-            } else {
-                // make the uri
-                uri = MGED_ONTOLOGY_URL + "#" + StringUtils.capitalize( value );
+            for ( OntologyEntry oe : ( Collection<OntologyEntry> ) mageObj.getAssociations() ) {
+                if ( oe.getValue().startsWith( "has_" ) ) {
+
+                    for ( OntologyEntry oei : ( Collection<OntologyEntry> ) oe.getAssociations() ) {
+
+                        if ( oe.getValue().equals( "has_value" ) && !oei.getValue().startsWith( "has_" ) ) {
+                            Characteristic result = makeCharacteristic( mageObj, oei );
+                            results.add( result );
+                        } else {
+
+                            for ( OntologyEntry oeii : ( Collection<OntologyEntry> ) oei.getAssociations() ) {
+
+                                if ( oei.getValue().equals( "has_value" ) && !oeii.getValue().startsWith( "has_" ) ) {
+                                    Characteristic result = makeCharacteristic( oe, oeii );
+                                    results.add( result );
+                                } else {
+
+                                    for ( OntologyEntry oeiii : ( Collection<OntologyEntry> ) oeii.getAssociations() ) {
+                                        if ( oeii.getValue().equals( "has_value" )
+                                                && !oeiii.getValue().startsWith( "has_" ) ) {
+                                            Characteristic result = makeCharacteristic( oei, oeiii );
+                                            results.add( result );
+
+                                        } else {
+
+                                            for ( OntologyEntry oeiiii : ( Collection<OntologyEntry> ) oeiii
+                                                    .getAssociations() ) {
+
+                                                if ( oeiii.getValue().equals( "has_value" )
+                                                        && !oeiiii.getValue().startsWith( "has_" ) ) {
+
+                                                    Characteristic result = makeCharacteristic( oeii, oeiiii );
+                                                    results.add( result );
+
+                                                } else {
+                                                    log.warn( "Too deep, replace with recursion" );
+                                                }
+                                            }
+
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            result.setValue( value );
-            result.setCategory( category );
-            result.setCategoryUri( uri );
-            result.setValueUri( uri );
-            result.setDescription( genericDescription + ": actual value could not be extracted" );
-            if ( log.isDebugEnabled() ) log.debug( "Class or property category=" + category + " value=" + value );
-            return result;
+
         } else { // instance
             VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
             boolean valueIsMOInstance = false;
@@ -2018,7 +2107,6 @@ public class MageMLConverterHelper {
                 classUri = ontologyReference.getURI();
             } else {
                 classUri = MGED_ONTOLOGY_URL + "#" + StringUtils.capitalize( category );
-
             }
             result.setValue( value );
             result.setCategory( category );
@@ -2027,11 +2115,48 @@ public class MageMLConverterHelper {
             result.setDescription( genericDescription );
             if ( log.isDebugEnabled() ) log.debug( "Instance category=" + category + " value=" + value );
             // then it is an instance.
-            return result;
+            results.add( result );
         }
 
+        return results;
         /* DO NOT convert any associations. Keep it shallow. */
         // convertAssociations( mageObj, result );
+    }
+
+    private VocabCharacteristic makeCharacteristic( OntologyEntry category, OntologyEntry value ) {
+
+        String cat = category.getValue();
+        String val = value.getValue();
+
+        Collection<String> instances;
+        boolean catIsMO = mgedOntologyHelper.classExists( StringUtils.capitalize( cat ) );
+
+        String catUri = null;
+        if ( catIsMO ) {
+            catUri = MGED_ONTOLOGY_URL + "#" + StringUtils.capitalize( cat );
+        }
+
+        String valUri = null;
+        boolean valIsMO = mgedOntologyHelper.classExists( StringUtils.capitalize( val ) );
+
+        if ( valIsMO ) {
+            valUri = MGED_ONTOLOGY_URL + "#" + StringUtils.capitalize( val );
+        }
+
+        if ( !valIsMO && catIsMO ) {
+            instances = mgedOntologyHelper.getInstances( StringUtils.capitalize( cat ) );
+            if ( instances.contains( val ) ) {
+                valIsMO = true;
+            }
+        }
+
+        VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
+
+        result.setCategory( cat );
+        result.setValue( val );
+        result.setCategoryUri( catUri );
+        result.setValueUri( valUri );
+        return result;
     }
 
     /**
@@ -2725,7 +2850,15 @@ public class MageMLConverterHelper {
      * @return
      */
     public ubic.gemma.model.common.description.Characteristic convertType( OntologyEntry mageObj ) {
-        return convertOntologyEntry( mageObj );
+        Collection<Characteristic> results = convertOntologyEntry( mageObj );
+        if ( results == null || results.isEmpty() ) {
+            return null;
+        }
+
+        if ( results.size() > 1 ) {
+            log.warn( "Multiple resulting characteristics for " + mageObj );
+        }
+        return results.iterator().next();
     }
 
     /**
@@ -2742,12 +2875,22 @@ public class MageMLConverterHelper {
     }
 
     /**
+     * This is hit for factor value conversion.
+     * 
      * @param mageObj
      * @return
      * @see convertOntologyEntry
      */
     public ubic.gemma.model.common.description.Characteristic convertValue( OntologyEntry mageObj ) {
-        return convertOntologyEntry( mageObj );
+        Collection<Characteristic> results = convertOntologyEntry( mageObj );
+        if ( results == null || results.isEmpty() ) {
+            return null;
+        }
+
+        if ( results.size() > 1 ) {
+            log.warn( "Multiple resulting characteristics for " + mageObj );
+        }
+        return results.iterator().next();
     }
 
     /**
@@ -2860,6 +3003,10 @@ public class MageMLConverterHelper {
         localExternalDataPaths.add( path );
     }
 
+    /**
+     * @param biomaterial
+     * @param factorValues
+     */
     private void addFactorValuesToBioMaterial( BioMaterial biomaterial, Collection<FactorValue> factorValues ) {
         if ( factorValues == null || factorValues.isEmpty() ) return;
         if ( biomaterial.getFactorValues() == null ) biomaterial.setFactorValues( new HashSet<FactorValue>() );
@@ -3050,8 +3197,11 @@ public class MageMLConverterHelper {
         try {
             converter = this.getClass().getMethod( "convert" + mageTypeName, new Class[] { mageObj.getClass() } );
         } catch ( NoSuchMethodException e ) {
+            /*
+             * This is usually an object we handle in some other way
+             */
             log.warn( "Conversion operation not yet supported: " + "convert" + mageTypeName + "("
-                    + mageObj.getClass().getName() + ")" );
+                    + mageObj.getClass().getName() + ") -- it may be handled more directly" );
         }
         return converter;
     }
@@ -3149,6 +3299,9 @@ public class MageMLConverterHelper {
         return gemmaSetter;
     }
 
+    /**
+     * @return
+     */
     private ExternalDatabase getArrayExpressReference() {
         if ( arrayExpress == null ) {
             arrayExpress = ExternalDatabase.Factory.newInstance();
@@ -3456,7 +3609,11 @@ public class MageMLConverterHelper {
                             log.debug( "Adding " + convertedGemmaObj + " to " + gemmaObjList + " (" + associationName
                                     + ")" );
                         }
-                        gemmaObjList.add( convertedGemmaObj );
+                        if ( convertedGemmaObj instanceof Collection ) {
+                            gemmaObjList.addAll( ( Collection ) convertedGemmaObj );
+                        } else {
+                            gemmaObjList.add( convertedGemmaObj );
+                        }
                     }
                 }
                 findAndInvokeSetter( gemmaObj, gemmaObjList, Collection.class, associationName );

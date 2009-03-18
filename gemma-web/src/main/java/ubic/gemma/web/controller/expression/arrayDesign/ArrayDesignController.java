@@ -192,7 +192,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
         }
 
-        return startJob( new RemoveArrayJob( arrayDesign, arrayDesignService ) );
+        return startJob( new RemoveArrayJob( arrayDesign ) );
 
     }
 
@@ -351,10 +351,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
-            return startJob( new GenerateSummary( request, arrayDesignReportService ) );
+            return startJob( new GenerateSummary() );
         }
         Long id = Long.parseLong( sId );
-        return startJob( new GenerateSummary( request, arrayDesignReportService, id ) );
+        return startJob( new GenerateSummary( id ) );
     }
 
     /**
@@ -421,7 +421,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             throw new IllegalArgumentException( "Cannot delete " + arrayDesign
                     + ", it is used by an expression experiment" );
         }
-        return ( String ) startJob( new RemoveArrayJob( arrayDesign, arrayDesignService ) ).getModel().get( "taskId" );
+        return ( String ) startJob( new RemoveArrayJob( arrayDesign ) ).getModel().get( "taskId" );
     }
 
     /**
@@ -633,7 +633,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param showOrphans
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<ArrayDesignValueObject> getArrayDesigns( Collection<Long> arrayDesignIds, boolean showMergees,
             boolean showOrphans ) {
         List<ArrayDesignValueObject> valueObjects = new ArrayList<ArrayDesignValueObject>();
@@ -730,7 +729,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return the taskid
      */
     public String updateReport( EntityDelegator ed ) {
-        GenerateSummary runner = new GenerateSummary( null, arrayDesignReportService, ed.getId() );
+        GenerateSummary runner = new GenerateSummary( ed.getId() );
         runner.setDoForward( false );
         return ( String ) super.startJob( runner ).getModel().get( "taskId" );
     }
@@ -770,18 +769,16 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
 
-        private ArrayDesignReportService arrayDesignReportService;
         private Long id;
 
-        public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService ) {
+        public GenerateSummary() {
             super( getMessageUtil() );
-            this.arrayDesignReportService = arrayDesignReportService;
+
             id = null;
         }
 
-        public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService, Long id ) {
+        public GenerateSummary( Long id ) {
             super( getMessageUtil() );
-            this.arrayDesignReportService = arrayDesignReportService;
             this.id = id;
         }
 
@@ -814,12 +811,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     class RemoveArrayJob extends BackgroundControllerJob<ModelAndView> {
 
-        private ArrayDesignService arrayDesignService;
         private ArrayDesign ad;
 
-        public RemoveArrayJob( ArrayDesign ad, ArrayDesignService arrayDesignService ) {
+        public RemoveArrayJob( ArrayDesign ad ) {
             super( getMessageUtil() );
-            this.arrayDesignService = arrayDesignService;
             this.ad = ad;
         }
 
