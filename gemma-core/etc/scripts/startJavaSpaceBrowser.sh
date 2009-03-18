@@ -8,7 +8,8 @@
 # GEMMA_LIB is only used here, so it can be defined here if you prefer not to put it in your profile.
 # GEMMA_LIB="/spacef/grp/lib/Gemma"
 
-if [[! -f "$JSHOMEDIR/logs/gigaspacesBrowserConsole.log"]]; then
+if [ ! -f "$JSHOMEDIR/logs/gigaspacesBrowserConsole.log" ];
+then
 	echo "$JSHOMEDIR/logs/gigaspacesBrowserConsole.log does not exist.  Creating it."
 	touch $JSHOMEDIR/logs/gigaspacesBrowserConsole.log
 fi
