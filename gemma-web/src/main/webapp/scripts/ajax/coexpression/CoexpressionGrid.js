@@ -88,9 +88,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										hidden : true,
 										dataIndex : "queryGene",
 										tooltip : "Query Gene",
-										renderer : function(value, metadata, record, row, col, ds) {
-											return value.officialSymbol;
-										},
+										renderer : this.queryGeneStyler.createDelegate(this) ,
 										sortable : true
 									}, {
 										id : 'details',
@@ -290,6 +288,15 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				return this.foundGeneTemplate.apply(g);
 			},
 
+			queryGeneStyler : function(value, metadata, record, row, col, ds) {
+
+				var g = record.data.queryGene;
+
+				if (g.officialName === null) {
+					g.officialName = "";
+				}
+				return this.foundGeneTemplate.apply(g);
+			},
 			bitImageStyler : function(value, metadata, record, row, col, ds) {
 				var bits = record.data.datasetVector;
 				var width = bits.length * Gemma.CoexpressionGrid.bitImageBarWidth;
