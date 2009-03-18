@@ -89,7 +89,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										dataIndex : "gene",
 										header : "Query Gene",
 										renderer : function(value, metadata, record, row, col, ds) {
-											return value.officialSymbol;
+											return String.format("<a href='/Gemma/gene/showGene.html?id={0}' ext:qtip='{1}'> {2} </a> ", value.id, value.officialName, value.officialSymbol); 
 										},
 										sortable : false
 									}, {

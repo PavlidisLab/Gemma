@@ -37,10 +37,10 @@ Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					});
 		}
 
-		var fields = [{
-					name : 'sort',
+		var fields = [
+			{	name : 'sort',
 					type : 'int'
-				}, {
+				},	{
 					name : 'group',
 					type : 'string'
 				}, {
@@ -50,7 +50,7 @@ Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		for (var i = 0; i < this.genes.length; ++i) {
 			fields.push({
 						name : this.genes[i].officialSymbol,
-						type : 'int'
+						type : 'string'
 					});
 		}
 
@@ -79,6 +79,7 @@ Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	transformData : function(genes, summary) {
 
+		
 		var datasetsAvailable = [0, "Datasets",
 				"<span ext:qtip='How many data sets met your criteria'>Available</span>"];
 		var datasetsTested = [1, "Datasets",
@@ -92,6 +93,9 @@ Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		var linksNegative = [4, "Links",
 				"<span ext:qtip='How many genes were considered negatively correlated with the query'>Met stringency (-)</span>"];
 
+ 		var geneDetails = [5, "Query Gene", "Details"];
+
+				
 		for (var i = 0; i < genes.length; ++i) {
 			var thisSummary = summary[genes[i].officialSymbol] || {};
 			datasetsAvailable.push(thisSummary.datasetsAvailable);
@@ -99,9 +103,10 @@ Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			linksFound.push(thisSummary.linksFound);
 			linksPositive.push(thisSummary.linksMetPositiveStringency);
 			linksNegative.push(thisSummary.linksMetNegativeStringency);
+			geneDetails.push( String.format("<a href='/Gemma/gene/showGene.html?id={0}' ext:qtip='{1}'> {2} </a> ", genes[i].id, genes[i].officialName, genes[i].officialSymbol));
 		}
 
-		return [datasetsAvailable, datasetsTested, linksFound, linksPositive, linksNegative];
+		return [datasetsAvailable, datasetsTested, linksFound, linksPositive, linksNegative, geneDetails];
 	}
 
 });
