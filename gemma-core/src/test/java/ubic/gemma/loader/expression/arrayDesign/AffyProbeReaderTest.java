@@ -93,8 +93,7 @@ public class AffyProbeReaderTest extends TestCase {
 
         assertTrue( "InputStream was null", is != null );
 
-        is = AffyProbeReaderTest.class
-                .getResourceAsStream( "/data/loader/expression/arrayDesign/HuEx-1_0-sample-probe.tab" );
+        is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/expression/arrayDesign/HuExSampleProbe.txt" );
 
         apr.parse( is );
 
