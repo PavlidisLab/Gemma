@@ -91,9 +91,10 @@ public class AffyProbeReaderTest extends TestCase {
      */
     public final void testReadExonArrayInputStream() throws Exception {
 
-        assertTrue( "InputStream was null", is != null );
 
         is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/expression/arrayDesign/HuExSampleProbe.txt" );
+
+        assertTrue( "InputStream was null", is != null );
 
         apr.parse( is );
 
