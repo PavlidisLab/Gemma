@@ -224,7 +224,7 @@ public class MageMLConverterHelper {
      * One of many ways to figure out how the heck samples are related to bioassays. Key is identifier for the
      * 'bioassaymaptarget' (that is, a bioassay)
      */
-    // Map<String, Collection<BioAssay>> bioAssayMap = new HashMap<String, Collection<BioAssay>>();
+    Map<String, Collection<BioAssay>> bioAssayMap = new HashMap<String, Collection<BioAssay>>();
     Map<org.biomage.Experiment.FactorValue, MeasuredBioAssay> factors2MeasuredBioAssays = new HashMap<org.biomage.Experiment.FactorValue, MeasuredBioAssay>();
 
     Map<String, FactorValue> fvMap = new HashMap<String, FactorValue>();
@@ -236,7 +236,8 @@ public class MageMLConverterHelper {
      * biosource <- <- <- <- <- physicalbioassay -> treatment -> target -> physicalbioassay <- measuredbioassay <-
      * derivedbioassay (no, I'm not making that up)
      */
-    // Map<String, PhysicalBioAssay> physicalBioAssay2physicalBioAssay = new HashMap<String, PhysicalBioAssay>();
+    Map<String, PhysicalBioAssay> physicalBioAssay2physicalBioAssay = new HashMap<String, PhysicalBioAssay>();
+
     /**
      * Stores the dimension information for the bioassays
      */
@@ -636,9 +637,6 @@ public class MageMLConverterHelper {
 
         Collection<BioAssay> bioAssayList = bad.getBioAssays();
 
-        /*
-         * Derived > Measured > Physical
-         */
         for ( BioAssay sample : bioAssayList ) {
             ubic.gemma.model.expression.bioAssay.BioAssay resultBioAssay;
 
@@ -672,19 +670,17 @@ public class MageMLConverterHelper {
         return resultBioAssayDimension;
     }
 
-    //
-    // /**
-    // * @param map
-    // */
-    // public void convertBioAssayMap( BioAssayMap map ) {
-    // String identifier = map.getBioAssayMapTarget().getIdentifier();
-    // if ( !bioAssayMap.containsKey( identifier ) ) {
-    // bioAssayMap.put( identifier, new HashSet<BioAssay>() );
-    // }
-    //
-    // bioAssayMap.get( identifier ).addAll( map.getSourceBioAssays() );
-    //
-    // }
+    /**
+     * @param map
+     */
+    public void convertBioAssayMap( BioAssayMap map ) {
+        String identifier = map.getBioAssayMapTarget().getIdentifier();
+        if ( !bioAssayMap.containsKey( identifier ) ) {
+            bioAssayMap.put( identifier, new HashSet<BioAssay>() );
+        }
+        bioAssayMap.get( identifier ).addAll( map.getSourceBioAssays() );
+
+    }
 
     /**
      * Note that LabeledExtracts are where we get the BioMaterial information from (directly). Information from other
@@ -1252,13 +1248,6 @@ public class MageMLConverterHelper {
         if ( mageObj == null ) return null;
 
         ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
-        //
-        // if ( sdrf != null && sdrf.containsKey( mageObj.getName() ) ) {
-        // /*
-        // * AHA this is one we want.
-        // */
-        // log.info( "Keeper: " + mageObj.getIdentifier() );
-        // }
 
         /*
          * Fill in the biomaterials, because this is only linked to the 'MeasuredBioAssay'...sometimes (varies)
@@ -1267,14 +1256,14 @@ public class MageMLConverterHelper {
         Collection<BioAssay> bioAssays = null;
         if ( map.size() == 0 ) {
 
-            // /*
-            // * Alternative route. If we add this we get extra bioassays with biomaterials, but it doesn't help.
-            // */
-            // if ( this.bioAssayMap.containsKey( mageObj.getIdentifier() ) ) {
-            // bioAssays = bioAssayMap.get( mageObj.getIdentifier() );
-            // } else {
-            // log.debug( "No derivedbioassaymap" );
-            // }
+            /*
+             * Alternative route. If we add this we get extra bioassays with biomaterials, but it doesn't help.
+             */
+            if ( this.bioAssayMap.containsKey( mageObj.getIdentifier() ) ) {
+                bioAssays = bioAssayMap.get( mageObj.getIdentifier() );
+            } else {
+                log.debug( "No derivedbioassaymap" );
+            }
 
         } else {
             BioAssayMap dbap = ( BioAssayMap ) map.get( 0 );
@@ -1349,6 +1338,10 @@ public class MageMLConverterHelper {
                         log.debug( "Filling in " + gemmaObj + " with data from "
                                 + physicalBioAssaySource.getIdentifier() );
                     specialConvertAssociationsForPhysicalBioAssay( physicalBioAssaySource, gemmaObj );
+                }
+
+                for ( BioMaterial bm : gemmaObj.getSamplesUsed() ) {
+                    bm.getFactorValues().add( factorValue );
                 }
 
                 bioAssayFactors.get( gemmaObj.getName() ).add( factorValue );
@@ -1545,8 +1538,10 @@ public class MageMLConverterHelper {
             if ( ( ( List ) associatedObject ).size() > 0 && log.isDebugEnabled() ) {
                 log.debug( "Converting Experiment-->BioAssays" );
             }
-            log.info( "Adding bioassays!" );
+
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+
+            log.info( "Added " + gemmaObj.getBioAssays().size() + " bioassays via direct association" );
         } else if ( associationName.equals( "Providers" ) ) {
             assert associatedObject instanceof List;
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "Provider" );
@@ -1914,9 +1909,9 @@ public class MageMLConverterHelper {
         if ( mageObj == null ) return null;
 
         ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
-
-        specialConvertAssociationsForPhysicalBioAssay( mageObj.getFeatureExtraction().getPhysicalBioAssaySource(),
-                result );
+        //
+        // specialConvertAssociationsForPhysicalBioAssay( mageObj.getFeatureExtraction().getPhysicalBioAssaySource(),
+        // result );
 
         /*
          * This is actually okay, sometimes. Later we check that we got bioassays with biomaterials associated.
@@ -1926,7 +1921,8 @@ public class MageMLConverterHelper {
         }
 
         convertAssociations( mageObj, result );
-        return result;
+        // return result;
+        return null;
 
     }
 
@@ -2278,13 +2274,10 @@ public class MageMLConverterHelper {
      */
     public Object convertPhysicalArrayDesign( org.biomage.ArrayDesign.PhysicalArrayDesign mageObj ) {
         if ( mageObj == null ) return null;
-        /*
-         * These can be hard to tell from the 'correct' bioassays. We get better results without looking at them.
-         */
-        // ubic.gemma.model.expression.arrayDesign.ArrayDesign result = convertArrayDesign( mageObj );
-        // convertAssociations( mageObj, result );
-        // return result;
-        return null;
+        ubic.gemma.model.expression.arrayDesign.ArrayDesign result = convertArrayDesign( mageObj );
+        convertAssociations( mageObj, result );
+        return result;
+
     }
 
     /**
@@ -2321,10 +2314,10 @@ public class MageMLConverterHelper {
     public ubic.gemma.model.expression.bioAssay.BioAssay convertPhysicalBioAssay( PhysicalBioAssay mageObj ) {
         if ( mageObj == null ) return null;
         ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
-        // specialConvertAssociationsForPhysicalBioAssay( mageObj, result );
         convertAssociations( mageObj, result );
-        // return result;
         return null;
+
+        // return result;
     }
 
     /**
@@ -2343,12 +2336,12 @@ public class MageMLConverterHelper {
             specialConvertAssociationsForPhysicalBioAssay( mageObj, gemmaObj );
         } else if ( associationName.equals( "BioAssayTreatments" ) ) {
 
-            // for ( Object o : mageObj.getBioAssayTreatments() ) {
-            // BioAssayTreatment t = ( BioAssayTreatment ) o;
-            // PhysicalBioAssay targetPBA = t.getTarget();
-            // // physicalBioAssay2physicalBioAssay.put( targetPBA.getIdentifier(), mageObj );
-            // specialConvertAssociationsForPhysicalBioAssay( targetPBA, gemmaObj );
-            // }
+            for ( Object o : mageObj.getBioAssayTreatments() ) {
+                BioAssayTreatment t = ( BioAssayTreatment ) o;
+                PhysicalBioAssay targetPBA = t.getTarget();
+                physicalBioAssay2physicalBioAssay.put( targetPBA.getIdentifier(), mageObj );
+                // specialConvertAssociationsForPhysicalBioAssay( targetPBA, gemmaObj );
+            }
             // assert associatedObject instanceof List;
             // this is not supported in our data model currently.
         } else if ( associationName.equals( "PhysicalBioAssayData" ) ) {
@@ -2951,10 +2944,6 @@ public class MageMLConverterHelper {
     public Collection<String> getTopLevelBioAssayIdentifiers() {
         return topLevelBioAssayIdentifiers;
     }
-
-    // public void setSdrf( SampleAndDataRelationshipParser sdrf ) {
-    // this.sdrf = sdrf;
-    // }
 
     /**
      * Special case: Convert a ReporterCompositeMaps (list) to a Collection of Reporters.
@@ -3814,28 +3803,28 @@ public class MageMLConverterHelper {
          * Nice idea but doesn't work well in practice.
          */
 
-        // if ( biomaterials.size() == 0 ) { // check to avoid endless loops.
-        // /*
-        // * ANOTHER route to the biosource
-        // */
-        // if ( physicalBioAssay2physicalBioAssay.containsKey( mageObj.getIdentifier() )
-        // && result.getSamplesUsed().size() == 0 ) {
-        // PhysicalBioAssay sourceBioAssay = physicalBioAssay2physicalBioAssay.get( mageObj.getIdentifier() );
-        // specialConvertAssociationsForPhysicalBioAssay( sourceBioAssay, result );
-        // } else {
-        //
-        // /*
-        // * ANOTHER way to the biosource
-        // */
-        // for ( Object o : mageObj.getBioAssayTreatments() ) {
-        // BioAssayTreatment t = ( BioAssayTreatment ) o;
-        // PhysicalBioAssay pb = t.getTarget();
-        // if ( result.getSamplesUsed().size() == 0 ) {
-        // specialConvertAssociationsForPhysicalBioAssay( pb, result );
-        // }
-        // }
-        // }
-        // }
+        if ( biomaterials.size() == 0 ) { // check to avoid endless loops.
+            /*
+             * ANOTHER route to the biosource
+             */
+            if ( physicalBioAssay2physicalBioAssay.containsKey( mageObj.getIdentifier() )
+                    && result.getSamplesUsed().size() == 0 ) {
+                PhysicalBioAssay sourceBioAssay = physicalBioAssay2physicalBioAssay.get( mageObj.getIdentifier() );
+                specialConvertAssociationsForPhysicalBioAssay( sourceBioAssay, result );
+            } else {
+
+                /*
+                 * ANOTHER way to the biosource
+                 */
+                for ( Object o : mageObj.getBioAssayTreatments() ) {
+                    BioAssayTreatment t = ( BioAssayTreatment ) o;
+                    PhysicalBioAssay pb = t.getTarget();
+                    if ( result.getSamplesUsed().size() == 0 ) {
+                        specialConvertAssociationsForPhysicalBioAssay( pb, result );
+                    }
+                }
+            }
+        }
         /*
          * Add the biomaterials to the bioassay.
          */

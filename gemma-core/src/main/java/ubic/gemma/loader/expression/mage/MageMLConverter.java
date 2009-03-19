@@ -25,6 +25,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.biomage.BioAssay.PhysicalBioAssay;
+import org.biomage.BioAssayData.BioAssayDimension;
+import org.biomage.BioAssayData.BioAssayMap;
+
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -75,6 +79,12 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
             convertedResult.clear();
         }
 
+        Class[] preConvert = new Class[] { BioAssayMap.class, PhysicalBioAssay.class };
+
+        for ( Class clazz : preConvert ) {
+            processMGEDClass( objects, clazz );
+        }
+
         // this is a little inefficient because it tries every possible package and class. - fix is to get just
         // the mage
         // packages!
@@ -86,13 +96,10 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
 
             for ( int j = 0; j < mageClasses.length; j++ ) {
                 try {
-                    Class c = Class.forName( name + "." + mageClasses[j] );
-                    Collection<Object> convertedObjects = getConvertedDataForType( c, objects );
-                    if ( convertedObjects != null && convertedObjects.size() > 0 ) {
-                        log.info( "Adding " + convertedObjects.size() + " converted " + name + "." + mageClasses[j]
-                                + "s" );
-                        convertedResult.addAll( convertedObjects );
-                    }
+                    String className = name + "." + mageClasses[j];
+                    Class c = Class.forName( className );
+
+                    Collection<Object> convertedObjects = processMGEDClass( objects, c );
                 } catch ( ClassNotFoundException ignored ) {
                 }
             }
@@ -106,6 +113,17 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
 
         this.isConverted = true;
         return convertedResult;
+    }
+
+    private Collection<Object> processMGEDClass( Collection objects, Class c ) {
+        Collection<Object> convertedObjects = getConvertedDataForType( c, objects );
+        if ( convertedObjects != null && convertedObjects.size() > 0 ) {
+            log.info( "Adding " + convertedObjects.size() + " converted " + c.getName() + "s" );
+            convertedResult.addAll( convertedObjects );
+        } else {
+            log.debug( "Converted " + objects.size() + " " + c.getName() + "s" );
+        }
+        return convertedObjects;
     }
 
     //

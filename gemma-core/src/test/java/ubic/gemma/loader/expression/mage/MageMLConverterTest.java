@@ -129,85 +129,86 @@ public class MageMLConverterTest extends AbstractMageTest {
 
     /**
      * This test is NOT redundant with the others one, because it has a different MAGE-ML format -- it exercises a
-     * variant path to populating the objects. E-HGMP-2, has 32 samples.
+     * variant path to populating the objects. E-MEXP-268, 8 samples
      * 
      * @throws Exception
      */
-    // @SuppressWarnings("null")
-    // public final void testConvert2() throws Exception {
-    // /* invoke mageMLParser */
-    // InputStream istMageExamples = MageMLConverterTest.class
-    // .getResourceAsStream( MAGE_DATA_RESOURCE_PATH
-    // + "HeCESbilaterals__intra-individual_differences_between_asymptomatic_and_symptomatic_carotid_plaques.part.xml"
-    // );
-    //
-    // assert mageMLParser != null;
-    //
-    // mageMLParser.parse( istMageExamples );
-    //
-    // /* get results from parsing step */
-    // log.info( "Tally:\n" + mageMLParser );
-    // Collection<Object> mageObjects = mageMLParser.getResults();
-    // log.debug( "number of SDOs: " + mageObjects.size() );
-    //
-    // istMageExamples.close();
-    //
-    // ExpressionExperiment expressionExperiment = null;
-    // Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
-    // log.debug( "number of GDOs: " + gemmaObjects.size() );
-    //
-    // int numExpExp = 0;
-    // for ( Object obj : gemmaObjects ) {
-    // if ( obj instanceof ExpressionExperiment ) {
-    // expressionExperiment = ( ExpressionExperiment ) obj;
-    // numExpExp++;
-    // }
-    // if ( log.isDebugEnabled() ) {
-    // log.debug( obj.getClass() + ": " + obj );
-    // }
-    // }
-    //
-    // assertNotNull( expressionExperiment );
-    // assertEquals( 1, numExpExp );
-    // assertEquals( 32, expressionExperiment.getBioAssays().size() );
-    // assertNotNull( expressionExperiment.getSource() );
-    // assertNotNull( expressionExperiment.getAccession() );
-    //
-    // /*
-    // * One factor, two factor values.
-    // */
-    // for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-    // assertTrue( "Got: " + ba.getName(), ba.getName().contains( "HeCES" ) );
-    // assertEquals( 1, ba.getSamplesUsed().size() );
-    // for ( BioMaterial bm : ba.getSamplesUsed() ) {
-    // assertEquals( 1, bm.getBioAssaysUsedIn().size() );
-    // assertEquals( 1, bm.getFactorValues().size() );
-    // }
-    // }
-    //
-    // /*
-    // * This study has one factor, diagnosis, with two factor values, each of which has two characteristics
-    // */
-    // assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
-    //
-    // for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
-    // assertEquals( 2, factor.getFactorValues().size() );
-    // for ( FactorValue fv : factor.getFactorValues() ) {
-    // assertEquals( 2, fv.getCharacteristics().size() );
-    // for ( Characteristic c : fv.getCharacteristics() ) {
-    // assertNotNull( c.getValue() );
-    // assertTrue( c.getCategory().startsWith( "Disease" ) ); // state or staging.
-    // }
-    //
-    // }
-    // }
-    //
-    // }
+    @SuppressWarnings("null")
+    public final void testConvert2() throws Exception {
+        /* invoke mageMLParser */
+        InputStream istMageExamples = MageMLConverterTest.class
+                .getResourceAsStream( MAGE_DATA_RESOURCE_PATH
+                        + "HeCESbilaterals__intra-individual_differences_between_asymptomatic_and_symptomatic_carotid_plaques.part.xml" );
+
+        assert mageMLParser != null;
+
+        mageMLParser.parse( istMageExamples );
+
+        /* get results from parsing step */
+        log.info( "Tally:\n" + mageMLParser );
+        Collection<Object> mageObjects = mageMLParser.getResults();
+        log.debug( "number of SDOs: " + mageObjects.size() );
+
+        istMageExamples.close();
+
+        ExpressionExperiment expressionExperiment = null;
+        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        log.debug( "number of GDOs: " + gemmaObjects.size() );
+
+        int numExpExp = 0;
+        for ( Object obj : gemmaObjects ) {
+            if ( obj instanceof ExpressionExperiment ) {
+                expressionExperiment = ( ExpressionExperiment ) obj;
+                numExpExp++;
+            }
+            if ( log.isDebugEnabled() ) {
+                log.debug( obj.getClass() + ": " + obj );
+            }
+        }
+
+        assertNotNull( expressionExperiment );
+        assertEquals( 1, numExpExp );
+        assertEquals( 8, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
+
+        /*
+         * One factor, two factor values.
+         */
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            assertTrue( "Got: " + ba.getName(), ba.getName().contains( "DBA" ) );
+            assertEquals( 1, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertEquals( 1, bm.getBioAssaysUsedIn().size() );
+                assertEquals( 1, bm.getFactorValues().size() );
+            }
+        }
+
+        /*
+         * This study has one factor, diagnosis, with two factor values, each of which has two characteristics
+         */
+        assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+
+        for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+            assertEquals( 2, factor.getFactorValues().size() );
+            for ( FactorValue fv : factor.getFactorValues() ) {
+                assertEquals( 2, fv.getCharacteristics().size() );
+                for ( Characteristic c : fv.getCharacteristics() ) {
+                    assertNotNull( c.getValue() );
+                    assertTrue( c.getCategory().startsWith( "Disease" ) ); // state or staging.
+                }
+
+            }
+        }
+    }
+
     // /**
-    // * Yet another case that breaks our parser -- biomaterials not associated. There are four DerivedBioAssays
-    // * associated with each DerivedBioAssay, etc. E-MEXP-297
+    // * Yet another case that breaks our parser. There are four DerivedBioAssays associated with each DerivedBioAssay,
+    // * etc. E-MEXP-297, 28 samples (we end up with >30 found)
     // * <p>
-    // * OK, I confess I have no idea how we would be able to parse this correctly
+    // * OK, I confess I have no idea how we would be able to parse this correctly. There are some very odd/complex
+    // things
+    // * about this study.
     // *
     // * @throws Exception
     // */
@@ -229,12 +230,6 @@ public class MageMLConverterTest extends AbstractMageTest {
     // istMageExamples.close();
     //
     // ExpressionExperiment expressionExperiment = null;
-    // //
-    // // SampleAndDataRelationshipParser sdrfParser = new SampleAndDataRelationshipParser();
-    // // InputStream sdrfis = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
-    // // + "E-MEXP-297.sdrf.txt" );
-    // // sdrfParser.parse( sdrfis );
-    // // mageMLConverter.setSdrf( sdrfParser );
     //
     // Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
     // log.debug( "number of GDOs: " + gemmaObjects.size() );
@@ -255,38 +250,31 @@ public class MageMLConverterTest extends AbstractMageTest {
     // assertEquals( 28, expressionExperiment.getBioAssays().size() );
     // assertNotNull( expressionExperiment.getSource() );
     // assertNotNull( expressionExperiment.getAccession() );
-    // //
-    // // /*
-    // // * One factor, two factor values.
-    // // */
-    // // for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-    // // assertTrue( "Got: " + ba.getName(), ba.getName().contains( "HeCES" ) );
-    // // assertEquals( 1, ba.getSamplesUsed().size() );
-    // // for ( BioMaterial bm : ba.getSamplesUsed() ) {
-    // // assertEquals( 1, bm.getBioAssaysUsedIn().size() );
-    // // assertEquals( 1, bm.getFactorValues().size() );
-    // // }
-    // // }
-    // //
-    // // /*
-    // // * This study has one factor, diagnosis, with two factor values, each of which has two characteristics
-    // // */
-    // // assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
-    // //
-    // // for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
-    // // assertEquals( 2, factor.getFactorValues().size() );
-    // // for ( FactorValue fv : factor.getFactorValues() ) {
-    // // assertEquals( 2, fv.getCharacteristics().size() );
-    // // for ( Characteristic c : fv.getCharacteristics() ) {
-    // // assertNotNull( c.getValue() );
-    // // assertTrue( c.getCategory().startsWith( "Disease" ) ); // state or staging.
-    // // }
-    // // }
-    // // }
+    //
+    // for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+    // assertTrue( "Got: " + ba.getName(), ba.getName().contains( "DBA" ) );
+    // assertEquals( 2, ba.getSamplesUsed().size() );
+    // for ( BioMaterial bm : ba.getSamplesUsed() ) {
+    // assertEquals( 3, bm.getFactorValues().size() );
+    // }
+    // }
+    //
+    // assertEquals( 3, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+    //
+    // for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+    // assertEquals( 2, factor.getFactorValues().size() );
+    // for ( FactorValue fv : factor.getFactorValues() ) {
+    // assertEquals( 2, fv.getCharacteristics().size() );
+    // for ( Characteristic c : fv.getCharacteristics() ) {
+    // assertNotNull( c.getValue() );
+    // }
+    // }
+    // }
     //
     // }
+
     /**
-     * This dataset has factors but not associated with any of the samples. E-NCMF-4
+     * This dataset has factors but not associated with any of the samples? E-NCMF-4
      * 
      * @throws Exception
      */
@@ -308,12 +296,6 @@ public class MageMLConverterTest extends AbstractMageTest {
         istMageExamples.close();
 
         ExpressionExperiment expressionExperiment = null;
-
-        // SampleAndDataRelationshipParser sdrfParser = new SampleAndDataRelationshipParser();
-        // InputStream sdrfis = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
-        // + "E-NCMF-4.sdrf.txt" );
-        // sdrfParser.parse( sdrfis );
-        // mageMLConverter.setSdrf( sdrfParser );
 
         Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
         log.debug( "number of GDOs: " + gemmaObjects.size() );
@@ -337,50 +319,76 @@ public class MageMLConverterTest extends AbstractMageTest {
 
     }
 
-    // /**
-    // * Yet another variant in the bioassay->biomaterial association, E-CBIL-22
-    // *
-    // * @throws Exception
-    // */
-    // @SuppressWarnings("null")
-    // public final void testConvert5() throws Exception {
-    // /* invoke mageMLParser */
-    // InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
-    // + "E-CBIL-22-PGC1alphaKO_2380_part.xml" );
-    //
-    // assert mageMLParser != null;
-    //
-    // mageMLParser.parse( istMageExamples );
-    //
-    // /* get results from parsing step */
-    // log.info( "Tally:\n" + mageMLParser );
-    // Collection<Object> mageObjects = mageMLParser.getResults();
-    // log.debug( "number of SDOs: " + mageObjects.size() );
-    //
-    // istMageExamples.close();
-    //
-    // ExpressionExperiment expressionExperiment = null;
-    // Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
-    // log.debug( "number of GDOs: " + gemmaObjects.size() );
-    //
-    // int numExpExp = 0;
-    // for ( Object obj : gemmaObjects ) {
-    // if ( obj instanceof ExpressionExperiment ) {
-    // expressionExperiment = ( ExpressionExperiment ) obj;
-    // numExpExp++;
-    // }
-    // if ( log.isDebugEnabled() ) {
-    // log.debug( obj.getClass() + ": " + obj );
-    // }
-    // }
-    //
-    // assertNotNull( expressionExperiment );
-    // assertEquals( 1, numExpExp );
-    // assertEquals( 21, expressionExperiment.getBioAssays().size() );
-    // assertNotNull( expressionExperiment.getSource() );
-    // assertNotNull( expressionExperiment.getAccession() );
-    //
-    // }
+    /**
+     * Yet another variant in the bioassay->biomaterial association, E-CBIL-22, 21 samples
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("null")
+    public final void testConvert5() throws Exception {
+        /* invoke mageMLParser */
+        InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
+                + "E-CBIL-22-PGC1alphaKO_2380_part.xml" );
+
+        assert mageMLParser != null;
+
+        mageMLParser.parse( istMageExamples );
+
+        /* get results from parsing step */
+        log.info( "Tally:\n" + mageMLParser );
+        Collection<Object> mageObjects = mageMLParser.getResults();
+        log.debug( "number of SDOs: " + mageObjects.size() );
+
+        istMageExamples.close();
+
+        ExpressionExperiment expressionExperiment = null;
+        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        log.debug( "number of GDOs: " + gemmaObjects.size() );
+
+        int numExpExp = 0;
+        for ( Object obj : gemmaObjects ) {
+            if ( obj instanceof ExpressionExperiment ) {
+                expressionExperiment = ( ExpressionExperiment ) obj;
+                numExpExp++;
+            }
+            if ( log.isDebugEnabled() ) {
+                log.debug( obj.getClass() + ": " + obj );
+            }
+        }
+
+        assertNotNull( expressionExperiment );
+        assertEquals( 1, numExpExp );
+        assertEquals( 21, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
+        /*
+         * 3 factors
+         */
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            assertTrue( "Got: " + ba.getName(), ba.getName().contains( "RAD" ) );
+            assertEquals( 1, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertEquals( 1, bm.getBioAssaysUsedIn().size() );
+                assertEquals( 3, bm.getFactorValues().size() );
+            }
+        }
+
+        /*
+         *  
+         */
+        assertEquals( 3, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+
+        for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+            assertEquals( 2, factor.getFactorValues().size() );
+            for ( FactorValue fv : factor.getFactorValues() ) {
+                assertEquals( 1, fv.getCharacteristics().size() );
+                for ( Characteristic c : fv.getCharacteristics() ) {
+                    assertNotNull( c.getValue() );
+                }
+
+            }
+        }
+    }
 
     public void testConvertCollection() throws Exception {
 
