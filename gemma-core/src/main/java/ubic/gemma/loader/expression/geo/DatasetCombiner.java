@@ -233,9 +233,16 @@ public class DatasetCombiner {
                      * In case NCBI is alive, but busted, html is returned but with an error.
                      */
                     if ( errorMat.find() ) {
-                        // throw new IOException( "Error from NCBI: " + line );
-                        // until we know what errors look like.
-                        log.error( "Error from NCBI? '" + line + "'" );
+
+                        /*
+                         * 'console.error' seems to be benign text in the page's js.
+                         */
+                        if ( !line.contains( "console.error" ) ) {
+                            // throw new IOException( "Error from NCBI: " + line );
+                            // until we know what errors look like.
+                            log.error( "Error from NCBI while fetching GDS? '" + line + "'" );
+                        }
+
                     }
                 }
             }
