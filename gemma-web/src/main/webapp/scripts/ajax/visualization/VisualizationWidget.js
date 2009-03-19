@@ -377,7 +377,7 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 
 					displayWindow : function(eevo, profiles) {
 
-						this.setTitle("<a href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +eevo.id+ " '> " + eevo.shortName + "</a>: "  +eevo.name);
+						this.setTitle("<a   target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +eevo.id+ " '> " + eevo.shortName + "</a>: "  +eevo.name);
 
 						if (!this.isVisible()) {
 							this.setVisible(true);
@@ -401,11 +401,11 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	displayWindow : function(eeIds, queryGene, coexpressedGene) {
 					
 		
-			var downloadDedvLink =  String.format("<a ext:qtip='Download coexpression data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > [download raw data]</a>",
+		this.setTitle("Visualization of query gene: <a   target='_blank' ext:qtip=' "+ queryGene.officialName+ " ' href='/Gemma/gene/showGene.html?id=" + queryGene.id + "'> " + queryGene.officialSymbol
+		+ "</a> with coexpressed gene <a  target='_blank' ext:qtip=' "+ coexpressedGene.officialName+ " ' href='/Gemma/gene/showGene.html?id=" + coexpressedGene.id + "'> " + coexpressedGene.officialSymbol + "</a>"	 );
+
+		var downloadDedvLink =  String.format("<a ext:qtip='Download coexpression data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > [download raw data]</a>",
 				eeIds, queryGene.id, coexpressedGene.id);
-		
-		this.setTitle("Visualization of query gene: " + queryGene.officialSymbol + " with coexpressed gene <b> "
-				+ coexpressedGene.officialSymbol + "</b>    " );
 
 		this.thumbnailPanel.setTitle(queryGene.officialSymbol + " (red) with " + coexpressedGene.officialSymbol
 				+ " (black)  <br>" + downloadDedvLink);
@@ -639,7 +639,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 					displayWindow : function(eevo, profiles) {
 
-						this.setTitle("<a href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +eevo.id+ " '> " + eevo.shortName + "</a>: " + eevo.name);
+						this.setTitle("<a   target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +eevo.id+ " '> " + eevo.shortName + "</a>: " + eevo.name);
 
 						if (!this.isVisible()) {
 							this.setVisible(true);
@@ -662,7 +662,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 	displayWindow : function(eeIds, gene, threshold, factorMap) {
 
-		this.setTitle("Visualization of gene: <a href='/Gemma/gene/showGene.html?id=" + gene.id + "'> " + gene.officialSymbol + "</a>");
+		this.setTitle("Visualization of gene: <a   target='_blank' ext:qtip=' "+ gene.officialSymbol+ " ' href='/Gemma/gene/showGene.html?id=" + gene.id + "'> " + gene.officialName + "</a>");
 
 		var downloadDedvLink =  String.format("<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > [download raw data]</a>",
 				eeIds,gene.id);
