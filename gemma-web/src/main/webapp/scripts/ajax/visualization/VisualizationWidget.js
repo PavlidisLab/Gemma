@@ -664,7 +664,10 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 		this.setTitle("Visualization of gene: <a href='/Gemma/gene/showGene.html?id=" + gene.id + "'> " + gene.officialSymbol + "</a>");
 
-		this.thumbnailPanel.setTitle(gene.officialSymbol);
+		var downloadDedvLink =  String.format("<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > [download raw data]</a>",
+				eeIds,gene.id);
+		
+		this.thumbnailPanel.setTitle(gene.officialSymbol + "<br>" + downloadDedvLink);
 
 		var params = [];
 		params.push(eeIds);
