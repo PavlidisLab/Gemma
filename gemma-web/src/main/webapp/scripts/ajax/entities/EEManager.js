@@ -184,11 +184,13 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						if (btn == 'yes') {
 							var callParams = []
 							callParams.push(id);
+							Ext.getBody().mask();
 							callParams.push({
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
 											k.handleWait(data, true);
 											this.relayEvents(k, ['done']);
+											Ext.getBody().unmask();
 											k.on('done', function(payload) {
 														this.fireEvent('deleted', payload)
 													});
@@ -215,11 +217,13 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						if (btn == 'yes') {
 							var callParams = []
 							callParams.push(id);
+							Ext.getBody().mask();
 							callParams.push({
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
 											k.handleWait(data, true);
 											this.relayEvents(k, ['done']);
+											Ext.getBody().unmask();
 											k.on('done', function(payload) {
 														this.fireEvent('link', payload)
 													});
@@ -246,11 +250,13 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						if (btn == 'yes') {
 							var callParams = []
 							callParams.push(id);
+							Ext.getBody().mask();
 							callParams.push({
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
 											k.handleWait(data, true);
 											this.relayEvents(k, ['done']);
+											Ext.getBody().unmask();
 											k.on('done', function(payload) {
 														this.fireEvent('missingValue', payload)
 													});
@@ -444,11 +450,13 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										handler : function(btn, text) {
 											var callParams = []
 											callParams.push(id);
+											Ext.getBody().mask();
 											callParams.push({
 														callback : function(data) {
 															var k = new Gemma.WaitHandler();
 															k.handleWait(data, true);
 															this.relayEvents(k, ['done']);
+															Ext.getBody().unmask();
 															k.on('done', function(payload) {
 																		this.fireEvent('differential', payload)
 																	});
@@ -510,11 +518,13 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						if (btn == 'yes') {
 							var callParams = []
 							callParams.push(id);
+							Ext.getBody().mask();
 							callParams.push({
 										callback : function(data) {
 											var k = new Gemma.WaitHandler();
 											k.handleWait(data, true);
 											this.relayEvents(k, ['done']);
+											Ext.getBody().unmask();
 											k.on('done', function(payload) {
 														this.fireEvent('processedVector', payload)
 													});
