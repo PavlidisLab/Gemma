@@ -46,8 +46,6 @@ public class AffyProbeReaderTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         apr = new AffyProbeReader();
-        apr.setSequenceField( 5 );
-        is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/affymetrix-probes-test.txt" );
 
     }
 
@@ -91,10 +89,8 @@ public class AffyProbeReaderTest extends TestCase {
      */
     public final void testReadExonArrayInputStream() throws Exception {
 
-
-        is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/expression/arrayDesign/HuExSampleProbe.txt" );
-
-        assertTrue( "InputStream was null", is != null );
+        is = AffyProbeReaderTest.class
+                .getResourceAsStream( "/data/loader/expression/arrayDesign/HuEx-1_0.sample.probe.tab" );
 
         apr.parse( is );
 
@@ -123,8 +119,8 @@ public class AffyProbeReaderTest extends TestCase {
      */
     public final void testReadInputStream() throws Exception {
 
-        assertTrue( "InputStream was null", is != null );
-
+        is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/affymetrix-probes-test.txt" );
+        apr.setSequenceField( 5 );
         apr.parse( is );
 
         String expectedValue = "GCCCCCGTGAGGATGTCACTCAGAT"; // 10
