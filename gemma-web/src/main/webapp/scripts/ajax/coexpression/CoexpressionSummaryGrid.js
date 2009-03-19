@@ -9,7 +9,7 @@ Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	editable : false,
 	title : 'Search Summary',
 	width : 350,
-	height : 250,
+	height : 300,
 	stateful : false,
 
 	// autoExpandColumn : 'key',
@@ -79,7 +79,6 @@ Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	transformData : function(genes, summary) {
 
-		
 		var datasetsAvailable = [0, "Datasets",
 				"<span ext:qtip='How many data sets met your criteria'>Available</span>"];
 		var datasetsTested = [1, "Datasets",

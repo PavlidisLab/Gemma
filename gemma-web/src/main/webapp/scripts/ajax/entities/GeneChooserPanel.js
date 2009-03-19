@@ -47,8 +47,6 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 		header : 'Name',
 		dataIndex : 'officialName',
 		renderer : function(value, metadata, record, row, col, ds) {
-			console.log(value);
-			console.log(record);
 			return String.format("<a href='/Gemma/gene/showGene.html?id={0}'> {1} </a> ", record.data.id, record.data.officialName);
 		}
 	}],
