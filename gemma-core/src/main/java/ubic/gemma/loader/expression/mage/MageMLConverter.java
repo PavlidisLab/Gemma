@@ -51,6 +51,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
     public MageMLConverter() {
         super();
         this.mageConverterHelper = new MageMLConverterHelper();
+
     }
 
     /**
@@ -206,6 +207,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
         }
     }
 
+    /**
+     * 
+     */
     private void cleanupBioAssays() {
         ExpressionExperiment ee = null;
         for ( Object object : convertedResult ) {
@@ -222,13 +226,17 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             if ( topLevelBioAssayIdentifiers.size() > 0 && !topLevelBioAssayIdentifiers.contains( ba.getName() ) ) {
-                log.info( "Removing bioassay with id=" + ba.getName() + ", it is not listed as being 'top level'" );
+                log.info( "Removing bioassay with id=" + ba.getName() + ", it is not listed as being 'top level' (has "
+                        + ba.getSamplesUsed().size() + " samplesUsed)" );
                 toRemove.add( ba );
             } else if ( ba.getSamplesUsed().size() == 0 ) {
                 log.warn( "Removing bioassay with no biomaterials: " + ba );
                 toRemove.add( ba );
             } else {
+
                 // keeper
+                log.info( "keep: " + ba );
+
             }
         }
 
@@ -328,4 +336,5 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
     public Collection<BioAssay> getQuantitationTypeBioAssays() {
         return this.mageConverterHelper.getQuantitationTypeBioAssays();
     }
+
 }
