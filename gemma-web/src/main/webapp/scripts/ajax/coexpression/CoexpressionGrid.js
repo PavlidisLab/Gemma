@@ -350,14 +350,16 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				return "<img src='/Gemma/images/icons/magnifier.png' ext:qtip='Show probe-level details' />";
 			},
 
-			downloadDedv : function(value, metadata, record, row, col, ds) {
+			//Creates a link for downloading raw dedv's data in tab delimted format
+			//currently not used as same function in visulazation widget
+			downloadDedvStyler : function(value, metadata, record, row, col, ds) {
 
 				var queryGene = record.data.queryGene;
 				var foundGene = record.data.foundGene;
-
+				
 				var activeExperimentsString = "";
 				var activeExperimentsSize = record.data.supportingExperiments.size();
-
+				
 				for (var i = 0; i < activeExperimentsSize; i++) {
 					if (i === 0) {
 						activeExperimentsString = record.data.supportingExperiments[i];
@@ -366,11 +368,11 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 								record.data.supportingExperiments[i]);
 					}
 				}
-
-				return String.format(
-						"<a href='javascript: Gemma.CoexpressionGrid.visualize([{0}],[{1},{2}])'> visualize </a> ",
-						activeExperimentsString, queryGene.id, foundGene.id);
-			},
+		
+			return String.format("<a href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > download </a>",
+				activeExperimentsString, queryGene.id, foundGene.id);
+		},
+			
 
 			loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
 				var queryIndex = this.getColumnModel().getIndexById('query');

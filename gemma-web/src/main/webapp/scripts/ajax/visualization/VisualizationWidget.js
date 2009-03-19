@@ -399,13 +399,20 @@ Gemma.VisualizationWindow = Ext.extend(Ext.Window, {
 	},
 
 	displayWindow : function(eeIds, queryGene, coexpressedGene) {
-
+					
+		
+			var downloadDedvLink =  String.format("<a ext:qtip='Download coexpression data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > [download raw data]</a>",
+				eeIds, queryGene.id, coexpressedGene.id);
+		
 		this.setTitle("Visualization of query gene: " + queryGene.officialSymbol + " with coexpressed gene <b> "
-				+ coexpressedGene.officialSymbol + "</b>");
+				+ coexpressedGene.officialSymbol + "</b>    " );
 
 		this.thumbnailPanel.setTitle(queryGene.officialSymbol + " (red) with " + coexpressedGene.officialSymbol
-				+ " (black)");
+				+ " (black)  <br>" + downloadDedvLink);
 
+				
+				
+				
 		var params = [];
 		params.push(eeIds);
 		params.push(queryGene.id);
