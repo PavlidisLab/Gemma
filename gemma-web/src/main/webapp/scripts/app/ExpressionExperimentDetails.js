@@ -127,7 +127,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						minLength : 7,
 						maxLength : 9,
 						allowNegative : false,
-						emptyText : 'Enter pubmed id',
+						emptyText : this.isAdmin|| this.isUser ? 'Enter pubmed id': 'Not Available',
 						width : 100,
 						id : 'pubmed-id-field',
 						enableKeyEvents : true,
@@ -374,7 +374,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		new Gemma.MGEDCombo({});
 
 		var taggerurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').tagger(' + e.id
-				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="add tags" title="add tags"/></a>';
+				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></a>';
 
 		tagView = new Gemma.AnnotationDataView({
 					readParams : [{
