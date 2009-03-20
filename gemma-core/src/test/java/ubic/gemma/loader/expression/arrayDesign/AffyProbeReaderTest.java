@@ -87,6 +87,7 @@ public class AffyProbeReaderTest extends TestCase {
     /*
      * Class under test for Map read(InputStream)
      */
+    @SuppressWarnings("null")
     public final void testReadExonArrayInputStream() throws Exception {
 
         is = AffyProbeReaderTest.class
@@ -94,7 +95,9 @@ public class AffyProbeReaderTest extends TestCase {
 
         apr.parse( is );
 
-        String expectedValue = "CGGTGCTGGGTCAGGGATCGACTGA";
+        // reverse complement of "CGGTGCTGGGTCAGGGATCGACTGA";
+        String expectedValue = "TCAGTCGATCCCTGACCCAGCACCG";
+
         CompositeSequence cs = apr.get( "2315108" );
 
         assertTrue( "CompositeSequence was null", cs != null );

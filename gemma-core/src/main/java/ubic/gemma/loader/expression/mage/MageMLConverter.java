@@ -19,14 +19,17 @@
 package ubic.gemma.loader.expression.mage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.biomage.Array.Array;
+import org.biomage.BioAssay.DerivedBioAssay;
+import org.biomage.BioAssay.MeasuredBioAssay;
 import org.biomage.BioAssay.PhysicalBioAssay;
-import org.biomage.BioAssayData.BioAssayDimension;
 import org.biomage.BioAssayData.BioAssayMap;
 
 import ubic.gemma.loader.util.converter.Converter;
@@ -79,9 +82,11 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
             convertedResult.clear();
         }
 
-        Class[] preConvert = new Class[] { BioAssayMap.class, PhysicalBioAssay.class };
+        Class[] preConvert = new Class[] { BioAssayMap.class, Array.class, DerivedBioAssay.class,
+                MeasuredBioAssay.class, PhysicalBioAssay.class };
+        List<Class> preConvertL = Arrays.asList( preConvert );
 
-        for ( Class clazz : preConvert ) {
+        for ( Class clazz : preConvertL ) {
             processMGEDClass( objects, clazz );
         }
 
@@ -99,7 +104,11 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
                     String className = name + "." + mageClasses[j];
                     Class c = Class.forName( className );
 
-                    Collection<Object> convertedObjects = processMGEDClass( objects, c );
+                    if ( preConvertL.contains( c ) ) {
+                        continue;
+                    }
+
+                    processMGEDClass( objects, c );
                 } catch ( ClassNotFoundException ignored ) {
                 }
             }
@@ -241,7 +250,17 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
 
         Collection<BioAssay> toRemove = new HashSet<BioAssay>();
         Collection<String> topLevelBioAssayIdentifiers = this.mageConverterHelper.getTopLevelBioAssayIdentifiers();
+        Map<String, Collection<org.biomage.BioAssay.BioAssay>> array2BioAssay = this.mageConverterHelper
+                .getArray2BioAssay();
 
+        log.info( array2BioAssay.size() + " assays, in principle" );
+
+        if ( ee.getBioAssays().size() < array2BioAssay.size() ) {
+            throw new IllegalStateException(
+                    "Something went wrong, the experiment has fewer bioassays than arrays used." );
+        }
+
+        Collection<String> usedArrayIds = new HashSet<String>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             if ( topLevelBioAssayIdentifiers.size() > 0 && !topLevelBioAssayIdentifiers.contains( ba.getName() ) ) {
                 log.info( "Removing bioassay with id=" + ba.getName() + ", it is not listed as being 'top level' (has "
@@ -252,8 +271,40 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
                 toRemove.add( ba );
             } else {
 
-                // keeper
-                log.info( "keep: " + ba );
+                boolean keep = ( topLevelBioAssayIdentifiers.size() > 0 && topLevelBioAssayIdentifiers.contains( ba
+                        .getName() ) );
+
+                if ( !keep ) {
+                    for ( String arrayId : array2BioAssay.keySet() ) {
+                        Collection<org.biomage.BioAssay.BioAssay> assay4Array = array2BioAssay.get( arrayId );
+                        assert assay4Array.size() > 0;
+
+                        for ( org.biomage.BioAssay.BioAssay arrayBa : assay4Array ) {
+                            if ( arrayBa.getIdentifier().equals( ba.getName() ) ) {
+
+                                if ( usedArrayIds.contains( arrayId ) ) {
+                                    log.warn( "Already have a BioAssay for array with id= " + arrayId );
+                                }
+
+                                // definitely keep;
+                                log.info( "Final bioassay on array " + arrayId + " ==> " + ba );
+                                keep = true;
+                                usedArrayIds.add( arrayId );
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if ( !keep ) {
+                    log.info( "Skipping bioassay that is not associated with array: " + ba );
+                    toRemove.add( ba );
+                } else {
+                    /*
+                     * Just in case we 'removed' it by accident.
+                     */
+                    toRemove.remove( ba );
+                }
 
             }
         }

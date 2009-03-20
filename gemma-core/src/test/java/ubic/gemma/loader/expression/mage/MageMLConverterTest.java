@@ -36,8 +36,8 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class MageMLConverterTest extends AbstractMageTest {
 
-    private MageMLParser mageMLParser = null;
     private MageMLConverter mageMLConverter = null;
+    private MageMLParser mageMLParser = null;
 
     /**
      * @param mageMLConverter The mageMLConverter to set.
@@ -59,7 +59,7 @@ public class MageMLConverterTest extends AbstractMageTest {
      * @throws Exception
      */
     @SuppressWarnings("null")
-    public final void testWithDerivedBioAssays() throws Exception {
+    public final void testConvert1() throws Exception {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "jml_projID_4_E-HGMP-2.part.xml" );
@@ -202,76 +202,74 @@ public class MageMLConverterTest extends AbstractMageTest {
         }
     }
 
-    // /**
-    // * Yet another case that breaks our parser. There are four DerivedBioAssays associated with each DerivedBioAssay,
-    // * etc. E-MEXP-297, 28 samples (we end up with >30 found)
-    // * <p>
-    // * OK, I confess I have no idea how we would be able to parse this correctly. There are some very odd/complex
-    // things
-    // * about this study.
-    // *
-    // * @throws Exception
-    // */
-    // @SuppressWarnings("null")
-    // public final void testConvert3() throws Exception {
-    // /* invoke mageMLParser */
-    // InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
-    // + "E-MEXP-297_fixed.part.xml" );
-    //
-    // assert mageMLParser != null;
-    //
-    // mageMLParser.parse( istMageExamples );
-    //
-    // /* get results from parsing step */
-    // log.info( "Tally:\n" + mageMLParser );
-    // Collection<Object> mageObjects = mageMLParser.getResults();
-    // log.debug( "number of SDOs: " + mageObjects.size() );
-    //
-    // istMageExamples.close();
-    //
-    // ExpressionExperiment expressionExperiment = null;
-    //
-    // Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
-    // log.debug( "number of GDOs: " + gemmaObjects.size() );
-    //
-    // int numExpExp = 0;
-    // for ( Object obj : gemmaObjects ) {
-    // if ( obj instanceof ExpressionExperiment ) {
-    // expressionExperiment = ( ExpressionExperiment ) obj;
-    // numExpExp++;
-    // }
-    // if ( log.isDebugEnabled() ) {
-    // log.debug( obj.getClass() + ": " + obj );
-    // }
-    // }
-    //
-    // assertNotNull( expressionExperiment );
-    // assertEquals( 1, numExpExp );
-    // assertEquals( 28, expressionExperiment.getBioAssays().size() );
-    // assertNotNull( expressionExperiment.getSource() );
-    // assertNotNull( expressionExperiment.getAccession() );
-    //
-    // for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-    // assertTrue( "Got: " + ba.getName(), ba.getName().contains( "DBA" ) );
-    // assertEquals( 2, ba.getSamplesUsed().size() );
-    // for ( BioMaterial bm : ba.getSamplesUsed() ) {
-    // assertEquals( 3, bm.getFactorValues().size() );
-    // }
-    // }
-    //
-    // assertEquals( 3, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
-    //
-    // for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
-    // assertEquals( 2, factor.getFactorValues().size() );
-    // for ( FactorValue fv : factor.getFactorValues() ) {
-    // assertEquals( 2, fv.getCharacteristics().size() );
-    // for ( Characteristic c : fv.getCharacteristics() ) {
-    // assertNotNull( c.getValue() );
-    // }
-    // }
-    // }
-    //
-    // }
+    /**
+     * Yet another case that broke our parser. There are four DerivedBioAssays associated with each DerivedBioAssay,
+     * etc. E-MEXP-297, 28 samples (we end up with >30 found)
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("null")
+    public final void testConvert3() throws Exception {
+        /* invoke mageMLParser */
+        InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
+                + "E-MEXP-297_fixed.part.xml" );
+
+        assert mageMLParser != null;
+
+        mageMLParser.parse( istMageExamples );
+
+        /* get results from parsing step */
+        log.info( "Tally:\n" + mageMLParser );
+        Collection<Object> mageObjects = mageMLParser.getResults();
+        log.debug( "number of SDOs: " + mageObjects.size() );
+
+        istMageExamples.close();
+
+        ExpressionExperiment expressionExperiment = null;
+
+        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        log.debug( "number of GDOs: " + gemmaObjects.size() );
+
+        int numExpExp = 0;
+        for ( Object obj : gemmaObjects ) {
+            if ( obj instanceof ExpressionExperiment ) {
+                expressionExperiment = ( ExpressionExperiment ) obj;
+                numExpExp++;
+            }
+            if ( log.isDebugEnabled() ) {
+                log.debug( obj.getClass() + ": " + obj );
+            }
+        }
+
+        assertNotNull( expressionExperiment );
+        assertEquals( 1, numExpExp );
+        assertEquals( 28, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
+
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            assertTrue( "Got: " + ba.getName(), ba.getName().contains( "DBA" ) );
+            assertEquals( 2, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertTrue( bm.getFactorValues().size() >= 2 );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    if ( fv.getCharacteristics().size() > 1 ) {
+                        assertNotNull( fv.getCharacteristics().iterator().next().getValue() );
+                    } else {
+                        log.info( fv );
+                        // assertNotNull( fv.getMeasurement() );
+                    }
+                }
+            }
+        }
+
+        assertEquals( 3, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+
+        for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+            assertTrue( factor.getFactorValues().size() >= 2 );
+        }
+
+    }
 
     /**
      * This dataset has factors but not associated with any of the samples? E-NCMF-4
@@ -390,7 +388,13 @@ public class MageMLConverterTest extends AbstractMageTest {
         }
     }
 
-    public void testConvertCollection() throws Exception {
+    /**
+     * E-MEXP-955, has 13 samples. In MAGE terms it has 13 MeasuredBioAssays, 1 DerivedBioAssay (!).
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("null")
+    public void testConvert6() throws Exception {
 
         /* PARSING */
         log.info( "***** PARSING *****  " );
@@ -431,6 +435,85 @@ public class MageMLConverterTest extends AbstractMageTest {
             }
         }
 
-        assert expressionExperiment != null && numExpExp == 1;
+        assertNotNull( expressionExperiment );
+        assertEquals( 1, numExpExp );
+        assertEquals( 13, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
+        /*
+         * 3 factors
+         */
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            assertTrue( "Got: " + ba.getName(), ba.getName().contains( "ebi" ) );
+            assertEquals( 1, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertEquals( 1, bm.getBioAssaysUsedIn().size() );
+                assertEquals( 3, bm.getFactorValues().size() );
+            }
+        }
+
+        /*
+         *  
+         */
+        assertEquals( 3, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+
+        for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+            assertTrue( factor.getFactorValues().size() >= 3 );
+            for ( FactorValue fv : factor.getFactorValues() ) {
+                log.info( fv );
+                assertEquals( 1, fv.getCharacteristics().size() );
+                for ( Characteristic c : fv.getCharacteristics() ) {
+                    assertNotNull( c.getValue() );
+                }
+
+            }
+        }
     }
+
+    /**
+     * E-MEXP-740 - 32 samples. Does not have top-level bioassays designated, there are two DerivedBioAssays per sample.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("null")
+    public final void testConvert7() throws Exception {
+        /* invoke mageMLParser */
+        InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
+                + "E-MEXP-740.xml" );
+
+        assert mageMLParser != null;
+
+        mageMLParser.parse( istMageExamples );
+
+        /* get results from parsing step */
+        log.info( "Tally:\n" + mageMLParser );
+        Collection<Object> mageObjects = mageMLParser.getResults();
+        log.debug( "number of SDOs: " + mageObjects.size() );
+
+        istMageExamples.close();
+
+        ExpressionExperiment expressionExperiment = null;
+
+        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        log.debug( "number of GDOs: " + gemmaObjects.size() );
+
+        int numExpExp = 0;
+        for ( Object obj : gemmaObjects ) {
+            if ( obj instanceof ExpressionExperiment ) {
+                expressionExperiment = ( ExpressionExperiment ) obj;
+                numExpExp++;
+            }
+            if ( log.isDebugEnabled() ) {
+                log.debug( obj.getClass() + ": " + obj );
+            }
+        }
+
+        assertNotNull( expressionExperiment );
+        assertEquals( 1, numExpExp );
+        assertEquals( 32, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
+
+    }
+
 }
