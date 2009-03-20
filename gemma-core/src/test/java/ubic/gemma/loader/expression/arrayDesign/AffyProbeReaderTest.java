@@ -131,7 +131,7 @@ public class AffyProbeReaderTest extends TestCase {
                         .getSequence() );
             }
 
-            log.info( c.getName() + " " + collapsed.getSequence() );
+            // log.info( c.getName() + " " + collapsed.getSequence() );
 
         }
 
