@@ -35,7 +35,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
@@ -64,7 +63,6 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         super.onSetUpInTransaction();
         endTransaction();
 
-        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
         taxon = taxonService.findByCommonName( "mouse" );
 
         // note that the name MG-U74A is not used by the result. this defines genbank ids etc.

@@ -27,8 +27,10 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author pavlidis
@@ -72,7 +74,6 @@ public class AffyProbeReaderTest extends TestCase {
         boolean foundIt = false;
         for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
             Reporter element = iter.next();
-            log.info( element.getName() );
             if ( element.getName().equals( "1000_at:617:349" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
 
@@ -105,16 +106,34 @@ public class AffyProbeReaderTest extends TestCase {
         boolean foundIt = false;
         for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
             Reporter element = iter.next();
-            log.info( element.getName() );
             if ( element.getName().equals( "2315108:814:817" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
-
                 assertEquals( expectedValue, actualValue );
                 foundIt = true;
                 break;
             }
         }
         assertTrue( "Didn't find the probe ", foundIt );
+
+        for ( CompositeSequence c : apr.getResults() ) {
+            BioSequence collapsed = SequenceManipulation.collapse( c );
+
+            if ( c.getName().equals( "2315357" ) ) {
+
+                /*
+                 * Note that Affy says the target sequence is
+                 * "ttttaattgatgataagctggaataatattaatacacacaaagcacgtgttgtaactttcatt", which slightly differs from our
+                 * assembly,we resolve an TA ... TA to TA, while they have TATA. The latter is correct based on the
+                 * targeted alignment, but given we only have the probes, it's reasonable.
+                 */
+                assertEquals( "TTTTAATTGATGATAAGCTGGAATAATATTACACACAAAGCACGTGTTGTAACTTTCATT".toUpperCase(), collapsed
+                        .getSequence() );
+            }
+
+            log.info( c.getName() + " " + collapsed.getSequence() );
+
+        }
+
     }
 
     /*
@@ -134,7 +153,6 @@ public class AffyProbeReaderTest extends TestCase {
         boolean foundIt = false;
         for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
             Reporter element = iter.next();
-            log.info( element.getName() );
             if ( element.getName().equals( "1004_at#2:557:275" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
 

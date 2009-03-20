@@ -21,6 +21,7 @@ package ubic.gemma.analysis.sequence;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -269,6 +270,87 @@ public class SequenceManipulation {
         }
 
         return 0;
+    }
+
+    /**
+     * @param sequence
+     * @return
+     */
+    public static String reverseComplement( String sequence ) {
+        if ( StringUtils.isBlank( sequence ) ) {
+            return sequence;
+        }
+
+        StringBuilder buf = new StringBuilder();
+        for ( int i = sequence.length() - 1; i >= 0; i-- ) {
+            buf.append( complement( sequence.charAt( i ) ) );
+        }
+        return buf.toString();
+    }
+
+    /**
+     * See for example http://www.bio-soft.net/sms/iupac.html
+     * 
+     * @param baseLetter
+     * @return
+     */
+    private static char complement( char baseLetter ) {
+
+        switch ( baseLetter ) {
+            // basics
+            case 'A':
+                return 'T';
+            case 'T':
+                return 'A';
+            case 'G':
+                return 'C';
+            case 'C':
+                return 'G';
+            case 'U':
+                return 'A';
+
+                // purine/pyrimidine
+            case 'R':
+                return 'Y';
+            case 'Y':
+                return 'R';
+
+                // complementary pairs.
+            case 'S':
+                return 'W';
+            case 'W':
+                return 'S';
+
+                // uncomplementary pairs
+            case 'K':
+                return 'M';
+            case 'M':
+                return 'K';
+
+                // choice of 3
+            case 'B':
+                return 'D';
+            case 'D':
+                return 'B';
+
+            case 'H':
+                return 'V';
+            case 'V':
+                return 'H';
+
+                // special
+            case 'N':
+                return 'N';
+            case '-':
+                return '-';
+            case ' ':
+                return ' ';
+            default:
+                break;
+        }
+
+        throw new IllegalArgumentException( "Don't know complement to " + baseLetter );
+
     }
 
     /**

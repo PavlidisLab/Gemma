@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
@@ -128,6 +129,7 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
         String ycoord;
         String startInSequence;
         String index = null;
+
         if ( sequenceField == 4 ) {
             xcoord = sArray[1];
             ycoord = sArray[2];
@@ -139,11 +141,15 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
             xcoord = sArray[2];
             ycoord = sArray[3];
 
+            if ( sArray[sequenceField + 1].equalsIgnoreCase( "sense" ) ) { // ???
+                sequence = SequenceManipulation.reverseComplement( sequence );
+            }
         } else {
             index = sArray[1];
             xcoord = sArray[2];
             ycoord = sArray[3];
             startInSequence = sArray[sequenceField - 1];
+
         }
 
         Reporter reporter = Reporter.Factory.newInstance();
