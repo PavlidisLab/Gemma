@@ -176,7 +176,6 @@ public class MageMLConverterTest extends AbstractMageTest {
          * One factor, two factor values.
          */
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-            assertTrue( "Got: " + ba.getName(), ba.getName().contains( "DBA" ) );
             assertEquals( 1, ba.getSamplesUsed().size() );
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
@@ -256,7 +255,7 @@ public class MageMLConverterTest extends AbstractMageTest {
                     if ( fv.getCharacteristics().size() > 1 ) {
                         assertNotNull( fv.getCharacteristics().iterator().next().getValue() );
                     } else {
-                        log.info( fv );
+                        // log.info( fv );
                         // assertNotNull( fv.getMeasurement() );
                     }
                 }
@@ -363,7 +362,6 @@ public class MageMLConverterTest extends AbstractMageTest {
          * 3 factors
          */
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-            assertTrue( "Got: " + ba.getName(), ba.getName().contains( "RAD" ) );
             assertEquals( 1, ba.getSamplesUsed().size() );
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
@@ -444,7 +442,6 @@ public class MageMLConverterTest extends AbstractMageTest {
          * 3 factors
          */
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-            assertTrue( "Got: " + ba.getName(), ba.getName().contains( "ebi" ) );
             assertEquals( 1, ba.getSamplesUsed().size() );
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
@@ -513,6 +510,12 @@ public class MageMLConverterTest extends AbstractMageTest {
         assertEquals( 32, expressionExperiment.getBioAssays().size() );
         assertNotNull( expressionExperiment.getSource() );
         assertNotNull( expressionExperiment.getAccession() );
+
+        boolean found = false;
+        for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
+            if ( qt.getName().equals( "Signal" ) ) found = true;
+        }
+        assertTrue( found );
 
     }
 

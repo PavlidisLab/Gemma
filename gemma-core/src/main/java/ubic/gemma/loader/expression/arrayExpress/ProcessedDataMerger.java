@@ -72,8 +72,9 @@ public class ProcessedDataMerger {
         Map<String, BioAssay> nameMap = new HashMap<String, BioAssay>();
         ArrayDesign ad = null;
         for ( BioAssay assay : bioAssays ) {
+
             nameMap.put( assay.getName(), assay );
-            log.info( assay.getName() );
+
             ArrayDesign baAd = assay.getArrayDesignUsed();
             if ( ad != null && !ad.equals( baAd ) ) {
                 throw new IllegalStateException( "Sorry, can't handle multiple array design experiments" );

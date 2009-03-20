@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.biomage.Array.Array;
 import org.biomage.BioAssay.DerivedBioAssay;
 import org.biomage.BioAssay.MeasuredBioAssay;
@@ -219,6 +220,10 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
                     }
                 }
 
+                for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+                    // log.info( qt );
+                }
+
                 if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 0 ) {
                     for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
                         if ( ef.getFactorValues().size() == 0 ) {
@@ -310,6 +315,18 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
         }
 
         ee.getBioAssays().removeAll( toRemove );
+
+        /**
+         * We need to put the NAME back... the ID (which we are storing in the name slot) is only used internally to the
+         * MAGE-ML
+         */
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            String name = this.mageConverterHelper.getId2Name().get( ba.getName() );
+            if ( log.isDebugEnabled() ) log.debug( ba.getName() + " --> " + name );
+            if ( StringUtils.isNotBlank( name ) ) {
+                ba.setName( name );
+            }
+        }
 
     }
 

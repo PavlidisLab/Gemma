@@ -254,6 +254,8 @@ public class MageMLConverterHelper {
      */
     private boolean haveInitializedMgedOntologyHelper = false;
 
+    private Map<String, String> id2Name = new HashMap<String, String>();
+
     /**
      * Places where, according to the current configuration, local MAGE bioDataCube external files are stored.
      */
@@ -1304,28 +1306,6 @@ public class MageMLConverterHelper {
         return result;
     }
 
-    private Collection<BioAssay> getAssociatedSourceBioAssays( DerivedBioAssay mageObj ) {
-        List map = mageObj.getDerivedBioAssayMap();
-        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
-
-        if ( map.size() > 0 ) {
-            BioAssayMap dbap = ( BioAssayMap ) map.get( 0 );
-            bioAssays = dbap.getSourceBioAssays();
-        }
-
-        /*
-         * Alternative route, but we need BOTH (damn). If we add this we get extra bioassays with biomaterials, but it
-         * doesn't help.
-         */
-        if ( this.bioAssayMap.containsKey( mageObj.getIdentifier() ) ) {
-            bioAssays.addAll( bioAssayMap.get( mageObj.getIdentifier() ) );
-        } else {
-            log.debug( "No derivedbioassaymap" );
-        }
-
-        return bioAssays;
-    }
-
     /**
      * @param mageObj
      * @param gemmaObj
@@ -1838,20 +1818,16 @@ public class MageMLConverterHelper {
         if ( mageObj == null ) return;
         if ( gemmaObj == null ) throw new IllegalArgumentException( "Must pass in a valid object" );
 
-        // we do this here because Mage names go with Identifiable, not
-        // describable.
-        if ( mageObj instanceof QuantitationType ) {
+        if ( mageObj instanceof BioAssay ) {
             /*
-             * For quantitation types it's easier to use the identifier, because that's what is used in the processed
-             * data file. Sort of.
-             */
-            gemmaObj.setName( getUnqualifiedIdentifier( mageObj ) );
-            gemmaObj.setDescription( mageObj.getName() );
-        } else if ( mageObj instanceof BioAssay ) {
-            /*
-             * The name is the description
+             * We need the _name_ so we can map to the processed data file.
              */
             gemmaObj.setName( mageObj.getIdentifier() );
+
+            if ( StringUtils.isNotBlank( mageObj.getName() ) ) {
+                this.id2Name.put( mageObj.getIdentifier(), mageObj.getName() );
+            }
+
         } else {
             gemmaObj.setName( mageObj.getName() );
         }
@@ -2255,18 +2231,6 @@ public class MageMLConverterHelper {
         return null;
     }
 
-    // /**
-    // * @param list
-    // * @param gemmaObj
-    // */
-    // private void specialConvertExperimentBioAssayDataAssociations( List<BioAssayData> bioAssayData,
-    // ExpressionExperiment gemmaObj ) {
-    // for ( BioAssayData data : bioAssayData ) {
-    // LocalFile file = convertBioAssayData( data );
-    // // need to attachi this to
-    // }
-    // }
-
     /**
      * @param mageObj
      * @return
@@ -2295,6 +2259,18 @@ public class MageMLConverterHelper {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
     }
+
+    // /**
+    // * @param list
+    // * @param gemmaObj
+    // */
+    // private void specialConvertExperimentBioAssayDataAssociations( List<BioAssayData> bioAssayData,
+    // ExpressionExperiment gemmaObj ) {
+    // for ( BioAssayData data : bioAssayData ) {
+    // LocalFile file = convertBioAssayData( data );
+    // // need to attachi this to
+    // }
+    // }
 
     /**
      * Not supported.
@@ -2979,6 +2955,13 @@ public class MageMLConverterHelper {
         return bioAssayDimensions.getQuantitationTypeDimension( bioAssay );
     }
 
+    /**
+     * @return the id2Name
+     */
+    public Map<String, String> getId2Name() {
+        return id2Name;
+    }
+
     public Collection<ubic.gemma.model.expression.bioAssay.BioAssay> getQuantitationTypeBioAssays() {
         return this.bioAssayDimensions.getQuantitationTypeBioAssays();
     }
@@ -3430,6 +3413,32 @@ public class MageMLConverterHelper {
             arrayExpress.setName( "ArrayExpress" );
         }
         return arrayExpress;
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    private Collection<BioAssay> getAssociatedSourceBioAssays( DerivedBioAssay mageObj ) {
+        List map = mageObj.getDerivedBioAssayMap();
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+
+        if ( map.size() > 0 ) {
+            BioAssayMap dbap = ( BioAssayMap ) map.get( 0 );
+            bioAssays = dbap.getSourceBioAssays();
+        }
+
+        /*
+         * Alternative route, but we need BOTH (damn). If we add this we get extra bioassays with biomaterials, but it
+         * doesn't help.
+         */
+        if ( this.bioAssayMap.containsKey( mageObj.getIdentifier() ) ) {
+            bioAssays.addAll( bioAssayMap.get( mageObj.getIdentifier() ) );
+        } else {
+            log.debug( "No derivedbioassaymap" );
+        }
+
+        return bioAssays;
     }
 
     /**

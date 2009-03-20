@@ -156,7 +156,8 @@ public class ArrayExpressLoadService {
             }
 
             log.info( "Merging processed data with expression experiment from MAGE-ML" );
-            Collection<QuantitationType> qts = locateQuantitationTypesInMageResults( result );
+            Collection<QuantitationType> qts = ee.getQuantitationTypes(); // locateQuantitationTypesInMageResults(
+            // result );
 
             if ( qts.size() == 0 ) {
                 throw new IllegalStateException( "No quantitation types found" );
@@ -164,8 +165,8 @@ public class ArrayExpressLoadService {
 
             pdMerger.merge( ee, qts, pdParser.getMap(), pdParser.getSamples() );
 
-          //  return ( ExpressionExperiment ) persisterHelper.persist( ee );
-            return null;
+            return ( ExpressionExperiment ) persisterHelper.persist( ee );
+
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
