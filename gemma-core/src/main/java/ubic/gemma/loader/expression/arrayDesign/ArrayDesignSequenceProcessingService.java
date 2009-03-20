@@ -357,10 +357,12 @@ public class ArrayDesignSequenceProcessingService {
      * 
      * @param arrayDesign An existing ArrayDesign that already has compositeSequences filled in.
      * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
+     * @param force if true, the sequences will be overwritten even if they already exist (That is, if the actual ATGCs
+     *        need to be replaced, but the BioSequences are already filled in)
      * @throws IOException
      */
     public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
-            Taxon taxon ) throws IOException {
+            Taxon taxon, boolean force ) throws IOException {
 
         log.info( "Processing Affymetrix design" );
         // arrayDesignService.thaw( arrayDesign );
@@ -407,6 +409,9 @@ public class ArrayDesignSequenceProcessingService {
             if ( wasOriginallyLackingCompositeSequences ) {
                 arrayDesign.getCompositeSequences().add( newCompositeSequence );
             } else {
+                if ( force ) {
+                    persistSequence( collapsed );
+                }
                 quickFindMap.put( newCompositeSequence.getName(), newCompositeSequence );
             }
 
@@ -492,7 +497,7 @@ public class ArrayDesignSequenceProcessingService {
 
         result = ( ArrayDesign ) persisterHelper.persist( result );
 
-        this.processAffymetrixDesign( result, probeSequenceFile, taxon );
+        this.processAffymetrixDesign( result, probeSequenceFile, taxon, false );
 
         return result;
     }
@@ -624,7 +629,7 @@ public class ArrayDesignSequenceProcessingService {
             SequenceType sequenceType, Taxon taxon ) throws IOException {
 
         if ( sequenceType.equals( SequenceType.AFFY_PROBE ) ) {
-            return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon );
+            return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon, true );
         } else if ( sequenceType.equals( SequenceType.OLIGO ) ) {
             return this.processOligoDesign( arrayDesign, sequenceFile, taxon );
         }
