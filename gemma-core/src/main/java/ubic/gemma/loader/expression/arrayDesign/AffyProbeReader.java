@@ -108,6 +108,11 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
     @Override
     @SuppressWarnings("unchecked")
     public CompositeSequence parseOneLine( String line ) {
+
+        if ( StringUtils.isEmpty( line ) ) {
+            return null;
+        }
+
         String[] sArray = line.split( "\t" );
         if ( sArray.length == 0 )
             throw new IllegalArgumentException( "Line format is not valid (not tab-delimited or no fields found)" );
