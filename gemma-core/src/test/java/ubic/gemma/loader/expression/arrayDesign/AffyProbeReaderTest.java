@@ -91,10 +91,12 @@ public class AffyProbeReaderTest extends TestCase {
     @SuppressWarnings("null")
     public final void testReadExonArrayInputStream() throws Exception {
 
-        is = AffyProbeReaderTest.class
+        InputStream ist = AffyProbeReaderTest.class
                 .getResourceAsStream( "/data/loader/expression/arrayDesign/HuEx-1_0.sample.probe.tab" );
 
-        apr.parse( is );
+        apr.parse( ist );
+
+        ist.close();
 
         // reverse complement of "CGGTGCTGGGTCAGGGATCGACTGA";
         String expectedValue = "TCAGTCGATCCCTGACCCAGCACCG";
