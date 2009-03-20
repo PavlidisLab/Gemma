@@ -274,21 +274,6 @@ public class ArrayExpressLoadService {
         return ee;
     }
 
-    /**
-     * @param objects
-     * @return
-     */
-    private Collection<QuantitationType> locateQuantitationTypesInMageResults( Collection<Object> objects ) {
-        Collection<QuantitationType> result = new HashSet<QuantitationType>();
-        for ( Object object : objects ) {
-            if ( object instanceof QuantitationType ) {
-                QuantitationType qt = ( QuantitationType ) object;
-                result.add( qt );
-            }
-        }
-        return result;
-    }
-
     public void setMageMLConverter( MageMLConverter mageMLConverter ) {
         this.mageMLConverter = mageMLConverter;
     }
