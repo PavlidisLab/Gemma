@@ -124,7 +124,8 @@ public class AffyProbeReaderTest extends TestCase {
                  * Note that Affy says the target sequence is
                  * "ttttaattgatgataagctggaataatattaatacacacaaagcacgtgttgtaactttcatt", which slightly differs from our
                  * assembly,we resolve an TA ... TA to TA, while they have TATA. The latter is correct based on the
-                 * targeted alignment, but given we only have the probes, it's reasonable.
+                 * targeted alignment, but given we only have the probes, it's reasonable. See
+                 * https://www.affymetrix.com/analysis/netaffx/exon/probe_set.affx?pk=1:2315357
                  */
                 assertEquals( "TTTTAATTGATGATAAGCTGGAATAATATTACACACAAAGCACGTGTTGTAACTTTCATT".toUpperCase(), collapsed
                         .getSequence() );
