@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -49,7 +50,9 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * </pre>
  * <p>
  * For exon arrays, the format is described in the README files that come with the sequence Zips. As in the 3' array
- * files, the probes are arranged 5' -> 3' so 'collapsing' can proceed as it does for the 3' arrays.
+ * files, the probes are arranged 5' -> 3', but the probes are given in the 'wrong' sense compared to the 3' arrays and
+ * the coordinates are from the point of view of the genome, not the transcript, so probes on the - strand have to be
+ * assembled in the reverse orientation.
  * </p>
  * 
  * <pre>
@@ -125,10 +128,16 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
         }
 
         String sequence = sArray[sequenceField];
+
+        if ( StringUtils.isBlank( sequence ) ) {
+            log.warn( "No sequence" );
+        }
+
         String xcoord;
         String ycoord;
         String startInSequence;
         String index = null;
+        boolean flip = false;
 
         if ( sequenceField == 4 ) {
             xcoord = sArray[1];
@@ -140,6 +149,11 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
             startInSequence = sArray[6]; // 7 is end, 8 is strand, 9 is sequence
             xcoord = sArray[2];
             ycoord = sArray[3];
+
+            /*
+             * For exon arrays, if the sequence is on the - strand we have to also reverse the ordering of the probes
+             */
+            flip = sArray[sequenceField - 1].equals( "-" );
 
             if ( sArray[sequenceField + 1].equalsIgnoreCase( "sense" ) ) { // ???
                 sequence = SequenceManipulation.reverseComplement( sequence );
@@ -165,6 +179,9 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
 
         try {
             reporter.setStartInBioChar( Long.parseLong( startInSequence ) );
+            if ( flip ) {
+                reporter.setStartInBioChar( -reporter.getStartInBioChar() );
+            }
         } catch ( NumberFormatException e ) {
 
             if ( startInSequence.equals( "---" ) ) {

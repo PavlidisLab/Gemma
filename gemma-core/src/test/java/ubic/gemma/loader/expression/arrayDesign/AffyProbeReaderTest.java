@@ -133,7 +133,16 @@ public class AffyProbeReaderTest extends TestCase {
                         .getSequence() );
             }
 
-            // log.info( c.getName() + " " + collapsed.getSequence() );
+            if ( c.getName().equals( "2390604" ) ) {
+                /*
+                 * This tests the correct strandedness. As for the above example, the precise assembly might be
+                 * different than the affy target
+                 */
+                assertEquals(
+                        "ACTTCTCTGACACCGCGTTGGGTTCGGGCTCCGAGCACTTCGAAAGTATAACCGCGGTCCCAAAGAGGCGTGCTCCTGGGAGTGCACGGTTTACATTCT"
+                                .toUpperCase(), collapsed.getSequence() );
+
+            }
 
         }
 
