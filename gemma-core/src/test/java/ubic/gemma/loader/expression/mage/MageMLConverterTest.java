@@ -22,7 +22,9 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -513,7 +515,12 @@ public class MageMLConverterTest extends AbstractMageTest {
 
         boolean found = false;
         for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
-            if ( qt.getName().equals( "Signal" ) ) found = true;
+            if ( qt.getName().equals( "Signal" ) ) {
+                assertEquals( ScaleType.LINEAR, qt.getScale() );
+                assertEquals( PrimitiveType.DOUBLE, qt.getRepresentation() );
+                assertTrue( qt.getIsPreferred() );
+                found = true;
+            }
         }
         assertTrue( found );
 

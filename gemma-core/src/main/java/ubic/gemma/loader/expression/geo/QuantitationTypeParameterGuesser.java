@@ -278,7 +278,8 @@ public class QuantitationTypeParameterGuesser {
         isPreferredNamePatterns.add( "value" );
         isPreferredNamePatterns.add( "rma" );
         isPreferredNamePatterns.add( "dchip" );
-        isPreferredNamePatterns.add( "CHPSignal" );
+        isPreferredNamePatterns.add( "chpsignal" );
+        isPreferredNamePatterns.add( "signal" );
 
     }
 
@@ -639,15 +640,23 @@ public class QuantitationTypeParameterGuesser {
         }
 
         qt.setGeneralType( gType );
-        qt.setScale( sType );
-        qt.setType( qType );
-        qt.setRepresentation( rType );
-        qt.setIsBackground( isBackground );
-        qt.setIsBackgroundSubtracted( isBackgroundSubtracted );
-        qt.setIsNormalized( isNormalized );
-        qt.setIsRatio( isRatio );
-        qt.setIsPreferred( isPreferred( qt ) );
 
-        qt.setIsMaskedPreferred( Boolean.FALSE );
+        if ( qt.getScale() == null ) qt.setScale( sType );
+
+        if ( qt.getType() == null ) qt.setType( qType );
+
+        if ( qt.getRepresentation() == null ) qt.setRepresentation( rType );
+
+        if ( qt.getIsBackground() == null ) qt.setIsBackground( isBackground );
+
+        if ( qt.getIsBackgroundSubtracted() == null ) qt.setIsBackgroundSubtracted( isBackgroundSubtracted );
+
+        if ( qt.getIsNormalized() == null ) qt.setIsNormalized( isNormalized );
+
+        if ( qt.getIsRatio() == null ) qt.setIsRatio( isRatio );
+
+        if ( qt.getIsPreferred() == null ) qt.setIsPreferred( isPreferred( qt ) );
+
+        if ( qt.getIsMaskedPreferred() == null ) qt.setIsMaskedPreferred( Boolean.FALSE );
     }
 }

@@ -2523,14 +2523,6 @@ public class MageMLConverterHelper {
         ubic.gemma.model.common.quantitationtype.QuantitationType result = ubic.gemma.model.common.quantitationtype.QuantitationType.Factory
                 .newInstance();
 
-        result.setIsRatio( false );
-        result.setIsBackground( false ); // OK
-        result.setIsBackgroundSubtracted( false );
-        result.setIsNormalized( false );
-        result.setIsPreferred( false );
-        result.setIsMaskedPreferred( false );
-        result.setRepresentation( PrimitiveType.DOUBLE );
-
         // note that PrimitiveType and Scale are set via associations.
         if ( mageObj instanceof SpecializedQuantitationType ) {
             result.setGeneralType( GeneralType.UNKNOWN );
@@ -2570,6 +2562,14 @@ public class MageMLConverterHelper {
 
         QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( result, result.getName(), result
                 .getDescription() );
+
+        if ( result.getIsRatio() == null ) result.setIsRatio( false );
+        if ( result.getIsBackground() == null ) result.setIsBackground( false ); // OK
+        if ( result.getIsBackgroundSubtracted() == null ) result.setIsBackgroundSubtracted( false );
+        if ( result.getIsNormalized() == null ) result.setIsNormalized( false );
+        if ( result.getIsPreferred() == null ) result.setIsPreferred( false );
+        if ( result.getIsMaskedPreferred() == null ) result.setIsMaskedPreferred( false );
+        if ( result.getRepresentation() == null ) result.setRepresentation( PrimitiveType.DOUBLE );
 
         return result;
     }
