@@ -614,6 +614,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
+     * Predicted genes.
+     * 
      * @param chromosome
      * @param start
      * @param end
@@ -634,7 +636,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         // + "WHERE "
         // + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
         // + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
-        
         // Using denormalized table.
         String query = "SELECT r.name, r.kgSymbol, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, 'Ensembl gene prediction' "
                 + "FROM ensGene as r "
@@ -645,10 +646,12 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         if ( strand != null ) {
             query = query + " AND r.strand = ?  ";
         }
-        return findGenesByQuery( start, end, searchChrom, strand, query );
+        return findPredictedGenesByQuery( start, end, searchChrom, strand, query, "Ensembl" );
     }
 
     /**
+     * Predicted genes.
+     * 
      * @param chromosome
      * @param queryStart
      * @param queryEnd
@@ -676,6 +679,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
+     * Predicted genes.
+     * 
      * @param chromosome
      * @param start
      * @param end
@@ -891,7 +896,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
             Collection<GeneProduct> geneProducts = findRefGenesByLocation( chromosome, left, right, strand );
             geneProducts.addAll( findKnownGenesByLocation( chromosome, left, right, strand ) );
-            geneProducts.addAll( findEnsemblGenesByLocation( chromosome, left, right, strand ) );
 
             Gene nearest = null;
             int closestSoFar = Integer.MAX_VALUE;
@@ -946,11 +950,14 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         // get known genes as well, in case all we got was an intron.
         geneProducts.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
 
-        // ensembl transcripts
-        geneProducts.addAll( findEnsemblGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
-
         // microRNAs
         geneProducts.addAll( findMicroRNAGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
+
+        // predicted genes if there is nothing else at this location: Ensembl genes
+        if ( geneProducts.size() == 0 ) {
+            Collection<GeneProduct> acembly = findEnsemblGenesByLocation( chromosome, queryStart, queryEnd, strand );
+            if ( acembly != null ) geneProducts.addAll( acembly );
+        }
 
         // predicted genes if there is nothing else at this location: AceView genes
         if ( geneProducts.size() == 0 ) {
