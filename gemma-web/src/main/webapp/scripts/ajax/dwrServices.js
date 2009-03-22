@@ -435,6 +435,12 @@ HibernateMonitorController.getSpaceStatus = function(callback) {
 HibernateMonitorController.getCacheStatus = function(callback) {
 	dwr.engine._execute(HibernateMonitorController._path, 'HibernateMonitorController', 'getCacheStatus', callback);
 }
+HibernateMonitorController.flushCache = function(p0, callback) {
+	dwr.engine._execute(HibernateMonitorController._path, 'HibernateMonitorController', 'flushCache', p0, callback);
+}
+HibernateMonitorController.flushAllCaches = function(callback) {
+	dwr.engine._execute(HibernateMonitorController._path, 'HibernateMonitorController', 'flushAllCaches', callback);
+}
 // ====================================================================================
 if (LinkAnalysisController == null)
 	var LinkAnalysisController = {};

@@ -24,3 +24,21 @@ function handleCacheData(data) {
 function handleSpaceStatus(data) {
 	Ext.DomHelper.overwrite("spaceStats", data);
 }
+
+function flushCache(name) {
+	Ext.Msg.show({
+				title : 'Are you sure?',
+				msg : 'Flush ' + name + " cache?",
+				buttons : Ext.Msg.YESNO,
+				fn : processFlushCacheResult,
+				animEl : 'cacheStats',
+				icon : Ext.MessageBox.QUESTION,
+				cacheName : name
+			});
+}
+
+function processFlushCacheResult(btn, text, opt)  {
+	if (btn == 'yes') {
+		HibernateMonitorController.flushCache(opt.cacheName);
+	}
+}

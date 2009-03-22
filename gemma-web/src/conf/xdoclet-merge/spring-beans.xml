@@ -650,6 +650,8 @@
 							<value>getHibernateStatus</value>
 							<value>getCacheStatus</value>
 							<value>getSpaceStatus</value>
+							<value>flushCache</value>
+							<value>flushAllCaches</value>
 						</list>
 					</property>
 				</bean>

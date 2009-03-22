@@ -20,18 +20,23 @@ package ubic.gemma.util.monitor;
 
 import java.util.Arrays;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Statistics;
 import net.sf.ehcache.config.CacheConfiguration;
 
 /**
- * Get statistics about object caches.
+ * Get statistics about and manage caches.
  * 
  * @author paul
  * @version $Id$
  */
 public class CacheMonitor {
+
+    private static Log log = LogFactory.getLog( CacheMonitor.class );
 
     private CacheManager cacheManager;
 
@@ -40,6 +45,33 @@ public class CacheMonitor {
      */
     public void setCacheManager( CacheManager cacheManager ) {
         this.cacheManager = cacheManager;
+    }
+
+    /**
+     * Remove all items from the cache given
+     * 
+     * @param cacheName
+     */
+    public void flushCache( String cacheName ) {
+        Cache cache = this.cacheManager.getCache( cacheName );
+        if ( cache != null ) {
+            cache.flush();
+            log.info( "Flushed " + cache.getName() );
+        } else {
+            throw new IllegalArgumentException( "No cache found with name=" + cacheName );
+        }
+    }
+
+    /**
+     * Remove all items from all caches.
+     * 
+     * @param cacheName
+     */
+    public void flushAllCaches() {
+        String[] cacheNames = cacheManager.getCacheNames();
+        for ( String string : cacheNames ) {
+            cacheManager.getCache( string ).flush();
+        }
     }
 
     /**
@@ -59,8 +91,8 @@ public class CacheMonitor {
         buf.append( "</tr>" );
 
         int count = 0;
-        for ( String cacheName : cacheNames ) {
-            Cache cache = cacheManager.getCache( cacheName );
+        for ( String rawCacheName : cacheNames ) {
+            Cache cache = cacheManager.getCache( rawCacheName );
             Statistics statistics = cache.getStatistics();
 
             long objectCount = statistics.getObjectCount();
@@ -70,9 +102,9 @@ public class CacheMonitor {
             }
 
             // a little shorter...
-            cacheName = cacheName.replaceFirst( "ubic.gemma.model.", "[entity] " );
+            String cacheName = rawCacheName.replaceFirst( "ubic.gemma.model.", "[entity] " );
 
-            buf.append( "<tr><td>" + cacheName + "</td>" );
+            buf.append( "<tr><td>" + getCacheFlushHtml( rawCacheName ) + cacheName + "</td>" );
             long hits = statistics.getCacheHits();
             long misses = statistics.getCacheMisses();
             long inMemoryHits = statistics.getInMemoryHits();
@@ -109,6 +141,11 @@ public class CacheMonitor {
         buf.append( "</table>" );
         return buf.toString();
 
+    }
+
+    private String getCacheFlushHtml( String cacheName ) {
+        return "<img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"flushCache('" + cacheName
+                + "')\" alt='Flush cache' title='Flush cache' />&nbsp;&nbsp;";
     }
 
 }

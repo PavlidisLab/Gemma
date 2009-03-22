@@ -46,6 +46,22 @@ public class HibernateMonitorController {
     }
 
     /**
+     * Flush (clear) a cache.
+     * 
+     * @param cache name Expose to AJAX
+     */
+    public void flushCache( String name ) {
+        this.cacheMonitor.flushCache( name );
+    }
+
+    /**
+     * Flush (clear) all caches. Expose to AJAX
+     */
+    public void flushAllCaches() {
+        this.cacheMonitor.flushAllCaches();
+    }
+
+    /**
      * @param cacheMonitor the cacheMonitor to set
      */
     public void setCacheMonitor( CacheMonitor cacheMonitor ) {
