@@ -25,10 +25,21 @@ function handleSpaceStatus(data) {
 	Ext.DomHelper.overwrite("spaceStats", data);
 }
 
+function flushAllCaches() {
+	Ext.Msg.show({
+				title : 'Are you sure?',
+				msg : 'Flush all caches?',
+				buttons : Ext.Msg.YESNO,
+				fn : processFlushAllCachesResult,
+				animEl : 'cacheStats',
+				icon : Ext.MessageBox.QUESTION
+			});
+}
+
 function flushCache(name) {
 	Ext.Msg.show({
 				title : 'Are you sure?',
-				msg : 'Flush ' + name + " cache?",
+				msg : 'Flush ' + name + ' cache?',
 				buttons : Ext.Msg.YESNO,
 				fn : processFlushCacheResult,
 				animEl : 'cacheStats',
@@ -37,8 +48,14 @@ function flushCache(name) {
 			});
 }
 
-function processFlushCacheResult(btn, text, opt)  {
+function processFlushCacheResult(btn, text, opt) {
 	if (btn == 'yes') {
 		HibernateMonitorController.flushCache(opt.cacheName);
+	}
+}
+
+function processFlushAllCachesResult(btn, text, opt) {
+	if (btn == 'yes') {
+		HibernateMonitorController.flushAllCaches();
 	}
 }

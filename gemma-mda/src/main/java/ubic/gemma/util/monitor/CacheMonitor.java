@@ -85,6 +85,9 @@ public class CacheMonitor {
 
         buf.append( cacheNames.length + " caches; only non-empty caches listed below." );
 
+        buf
+                .append( "&nbsp;To flush all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"flushAllCaches()\" alt='Flush caches' title='Flush caches' />&nbsp;&nbsp;" );
+
         buf.append( "<table style='font-size:small'  ><tr>" );
         String header = "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
         buf.append( header );
