@@ -40,6 +40,11 @@ public class FilterConfig implements Serializable {
         buf.append( "# lowExpressionCut:" + this.getLowExpressionCut() + "\n" );
         buf.append( "# minPresentFraction:" + this.getMinPresentFraction() + "\n" );
         buf.append( "# lowVarianceCut:" + this.getLowVarianceCut() + "\n" );
+        buf.append( "# startingProbes:" + this.getStartingRows() + "\n" );
+        buf.append( "# afterInitialFilter:" + this.getAfterInitialFilter() + "\n" );
+        buf.append( "# afterMinPresentFilter:" + this.getAfterMinPresentFilter() + "\n" );
+        buf.append( "# afterLowVarianceCut:" + this.getAfterLowVarianceCut() + "\n" );
+        buf.append( "# afterLowExpressionCut:" + this.getAfterLowExpressionCut() + "\n" );
         //buf.append( "# knownGenesOnly " + this.isKnownGenesOnly() + "\n" );
         return buf.toString();
     }
@@ -73,7 +78,13 @@ public class FilterConfig implements Serializable {
     private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
     private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
     private double lowVarianceCut = DEFAULT_LOWVARIANCECUT;
-
+    private int startingRows = 0;
+    private int afterInitialFilter = 0;
+    private int afterMinPresentFilter = 0;
+    private int afterLowVarianceCut = 0;
+    private int afterLowExpressionCut = 0;
+    
+    
     private boolean knownGenesOnly = false;
 
     /**
@@ -161,6 +172,76 @@ public class FilterConfig implements Serializable {
      */
     public void setIgnoreMinimumRowsThreshold( boolean ignoreMinimumRowsThreshold ) {
         this.ignoreMinimumRowsThreshold = ignoreMinimumRowsThreshold;
+    }
+
+    /**
+     * @return the afterInitialFilter
+     */
+    public int getAfterInitialFilter() {
+        return afterInitialFilter;
+    }
+
+    /**
+     * @param afterInitialFilter the afterInitialFilter to set
+     */
+    public void setAfterInitialFilter( int afterInitialFilter ) {
+        this.afterInitialFilter = afterInitialFilter;
+    }
+
+    /**
+     * @return the afterLowExpressionCut
+     */
+    public int getAfterLowExpressionCut() {
+        return afterLowExpressionCut;
+    }
+
+    /**
+     * @param afterLowExpressionCut the afterLowExpressionCut to set
+     */
+    public void setAfterLowExpressionCut( int afterLowExpressionCut ) {
+        this.afterLowExpressionCut = afterLowExpressionCut;
+    }
+
+    /**
+     * @return the afterLowVarianceCut
+     */
+    public int getAfterLowVarianceCut() {
+        return afterLowVarianceCut;
+    }
+
+    /**
+     * @param afterLowVarianceCut the afterLowVarianceCut to set
+     */
+    public void setAfterLowVarianceCut( int afterLowVarianceCut ) {
+        this.afterLowVarianceCut = afterLowVarianceCut;
+    }
+
+    /**
+     * @return the afterMinPresentFilter
+     */
+    public int getAfterMinPresentFilter() {
+        return afterMinPresentFilter;
+    }
+
+    /**
+     * @param afterMinPresentFilter the afterMinPresentFilter to set
+     */
+    public void setAfterMinPresentFilter( int afterMinPresentFilter ) {
+        this.afterMinPresentFilter = afterMinPresentFilter;
+    }
+
+    /**
+     * @return the startingRows
+     */
+    public int getStartingRows() {
+        return startingRows;
+    }
+
+    /**
+     * @param startingRows the startingRows to set
+     */
+    public void setStartingRows( int startingRows ) {
+        this.startingRows = startingRows;
     }
 
 }
