@@ -163,6 +163,7 @@ public class ExpressionExperimentFilter {
         ExpressionDataDoubleMatrix filteredMatrix = eeDoubleMatrix;
 
         int startingRows = eeDoubleMatrix.rows();
+        config.setStartingRows( startingRows );
         filteredMatrix = noSequencesFilter( eeDoubleMatrix );
         int afterSequenceRemovalRows = filteredMatrix.rows();
 
@@ -178,11 +179,13 @@ public class ExpressionExperimentFilter {
             filteredMatrix = affyControlProbeFilter( filteredMatrix );
             afterAffyControlsFilter = filteredMatrix.rows();
         }
+        config.setAfterInitialFilter( afterAffyControlsFilter );
 
         if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() ) {
             log.info( "Filtering for missing data" );
             filteredMatrix = minPresentFilter( filteredMatrix );
             afterMinPresentFilter = filteredMatrix.rows();
+            config.setAfterMinPresentFilter( afterMinPresentFilter );
         }
 
         if ( config.isLowVarianceCutIsSet() ) {
@@ -192,8 +195,9 @@ public class ExpressionExperimentFilter {
             } else {
                 log.info( "Filtering for low CV (signals)" );
                 filteredMatrix = lowCVFilter( filteredMatrix );
-                afterLowVarianceCut = filteredMatrix.rows();
             }
+            afterLowVarianceCut = filteredMatrix.rows();
+            config.setAfterLowVarianceCut( afterLowVarianceCut );
         }
 
         if ( config.isLowExpressionCutIsSet() ) {
@@ -201,6 +205,7 @@ public class ExpressionExperimentFilter {
             Map<DesignElement, Double> ranks = eeDoubleMatrix.getRanks();
             filteredMatrix = lowExpressionFilter( filteredMatrix, ranks );
             afterLowExpressionCut = filteredMatrix.rows();
+            config.setAfterLowExpressionCut( afterLowExpressionCut );
         }
 
         if ( log.isInfoEnabled() ) {
