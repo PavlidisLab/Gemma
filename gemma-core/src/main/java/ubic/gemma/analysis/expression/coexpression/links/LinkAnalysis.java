@@ -243,16 +243,20 @@ public class LinkAnalysis {
             log.info( "Minimum correlation to get " + form.format( maxP ) + " is about " + form.format( scoreAtP )
                     + " for " + metricMatrix.getNumUniqueGenes() + " unique items (if all " + this.dataMatrix.columns()
                     + " items are present)" );
-
             if ( scoreAtP > 0.9 ) {
                 log.warn( "This data set has a very high threshold for statistical significance!" );
-            }
-
+            }  
         }
         this.metricMatrix.setPValueThreshold( maxP ); // this is the corrected
         // value.
 
         config.setUpperTailCut( Math.max( scoreAtP, cdfUpperCutScore ) );
+        if(config.getUpperTailCut() == scoreAtP){
+            config.setUpperCdfCutUsed( false );
+        }
+        else if(config.getUpperTailCut() == cdfUpperCutScore){
+            config.setUpperCdfCutUsed( true );
+        }
         log.info( "Final upper cut is " + form.format( config.getUpperTailCut() ) );
 
         if ( !config.isAbsoluteValue() ) {
@@ -260,6 +264,13 @@ public class LinkAnalysis {
             log.info( "Final lower cut is " + form.format( config.getLowerTailCut() ) );
         }
 
+        if(config.getLowerTailCut() == scoreAtP){
+            config.setLowerCdfCutUsed( false );
+        }
+        else if(config.getLowerTailCut() == cdfLowerCutScore){
+            config.setLowerCdfCutUsed( true );
+        }        
+        
         metricMatrix.setUpperTailThreshold( config.getUpperTailCut() );
         if ( config.isAbsoluteValue() ) {
             metricMatrix.setLowerTailThreshold( config.getUpperTailCut() );
