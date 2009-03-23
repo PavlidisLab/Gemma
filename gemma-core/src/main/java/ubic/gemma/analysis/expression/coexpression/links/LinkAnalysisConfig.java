@@ -54,7 +54,9 @@ public class LinkAnalysisConfig implements Serializable {
     private boolean knownGenesOnly = false;
     private boolean useDb = true;
     private boolean makeSampleCorrMatImages = true;
-
+    private boolean lowerCdfCutUsed = false;
+    private boolean upperCdfCutUsed = false;
+    
     private NormalizationMethod normalizationMethod = NormalizationMethod.none;
 
     /*
@@ -175,7 +177,18 @@ public class LinkAnalysisConfig implements Serializable {
         if(this.isSubsetUsed()){
             buf.append( "# subset:" + this.subsetSize + "\n" );
         }
-        
+        if(this.isUpperCdfCutUsed()){
+            buf.append( "# upperCutUsed:cdfCut\n" );
+        }
+        else{
+            buf.append( "# upperCutUsed:fwe\n" );
+        }
+        if(this.isLowerCdfCutUsed()){
+            buf.append( "# lowerCutUsed:cdfCut\n" );
+        }
+        else{
+            buf.append( "# lowerCutUsed:fwe\n" );
+        }        
         return buf.toString();
     }
 
@@ -251,5 +264,33 @@ public class LinkAnalysisConfig implements Serializable {
 
     public void setSubsetUsed( boolean subsetUsed ) {
         this.subsetUsed = subsetUsed;
+    }
+
+    /**
+     * @return the lowerCdfCutUsed
+     */
+    public boolean isLowerCdfCutUsed() {
+        return lowerCdfCutUsed;
+    }
+
+    /**
+     * @param lowerCdfCutUsed the lowerCdfCutUsed to set
+     */
+    public void setLowerCdfCutUsed( boolean lowerCdfCutUsed ) {
+        this.lowerCdfCutUsed = lowerCdfCutUsed;
+    }
+
+    /**
+     * @return the upperCdfCutUsed
+     */
+    public boolean isUpperCdfCutUsed() {
+        return upperCdfCutUsed;
+    }
+
+    /**
+     * @param upperCdfCutUsed the upperCdfCutUsed to set
+     */
+    public void setUpperCdfCutUsed( boolean upperCdfCutUsed ) {
+        this.upperCdfCutUsed = upperCdfCutUsed;
     }
 }
