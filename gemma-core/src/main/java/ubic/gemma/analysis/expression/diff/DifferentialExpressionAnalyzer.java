@@ -166,7 +166,7 @@ public class DifferentialExpressionAnalyzer {
                 if ( factors.size() != 2 ) {
                     throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
                 }
-                if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment ) ) {
+                if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment, factors ) ) {
                     throw new IllegalArgumentException(
                             "Experimental design must be block complete to run Two-way ANOVA with interactions" );
                 }

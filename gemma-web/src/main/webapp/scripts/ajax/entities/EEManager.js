@@ -352,13 +352,13 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 								callParams.push(id);
 								callParams.push(factorsToUseIds);
 								callParams.push(includeInteractions);
-
+								Ext.getBody().mask();
 								callParams.push({
-
 											callback : function(data) {
 												var k = new Gemma.WaitHandler();
 												k.handleWait(data, true);
-												this.relayEvents(k, ['done']);
+												deasw.relayEvents(k, ['done']);
+												Ext.getBody().unmask();
 												k.on('done', function(payload) {
 															this.fireEvent('differential', payload)
 														});

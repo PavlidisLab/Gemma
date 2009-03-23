@@ -205,7 +205,8 @@ public class DifferentialExpressionAnalysisHelperService {
 
     /**
      * Returns true if the block design is complete and there are at least 2 biological replicates for each "group",
-     * false otherwise.
+     * false otherwise. When determining completeness, a biomaterial's factor values are only considered if they are
+     * equivalent to one of the input experimental factors.
      * 
      * @param expressionExperiment
      * @param factors to consider completeness for.
@@ -216,15 +217,49 @@ public class DifferentialExpressionAnalysisHelperService {
         Collection<BioMaterial> biomaterials = getBioMaterials( expressionExperiment );
 
         /*
-         * Make sure each biomaterial has factor values from one experimental factor paired with factor values from the
-         * other experimental factors
+         * Get biomaterials with only those factor values equal to the factor values in the input factors. Only these
+         * factor values in each biomaterial will be used to determine completeness.
          */
+        Collection<BioMaterial> biomaterialsWithGivenFactorValues = filterFactorValuesFromBiomaterials( factors,
+                biomaterials );
 
-        boolean completeBlock = checkBlockDesign( biomaterials, factors );
+        boolean completeBlock = checkBlockDesign( biomaterialsWithGivenFactorValues, factors );
 
         boolean hasAllReps = checkBiologicalReplicates( expressionExperiment, factors );
 
         return completeBlock && hasAllReps;
+    }
+
+    /**
+     * Returns biomaterials with 'filtered' factor values. That is, each biomaterial will only contain those factor
+     * values equivalent to a factor value from one of the input experimental factors.
+     * 
+     * @param factors
+     * @param biomaterials
+     * @return Collection<BioMaterial>
+     */
+    private Collection<BioMaterial> filterFactorValuesFromBiomaterials( Collection<ExperimentalFactor> factors,
+            Collection<BioMaterial> biomaterials ) {
+        Collection<FactorValue> allFactorValuesFromGivenFactors = new HashSet<FactorValue>();
+        for ( ExperimentalFactor ef : factors ) {
+            allFactorValuesFromGivenFactors.addAll( ef.getFactorValues() );
+        }
+
+        Collection<BioMaterial> biomaterialsWithGivenFactorValues = new HashSet<BioMaterial>();
+        for ( BioMaterial b : biomaterials ) {
+            Collection<FactorValue> biomaterialFactorValues = b.getFactorValues();
+            Collection<FactorValue> factorValuesToConsider = new HashSet<FactorValue>();
+            factorValuesToConsider.addAll( biomaterialFactorValues );
+            for ( FactorValue biomaterialFactorValue : biomaterialFactorValues ) {
+                if ( !allFactorValuesFromGivenFactors.contains( biomaterialFactorValue ) ) {
+                    factorValuesToConsider.remove( biomaterialFactorValue );
+                }
+            }
+            b.setFactorValues( factorValuesToConsider );
+            biomaterialsWithGivenFactorValues.add( b );
+        }
+
+        return biomaterialsWithGivenFactorValues;
     }
 
     /**
@@ -268,8 +303,10 @@ public class DifferentialExpressionAnalysisHelperService {
     }
 
     /**
-     * Determines if each biomaterial has factor value from an experimental factor equal to experimental factor of one
-     * of the supplied factor values.
+     * Returns true if all of the following conditions hold true: each biomaterial has more than 2 factor values, each
+     * biomaterial has a factor value from one of the input factors paired with a factor value from the other input
+     * factors, and all factor values from 1 factor have been paired with all factor values from the other factors,
+     * across all biomaterials.
      * 
      * @param biomaterials
      * @param factorValues
