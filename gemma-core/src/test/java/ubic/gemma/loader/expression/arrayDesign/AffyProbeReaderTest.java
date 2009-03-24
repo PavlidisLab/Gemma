@@ -92,7 +92,7 @@ public class AffyProbeReaderTest extends TestCase {
     public final void testReadExonArray() throws Exception {
 
         InputStream ist = AffyProbeReaderTest.class
-                .getResourceAsStream( "/data/loader/expression/arrayDesign/HuEx-1_0.sample.probe.tab" );
+                .getResourceAsStream( "/data/loader/expression/arrayDesign/HuEx1_0SampleProbe.txt" );
 
         apr.parse( ist );
 
@@ -154,7 +154,7 @@ public class AffyProbeReaderTest extends TestCase {
     public final void testReadExonArray2() throws Exception {
 
         InputStream ist = AffyProbeReaderTest.class
-                .getResourceAsStream( "/data/loader/expression/arrayDesign/MoGene.sample.probe.tab" );
+                .getResourceAsStream( "/data/loader/expression/arrayDesign/MoGeneSampleProbe.txt" );
 
         apr.parse( ist );
 
