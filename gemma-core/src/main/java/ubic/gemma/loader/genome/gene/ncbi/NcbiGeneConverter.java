@@ -51,7 +51,7 @@ import ubic.gemma.util.SequenceBinUtils;
  * @version $Id$
  * @see NCBIGene2Accession, NCBIGeneInfo
  */
-public class NcbiGeneConverter implements Converter {
+public class NcbiGeneConverter implements Converter<Object, Object> {
 
     private static Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
     AtomicBoolean producerDone = new AtomicBoolean( false );
@@ -70,7 +70,7 @@ public class NcbiGeneConverter implements Converter {
      * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
-    public Collection<Object> convert( Collection sourceDomainObjects ) {
+    public Collection<Object> convert( Collection<Object> sourceDomainObjects ) {
         Collection<Object> results = new HashSet<Object>();
         for ( Object object : sourceDomainObjects ) {
             results.add( this.convert( object ) );

@@ -91,7 +91,8 @@ import ubic.gemma.ontology.MgedOntologyService;
  * <p>
  * GEO has four basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays), Series (Experiments) and DataSets
  * (which are curated Experiments). Note that a sample can belong to more than one series. A series can include more
- * than one dataset. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
+ * than one dataset. GEO also supports the concept of a superseries. See
+ * http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
  * <p>
  * A curated expression data set is at first represented by a GEO "GDS" number (a curated dataset), which maps to a
  * series (GSE). HOWEVER, multiple datasets may go together to form a series (GSE). This can happen when the "A" and "B"
@@ -106,7 +107,7 @@ import ubic.gemma.ontology.MgedOntologyService;
  * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
  * @spring.property name="taxonService" ref="taxonService"
  */
-public class GeoConverter implements Converter {
+public class GeoConverter implements Converter<Object, Object> {
 
     /**
      * This string is inserted into the descriptions of constructed biomaterials.
@@ -149,7 +150,7 @@ public class GeoConverter implements Converter {
     private ExternalDatabase genbank;
 
     private boolean splitIncompatiblePlatforms = false;
-    
+
     /**
      * The scientific name used for rat species. FIXME this should be updated elsewhere; avoid this hardcoding.
      */
@@ -198,13 +199,14 @@ public class GeoConverter implements Converter {
     /**
      * @param geoObject
      */
+    @SuppressWarnings("unchecked")
     public Object convert( Object geoObject ) {
         if ( geoObject == null ) {
             log.warn( "Null object" );
             return null;
         }
         if ( geoObject instanceof Collection ) {
-            return convert( ( Collection ) geoObject );
+            return convert( ( Collection<Object> ) geoObject );
         } else if ( geoObject instanceof GeoDataset ) {
             return convertDataset( ( GeoDataset ) geoObject );
         } else if ( geoObject instanceof GeoSeries ) { // typically we start here, with a series.
@@ -312,7 +314,7 @@ public class GeoConverter implements Converter {
             sourceChar.setDescription( "GEO Sample source" );
             String characteristic = trimString( channel.getSourceName() );
             sourceChar.setCategory( "BioSource" );
-            sourceChar.setCategoryUri(  MgedOntologyService.MGED_ONTO_BASE_URL  + "#BioSource" );
+            sourceChar.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#BioSource" );
             sourceChar.setValue( characteristic );
             sourceChar.setEvidenceCode( GOEvidenceCode.IEA );
             bioMaterial.getCharacteristics().add( sourceChar );
@@ -524,9 +526,9 @@ public class GeoConverter implements Converter {
             throw new UnsupportedOperationException( "GEO Dataset can only be associated with one series" );
         }
 
-        Collection<ExpressionExperiment> results = this.convertSeries( geoDataset.getSeries().iterator().next() );
-        assert results.size() == 1; // unless we have multiple species, not possible.
-        return results.iterator().next();
+        Collection<ExpressionExperiment> seriesResults = this.convertSeries( geoDataset.getSeries().iterator().next() );
+        assert seriesResults.size() == 1; // unless we have multiple species, not possible.
+        return seriesResults.iterator().next();
     }
 
     /**
@@ -936,7 +938,7 @@ public class GeoConverter implements Converter {
 
             boolean isRefseq = false;
             // ExternalDB will be null if it's IMAGE (this is really pretty messy, sorry)
-            if ( externalDb != null && externalDb.getName().equals( "Genbank" )
+            if ( externalAccession != null && externalDb != null && externalDb.getName().equals( "Genbank" )
                     && StringUtils.isNotBlank( externalAccession ) ) {
                 // http://www.ncbi.nlm.nih.gov/RefSeq/key.html#accessions : "RefSeq accession numbers can be
                 // distinguished from GenBank accessions by their prefix distinct format of [2 characters|underbar]"
@@ -968,7 +970,8 @@ public class GeoConverter implements Converter {
                  */
 
                 /*
-                 * We also don't store them if they are refseq ids, because refseq ids are not actually put on arrays.
+                 * We also don't store them if they are refseq ids, because refseq ids are generally not the actual
+                 * sequences put on arrays.
                  */
 
                 DatabaseEntry dbe = createDatabaseEntry( externalDb, externalAccession, bs );
@@ -1384,8 +1387,9 @@ public class GeoConverter implements Converter {
 
     /**
      * Convert a GEO series into one or more ExpressionExperiments. The more than one case comes up if the are platforms
-     * from more than one organism represented in the series. If the series is split into two or more
-     * ExpressionExperiments, each refers to a modified GEO accession such as GSE2393.1, GSE2393.2 etc for each organism
+     * from more than one organism represented in the series, ir if 'split by platform' is set. If the series is split
+     * into two or more ExpressionExperiments, each refers to a modified GEO accession such as GSE2393.1, GSE2393.2 etc
+     * for each organism/platform
      * <p>
      * Similarly, because there is no concept of "biomaterial" in GEO, samples that are inferred to have been run using
      * the same biomaterial. The biomaterials are given names after the GSE and the bioAssays (GSMs) such as
@@ -1425,8 +1429,8 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * Used for the case where we want to split the GSE into two separate ExpressionExperiments based on platform. This
-     * is necessary when the two platforms are completely incompatible.
+     * Used for the case where we want to split the GSE into two (or more) separate ExpressionExperiments based on
+     * platform. This is necessary when the two platforms are completely incompatible.
      * 
      * @param series
      * @param converted
@@ -2170,11 +2174,11 @@ public class GeoConverter implements Converter {
     private String determinePlatformSequenceColumn( GeoPlatform platform ) {
         Collection<String> columnNames = platform.getColumnNames();
         int index = 0;
-        for ( String string : columnNames ) {
-            if ( GeoConstants.likelySequence( string ) ) {
-                log.debug( string + " appears to indicate the  probe descriptions in column " + index
+        for ( String columnName : columnNames ) {
+            if ( GeoConstants.likelySequence( columnName ) ) {
+                log.debug( "'" + columnName + "' appears to indicate the sequences in column " + index
                         + " for platform " + platform );
-                return string;
+                return columnName;
             }
             index++;
         }

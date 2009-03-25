@@ -46,7 +46,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  * @spring.bean id="mageMLConverter" singleton="false"
  */
-public class MageMLConverter extends AbstractMageTool implements Converter {
+public class MageMLConverter extends AbstractMageTool implements Converter<Object, Object> {
 
     private Collection<Object> convertedResult;
     private boolean isConverted = false;
@@ -75,7 +75,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
      * (non-Javadoc)
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
-    public Collection<Object> convert( Collection objects ) {
+    public Collection<Object> convert( Collection<Object> objects ) {
         Package[] allPackages = Package.getPackages();
         if ( convertedResult == null ) {
             convertedResult = new ArrayList<Object>();
