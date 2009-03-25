@@ -18,8 +18,12 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import java.util.Collection;
+
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -261,12 +265,12 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      * Get all audit events associated with the specified arrayDesign ids.
      * </p>
      */
-    public java.util.Map getAuditEvents( java.util.Collection<Long> ids );
+    public java.util.Map<Long, Collection<AuditEvent>> getAuditEvents( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Collection getExpressionExperiments(
+    public java.util.Collection<ExpressionExperiment> getExpressionExperiments(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**

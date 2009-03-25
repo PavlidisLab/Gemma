@@ -21,15 +21,17 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 /**
  * @author pavlidis
@@ -67,7 +69,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
                 names.add( bioAssay.getName() );
             }
             queryObject.createCriteria( "bioAssays" ).add( Restrictions.in( "name", names ) );
-            
+
             BioAssayDimension candidate = ( BioAssayDimension ) queryObject.uniqueResult();
 
             if ( candidate == null ) return null;
@@ -110,4 +112,31 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
         if ( log.isDebugEnabled() ) log.debug( "Creating new " + bioAssayDimension );
         return create( bioAssayDimension );
     }
+
+    /*
+     * (non-Javadoc)
+     * @seeubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#thaw(ubic.gemma.model.expression.bioAssayData.
+     * BioAssayDimension)
+     */
+    public void thaw( final BioAssayDimension bioAssayDimension ) {
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( bioAssayDimension, LockMode.NONE );
+                Hibernate.initialize( bioAssayDimension );
+                Hibernate.initialize( bioAssayDimension.getBioAssays() );
+
+                for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+                    Hibernate.initialize( ba );
+                    Hibernate.initialize( ba.getSamplesUsed() );
+                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                        Hibernate.initialize( bm.getFactorValues() );
+                    }
+                }
+                session.clear();
+                return null;
+            }
+        } );
+    }
+
 }

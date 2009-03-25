@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -28,7 +27,7 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
 
     @Override
     protected BioAssayDimension handleCreate( BioAssayDimension bioAssayDimension ) throws Exception {
-        return ( BioAssayDimension ) this.getBioAssayDimensionDao().create( bioAssayDimension );
+        return this.getBioAssayDimensionDao().create( bioAssayDimension );
     }
 
     /**
@@ -42,7 +41,7 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
 
     @Override
     protected BioAssayDimension handleLoad( Long id ) throws Exception {
-        return ( BioAssayDimension ) this.getBioAssayDimensionDao().load( id );
+        return this.getBioAssayDimensionDao().load( id );
     }
 
     @Override
@@ -53,6 +52,11 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
     @Override
     protected void handleUpdate( BioAssayDimension bioAssayDimension ) throws Exception {
         this.getBioAssayDimensionDao().update( bioAssayDimension );
+    }
+
+    public void thaw( BioAssayDimension bioAssayDimension ) {
+        this.getBioAssayDimensionDao().thaw( bioAssayDimension );
+
     }
 
 }

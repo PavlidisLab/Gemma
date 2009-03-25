@@ -36,6 +36,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.NonUniqueObjectException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -45,6 +46,7 @@ import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateCallback;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
@@ -58,6 +60,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
@@ -71,11 +74,11 @@ import ubic.gemma.util.CommonQueries;
  */
 public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
 
-    private static final String EXPRESSION_EXPERIMENT_QCACHE_REGION = "expressionExperiment-qc";
-
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
     private static final int BATCH_SIZE = 1000;
+
+    private static final String EXPRESSION_EXPERIMENT_QCACHE_REGION = "expressionExperiment-qc";
 
     public ExpressionExperiment expressionExperimentValueObjectToEntity(
             ExpressionExperimentValueObject expressionExperimentValueObject ) {
@@ -175,6 +178,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
         return CommonQueries.getArrayDesignsUsed( expressionExperiment, this.getSession() );
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
+        String queryString = "select distinct b from BioAssayDimensionImpl b, ExpressionExperimentImpl e "
+                + "inner join b.bioAssays bba inner join e.bioAssays eb where eb = bba and e = :ee ";
+        return getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
     }
 
     /*
@@ -1404,7 +1414,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
 
-                session.lock( ee, LockMode.NONE );
+                try {
+                    session.lock( ee, LockMode.NONE );
+                } catch ( NonUniqueObjectException e ) {
+                    return null;
+                }
 
                 Hibernate.initialize( ee );
                 Hibernate.initialize( ee.getQuantitationTypes() );

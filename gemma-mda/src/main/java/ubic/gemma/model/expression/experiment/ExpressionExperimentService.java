@@ -28,8 +28,10 @@ import java.util.Map;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -181,7 +183,7 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * See getAssayedGenes
      * </p>
      */
-    public java.util.Collection getAssayedProbes(
+    public java.util.Collection<CompositeSequence> getAssayedProbes(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
             java.lang.Double rankThreshold );
 
@@ -191,6 +193,14 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * </p>
      */
     public long getBioMaterialCount( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+
+    /**
+     * Retrieve the BioAssayDimensions for the study.
+     * 
+     * @param expressionExperiment
+     * @return
+     */
+    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
      * 

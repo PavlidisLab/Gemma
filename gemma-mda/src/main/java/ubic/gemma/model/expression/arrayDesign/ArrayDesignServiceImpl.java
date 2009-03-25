@@ -33,6 +33,9 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnaly
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -49,7 +52,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * .gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) throws Exception {
+    protected Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign )
+            throws Exception {
         return this.getArrayDesignDao().compositeSequenceWithoutBioSequences( arrayDesign );
     }
 
@@ -60,7 +64,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * .gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) throws Exception {
+    protected Collection<CompositeSequence> handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign )
+            throws Exception {
         return this.getArrayDesignDao().compositeSequenceWithoutBlatResults( arrayDesign );
     }
 
@@ -71,7 +76,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * .model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign ) throws Exception {
+    protected Collection<CompositeSequence> handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign )
+            throws Exception {
         return this.getArrayDesignDao().compositeSequenceWithoutGenes( arrayDesign );
     }
 
@@ -88,7 +94,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      */
     @Override
     protected ArrayDesign handleCreate( ArrayDesign arrayDesign ) throws Exception {
-        return ( ArrayDesign ) this.getArrayDesignDao().create( arrayDesign );
+        return this.getArrayDesignDao().create( arrayDesign );
     }
 
     @Override
@@ -110,7 +116,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     }
 
     @Override
-    protected Collection handleFindByAlternateName( String queryString ) throws Exception {
+    protected Collection<ArrayDesign> handleFindByAlternateName( String queryString ) throws Exception {
         return this.getArrayDesignDao().findByAlternateName( queryString );
     }
 
@@ -137,7 +143,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see ubic.gemma.model.expression.arrayDesign.handleGetAllAssociatedBioAssays(long)
      */
     @Override
-    protected java.util.Collection handleGetAllAssociatedBioAssays( java.lang.Long id ) {
+    protected java.util.Collection<BioAssay> handleGetAllAssociatedBioAssays( java.lang.Long id ) {
         return this.getArrayDesignDao().getAllAssociatedBioAssays( id );
 
     }
@@ -158,7 +164,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetExpressionExperimentsById(long)
      */
     @Override
-    protected Collection handleGetExpressionExperiments( ArrayDesign arrayDesign ) throws Exception {
+    protected Collection<ExpressionExperiment> handleGetExpressionExperiments( ArrayDesign arrayDesign )
+            throws Exception {
         return this.getArrayDesignDao().getExpressionExperiments( arrayDesign );
     }
 
@@ -169,7 +176,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastAnnotationFile( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastAnnotationFile( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
 
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
@@ -187,7 +194,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastGeneMapping( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastGeneMapping( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         Set<Long> aaIds = eventMap.keySet();
@@ -201,7 +208,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastRepeatAnalysis( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastRepeatAnalysis( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not SequenceAnalysis events
@@ -219,7 +226,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastSequenceAnalysis( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastSequenceAnalysis( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not SequenceAnalysis events
@@ -236,7 +243,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastSequenceUpdate( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastSequenceUpdate( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not Sequence update events
@@ -251,9 +258,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastTroubleEvent(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected java.util.Map handleGetLastTroubleEvent( Collection ids ) throws Exception {
+    protected java.util.Map<Long, AuditEvent> handleGetLastTroubleEvent( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
 
@@ -284,9 +290,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastValidationEvent(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastValidationEvent( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastValidationEvent( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
 
@@ -334,22 +339,22 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     }
 
     @Override
-    protected Map handleIsMerged( Collection ids ) throws Exception {
+    protected Map<Long, Boolean> handleIsMerged( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().isMerged( ids );
     }
 
     @Override
-    protected Map handleIsMergee( Collection ids ) throws Exception {
+    protected Map<Long, Boolean> handleIsMergee( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().isMergee( ids );
     }
 
     @Override
-    protected Map handleIsSubsumed( Collection ids ) throws Exception {
+    protected Map<Long, Boolean> handleIsSubsumed( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().isSubsumed( ids );
     }
 
     @Override
-    protected Map handleIsSubsumer( Collection ids ) throws Exception {
+    protected Map<Long, Boolean> handleIsSubsumer( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().isSubsumer( ids );
     }
 
@@ -359,14 +364,14 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      */
     @Override
     protected ArrayDesign handleLoad( long id ) throws Exception {
-        return ( ArrayDesign ) this.getArrayDesignDao().load( id );
+        return this.getArrayDesignDao().load( id );
     }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllArrayDesigns()
      */
     @Override
-    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+    protected java.util.Collection<ArrayDesign> handleLoadAll() throws java.lang.Exception {
         return this.getArrayDesignDao().loadAll();
     }
 
@@ -375,7 +380,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadAllValueObjects()
      */
     @Override
-    protected Collection handleLoadAllValueObjects() throws Exception {
+    protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() throws Exception {
         return this.getArrayDesignDao().loadAllValueObjects();
     }
 
@@ -386,7 +391,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * expression.arrayDesign.ArrayDesign)
      */
     @Override
-    protected Collection handleLoadCompositeSequences( ArrayDesign arrayDesign ) throws Exception {
+    protected Collection<CompositeSequence> handleLoadCompositeSequences( ArrayDesign arrayDesign ) throws Exception {
         return this.getArrayDesignDao().loadCompositeSequences( arrayDesign.getId() );
     }
 
@@ -399,9 +404,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().loadFully( id );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
+    protected Collection<ArrayDesign> handleLoadMultiple( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().load( ids );
     }
 
@@ -410,7 +414,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadValueObjects(java.util.Collection)
      */
     @Override
-    protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
+    protected Collection<ArrayDesignValueObject> handleLoadValueObjects( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().loadValueObjects( ids );
     }
 
@@ -431,7 +435,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * java.util.Collection)
      */
     @Override
-    protected long handleNumAllCompositeSequenceWithBioSequences( Collection ids ) throws Exception {
+    protected long handleNumAllCompositeSequenceWithBioSequences( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().numAllCompositeSequenceWithBioSequences( ids );
     }
 
@@ -452,7 +456,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * .util.Collection)
      */
     @Override
-    protected long handleNumAllCompositeSequenceWithBlatResults( Collection ids ) throws Exception {
+    protected long handleNumAllCompositeSequenceWithBlatResults( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().numAllCompositeSequenceWithBlatResults( ids );
     }
 
@@ -472,7 +476,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * .Collection)
      */
     @Override
-    protected long handleNumAllCompositeSequenceWithGenes( Collection ids ) throws Exception {
+    protected long handleNumAllCompositeSequenceWithGenes( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().numAllCompositeSequenceWithGenes( ids );
     }
 
@@ -490,7 +494,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllGenes(java.util.Collection)
      */
     @Override
-    protected long handleNumAllGenes( Collection ids ) throws Exception {
+    protected long handleNumAllGenes( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().numAllGenes( ids );
     }
 

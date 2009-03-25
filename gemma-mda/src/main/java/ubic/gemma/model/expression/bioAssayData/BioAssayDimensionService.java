@@ -54,5 +54,11 @@ public interface BioAssayDimensionService {
      * 
      */
     public void update( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
+    
+    /**
+     * 
+     * @param bioAssayDimension
+     */
+    public void thaw( BioAssayDimension bioAssayDimension );
 
 }

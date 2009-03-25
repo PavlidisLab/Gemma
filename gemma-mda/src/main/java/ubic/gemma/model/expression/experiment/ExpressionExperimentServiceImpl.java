@@ -41,6 +41,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -64,6 +65,13 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByQuantitationType( type );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getBioAssayDimensions(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
+        return this.getExpressionExperimentDao().getBioAssayDimensions( expressionExperiment );
+    }
+
     /*
      * (non-Javadoc)
      * @seeubic.gemma.model.expression.experiment.ExpressionExperimentService#getProcessedDataVectors(ubic.gemma.model.
@@ -77,7 +85,7 @@ public class ExpressionExperimentServiceImpl extends
     protected Integer handleCountAll() throws Exception {
         return this.getExpressionExperimentDao().countAll();
     }
-
+    
     /*
      * (non-Javadoc)
      * @see

@@ -22,8 +22,11 @@
 //
 package ubic.gemma.model.expression.arrayDesign;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -88,9 +91,8 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
         if ( instances != null ) {
             for ( final java.util.Iterator<ArrayDesignValueObject> iterator = instances.iterator(); iterator.hasNext(); ) {
                 // - remove an objects that are null or not of the correct instance
-                if ( !( iterator.next() instanceof ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject ) ) {
-                    iterator.remove();
-                }
+                iterator.remove();
+
             }
             org.apache.commons.collections.CollectionUtils.transform( instances,
                     ArrayDesignValueObjectToEntityTransformer );
@@ -114,7 +116,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public java.util.Collection compositeSequenceWithoutBlatResults(
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBlatResults(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
             return this.handleCompositeSequenceWithoutBlatResults( arrayDesign );
@@ -128,7 +130,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public java.util.Collection compositeSequenceWithoutGenes(
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutGenes(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
             return this.handleCompositeSequenceWithoutGenes( arrayDesign );
@@ -164,9 +166,9 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) entityIterator
-                                    .next() );
+                        for ( java.util.Iterator<ArrayDesign> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
                         }
                         return null;
                     }
@@ -226,24 +228,24 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
         }
     }
 
+    @SuppressWarnings("unchecked")
     public ArrayDesign find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( arrayDesign );
         argNames.add( "arrayDesign" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam(
+                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) result );
         return ( ArrayDesign ) result;
     }
@@ -266,8 +268,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      */
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign find( final java.lang.String queryString,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        return ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) this.find( TRANSFORM_NONE, queryString,
-                arrayDesign );
+        return this.find( TRANSFORM_NONE, queryString, arrayDesign );
     }
 
     /**
@@ -412,7 +413,6 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(int,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    @SuppressWarnings( { "unchecked" })
     public Object findOrCreate( final int transform,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         return this
@@ -426,7 +426,6 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         return ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) this.findOrCreate( TRANSFORM_NONE, queryString,
@@ -444,7 +443,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getAllAssociatedBioAssays(java.lang.Long)
      */
-    public java.util.Collection getAllAssociatedBioAssays( final java.lang.Long id ) {
+    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( final java.lang.Long id ) {
         try {
             return this.handleGetAllAssociatedBioAssays( id );
         } catch ( Throwable th ) {
@@ -457,7 +456,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getAuditEvents(java.util.Collection)
      */
-    public java.util.Map getAuditEvents( final java.util.Collection ids ) {
+    public java.util.Map<Long, Collection<AuditEvent>> getAuditEvents( final java.util.Collection<Long> ids ) {
         try {
             return this.handleGetAuditEvents( ids );
         } catch ( Throwable th ) {
@@ -470,7 +469,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public java.util.Collection getExpressionExperiments(
+    public java.util.Collection<ExpressionExperiment> getExpressionExperiments(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
             return this.handleGetExpressionExperiments( arrayDesign );
@@ -497,7 +496,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#isMerged(java.util.Collection)
      */
-    public java.util.Map isMerged( final java.util.Collection ids ) {
+    public java.util.Map<Long, Boolean> isMerged( final java.util.Collection<Long> ids ) {
         try {
             return this.handleIsMerged( ids );
         } catch ( Throwable th ) {
@@ -576,11 +575,9 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadAll(int)
      */
-    public java.util.Collection<ArrayDesign> loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.class );
-        this.transformEntities( transform, results );
-        return results;
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<ArrayDesign> loadAll( @SuppressWarnings("unused") final int transform ) {
+        return this.getHibernateTemplate().loadAll( ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.class );
     }
 
     /**
@@ -638,7 +635,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadValueObjects(java.util.Collection)
      */
-    public java.util.Collection loadValueObjects( final java.util.Collection ids ) {
+    public java.util.Collection<ArrayDesignValueObject> loadValueObjects( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadValueObjects( ids );
         } catch ( Throwable th ) {
@@ -664,7 +661,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllCompositeSequenceWithBioSequences(java.util.Collection)
      */
-    public long numAllCompositeSequenceWithBioSequences( final java.util.Collection ids ) {
+    public long numAllCompositeSequenceWithBioSequences( final java.util.Collection<Long> ids ) {
         try {
             return this.handleNumAllCompositeSequenceWithBioSequences( ids );
         } catch ( Throwable th ) {
@@ -690,7 +687,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllCompositeSequenceWithBlatResults(java.util.Collection)
      */
-    public long numAllCompositeSequenceWithBlatResults( final java.util.Collection ids ) {
+    public long numAllCompositeSequenceWithBlatResults( final java.util.Collection<Long> ids ) {
         try {
             return this.handleNumAllCompositeSequenceWithBlatResults( ids );
         } catch ( Throwable th ) {
@@ -716,7 +713,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllCompositeSequenceWithGenes(java.util.Collection)
      */
-    public long numAllCompositeSequenceWithGenes( final java.util.Collection ids ) {
+    public long numAllCompositeSequenceWithGenes( final java.util.Collection<Long> ids ) {
         try {
             return this.handleNumAllCompositeSequenceWithGenes( ids );
         } catch ( Throwable th ) {
@@ -742,7 +739,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numAllGenes(java.util.Collection)
      */
-    public long numAllGenes( final java.util.Collection ids ) {
+    public long numAllGenes( final java.util.Collection<Long> ids ) {
         try {
             return this.handleNumAllGenes( ids );
         } catch ( Throwable th ) {
@@ -984,7 +981,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#toArrayDesignValueObjectCollection(java.util.Collection)
      */
-    public final void toArrayDesignValueObjectCollection( java.util.Collection entities ) {
+    public final void toArrayDesignValueObjectCollection( java.util.Collection<ArrayDesign> entities ) {
         if ( entities != null ) {
             org.apache.commons.collections.CollectionUtils.transform( entities, ARRAYDESIGNVALUEOBJECT_TRANSFORMER );
         }
@@ -1001,8 +998,9 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.expression.arrayDesign.ArrayDesign ) entityIterator.next() );
+                        for ( java.util.Iterator<ArrayDesign> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }
@@ -1089,7 +1087,8 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * Performs the core logic for {@link #getAuditEvents(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetAuditEvents( java.util.Collection<Long> ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Collection<AuditEvent>> handleGetAuditEvents( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for
@@ -1326,7 +1325,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<ArrayDesign> entities ) {
         switch ( transform ) {
             case ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.TRANSFORM_ARRAYDESIGNVALUEOBJECT:
                 toArrayDesignValueObjectCollection( entities );

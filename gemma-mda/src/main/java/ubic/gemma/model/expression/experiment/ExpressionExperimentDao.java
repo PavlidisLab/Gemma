@@ -24,9 +24,11 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -358,7 +360,15 @@ public interface ExpressionExperimentDao extends
      * events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map getAuditEvents( java.util.Collection<Long> ids );
+    public java.util.Map<Long, Collection<AuditEvent>> getAuditEvents( java.util.Collection<Long> ids );
+
+    /**
+     * Retrieve the BioAssayDimensions for the study.
+     * 
+     * @param expressionExperiment
+     * @return
+     */
+    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
      * 

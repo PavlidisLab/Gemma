@@ -22,6 +22,11 @@
 //
 package ubic.gemma.model.expression.arrayDesign;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.arrayDesign.ArrayDesignService</code>, provides
@@ -38,7 +43,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public java.util.Collection compositeSequenceWithoutBioSequences(
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBioSequences(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
             return this.handleCompositeSequenceWithoutBioSequences( arrayDesign );
@@ -52,7 +57,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public java.util.Collection compositeSequenceWithoutBlatResults(
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBlatResults(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
             return this.handleCompositeSequenceWithoutBlatResults( arrayDesign );
@@ -66,7 +71,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public java.util.Collection compositeSequenceWithoutGenes(
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutGenes(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
             return this.handleCompositeSequenceWithoutGenes( arrayDesign );
@@ -147,7 +152,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByAlternateName(java.lang.String)
      */
-    public java.util.Collection findByAlternateName( final java.lang.String queryString ) {
+    public java.util.Collection<ArrayDesign> findByAlternateName( final java.lang.String queryString ) {
         try {
             return this.handleFindByAlternateName( queryString );
         } catch ( Throwable th ) {
@@ -200,7 +205,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllAssociatedBioAssays(java.lang.Long)
      */
-    public java.util.Collection getAllAssociatedBioAssays( final java.lang.Long id ) {
+    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( final java.lang.Long id ) {
         try {
             return this.handleGetAllAssociatedBioAssays( id );
         } catch ( Throwable th ) {
@@ -227,7 +232,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public java.util.Collection getExpressionExperiments(
+    public java.util.Collection<ExpressionExperiment> getExpressionExperiments(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
             return this.handleGetExpressionExperiments( arrayDesign );
@@ -241,7 +246,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastAnnotationFile(java.util.Collection)
      */
-    public java.util.Map getLastAnnotationFile( final java.util.Collection ids ) {
+    public java.util.Map<Long, AuditEvent> getLastAnnotationFile( final java.util.Collection<Long> ids ) {
         try {
             return this.handleGetLastAnnotationFile( ids );
         } catch ( Throwable th ) {
@@ -254,7 +259,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastGeneMapping(java.util.Collection)
      */
-    public java.util.Map getLastGeneMapping( final java.util.Collection ids ) {
+    public java.util.Map<Long, AuditEvent> getLastGeneMapping( final java.util.Collection<Long> ids ) {
         try {
             return this.handleGetLastGeneMapping( ids );
         } catch ( Throwable th ) {
@@ -267,7 +272,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastRepeatAnalysis(java.util.Collection)
      */
-    public java.util.Map getLastRepeatAnalysis( final java.util.Collection ids ) {
+    public java.util.Map<Long, AuditEvent> getLastRepeatAnalysis( final java.util.Collection<Long> ids ) {
         try {
             return this.handleGetLastRepeatAnalysis( ids );
         } catch ( Throwable th ) {
@@ -280,7 +285,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastSequenceAnalysis(java.util.Collection)
      */
-    public java.util.Map getLastSequenceAnalysis( final java.util.Collection ids ) {
+    public java.util.Map<Long, AuditEvent> getLastSequenceAnalysis( final java.util.Collection<Long> ids ) {
         try {
             return this.handleGetLastSequenceAnalysis( ids );
         } catch ( Throwable th ) {
@@ -293,7 +298,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastSequenceUpdate(java.util.Collection)
      */
-    public java.util.Map getLastSequenceUpdate( final java.util.Collection ids ) {
+    public java.util.Map<Long, AuditEvent> getLastSequenceUpdate( final java.util.Collection<Long> ids ) {
         try {
             return this.handleGetLastSequenceUpdate( ids );
         } catch ( Throwable th ) {
@@ -306,7 +311,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastTroubleEvent(java.util.Collection)
      */
-    public java.util.Map getLastTroubleEvent( final java.util.Collection ids ) {
+    public java.util.Map<Long, AuditEvent> getLastTroubleEvent( final java.util.Collection<Long> ids ) {
         try {
             return this.handleGetLastTroubleEvent( ids );
         } catch ( Throwable th ) {
@@ -319,7 +324,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastValidationEvent(java.util.Collection)
      */
-    public java.util.Map getLastValidationEvent( final java.util.Collection ids ) {
+    public java.util.Map<Long, AuditEvent> getLastValidationEvent( final java.util.Collection<Long> ids ) {
         try {
             return this.handleGetLastValidationEvent( ids );
         } catch ( Throwable th ) {
@@ -358,7 +363,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isMerged(java.util.Collection)
      */
-    public java.util.Map isMerged( final java.util.Collection ids ) {
+    public java.util.Map<Long, Boolean> isMerged( final java.util.Collection<Long> ids ) {
         try {
             return this.handleIsMerged( ids );
         } catch ( Throwable th ) {
@@ -371,7 +376,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isMergee(java.util.Collection)
      */
-    public java.util.Map isMergee( final java.util.Collection ids ) {
+    public java.util.Map<Long, Boolean> isMergee( final java.util.Collection<Long> ids ) {
         try {
             return this.handleIsMergee( ids );
         } catch ( Throwable th ) {
@@ -384,7 +389,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isSubsumed(java.util.Collection)
      */
-    public java.util.Map isSubsumed( final java.util.Collection ids ) {
+    public java.util.Map<Long, Boolean> isSubsumed( final java.util.Collection<Long> ids ) {
         try {
             return this.handleIsSubsumed( ids );
         } catch ( Throwable th ) {
@@ -397,7 +402,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isSubsumer(java.util.Collection)
      */
-    public java.util.Map isSubsumer( final java.util.Collection ids ) {
+    public java.util.Map<Long, Boolean> isSubsumer( final java.util.Collection<Long> ids ) {
         try {
             return this.handleIsSubsumer( ids );
         } catch ( Throwable th ) {
@@ -423,7 +428,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<ArrayDesign> loadAll() {
         try {
             return this.handleLoadAll();
         } catch ( Throwable th ) {
@@ -436,7 +441,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadAllValueObjects()
      */
-    public java.util.Collection loadAllValueObjects() {
+    public java.util.Collection<ArrayDesignValueObject> loadAllValueObjects() {
         try {
             return this.handleLoadAllValueObjects();
         } catch ( Throwable th ) {
@@ -449,7 +454,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public java.util.Collection loadCompositeSequences(
+    public java.util.Collection<CompositeSequence> loadCompositeSequences(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
             return this.handleLoadCompositeSequences( arrayDesign );
@@ -476,7 +481,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadMultiple(java.util.Collection)
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+    public java.util.Collection<ArrayDesign> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -489,7 +494,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadValueObjects(java.util.Collection)
      */
-    public java.util.Collection loadValueObjects( final java.util.Collection ids ) {
+    public java.util.Collection<ArrayDesignValueObject> loadValueObjects( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadValueObjects( ids );
         } catch ( Throwable th ) {
@@ -515,7 +520,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBioSequences(java.util.Collection)
      */
-    public long numAllCompositeSequenceWithBioSequences( final java.util.Collection ids ) {
+    public long numAllCompositeSequenceWithBioSequences( final java.util.Collection<Long> ids ) {
         try {
             return this.handleNumAllCompositeSequenceWithBioSequences( ids );
         } catch ( Throwable th ) {
@@ -541,7 +546,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBlatResults(java.util.Collection)
      */
-    public long numAllCompositeSequenceWithBlatResults( final java.util.Collection ids ) {
+    public long numAllCompositeSequenceWithBlatResults( final java.util.Collection<Long> ids ) {
         try {
             return this.handleNumAllCompositeSequenceWithBlatResults( ids );
         } catch ( Throwable th ) {
@@ -567,7 +572,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithGenes(java.util.Collection)
      */
-    public long numAllCompositeSequenceWithGenes( final java.util.Collection ids ) {
+    public long numAllCompositeSequenceWithGenes( final java.util.Collection<Long> ids ) {
         try {
             return this.handleNumAllCompositeSequenceWithGenes( ids );
         } catch ( Throwable th ) {
@@ -593,7 +598,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllGenes(java.util.Collection)
      */
-    public long numAllGenes( final java.util.Collection ids ) {
+    public long numAllGenes( final java.util.Collection<Long> ids ) {
         try {
             return this.handleNumAllGenes( ids );
         } catch ( Throwable th ) {
@@ -810,21 +815,21 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
      * Performs the core logic for
      * {@link #compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Collection handleCompositeSequenceWithoutBioSequences(
+    protected abstract java.util.Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Collection handleCompositeSequenceWithoutBlatResults(
+    protected abstract java.util.Collection<CompositeSequence> handleCompositeSequenceWithoutBlatResults(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Collection handleCompositeSequenceWithoutGenes(
+    protected abstract java.util.Collection<CompositeSequence> handleCompositeSequenceWithoutGenes(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
@@ -860,7 +865,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #findByAlternateName(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByAlternateName( java.lang.String queryString )
+    protected abstract java.util.Collection<ArrayDesign> handleFindByAlternateName( java.lang.String queryString )
             throws java.lang.Exception;
 
     /**
@@ -884,7 +889,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #getAllAssociatedBioAssays(java.lang.Long)}
      */
-    protected abstract java.util.Collection handleGetAllAssociatedBioAssays( java.lang.Long id )
+    protected abstract java.util.Collection<BioAssay> handleGetAllAssociatedBioAssays( java.lang.Long id )
             throws java.lang.Exception;
 
     /**
@@ -898,44 +903,49 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
      * Performs the core logic for
      * {@link #getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Collection handleGetExpressionExperiments(
+    protected abstract java.util.Collection<ExpressionExperiment> handleGetExpressionExperiments(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getLastAnnotationFile(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetLastAnnotationFile( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, AuditEvent> handleGetLastAnnotationFile( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getLastGeneMapping(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetLastGeneMapping( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, AuditEvent> handleGetLastGeneMapping( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getLastRepeatAnalysis(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetLastRepeatAnalysis( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, AuditEvent> handleGetLastRepeatAnalysis( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getLastSequenceAnalysis(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetLastSequenceAnalysis( java.util.Collection ids )
+    protected abstract java.util.Map<Long, AuditEvent> handleGetLastSequenceAnalysis( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getLastSequenceUpdate(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetLastSequenceUpdate( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, AuditEvent> handleGetLastSequenceUpdate( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getLastTroubleEvent(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetLastTroubleEvent( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, AuditEvent> handleGetLastTroubleEvent( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getLastValidationEvent(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetLastValidationEvent( java.util.Collection ids )
+    protected abstract java.util.Map<Long, AuditEvent> handleGetLastValidationEvent( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
@@ -952,22 +962,26 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #isMerged(java.util.Collection)}
      */
-    protected abstract java.util.Map handleIsMerged( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Boolean> handleIsMerged( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #isMergee(java.util.Collection)}
      */
-    protected abstract java.util.Map handleIsMergee( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Boolean> handleIsMergee( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #isSubsumed(java.util.Collection)}
      */
-    protected abstract java.util.Map handleIsSubsumed( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Boolean> handleIsSubsumed( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #isSubsumer(java.util.Collection)}
      */
-    protected abstract java.util.Map handleIsSubsumer( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Boolean> handleIsSubsumer( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #load(long)}
@@ -978,17 +992,18 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<ArrayDesign> handleLoadAll() throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadAllValueObjects()}
      */
-    protected abstract java.util.Collection handleLoadAllValueObjects() throws java.lang.Exception;
+    protected abstract java.util.Collection<ArrayDesignValueObject> handleLoadAllValueObjects()
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.util.Collection handleLoadCompositeSequences(
+    protected abstract java.util.Collection<CompositeSequence> handleLoadCompositeSequences(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
@@ -1000,13 +1015,14 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection<ArrayDesign> handleLoadMultiple( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadValueObjects(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadValueObjects( java.util.Collection ids )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<ArrayDesignValueObject> handleLoadValueObjects(
+            java.util.Collection<Long> ids ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #numAllCompositeSequenceWithBioSequences()}
@@ -1016,7 +1032,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #numAllCompositeSequenceWithBioSequences(java.util.Collection)}
      */
-    protected abstract long handleNumAllCompositeSequenceWithBioSequences( java.util.Collection ids )
+    protected abstract long handleNumAllCompositeSequenceWithBioSequences( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
@@ -1027,7 +1043,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #numAllCompositeSequenceWithBlatResults(java.util.Collection)}
      */
-    protected abstract long handleNumAllCompositeSequenceWithBlatResults( java.util.Collection ids )
+    protected abstract long handleNumAllCompositeSequenceWithBlatResults( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
@@ -1038,7 +1054,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #numAllCompositeSequenceWithGenes(java.util.Collection)}
      */
-    protected abstract long handleNumAllCompositeSequenceWithGenes( java.util.Collection ids )
+    protected abstract long handleNumAllCompositeSequenceWithGenes( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
     /**
@@ -1049,7 +1065,7 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     /**
      * Performs the core logic for {@link #numAllGenes(java.util.Collection)}
      */
-    protected abstract long handleNumAllGenes( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract long handleNumAllGenes( java.util.Collection<Long> ids ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}

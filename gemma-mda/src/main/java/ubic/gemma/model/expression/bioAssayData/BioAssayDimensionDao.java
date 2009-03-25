@@ -107,4 +107,6 @@ public interface BioAssayDimensionDao extends BaseDao<BioAssayDimension> {
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension findOrCreate(
             ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
+    public void thaw( BioAssayDimension bioAssayDimension );
+
 }
