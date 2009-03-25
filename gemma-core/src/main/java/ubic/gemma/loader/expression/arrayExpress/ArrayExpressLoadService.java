@@ -27,6 +27,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.analysis.report.ArrayDesignReportService;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.loader.expression.mage.MageMLConverter;
 import ubic.gemma.loader.expression.mage.MageMLParser;
 import ubic.gemma.model.common.description.LocalFile;
@@ -36,6 +38,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
@@ -45,6 +48,9 @@ import ubic.gemma.persistence.PersisterHelper;
  * @spring.property name="persisterHelper" ref="persisterHelper"
  * @spring.property name="mageMLConverter" ref="mageMLConverter"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="arrayDesignReportService" ref="arrayDesignReportService"
+ * @spring.property name="expressionExperimentReportServcie" ref="expressionExperimentReportService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author pavlidis
  * @version $Id$
  */
@@ -52,11 +58,15 @@ public class ArrayExpressLoadService {
 
     private static Log log = LogFactory.getLog( ArrayExpressLoadService.class.getName() );
 
-    PersisterHelper persisterHelper;
+    private ArrayDesignReportService arrayDesignReportService;
 
-    MageMLConverter mageMLConverter;
+    private ArrayDesignService arrayDesignService;
 
-    ArrayDesignService arrayDesignService;
+    private ExpressionExperimentReportService expressionExperimentReportService;
+
+    private ExpressionExperimentService expressionExperimentService;
+    private MageMLConverter mageMLConverter;
+    private PersisterHelper persisterHelper;
 
     public ExpressionExperiment load( String accession ) {
         return this.load( accession, null, false );
@@ -165,7 +175,11 @@ public class ArrayExpressLoadService {
 
             pdMerger.merge( ee, qts, pdParser.getMap(), pdParser.getSamples() );
 
-            return ( ExpressionExperiment ) persisterHelper.persist( ee );
+            ExpressionExperiment persistedEE = ( ExpressionExperiment ) persisterHelper.persist( ee );
+
+            updateReports( persistedEE );
+
+            return persistedEE;
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -174,31 +188,54 @@ public class ArrayExpressLoadService {
     }
 
     /**
-     * @param bioAssays
-     * @param ad
+     * @param arrayDesignReportService the arrayDesignReportService to set
      */
-    private void processArrayDesignInfo( Collection<BioAssay> bioAssays, ArrayDesign ad ) {
+    public void setArrayDesignReportService( ArrayDesignReportService arrayDesignReportService ) {
+        this.arrayDesignReportService = arrayDesignReportService;
+    }
 
-        arrayDesignService.thawLite( ad );
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
 
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+    /**
+     * @param expressionExperimentReportService the expressionExperimentReportService to set
+     */
+    public void setExpressionExperimentReportService(
+            ExpressionExperimentReportService expressionExperimentReportService ) {
+        this.expressionExperimentReportService = expressionExperimentReportService;
+    }
 
-        for ( BioAssay assay : bioAssays ) {
-            ads.add( assay.getArrayDesignUsed() );
+    /**
+     * @param expressionExperimentService the expressionExperimentService to set
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setMageMLConverter( MageMLConverter mageMLConverter ) {
+        this.mageMLConverter = mageMLConverter;
+    }
+
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * Locate the expression experiment in the MAGE results.
+     * 
+     * @param result
+     * @return
+     */
+    private ExpressionExperiment locateExpressionExperimentInMageResults( Collection<Object> result ) {
+        ExpressionExperiment ee = null;
+        for ( Object object : result ) {
+            if ( object instanceof ExpressionExperiment ) {
+                ee = ( ExpressionExperiment ) object;
+                break;
+            }
         }
-        log.info( "There are " + ads.size() + " array designs for this experiment" );
-        if ( ads.size() != 1 ) {
-            throw new IllegalStateException(
-                    "Expression experiment uses multiple Array Designs, "
-                            + ads.size()
-                            + "  Unable to match up multiple array designs with single array design selected. Failed to load Expression experiment. " );
-        }
-
-        // Just make sure all the bioAssays are pointing to the correct AD.
-        for ( BioAssay assay : bioAssays ) {
-            assay.setArrayDesignUsed( ad );
-        }
-
+        return ee;
     }
 
     /**
@@ -258,31 +295,50 @@ public class ArrayExpressLoadService {
     }
 
     /**
-     * Locate the expression experiment in the MAGE results.
-     * 
-     * @param result
-     * @return
+     * @param bioAssays
+     * @param ad
      */
-    private ExpressionExperiment locateExpressionExperimentInMageResults( Collection<Object> result ) {
-        ExpressionExperiment ee = null;
-        for ( Object object : result ) {
-            if ( object instanceof ExpressionExperiment ) {
-                ee = ( ExpressionExperiment ) object;
-                break;
-            }
+    private void processArrayDesignInfo( Collection<BioAssay> bioAssays, ArrayDesign ad ) {
+
+        arrayDesignService.thawLite( ad );
+
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+
+        for ( BioAssay assay : bioAssays ) {
+            ads.add( assay.getArrayDesignUsed() );
         }
-        return ee;
+        log.info( "There are " + ads.size() + " array designs for this experiment" );
+        if ( ads.size() != 1 ) {
+            throw new IllegalStateException(
+                    "Expression experiment uses multiple Array Designs, "
+                            + ads.size()
+                            + "  Unable to match up multiple array designs with single array design selected. Failed to load Expression experiment. " );
+        }
+
+        // Just make sure all the bioAssays are pointing to the correct AD.
+        for ( BioAssay assay : bioAssays ) {
+            assay.setArrayDesignUsed( ad );
+        }
+
     }
 
-    public void setMageMLConverter( MageMLConverter mageMLConverter ) {
-        this.mageMLConverter = mageMLConverter;
-    }
+    /**
+     * @param entities
+     */
+    private void updateReports( ExpressionExperiment expressionExperiment ) {
+        Collection<ArrayDesign> adsToUpdate = new HashSet<ArrayDesign>();
 
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
+        this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
 
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
+        this.expressionExperimentService.thawLite( expressionExperiment );
+
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            adsToUpdate.add( ba.getArrayDesignUsed() );
+        }
+
+        for ( ArrayDesign arrayDesign : adsToUpdate ) {
+            this.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        }
+
     }
 }

@@ -71,6 +71,10 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
         if ( sArray.length == 0 ) {
             return null;
         }
+        
+        if (sArray.length != 3) {
+            throw new IllegalArgumentException("Expected 3 fields: probe name, sequence name, sequence; line=" + line);
+        }
 
         String probeId = sArray[0].trim();
 

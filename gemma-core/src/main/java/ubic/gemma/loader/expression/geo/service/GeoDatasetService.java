@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ubic.gemma.analysis.report.ArrayDesignReportService;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
@@ -52,12 +54,24 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @spring.bean id="geoDatasetService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="bioAssayService" ref="bioAssayService"
+ * @spring.property name="arrayDesignReportService" ref="arrayDesignReportService"
+ * @spring.property name="expressionExperimentReportServcie" ref="expressionExperimentReportService"
  */
 public class GeoDatasetService extends AbstractGeoService {
 
     private static final String GEO_DB_NAME = "GEO";
-    BioAssayService bioAssayService;
-    ExpressionExperimentService expressionExperimentService;
+    private BioAssayService bioAssayService;
+    private ExpressionExperimentService expressionExperimentService;
+    private ArrayDesignReportService arrayDesignReportService;
+    private ExpressionExperimentReportService expressionExperimentReportService;
+
+    /**
+     * @param expressionExperimentReportService the expressionExperimentReportService to set
+     */
+    public void setExpressionExperimentReportService(
+            ExpressionExperimentReportService expressionExperimentReportService ) {
+        this.expressionExperimentReportService = expressionExperimentReportService;
+    }
 
     /**
      * Given a GEO GSE or GDS (or GPL, but support might not be complete)
@@ -166,7 +180,39 @@ public class GeoDatasetService extends AbstractGeoService {
         Collection persistedResult = persisterHelper.persist( result );
         log.debug( "Persisted " + seriesAccession );
         this.geoConverter.clear();
+
+        updateReports( persistedResult );
+
         return persistedResult;
+    }
+
+    /**
+     * @param entities
+     */
+    @SuppressWarnings("unchecked")
+    private void updateReports( Collection entities ) {
+        Collection<ArrayDesign> adsToUpdate = new HashSet<ArrayDesign>();
+        for ( Object entity : entities ) {
+            if ( entity instanceof ExpressionExperiment ) {
+                ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
+                this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
+
+                this.expressionExperimentService.thawLite( expressionExperiment );
+
+                for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+                    adsToUpdate.add( ba.getArrayDesignUsed() );
+                }
+
+            } else if ( entity instanceof ArrayDesign ) {
+                adsToUpdate.add( ( ArrayDesign ) entity );
+            }
+
+        }
+
+        for ( ArrayDesign arrayDesign : adsToUpdate ) {
+            this.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        }
+
     }
 
     /**
