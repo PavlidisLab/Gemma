@@ -49,7 +49,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @spring.property name="mageMLConverter" ref="mageMLConverter"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="arrayDesignReportService" ref="arrayDesignReportService"
- * @spring.property name="expressionExperimentReportServcie" ref="expressionExperimentReportService"
+ * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author pavlidis
  * @version $Id$
