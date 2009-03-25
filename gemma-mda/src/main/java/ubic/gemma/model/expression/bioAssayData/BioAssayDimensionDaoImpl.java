@@ -20,7 +20,7 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Iterator; 
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;

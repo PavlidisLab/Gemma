@@ -52,7 +52,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#find(ubic.gemma
+     * .model.genome.biosequence.BioSequence)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -101,15 +102,16 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findByAccession(ubic.gemma.model.common.description.
+     * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findByAccession (ubic.gemma.model.common.description.
      * DatabaseEntry)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public BioSequence findByAccession( DatabaseEntry databaseEntry ) {
         BusinessKey.checkValidKey( databaseEntry );
 
         String queryString = "";
-        List results = null;
+        List<BioSequence> results = null;
         if ( databaseEntry.getId() != null ) {
             queryString = "select b from BioSequenceImpl b inner join fetch b.sequenceDatabaseEntry d inner join fetch d.externalDatabase e  where d=:dbe";
             results = this.getHibernateTemplate().findByNamedParam( queryString, "dbe", databaseEntry );
@@ -145,9 +147,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence
-     * )
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findOrCreate(ubic
+     * .gemma.model.genome.biosequence.BioSequence )
      */
     @Override
     public BioSequence findOrCreate( BioSequence bioSequence ) {
@@ -167,7 +168,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName(java.lang.String)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName (java.lang.String)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -192,8 +193,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         return results;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindByName( String name ) throws Exception {
+    protected Collection<BioSequence> handleFindByName( String name ) throws Exception {
         if ( name == null ) return null;
         final String query = "from BioSequenceImpl b where b.name = :name";
         return getHibernateTemplate().findByNamedParam( query, "name", name );
@@ -201,7 +203,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByAccession(java.lang.String)
+     * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase# handleGetGenesByAccession(java.lang.String)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -214,7 +216,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName(java.lang.String)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName (java.lang.String)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -235,7 +237,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleLoad(java.util.Collection)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleLoad(java .util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -246,16 +248,15 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(ubic.gemma.model.genome.biosequence.BioSequence
-     * )
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(ubic
+     * .gemma.model.genome.biosequence.BioSequence )
      */
     @Override
     protected void handleThaw( final BioSequence bioSequence ) throws Exception {
         if ( bioSequence == null ) return;
         if ( bioSequence.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( bioSequence );
                 Hibernate.initialize( bioSequence );
@@ -288,31 +289,31 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 EntityUtils.unProxy( bioSequence );
                 return null;
             }
-        }, true );
+        } );
     }
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java.util.Collection)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java .util.Collection)
      */
     @Override
-    protected void handleThaw( final Collection bioSequences ) throws Exception {
+    protected void handleThaw( final Collection<BioSequence> bioSequences ) throws Exception {
         doThaw( bioSequences, true );
     }
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java.util.Collection)
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java .util.Collection)
      */
     @Override
-    protected void handleThawLite( final Collection bioSequences ) throws Exception {
+    protected void handleThawLite( final Collection<BioSequence> bioSequences ) throws Exception {
         doThaw( bioSequences, false );
     }
 
     /**
      * @param results
      */
-    private void debug( BioSequence query, List results ) {
+    private void debug( BioSequence query, List<BioSequence> results ) {
         StringBuilder sb = new StringBuilder();
         sb.append( "\nMultiple BioSequences found matching query:\n" );
 
@@ -341,15 +342,19 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * @param bioSequences
      * @param deep
      */
-    private void doThaw( final Collection bioSequences, final boolean deep ) {
+    private void doThaw( final Collection<BioSequence> bioSequences, final boolean deep ) {
         if ( bioSequences == null || bioSequences.size() == 0 ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 FlushMode oldFlushMode = session.getFlushMode();
                 CacheMode oldCacheMode = session.getCacheMode();
-                session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
-                session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
+                session.setCacheMode( CacheMode.IGNORE ); // Don't hit the
+                // secondary
+                // cache
+                session.setFlushMode( FlushMode.MANUAL ); // We're
+                // READ-ONLY so
+                // this is okay.
                 int count = 0;
                 for ( Object object : bioSequences ) {
                     BioSequence bioSequence = ( BioSequence ) object;
@@ -373,14 +378,17 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
                     if ( ++count % 2000 == 0 ) {
                         log.info( "Thawed " + count + " sequences ..." );
+                        session.clear();
                     }
                     EntityUtils.unProxy( bioSequence );
                 }
+
                 session.clear();
                 session.setFlushMode( oldFlushMode );
                 session.setCacheMode( oldCacheMode );
+                log.info( "Thaw done" );
                 return null;
             }
-        }, true );
+        } );
     }
 }
