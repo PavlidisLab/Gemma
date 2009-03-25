@@ -99,7 +99,7 @@ public class ExpressionDataSampleCorrelation {
         DoubleMatrix cormat = getMatrix( eeDoubleMatrix );
         String fileBaseName = getMatrixFileBaseName( ee );
         try {
-            ExpressionDataSampleCorrelation.createMatrixImages( cormat, getStorageDirectory(), fileBaseName );
+            createMatrixImages( cormat, getStorageDirectory(), fileBaseName );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -132,7 +132,7 @@ public class ExpressionDataSampleCorrelation {
         }
 
         DoubleMatrix columns = new DenseDoubleMatrix( rawcols );
-        
+
         List<BioAssay> colElements = new ArrayList<BioAssay>();
         for ( BioMaterial bioMaterial : ordered ) {
             int i = matrix.getColumnIndex( bioMaterial );
@@ -140,10 +140,9 @@ public class ExpressionDataSampleCorrelation {
             colElements.add( bas.iterator().next() );
         }
         columns.setRowNames( colElements );
-        columns.setColumnNames( colElements );        
-        
-        DoubleMatrix<BioAssay, BioAssay> mat = MatrixStats.correlationMatrix( columns );
+        columns.setColumnNames( colElements );
 
+        DoubleMatrix<BioAssay, BioAssay> mat = MatrixStats.correlationMatrix( columns );
 
         return mat;
     }
