@@ -55,7 +55,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="bioAssayService" ref="bioAssayService"
  * @spring.property name="arrayDesignReportService" ref="arrayDesignReportService"
- * @spring.property name="expressionExperimentReportServcie" ref="expressionExperimentReportService"
+ * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
  */
 public class GeoDatasetService extends AbstractGeoService {
 
