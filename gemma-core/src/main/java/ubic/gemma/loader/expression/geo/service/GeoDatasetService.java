@@ -60,18 +60,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 public class GeoDatasetService extends AbstractGeoService {
 
     private static final String GEO_DB_NAME = "GEO";
-    private BioAssayService bioAssayService;
-    private ExpressionExperimentService expressionExperimentService;
-    private ArrayDesignReportService arrayDesignReportService;
-    private ExpressionExperimentReportService expressionExperimentReportService;
 
-    /**
-     * @param expressionExperimentReportService the expressionExperimentReportService to set
-     */
-    public void setExpressionExperimentReportService(
-            ExpressionExperimentReportService expressionExperimentReportService ) {
-        this.expressionExperimentReportService = expressionExperimentReportService;
-    }
+    private ArrayDesignReportService arrayDesignReportService;
+    private BioAssayService bioAssayService;
+    private ExpressionExperimentReportService expressionExperimentReportService;
+    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * Given a GEO GSE or GDS (or GPL, but support might not be complete)
@@ -187,32 +180,10 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
-     * @param entities
+     * @param arrayDesignReportService the arrayDesignReportService to set
      */
-    @SuppressWarnings("unchecked")
-    private void updateReports( Collection entities ) {
-        Collection<ArrayDesign> adsToUpdate = new HashSet<ArrayDesign>();
-        for ( Object entity : entities ) {
-            if ( entity instanceof ExpressionExperiment ) {
-                ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
-                this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
-
-                this.expressionExperimentService.thawLite( expressionExperiment );
-
-                for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-                    adsToUpdate.add( ba.getArrayDesignUsed() );
-                }
-
-            } else if ( entity instanceof ArrayDesign ) {
-                adsToUpdate.add( ( ArrayDesign ) entity );
-            }
-
-        }
-
-        for ( ArrayDesign arrayDesign : adsToUpdate ) {
-            this.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        }
-
+    public void setArrayDesignReportService( ArrayDesignReportService arrayDesignReportService ) {
+        this.arrayDesignReportService = arrayDesignReportService;
     }
 
     /**
@@ -220,6 +191,14 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     public void setBioAssayService( BioAssayService bioAssayService ) {
         this.bioAssayService = bioAssayService;
+    }
+
+    /**
+     * @param expressionExperimentReportService the expressionExperimentReportService to set
+     */
+    public void setExpressionExperimentReportService(
+            ExpressionExperimentReportService expressionExperimentReportService ) {
+        this.expressionExperimentReportService = expressionExperimentReportService;
     }
 
     /**
@@ -642,6 +621,35 @@ public class GeoDatasetService extends AbstractGeoService {
             }
         }
         return finishedDatasets;
+
+    }
+
+    /**
+     * @param entities
+     */
+    @SuppressWarnings("unchecked")
+    private void updateReports( Collection entities ) {
+        Collection<ArrayDesign> adsToUpdate = new HashSet<ArrayDesign>();
+        for ( Object entity : entities ) {
+            if ( entity instanceof ExpressionExperiment ) {
+                ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
+                this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
+
+                this.expressionExperimentService.thawLite( expressionExperiment );
+
+                for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+                    adsToUpdate.add( ba.getArrayDesignUsed() );
+                }
+
+            } else if ( entity instanceof ArrayDesign ) {
+                adsToUpdate.add( ( ArrayDesign ) entity );
+            }
+
+        }
+
+        for ( ArrayDesign arrayDesign : adsToUpdate ) {
+            this.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        }
 
     }
 
