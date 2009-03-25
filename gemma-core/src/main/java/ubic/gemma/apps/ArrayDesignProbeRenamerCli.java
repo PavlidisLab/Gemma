@@ -58,7 +58,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     protected void buildOptions() {
         super.buildOptions();
         addOption( OptionBuilder.isRequired().hasArg().withArgName( "file" ).withDescription(
-                "Two-column file with old and new identifiers" ).create( 'f' ) );
+                "Two-column file with old and new identifiers (additional columns ignored)" ).create( 'f' ) );
     }
 
     @Override
