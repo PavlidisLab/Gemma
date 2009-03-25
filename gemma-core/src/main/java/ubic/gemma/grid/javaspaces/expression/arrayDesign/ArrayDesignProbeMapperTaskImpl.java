@@ -25,6 +25,7 @@ import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
 
 /**
  * A probe mapper spaces task that can be passed into a space and executed by a worker.
@@ -46,7 +47,7 @@ public class ArrayDesignProbeMapperTaskImpl extends BaseSpacesTask implements Ar
      */
     public TaskResult execute( ArrayDesignProbeMapTaskCommand command ) {
 
-        super.initProgressAppender( this.getClass() );
+        SpacesProgressAppender spacesProgressAppender = super.initProgressAppender( this.getClass() );
 
         ArrayDesign ad = command.getArrayDesign();
 
@@ -58,6 +59,9 @@ public class ArrayDesignProbeMapperTaskImpl extends BaseSpacesTask implements Ar
 
         result.setTaskID( super.taskId );
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
+
+        super.tidyProgress( spacesProgressAppender );
+
         return result;
     }
 

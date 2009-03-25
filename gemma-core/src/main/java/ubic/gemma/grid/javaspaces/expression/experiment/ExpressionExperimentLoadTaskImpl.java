@@ -31,6 +31,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
 
 /**
  * @author keshav
@@ -49,7 +50,8 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
     @SuppressWarnings("unchecked")
     public TaskResult execute( ExpressionExperimentLoadTaskCommand command ) {
         ExpressionExperimentLoadTaskCommand jsEeLoadCommand = ( ExpressionExperimentLoadTaskCommand ) command;
-        super.initProgressAppender( this.getClass() );
+
+        SpacesProgressAppender spacesProgressAppender = super.initProgressAppender( this.getClass() );
 
         String accession = jsEeLoadCommand.getAccession();
         boolean loadPlatformOnly = jsEeLoadCommand.isLoadPlatformOnly();
@@ -109,6 +111,9 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
         }
         result.setTaskID( super.taskId );
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
+
+        super.tidyProgress( spacesProgressAppender );
+
         return result;
     }
 

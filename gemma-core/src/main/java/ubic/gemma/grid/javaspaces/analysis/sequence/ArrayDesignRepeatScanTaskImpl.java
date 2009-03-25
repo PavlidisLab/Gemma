@@ -29,6 +29,7 @@ import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
 
 /**
  * An array design repeat scan spaces task that can be passed into a space and executed by a worker.
@@ -48,7 +49,7 @@ public class ArrayDesignRepeatScanTaskImpl extends BaseSpacesTask implements Arr
      */
     public TaskResult execute( ArrayDesignRepeatScanTaskCommand command ) {
 
-        super.initProgressAppender( this.getClass() );
+        SpacesProgressAppender spacesProgressAppender = super.initProgressAppender( this.getClass() );
 
         TaskResult result = new TaskResult();
 
@@ -62,6 +63,9 @@ public class ArrayDesignRepeatScanTaskImpl extends BaseSpacesTask implements Arr
 
         result.setTaskID( super.taskId );
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
+
+        super.tidyProgress( spacesProgressAppender );
+
         return result;
     }
 

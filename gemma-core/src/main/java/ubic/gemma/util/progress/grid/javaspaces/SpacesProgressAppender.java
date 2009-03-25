@@ -78,4 +78,12 @@ public class SpacesProgressAppender extends ProgressAppender {
             }
         }
     }
+
+    /**
+     * Remove the progress entry from the space.
+     */
+    public void removeProgressEntry() {
+        // if ( entry != null ) gigaSpacesTemplate.take( entry, Lease.FOREVER );
+        if ( entry != null ) gigaSpacesTemplate.clear( entry );
+    }
 }

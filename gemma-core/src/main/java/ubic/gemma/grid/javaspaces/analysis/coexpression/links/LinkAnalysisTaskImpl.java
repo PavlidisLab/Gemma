@@ -21,6 +21,7 @@ package ubic.gemma.grid.javaspaces.analysis.coexpression.links;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
+import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
 
 /**
  * @author keshav
@@ -40,7 +41,8 @@ public class LinkAnalysisTaskImpl extends BaseSpacesTask implements LinkAnalysis
      * SpacesLinkAnalysisCommand)
      */
     public TaskResult execute( LinkAnalysisTaskCommand command ) {
-        super.initProgressAppender( this.getClass() );
+        SpacesProgressAppender spacesProgressAppender = super.initProgressAppender( this.getClass() );
+
         TaskResult result = new TaskResult();
 
         try {
@@ -51,6 +53,8 @@ public class LinkAnalysisTaskImpl extends BaseSpacesTask implements LinkAnalysis
         }
 
         result.setTaskID( super.taskId );
+
+        super.tidyProgress( spacesProgressAppender );
 
         return result;
 

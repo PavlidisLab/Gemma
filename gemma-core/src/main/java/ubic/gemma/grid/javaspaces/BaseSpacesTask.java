@@ -69,12 +69,14 @@ public abstract class BaseSpacesTask implements SpacesTask {
     }
 
     /**
-     * Initializes the progress appender for tasks. Typically, this method should be called at the beginning of the
+     * Creates a new progress appender for tasks. Typically, this method should be called at the beginning of the
      * execute method of the task.
      * 
      * @param clazz
+     * @return {@link SpacesProgressAppender}
      */
-    public void initProgressAppender( Class clazz ) {
+    public SpacesProgressAppender initProgressAppender( Class clazz ) {
+
         log.info( "Executing task " + clazz.getSimpleName() + " with id " + this.taskId );
 
         log.debug( "Current Thread: " + Thread.currentThread().getName() + " Authentication: "
@@ -89,6 +91,19 @@ public abstract class BaseSpacesTask implements SpacesTask {
         SpacesProgressAppender javaSpacesAppender = new SpacesProgressAppender( gigaSpacesTemplate, taskId );
         if ( !logger.isAttached( javaSpacesAppender ) ) {
             logger.addAppender( javaSpacesAppender );
+        }
+        return javaSpacesAppender;
+    }
+
+    /**
+     * Removes the {@link SpacesProgressAppender} from the list of appenders, and removes the progress entry from the
+     * space. Typically, this is called after at the end of a task's execute method.
+     */
+    public void tidyProgress( SpacesProgressAppender spacesProgressAppender ) {
+        if ( spacesProgressAppender != null ) {
+            Logger logger = LogManager.getLogger( "ubic.gemma" );
+            logger.removeAppender( spacesProgressAppender );
+            spacesProgressAppender.removeProgressEntry();
         }
     }
 

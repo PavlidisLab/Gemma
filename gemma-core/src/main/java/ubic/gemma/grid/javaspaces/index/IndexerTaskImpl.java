@@ -23,8 +23,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.spi.InternalCompass;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
+
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.util.CompassUtils;
+import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
 
 /**
  * @author klc
@@ -114,14 +116,13 @@ public class IndexerTaskImpl extends BaseSpacesTask implements IndexerTask {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
      */
     public IndexerResult execute( IndexerTaskCommand command ) {
 
         IndexerTaskCommand indexCommand = ( IndexerTaskCommand ) command;
 
-        super.initProgressAppender( this.getClass() );
+        SpacesProgressAppender spacesProgressAppender = super.initProgressAppender( this.getClass() );
 
         IndexerResult result = new IndexerResult();
 
@@ -168,6 +169,8 @@ public class IndexerTaskImpl extends BaseSpacesTask implements IndexerTask {
         } catch ( Exception e ) {
             log.error( e );
         }
+
+        super.tidyProgress( spacesProgressAppender );
 
         return result;
     }

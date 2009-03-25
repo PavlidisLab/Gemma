@@ -28,6 +28,7 @@ import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
 
 /**
  * A "processed expression data vector create" spaces task that can be passed into a space and executed by a worker.
@@ -49,7 +50,7 @@ public class ProcessedExpressionDataVectorCreateTaskImpl extends BaseSpacesTask 
      * .javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand)
      */
     public TaskResult execute( ProcessedExpressionDataVectorCreateTaskCommand command ) {
-        super.initProgressAppender( this.getClass() );
+        SpacesProgressAppender spacesProgressAppender = super.initProgressAppender( this.getClass() );
 
         ExpressionExperiment ee = command.getExpressionExperiment();
 
@@ -59,6 +60,9 @@ public class ProcessedExpressionDataVectorCreateTaskImpl extends BaseSpacesTask 
         result.setAnswer( processedVectors.size() );
         result.setTaskID( super.taskId );
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
+
+        super.tidyProgress( spacesProgressAppender );
+
         return result;
     }
 

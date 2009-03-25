@@ -27,6 +27,7 @@ import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
 
 /**
  * A differential expression analysis spaces task that can be passed into a space and executed by a worker.
@@ -48,7 +49,7 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
      */
     public TaskResult execute( DifferentialExpressionAnalysisTaskCommand command ) {
 
-        super.initProgressAppender( this.getClass() );
+        SpacesProgressAppender spacesProgressAppender = super.initProgressAppender( this.getClass() );
 
         DifferentialExpressionAnalysis results = doAnalysis( command );
 
@@ -64,6 +65,9 @@ public class DifferentialExpressionAnalysisTaskImpl extends BaseSpacesTask imple
 
         result.setTaskID( super.taskId );
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
+
+        super.tidyProgress( spacesProgressAppender );
+
         return result;
     }
 
