@@ -131,6 +131,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         "Only random subset of total coexpression links will be written to output with size given" ).create( "subset" );
         addOption( subsetOption );        
         
+        Option chooseCutOption = OptionBuilder.hasArg().withArgName( "Singular correlation threshold" ).withDescription(
+        "Choose correlation threshold {fwe|cdfcut} to be used independently to select best links, default is none" ).create( "choosecut" );
+        addOption( chooseCutOption );        
+        
         addForceOption();
         addAutoOption();
     }
@@ -237,6 +241,17 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             log.info( "Representative subset of links requested for output" );
             this.linkAnalysisConfig.setSubsetSize(Double.parseDouble( subsetSize ) );
             this.linkAnalysisConfig.setSubset( true );
+        }
+        
+        if (hasOption("choosecut")){
+            String singularThreshold = getOptionValue("choosecut");
+            if(singularThreshold.equals( "fwe" ) || singularThreshold.equals( "cdfcut" ) || singularThreshold.equals( "none" )){
+                log.info("Singular correlation threshold chosen");
+                this.linkAnalysisConfig.setSingularThreshold( singularThreshold );
+            }
+            else{
+                log.error("Must choose 'fwe', 'cdfcut', or 'none' as the singular correlation threshold, defaulting to 'none'");
+            }
         }
 
     }
