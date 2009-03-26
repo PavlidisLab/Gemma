@@ -391,7 +391,7 @@
 				ubic.gemma.model.common.auditAndSecurity.UserService.findByUserName=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserService.findByEmail=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserService.update=PROPAGATION_REQUIRED
-				ubic.gemma.model.common.auditAndSecurity.UserService.loadAllRoles=PROPAGATION_REQUIRED
+				ubic.gemma.model.common.auditAndSecurity.UserService.loadAllRoles=PROPAGATION_REQUIRED, readOnly
 				ubic.gemma.model.common.auditAndSecurity.UserQueryService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeAllForUser=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeOldForUser=PROPAGATION_REQUIRED
