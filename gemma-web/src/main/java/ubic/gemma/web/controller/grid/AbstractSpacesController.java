@@ -129,7 +129,7 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
 
             GigaSpacesTemplate template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
 
-            /* set the type of object this spaces client of */
+            /* set the type of object this spaces client is notified on */
             SpacesProgressEntry spacesProgressEntry = new SpacesProgressEntry();
             spacesProgressEntry.taskId = taskId;
             template.addNotifyDelegatorListener( javaSpacesJobObserver, spacesProgressEntry, null, true, Lease.FOREVER,
