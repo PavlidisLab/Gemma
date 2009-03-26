@@ -92,7 +92,8 @@ public class LinkAnalysis {
         log.debug( "Taxon: " + this.taxon.getCommonName() );
 
         if ( this.probeToGeneMap.size() == 0 ) {
-            throw new IllegalStateException( "No genes found for this dataset. Is the 'GENE2CS' table up to date?" );
+            throw new IllegalStateException(
+                    "No genes found for this dataset. Do the associated array designs need processing?" );
         }
 
         log.info( "Current Options: \n" + this.config );
