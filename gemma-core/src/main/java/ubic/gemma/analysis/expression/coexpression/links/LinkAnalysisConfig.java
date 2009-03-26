@@ -48,6 +48,7 @@ public class LinkAnalysisConfig implements Serializable {
     private double fwe = 0.01;
     private double cdfCut = 0.01; // 1.0 means, keep everything.
     private double subsetSize = 0.0;
+    private String singularThreshold = "none"; //fwe|cdfcut
 
     private boolean subset = false;
     private boolean subsetUsed = false;
@@ -292,5 +293,19 @@ public class LinkAnalysisConfig implements Serializable {
      */
     public void setUpperCdfCutUsed( boolean upperCdfCutUsed ) {
         this.upperCdfCutUsed = upperCdfCutUsed;
+    }
+
+    /**
+     * @return the singularThreshold
+     */
+    public String getSingularThreshold() {
+        return singularThreshold;
+    }
+
+    /**
+     * @param singularThreshold the singularThreshold to set
+     */
+    public void setSingularThreshold( String singularThreshold ) {
+        this.singularThreshold = singularThreshold;
     }
 }
