@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.Authentication;
+import org.springframework.security.AuthenticationException;
 import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.security.providers.AuthenticationProvider;
 import org.springframework.security.providers.ProviderManager;
@@ -156,8 +157,7 @@ public abstract class UserAuthenticatingMultiActionController extends BaseMultiA
             return; // must be testing.
         }
         Authentication authentication = providerManager.doAuthentication( auth );
-        assert authentication.isAuthenticated() : "New user " + user.getUserName()
-                + " wasn't authenticated with password.";
+
         SecurityContextHolder.getContext().setAuthentication( authentication );
     }
 
