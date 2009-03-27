@@ -75,7 +75,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#create(ubic.gemma.model.common.auditAndSecurity.User)
      */
     public User create( ubic.gemma.model.common.auditAndSecurity.User user ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.User ) this.create( TRANSFORM_NONE, user );
+        return this.create( TRANSFORM_NONE, user );
     }
 
     /**
@@ -114,7 +114,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      */
 
     public ubic.gemma.model.common.auditAndSecurity.User findByEmail( java.lang.String email ) {
-        return ( User ) this.findByEmail( TRANSFORM_NONE, email );
+        return this.findByEmail( TRANSFORM_NONE, email );
     }
 
     /**
@@ -276,15 +276,15 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.User"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.User"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.User ) result );
         return ( User ) result;
     }
@@ -293,7 +293,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByUserName(java.lang.String)
      */
     public ubic.gemma.model.common.auditAndSecurity.User findByUserName( java.lang.String userName ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.User ) this.findByUserName( TRANSFORM_NONE, userName );
+        return this.findByUserName( TRANSFORM_NONE, userName );
     }
 
     /**
@@ -301,8 +301,7 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements
      */
     public ubic.gemma.model.common.auditAndSecurity.User findByUserName( final java.lang.String queryString,
             final java.lang.String userName ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.User ) this.findByUserName( TRANSFORM_NONE, queryString,
-                userName );
+        return this.findByUserName( TRANSFORM_NONE, queryString, userName );
     }
 
     /**

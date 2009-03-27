@@ -36,14 +36,11 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserDaoBase#find(ubic.gemma.model.common.auditAndSecurity.user)
      */
-    public User find( User contact ) {
+    @SuppressWarnings("unchecked")
+    public User find( User user ) {
         try {
-            assert contact instanceof User;
-
-            User user = ( User ) contact;
 
             BusinessKey.checkKey( user );
 
