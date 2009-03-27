@@ -590,8 +590,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         overallWatch.start();
 
         String sId = request.getParameter( "id" );
-        boolean showMergees = Boolean.parseBoolean( request.getParameter( "showMerg" ) );
-        boolean showOrphans = Boolean.parseBoolean( request.getParameter( "showOrph" ) );
+        String sShowMerge = request.getParameter( "showMerg" );
+        String sShowOrph = request.getParameter( "showOrph" );
+        
+        boolean showMergees = Boolean.parseBoolean( sShowMerge );
+        boolean showOrphans = Boolean.parseBoolean( sShowOrph );
+
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
 
         if ( sId == null ) {
@@ -635,27 +639,29 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     public Collection<ArrayDesignValueObject> getArrayDesigns( Collection<Long> arrayDesignIds, boolean showMergees,
             boolean showOrphans ) {
-        List<ArrayDesignValueObject> valueObjects = new ArrayList<ArrayDesignValueObject>();
-        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
+        List<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
+
+        // If no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( arrayDesignIds.isEmpty() ) {
-            valueObjects.addAll( arrayDesignService.loadAllValueObjects() );
+            result.addAll( arrayDesignService.loadAllValueObjects() );
         } else {// if ids are specified, then display only those arrayDesigns
-            valueObjects.addAll( arrayDesignService.loadValueObjects( arrayDesignIds ) );
+            result.addAll( arrayDesignService.loadValueObjects( arrayDesignIds ) );
         }
 
+        // Filter...
         Collection<ArrayDesignValueObject> toHide = new HashSet<ArrayDesignValueObject>();
-        for ( ArrayDesignValueObject a : valueObjects ) {
-            if ( !showMergees && ( a.getIsMergee() != null ) && a.getIsMergee() ) {
+        for ( ArrayDesignValueObject a : result ) {
+            if ( !showMergees && a.getIsMergee() != null && a.getIsMergee() ) {
                 toHide.add( a );
             }
             if ( !showOrphans && ( a.getExpressionExperimentCount() == null || a.getExpressionExperimentCount() == 0 ) ) {
                 toHide.add( a );
             }
         }
-        valueObjects.removeAll( toHide );
-        Collections.sort( valueObjects, new ArrayDesignValueObjectComparator() );
+        result.removeAll( toHide );
+        Collections.sort( result, new ArrayDesignValueObjectComparator() );
 
-        return valueObjects;
+        return result;
     }
 
     /**
