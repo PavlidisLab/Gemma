@@ -29,36 +29,6 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface PersonDao extends BaseDao<Person> {
     /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.auditAndSecurity.Person)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #find(int, ubic.gemma.model.common.auditAndSecurity.Person person)}.
-     * </p>
-     */
-    public Object find( int transform, String queryString, ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object find( int transform, ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #find(ubic.gemma.model.common.auditAndSecurity.Person)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Person find( String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
      * 
      */
     public ubic.gemma.model.common.auditAndSecurity.Person find( ubic.gemma.model.common.auditAndSecurity.Person person );
@@ -171,38 +141,6 @@ public interface PersonDao extends BaseDao<Person> {
      * </p>
      */
     public java.util.Collection<Person> findByLastName( String queryString, java.lang.String lastName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.common.auditAndSecurity.Person)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findOrCreate(int, ubic.gemma.model.common.auditAndSecurity.Person
-     * person)}.
-     * </p>
-     */
-    public Object findOrCreate( int transform, String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform, ubic.gemma.model.common.auditAndSecurity.Person person );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate( String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Person person );
 
     /**
      * 

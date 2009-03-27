@@ -29,7 +29,12 @@ import ubic.gemma.util.BusinessKey;
  */
 public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.ContactDaoBase {
 
-    @Override
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.ContactDaoBase#find(ubic.gemma.model.common.auditAndSecurity.Contact)
+     */
+    @SuppressWarnings("unchecked")
     public Contact find( Contact contact ) {
         try {
 
@@ -58,13 +63,18 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
         }
     }
 
-    @Override
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.ContactDaoBase#findOrCreate(ubic.gemma.model.common.auditAndSecurity
+     * .Contact)
+     */
     public Contact findOrCreate( Contact contact ) {
 
         Contact existingContact = find( contact );
         if ( existingContact != null ) {
             return existingContact;
         }
-        return ( Contact ) create( contact );
+        return create( contact );
     }
 }

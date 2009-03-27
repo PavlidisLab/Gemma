@@ -30,7 +30,11 @@ import org.hibernate.criterion.Restrictions;
  */
 public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.PersonDaoBase {
 
-    @Override
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#find(ubic.gemma.model.common.auditAndSecurity.Person)
+     */
+    @SuppressWarnings("unchecked")
     public Person find( Person person ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Person.class );
@@ -66,7 +70,11 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
         }
     }
 
-    @Override
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.PersonDao#findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)
+     */
     public Person findOrCreate( Person person ) {
         if ( person == null
                 || ( person.getLastName() == null && person.getAddress() == null && person.getEmail() == null
@@ -77,7 +85,7 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
         if ( newPerson != null ) {
             return newPerson;
         }
-        return ( Person ) create( person );
+        return create( person );
     }
 
 }
