@@ -132,7 +132,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addOption( subsetOption );        
         
         Option chooseCutOption = OptionBuilder.hasArg().withArgName( "Singular correlation threshold" ).withDescription(
-        "Choose correlation threshold {fwe|cdfcut} to be used independently to select best links, default is none" ).create( "choosecut" );
+        "Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none" ).create( "choosecut" );
         addOption( chooseCutOption );        
         
         addForceOption();
@@ -245,12 +245,12 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         
         if (hasOption("choosecut")){
             String singularThreshold = getOptionValue("choosecut");
-            if(singularThreshold.equals( "fwe" ) || singularThreshold.equals( "cdfcut" ) || singularThreshold.equals( "none" )){
+            if(singularThreshold.equals( "fwe" ) || singularThreshold.equals( "cdfCut" ) || singularThreshold.equals( "none" )){
                 log.info("Singular correlation threshold chosen");
                 this.linkAnalysisConfig.setSingularThreshold( singularThreshold );
             }
             else{
-                log.error("Must choose 'fwe', 'cdfcut', or 'none' as the singular correlation threshold, defaulting to 'none'");
+                log.error("Must choose 'fwe', 'cdfCut', or 'none' as the singular correlation threshold, defaulting to 'none'");
             }
         }
 

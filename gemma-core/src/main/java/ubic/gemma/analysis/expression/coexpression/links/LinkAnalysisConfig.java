@@ -48,7 +48,7 @@ public class LinkAnalysisConfig implements Serializable {
     private double fwe = 0.01;
     private double cdfCut = 0.01; // 1.0 means, keep everything.
     private double subsetSize = 0.0;
-    private String singularThreshold = "none"; //fwe|cdfcut
+    private String singularThreshold = "none"; //fwe|cdfCut
 
     private boolean subset = false;
     private boolean subsetUsed = false;

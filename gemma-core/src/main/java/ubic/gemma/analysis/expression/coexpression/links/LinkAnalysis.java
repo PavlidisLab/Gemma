@@ -280,7 +280,7 @@ public class LinkAnalysis {
             config.setUpperCdfCutUsed( false );
             config.setLowerCdfCutUsed( false );
         }
-        else if(config.getSingularThreshold().equals( "cdfcut" )){
+        else if(config.getSingularThreshold().equals( "cdfCut" )){
             config.setUpperTailCut(cdfUpperCutScore);
             log.info( "Final upper cut is " + form.format( config.getUpperTailCut() ) );
             if ( !config.isAbsoluteValue() ) {
