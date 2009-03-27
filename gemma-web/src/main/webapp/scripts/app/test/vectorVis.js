@@ -1,8 +1,11 @@
+Ext.namespace('Gemma');
+
+
 /**
  * 
  * show heatmap of data.
  * 
- * retrieve data using the VisualizationController.
+ * retrieve data using the DEDVController.
  * 
  * 
  */
@@ -13,7 +16,7 @@ Ext.onReady(function() {
 });
 
 function draw() {
-	VisualizationController.getVectorData([1231409, 1231413, 1231415, 1252263],
+	DEDVController.getVectorData([1231409, 1231413, 1231415, 1252263],
 			drawMap);
 }
 

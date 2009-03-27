@@ -34,6 +34,10 @@ import cern.colt.list.DoubleArrayList;
  */
 public class DoubleVectorValueObject extends DataVectorValueObject {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -5116242513725297615L;
     private boolean masked = false;
     private double[] data = null;
     private Double rankByMean;

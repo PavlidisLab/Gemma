@@ -5,7 +5,10 @@
 	<jwr:script src='/scripts/ajax/coexpression/CoexpressionSearchForm.js' useRandomParam="false" />
 	<jwr:script src='/scripts/app/CoexpressionSearch.js' useRandomParam="false" />
 	<jwr:script src='/scripts/ajax/coexpression/CoexpressionGrid.js' useRandomParam="false" />
-	<jwr:script src='/scripts/ajax/visualization/VisualizationWidget.js' useRandomParam="false" />
+	<jwr:script src='/scripts/ajax/visualization/CoexpressionVisualizationWidget.js' useRandomParam="false" />
+
+
+	<jwr:script src='/scripts/app/test/vectorVis.js' />
 
 	<content tag="heading">
 	<fmt:message key="searchCoexpression.heading" />
@@ -35,3 +38,10 @@
 <div id="coexpression-wrap">
 	<div id='coexpression-all'></div>
 </div>
+
+	<form>
+		<input type="button" value="draw" onClick="draw();" />
+	</form>
+
+	<div id="vis" style="width: 600px; height: 300px;">
+		</div>

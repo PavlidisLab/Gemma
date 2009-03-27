@@ -33,11 +33,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.time.StopWatch;
 import org.springframework.web.servlet.ModelAndView;
 
+import cern.colt.list.DoubleArrayList;
+
+import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -45,6 +50,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.controller.visualization.ExpressionProfileDataObject;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 import ubic.gemma.web.view.TextView;
 
@@ -57,6 +63,8 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="geneDifferentialExpressionService" ref="geneDifferentialExpressionService"
+ * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
+
  * @author kelsey
  * @version $Id$
  */
@@ -67,6 +75,7 @@ public class DEDVController extends BaseFormController {
     private GeneService geneService;
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private DesignElementDataVectorService designElementDataVectorService;
 
     /**
      * Given a collection of expression experiment Ids and a geneId returns a map of DEDV value objects to a collection
@@ -286,6 +295,11 @@ public class DEDVController extends BaseFormController {
     public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
         this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
     }
+    
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
+
 
     /**
      * @param processedExpressionDataVectorService the processedExpressionDataVectorService to set
@@ -632,5 +646,26 @@ public class DEDVController extends BaseFormController {
         return result;
 
     }
+    
+    
+    public Collection<ExpressionProfileDataObject> getVectorData( Collection<Long> dedvIds ) {
+        List<ExpressionProfileDataObject> result = new ArrayList<ExpressionProfileDataObject>();
+        for ( Long id : dedvIds ) {
+            DesignElementDataVector vector = this.designElementDataVectorService.load( id );
+            DoubleVectorValueObject dvvo = new DoubleVectorValueObject( vector );
+            ExpressionProfileDataObject epdo = new ExpressionProfileDataObject( dvvo );
+
+            DoubleArrayList doubleArrayList = new cern.colt.list.DoubleArrayList( epdo.getData() );
+            DescriptiveWithMissing.standardize( doubleArrayList );
+            epdo.setData( doubleArrayList.elements() );
+
+            result.add( epdo );
+        }
+
+        // TODO fill in gene; normalize and clip if desired.; watch for invalid ids.
+
+        return result;
+    }
+    
 
 }

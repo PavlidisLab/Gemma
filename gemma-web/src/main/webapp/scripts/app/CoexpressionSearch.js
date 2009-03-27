@@ -53,7 +53,7 @@ Ext.onReady(function() {
 					visWindow.close();
 				}
 
-				visWindow = new Gemma.VisualizationWindow({
+				visWindow = new Gemma.CoexpressionVisualizationWindow({
 					admin : admin
 				});
 				visWindow.displayWindow(activeExperiments, queryGene, foundGene);
