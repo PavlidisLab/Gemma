@@ -576,7 +576,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadAll(int)
      */
     @SuppressWarnings("unchecked")
-    public java.util.Collection<ArrayDesign> loadAll( @SuppressWarnings("unused") final int transform ) {
+    public java.util.Collection<ArrayDesign> loadAll( final int transform ) {
         return this.getHibernateTemplate().loadAll( ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.class );
     }
 
@@ -1315,9 +1315,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * Transforms a collection of entities using the
      * {@link #transformEntity(int,ubic.gemma.model.expression.arrayDesign.ArrayDesign)} method. This method does not
-     * instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
+     * instantiate a new collection. <p/> This method is to be used internally only.
      * 
      * @param transform one of the constants declared in
      *        <code>ubic.gemma.model.expression.arrayDesign.ArrayDesignDao</code>
@@ -1339,10 +1337,9 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.expression.arrayDesign.ArrayDesignDao</code>, please note that the {@link #TRANSFORM_NONE}
-     * constant denotes no transformation, so the entity itself will be returned.
-     * <p/>
-     * This method will return instances of these types:
+     * <code>ubic.gemma.model.expression.arrayDesign.ArrayDesignDao</code>, please note that the
+     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. <p/> This
+     * method will return instances of these types:
      * <ul>
      * <li>{@link ubic.gemma.model.expression.arrayDesign.ArrayDesign} - {@link #TRANSFORM_NONE}</li>
      * <li>{@link ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject} -
