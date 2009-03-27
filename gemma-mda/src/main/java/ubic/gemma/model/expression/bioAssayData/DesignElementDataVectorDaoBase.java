@@ -103,7 +103,7 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#remove(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
      */
-    public void remove( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector ) {
+    public void remove( T designElementDataVector ) {
         if ( designElementDataVector == null ) {
             throw new IllegalArgumentException(
                     "DesignElementDataVector.remove - 'designElementDataVector' can not be null" );
