@@ -43,6 +43,10 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.util.ConfigUtils;
 
 /**
+ * FIXME defunct. Should grab urls like http://www.ebi.ac.uk/microarray-as/aer/lob?name=adss&id=181940719, which have to
+ * be scraped from pages like
+ * http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=PhysicalArrayDesign&aAccession=A-MEXP-15
+ * <p>
  * Fetch files for ArrayDesigns from ArrayExpress. Examples:
  * <ul>
  * <li>ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/array/FPMI/A-FPMI-3 (note no composite sequences)
@@ -58,7 +62,6 @@ public class ArrayDesignFetcher extends FtpFetcher {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.fetcher.Fetcher#fetch(java.lang.String)
      */
     @Override
@@ -209,7 +212,6 @@ public class ArrayDesignFetcher extends FtpFetcher {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
      */
     @Override
@@ -220,7 +222,6 @@ public class ArrayDesignFetcher extends FtpFetcher {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
      */
     @Override
@@ -230,7 +231,6 @@ public class ArrayDesignFetcher extends FtpFetcher {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
      */
     @Override
