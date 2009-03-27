@@ -960,9 +960,6 @@ public class SearchService implements InitializingBean {
     /**
      * Search by name of the composite sequence as well as gene.
      * 
-     * @param searchString
-     * @param arrayDesign to restrict to
-     * @param geneSearchResults Can be null, otherwise used to avoid a second search.
      * @return
      * @throws Exception
      */
@@ -970,6 +967,11 @@ public class SearchService implements InitializingBean {
             Collection<SearchResult> geneSearchResults ) {
 
         StopWatch watch = startTiming();
+
+        /*
+         * FIXME: this at least partly ignores any array design that was set as a restriction, especially in a gene
+         * search.
+         */
 
         Collection<SearchResult> allResults = new HashSet<SearchResult>();
         allResults.addAll( compassCompositeSequenceSearch( settings ) );

@@ -1412,13 +1412,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             return;
         }
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
+            
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-
-                try {
-                    session.lock( ee, LockMode.NONE );
-                } catch ( NonUniqueObjectException e ) {
-                    return null;
-                }
+                session.lock( ee, LockMode.NONE );
 
                 Hibernate.initialize( ee );
                 Hibernate.initialize( ee.getQuantitationTypes() );

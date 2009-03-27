@@ -30,7 +30,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     private IntegerMatrix<DesignElement, Integer> matrix;
 
-    public ExpressionDataIntegerMatrix( Collection<DesignElementDataVector> vectors ) {
+    public ExpressionDataIntegerMatrix( Collection<? extends DesignElementDataVector> vectors ) {
         init();
 
         for ( DesignElementDataVector dedv : vectors ) {

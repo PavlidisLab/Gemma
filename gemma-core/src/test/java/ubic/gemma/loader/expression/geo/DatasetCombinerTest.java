@@ -69,6 +69,9 @@ public class DatasetCombinerTest extends TestCase {
             if ( e.getCause() instanceof java.net.UnknownHostException ) {
                 log.warn( "Test skipped due to unknown host exception" );
                 return;
+            } else if ( e.getCause() instanceof java.io.IOException && e.getCause().getMessage().contains( "503" ) ) {
+                log.warn( "Test skipped due to 503 from NCBI" );
+                return;
             }
             throw e;
         }

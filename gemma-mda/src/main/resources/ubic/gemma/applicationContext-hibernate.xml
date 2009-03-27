@@ -601,13 +601,11 @@
 				ubic.gemma.model.expression.bioAssay.BioAssayService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService.remove=PROPAGATION_REQUIRED
-				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.countAll=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.removeDataForCompositeSequence=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.removeDataForQuantitationType=PROPAGATION_REQUIRED
-				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.getPreferredVectors=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.update=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.find=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.create=PROPAGATION_REQUIRED
@@ -617,6 +615,8 @@
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getRanks=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.createProcessedDataVectors=PROPAGATION_REQUIRED
+				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.update=PROPAGATION_REQUIRED
+				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.remove=PROPAGATION_REQUIRED
@@ -2227,25 +2227,7 @@
 			</list>
 		</property>
 	</bean>
-	<!-- DataVector Entity Proxy with inner DataVector Entity implementation -->
-	<bean id="dataVectorDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.expression.bioAssayData.DataVectorDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.DataVectorDao
-			</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
+	 
 	<!-- BioAssayDataVector Entity Proxy with inner BioAssayDataVector Entity implementation -->
 	<bean id="bioAssayDataVectorDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
@@ -2265,18 +2247,19 @@
 			</list>
 		</property>
 	</bean>
-	<!-- DesignElementDataVector Entity Proxy with inner DesignElementDataVector Entity implementation -->
-	<bean id="designElementDataVectorDao" class="org.springframework.aop.framework.ProxyFactoryBean">
+	 
+
+	<!-- RawExpressionDataVectorDao Entity Proxy with inner RawExpressionDataVectorDao Entity implementation -->
+	<bean id="rawExpressionDataVectorDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
-			<bean class="ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoImpl">
+			<bean class="ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDaoImpl">
 				<property name="sessionFactory">
 					<ref local="sessionFactory" />
 				</property>
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao
-			</value>
+			<value>ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDao</value>
 		</property>
 		<property name="interceptorNames">
 			<list>
@@ -3870,9 +3853,6 @@
 				<property name="bioAssayDimensionDao">
 					<ref bean="bioAssayDimensionDao" />
 				</property>
-				<property name="designElementDataVectorDao">
-					<ref bean="designElementDataVectorDao" />
-				</property>
 				<property name="arrayDesignDao">
 					<ref bean="arrayDesignDao" />
 				</property>
@@ -4131,8 +4111,11 @@
 	<bean id="designElementDataVectorService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceImpl">
-				<property name="designElementDataVectorDao">
-					<ref bean="designElementDataVectorDao" />
+				<property name="rawExpressionDataVectorDao">
+					<ref bean="rawExpressionDataVectorDao" />
+				</property>
+				<property name="processedExpressionDataVectorDao">
+					<ref bean="processedExpressionDataVectorDao" />
 				</property>
 			</bean>
 		</property>

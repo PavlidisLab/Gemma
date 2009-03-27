@@ -137,7 +137,8 @@ public class OntologyService {
      * returned list also. Then will search the birnlex, obo Disease Ontology and FMA Ontology for OntologyResources
      * (Terms and Individuals) that match the search term exactly
      * 
-     * @param fetchResultsByGeneAndExperimentsQuery
+     * @param givenQueryString
+     * @param categoryUri 
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -148,7 +149,8 @@ public class OntologyService {
 
         String queryString = givenQueryString;
 
-        log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
+        if ( log.isDebugEnabled() )
+            log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
 
         if ( queryString == null ) return null;
 
@@ -163,8 +165,9 @@ public class OntologyService {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri.trim() ) );
             if ( results.size() > 0 ) individualResults.addAll( filter( results, queryString ) );
         }
-        log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in "
-                + watch.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in "
+                    + watch.getTime() + " ms" );
 
         List<Characteristic> alreadyUsedResults = new ArrayList<Characteristic>();
         Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
@@ -186,8 +189,9 @@ public class OntologyService {
                 }
             }
         }
-        log.debug( "found " + alreadyUsedResults.size() + " matching characteristics used in the database" + " in "
-                + watch.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "found " + alreadyUsedResults.size() + " matching characteristics used in the database" + " in "
+                    + watch.getTime() + " ms" );
 
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
@@ -200,29 +204,33 @@ public class OntologyService {
         // die parsing them
         // FIXME hard-coding of ontologies to search
         results = mgedOntologyService.findResources( queryString );
-        log.debug( "found " + results.size() + " terms from mged in " + watch.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "found " + results.size() + " terms from mged in " + watch.getTime() + " ms" );
         searchResults.addAll( filter( results, queryString ) );
 
         results = birnLexOntologyService.findResources( queryString );
-        log.debug( "found " + results.size() + " terms from birnLex in " + watch.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "found " + results.size() + " terms from birnLex in " + watch.getTime() + " ms" );
         searchResults.addAll( filter( results, queryString ) );
 
         results = diseaseOntologyService.findResources( queryString );
-        log.debug( "found " + results.size() + " terms from obo in " + watch.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "found " + results.size() + " terms from obo in " + watch.getTime() + " ms" );
         searchResults.addAll( filter( results, queryString ) );
 
         results = fmaOntologyService.findResources( queryString );
-        log.debug( "found " + results.size() + " terms from fma in " + watch.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "found " + results.size() + " terms from fma in " + watch.getTime() + " ms" );
         searchResults.addAll( filter( results, queryString ) );
 
         results = chebiOntologyService.findResources( queryString );
-        log.debug( "found " + results.size() + " terms from chebi in " + watch.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "found " + results.size() + " terms from chebi in " + watch.getTime() + " ms" );
         searchResults.addAll( filter( results, queryString ) );
 
         // Sort the individual results.
         Collection<Characteristic> sortedResults = sort( individualResults, alreadyUsedResults, searchResults,
                 queryString, foundValues );
-        log.debug( "sorted " + sortedResults.size() + " in " + watch.getTime() + " ms" );
 
         return sortedResults;
 

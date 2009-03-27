@@ -634,8 +634,8 @@ public class GeoDatasetService extends AbstractGeoService {
             if ( entity instanceof ExpressionExperiment ) {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
                 this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
-
-                this.expressionExperimentService.thawLite( expressionExperiment );
+                
+                // no need to thaw here as we're still in a session.
 
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     adsToUpdate.add( ba.getArrayDesignUsed() );

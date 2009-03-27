@@ -50,13 +50,13 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * @param dimensions
      * @param qtypes
      */
-    public ExpressionDataBooleanMatrix( Collection<DesignElementDataVector> vectors, List<QuantitationType> qtypes ) {
+    public ExpressionDataBooleanMatrix( Collection<? extends DesignElementDataVector> vectors, List<QuantitationType> qtypes ) {
         init();
         Collection<DesignElementDataVector> selectedVectors = selectVectors( vectors, qtypes );
         vectorsToMatrix( selectedVectors );
     }
 
-    public ExpressionDataBooleanMatrix( Collection<DesignElementDataVector> vectors ) {
+    public ExpressionDataBooleanMatrix( Collection<? extends DesignElementDataVector> vectors ) {
         init();
 
         for ( DesignElementDataVector dedv : vectors ) {

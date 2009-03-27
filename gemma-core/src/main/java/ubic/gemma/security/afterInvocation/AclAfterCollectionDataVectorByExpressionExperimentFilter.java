@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class AclAfterCollectionDataVectorByExpressionExperimentFilter extends ByAssociatedObjectFilter {
 
+    @Override
     public String getProcessConfigAttribute() {
         return "AFTER_ACL_DATAVECTOR_COLLECTION_READ";
     }
@@ -44,6 +45,7 @@ public class AclAfterCollectionDataVectorByExpressionExperimentFilter extends By
      * @param targetDomainObject
      * @return
      */
+    @Override
     protected Securable getDomainObject( Object targetDomainObject ) {
         ExpressionExperiment domainObject = null;
         if ( targetDomainObject instanceof DesignElementDataVector ) {

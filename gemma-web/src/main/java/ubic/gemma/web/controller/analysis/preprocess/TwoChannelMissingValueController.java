@@ -26,8 +26,8 @@ import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTask;
-import ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTaskCommand;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTaskCommand; 
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
@@ -66,7 +66,7 @@ public class TwoChannelMissingValueController extends AbstractSpacesController<B
             TwoChannelMissingValueTaskCommand tc = ( ( TwoChannelMissingValueTaskCommand ) c );
 
             try {
-                Collection<DesignElementDataVector> results = twoChannelMissingValues.computeMissingValues( tc
+                Collection<RawExpressionDataVector> results = twoChannelMissingValues.computeMissingValues( tc
                         .getExpressionExperiment(), tc.getS2n(), tc.getExtraMissingValueIndicators() );
                 return results.size() > 0;
             } catch ( Exception e ) {

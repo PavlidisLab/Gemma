@@ -153,6 +153,7 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
         }
 
         this.expressionExperimentService.thawLite( newee );
+        assertNotNull( newee );
         processedDataVectorDao.createProcessedDataVectors( newee );
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( newee );

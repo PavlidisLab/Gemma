@@ -23,7 +23,7 @@ import java.util.Collection;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Gene; 
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -88,6 +88,9 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      */
 
     public double[] standardize() {
+        /*
+         * FIXME If the values are all equal, variance == 0 and we get nothing back. So we should fill in zeros instead.
+         */
 
         /*
          * DoubleArrayList constructor does not make a copy, so we have to make one.

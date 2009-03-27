@@ -22,7 +22,9 @@
 //
 package ubic.gemma.model.expression.bioAssayData;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @author Paul
@@ -38,42 +40,27 @@ public interface DesignElementDataVectorService {
     /**
      * 
      */
-    public java.util.Collection create( java.util.Collection vectors );
+    public java.util.Collection<? extends DesignElementDataVector> create(
+            java.util.Collection<? extends DesignElementDataVector> vectors );
 
     /**
      * 
      */
-    public java.util.Collection find( java.util.Collection quantitationTypes );
+    public java.util.Collection<? extends DesignElementDataVector> find(
+            java.util.Collection<QuantitationType> quantitationTypes );
 
     /**
      * 
      */
-    public java.util.Collection find( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * 
-     */
-    public java.util.Collection find( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
+    public java.util.Collection<? extends DesignElementDataVector> find(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.DesignElementDataVector findOrCreate(
-            ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector );
-
-    /**
-     * Given a collection of genes, a collection of expression experiments will return a collection of "preferred"
-     * design element data vectors for the given genes in the given experiments. Note that these vectors should be
-     * 'masked' for missing values before typical uses.
-     * <p>
-     * The vectors will be thawed.
-     * 
-     * @param ees
-     * @param genes
-     * @return
-     */
-    public java.util.Map getPreferredVectors( java.util.Collection<ExpressionExperiment> ees, java.util.Collection genes );
+    public java.util.Collection<? extends DesignElementDataVector> find(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * 
@@ -83,12 +70,12 @@ public interface DesignElementDataVectorService {
     /**
      * 
      */
-    public void remove( java.util.Collection vectors );
+    public void remove( java.util.Collection<? extends DesignElementDataVector> vectors );
 
     /**
      * 
      */
-    public void remove( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector );
+    public void remove( ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector designElementDataVector );
 
     /**
      * <p>
@@ -110,27 +97,27 @@ public interface DesignElementDataVectorService {
     /**
      * 
      */
-    public void thaw( java.util.Collection designElementDataVectors );
+    public void thaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors );
 
     /**
      * <p>
      * Thaws associations of the given DesignElementDataVector
      * </p>
      */
-    public void thaw( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector designElementDataVector );
+    public void thaw( RawExpressionDataVector designElementDataVector );
 
     /**
      * <p>
      * updates a collection of designElementDataVectors
      * </p>
      */
-    public void update( java.util.Collection dedvs );
+    public void update( java.util.Collection<? extends DesignElementDataVector> dedvs );
 
     /**
      * <p>
      * updates an already existing dedv
      * </p>
      */
-    public void update( ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv );
+    public void update( RawExpressionDataVector dedv );
 
 }

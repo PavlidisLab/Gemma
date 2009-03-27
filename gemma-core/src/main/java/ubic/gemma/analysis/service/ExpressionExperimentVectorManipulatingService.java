@@ -27,15 +27,27 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
 /**
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
+ * @spring.property name="processedExpressionDataVectorService" ref="processedExpressionDataVectorService"
  * @author pavlidis
  * @version $Id$
  */
 public abstract class ExpressionExperimentVectorManipulatingService {
 
     protected DesignElementDataVectorService designElementDataVectorService;
+
+    protected ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    /**
+     * @param processedExpressionDataVectorService the processedExpressionDataVectorService to set
+     */
+    public void setProcessedExpressionDataVectorService(
+            ProcessedExpressionDataVectorService processedExpressionDataVectorService ) {
+        this.processedExpressionDataVectorService = processedExpressionDataVectorService;
+    }
 
     // ByteArrayConverter is stateless.
     protected ByteArrayConverter converter = new ByteArrayConverter();
@@ -45,10 +57,10 @@ public abstract class ExpressionExperimentVectorManipulatingService {
      * @param type
      * @return
      */
-    @SuppressWarnings("unchecked")
-    protected Collection<DesignElementDataVector> getVectorsForOneQuantitationType( ArrayDesign arrayDesign,
+    protected Collection<? extends DesignElementDataVector> getVectorsForOneQuantitationType( ArrayDesign arrayDesign,
             QuantitationType type ) {
-        Collection<DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( arrayDesign, type );
+        Collection<? extends DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( arrayDesign,
+                type );
         designElementDataVectorService.thaw( vectorsForQt );
         return vectorsForQt;
     }
@@ -101,9 +113,8 @@ public abstract class ExpressionExperimentVectorManipulatingService {
      * @param type
      * @return
      */
-    @SuppressWarnings("unchecked")
-    protected Collection<DesignElementDataVector> getVectorsForOneQuantitationType( QuantitationType type ) {
-        Collection<DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( type );
+    protected Collection<? extends DesignElementDataVector> getVectorsForOneQuantitationType( QuantitationType type ) {
+        Collection<? extends DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( type );
         designElementDataVectorService.thaw( vectorsForQt );
         return vectorsForQt;
     }

@@ -37,7 +37,10 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * Methods to organize ExpressionDataMatrices by column (or at least provide the ordering)
+ * Methods to organize ExpressionDataMatrices by column (or at least provide the ordering). This works by greedily
+ * finding the factor with the fewest categories, sorting the samples by the factor values (measurements are treated as
+ * numbers if possible), and recursively repeating this for each block, until there are no more factors with more than
+ * one value.
  * 
  * @author paul
  * @version $Id$
@@ -47,9 +50,99 @@ public class ExpressionDataMatrixColumnSort {
 
     /**
      * @param mat
+     * @return sorted by experimental design, if possible, or by name if no design exists.
+     */
+    public static List<BioMaterial> orderByExperimentalDesign( ExpressionDataMatrix<?> mat ) {
+        List<BioMaterial> start = getBms( mat );
+
+        List<BioMaterial> ordered = orderByExperimentalDesign( start );
+
+        // log.info( "AFTER" );
+        // assert ordered.size() == start.size();
+        // StringBuilder buf2 = new StringBuilder();
+        //
+        // Collection<ExperimentalFactor> efs = getFactors( ordered );
+        //
+        // for ( BioMaterial bioMaterial : ordered ) {
+        // buf2.append( StringUtils.leftPad( bioMaterial.getId().toString(), 3 ) + "  " );
+        //
+        // for ( ExperimentalFactor ef : efs ) {
+        // for ( FactorValue fv : bioMaterial.getFactorValues() ) {
+        // if ( fv.getExperimentalFactor().equals( ef ) ) buf2.append( fv + "\t" );
+        // }
+        // }
+        //
+        // buf2.append( "\n" );
+        // }
+        // log.info( buf2.toString() );
+
+        return ordered;
+
+    }
+
+    /**
+     * @param start
      * @return
      */
-    public static List<BioMaterial> orderByName( ExpressionDataMatrix mat ) {
+    public static List<BioMaterial> orderByExperimentalDesign( List<BioMaterial> start ) {
+
+        if ( start.size() == 1 ) {
+            return start;
+        }
+
+        if ( start.size() == 0 ) {
+            throw new IllegalArgumentException( "Must provide some biomaterials" );
+        }
+
+        Collection<ExperimentalFactor> factors = getFactors( start );
+        if ( factors.size() == 0 ) {
+            log.warn( "No experimental design, sorting by sample name" );
+            orderByName( start );
+            return start;
+        }
+        Map<FactorValue, Collection<BioMaterial>> fv2bms = buildFv2BmMap( start );
+
+        ExperimentalFactor simplest = chooseSimplestFactor( start, factors );
+
+        if ( simplest == null ) {
+            // we're done.
+            return start;
+        }
+
+        /*
+         * Order this chunk by the selected factor
+         */
+        List<BioMaterial> ordered = orderByFactor( simplest, fv2bms, start,
+                new HashMap<ExperimentalFactor, Collection<BioMaterial>>() );
+
+        /*
+         * Recurse in and order each chunk
+         */
+        LinkedHashMap<FactorValue, List<BioMaterial>> chunks = chunkOnFactor( simplest, ordered );
+
+        log.debug( chunks.size() + " chunks for " + simplest + ", from current chunk of size " + start.size() );
+
+        List<BioMaterial> result = new ArrayList<BioMaterial>();
+        for ( FactorValue fv : chunks.keySet() ) {
+            List<BioMaterial> chunk = chunks.get( fv );
+
+            if ( chunk.size() < 2 ) {
+                result.addAll( chunk );
+            } else {
+                List<BioMaterial> orderedChunk = orderByExperimentalDesign( chunk );
+                result.addAll( orderedChunk );
+            }
+        }
+
+        return result;
+
+    }
+
+    /**
+     * @param mat
+     * @return
+     */
+    public static List<BioMaterial> orderByName( ExpressionDataMatrix<?> mat ) {
         List<BioMaterial> start = getBms( mat );
         orderByName( start );
         return start;
@@ -69,62 +162,122 @@ public class ExpressionDataMatrixColumnSort {
                 BioAssay ba2 = o2.getBioAssaysUsedIn().iterator().next();
                 if ( ba1.getName() != null && ba2.getName() != null ) {
                     return ba1.getName().compareTo( ba2.getName() );
-                } else {
-                    if ( o1.getName() != null && o2.getName() != null ) {
-                        return o1.getName().compareTo( o2.getName() );
-                    } else {
-                        return 0;
-                    }
                 }
+                if ( o1.getName() != null && o2.getName() != null ) {
+                    return o1.getName().compareTo( o2.getName() );
+                }
+                return 0;
+
             }
         } );
     }
 
     /**
-     * @param mat
-     * @return sorted by experimental design, if possible, or by name if no design exists.
+     * @param bms
+     * @return
      */
-    public static List<BioMaterial> orderByExperimentalDesign( ExpressionDataMatrix mat ) {
-        List<BioMaterial> start = getBms( mat );
-
-        List<BioMaterial> ordered = orderByExperimentalDesign( start );
-
-        // log.info( "AFTER" );
-        // assert ordered.size() == start.size();
-        // StringBuilder buf2 = new StringBuilder();
-        // for ( BioMaterial bioMaterial : ordered ) {
-        // buf2.append( bioMaterial.getId() + " " );
-        // for ( FactorValue fv : bioMaterial.getFactorValues() ) {
-        // buf2.append( fv + " " );
-        // }
-        // buf2.append( "\n" );
-        // }
-        // log.info( buf2.toString() );
-
-        return ordered;
-
+    private static Map<FactorValue, Collection<BioMaterial>> buildFv2BmMap( Collection<BioMaterial> bms ) {
+        Map<FactorValue, Collection<BioMaterial>> fv2bms = new HashMap<FactorValue, Collection<BioMaterial>>();
+        for ( BioMaterial bm : bms ) {
+            Collection<FactorValue> factorValues = bm.getFactorValues();
+            for ( FactorValue fv : factorValues ) {
+                if ( !fv2bms.containsKey( fv ) ) {
+                    fv2bms.put( fv, new HashSet<BioMaterial>() );
+                }
+                fv2bms.get( fv ).add( bm );
+            }
+        }
+        return fv2bms;
     }
 
     /**
-     * @param start
+     * Choose the factor with the smallest number of categories
+     * 
+     * @param bms
+     * @param factors
+     * @return null if no factor has at least 2 values represented, or the factor with the fewest number of values (at
+     *         least 2 values that is)
+     */
+    private static ExperimentalFactor chooseSimplestFactor( List<BioMaterial> bms,
+            Collection<ExperimentalFactor> factors ) {
+
+        ExperimentalFactor simplest = null;
+        int smallestSize = Integer.MAX_VALUE;
+
+        Collection<FactorValue> usedValues = new HashSet<FactorValue>();
+        for ( BioMaterial bm : bms ) {
+            usedValues.addAll( bm.getFactorValues() );
+        }
+
+        for ( ExperimentalFactor ef : factors ) {
+
+            int numvals = 0;
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                if ( usedValues.contains( fv ) ) {
+                    numvals++;
+                }
+            }
+
+            if ( numvals > 1 && numvals < smallestSize ) {
+                smallestSize = numvals;
+                simplest = ef;
+            }
+        }
+        return simplest;
+    }
+
+    /**
+     * Divide the biomaterials up into chunks based on the experimental factor given, keeping everybody in order.
+     * 
+     * @param ef
+     * @param bms
+     * @return ordered map of fv->bm where fv is of ef
+     */
+    private static LinkedHashMap<FactorValue, List<BioMaterial>> chunkOnFactor( ExperimentalFactor ef,
+            List<BioMaterial> bms ) {
+        LinkedHashMap<FactorValue, List<BioMaterial>> chunks = new LinkedHashMap<FactorValue, List<BioMaterial>>();
+
+        for ( FactorValue fv : ef.getFactorValues() ) {
+            chunks.put( fv, new ArrayList<BioMaterial>() );
+        }
+
+        for ( BioMaterial bm : bms ) {
+            for ( FactorValue fv : bm.getFactorValues() ) {
+                if ( chunks.containsKey( fv ) ) {
+                    chunks.get( fv ).add( bm );
+                }
+            }
+        }
+        return chunks;
+    }
+
+    /**
+     * Get all biomaterials for a matrix.
+     * 
+     * @param mat
      * @return
      */
-    public static List<BioMaterial> orderByExperimentalDesign( List<BioMaterial> start ) {
-
-        Collection<ExperimentalFactor> factors = getFactors( start );
-        if ( factors.size() == 0 ) {
-            log.warn( "No experimental design, sorting by sample name" );
-            orderByName( start );
-            return start;
+    private static List<BioMaterial> getBms( ExpressionDataMatrix<?> mat ) {
+        List<BioMaterial> result = new ArrayList<BioMaterial>();
+        for ( int i = 0; i < mat.columns(); i++ ) {
+            result.add( mat.getBioMaterialForColumn( i ) );
         }
-        Map<FactorValue, Collection<BioMaterial>> fv2bms = buildFv2BmMap( start );
+        return result;
+    }
 
-        // TODO Start with the factor with the fewest categories.
-        ExperimentalFactor ef = factors.iterator().next();
-
-        List<BioMaterial> ordered = orderByFactor( ef, fv2bms, start,
-                new HashMap<ExperimentalFactor, Collection<BioMaterial>>() );
-        return ordered;
+    /**
+     * @param bms
+     * @return
+     */
+    private static Collection<ExperimentalFactor> getFactors( Collection<BioMaterial> bms ) {
+        Collection<ExperimentalFactor> efs = new HashSet<ExperimentalFactor>();
+        for ( BioMaterial bm : bms ) {
+            Collection<FactorValue> factorValues = bm.getFactorValues();
+            for ( FactorValue fv : factorValues ) {
+                efs.add( fv.getExperimentalFactor() );
+            }
+        }
+        return efs;
     }
 
     /**
@@ -173,57 +326,57 @@ public class ExpressionDataMatrixColumnSort {
             return bms;
         }
 
-        if ( !doneFactors.containsKey( ef ) ) {
-            doneFactors.put( ef, new HashSet<BioMaterial>() );
-        }
-
-        log.debug( "Marking " + bms.size() + " bms done for " + ef.getName() );
-        doneFactors.get( ef ).addAll( bms );
-
-        int chunkStartIndex = 0;
-        for ( FactorValue factorValue : chunks.keySet() ) {
-
-            // Note that factorValue can be null, when there are biomaterials that don't have a value assigned for the
-            // current factor.
-
-            List<BioMaterial> chunk = chunks.get( factorValue );
-
-            log.debug( "Processing chunk for " + factorValue + " with " + chunk.size() + " members" );
-
-            if ( chunk.size() == 1 ) {
-                chunkStartIndex += chunk.size();
-                continue; // can't reorder it!
-            }
-
-            Collection<ExperimentalFactor> factors = getFactors( chunk );
-            factor: for ( ExperimentalFactor nextFactor : factors ) {
-
-                if ( nextFactor.equals( ef ) ) continue;
-                if ( doneFactors.containsKey( nextFactor ) ) {
-                    for ( BioMaterial seen : doneFactors.get( nextFactor ) ) {
-                        if ( chunk.contains( seen ) ) {
-                            continue factor;
-                        }
-                    }
-                }
-
-                log.debug( "Reordering " + chunk.size() + "bms by " + nextFactor );
-
-                List<BioMaterial> orderedChunk = orderByFactor( nextFactor, fv2bms, chunk, doneFactors );
-
-                /*
-                 * Reorganize the current chunk
-                 */
-                log.debug( "Implementing ordering by " + nextFactor );
-                int j = 0;
-                for ( int i = chunkStartIndex; i < chunkStartIndex + chunk.size(); i++ ) {
-                    organized.set( i, orderedChunk.get( j ) );
-                    j++;
-                }
-                break; // only one factor at a time, please
-            }
-            chunkStartIndex += chunk.size();
-        }
+        // if ( !doneFactors.containsKey( ef ) ) {
+        // doneFactors.put( ef, new HashSet<BioMaterial>() );
+        // }
+        //
+        // log.debug( "Marking " + bms.size() + " bms done for " + ef.getName() );
+        // doneFactors.get( ef ).addAll( bms );
+        //
+        // int chunkStartIndex = 0;
+        // for ( FactorValue factorValue : chunks.keySet() ) {
+        //
+        // // Note that factorValue can be null, when there are biomaterials that don't have a value assigned for the
+        // // current factor.
+        //
+        // List<BioMaterial> chunk = chunks.get( factorValue );
+        //
+        // log.debug( "Processing chunk for " + factorValue + " with " + chunk.size() + " members" );
+        //
+        // if ( chunk.size() == 1 ) {
+        // chunkStartIndex += chunk.size();
+        // continue; // can't reorder it!
+        // }
+        //
+        // Collection<ExperimentalFactor> factors = getFactors( chunk );
+        // factor: for ( ExperimentalFactor nextFactor : factors ) {
+        //
+        // if ( nextFactor.equals( ef ) ) continue;
+        // if ( doneFactors.containsKey( nextFactor ) ) {
+        // for ( BioMaterial seen : doneFactors.get( nextFactor ) ) {
+        // if ( chunk.contains( seen ) ) {
+        // continue factor;
+        // }
+        // }
+        // }
+        //
+        // log.debug( "Reordering " + chunk.size() + "bms by " + nextFactor );
+        //
+        // List<BioMaterial> orderedChunk = orderByFactor( nextFactor, fv2bms, chunk, doneFactors );
+        //
+        // /*
+        // * Reorganize the current chunk
+        // */
+        // log.debug( "Implementing ordering by " + nextFactor );
+        // int j = 0;
+        // for ( int i = chunkStartIndex; i < chunkStartIndex + chunk.size(); i++ ) {
+        // organized.set( i, orderedChunk.get( j ) );
+        // j++;
+        // }
+        // break; // only one factor at a time, please
+        // }
+        // chunkStartIndex += chunk.size();
+        // }
         return organized;
     }
 
@@ -246,7 +399,7 @@ public class ExpressionDataMatrixColumnSort {
                  * This can happen if a factorvalue has been created but not yet associated with any biomaterials. This
                  * can also be cruft.
                  */
-                log.warn( "No biomaterials have factor value " + fv + "?" );
+                // log.warn( "No biomaterials have factor value " + fv + "?" );
                 continue;
             }
 
@@ -291,7 +444,7 @@ public class ExpressionDataMatrixColumnSort {
         if ( factorValues.iterator().next().getMeasurement() == null ) {
             return;
         }
-        log.debug( "Sorting" );
+        log.debug( "Sorting measurements" );
         Collections.sort( factorValues, new Comparator<FactorValue>() {
             public int compare( FactorValue o1, FactorValue o2 ) {
                 try {
@@ -304,58 +457,11 @@ public class ExpressionDataMatrixColumnSort {
                         return -1;
                     else if ( d1 > d2 ) return 1;
                     return 0;
+
                 } catch ( NumberFormatException e ) {
                     return o1.getMeasurement().getValue().compareTo( o2.getMeasurement().getValue() );
                 }
             }
         } );
     }
-
-    /**
-     * Get all biomaterials for a matrix.
-     * 
-     * @param mat
-     * @return
-     */
-    private static List<BioMaterial> getBms( ExpressionDataMatrix mat ) {
-        List<BioMaterial> result = new ArrayList<BioMaterial>();
-        for ( int i = 0; i < mat.columns(); i++ ) {
-            result.add( mat.getBioMaterialForColumn( i ) );
-        }
-        return result;
-    }
-
-    /**
-     * @param bms
-     * @return
-     */
-    private static Map<FactorValue, Collection<BioMaterial>> buildFv2BmMap( Collection<BioMaterial> bms ) {
-        Map<FactorValue, Collection<BioMaterial>> fv2bms = new HashMap<FactorValue, Collection<BioMaterial>>();
-        for ( BioMaterial bm : bms ) {
-            Collection<FactorValue> factorValues = bm.getFactorValues();
-            for ( FactorValue fv : factorValues ) {
-                if ( !fv2bms.containsKey( fv ) ) {
-                    fv2bms.put( fv, new HashSet<BioMaterial>() );
-                }
-                fv2bms.get( fv ).add( bm );
-            }
-        }
-        return fv2bms;
-    }
-
-    /**
-     * @param bms
-     * @return
-     */
-    private static Collection<ExperimentalFactor> getFactors( Collection<BioMaterial> bms ) {
-        Collection<ExperimentalFactor> efs = new HashSet<ExperimentalFactor>();
-        for ( BioMaterial bm : bms ) {
-            Collection<FactorValue> factorValues = bm.getFactorValues();
-            for ( FactorValue fv : factorValues ) {
-                efs.add( fv.getExperimentalFactor() );
-            }
-        }
-        return efs;
-    }
-
 }

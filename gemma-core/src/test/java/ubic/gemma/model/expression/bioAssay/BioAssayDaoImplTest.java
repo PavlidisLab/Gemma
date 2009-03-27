@@ -36,8 +36,6 @@ public class BioAssayDaoImplTest extends BaseSpringContextTest {
 
     private static final int NUMTESTBIOASSAYS = 5;
 
-    protected DesignElementDataVectorDao designElementDataVectorDao;
-
     protected BioAssayDimensionDao bioAssayDimensionDao;
 
     private static BioAssay ba;
@@ -52,8 +50,7 @@ public class BioAssayDaoImplTest extends BaseSpringContextTest {
         endTransaction();
         this.bioAssayDao = ( BioAssayDao ) getBean( "bioAssayDao" );
         List<BioAssay> bas = new ArrayList<BioAssay>();
-        BioAssayDimension bad = ( BioAssayDimension ) bioAssayDimensionDao.create( BioAssayDimension.Factory
-                .newInstance() );
+        BioAssayDimension bad = bioAssayDimensionDao.create( BioAssayDimension.Factory.newInstance() );
 
         if ( !setupDone ) {
             ArrayDesign a = this.getTestPersistentArrayDesign( 5, true, false, true ); // readonly
@@ -73,7 +70,7 @@ public class BioAssayDaoImplTest extends BaseSpringContextTest {
      */
     public void testFindBioAssayDimensionsLong() {
         assertTrue( ba.getId() != null );
-        Collection result = bioAssayDao.findBioAssayDimensions( ba );
+        Collection<BioAssayDimension> result = bioAssayDao.findBioAssayDimensions( ba );
         assertEquals( 1, result.size() );
     }
 
@@ -85,10 +82,6 @@ public class BioAssayDaoImplTest extends BaseSpringContextTest {
 
     public void setBioAssayDimensionDao( BioAssayDimensionDao bioAssayDimensionDao ) {
         this.bioAssayDimensionDao = bioAssayDimensionDao;
-    }
-
-    public void setDesignElementDataVectorDao( DesignElementDataVectorDao designElementDataVectorDao ) {
-        this.designElementDataVectorDao = designElementDataVectorDao;
     }
 
 }

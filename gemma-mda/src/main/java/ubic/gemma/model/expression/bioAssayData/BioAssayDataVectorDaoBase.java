@@ -26,7 +26,7 @@ package ubic.gemma.model.expression.bioAssayData;
  * 
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVector
  */
-public abstract class BioAssayDataVectorDaoBase extends ubic.gemma.model.expression.bioAssayData.DataVectorDaoImpl
+public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.hibernate3.support.HibernateDaoSupport
         implements ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao {
 
     /**
@@ -207,7 +207,6 @@ public abstract class BioAssayDataVectorDaoBase extends ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#load(int, java.lang.Long)
      */
-    @Override
     public Object load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BioAssayDataVector.load - 'id' can not be null" );
@@ -220,7 +219,6 @@ public abstract class BioAssayDataVectorDaoBase extends ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#load(java.lang.Long)
      */
-    @Override
     public ubic.gemma.model.expression.bioAssayData.DataVector load( java.lang.Long id ) {
         return ( ubic.gemma.model.expression.bioAssayData.BioAssayDataVector ) this.load( TRANSFORM_NONE, id );
     }
@@ -228,7 +226,6 @@ public abstract class BioAssayDataVectorDaoBase extends ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#loadAll()
      */
-    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
@@ -237,7 +234,6 @@ public abstract class BioAssayDataVectorDaoBase extends ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#loadAll(int)
      */
-    @Override
     public java.util.Collection loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorImpl.class );
@@ -248,7 +244,6 @@ public abstract class BioAssayDataVectorDaoBase extends ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#remove(java.lang.Long)
      */
-    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BioAssayDataVector.remove - 'id' can not be null" );
@@ -263,7 +258,6 @@ public abstract class BioAssayDataVectorDaoBase extends ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#remove(java.util.Collection)
      */
-    @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioAssayDataVector.remove - 'entities' can not be null" );
@@ -284,7 +278,6 @@ public abstract class BioAssayDataVectorDaoBase extends ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#update(java.util.Collection)
      */
-    @Override
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioAssayDataVector.update - 'entities' can not be null" );
@@ -325,7 +318,6 @@ public abstract class BioAssayDataVectorDaoBase extends ubic.gemma.model.express
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
      */
-    @Override
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through

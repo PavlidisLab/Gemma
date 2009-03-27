@@ -30,13 +30,12 @@ import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -47,7 +46,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
     /**
      * Test method for
-     * {@link ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#loadPersistentModel(ubic.gemma.loader.expression.simple.model.ExpressionExperimentMetaData, java.io.InputStream)}.
+     * {@link ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#loadPersistentModel(ubic.gemma.loader.expression.simple.model.ExpressionExperimentMetaData, java.io.InputStream)}
+     * .
      */
     public final void testLoad() throws Exception {
         SimpleExpressionDataLoaderService service = ( SimpleExpressionDataLoaderService ) this
@@ -85,7 +85,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
     /**
      * @throws Exception
-     *         {@link ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#loadPersistentModel(ubic.gemma.loader.expression.simple.model.ExpressionExperimentMetaData, java.io.InputStream)}.
+     *         {@link ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#loadPersistentModel(ubic.gemma.loader.expression.simple.model.ExpressionExperimentMetaData, java.io.InputStream)}
+     *         .
      */
     public final void testLoadB() throws Exception {
         SimpleExpressionDataLoaderService service = ( SimpleExpressionDataLoaderService ) this
@@ -159,7 +160,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
                 .getBean( "designElementDataVectorService" );
 
-        for ( DesignElementDataVector vector : ee.getRawExpressionDataVectors() ) {
+        for ( RawExpressionDataVector vector : ee.getRawExpressionDataVectors() ) {
             dedvs.thaw( vector );
             assertTrue( ( ( CompositeSequence ) vector.getDesignElement() ).getBiologicalCharacteristic().getName()
                     .startsWith( "IMAGE:" ) );
@@ -190,7 +191,6 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
                 .getBean( "expressionExperimentService" );
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 

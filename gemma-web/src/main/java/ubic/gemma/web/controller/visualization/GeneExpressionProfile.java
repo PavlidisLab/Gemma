@@ -50,25 +50,25 @@ public class GeneExpressionProfile {
     private String color = "black";
 
     public GeneExpressionProfile( DoubleVectorValueObject vector, String color, int factor ) {
-        this.genes = convert2GeneValueObjects(vector.getGenes());
+        this.genes = convert2GeneValueObjects( vector.getGenes() );
         this.probe = vector.getDesignElement();
         this.probe.setArrayDesign( null );
         this.points = new ArrayList<DoublePoint>();
         this.factor = factor;
-        
+
         if ( color != null ) {
             this.color = color;
         }
 
         double[] data = vector.standardize();
+
         int i = 0;
         // Also test to make sure all the data isn't NAN
         Boolean allNan = true;
         for ( Double d : data ) {
-            
-            if (!d.equals( Double.NaN))
-                allNan = false;
-            
+
+            if ( !d.equals( Double.NaN ) ) allNan = false;
+
             // TESTING: simulate missing data.
             // if ( RandomUtils.nextDouble() < 0.1 || i == 0) {
             // points.add( new DoublePoint( i, Double.NaN ) );
@@ -78,22 +78,23 @@ public class GeneExpressionProfile {
             i++;
         }
         // If all nan change points to null;
-        if (allNan){
+        if ( allNan ) {
             points = null;
-            //log.info( "All Nan removed from: " + this.probe);
+            // log.info( "All Nan removed from: " + this.probe);
         }
     }
 
-    //TODO move this to GeneValueObject
-    private Collection<GeneValueObject> convert2GeneValueObjects(Collection<Gene> genes){
-    
-        Collection<GeneValueObject> converted= new HashSet<GeneValueObject>();
-        for(Gene g : genes)
-            converted.add( new GeneValueObject(g.getId(),g.getName(),g.getNcbiId(),g.getOfficialSymbol(),g.getOfficialName(),g.getDescription()) );       
-        
+    // TODO move this to GeneValueObject
+    private Collection<GeneValueObject> convert2GeneValueObjects( Collection<Gene> genes ) {
+
+        Collection<GeneValueObject> converted = new HashSet<GeneValueObject>();
+        for ( Gene g : genes )
+            converted.add( new GeneValueObject( g.getId(), g.getName(), g.getNcbiId(), g.getOfficialSymbol(), g
+                    .getOfficialName(), g.getDescription() ) );
+
         return converted;
     }
-    
+
     public String getColor() {
         return color;
     }

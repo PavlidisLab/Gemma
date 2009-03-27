@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.CrudUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -53,7 +54,6 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.BaseDependencyInjectionSpringContextTest#onSetUpInTransaction()
      */
     @Override
@@ -101,6 +101,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     public void testMakePrivate() throws Exception {
         ArrayDesign ad = arrayDesignService.findByName( arrayDesignName );
         SecurityService securityService = new SecurityService();
+        securityService.setCrudUtils( ( CrudUtils ) this.getBean( "crudUtils" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
         securityService.makePrivate( ad );
         /*
@@ -115,7 +116,6 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     public void testRemoveArrayDesign() throws Exception {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 10 ) + "_array" );

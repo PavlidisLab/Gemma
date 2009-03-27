@@ -137,7 +137,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
         for ( QuantitationType type : qts ) {
 
-            Collection<DesignElementDataVector> oldVectors = getVectorsForOneQuantitationType( type );
+            Collection<? extends DesignElementDataVector> oldVectors = getVectorsForOneQuantitationType( type );
 
             if ( oldVectors.size() == 0 ) {
                 log.warn( "No vectors for " + type + "!" );
@@ -310,7 +310,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
      * @return map of design element to vectors.
      */
     private Map<DesignElement, Collection<DesignElementDataVector>> getDevMap(
-            Collection<DesignElementDataVector> oldVectors ) {
+            Collection<? extends DesignElementDataVector> oldVectors ) {
         Map<DesignElement, Collection<DesignElementDataVector>> deVMap = new HashMap<DesignElement, Collection<DesignElementDataVector>>();
         for ( DesignElementDataVector vector : oldVectors ) {
             if ( !deVMap.containsKey( vector.getDesignElement() ) ) {

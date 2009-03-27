@@ -25,6 +25,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
@@ -116,14 +117,13 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
     @Override
     protected void onTearDown() throws Exception {
         super.onTearDown();
-        GeneService geneService = ( GeneService ) getBean( "geneService" );
-        geneService.remove( geneService.loadAll() );
+     //   GeneService geneService = ( GeneService ) getBean( "geneService" );
+     //   geneService.remove( geneService.loadAll() );
     }
 
     /**
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     public void testGeneLoader() throws Exception {
         GeneService geneService = ( GeneService ) getBean( "geneService" );
         NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );

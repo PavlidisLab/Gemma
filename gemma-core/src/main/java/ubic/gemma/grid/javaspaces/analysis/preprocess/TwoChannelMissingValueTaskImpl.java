@@ -27,6 +27,7 @@ import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
 
@@ -54,7 +55,7 @@ public class TwoChannelMissingValueTaskImpl extends BaseSpacesTask implements Tw
         ExpressionExperiment ee = command.getExpressionExperiment();
 
         TaskResult result = new TaskResult();
-        Collection<DesignElementDataVector> missingValueVectors = twoChannelMissingValues.computeMissingValues( ee,
+        Collection<RawExpressionDataVector> missingValueVectors = twoChannelMissingValues.computeMissingValues( ee,
                 command.getS2n(), command.getExtraMissingValueIndicators() );
         result.setAnswer( missingValueVectors.size() );
         result.setTaskID( super.taskId );

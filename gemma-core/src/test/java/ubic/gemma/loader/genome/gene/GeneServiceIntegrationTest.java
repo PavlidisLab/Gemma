@@ -50,7 +50,6 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     String officialName = "PPARA";
     String accession = "GPL140";
 
-    @SuppressWarnings("unchecked")
     public void testGetCompositeSequenceCountById() throws Exception {
 
         // get geneService
@@ -63,7 +62,6 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         assert ( count != 0 );
     }
 
-    @SuppressWarnings("unchecked")
     public void testGetCompositeSequencesById() throws Exception {
 
         // get geneService
@@ -76,11 +74,9 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         assert ( compSequences.size() != 0 );
     }
 
-    @SuppressWarnings("unchecked")
     public void testGetGenesByTaxon() throws Exception {
         // get geneService
         GeneService geneService = ( GeneService ) this.getBean( "geneService" );
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
         Taxon taxon = taxonService.findByCommonName( "human" );
         Collection<Gene> geneCollection = geneService.getGenesByTaxon( taxon );

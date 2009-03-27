@@ -38,6 +38,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -62,9 +64,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 public class SampleRemoveService extends ExpressionExperimentVectorManipulatingService {
 
     private static Log log = LogFactory.getLog( SampleRemoveService.class.getName() );
-
-    // ByteArrayConverter is stateless.
-    ByteArrayConverter converter = new ByteArrayConverter();
 
     BioAssayService bioAssayService;
 
@@ -133,11 +132,12 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
         Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
         for ( QuantitationType type : qts ) {
             log.info( "Marking outlier for " + type + "; loading vectors ..." );
-            Collection<DesignElementDataVector> oldVectors = getVectorsForOneQuantitationType( type );
+            Collection<? extends DesignElementDataVector> oldVectors = getVectorsForOneQuantitationType( type );
             PrimitiveType representation = type.getRepresentation();
 
             int count = 0;
             for ( DesignElementDataVector vector : oldVectors ) {
+
                 BioAssayDimension bad = vector.getBioAssayDimension();
                 dims.add( bad );
                 List<BioAssay> vectorAssays = ( List<BioAssay> ) bad.getBioAssays();
@@ -178,7 +178,9 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
             }
 
             log.info( "Committing changes to " + oldVectors.size() + " vectors" );
+
             designElementDataVectorService.update( oldVectors );
+
         }
 
         log.info( "Logging event." );

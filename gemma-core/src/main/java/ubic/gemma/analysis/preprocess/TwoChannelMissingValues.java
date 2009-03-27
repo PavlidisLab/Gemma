@@ -112,7 +112,7 @@ public class TwoChannelMissingValues {
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the experiment.
      */
     @SuppressWarnings("unchecked")
-    public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment expExp,
+    public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment expExp,
             double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
 
         expressionExperimentService.thawLite( expExp );
@@ -131,7 +131,7 @@ public class TwoChannelMissingValues {
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
         Collection<BioAssayDimension> dims = builder.getBioAssayDimensions();
-        Collection<DesignElementDataVector> finalResults = new HashSet<DesignElementDataVector>();
+        Collection<RawExpressionDataVector> finalResults = new HashSet<RawExpressionDataVector>();
 
         /*
          * Note we have to do this one array design at a time, because we are producing DesignElementDataVectors which
@@ -154,7 +154,7 @@ public class TwoChannelMissingValues {
         ExpressionDataDoubleMatrix signalDataA = builder.getSignalChannelA();
         ExpressionDataDoubleMatrix signalDataB = builder.getSignalChannelB();
 
-        Collection<DesignElementDataVector> dimRes = computeMissingValues( expExp, preferredData, signalDataA,
+        Collection<RawExpressionDataVector> dimRes = computeMissingValues( expExp, preferredData, signalDataA,
                 signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold, extraMissingValueIndicators );
 
         finalResults.addAll( dimRes );
@@ -196,7 +196,7 @@ public class TwoChannelMissingValues {
      * @see computeMissingValues( ExpressionExperiment expExp, double signalToNoiseThreshold )
      */
     @SuppressWarnings("unchecked")
-    protected Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment source,
+    protected Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment source,
             ExpressionDataDoubleMatrix preferred, ExpressionDataDoubleMatrix signalChannelA,
             ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
             ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold,
@@ -205,7 +205,7 @@ public class TwoChannelMissingValues {
         validate( preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB, signalToNoiseThreshold );
 
         ByteArrayConverter converter = new ByteArrayConverter();
-        Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
+        Collection<RawExpressionDataVector> results = new HashSet<RawExpressionDataVector>();
         QuantitationType present = getMissingDataQuantitationType( signalToNoiseThreshold );
         source.getQuantitationTypes().add( present );
 
@@ -214,7 +214,7 @@ public class TwoChannelMissingValues {
 
             DesignElement designElement = element.getDesignElement();
 
-            DesignElementDataVector vect = RawExpressionDataVector.Factory.newInstance();
+            RawExpressionDataVector vect = RawExpressionDataVector.Factory.newInstance();
             vect.setQuantitationType( present );
             vect.setExpressionExperiment( source );
             vect.setDesignElement( designElement );
@@ -272,7 +272,7 @@ public class TwoChannelMissingValues {
         log.info( "Finished: " + count + " vectors examined for missing values" );
 
         log.info( "Persisting " + results.size() + " vectors ... " );
-        results = designElementDataVectorService.create( results );
+        results = ( Collection<RawExpressionDataVector> ) designElementDataVectorService.create( results );
         expressionExperimentService.update( source ); // this is needed to get the QT filled in properly.
 
         return results;

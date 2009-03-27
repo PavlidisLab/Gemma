@@ -40,6 +40,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.biomaterial.Compound;
@@ -112,10 +113,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             return persistBioAssay( ( BioAssay ) entity );
         } else if ( entity instanceof Compound ) {
             return persistCompound( ( Compound ) entity );
-        } else if ( entity instanceof DesignElementDataVector ) {
-            return persistDesignElementDataVector( ( DesignElementDataVector ) entity );
         }
-
         return super.persist( entity );
 
     }
@@ -438,20 +436,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( compound.getIsSolvent() == null )
             throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
         return compoundService.findOrCreate( compound );
-    }
-
-    /**
-     * This is used when creating vectors "one by one" rather than by composition with an ExpressionExperiment. Not
-     * normally used.
-     * 
-     * @param vector
-     * @return
-     */
-    private DesignElementDataVector persistDesignElementDataVector( DesignElementDataVector vector ) {
-        if ( vector == null ) return null;
-        this.fillInDesignElementDataVectorAssociations( vector );
-        vector.setExpressionExperiment( persistExpressionExperiment( vector.getExpressionExperiment() ) );
-        return designElementDataVectorService.findOrCreate( vector );
     }
 
     /**

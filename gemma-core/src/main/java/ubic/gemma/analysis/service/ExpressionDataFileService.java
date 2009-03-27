@@ -189,7 +189,7 @@ public class ExpressionDataFileService {
 
             log.info( "Creating new quantitation type expression data file: " + f );
 
-            Collection<DesignElementDataVector> vectors = designElementDataVectorService.find( type );
+            Collection<? extends DesignElementDataVector> vectors = designElementDataVectorService.find( type );
             Collection<ArrayDesign> arrayDesigns = getArrayDesigns( vectors );
             Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
 
@@ -279,7 +279,7 @@ public class ExpressionDataFileService {
 
             log.info( "Creating new quantitation type  JSON data file: " + f );
 
-            Collection<DesignElementDataVector> vectors = designElementDataVectorService.find( type );
+            Collection<? extends DesignElementDataVector> vectors = designElementDataVectorService.find( type );
 
             if ( vectors.size() == 0 ) {
                 log.warn( "No vectors for " + type );
@@ -297,7 +297,7 @@ public class ExpressionDataFileService {
      * @param vectors
      * @return
      */
-    private Collection<ArrayDesign> getArrayDesigns( Collection<DesignElementDataVector> vectors ) {
+    private Collection<ArrayDesign> getArrayDesigns( Collection<? extends DesignElementDataVector> vectors ) {
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         for ( DesignElementDataVector v : vectors ) {
             ads.add( v.getDesignElement().getArrayDesign() );
@@ -403,8 +403,8 @@ public class ExpressionDataFileService {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    private void writeJson( File file, PrimitiveType representation, Collection<DesignElementDataVector> vectors )
-            throws IOException {
+    private void writeJson( File file, PrimitiveType representation,
+            Collection<? extends DesignElementDataVector> vectors ) throws IOException {
         designElementDataVectorService.thaw( vectors );
         ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
@@ -438,8 +438,9 @@ public class ExpressionDataFileService {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    private void writeVectors( File file, PrimitiveType representation, Collection<DesignElementDataVector> vectors,
-            Map<Long, Collection<Gene>> geneAnnotations ) throws IOException {
+    private void writeVectors( File file, PrimitiveType representation,
+            Collection<? extends DesignElementDataVector> vectors, Map<Long, Collection<Gene>> geneAnnotations )
+            throws IOException {
         designElementDataVectorService.thaw( vectors );
 
         ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );

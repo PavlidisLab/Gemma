@@ -160,7 +160,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
         String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
         String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
-        String geneHistoryFile = filePath + File.separatorChar + "selected_geneHistory.gz";
+        String geneHistoryFile = filePath + File.separatorChar + "selected_gene_history.gz";
         loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, true );
     }
 

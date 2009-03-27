@@ -23,7 +23,6 @@ import java.io.InputStream;
 import ubic.gemma.externalDb.GoldenPathDumper;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -34,8 +33,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
 
     public void testGetTranscriptBioSequences() throws Exception {
-
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
         Taxon taxon = taxonService.findByCommonName( "mouse" );
 
@@ -55,8 +52,6 @@ public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
 
     public void testGetTranscriptBioSequencesFromDatabase() throws Exception {
 
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
-
         Taxon taxon = taxonService.findByCommonName( "mouse" );
 
         GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
@@ -73,7 +68,7 @@ public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
 
         gp.setLimit( 20 );
         gp.load( dumper );
-
+        
     }
 
 }

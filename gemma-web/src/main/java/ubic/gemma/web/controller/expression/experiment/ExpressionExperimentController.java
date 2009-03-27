@@ -340,13 +340,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     private static final Boolean AJAX = true;
+
     /*
      * If this is too long, tooltips break.
      */
     private static final int MAX_EVENT_DESCRIPTION_LENGTH = 200;
-    private static final int TRIM_SIZE = 220;
-    PersisterHelper persisterHelper = null;
 
+    private static final int TRIM_SIZE = 220;
+
+    PersisterHelper persisterHelper = null;
     private ArrayDesignService arrayDesignService;
 
     private AuditEventService auditEventService;
@@ -576,6 +578,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( e == null || e.getId() == null ) return null;
 
         ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
+
         Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
 
         if ( ee.getExperimentalDesign() == null ) return null;
@@ -625,6 +628,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         expressionExperimentService.thawLite( ee );
+
         Collection<Long> ids = new HashSet<Long>();
         ids.add( ee.getId() );
 

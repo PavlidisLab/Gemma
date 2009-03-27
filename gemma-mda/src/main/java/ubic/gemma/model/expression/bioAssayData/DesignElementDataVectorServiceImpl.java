@@ -26,6 +26,8 @@ import java.util.Map;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @author pavlidis
@@ -37,111 +39,135 @@ public class DesignElementDataVectorServiceImpl extends
 
     @Override
     protected Integer handleCountAll() throws Exception {
-        return this.getDesignElementDataVectorDao().countAll();
+        return this.getRawExpressionDataVectorDao().countAll();
     }
 
     @Override
-    protected Collection handleCreate( Collection vectors ) throws Exception {
-        return this.getDesignElementDataVectorDao().create( vectors );
+    protected Collection<? extends DesignElementDataVector> handleCreate(
+            Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+        Class<? extends DesignElementDataVector> vectorClass = getVectorClass( vectors );
+
+        if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
+            return this.getRawExpressionDataVectorDao().create( ( Collection<RawExpressionDataVector> ) vectors );
+        }
+        return this.getProcessedExpressionDataVectorDao()
+                .create( ( Collection<ProcessedExpressionDataVector> ) vectors );
+
     }
 
     @Override
-    protected Collection handleFind( ArrayDesign arrayDesign, QuantitationType quantitationType ) throws Exception {
-        return this.getDesignElementDataVectorDao().find( arrayDesign, quantitationType );
+    protected Collection<RawExpressionDataVector> handleFind( ArrayDesign arrayDesign, QuantitationType quantitationType )
+            throws Exception {
+        return this.getRawExpressionDataVectorDao().find( arrayDesign, quantitationType );
     }
 
     @Override
-    protected Collection handleFind( Collection quantitationTypes ) throws Exception {
-        return this.getDesignElementDataVectorDao().find( quantitationTypes );
+    protected Collection<RawExpressionDataVector> handleFind( Collection quantitationTypes ) throws Exception {
+        return this.getRawExpressionDataVectorDao().find( quantitationTypes );
     }
 
     /*
-     * (non-Javadoc)R
+     * (non-Javadoc)
      * @see
-     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleFindAllForMatrix(ubic.gemma
+     * ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorServiceBase#handleFindAllForMatrix(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType,
      * ubic.gemma.model.expression.designElement.DesignElement)
      */
     @Override
-    protected Collection handleFind( QuantitationType quantitationType ) throws Exception {
-        return this.getDesignElementDataVectorDao().find( quantitationType );
+    protected Collection<RawExpressionDataVector> handleFind( QuantitationType quantitationType ) throws Exception {
+        return this.getRawExpressionDataVectorDao().find( quantitationType );
     }
 
     @Override
-    protected DesignElementDataVector handleFindOrCreate( DesignElementDataVector designElementDataVector )
-            throws Exception {
+    protected RawExpressionDataVector handleLoad( Long id ) throws Exception {
+        return this.getRawExpressionDataVectorDao().load( id );
+    }
 
-        return this.getDesignElementDataVectorDao().findOrCreate( designElementDataVector );
+    private Class<? extends DesignElementDataVector> getVectorClass(
+            Collection<? extends DesignElementDataVector> vectors ) {
+        Class<? extends DesignElementDataVector> vectorClass = null;
+        for ( DesignElementDataVector designElementDataVector : vectors ) {
+            if ( vectorClass == null ) {
+                vectorClass = designElementDataVector.getClass();
+            }
+            if ( !vectorClass.equals( designElementDataVector.getClass() ) ) {
+                throw new IllegalArgumentException( "Two types of vector in one collection, not supported" );
+            }
+        }
+        return vectorClass;
+    }
+
+    @Override
+    protected void handleRemove( Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+
+        Class<? extends DesignElementDataVector> vectorClass = getVectorClass( vectors );
+
+        if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
+            this.getRawExpressionDataVectorDao().remove( ( Collection<RawExpressionDataVector> ) vectors );
+        } else {
+            this.getProcessedExpressionDataVectorDao().remove( ( Collection<ProcessedExpressionDataVector> ) vectors );
+        }
+    }
+
+    @Override
+    protected void handleRemove( RawExpressionDataVector designElementDataVector ) throws Exception {
+        this.getRawExpressionDataVectorDao().remove( designElementDataVector );
+
     }
 
     /*
      * (non-Javadoc)
      * @see
-     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetPreferredVectors(java.util
-     * .Collection, java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    @Override
-    protected Map handleGetPreferredVectors( Collection ees, Collection genes ) throws Exception {
-        return this.getDesignElementDataVectorDao().getPreferredVectors( ees, genes );
-    }
-
-    @Override
-    protected DesignElementDataVector handleLoad( Long id ) throws Exception {
-        return ( DesignElementDataVector ) this.getDesignElementDataVectorDao().load( id );
-    }
-
-    @Override
-    protected void handleRemove( Collection vectors ) throws Exception {
-        this.getDesignElementDataVectorDao().remove( vectors );
-    }
-
-    @Override
-    protected void handleRemove( DesignElementDataVector designElementDataVector ) throws Exception {
-        this.getDesignElementDataVectorDao().remove( designElementDataVector );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleRemoveDataForCompositeSequence
+     * ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorServiceBase#handleRemoveDataForCompositeSequence
      * (ubic.gemma.model.expression.designElement.CompositeSequence)
      */
     @Override
     protected void handleRemoveDataForCompositeSequence( CompositeSequence compositeSequence ) throws Exception {
-        this.getDesignElementDataVectorDao().removeDataForCompositeSequence( compositeSequence );
+        this.getRawExpressionDataVectorDao().removeDataForCompositeSequence( compositeSequence );
     }
 
     /*
      * (non-Javadoc)
      * @see
-     * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleRemoveDataForQuantitationType
+     * ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorServiceBase#handleRemoveDataForQuantitationType
      * (ubic.gemma.model.expression.experiment.ExpressionExperiment,
      * ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
     protected void handleRemoveDataForQuantitationType( QuantitationType quantitationType ) throws Exception {
-        this.getDesignElementDataVectorDao().removeDataForQuantitationType( quantitationType );
+        this.getRawExpressionDataVectorDao().removeDataForQuantitationType( quantitationType );
     }
 
     @Override
-    protected void handleThaw( Collection designElementDataVectors ) throws Exception {
-        this.getDesignElementDataVectorDao().thaw( designElementDataVectors );
+    protected void handleThaw( Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+        Class<? extends DesignElementDataVector> vectorClass = getVectorClass( vectors );
+
+        if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
+            this.getRawExpressionDataVectorDao().thaw( ( Collection<RawExpressionDataVector> ) vectors );
+        } else {
+            this.getProcessedExpressionDataVectorDao().thaw( ( Collection<ProcessedExpressionDataVector> ) vectors );
+        }
     }
 
     @Override
-    protected void handleThaw( DesignElementDataVector designElementDataVector ) throws Exception {
-        this.getDesignElementDataVectorDao().thaw( designElementDataVector );
+    protected void handleThaw( RawExpressionDataVector designElementDataVector ) throws Exception {
+        this.getRawExpressionDataVectorDao().thaw( designElementDataVector );
     }
 
     @Override
-    protected void handleUpdate( Collection dedvs ) throws Exception {
-        this.getDesignElementDataVectorDao().update( dedvs );
+    protected void handleUpdate( Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+        Class<? extends DesignElementDataVector> vectorClass = getVectorClass( vectors );
+
+        if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
+            this.getRawExpressionDataVectorDao().update( ( Collection<RawExpressionDataVector> ) vectors );
+        } else {
+            this.getProcessedExpressionDataVectorDao().update( ( Collection<ProcessedExpressionDataVector> ) vectors );
+        }
     }
 
     @Override
-    protected void handleUpdate( DesignElementDataVector dedv ) throws Exception {
-        this.getDesignElementDataVectorDao().update( dedv );
+    protected void handleUpdate( RawExpressionDataVector dedv ) throws Exception {
+        this.getRawExpressionDataVectorDao().update( dedv );
     }
 
 }

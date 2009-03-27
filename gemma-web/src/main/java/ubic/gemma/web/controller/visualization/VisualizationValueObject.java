@@ -19,16 +19,20 @@
 
 package ubic.gemma.web.controller.visualization;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -42,10 +46,36 @@ import ubic.gemma.model.genome.Gene;
 public class VisualizationValueObject {
 
     private static String[] colors = new String[] { "red", "black", "blue", "green", "orange" };
+
     private static Log log = LogFactory.getLog( VisualizationValueObject.class );
+
     private Map<Long, String> colorMap = new HashMap<Long, String>();
 
     private ExpressionExperimentValueObject eevo = null;
+
+    private Collection<FactorProfile> factorProfiles;
+
+    /**
+     * Initialize the factor profiles.
+     * 
+     * @param layout
+     */
+    public void setUpFactorProfiles( LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> layout ) {
+        if ( layout == null ) {
+            log.warn( "Null layout, ignoring" );
+            return;
+        }
+        Collection<ExperimentalFactor> efs = new HashSet<ExperimentalFactor>();
+        for ( Map<ExperimentalFactor, Double> maps : layout.values() ) {
+            efs.addAll( maps.keySet() );
+        }
+
+        this.factorProfiles = new ArrayList<FactorProfile>();
+        for ( ExperimentalFactor experimentalFactor : efs ) {
+            this.factorProfiles.add( new FactorProfile( experimentalFactor, layout ) );
+        }
+    }
+
     private Collection<GeneExpressionProfile> profiles;
 
     public VisualizationValueObject() {
@@ -131,13 +161,20 @@ public class VisualizationValueObject {
         return eevo;
     }
 
-    // ---------------------------------
-    // Getters and Setters
-    // ---------------------------------
+    /**
+     * @return the factorProfiles
+     */
+    public Collection<FactorProfile> getFactorProfiles() {
+        return factorProfiles;
+    }
 
     public Collection<GeneExpressionProfile> getProfiles() {
         return profiles;
     }
+
+    // ---------------------------------
+    // Getters and Setters
+    // ---------------------------------
 
     public void setEE( ExpressionExperiment ee ) {
         this.eevo = new ExpressionExperimentValueObject();
@@ -154,6 +191,13 @@ public class VisualizationValueObject {
     public void setEEwithPvalue( ExpressionExperiment ee, Double minP ) {
         setEE( ee );
         this.eevo.setMinPvalue( minP );
+    }
+
+    /**
+     * @param factorProfiles the factorProfiles to set
+     */
+    public void setFactorProfiles( Collection<FactorProfile> factorProfiles ) {
+        this.factorProfiles = factorProfiles;
     }
 
     public void setProfiles( Collection<GeneExpressionProfile> profiles ) {

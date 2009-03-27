@@ -30,7 +30,7 @@ import ubic.gemma.model.genome.Gene;
  * @author Paul
  * @version $Id$
  */
-public interface ProcessedExpressionDataVectorDao {
+public interface ProcessedExpressionDataVectorDao extends DesignElementDataVectorDao<ProcessedExpressionDataVector> {
 
     public enum RankMethod {
         mean, max
@@ -69,15 +69,5 @@ public interface ProcessedExpressionDataVectorDao {
             RankMethod method );
 
     public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
-
-    /**
-     * 
-     */
-    public void thaw( java.util.Collection designElementDataVectors );
-
-    /**
-     * 
-     */
-    public void update( java.util.Collection designElementDataVectors );
 
 }

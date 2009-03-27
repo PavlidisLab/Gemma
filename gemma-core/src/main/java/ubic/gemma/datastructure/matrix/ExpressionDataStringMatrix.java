@@ -55,12 +55,12 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         throw new UnsupportedOperationException();
     }
 
-    public ExpressionDataStringMatrix( Collection<DesignElementDataVector> dataVectors,
+    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> dataVectors,
             QuantitationType quantitationType ) {
         throw new UnsupportedOperationException();
     }
 
-    public ExpressionDataStringMatrix( Collection<DesignElementDataVector> vectors ) {
+    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> vectors ) {
         init();
         selectVectors( vectors );
         vectorsToMatrix( vectors );
@@ -74,7 +74,6 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
     public String[][] get( List<DesignElement> designElements, List<BioAssay> bioAssays ) {
@@ -83,8 +82,8 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
+     * @see
+     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public String[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );
@@ -93,7 +92,6 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
      */
     public String[] getColumn( Integer index ) {
@@ -102,7 +100,6 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
     public String[][] getColumns( List bioAssays ) {
@@ -115,7 +112,6 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
     public String[][] getRawMatrix() {
@@ -128,8 +124,9 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
+     * @see
+     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement
+     * )
      */
     public String[] getRow( DesignElement designElement ) {
         return this.matrix.getRow( this.getRowIndex( designElement ) );
@@ -137,7 +134,6 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
     public String[][] getRows( List<DesignElement> designElements ) {

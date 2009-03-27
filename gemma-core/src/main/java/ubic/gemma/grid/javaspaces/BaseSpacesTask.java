@@ -75,7 +75,7 @@ public abstract class BaseSpacesTask implements SpacesTask {
      * @param clazz
      * @return {@link SpacesProgressAppender}
      */
-    public SpacesProgressAppender initProgressAppender( Class clazz ) {
+    public SpacesProgressAppender initProgressAppender( Class<? extends SpacesTask> clazz ) {
 
         log.info( "Executing task " + clazz.getSimpleName() + " with id " + this.taskId );
 

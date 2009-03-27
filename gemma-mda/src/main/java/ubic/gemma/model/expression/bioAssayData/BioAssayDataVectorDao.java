@@ -25,7 +25,10 @@ package ubic.gemma.model.expression.bioAssayData;
 /**
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVector
  */
-public interface BioAssayDataVectorDao extends ubic.gemma.model.expression.bioAssayData.DataVectorDao {
+public interface BioAssayDataVectorDao {
+
+    public final static int TRANSFORM_NONE = 0;
+
     /**
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)} with an

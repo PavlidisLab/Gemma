@@ -33,6 +33,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -139,7 +141,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 // use each design element only once per quantitation type per array design.
                 usedDesignElements.clear();
 
-                Collection<DesignElementDataVector> vectorsForQt = getVectorsForOneQuantitationType( oldAd, type );
+                Collection<? extends DesignElementDataVector> vectorsForQt = getVectorsForOneQuantitationType( oldAd,
+                        type );
 
                 if ( vectorsForQt.size() == 0 ) {
                     /*
@@ -151,7 +154,16 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
                 // Collection<DesignElementDataVector> doomedToBeRemoved = new HashSet<DesignElementDataVector>();
                 int count = 0;
+                Class<? extends DesignElementDataVector> vectorClass = null;
                 for ( DesignElementDataVector vector : vectorsForQt ) {
+
+                    if ( vectorClass == null ) {
+                        vectorClass = vector.getClass();
+                    }
+
+                    if ( !vector.getClass().equals( vectorClass ) ) {
+                        throw new IllegalStateException( "Two types of vector for one quantitationtype: " + type );
+                    }
 
                     // we're doing this by array design; nice to have a method to fetch those only, oh well.
                     if ( !vector.getDesignElement().getArrayDesign().equals( oldAd ) ) {
@@ -166,7 +178,14 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 }
 
                 log.info( "Updating " + count + " vectors for " + type );
-                designElementDataVectorService.update( vectorsForQt );
+                if ( vectorClass != null ) {
+                    if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
+                        designElementDataVectorService.update( ( Collection<RawExpressionDataVector> ) vectorsForQt );
+                    } else {
+                        processedExpressionDataVectorService
+                                .update( ( Collection<ProcessedExpressionDataVector> ) vectorsForQt );
+                    }
+                }
             }
         }
 

@@ -54,8 +54,6 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
 
     private ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao bioAssayDimensionDao;
 
-    private ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao designElementDataVectorDao;
-
     private ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao;
 
     private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
@@ -753,14 +751,6 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
     }
 
     /**
-     * Sets the reference to <code>designElementDataVector</code>'s DAO.
-     */
-    public void setDesignElementDataVectorDao(
-            ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao designElementDataVectorDao ) {
-        this.designElementDataVectorDao = designElementDataVectorDao;
-    }
-
-    /**
      * @param differentialExpressionAnalysisDao the differentialExpressionAnalysisDao to set
      */
     public void setDifferentialExpressionAnalysisDao(
@@ -846,13 +836,6 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
      */
     protected ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao getBioAssayDimensionDao() {
         return this.bioAssayDimensionDao;
-    }
-
-    /**
-     * Gets the reference to <code>designElementDataVector</code>'s DAO.
-     */
-    protected ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao getDesignElementDataVectorDao() {
-        return this.designElementDataVectorDao;
     }
 
     /**

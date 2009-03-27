@@ -67,7 +67,7 @@ public class ExpressionDataMatrixBuilder {
      * @return matrix of appropriate type.
      */
     public static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
-            Collection<DesignElementDataVector> vectors ) {
+            Collection<? extends DesignElementDataVector> vectors ) {
         ExpressionDataMatrix<?> expressionDataMatrix = null;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
             expressionDataMatrix = new ExpressionDataDoubleMatrix( vectors );

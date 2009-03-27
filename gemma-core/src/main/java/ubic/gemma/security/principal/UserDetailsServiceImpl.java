@@ -45,7 +45,7 @@ import ubic.gemma.util.SecurityUtil;
  */
 public class UserDetailsServiceImpl implements UserDetailsService, ApplicationContextAware {
 
-    static UserService userService;
+    private static UserService userService;
     private static ApplicationContext applicationContext;
     private static Map<String, User> userCache = new HashMap<String, User>();
 

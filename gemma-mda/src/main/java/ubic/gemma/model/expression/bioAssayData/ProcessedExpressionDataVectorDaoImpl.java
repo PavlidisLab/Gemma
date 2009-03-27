@@ -47,12 +47,24 @@ import ubic.gemma.util.CommonQueries;
  * @author Paul
  * @version $Id$
  */
-public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl implements
-        ProcessedExpressionDataVectorDao {
+public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl<ProcessedExpressionDataVector>
+        implements ProcessedExpressionDataVectorDao {
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorDaoImpl.class.getName() );
 
     private ProcessedDataVectorCache processedDataVectorCache;
+
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from ProcessedExpressionDataVectorImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 
     /*
      * (non-Javadoc)
@@ -60,9 +72,13 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#createProcessedDataVectors(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment)
      */
-    @SuppressWarnings("unchecked")
     public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
             final ExpressionExperiment expressionExperiment ) {
+
+        if ( expressionExperiment == null ) {
+            throw new IllegalStateException( "ExpressionExperiment cannot be null" );
+        }
+
         /*
          * If the experiment already has them, delete them.
          */
@@ -88,12 +104,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             }
         }
 
-        Collection<DesignElementDataVector> missingValueVectors = new HashSet<DesignElementDataVector>();
+        Collection<RawExpressionDataVector> missingValueVectors = new HashSet<RawExpressionDataVector>();
         if ( isTwoChannel ) {
-            missingValueVectors = super.getMissingValueVectors( expressionExperiment );
+            missingValueVectors = this.getMissingValueVectors( expressionExperiment );
         }
 
-        Collection<DesignElementDataVector> preferredDataVectors = super.getPreferredDataVectors( expressionExperiment );
+        Collection<RawExpressionDataVector> preferredDataVectors = this.getPreferredDataVectors( expressionExperiment );
         if ( preferredDataVectors.isEmpty() ) {
             throw new IllegalArgumentException( "No preferred data vectors for " + expressionExperiment );
         }
@@ -126,38 +142,49 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrices(java.util.
-     * Collection)
+    /**
+     * @param ee
+     * @return
      */
-    public Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments ) {
-        // FIXME implement
-        throw new UnsupportedOperationException();
+    @SuppressWarnings("unchecked")
+    protected Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
+                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
+                + " and dedv.expressionExperiment  = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrices(java.util.
-     * Collection, java.util.Collection)
+    /**
+     * @param ee
+     * @return
      */
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
-        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes );
+    @SuppressWarnings("unchecked")
+    protected Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
+                + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrix(ubic.gemma.model
-     * .expression.experiment.ExpressionExperiment)
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#load(int, java.lang.Long)
      */
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment ) {
-        // FIXME implement
-        throw new UnsupportedOperationException();
+
+    public ProcessedExpressionDataVector load( final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ProcessedExpressionDataVector.load - 'id' can not be null" );
+        }
+        return ( ProcessedExpressionDataVector ) this.getHibernateTemplate().get(
+                ProcessedExpressionDataVectorImpl.class, id );
+
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection<ProcessedExpressionDataVector> loadAll() {
+        return this.getHibernateTemplate().loadAll( ProcessedExpressionDataVectorImpl.class );
     }
 
     /*
@@ -413,8 +440,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param cs2gene
      * @return
      */
-    private Map<DesignElementDataVector, Collection<Gene>> getProcessedVectors( Collection<ExpressionExperiment> ees,
-            Map<CompositeSequence, Collection<Gene>> cs2gene ) {
+    private Map<ProcessedExpressionDataVector, Collection<Gene>> getProcessedVectors(
+            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene ) {
 
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
@@ -467,8 +494,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
              */
             cs2gene = CommonQueries.getFullCs2GeneMap( cs2gene.keySet(), this.getSession() );
 
-            Map<DesignElementDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors( needToSearch,
-                    cs2gene );
+            Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
+                    needToSearch, cs2gene );
             Collection<DoubleVectorValueObject> newResults = unpack( processedDataVectors );
             cacheResults( newResults );
             results.addAll( newResults );
@@ -506,8 +533,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param missingValueData
      * @return
      */
-    private Collection<DoubleVectorValueObject> maskAndUnpack( Collection<DesignElementDataVector> preferredData,
-            Collection<DesignElementDataVector> missingValueData ) {
+    private Collection<DoubleVectorValueObject> maskAndUnpack( Collection<RawExpressionDataVector> preferredData,
+            Collection<RawExpressionDataVector> missingValueData ) {
         Collection<DoubleVectorValueObject> unpackedData = unpack( preferredData );
 
         if ( missingValueData.size() == 0 ) {
@@ -547,7 +574,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return unpackedData;
     }
 
-    private Collection<DoubleVectorValueObject> unpack( Collection<DesignElementDataVector> data ) {
+    private Collection<DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data ) {
         Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
         for ( DesignElementDataVector v : data ) {
             result.add( new DoubleVectorValueObject( v ) );
@@ -559,7 +586,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param data
      * @return
      */
-    private Collection<DoubleVectorValueObject> unpack( Map<DesignElementDataVector, Collection<Gene>> data ) {
+    private Collection<DoubleVectorValueObject> unpack( Map<? extends DesignElementDataVector, Collection<Gene>> data ) {
         Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
         for ( DesignElementDataVector v : data.keySet() ) {
             result.add( new DoubleVectorValueObject( v, data.get( v ) ) );
@@ -567,13 +594,32 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return result;
     }
 
-    private Collection<BooleanVectorValueObject> unpackBooleans( Collection<DesignElementDataVector> data ) {
+    private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends DesignElementDataVector> data ) {
         Collection<BooleanVectorValueObject> result = new HashSet<BooleanVectorValueObject>();
 
         for ( DesignElementDataVector v : data ) {
             result.add( new BooleanVectorValueObject( v ) );
         }
         return result;
+    }
+
+    public Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments ) {
+        throw new UnsupportedOperationException();
+    }
+
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
+        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes );
+    }
+
+    public void remove( ProcessedExpressionDataVector designElementDataVector ) {
+        this.getHibernateTemplate().delete( designElementDataVector );
+
+    }
+
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment ) {
+        throw new UnsupportedOperationException();
     }
 
 }

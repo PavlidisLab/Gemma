@@ -31,15 +31,16 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
 
     final public void testLoad() throws Exception {
         endTransaction();
+        // Affymetrix GeneChip® Murine Genome U74Av2 [MG_U74Av2] = GPL81   
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
-        ExpressionExperiment experiment = svc.load( "E-MEXP-955" );
+        ExpressionExperiment experiment = svc.load( "E-MEXP-955", "GPL81", false );
         assertNotNull( experiment );
     }
 
     final public void testLoadWithAEDesign() throws Exception {
         endTransaction();
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
-        ExpressionExperiment experiment = svc.load( "E-MEXP-297", null, true );
+        ExpressionExperiment experiment = svc.load( "E-MEXP-297", null, true ); // uses A-MEXP-153
         assertNotNull( experiment );
     }
 

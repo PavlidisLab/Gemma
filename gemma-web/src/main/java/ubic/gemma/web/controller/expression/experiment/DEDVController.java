@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,14 +42,17 @@ import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.visualization.ExpressionProfileDataObject;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
@@ -63,19 +67,20 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="geneDifferentialExpressionService" ref="geneDifferentialExpressionService"
+ * @spring.property name="experimentalDesignVisualizationService" ref="experimentalDesignVisualizationService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
-
  * @author kelsey
  * @version $Id$
  */
 public class DEDVController extends BaseFormController {
 
+    private DesignElementDataVectorService designElementDataVectorService;
+    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
     private ExpressionExperimentService expressionExperimentService;
     private GeneDifferentialExpressionService geneDifferentialExpressionService;
     private GeneService geneService;
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-    private DesignElementDataVectorService designElementDataVectorService;
 
     /**
      * Given a collection of expression experiment Ids and a geneId returns a map of DEDV value objects to a collection
@@ -93,6 +98,8 @@ public class DEDVController extends BaseFormController {
 
         Collection<DoubleVectorValueObject> dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
+
+        experimentalDesignVisualizationService.sortVectorDataByDesign( dedvMap );
 
         watch.stop();
         Long time = watch.getTime();
@@ -132,12 +139,16 @@ public class DEDVController extends BaseFormController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
 
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
+                .sortVectorDataByDesign( dedvs );
+
         watch.stop();
         Long time = watch.getTime();
 
-        if ( dedvs.size() == 0 ) {            
-           log.warn("No expression profiles (DEDVs) were available for the experiments:  " + eeIds + " and genes(s) " + queryGene.getOfficialSymbol() + ", " + coexpressedGene.getOfficialSymbol() );
-           return null;
+        if ( dedvs.size() == 0 ) {
+            log.warn( "No expression profiles (DEDVs) were available for the experiments:  " + eeIds + " and genes(s) "
+                    + queryGene.getOfficialSymbol() + ", " + coexpressedGene.getOfficialSymbol() );
+            return null;
         }
 
         if ( time > 1000 ) {
@@ -147,7 +158,7 @@ public class DEDVController extends BaseFormController {
 
         Map<Long, Collection<Long>> validatedProbes = getProbeLinkValidation( ees, queryGene, coexpressedGene, dedvs );
 
-        return makeVisCollection( dedvs, genes, validatedProbes );
+        return makeVisCollection( dedvs, genes, validatedProbes, layouts );
 
     }
 
@@ -175,6 +186,9 @@ public class DEDVController extends BaseFormController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
 
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
+                .sortVectorDataByDesign( dedvs );
+
         watch.stop();
         Long time = watch.getTime();
 
@@ -185,62 +199,15 @@ public class DEDVController extends BaseFormController {
         watch.start();
 
         Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = getProbeDiffExValidation( ees,
-                genes, threshold, factorMap, dedvs );
+                genes, threshold, factorMap );
 
         watch.stop();
         time = watch.getTime();
 
         log.info( "Retrieved " + validatedProbes.size() + " valid probes in " + time + " ms." );
 
-        return makeDiffVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes );
+        return makeDiffVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes, layouts );
 
-    }
-
-    /**
-     * @param ees
-     * @param genes
-     * @param threshold
-     * @param factorMap
-     * @param dedvs
-     * @return
-     */
-    private Map<Long, Collection<DifferentialExpressionValueObject>> getProbeDiffExValidation(
-            Collection<ExpressionExperiment> ees, Collection<Gene> genes, Double threshold,
-            Collection<DiffExpressionSelectedFactorCommand> factorMap, Collection<DoubleVectorValueObject> dedvs ) {
-
-        if ( factorMap == null ) {
-            throw new IllegalArgumentException( "Factor information is missing, please make sure factors are selected." );
-        }
-
-        Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<Long, Collection<DifferentialExpressionValueObject>>();
-
-        Collection<Long> wantedFactors = new HashSet<Long>();
-        for ( DiffExpressionSelectedFactorCommand factor : factorMap ) {
-            wantedFactors.add( factor.getEfId() );
-        }
-
-        for ( Gene gene : genes ) {
-            Collection<DifferentialExpressionValueObject> differentialExpression = geneDifferentialExpressionService
-                    .getDifferentialExpression( ees, gene, threshold, factorMap );
-
-            for ( DifferentialExpressionValueObject diffVo : differentialExpression ) {
-                assert diffVo.getP() <= threshold;
-                Long eeId = diffVo.getExpressionExperiment().getId();
-
-                if ( !validatedProbes.containsKey( eeId ) ) {
-                    validatedProbes.put( eeId, new HashSet<DifferentialExpressionValueObject>() );
-                }
-
-                Collection<ExperimentalFactorValueObject> factors = diffVo.getExperimentalFactors();
-
-                for ( ExperimentalFactorValueObject fac : factors ) {
-                    if ( wantedFactors.contains( fac.getId() ) ) {
-                        validatedProbes.get( eeId ).add( diffVo );
-                    }
-                }
-            }
-        }
-        return validatedProbes;
     }
 
     /**
@@ -273,8 +240,43 @@ public class DEDVController extends BaseFormController {
                     + " genes in " + time + " ms (times <100ms not reported)." );
         }
 
-        return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), null );
+        return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), null, null );
 
+    }
+
+    /**
+     * @param dedvIds
+     * @return
+     */
+    public Collection<ExpressionProfileDataObject> getVectorData( Collection<Long> dedvIds ) {
+        List<ExpressionProfileDataObject> result = new ArrayList<ExpressionProfileDataObject>();
+        for ( Long id : dedvIds ) {
+            DesignElementDataVector vector = this.designElementDataVectorService.load( id );
+            DoubleVectorValueObject dvvo = new DoubleVectorValueObject( vector );
+            ExpressionProfileDataObject epdo = new ExpressionProfileDataObject( dvvo );
+
+            DoubleArrayList doubleArrayList = new cern.colt.list.DoubleArrayList( epdo.getData() );
+            DescriptiveWithMissing.standardize( doubleArrayList );
+            epdo.setData( doubleArrayList.elements() );
+
+            result.add( epdo );
+        }
+
+        // TODO fill in gene; normalize and clip if desired.; watch for invalid ids.
+
+        return result;
+    }
+
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
+
+    /**
+     * @param experimentalDesignVisualizationService the experimentalDesignVisualizationService to set
+     */
+    public void setExperimentalDesignVisualizationService(
+            ExperimentalDesignVisualizationService experimentalDesignVisualizationService ) {
+        this.experimentalDesignVisualizationService = experimentalDesignVisualizationService;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -295,11 +297,6 @@ public class DEDVController extends BaseFormController {
     public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
         this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
     }
-    
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
-    }
-
 
     /**
      * @param processedExpressionDataVectorService the processedExpressionDataVectorService to set
@@ -393,6 +390,52 @@ public class DEDVController extends BaseFormController {
     }
 
     /**
+     * @param ees
+     * @param genes
+     * @param threshold
+     * @param factorMap
+     * @return
+     */
+    private Map<Long, Collection<DifferentialExpressionValueObject>> getProbeDiffExValidation(
+            Collection<ExpressionExperiment> ees, Collection<Gene> genes, Double threshold,
+            Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
+
+        if ( factorMap == null ) {
+            throw new IllegalArgumentException( "Factor information is missing, please make sure factors are selected." );
+        }
+
+        Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<Long, Collection<DifferentialExpressionValueObject>>();
+
+        Collection<Long> wantedFactors = new HashSet<Long>();
+        for ( DiffExpressionSelectedFactorCommand factor : factorMap ) {
+            wantedFactors.add( factor.getEfId() );
+        }
+
+        for ( Gene gene : genes ) {
+            Collection<DifferentialExpressionValueObject> differentialExpression = geneDifferentialExpressionService
+                    .getDifferentialExpression( ees, gene, threshold, factorMap );
+
+            for ( DifferentialExpressionValueObject diffVo : differentialExpression ) {
+                assert diffVo.getP() <= threshold;
+                Long eeId = diffVo.getExpressionExperiment().getId();
+
+                if ( !validatedProbes.containsKey( eeId ) ) {
+                    validatedProbes.put( eeId, new HashSet<DifferentialExpressionValueObject>() );
+                }
+
+                Collection<ExperimentalFactorValueObject> factors = diffVo.getExperimentalFactors();
+
+                for ( ExperimentalFactorValueObject fac : factors ) {
+                    if ( wantedFactors.contains( fac.getId() ) ) {
+                        validatedProbes.get( eeId ).add( diffVo );
+                    }
+                }
+            }
+        }
+        return validatedProbes;
+    }
+
+    /**
      * Identify which probes were 'responsible' for the coexpression links.
      * 
      * @param ees
@@ -458,79 +501,18 @@ public class DEDVController extends BaseFormController {
     }
 
     /**
-     * @param newResults
-     * @return
-     */
-    private Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> makeVectorMap(
-            Collection<DoubleVectorValueObject> newResults ) {
-        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result = new HashMap<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>>();
-        for ( DoubleVectorValueObject v : newResults ) {
-            ExpressionExperiment e = v.getExpressionExperiment();
-            if ( !result.containsKey( e ) ) {
-                result.put( e, new HashMap<Gene, Collection<DoubleVectorValueObject>>() );
-            }
-            Map<Gene, Collection<DoubleVectorValueObject>> innerMap = result.get( e );
-            for ( Gene g : v.getGenes() ) {
-                if ( !innerMap.containsKey( g ) ) {
-                    innerMap.put( g, new HashSet<DoubleVectorValueObject>() );
-                }
-                innerMap.get( g ).add( v );
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
-     * Currently removes multiple hits for same gene. Tries to pick best DEDV.
-     * 
-     * @param dedvs
-     * @param genes
-     * @return
-     */
-    private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs, List<Gene> genes,
-            Map<Long, Collection<Long>> validatedProbes ) {
-
-        Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
-
-        // Organize by expression experiment
-        for ( DoubleVectorValueObject dvvo : dedvs ) {
-            ExpressionExperiment ee = dvvo.getExpressionExperiment();
-            if ( !vvoMap.containsKey( ee ) ) {
-                vvoMap.put( ee, new HashSet<DoubleVectorValueObject>() );
-            }
-            vvoMap.get( ee ).add( dvvo );
-        }
-
-        VisualizationValueObject[] result = new VisualizationValueObject[vvoMap.keySet().size()];
-        // Create collection of visualizationValueObject for flotr on js side
-        int i = 0;
-        for ( ExpressionExperiment ee : vvoMap.keySet() ) {
-            Collection<Long> validatedProbeList = null;
-            if ( validatedProbes != null ) {
-                validatedProbeList = validatedProbes.get( ee.getId() );
-            }
-            Collection<DoubleVectorValueObject> vectors = vvoMap.get( ee );
-            VisualizationValueObject vvo = new VisualizationValueObject( vectors, genes, validatedProbeList );
-            result[i] = vvo;
-            i++;
-        }
-
-        return result;
-
-    }
-
-    /**
      * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
      * Currently removes multiple hits for same gene. Tries to pick best DEDV. Organizes the experiments from lowest to
      * higest p-value
      * 
      * @param dedvs
      * @param genes
+     * @param layouts
      * @return
      */
     private VisualizationValueObject[] makeDiffVisCollection( Collection<DoubleVectorValueObject> dedvs,
-            List<Gene> genes, Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes ) {
+            List<Gene> genes, Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes,
+            Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts ) {
 
         Long time;
         StopWatch watch = new StopWatch();
@@ -538,9 +520,12 @@ public class DEDVController extends BaseFormController {
 
         Map<Long, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<Long, Collection<DoubleVectorValueObject>>();
 
+        Map<Long, ExpressionExperiment> eeMap = new HashMap<Long, ExpressionExperiment>();
+
         // Organize by expression experiment
         for ( DoubleVectorValueObject dvvo : dedvs ) {
             ExpressionExperiment ee = dvvo.getExpressionExperiment();
+            eeMap.put( ee.getId(), ee );
             if ( !vvoMap.containsKey( ee.getId() ) ) {
                 vvoMap.put( ee.getId(), new HashSet<DoubleVectorValueObject>() );
             }
@@ -571,14 +556,6 @@ public class DEDVController extends BaseFormController {
                 this.pValue = pValue;
             }
 
-            public Long getEEId() {
-                return EEId;
-            }
-
-            public double getPValue() {
-                return pValue;
-            }
-
             public int compareTo( EE2PValue o ) {
                 if ( this.pValue > o.getPValue() )
                     return 1;
@@ -586,6 +563,14 @@ public class DEDVController extends BaseFormController {
                     return -1;
                 else
                     return 0;
+            }
+
+            public Long getEEId() {
+                return EEId;
+            }
+
+            public double getPValue() {
+                return pValue;
             }
 
         }
@@ -633,6 +618,17 @@ public class DEDVController extends BaseFormController {
 
             VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ), genes,
                     validatedProbeIdList, ee2P.getPValue() );
+
+            /*
+             * Set up the experimental designinfo so we can show it above the graph.
+             */
+
+            if ( layouts != null ) {
+                ExpressionExperiment ee = eeMap.get( ee2P.getEEId() );
+                log.debug( "setup experimental design layout profiles for " + ee );
+                vvo.setUpFactorProfiles( layouts.get( ee ) );
+            }
+
             result[i] = vvo;
             i++;
         }
@@ -646,26 +642,75 @@ public class DEDVController extends BaseFormController {
         return result;
 
     }
-    
-    
-    public Collection<ExpressionProfileDataObject> getVectorData( Collection<Long> dedvIds ) {
-        List<ExpressionProfileDataObject> result = new ArrayList<ExpressionProfileDataObject>();
-        for ( Long id : dedvIds ) {
-            DesignElementDataVector vector = this.designElementDataVectorService.load( id );
-            DoubleVectorValueObject dvvo = new DoubleVectorValueObject( vector );
-            ExpressionProfileDataObject epdo = new ExpressionProfileDataObject( dvvo );
 
-            DoubleArrayList doubleArrayList = new cern.colt.list.DoubleArrayList( epdo.getData() );
-            DescriptiveWithMissing.standardize( doubleArrayList );
-            epdo.setData( doubleArrayList.elements() );
-
-            result.add( epdo );
+    /**
+     * @param newResults
+     * @return
+     */
+    private Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> makeVectorMap(
+            Collection<DoubleVectorValueObject> newResults ) {
+        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result = new HashMap<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>>();
+        for ( DoubleVectorValueObject v : newResults ) {
+            ExpressionExperiment e = v.getExpressionExperiment();
+            if ( !result.containsKey( e ) ) {
+                result.put( e, new HashMap<Gene, Collection<DoubleVectorValueObject>>() );
+            }
+            Map<Gene, Collection<DoubleVectorValueObject>> innerMap = result.get( e );
+            for ( Gene g : v.getGenes() ) {
+                if ( !innerMap.containsKey( g ) ) {
+                    innerMap.put( g, new HashSet<DoubleVectorValueObject>() );
+                }
+                innerMap.get( g ).add( v );
+            }
         }
-
-        // TODO fill in gene; normalize and clip if desired.; watch for invalid ids.
-
         return result;
     }
-    
+
+    /**
+     * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
+     * Currently removes multiple hits for same gene. Tries to pick best DEDV.
+     * 
+     * @param dedvs
+     * @param genes
+     * @param layouts
+     * @return
+     */
+    private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs, List<Gene> genes,
+            Map<Long, Collection<Long>> validatedProbes,
+            Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts ) {
+
+        Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
+        // Organize by expression experiment
+        for ( DoubleVectorValueObject dvvo : dedvs ) {
+            ExpressionExperiment ee = dvvo.getExpressionExperiment();
+            if ( !vvoMap.containsKey( ee ) ) {
+                vvoMap.put( ee, new HashSet<DoubleVectorValueObject>() );
+            }
+            vvoMap.get( ee ).add( dvvo );
+        }
+
+        VisualizationValueObject[] result = new VisualizationValueObject[vvoMap.keySet().size()];
+        // Create collection of visualizationValueObject for flotr on js side
+        int i = 0;
+        for ( ExpressionExperiment ee : vvoMap.keySet() ) {
+            Collection<Long> validatedProbeList = null;
+            if ( validatedProbes != null ) {
+                validatedProbeList = validatedProbes.get( ee.getId() );
+            }
+            Collection<DoubleVectorValueObject> vectors = vvoMap.get( ee );
+            VisualizationValueObject vvo = new VisualizationValueObject( vectors, genes, validatedProbeList );
+
+            /*
+             * Set up the experimental designinfo so we can show it above the graph.
+             */
+            if ( layouts != null ) vvo.setUpFactorProfiles( layouts.get( ee ) );
+
+            result[i] = vvo;
+            i++;
+        }
+
+        return result;
+
+    }
 
 }
