@@ -155,7 +155,10 @@ public class CompositeSequenceController extends BaseMultiActionController {
 
         Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
         for ( SearchResult sr : searchResults ) {
-            css.add( ( CompositeSequence ) sr.getResultObject() );
+            CompositeSequence cs = ( CompositeSequence ) sr.getResultObject();
+            if (arrayDesign == null || cs.getArrayDesign().equals( arrayDesign ) ) {
+                css.add( cs );
+            }
         }
 
         return getSummaries( css );
