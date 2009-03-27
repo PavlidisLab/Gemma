@@ -556,31 +556,4 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 });
 
-Gemma.WaitHandler = Ext.extend(Ext.Component, {
-			initComponent : function() {
 
-				Gemma.WaitHandler.superclass.initComponent.call(this);
-
-				this.addEvents('done');
-
-			},
-			/**
-			 * Parameters are passed to ProgressWindow config; eventToFire is fired in the callback.
-			 */
-			handleWait : function(taskId, showAllMessages) {
-				try {
-					var p = new Gemma.ProgressWindow({
-								taskId : taskId,
-								callback : function(data) {
-									this.fireEvent('done', data);
-								}.createDelegate(this),
-								showAllMessages : showAllMessages
-							});
-
-					p.show();
-				} catch (e) {
-					Ext.Msg.alert("Error", e);
-				}
-			}
-
-		});
