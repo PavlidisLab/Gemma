@@ -59,7 +59,6 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -96,7 +95,6 @@ import com.sdicons.json.parser.JSONParser;
  * @spring.property name = "persisterHelper" ref="persisterHelper"
  * @spring.property name = "validator" ref="expressionExperimentValidator"
  * @spring.property name = "quantitationTypeService" ref="quantitationTypeService"
- * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
  */
 public class ExpressionExperimentFormController extends BaseFormController {
     private static Log log = LogFactory.getLog( ExpressionExperimentFormController.class.getName() );
@@ -108,8 +106,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
     BibliographicReferenceService bibliographicReferenceService = null;
     PersisterHelper persisterHelper = null;
     QuantitationTypeService quantitationTypeService;
-    DesignElementDataVectorService designElementDataVectorService;
-
     private ExternalDatabaseService externalDatabaseService = null;
 
     public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
@@ -221,7 +217,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
-    @Override 
+    @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
@@ -622,10 +618,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
      */
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
         this.bioMaterialService = bioMaterialService;
-    }
-
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
     }
 
     public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
