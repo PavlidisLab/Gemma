@@ -160,13 +160,13 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
         }
 
         /**
-         * @param command
+         * @param cmd
          * @return
          */
-        private TaskResult process( ExpressionExperimentLoadTaskCommand command ) {
-            command.setTaskId( this.taskId );
+        private TaskResult process( ExpressionExperimentLoadTaskCommand cmd ) {
+            cmd.setTaskId( this.taskId );
             try {
-                TaskResult result = eeTaskProxy.execute( command );
+                TaskResult result = eeTaskProxy.execute( cmd );
                 return result;
             } catch ( Exception e ) {
                 if ( e instanceof InterruptedException ) {

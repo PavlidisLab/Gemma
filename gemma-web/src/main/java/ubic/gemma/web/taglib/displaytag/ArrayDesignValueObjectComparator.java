@@ -1,5 +1,5 @@
 /*
- * The Gemma21 project
+ * The Gemma  project
  * 
  * Copyright (c) 2007 University of British Columbia
  * 
@@ -25,14 +25,15 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 /**
  * @author klc Compares
+ * @author $Id$
  */
 public class ArrayDesignValueObjectComparator implements Comparator<ArrayDesignValueObject> {
 
     public int compare( ArrayDesignValueObject arg0, ArrayDesignValueObject arg1 ) {
 
-        if ( ( arg0.getDateCreated() == null ) || ( arg1.getDateCreated() == null ) ) return 0;
+        if ( arg0.getDateCreated() == null || arg1.getDateCreated() == null ) return 0;
 
-        return ( arg0.getDateCreated().compareTo( arg1.getDateCreated() ) * -1 );
+        return arg0.getDateCreated().compareTo( arg1.getDateCreated() ) * -1;
     }
 
 }
