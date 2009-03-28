@@ -14,6 +14,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.context.SecurityContext;
 import org.springframework.security.context.SecurityContextHolder;
 
+import ubic.gemma.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent;
@@ -45,8 +46,6 @@ import ubic.gemma.model.genome.TaxonService;
  * </ol>
  * This can also allow directly associating probes with genes (via products) based on an input file, without any
  * sequence analysis.
- * <p>
- * TODO : allow tuning of parameters from the command line.
  * 
  * @author pavlidis
  * @version $Id$
@@ -60,6 +59,15 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ExternalDatabase sourceDatabase = null;
     private boolean useDB = true;
 
+    private String OPTION_EST = "e"; // usuall off
+    private String OPTION_ENSEMBL = "n";
+    private String OPTION_REFSEQ = "r";
+    private String OPTION_KNOWNGENE = "k";
+    private String OPTION_MRNA = "m";
+    private String OPTION_MICRORNA = "i";
+    private String OPTION_ACEMBLY = "a";
+    private String OPTION_NSCAN = "s";
+
     /*
      * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
@@ -69,7 +77,41 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     protected void buildOptions() {
         super.buildOptions();
 
-        requireLogin();
+        requireLogin(); // actually only needed if using the db to save results (usual case)
+
+        addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+                "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD ).withLongOpt(
+                "identityThreshold" ).create( 'i' ) );
+
+        addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+                "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD ).withLongOpt(
+                "scoreThreshold" ).create( 's' ) );
+
+        /*
+         * TODO: options for which tracks to search.
+         */
+
+        addOption( OptionBuilder
+                .hasArg()
+                .withArgName( "configstring" )
+                .withDescription(
+                        "String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set, all will be used except as listed below "
+                                + OPTION_REFSEQ
+                                + " - search refseq track for genes\n"
+                                + OPTION_KNOWNGENE
+                                + " - search refseq track for genes\n"
+                                + OPTION_MICRORNA
+                                + " - search miRNA track for genes\n"
+                                + OPTION_EST
+                                + " - search EST track for transcripts (Default=false)\n"
+                                + OPTION_MRNA
+                                + " - search mRNA track for transcripts\n"
+                                + OPTION_ACEMBLY
+                                + " - search Acembly track for predicted genes\n"
+                                + OPTION_ENSEMBL
+                                + " - search Ensembl track for predicted genes\n"
+                                + OPTION_NSCAN
+                                + " - search NScan track for predicted genes\n" ).create( "config" ) );
 
         Option taxonOption = OptionBuilder
                 .hasArg()
@@ -95,10 +137,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 "source" );
         addOption( databaseOption );
 
-        Option noDatabaseOption = OptionBuilder
-                .withDescription(
-                        "Don't save the results to the database, print to stdout instead (valid for single designs only, not batches, and not with -import)" )
-                .create( "nodb" );
+        Option noDatabaseOption = OptionBuilder.withDescription(
+                "Don't save the results to the database, print to stdout instead (not with -import)" ).create( "nodb" );
 
         addOption( noDatabaseOption );
 
@@ -124,7 +164,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Array design mapping of probes to genes", args );
+
         if ( err != null ) return err;
+
+        ProbeMapperConfig config = configure();
 
         final Date skipIfLastRunLaterThan = getLimitingDate();
 
@@ -154,7 +197,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     return e;
                 }
             } else {
-                arrayDesignProbeMapperService.processArrayDesign( arrayDesign, this.useDB );
+
+                arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
                 if ( useDB ) {
                     audit( arrayDesign, "Run with default parameters", AlignmentBasedGeneMappingEvent.Factory
                             .newInstance() );
@@ -175,6 +219,49 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         return null;
+    }
+
+    /**
+     * @return
+     */
+    private ProbeMapperConfig configure() {
+        ProbeMapperConfig config = new ProbeMapperConfig();
+
+        if ( this.hasOption( "config" ) ) {
+
+            String configString = this.getOptionValue( "config" );
+
+            if ( !configString.matches( "[" + OPTION_REFSEQ + OPTION_KNOWNGENE + OPTION_MICRORNA + OPTION_EST
+                    + OPTION_MRNA + OPTION_ACEMBLY + OPTION_ENSEMBL + OPTION_NSCAN + "]+" ) ) {
+                throw new IllegalArgumentException( "Configuration string must only contain values [" + OPTION_REFSEQ
+                        + OPTION_KNOWNGENE + OPTION_MICRORNA + OPTION_EST + OPTION_MRNA + OPTION_ACEMBLY
+                        + OPTION_ENSEMBL + OPTION_NSCAN + "]" );
+            }
+
+            config.setAllTracksOff();
+
+            config.setUseEsts( configString.contains( OPTION_EST ) );
+            config.setUseMrnas( configString.contains( OPTION_MRNA ) );
+            config.setUseMiRNA( configString.contains( OPTION_MICRORNA ) );
+            config.setUseEnsembl( configString.contains( OPTION_ENSEMBL ) );
+            config.setUseNscan( configString.contains( OPTION_NSCAN ) );
+            config.setUseRefGene( configString.contains( OPTION_REFSEQ ) );
+            config.setUseKnownGene( configString.contains( OPTION_KNOWNGENE ) );
+            config.setUseAcembly( configString.contains( OPTION_ACEMBLY ) );
+
+            log.info( config );
+        }
+
+        if ( hasOption( 's' ) ) {
+            config.setBlatScoreThreshold( getDoubleOptionValue( 's' ) );
+        }
+
+        if ( hasOption( 'i' ) ) {
+            config.setIdentityThreshold( getDoubleOptionValue( 'i' ) );
+        }
+
+        return config;
+
     }
 
     /**
@@ -273,7 +360,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         try {
             arrayDesignService.thawLite( design );
 
-            arrayDesignProbeMapperService.processArrayDesign( design );
+            arrayDesignProbeMapperService.processArrayDesign( design, this.configure(), this.useDB );
             successObjects.add( design.getName() );
             ArrayDesignGeneMappingEvent eventType = AlignmentBasedGeneMappingEvent.Factory.newInstance();
             audit( design, "Part of a batch job", eventType );
@@ -393,6 +480,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         return true;
     }
 
+    /*
+     * See 'configure' for how the other options are handled. (non-Javadoc)
+     * @see ubic.gemma.apps.ArrayDesignSequenceManipulatingCli#processOptions()
+     */
     @Override
     protected void processOptions() {
         super.processOptions();

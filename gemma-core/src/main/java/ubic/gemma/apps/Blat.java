@@ -63,9 +63,10 @@ import ubic.gemma.util.concurrent.GenericStreamConsumer;
 public class Blat {
 
     /**
-     * This value is basically a threshold fraction of aligned bases in the query
+     * This value is basically a threshold fraction of aligned bases in the query. Hits below this score are simply not
+     * reported. {@link BlatResult} has implementation of score computation.
      * 
-     * @see BlatResult implementation for how the score is computed.
+     * @see BlatResult
      */
     public static final double DEFAULT_BLAT_SCORE_THRESHOLD = 0.7;
 

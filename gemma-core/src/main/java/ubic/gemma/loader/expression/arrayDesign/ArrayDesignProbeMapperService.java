@@ -36,7 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.ProbeMapper;
-import ubic.gemma.apps.Blat;
+import ubic.gemma.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -53,7 +53,6 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.PersisterHelper;
@@ -65,7 +64,6 @@ import ubic.gemma.persistence.PersisterHelper;
  * @version $Id$
  * @spring.bean name="arrayDesignProbeMapperService"
  * @spring.property name="blatResultService" ref="blatResultService"
- * @spring.property name="blatAssociationService" ref="blatAssociationService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="probeMapper" ref="probeMapper"
@@ -80,45 +78,38 @@ public class ArrayDesignProbeMapperService {
 
     private static final int QUEUE_SIZE = 20000;
 
-    AnnotationAssociationService annotationAssociationService;
+    private AnnotationAssociationService annotationAssociationService;
 
-    ArrayDesignService arrayDesignService;
+    private ArrayDesignService arrayDesignService;
 
-    BioSequenceService bioSequenceService;
+    private BioSequenceService bioSequenceService;
 
-    BlatAssociationService blatAssociationService;
+    private BlatResultService blatResultService;
 
-    BlatResultService blatResultService;
+    private CompositeSequenceService compositeSequenceService;
 
-    CompositeSequenceService compositeSequenceService;
+    private GeneService geneService;
 
-    GeneService geneService;
+    private PersisterHelper persisterHelper;
 
-    PersisterHelper persisterHelper;
-
-    ProbeMapper probeMapper;
-
-    private double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
-
-    private double identityThreshold = ProbeMapper.DEFAULT_IDENTITY_THRESHOLD;
-
-    private double scoreThreshold = ProbeMapper.DEFAULT_SCORE_THRESHOLD;
+    private ProbeMapper probeMapper;
 
     /**
-     * Do probe mapping, writing the results to the database.
+     * Do probe mapping, writing the results to the database and using default settings.
      * 
      * @param arrayDesign
      */
     public void processArrayDesign( ArrayDesign arrayDesign ) {
-        this.processArrayDesign( arrayDesign, true );
+        this.processArrayDesign( arrayDesign, new ProbeMapperConfig(), true );
     }
 
     /**
      * @param arrayDesign
+     * @param config
      * @param useDB if false, the results will not be written to the database, but printed to stdout instead.
      */
     @SuppressWarnings("unchecked")
-    public void processArrayDesign( ArrayDesign arrayDesign, boolean useDB ) {
+    public void processArrayDesign( ArrayDesign arrayDesign, ProbeMapperConfig config, boolean useDB ) {
 
         Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
         if ( taxon == null ) {
@@ -130,10 +121,6 @@ public class ArrayDesignProbeMapperService {
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
         }
-
-        probeMapper.setIdentityThreshold( identityThreshold );
-        probeMapper.setScoreThreshold( scoreThreshold );
-        probeMapper.setBlatScoreThreshold( blatScoreThreshold );
 
         BlockingQueue<BlatAssociation> persistingQueue = new ArrayBlockingQueue<BlatAssociation>( QUEUE_SIZE );
         AtomicBoolean generatorDone = new AtomicBoolean( false );
@@ -159,7 +146,7 @@ public class ArrayDesignProbeMapperService {
             if ( blatResults == null || blatResults.isEmpty() ) continue;
 
             Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( goldenPathDb,
-                    blatResults );
+                    blatResults, config );
 
             if ( log.isDebugEnabled() )
                 log.debug( "Found " + results.size() + " mappings for " + compositeSequence + " (" + blatResults.size()
@@ -244,7 +231,7 @@ public class ArrayDesignProbeMapperService {
      * because 1) Gemma associates sequences with transcripts, not genes and 2) if all we get is a gene, we have to
      * assume all gene products are relevant.
      * 
-     * @param arrayDesign. If
+     * @param arrayDesign.
      * @param taxon. We require this to ensure correct association of the sequences with the genes.
      * @param source
      * @param sourceDB describes where the annotations came from. Can be null if you really don't know.
@@ -368,24 +355,10 @@ public class ArrayDesignProbeMapperService {
     }
 
     /**
-     * @param blatAssociationService the blatAssociationService to set
-     */
-    public void setBlatAssociationService( BlatAssociationService blatAssociationService ) {
-        this.blatAssociationService = blatAssociationService;
-    }
-
-    /**
      * @param bioSequenceService the bioSequenceService to set
      */
     public void setBlatResultService( BlatResultService blatResultService ) {
         this.blatResultService = blatResultService;
-    }
-
-    /**
-     * @param blatScoreThreshold the blatScoreThreshold to set
-     */
-    public void setBlatScoreThreshold( double blatScoreThreshold ) {
-        this.blatScoreThreshold = blatScoreThreshold;
     }
 
     /**
@@ -403,13 +376,6 @@ public class ArrayDesignProbeMapperService {
     }
 
     /**
-     * @param identityThreshold the identityThreshold to set
-     */
-    public void setIdentityThreshold( double identityThreshold ) {
-        this.identityThreshold = identityThreshold;
-    }
-
-    /**
      * @param persisterHelper the persisterHelper to set
      */
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
@@ -418,13 +384,6 @@ public class ArrayDesignProbeMapperService {
 
     public void setProbeMapper( ProbeMapper probeMapper ) {
         this.probeMapper = probeMapper;
-    }
-
-    /**
-     * @param scoreThreshold the scoreThreshold to set
-     */
-    public void setScoreThreshold( double scoreThreshold ) {
-        this.scoreThreshold = scoreThreshold;
     }
 
     /**

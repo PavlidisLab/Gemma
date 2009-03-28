@@ -47,7 +47,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 import ubic.gemma.util.SequenceBinUtils;
 
 /**
- * Provides methods for mapping sequences to genes and gene products.
+ * Provides methods for mapping sequences to genes and gene products. Some methods accept a configuration object that
+ * allows threshold etc. to be modified.
  * 
  * @spring.bean name="probeMapper"
  * @spring.property name="probeAlignedRegionService" ref="probeAlignedRegionService"
@@ -58,49 +59,12 @@ import ubic.gemma.util.SequenceBinUtils;
  */
 public class ProbeMapper {
 
-    /**
-     * Sequences which hybridize to this many or more sites in the genome are candidates to be considered non-specific.
-     * This is used in combination with the REPEAT_FRACTION_MAXIMUM. Note that many sequences which contain repeats
-     * nonetheless only align to very few sites in the genome.
-     */
-    private static final int NON_SPECIFIC_SITE_THRESHOLD = 3;
-
-    /**
-     * Sequences which have more than this fraction accounted for by repeats (via repeatmasker) will not be examined if
-     * they produce multiple alignments to the genome, regardless of the alignment quality.
-     */
-    public static final double REPEAT_FRACTION_MAXIMUM = 0.3;
-
-    /**
-     * Sequence identity below which we throw hits away.
-     */
-    public static final double DEFAULT_IDENTITY_THRESHOLD = 0.80;
-
-    /**
-     * Blat score threshold below which we do not consider hits. This reflects the fraction of aligned bases.
-     * 
-     * @see Blat for the use of a similar parameter, used to determine the retention of raw Blat results.
-     * @see BlatResult for how the score is computed.
-     */
-    public static final double DEFAULT_SCORE_THRESHOLD = 0.75;
-
     private Log log = LogFactory.getLog( ProbeMapper.class.getName() );
-
-    private double identityThreshold = DEFAULT_IDENTITY_THRESHOLD;
-    private double scoreThreshold = DEFAULT_SCORE_THRESHOLD;
-    private double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
     private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
 
     private ProbeAlignedRegionService probeAlignedRegionService;
     private ChromosomeService chromosomeService;
     private TaxonService taxonService;
-
-    /**
-     * @return the blatScoreThreshold
-     */
-    public double getBlatScoreThreshold() {
-        return this.blatScoreThreshold;
-    }
 
     /**
      * Given some blat results (possibly for multiple sequences) determine which if any gene products they should be
@@ -111,10 +75,11 @@ public class ProbeMapper {
      * 
      * @param goldenPathDb
      * @param blatResults
+     * @param config
      * @return A map of sequence names to collections of blat associations for each sequence.
      */
     public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
-            Collection<BlatResult> blatResults ) {
+            Collection<BlatResult> blatResults, ProbeMapperConfig config ) {
 
         if ( log.isDebugEnabled() ) {
             log.debug( blatResults.size() + " Blat results to map " );
@@ -137,8 +102,8 @@ public class ProbeMapper {
             }
 
             Double fractionRepeats = sequence.getFractionRepeats();
-            if ( fractionRepeats != null && fractionRepeats > REPEAT_FRACTION_MAXIMUM
-                    && blatResultsForSequence.size() >= NON_SPECIFIC_SITE_THRESHOLD ) {
+            if ( fractionRepeats != null && fractionRepeats > config.getMaximumRepeatFraction()
+                    && blatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
                 skippedDueToRepeat++;
                 skipped++;
                 continue;
@@ -150,7 +115,8 @@ public class ProbeMapper {
             for ( BlatResult blatResult : blatResultsForSequence ) {
                 assert blatResult.score() >= 0 : "Score was " + blatResult.score();
                 assert blatResult.identity() >= 0 : "Identity was " + blatResult.identity();
-                if ( blatResult.score() < scoreThreshold || blatResult.identity() < identityThreshold ) {
+                if ( blatResult.score() < config.getBlatScoreThreshold()
+                        || blatResult.identity() < config.getIdentityThreshold() ) {
                     if ( log.isDebugEnabled() )
                         log.debug( "Result for " + sequence + " skipped with score=" + blatResult.score()
                                 + " identity=" + blatResult.identity() );
@@ -162,7 +128,8 @@ public class ProbeMapper {
                     blatResult.getQuerySequence().setTaxon( goldenPathDb.getTaxon() );
 
                 // here's the key line!
-                Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult );
+                Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult,
+                        config );
 
                 if ( resultsForOneBlatResult != null && resultsForOneBlatResult.size() > 0 ) {
                     blatAssociationsForSequence.addAll( resultsForOneBlatResult );
@@ -212,6 +179,24 @@ public class ProbeMapper {
         }
 
         return allRes;
+    }
+
+    /**
+     * Given some blat results (possibly for multiple sequences) determine which if any gene products they should be
+     * associatd with; if there are multiple results for a single sequence, these are further analyzed for specificity
+     * and redundancy, so that there is a single BlatAssociation between any sequence andy andy gene product. Default
+     * settings (ProbeMapperConfig) are used.
+     * <p>
+     * This is a major entrypoint for this API.
+     * 
+     * @param goldenPathDb
+     * @param blatResults
+     * @return A map of sequence names to collections of blat associations for each sequence.
+     * @see ProbeMapperConfig
+     */
+    public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
+            Collection<BlatResult> blatResults ) {
+        return this.processBlatResults( goldenPathDb, blatResults, new ProbeMapperConfig() );
     }
 
     /**
@@ -284,10 +269,11 @@ public class ProbeMapper {
     }
 
     /**
-     * @param writer
+     * Given a genbank accession (for a mRNA or EST), find alignment data from GoldenPath.
+     * 
      * @param goldenPathDb
      * @param genbankId
-     * @throws IOException
+     * @param map of sequence names to BLAT associations.
      */
     public Map<String, Collection<BlatAssociation>> processGbId( GoldenPathSequenceAnalysis goldenPathDb,
             String genbankId ) {
@@ -351,7 +337,7 @@ public class ProbeMapper {
     public Collection<BlatAssociation> processSequence( GoldenPathSequenceAnalysis goldenPath, BioSequence sequence ) {
 
         Blat b = new Blat();
-        b.setBlatScoreThreshold( blatScoreThreshold );
+        b.setBlatScoreThreshold( ( new ProbeMapperConfig() ).getBlatScoreThreshold() );
         Collection<BlatResult> results;
         try {
             results = b.blatQuery( sequence, goldenPath.getTaxon() );
@@ -371,9 +357,9 @@ public class ProbeMapper {
      * @return
      */
     public Map<String, Collection<BlatAssociation>> processSequences( GoldenPathSequenceAnalysis goldenpath,
-            Collection<BioSequence> sequences ) {
+            Collection<BioSequence> sequences, ProbeMapperConfig config ) {
         Blat b = new Blat();
-        b.setBlatScoreThreshold( blatScoreThreshold );
+        b.setBlatScoreThreshold( config.getBlatScoreThreshold() );
 
         try {
             Map<BioSequence, Collection<BlatResult>> results = b.blatQuery( sequences, goldenpath.getTaxon() );
@@ -389,37 +375,15 @@ public class ProbeMapper {
     }
 
     /**
-     * @param blatScoreThreshold the blatScoreThreshold to set
-     */
-    public void setBlatScoreThreshold( double blatScoreThreshold ) {
-        this.blatScoreThreshold = blatScoreThreshold;
-    }
-
-    /**
-     * @param identityThreshold
-     */
-    public void setIdentityThreshold( double identityThreshold ) {
-        this.identityThreshold = identityThreshold;
-
-    }
-
-    /**
-     * @param scoreThreshold
-     */
-    public void setScoreThreshold( double scoreThreshold ) {
-        this.scoreThreshold = scoreThreshold;
-
-    }
-
-    /**
      * Process a single BlatResult, identifying gene products it maps to.
      * 
      * @param goldenPathDb
      * @param blatResult
+     * @param config
      * @return BlatAssociations between the queried biosequence and one or more gene products.
      */
     private Collection<BlatAssociation> processBlatResult( GoldenPathSequenceAnalysis goldenPathDb,
-            BlatResult blatResult ) {
+            BlatResult blatResult, ProbeMapperConfig config ) {
         assert blatResult.getTargetChromosome() != null : "Chromosome not filled in for blat result";
 
         boolean ignoreStrand = determineStrandTreatment( blatResult );
@@ -428,7 +392,7 @@ public class ProbeMapper {
 
         Collection<BlatAssociation> blatAssociations = goldenPathDb.findAssociations( blatResult.getTargetChromosome()
                 .getName(), blatResult.getTargetStart(), blatResult.getTargetEnd(), blatResult.getTargetStarts(),
-                blatResult.getBlockSizes(), strand, threeprimeMethod );
+                blatResult.getBlockSizes(), strand, threeprimeMethod, config );
 
         if ( blatAssociations != null && blatAssociations.size() > 0 ) {
             for ( BlatAssociation association : blatAssociations ) {

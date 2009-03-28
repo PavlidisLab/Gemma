@@ -30,6 +30,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.util.SQLUtils;
+import ubic.gemma.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneConverter;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -125,7 +126,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         String key = chromosome + "||" + queryStart.toString() + "||" + queryEnd.toString();
 
         Collection<Gene> mRNAs;
-        if ( cache.containsKey( cache ) ) {
+        if ( cache.containsKey( key ) ) {
             log.info( "Cache hit!" );
             mRNAs = ( Collection<Gene> ) cache.get( key );
         } else {
@@ -156,6 +157,57 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
+     * Recompute the exonOverlap looking at EST evidence. This lets us be a much less conservative about how we compute
+     * exon overlaps.
+     * 
+     * @param chromosome
+     * @param queryStart
+     * @param queryEnd
+     * @param starts
+     * @param sizes
+     * @param exonOverlap Exon overlap we're starting with. We only care to improve on this.
+     * @param strand of the region
+     * @return The best overlap with any exons from an mRNA in the selected region.
+     * @see getThreePrimeDistances
+     */
+    @SuppressWarnings("unchecked")
+    private int checkESTs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
+            int exonOverlap, String strand ) {
+
+        String key = chromosome + "||" + queryStart.toString() + "||" + queryEnd.toString();
+
+        Collection<Gene> ests;
+        if ( cache.containsKey( key ) ) {
+            log.info( "Cache hit!" );
+            ests = ( Collection<Gene> ) cache.get( key );
+        } else {
+            ests = findESTs( chromosome, queryStart, queryEnd, strand );
+            cache.put( key, ests );
+        }
+
+        if ( ests.size() > 0 ) {
+            if ( log.isDebugEnabled() )
+                log.debug( ests.size() + " ESTs found at chr" + chromosome + ":" + queryStart + "-" + queryEnd
+                        + ", trying to improve overlap of  " + exonOverlap );
+
+            int maxOverlap = exonOverlap;
+            for ( Gene est : ests ) {
+                int overlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, null, est );
+                if ( log.isDebugEnabled() ) log.debug( "overlap with " + est.getNcbiId() + "=" + overlap );
+                if ( overlap > maxOverlap ) {
+                    if ( log.isDebugEnabled() ) log.debug( "Best EST overlap=" + overlap );
+                    maxOverlap = overlap;
+                }
+            }
+
+            exonOverlap = maxOverlap;
+            if ( log.isDebugEnabled() ) log.debug( "Overlap with ESTs is now " + exonOverlap );
+        }
+
+        return exonOverlap;
+    }
+
+    /**
      * Given a location and a gene product, compute the distance from the 3' end of the gene product as well as the
      * amount of overlap. If the location has low overlaps with known exons (threshold set by
      * RECHECK_OVERLAP_THRESHOLD), we search for mRNAs in the region. If there are overlapping mRNAs, we use the best
@@ -173,7 +225,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      *      FIXME this should take a PhysicalLocation as an argument.
      */
     private BlatAssociation computeLocationInGene( String chromosome, Long queryStart, Long queryEnd, String starts,
-            String sizes, GeneProduct geneProduct, ThreePrimeDistanceMethod method ) {
+            String sizes, GeneProduct geneProduct, ThreePrimeDistanceMethod method, ProbeMapperConfig config ) {
 
         assert geneProduct != null : "GeneProduct is null";
 
@@ -192,11 +244,17 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             exonOverlap = SequenceManipulation.getGeneProductExonOverlap( starts, sizes, geneLoc.getStrand(),
                     geneProduct );
             int totalSize = SequenceManipulation.totalSize( sizes );
-            assert exonOverlap <= totalSize;
-            if ( exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
+
+            if ( config.isUseMrnas() && exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
                 exonOverlap = checkRNAs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap, geneLoc
                         .getStrand() );
             }
+
+            if ( config.isUseEsts() && exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
+                exonOverlap = checkESTs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap, geneLoc
+                        .getStrand() );
+            }
+            assert exonOverlap <= totalSize;
         }
 
         blatAssociation.setOverlap( exonOverlap );
@@ -783,6 +841,84 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
+     * Check to see if there are ESTs that overlap with this region. We provisionally promote the ESTs to the status of
+     * genes for this purpose.
+     * 
+     * @param chromosome
+     * @param regionStart the region to be checked
+     * @param regionEnd
+     * @return The ESTs which overlap the query region. (using the all_est table)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<Gene> findESTs( final String chromosome, Long regionStart, Long regionEnd, String strand ) {
+
+        String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
+        String query = "SELECT est.qName, est.qName, est.tStart, est.tEnd, est.strand, est.blockSizes, est.tStarts  "
+                + " FROM all_est as est  WHERE "
+                + "((est.tStart > ? AND est.tEnd < ?) OR (est.tStart < ? AND est.tEnd > ?) OR "
+                + "(est.tStart > ?  AND est.tStart < ?) OR  (est.tEnd > ? AND  est.tEnd < ? )) and est.tName = ? ";
+
+        query = query + " and " + SequenceBinUtils.addBinToQuery( "est", regionStart, regionEnd );
+
+        if ( strand != null ) {
+            query = query + " and est.strand = ?";
+        }
+
+        Object[] params = null;
+
+        if ( strand == null )
+            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
+                    regionStart, regionEnd, searchChrom };
+        else
+            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
+                    regionStart, regionEnd, searchChrom, strand };
+
+        try {
+            return ( Collection<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
+
+                @SuppressWarnings("synthetic-access")
+                public Object handle( ResultSet rs ) throws SQLException {
+                    Collection<Gene> r = new HashSet<Gene>();
+                    while ( rs.next() ) {
+
+                        Gene gene = Gene.Factory.newInstance();
+
+                        gene.setNcbiId( rs.getString( 1 ) );
+                        gene.setOfficialSymbol( rs.getString( 2 ) );
+                        gene.setName( gene.getOfficialSymbol() );
+
+                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+                        pl.setNucleotide( rs.getLong( 3 ) );
+                        pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
+                        pl.setStrand( rs.getString( 5 ) );
+                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
+
+                        Chromosome c = Chromosome.Factory.newInstance();
+                        c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
+                        c.setTaxon( getTaxon() );
+                        pl.setChromosome( c );
+
+                        // note that we aren't setting the chromosome here; we already know that.
+                        gene.setPhysicalLocation( pl );
+                        r.add( gene );
+
+                        Blob blockSizes = rs.getBlob( 6 );
+                        Blob blockStarts = rs.getBlob( 7 );
+
+                        setBlocks( gene, blockSizes, blockStarts );
+
+                    }
+                    return r;
+                }
+            } );
+
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    /**
      * FIXME add support for microRNAs?
      * 
      * @param identifier A Genbank accession referring to an EST or mRNA. For other types of queries this will not
@@ -857,7 +993,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
-     * Given a physical location, find how close it is to the 3' end of a gene it is in.
+     * Given a physical location, find how close it is to the 3' end of a gene it is in, using default mapping settings.
      * 
      * @param br BlatResult holding the parameters needed.
      * @param method The constant representing the method to use to locate the 3' distance.
@@ -865,7 +1001,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     public Collection<? extends BioSequence2GeneProduct> getThreePrimeDistances( BlatResult br,
             ThreePrimeDistanceMethod method ) {
         return findAssociations( br.getTargetChromosome().getName(), br.getTargetStart(), br.getTargetEnd(), br
-                .getTargetStarts(), br.getBlockSizes(), br.getStrand(), method );
+                .getTargetStarts(), br.getBlockSizes(), br.getStrand(), method, new ProbeMapperConfig() );
     }
 
     /**
@@ -936,7 +1072,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      *         the result is null;
      */
     public Collection<BlatAssociation> findAssociations( String chromosome, Long queryStart, Long queryEnd,
-            String starts, String sizes, String strand, ThreePrimeDistanceMethod method ) {
+            String starts, String sizes, String strand, ThreePrimeDistanceMethod method, ProbeMapperConfig config ) {
 
         if ( log.isDebugEnabled() )
             log.debug( "Seeking gene overlaps with: chrom=" + chromosome + " start=" + queryStart + " end=" + queryEnd
@@ -944,29 +1080,37 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
         if ( queryEnd < queryStart ) throw new IllegalArgumentException( "End must not be less than start" );
 
-        // starting with refgene means we can get the correct transcript name etc.
-        Collection<GeneProduct> geneProducts = findRefGenesByLocation( chromosome, queryStart, queryEnd, strand );
+        Collection<GeneProduct> geneProducts = new HashSet<GeneProduct>();
 
-        // get known genes as well, in case all we got was an intron.
-        geneProducts.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
+        if ( config.isUseRefGene() ) {
+            // starting with refgene means we can get the correct transcript name etc.
+            geneProducts.addAll( findRefGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
+        }
 
-        // microRNAs
-        geneProducts.addAll( findMicroRNAGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
+        if ( config.isUseKnownGene() ) {
+            // get known genes as well, in case all we got was an intron.
+            geneProducts.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
+        }
+
+        if ( config.isUseMiRNA() ) {
+            // microRNAs
+            geneProducts.addAll( findMicroRNAGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
+        }
 
         // predicted genes if there is nothing else at this location: Ensembl genes
-        if ( geneProducts.size() == 0 ) {
+        if ( geneProducts.size() == 0 && config.isUseEnsembl() ) {
             Collection<GeneProduct> acembly = findEnsemblGenesByLocation( chromosome, queryStart, queryEnd, strand );
             if ( acembly != null ) geneProducts.addAll( acembly );
         }
 
         // predicted genes if there is nothing else at this location: AceView genes
-        if ( geneProducts.size() == 0 ) {
+        if ( geneProducts.size() == 0 && config.isUseAcembly() ) {
             Collection<GeneProduct> acembly = findAcemblyGenesByLocation( chromosome, queryStart, queryEnd, strand );
             if ( acembly != null ) geneProducts.addAll( acembly );
         }
 
         // Last ditch: NSCAN
-        if ( geneProducts.size() == 0 ) {
+        if ( geneProducts.size() == 0 && config.isUseNscan() ) {
             Collection<GeneProduct> nscan = findNscanGenesByLocation( chromosome, queryStart, queryEnd, strand );
             if ( nscan != null ) geneProducts.addAll( nscan );
         }
@@ -978,13 +1122,15 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             if ( log.isDebugEnabled() ) log.debug( geneProduct );
 
             BlatAssociation blatAssociation = computeLocationInGene( chromosome, queryStart, queryEnd, starts, sizes,
-                    geneProduct, method );
+                    geneProduct, method, config );
             results.add( blatAssociation );
         }
         return results;
     }
 
     /**
+     * Uses default mapping settings
+     * 
      * @param identifier
      * @return
      */
