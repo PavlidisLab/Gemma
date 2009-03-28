@@ -105,10 +105,20 @@ public class ArrayDesignProbeMapperService {
     private double scoreThreshold = ProbeMapper.DEFAULT_SCORE_THRESHOLD;
 
     /**
+     * Do probe mapping, writing the results to the database.
+     * 
      * @param arrayDesign
      */
-    @SuppressWarnings("unchecked")
     public void processArrayDesign( ArrayDesign arrayDesign ) {
+        this.processArrayDesign( arrayDesign, true );
+    }
+
+    /**
+     * @param arrayDesign
+     * @param useDB if false, the results will not be written to the database, but printed to stdout instead.
+     */
+    @SuppressWarnings("unchecked")
+    public void processArrayDesign( ArrayDesign arrayDesign, boolean useDB ) {
 
         Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
         if ( taxon == null ) {
@@ -131,8 +141,10 @@ public class ArrayDesignProbeMapperService {
 
         load( persistingQueue, generatorDone, loaderDone );
 
-        log.info( "Removing any old associations" );
-        arrayDesignService.deleteGeneProductAssociations( arrayDesign );
+        if ( useDB ) {
+            log.info( "Removing any old associations" );
+            arrayDesignService.deleteGeneProductAssociations( arrayDesign );
+        }
 
         int count = 0;
         int hits = 0;
@@ -158,8 +170,12 @@ public class ArrayDesignProbeMapperService {
                     if ( log.isDebugEnabled() ) log.debug( association );
                 }
 
-                // persisting is done in a separate thread.
-                persistingQueue.addAll( col );
+                if ( useDB ) {
+                    // persisting is done in a separate thread.
+                    persistingQueue.addAll( col );
+                } else {
+                    printResult( compositeSequence, col );
+                }
                 ++hits;
             }
 
@@ -181,6 +197,31 @@ public class ArrayDesignProbeMapperService {
         }
 
         log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
+    }
+
+    /**
+     * Print results to STDOUT
+     * 
+     * @param compositeSequence
+     * @param col
+     */
+    private void printResult( CompositeSequence compositeSequence, Collection<BlatAssociation> col ) {
+        for ( BlatAssociation blatAssociation : col ) {
+            printResult( compositeSequence, blatAssociation );
+        }
+    }
+
+    /**
+     * Print line of result to STDOUT.
+     * 
+     * @param cs
+     * @param blatAssociation
+     */
+    private void printResult( CompositeSequence cs, BlatAssociation blatAssociation ) {
+
+        System.out.println( cs.getName() + '\t' + blatAssociation.getBioSequence().getName() + '\t'
+                + blatAssociation.getGeneProduct().getName() + '\t'
+                + blatAssociation.getGeneProduct().getGene().getOfficialName() );
     }
 
     /**

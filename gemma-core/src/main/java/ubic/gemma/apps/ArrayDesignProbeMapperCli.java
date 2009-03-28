@@ -58,6 +58,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private Taxon taxon;
     private String directAnnotationInputFileName = null;
     private ExternalDatabase sourceDatabase = null;
+    private boolean useDB = true;
 
     /*
      * (non-Javadoc)
@@ -93,6 +94,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 "Source database name (GEO etc); required if using -import" ).hasArg().withArgName( "dbname" ).create(
                 "source" );
         addOption( databaseOption );
+
+        Option noDatabaseOption = OptionBuilder
+                .withDescription(
+                        "Don't save the results to the database, print to stdout instead (valid for single designs only, not batches, and not with -import)" )
+                .create( "nodb" );
+
+        addOption( noDatabaseOption );
 
         super.addThreadsOption();
     }
@@ -146,8 +154,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     return e;
                 }
             } else {
-                arrayDesignProbeMapperService.processArrayDesign( arrayDesign );
-                audit( arrayDesign, "Run with default parameters", AlignmentBasedGeneMappingEvent.Factory.newInstance() );
+                arrayDesignProbeMapperService.processArrayDesign( arrayDesign, this.useDB );
+                if ( useDB ) {
+                    audit( arrayDesign, "Run with default parameters", AlignmentBasedGeneMappingEvent.Factory
+                            .newInstance() );
+                }
             }
 
         } else if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
@@ -157,71 +168,78 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         "Sorry, you can't provide an input mapping file when doing multiple arrays at once" );
             }
 
-            // look at all array designs.
-            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
-
-            final SecurityContext context = SecurityContextHolder.getContext();
-
-            // split over multiple threads so we can multiplex. Put the array designs in a queue.
-
-            /*
-             * Here is our task runner.
-             */
-            class Consumer implements Runnable {
-                private final BlockingQueue<ArrayDesign> queue;
-
-                public Consumer( BlockingQueue<ArrayDesign> q ) {
-                    queue = q;
-                }
-
-                public void run() {
-                    SecurityContextHolder.setContext( context );
-                    while ( true ) {
-                        ArrayDesign ad = queue.poll();
-                        if ( ad == null ) {
-                            break;
-                        }
-                        consume( ad );
-                    }
-                }
-
-                void consume( ArrayDesign x ) {
-                    if ( taxon.equals( arrayDesignService.getTaxon( x.getId() ) ) ) {
-                        processArrayDesign( skipIfLastRunLaterThan, x );
-                    }
-
-                }
-            }
-
-            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
-            for ( ArrayDesign ad : allArrayDesigns ) {
-                arrayDesigns.add( ad );
-            }
-
-            /*
-             * Start the threads
-             */
-            log.info( this.numThreads + " threads" );
-            Collection<Thread> threads = new ArrayList<Thread>();
-            for ( int i = 0; i < this.numThreads; i++ ) {
-                Consumer c1 = new Consumer( arrayDesigns );
-                Thread k = new Thread( c1 );
-                threads.add( k );
-                k.start();
-            }
-
-            waitForThreadPoolCompletion( threads );
-
-            /*
-             * All done
-             */
-            summarizeProcessing();
+            batchRun( skipIfLastRunLaterThan );
 
         } else {
             return new IllegalArgumentException( "Seems you did not set options to get anything to happen." );
         }
 
         return null;
+    }
+
+    /**
+     * @param skipIfLastRunLaterThan
+     */
+    private void batchRun( final Date skipIfLastRunLaterThan ) {
+        // look at all array designs.
+        Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
+
+        final SecurityContext context = SecurityContextHolder.getContext();
+
+        // split over multiple threads so we can multiplex. Put the array designs in a queue.
+
+        /*
+         * Here is our task runner.
+         */
+        class Consumer implements Runnable {
+            private final BlockingQueue<ArrayDesign> queue;
+
+            public Consumer( BlockingQueue<ArrayDesign> q ) {
+                queue = q;
+            }
+
+            public void run() {
+                SecurityContextHolder.setContext( context );
+                while ( true ) {
+                    ArrayDesign ad = queue.poll();
+                    if ( ad == null ) {
+                        break;
+                    }
+                    consume( ad );
+                }
+            }
+
+            void consume( ArrayDesign x ) {
+                if ( taxon.equals( arrayDesignService.getTaxon( x.getId() ) ) ) {
+                    processArrayDesign( skipIfLastRunLaterThan, x );
+                }
+
+            }
+        }
+
+        BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
+        for ( ArrayDesign ad : allArrayDesigns ) {
+            arrayDesigns.add( ad );
+        }
+
+        /*
+         * Start the threads
+         */
+        log.info( this.numThreads + " threads" );
+        Collection<Thread> threads = new ArrayList<Thread>();
+        for ( int i = 0; i < this.numThreads; i++ ) {
+            Consumer c1 = new Consumer( arrayDesigns );
+            Thread k = new Thread( c1 );
+            threads.add( k );
+            k.start();
+        }
+
+        waitForThreadPoolCompletion( threads );
+
+        /*
+         * All done
+         */
+        summarizeProcessing();
     }
 
     /**
@@ -408,6 +426,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "No taxon named " + taxonName );
             }
+        }
+
+        if ( this.hasOption( "nodb" ) ) {
+            this.useDB = false;
         }
 
     }
