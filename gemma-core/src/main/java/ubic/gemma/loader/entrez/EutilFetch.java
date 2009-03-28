@@ -67,7 +67,13 @@ public class EutilFetch {
 
             NodeList countNode = document.getElementsByTagName( "Count" );
             Node countEl = countNode.item( 0 );
-            int count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
+
+            int count = 0;
+            try {
+                count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
+            } catch ( NumberFormatException e ) {
+                return "No results [count was " + XMLUtils.getTextValue( ( Element ) countEl );
+            }
 
             if ( count == 0 ) return "No results";
 
