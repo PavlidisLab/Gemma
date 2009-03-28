@@ -59,14 +59,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ExternalDatabase sourceDatabase = null;
     private boolean useDB = true;
 
-    private String OPTION_EST = "e"; // usuall off
-    private String OPTION_ENSEMBL = "n";
-    private String OPTION_REFSEQ = "r";
-    private String OPTION_KNOWNGENE = "k";
-    private String OPTION_MRNA = "m";
-    private String OPTION_MICRORNA = "i";
-    private String OPTION_ACEMBLY = "a";
-    private String OPTION_NSCAN = "s";
+    private final static String OPTION_EST = "e"; // usually off
+    private final static String OPTION_ENSEMBL = "n";
+    private final static String OPTION_REFSEQ = "r";
+    private final static String OPTION_KNOWNGENE = "k";
+    private final static String OPTION_MRNA = "m";
+    private final static String OPTION_MICRORNA = "i";
+    private final static String OPTION_ACEMBLY = "a";
+    private final static String OPTION_NSCAN = "s";
 
     /*
      * (non-Javadoc)
@@ -95,23 +95,23 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .hasArg()
                 .withArgName( "configstring" )
                 .withDescription(
-                        "String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set, all will be used except as listed below "
-                                + OPTION_REFSEQ
-                                + " - search refseq track for genes\n"
-                                + OPTION_KNOWNGENE
-                                + " - search refseq track for genes\n"
-                                + OPTION_MICRORNA
-                                + " - search miRNA track for genes\n"
-                                + OPTION_EST
-                                + " - search EST track for transcripts (Default=false)\n"
-                                + OPTION_MRNA
-                                + " - search mRNA track for transcripts\n"
-                                + OPTION_ACEMBLY
-                                + " - search Acembly track for predicted genes\n"
-                                + OPTION_ENSEMBL
-                                + " - search Ensembl track for predicted genes\n"
-                                + OPTION_NSCAN
-                                + " - search NScan track for predicted genes\n" ).create( "config" ) );
+                        "String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set, all will be used except as listed below:\n "
+
+                                + OPTION_REFSEQ + " - search refseq track for genes (best to leave on)\n"
+
+                                + OPTION_KNOWNGENE + " - search refseq track for genes (best to leave on)\n"
+
+                                + OPTION_MICRORNA + " - search miRNA track for genes (doesn't hurt)\n"
+
+                                + OPTION_EST + " - search EST track for transcripts (Default=false)\n"
+
+                                + OPTION_MRNA + " - search mRNA track for transcripts\n"
+
+                                + OPTION_ACEMBLY + " - search Acembly track for predicted genes\n"
+
+                                + OPTION_ENSEMBL + " - search Ensembl track for predicted genes\n"
+
+                                + OPTION_NSCAN + " - search NScan track for predicted genes\n" ).create( "config" ) );
 
         Option taxonOption = OptionBuilder
                 .hasArg()
