@@ -23,7 +23,6 @@
 	<classpathentry excluding="**/empty.file" kind="src" output="build/Gemma/" path="gemma-web/src/main/webapp"/>
 	<classpathentry kind="src" output="test-build" path="gemma-web/src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-binding/1.0.5/spring-binding-1.0.5.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-dbutils/commons-dbutils/1.0/commons-dbutils-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar" sourcepath="/JAR_SOURCE/commons-logging-1.0.4-src/src/java">
@@ -224,5 +223,6 @@
 	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-taglibs/2.0.3/spring-security-taglibs-2.0.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/sf/jsr107cache/jsr107cache/1.0/jsr107cache-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/opensymphony/oscache/2.4/oscache-2.4.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
