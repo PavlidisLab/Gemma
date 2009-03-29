@@ -1025,7 +1025,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-
+                long lastTime = 0;
                 // The following are VERY important for performance. (actually not so sure anymore as we now have the
                 // transaction
                 // marked 'readonly' for this method)
@@ -1069,12 +1069,14 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
 
-                    if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 && timer.getTime() > 5000 ) {
-                        log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo
-                                + " ... (" + timer.getTime() / 1000 + "s elapsed)" );
+                    if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
+                        if ( timer.getTime() - lastTime > 5000 ) {
+                            log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo
+                                    + " ... (" + timer.getTime() / 1000 + "s elapsed)" );
+                            lastTime = timer.getTime();
+                        }
                         // /////
-                        // session.flush();
-                        // session.clear();
+                        session.clear();
                     }
 
                     if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
@@ -1088,8 +1090,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         }
 
                     }
-                    session.evict( cs );
 
+                    /*
+                     * Might be better to do a clear, periodically. See dommended
+                     */
+                    // session.evict( cs );
                 }
 
                 if ( timer.getTime() > 5000 )

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
@@ -345,6 +346,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     private void doThaw( final Collection<BioSequence> bioSequences, final boolean deep ) {
         if ( bioSequences == null || bioSequences.size() == 0 ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
+        final StopWatch timer = new StopWatch();
+        timer.start();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 FlushMode oldFlushMode = session.getFlushMode();
@@ -356,6 +359,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 // READ-ONLY so
                 // this is okay.
                 int count = 0;
+                long lastTime = 0;
                 for ( Object object : bioSequences ) {
                     BioSequence bioSequence = ( BioSequence ) object;
                     session.lock( bioSequence, LockMode.NONE );
@@ -377,7 +381,10 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                     }
 
                     if ( ++count % 2000 == 0 ) {
-                        log.info( "Thawed " + count + " sequences ..." );
+                        if ( timer.getTime() - lastTime > 10000 ) {
+                            log.info( "Thawed " + count + " sequences ..." );
+                            lastTime = timer.getTime();
+                        }
                         session.clear();
                     }
                     EntityUtils.unProxy( bioSequence );
