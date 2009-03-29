@@ -103,7 +103,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     /**
      * cache results of mRNA queries.
      */
-    LRUMap cache = new LRUMap( 200 );
+    LRUMap cache = new LRUMap( 2000 );
 
     /**
      * Recompute the exonOverlap looking at mRNAs. This lets us be a little less conservative about how we compute exon
@@ -123,11 +123,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     private int checkRNAs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
             int exonOverlap, String strand ) {
 
-        String key = chromosome + "||" + queryStart.toString() + "||" + queryEnd.toString();
+        String key = "MRNA " + chromosome + "||" + queryStart.toString() + "||" + queryEnd.toString() + strand;
 
         Collection<Gene> mRNAs;
         if ( cache.containsKey( key ) ) {
-            log.info( "Cache hit!" );
             mRNAs = ( Collection<Gene> ) cache.get( key );
         } else {
             mRNAs = findRNAs( chromosome, queryStart, queryEnd, strand );
@@ -174,11 +173,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     private int checkESTs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
             int exonOverlap, String strand ) {
 
-        String key = chromosome + "||" + queryStart.toString() + "||" + queryEnd.toString();
+        String key = "EST " + chromosome + "||" + queryStart.toString() + "||" + queryEnd.toString() + strand;
 
         Collection<Gene> ests;
         if ( cache.containsKey( key ) ) {
-            log.info( "Cache hit!" );
             ests = ( Collection<Gene> ) cache.get( key );
         } else {
             ests = findESTs( chromosome, queryStart, queryEnd, strand );
@@ -210,8 +208,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     /**
      * Given a location and a gene product, compute the distance from the 3' end of the gene product as well as the
      * amount of overlap. If the location has low overlaps with known exons (threshold set by
-     * RECHECK_OVERLAP_THRESHOLD), we search for mRNAs in the region. If there are overlapping mRNAs, we use the best
-     * overlap value.
+     * RECHECK_OVERLAP_THRESHOLD), we optionally search for mRNAs in the region. If there are overlapping mRNAs, we use
+     * the best overlap value. If the overlap is still not high enough we optionally check ESTs.
      * 
      * @param chromosome
      * @param queryStart
@@ -220,6 +218,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param sizes Sizes of alignments of the query.
      * @param geneProduct GeneProduct with which the overlap and distance is to be computed.
      * @param method
+     * @param config The useEsts and useRNA options are relevant
      * @return a ThreePrimeData object containing the results.
      * @see getThreePrimeDistances <p>
      *      FIXME this should take a PhysicalLocation as an argument.
@@ -246,13 +245,23 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             int totalSize = SequenceManipulation.totalSize( sizes );
 
             if ( config.isUseMrnas() && exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
-                exonOverlap = checkRNAs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap, geneLoc
+                int newOverlap = checkRNAs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap, geneLoc
                         .getStrand() );
+
+                if ( newOverlap > exonOverlap ) {
+                    log.debug( "mRNA overlap was higher than primary transcript" );
+                    exonOverlap = newOverlap;
+                }
             }
 
             if ( config.isUseEsts() && exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
-                exonOverlap = checkESTs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap, geneLoc
+                int newOverlap = checkESTs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap, geneLoc
                         .getStrand() );
+
+                if ( newOverlap > exonOverlap ) {
+                    log.debug( "Exon overlap was higher than mrna or  primary transcript" );
+                    exonOverlap = newOverlap;
+                }
             }
             assert exonOverlap <= totalSize;
         }
@@ -1123,6 +1132,16 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
             BlatAssociation blatAssociation = computeLocationInGene( chromosome, queryStart, queryEnd, starts, sizes,
                     geneProduct, method, config );
+
+            /*
+             * We check against the actual threshold later. We can't fully check it now because not all the slots are
+             * populated yet.
+             */
+            if ( config.getMinimumExonOverlapFraction() > 0.0 && blatAssociation.getOverlap() == 0 ) {
+                log.debug( "Result failed to meet exon overlap threshold (0)" );
+                continue;
+            }
+
             results.add( blatAssociation );
         }
         return results;

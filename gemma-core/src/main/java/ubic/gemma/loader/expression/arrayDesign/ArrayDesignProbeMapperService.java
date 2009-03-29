@@ -206,9 +206,12 @@ public class ArrayDesignProbeMapperService {
      */
     private void printResult( CompositeSequence cs, BlatAssociation blatAssociation ) {
 
+        GeneProduct geneProduct = blatAssociation.getGeneProduct();
+        Gene gene = geneProduct.getGene();
         System.out.println( cs.getName() + '\t' + blatAssociation.getBioSequence().getName() + '\t'
-                + blatAssociation.getGeneProduct().getName() + '\t'
-                + blatAssociation.getGeneProduct().getGene().getOfficialName() );
+                + geneProduct.getName() + '\t'
+                + gene.getOfficialSymbol() + "\t"
+                + gene.getClass().getSimpleName() );
     }
 
     /**

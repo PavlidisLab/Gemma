@@ -195,11 +195,23 @@ public class BlatAssociationScorer {
         assert br.getQuerySequence().getLength() > 0;
 
         double blatScore = br.score();
-        double overlap = ( double ) blatAssociation.getOverlap() / ( double ) ( br.getQuerySequence().getLength() );
+        double overlap = computeOverlapFraction( blatAssociation );
         double score = computeScore( blatScore, overlap );
 
         blatAssociation.setScore( score );
         return score;
+    }
+
+    /**
+     * Compute how much the BLAT alignment with the target gene product is as a fraction of the query sequence length.
+     * Assumes that the overlap with a transcript has already been computed.
+     * 
+     * @param blatAssociation
+     * @return
+     */
+    public static double computeOverlapFraction( BlatAssociation blatAssociation ) {
+        return ( double ) blatAssociation.getOverlap()
+                / ( double ) blatAssociation.getBlatResult().getQuerySequence().getLength();
     }
 
     /**
@@ -221,7 +233,7 @@ public class BlatAssociationScorer {
 
     /**
      * Break results down by gene product, and throw out duplicates (only allow one result per gene product), fills in
-     * score and initializes specificity.
+     * score and initializes specificity
      * 
      * @param blatAssociations
      * @param geneProducts
@@ -231,8 +243,10 @@ public class BlatAssociationScorer {
             Collection<BlatAssociation> blatAssociations ) {
         Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<GeneProduct, Collection<BlatAssociation>>();
         Collection<BioSequence> sequences = new HashSet<BioSequence>();
+
         for ( BlatAssociation blatAssociation : blatAssociations ) {
             assert blatAssociation.getBioSequence() != null;
+
             computeScore( blatAssociation );
             sequences.add( blatAssociation.getBioSequence() );
 

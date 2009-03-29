@@ -87,6 +87,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD ).withLongOpt(
                 "scoreThreshold" ).create( 's' ) );
 
+        addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+                "Minimum fraction of probe overlap with exons, default = "
+                        + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION ).withLongOpt( "overlapThreshold" )
+                .create( 'o' ) );
+
         /*
          * TODO: options for which tracks to search.
          */
@@ -198,6 +203,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 }
             } else {
 
+                if ( !this.useDB ) {
+                    log.info( "**** Writing to STDOUT instead of the database ***" );
+                    System.out.print( config );
+                }
+
                 arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
                 if ( useDB ) {
                     audit( arrayDesign, "Run with default parameters", AlignmentBasedGeneMappingEvent.Factory
@@ -248,17 +258,33 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             config.setUseRefGene( configString.contains( OPTION_REFSEQ ) );
             config.setUseKnownGene( configString.contains( OPTION_KNOWNGENE ) );
             config.setUseAcembly( configString.contains( OPTION_ACEMBLY ) );
-
-            log.info( config );
         }
 
         if ( hasOption( 's' ) ) {
-            config.setBlatScoreThreshold( getDoubleOptionValue( 's' ) );
+            double blatscorethresh = getDoubleOptionValue( 's' );
+            if ( blatscorethresh < 0 || blatscorethresh > 1 ) {
+                throw new IllegalArgumentException( "BLAT score threshold must be between 0 and 1" );
+            }
+            config.setBlatScoreThreshold( blatscorethresh );
         }
 
         if ( hasOption( 'i' ) ) {
-            config.setIdentityThreshold( getDoubleOptionValue( 'i' ) );
+            double option = getDoubleOptionValue( 'i' );
+            if ( option < 0 || option > 1 ) {
+                throw new IllegalArgumentException( "Identity threshold must be between 0 and 1" );
+            }
+            config.setIdentityThreshold( option );
         }
+
+        if ( hasOption( 'o' ) ) {
+            double option = getDoubleOptionValue( 'o' );
+            if ( option < 0 || option > 1 ) {
+                throw new IllegalArgumentException( "Overlap threshold must be between 0 and 1" );
+            }
+            config.setMinimumExonOverlapFraction( option );
+        }
+
+        log.info( config );
 
         return config;
 

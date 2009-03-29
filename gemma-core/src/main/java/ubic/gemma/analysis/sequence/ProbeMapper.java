@@ -157,9 +157,12 @@ public class ProbeMapper {
             // Another important step: fill in the specificity, remove duplicates
             BlatAssociationScorer.scoreResults( blatAssociationsForSequence );
 
+            // Remove hits not meeting criteria
+            blatAssociationsForSequence = filterOnScores( blatAssociationsForSequence, config );
+
             if ( log.isDebugEnabled() ) {
                 log.debug( blatAssociationsForSequence.size() + " associations for " + sequence
-                        + " after redundancy reduction" );
+                        + " after redundancy reduction and score filtering" );
             }
 
             String queryName = sequence.getName();
@@ -179,6 +182,31 @@ public class ProbeMapper {
         }
 
         return allRes;
+    }
+
+    /**
+     * TODO implement checking the score, not just the exon overlap.
+     * 
+     * @param blatAssociationsForSequence
+     * @param config
+     * @return filtered collection
+     */
+    private Collection<BlatAssociation> filterOnScores( Collection<BlatAssociation> blatAssociationsForSequence,
+            ProbeMapperConfig config ) {
+        double minimumExonOverlapFraction = config.getMinimumExonOverlapFraction();
+        if ( minimumExonOverlapFraction == 0 ) return blatAssociationsForSequence;
+
+        Collection<BlatAssociation> result = new HashSet<BlatAssociation>();
+
+        for ( BlatAssociation ba : blatAssociationsForSequence ) {
+            if ( BlatAssociationScorer.computeOverlapFraction( ba ) < minimumExonOverlapFraction ) {
+                log.debug( "Result failed to meet exon overlap threshold" );
+                continue;
+            }
+            result.add( ba );
+        }
+
+        return result;
     }
 
     /**

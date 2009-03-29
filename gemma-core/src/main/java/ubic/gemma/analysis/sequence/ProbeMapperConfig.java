@@ -70,6 +70,8 @@ public class ProbeMapperConfig {
 
     private double maximumRepeatFraction = REPEAT_FRACTION_MAXIMUM;
 
+    public static final double DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION = 0.0;
+
     /**
      * Sequences that contain more than the maximumRepeatFraction of repeat sequences AND which align to more than this
      * number of sites will be left unmapped. FIXME we might modify this behavior.
@@ -94,6 +96,16 @@ public class ProbeMapperConfig {
     private boolean useNscan = true;
 
     private boolean useRefGene = true;
+
+    private double minimumExonOverlapFraction = DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION;
+
+    public double getMinimumExonOverlapFraction() {
+        return minimumExonOverlapFraction;
+    }
+
+    public void setMinimumExonOverlapFraction( double minimumExonOverlapFraction ) {
+        this.minimumExonOverlapFraction = minimumExonOverlapFraction;
+    }
 
     /**
      * @return the blatScoreThreshold
