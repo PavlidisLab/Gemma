@@ -338,7 +338,7 @@
 						</configuration>
 						<executions>
 							<execution>
-								<id>drop-testdb</id>
+								<id>drop-add-testdb</id>
 								<phase>initialize</phase>
 								<goals>
 									<goal>execute</goal>
@@ -347,23 +347,11 @@
 									<url>${bootstrap.db.url}</url>
 									<autocommit>false</autocommit>
 									<sqlCommand>
-									<![CDATA[drop database if exists ${gemma.testdb.name}]]>
+									<![CDATA[drop database if exists ${gemma.testdb.name};
+									create database ${gemma.testdb.name}]]>
 									</sqlCommand>
 								</configuration>
-							</execution>
-							<execution>
-								<id>create-testdb</id>
-								<phase>process-test-resources</phase>
-								<goals>
-									<goal>execute</goal>
-								</goals>
-								<configuration>
-									<url>${bootstrap.db.url}</url>
-									<sqlCommand>
-									<![CDATA[create database ${gemma.testdb.name}]]>
-									</sqlCommand>
-								</configuration>
-							</execution>
+							</execution>	
 							<execution>
 								<id>load-testdb-schema</id>
 								<phase>process-test-resources</phase>
@@ -383,7 +371,7 @@
 							</execution>
 							<execution>
 								<id>install-triggers</id>
-								<phase>process-test-resources</phase>
+								<phase>test-compile</phase>
 								<goals>
 									<goal>execute</goal>
 								</goals>
@@ -444,7 +432,7 @@
 						</configuration>
 						<executions>
 							<execution>
-								<id>drop-db</id>
+								<id>drop-add-db</id>
 								<phase>initialize</phase>
 								<goals>
 									<goal>execute</goal>
@@ -453,23 +441,11 @@
 									<url>${bootstrap.db.url}</url>
 									<autocommit>false</autocommit>
 									<sqlCommand>
-									<![CDATA[drop database if exists ${gemma.db.name}]]>
-									</sqlCommand>
+									<![CDATA[drop database if exists ${gemma.db.name};
+									create database ${gemma.db.name}]]>
+									</sqlCommand>		 
 								</configuration>
-							</execution>
-							<execution>
-								<id>create-db</id>
-								<phase>process-resources</phase>
-								<goals>
-									<goal>execute</goal>
-								</goals>
-								<configuration>
-									<url>${bootstrap.db.url}</url>
-									<sqlCommand>
-									<![CDATA[create database ${gemma.db.name}]]>
-									</sqlCommand>
-								</configuration>
-							</execution>
+							</execution> 
 							<execution>
 								<id>load-db-schema</id>
 								<phase>process-resources</phase>
@@ -490,7 +466,7 @@
 							</execution>
 							<execution>
 								<id>install-triggers</id>
-								<phase>process-resources</phase>
+								<phase>compile</phase>
 								<goals>
 									<goal>execute</goal>
 								</goals>
