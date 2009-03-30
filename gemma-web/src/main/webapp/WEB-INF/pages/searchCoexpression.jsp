@@ -38,10 +38,3 @@
 <div id="coexpression-wrap">
 	<div id='coexpression-all'></div>
 </div>
-
-	<form>
-		<input type="button" value="draw" onClick="draw();" />
-	</form>
-
-	<div id="vis" style="width: 600px; height: 300px;">
-		</div>

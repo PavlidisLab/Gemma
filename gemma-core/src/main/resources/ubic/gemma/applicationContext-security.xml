@@ -375,9 +375,9 @@
                 ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService.remove=user,admin 
                 ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
                 ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.create=user,admin
-                ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.load=user,admin
+                ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.load=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.update=user,admin
-                ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.find=user,admin
+                ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataArrays=user,admin,ROLE_ANONYMOUS,AFTER_ACL_DATAVECTOR_COLLECTION_READ
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.createProcessedDataVectors=user,admin
                 ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getRanks=user,admin,ROLE_ANONYMOUS  

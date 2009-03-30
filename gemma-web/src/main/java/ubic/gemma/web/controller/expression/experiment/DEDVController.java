@@ -251,15 +251,20 @@ public class DEDVController extends BaseFormController {
     public Collection<ExpressionProfileDataObject> getVectorData( Collection<Long> dedvIds ) {
         List<ExpressionProfileDataObject> result = new ArrayList<ExpressionProfileDataObject>();
         for ( Long id : dedvIds ) {
-            DesignElementDataVector vector = this.designElementDataVectorService.load( id );
-            DoubleVectorValueObject dvvo = new DoubleVectorValueObject( vector );
-            ExpressionProfileDataObject epdo = new ExpressionProfileDataObject( dvvo );
+            DesignElementDataVector vector = this.designElementDataVectorService.load( id );            
+            try {
+                DoubleVectorValueObject dvvo = new DoubleVectorValueObject( vector );
+                ExpressionProfileDataObject epdo = new ExpressionProfileDataObject( dvvo );
 
-            DoubleArrayList doubleArrayList = new cern.colt.list.DoubleArrayList( epdo.getData() );
-            DescriptiveWithMissing.standardize( doubleArrayList );
-            epdo.setData( doubleArrayList.elements() );
+                DoubleArrayList doubleArrayList = new cern.colt.list.DoubleArrayList( epdo.getData() );
+                DescriptiveWithMissing.standardize( doubleArrayList );
+                epdo.setData( doubleArrayList.elements() );
 
-            result.add( epdo );
+                result.add( epdo );
+            }catch(IllegalArgumentException iae){
+                log.warn(iae );
+            }
+     
         }
 
         // TODO fill in gene; normalize and clip if desired.; watch for invalid ids.
