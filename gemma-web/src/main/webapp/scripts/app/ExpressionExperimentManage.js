@@ -22,7 +22,10 @@ Ext.onReady(function() {
 	this.manager = manager;
 
 	var store = new Gemma.PagingDataStore({
-				proxy : new Ext.data.DWRProxy(ExpressionExperimentController.loadStatusSummaries),
+
+				proxy : new Ext.data.DWRProxy(
+						ExpressionExperimentController.loadStatusSummaries),
+
 				reader : new Ext.data.ListRangeReader({
 							id : "id"
 						}, manager.record),
@@ -32,7 +35,7 @@ Ext.onReady(function() {
 					field : 'dateCreated',
 					direction : 'DESC'
 				}
-			});
+	});
 
 	manager.on('done', function() {
 				store.reload();
@@ -354,7 +357,11 @@ Ext.onReady(function() {
 	store.load({
 				params : [null, limit]
 			});
-
+	
+	store.on("loadexception", function(scope, args, data, e) {
+				Ext.Msg.alert('Session expired?', data
+								+ ".  \nTry signing in again.");
+			});
 });
 
 /**
