@@ -287,6 +287,7 @@ public class LinkAnalysis {
                 config.setLowerTailCut(cdfLowerCutScore);
                 log.info( "Final lower cut is " + form.format( config.getLowerTailCut() ) );
             }
+            metricMatrix.setUsePvalueThreshold( false );//use only cdfCut exclusively to keep links
             config.setUpperCdfCutUsed( true );
             config.setLowerCdfCutUsed( true );            
         }
