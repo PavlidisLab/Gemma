@@ -391,7 +391,7 @@ public class ArrayExpressLoadService {
      * 
      * @param experimentAccession in ArrayExpress e.g. E-TAMB-1
      * @param bioAssays
-     * @param isUsingReporters
+     * @param isUsingReporters Whether data is based on CompositeSequences or Reporters.
      */
     private void processArrayDesignInfo( String experimentAccession, Collection<BioAssay> bioAssays,
             boolean isUsingReporters ) {

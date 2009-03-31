@@ -199,6 +199,7 @@ public class ProcessedDataMerger {
 
         log.info( "Processed data for " + count + " composite sequences, got "
                 + mageMlResult.getRawExpressionDataVectors().size() + " raw data vectors." );
+
     }
 
     /**

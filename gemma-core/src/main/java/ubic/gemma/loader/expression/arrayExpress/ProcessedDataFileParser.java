@@ -150,8 +150,10 @@ public class ProcessedDataFileParser extends LineMapParser<String, Map<String, L
 
             if ( i == 0 ) {
                 if ( field.contains( "Reporter" ) ) {
+                    log.info( "Data indexed by reporters" );
                     usingReporters = true;
                 } else {
+                    log.info( "Data indexed by composite sequences" );
                     usingReporters = false;
                 }
                 continue;

@@ -123,10 +123,14 @@ public class ArrayDesignParser extends BasicLineParser<CompositeSequence> {
         String probeName = null;
         String probeDescription = null;
 
-        if ( this.useReporterId || csName.equals( "-" ) ) {
+        if ( this.useReporterId ) {
             probeName = reporterIdentifier;
         } else {
             probeName = csIdentifier;
+        }
+
+        if ( probeName.equals( "-" ) ) {
+            return null;
         }
 
         if ( csDescription != null ) {

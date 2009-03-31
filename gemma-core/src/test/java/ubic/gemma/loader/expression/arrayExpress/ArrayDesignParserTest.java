@@ -63,6 +63,7 @@ public class ArrayDesignParserTest extends TestCase {
         InputStream is = ArrayDesignParserTest.class
                 .getResourceAsStream( "/data/loader/expression/mage/A-FPMI-3.arrayDesignDetails.test.txt" );
         ArrayDesignParser parser = new ArrayDesignParser();
+        parser.setUseReporterId( true );
         parser.parse( is );
         is.close();
 
@@ -93,8 +94,8 @@ public class ArrayDesignParserTest extends TestCase {
 
         for ( CompositeSequence cs : probes ) {
             assertNotNull( cs.getName() );
-            log.info( cs.getName() );
-            log.info( cs.getDescription() );
+            // log.info( cs.getName() );
+            // log.info( cs.getDescription() );
         }
 
     }
