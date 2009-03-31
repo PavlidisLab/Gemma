@@ -70,7 +70,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
             filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
             String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
             String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
-            String geneHistoryFile = filePath + File.separatorChar + "selected_geneHistory.gz";
+            String geneHistoryFile = filePath + File.separatorChar + "selected_gene_history.gz";
 
             loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, true );
 
@@ -101,8 +101,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
         endTransaction();
 
     }
-
-    @SuppressWarnings("unchecked")
+ 
     public void testFindByGene() {
         GeneService geneService = ( GeneService ) this.getBean( "geneService" );
         Collection<Gene> genes = geneService.findByOfficialSymbol( "PON2" );
@@ -111,8 +110,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
         assertEquals( 1, collection.size() );
 
     }
-
-    @SuppressWarnings("unchecked")
+ 
     public void testFindByGeneAndArrayDesign() {
         GeneService geneService = ( GeneService ) this.getBean( "geneService" );
         Collection<Gene> genes = geneService.findByOfficialSymbol( "PON2" );
@@ -120,8 +118,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
         Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g, getAd() );
         assertEquals( 1, collection.size() );
     }
-
-    @SuppressWarnings("unchecked")
+ 
     public void testHandleGetGenesCompositeSequence() {
 
         Collection<CompositeSequence> css = compositeSequenceService.findByName( "C277" );
@@ -129,8 +126,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
         Collection<Gene> genes = compositeSequenceService.getGenes( cs );
         assertEquals( 1, genes.size() );
     }
-
-    @SuppressWarnings("unchecked")
+ 
     public void testHandleGetGenesCompositeSequences() {
 
         TableMaintenanceUtil tu = ( TableMaintenanceUtil ) this.getBean( "tableMaintenanceUtil" );

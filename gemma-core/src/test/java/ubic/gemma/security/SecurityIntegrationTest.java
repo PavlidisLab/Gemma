@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.CrudUtils;
+import ubic.gemma.security.acl.basic.jdbc.CustomAclDao;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -103,6 +104,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
         SecurityService securityService = new SecurityService();
         securityService.setCrudUtils( ( CrudUtils ) this.getBean( "crudUtils" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+        securityService.setCustomAclDao( ( CustomAclDao ) this.getBean( "customAclDao" ) );
         securityService.makePrivate( ad );
         /*
          * uncomment so you can see the acl permission has been changed in the database.

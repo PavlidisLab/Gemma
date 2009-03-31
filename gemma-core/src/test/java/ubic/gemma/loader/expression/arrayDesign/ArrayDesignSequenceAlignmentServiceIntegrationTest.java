@@ -37,10 +37,11 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
 
     /**
      * Test method for
-     * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}.
+     * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}
+     * .
      */
     public final void testProcessArrayDesign() throws Exception {
-        if (ad == null) return;
+        if ( ad == null ) return;
         String gfClientExe = ConfigUtils.getString( "gfClient.exe" );
 
         if ( gfClientExe == null ) {
@@ -55,6 +56,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
         }
 
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+        arrayDesignService.thawLite( ad );
         try {
             app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils
                     .getString( "gemma.home" )

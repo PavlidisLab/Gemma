@@ -19,7 +19,6 @@
 package ubic.gemma.loader.entrez.pubmed;
 
 import ubic.gemma.apps.AbstractCLITestCase;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -43,9 +42,7 @@ public class PubMedSearcherTest extends AbstractCLITestCase {
      */
     public final void testMain() throws Exception {
         try {
-            Exception result = p.doWork( new String[] { "-v", "3", "-u", ConfigUtils.getString( "gemma.regular.user" ),
-                    "-p", ConfigUtils.getString( "gemma.regular.password" ), "-testing", "hippocampus", "diazepam",
-                    "juvenile" } );
+            Exception result = p.doWork( new String[] { "-v", "3", "hippocampus", "diazepam", "juvenile" } );
             if ( result != null ) {
                 if ( result instanceof java.net.UnknownHostException ) {
                     log.warn( "Test skipped because of UnknownHostException" );

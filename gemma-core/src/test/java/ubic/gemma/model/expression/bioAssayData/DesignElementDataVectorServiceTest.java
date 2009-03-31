@@ -116,7 +116,7 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
             }
         }
 
-        assertNotNull( qt );
+        assertNotNull( "QT is null", qt );
 
         Collection<? extends DesignElementDataVector> preferredVectors = dedvs.find( qt );
 
