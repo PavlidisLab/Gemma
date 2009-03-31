@@ -222,7 +222,7 @@ public class MageMLConverterHelper {
      */
     Map<String, Collection<BioAssay>> array2BioAssay = new HashMap<String, Collection<BioAssay>>();
 
-    ExternalDatabase arrayExpress = null;
+    private static ExternalDatabase arrayExpress = null;
 
     Map<String, Collection<FactorValue>> bioAssayFactors = new HashMap<String, Collection<FactorValue>>();
     /**
@@ -338,13 +338,14 @@ public class MageMLConverterHelper {
 
         DatabaseEntry acc = DatabaseEntry.Factory.newInstance();
         acc.setAccession( accession );
-        acc.setExternalDatabase( this.getArrayExpressReference() );
+        acc.setExternalDatabase( getArrayExpressReference() );
 
         result.getExternalReferences().add( acc );
 
         convertIdentifiable( mageObj, result );
         result.setShortName( result.getName() );
         convertAssociations( mageObj, result );
+
         return result;
     }
 
@@ -1491,7 +1492,7 @@ public class MageMLConverterHelper {
          */
         DatabaseEntry acc = DatabaseEntry.Factory.newInstance();
         acc.setAccession( mageObj.getIdentifier() );
-        acc.setExternalDatabase( this.getArrayExpressReference() );
+        acc.setExternalDatabase( getArrayExpressReference() );
         result.setAccession( acc );
 
         convertIdentifiable( mageObj, result );
@@ -1828,6 +1829,11 @@ public class MageMLConverterHelper {
                 this.id2Name.put( mageObj.getIdentifier(), mageObj.getName() );
             }
 
+        } else if ( mageObj instanceof QuantitationType ) {
+            /*
+             * quantitation types are a weird case.
+             */
+            gemmaObj.setName( getUnqualifiedIdentifier( mageObj ) );
         } else {
             gemmaObj.setName( mageObj.getName() );
         }
@@ -2557,6 +2563,7 @@ public class MageMLConverterHelper {
         } else {
             result.setIsBackground( false );
         }
+
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
 
@@ -2948,7 +2955,9 @@ public class MageMLConverterHelper {
      * @param bioAssay
      * @return A List of QuantitationTypes representing the QuantitationTypeDimension for the BioAssay. If there is no
      *         such bioAssay in the current data, returns null.
+     * @deprecated Not used
      */
+    @Deprecated
     public List<ubic.gemma.model.common.quantitationtype.QuantitationType> getBioAssayQuantitationTypeDimension(
             ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         if ( bioAssay == null ) throw new IllegalArgumentException();
@@ -2962,6 +2971,11 @@ public class MageMLConverterHelper {
         return id2Name;
     }
 
+    /**
+     * @return
+     * @deprecated Not used - but might be needed for bioassay data if we get it from raw files
+     */
+    @Deprecated
     public Collection<ubic.gemma.model.expression.bioAssay.BioAssay> getQuantitationTypeBioAssays() {
         return this.bioAssayDimensions.getQuantitationTypeBioAssays();
     }
@@ -3407,7 +3421,7 @@ public class MageMLConverterHelper {
     /**
      * @return
      */
-    private ExternalDatabase getArrayExpressReference() {
+    public static ExternalDatabase getArrayExpressReference() {
         if ( arrayExpress == null ) {
             arrayExpress = ExternalDatabase.Factory.newInstance();
             arrayExpress.setName( "ArrayExpress" );
@@ -3871,21 +3885,33 @@ public class MageMLConverterHelper {
      */
     private void specialConvertAssociationsForPhysicalBioAssay( PhysicalBioAssay mageObj,
             ubic.gemma.model.expression.bioAssay.BioAssay result ) {
+
         Collection<BioMaterial> biomaterials = new HashSet<BioMaterial>();
+
         BioAssayCreation bac = mageObj.getBioAssayCreation();
         if ( bac != null ) {
 
             String arrayId = bac.getArray().getIdentifier();
             log.debug( arrayId + "....Array" );
 
-            if ( array2BioAssay.containsKey( arrayId ) ) {
-                array2BioAssay.get( arrayId ).add( mageObj );
-            } else {
-                throw new IllegalStateException();
+            /*
+             * If array2BioAssay is empty, the MAGE-ML lacks the Array package.
+             */
+            if ( array2BioAssay.size() > 0 ) {
+
+                if ( array2BioAssay.containsKey( arrayId ) ) {
+                    array2BioAssay.get( arrayId ).add( mageObj );
+                } else {
+                    throw new IllegalStateException( "Bioassay " + mageObj.getIdentifier()
+                            + " associated with unexpected array design id : " + arrayId );
+                }
             }
 
             ArrayDesign ad = bac.getArray().getArrayDesign();
             if ( ad == null ) {
+                /*
+                 * This happens if the ArrayDesign package is missing, e.g. E-SMDB-1853. We'll have trouble later.
+                 */
                 log.warn( "No array Design for " + result + " from " + mageObj );
             } else {
                 ubic.gemma.model.expression.arrayDesign.ArrayDesign conv = convertArrayDesign( ad );

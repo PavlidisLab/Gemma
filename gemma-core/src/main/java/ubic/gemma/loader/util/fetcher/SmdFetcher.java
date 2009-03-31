@@ -44,8 +44,7 @@ public abstract class SmdFetcher extends FtpFetcher {
      * 
      * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
      */
-    @Override
-    @SuppressWarnings("unused")
+    @Override 
     protected final String formLocalFilePath( String identifier, File newDir ) {
         throw new UnsupportedOperationException();
     }
@@ -55,8 +54,7 @@ public abstract class SmdFetcher extends FtpFetcher {
      * 
      * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
      */
-    @Override
-    @SuppressWarnings("unused")
+    @Override 
     protected final String formRemoteFilePath( String identifier ) {
         throw new UnsupportedOperationException();
     }

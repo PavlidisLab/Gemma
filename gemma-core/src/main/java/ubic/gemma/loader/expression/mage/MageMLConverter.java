@@ -35,6 +35,7 @@ import org.biomage.BioAssayData.BioAssayMap;
 
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -79,15 +80,17 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
         Package[] allPackages = Package.getPackages();
         if ( convertedResult == null ) {
             convertedResult = new ArrayList<Object>();
+            this.mageConverterHelper = new MageMLConverterHelper();
         } else {
             convertedResult.clear();
+            this.mageConverterHelper = new MageMLConverterHelper();
         }
 
-        Class[] preConvert = new Class[] { BioAssayMap.class, Array.class, DerivedBioAssay.class,
+        Class<?>[] preConvert = new Class<?>[] { BioAssayMap.class, Array.class, DerivedBioAssay.class,
                 MeasuredBioAssay.class, PhysicalBioAssay.class };
-        List<Class> preConvertL = Arrays.asList( preConvert );
+        List<Class<?>> preConvertL = Arrays.asList( preConvert );
 
-        for ( Class clazz : preConvertL ) {
+        for ( Class<? extends Object> clazz : preConvertL ) {
             processMGEDClass( objects, clazz );
         }
 
@@ -103,7 +106,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
             for ( int j = 0; j < mageClasses.length; j++ ) {
                 try {
                     String className = name + "." + mageClasses[j];
-                    Class c = Class.forName( className );
+                    Class<? extends Object> c = Class.forName( className );
 
                     if ( preConvertL.contains( c ) ) {
                         continue;
@@ -125,7 +128,12 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
         return convertedResult;
     }
 
-    private Collection<Object> processMGEDClass( Collection objects, Class c ) {
+    /**
+     * @param objects
+     * @param c
+     * @return
+     */
+    private Collection<Object> processMGEDClass( Collection<? extends Object> objects, Class<? extends Object> c ) {
         Collection<Object> convertedObjects = getConvertedDataForType( c, objects );
         if ( convertedObjects != null && convertedObjects.size() > 0 ) {
             log.info( "Adding " + convertedObjects.size() + " converted " + c.getName() + "s" );
@@ -136,49 +144,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
         return convertedObjects;
     }
 
-    //
-    // /**
-    // * @param convertedResult
-    // */
-    // private void fillInBioMaterialFactorValues( Collection<Object> convertedResult ) {
-    // ExpressionExperiment ee = null;
-    // for ( Object object : convertedResult ) {
-    // if ( object instanceof ExpressionExperiment ) ee = ( ExpressionExperiment ) object;
-    // }
-    // assert ee != null;
-    //
-    // Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
-    // Collection<BioAssay> bioAssays = ee.getBioAssays();
-    // for ( BioAssay assay : bioAssays ) {
-    // for ( BioMaterial bm : assay.getSamplesUsed() ) {
-    // log.info( "checking factor values on biomaterial " + bm );
-    // Collection<FactorValue> factorValues = new HashSet<FactorValue>();
-    // for ( FactorValue value : bm.getFactorValues() ) {
-    // FactorValue efFactorValue = findMatchingFactorValue( value, experimentalFactors );
-    // if ( efFactorValue == null )
-    // throw new IllegalStateException( "No experimental-factor bound factor value found for " + value );
-    // if ( efFactorValue.getExperimentalFactor() == null )
-    // log.info( "experimental-factor bound factor value " + efFactorValue
-    // + " has null experimental factor" );
-    // factorValues.add( efFactorValue );
-    // }
-    // bm.setFactorValues( factorValues );
-    // log.info( "biomaterial " + bm + " has " + factorValues.size() + " factor values: " + factorValues );
-    // }
-    // }
-    // }
-
-    // private FactorValue findMatchingFactorValue( FactorValue needle, Collection<ExperimentalFactor> haystack ) {
-    // for ( ExperimentalFactor factor : haystack ) {
-    // for ( FactorValue factorValue : factor.getFactorValues() ) {
-    // // TODO find a better way to equate factor values
-    // log.info( factorValue );
-    // if ( needle.toString().equals( factorValue.toString() ) ) return factorValue;
-    // }
-    // }
-    // return null;
-    // }
-
+    /**
+     * Populate the quantitation types in the EE.
+     */
     private void fillInExpressionExperimentQuantitationTypes() {
         ExpressionExperiment ee = null;
         for ( Object object : convertedResult ) {
@@ -191,11 +159,16 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
         assert ee != null;
 
         for ( Object object : convertedResult ) {
-            if ( object instanceof QuantitationType ) ee.getQuantitationTypes().add( ( QuantitationType ) object );
+            if ( object instanceof QuantitationType ) {
+                log.info( object );
+                ee.getQuantitationTypes().add( ( QuantitationType ) object );
+            }
         }
-
     }
 
+    /**
+     * Check that we have a valid structure.
+     */
     private void validate() {
         ExpressionExperiment ee = null;
         for ( Object object : convertedResult ) {
@@ -220,9 +193,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
                     }
                 }
 
-                for ( QuantitationType qt : ee.getQuantitationTypes() ) {
-                    // log.info( qt );
-                }
+                // for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+                // log.info( qt );
+                // }
 
                 if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 0 ) {
                     for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
@@ -258,15 +231,15 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
         Map<String, Collection<org.biomage.BioAssay.BioAssay>> array2BioAssay = this.mageConverterHelper
                 .getArray2BioAssay();
 
-        log.info( array2BioAssay.size() + " assays, in principle" );
-
-        if ( ee.getBioAssays().size() < array2BioAssay.size() ) {
-            throw new IllegalStateException(
-                    "Something went wrong, the experiment has fewer bioassays than arrays used." );
+        if ( ee.getBioAssays().size() == 0 ) {
+            throw new IllegalStateException( "No bioassays" );
         }
+
+        ArrayDesign singleArrayDesign = checkArrayDesigns( ee, array2BioAssay );
 
         Collection<String> usedArrayIds = new HashSet<String>();
         for ( BioAssay ba : ee.getBioAssays() ) {
+
             if ( topLevelBioAssayIdentifiers.size() > 0 && !topLevelBioAssayIdentifiers.contains( ba.getName() ) ) {
                 log.info( "Removing bioassay with id=" + ba.getName() + ", it is not listed as being 'top level' (has "
                         + ba.getSamplesUsed().size() + " samplesUsed)" );
@@ -280,22 +253,41 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
                         .getName() ) );
 
                 if ( !keep ) {
-                    for ( String arrayId : array2BioAssay.keySet() ) {
-                        Collection<org.biomage.BioAssay.BioAssay> assay4Array = array2BioAssay.get( arrayId );
-                        assert assay4Array.size() > 0;
 
-                        for ( org.biomage.BioAssay.BioAssay arrayBa : assay4Array ) {
-                            if ( arrayBa.getIdentifier().equals( ba.getName() ) ) {
+                    if ( array2BioAssay.size() == 0 ) {
+                        /*
+                         * The ArrayDesign package was missing from the MAGE-ML. We won't be able to check. We have to
+                         * assume it's okay, but the array design might be null, so we try to set it if we only got a
+                         * single array design in the first place.
+                         */
+                        if ( ba.getArrayDesignUsed() == null ) {
+                            // Not sure this ever works.
+                            if ( singleArrayDesign == null ) {
+                                log.warn( "No array design available for " + ba );
+                            }
 
-                                if ( usedArrayIds.contains( arrayId ) ) {
-                                    log.warn( "Already have a BioAssay for array with id= " + arrayId );
+                            ba.setArrayDesignUsed( singleArrayDesign );
+                        }
+
+                        keep = true;
+                    } else {
+                        for ( String arrayId : array2BioAssay.keySet() ) {
+                            Collection<org.biomage.BioAssay.BioAssay> assay4Array = array2BioAssay.get( arrayId );
+                            assert assay4Array.size() > 0;
+
+                            for ( org.biomage.BioAssay.BioAssay arrayBa : assay4Array ) {
+                                if ( arrayBa.getIdentifier().equals( ba.getName() ) ) {
+
+                                    if ( usedArrayIds.contains( arrayId ) ) {
+                                        log.warn( "Already have a BioAssay for array with id= " + arrayId );
+                                    }
+
+                                    // definitely keep;
+                                    log.info( "Final bioassay on array " + arrayId + " ==> " + ba );
+                                    keep = true;
+                                    usedArrayIds.add( arrayId );
+                                    break;
                                 }
-
-                                // definitely keep;
-                                log.info( "Final bioassay on array " + arrayId + " ==> " + ba );
-                                keep = true;
-                                usedArrayIds.add( arrayId );
-                                break;
                             }
                         }
                     }
@@ -327,6 +319,50 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
                 ba.setName( name );
             }
         }
+
+    }
+
+    /**
+     * @param ee
+     * @param array2BioAssay
+     * @return
+     */
+    private ArrayDesign checkArrayDesigns( ExpressionExperiment ee,
+            Map<String, Collection<org.biomage.BioAssay.BioAssay>> array2BioAssay ) {
+
+        if ( array2BioAssay.size() == 0 ) {
+
+            /*
+             * I'm not sure this has ever been triggered.
+             */
+            log.info( ee.getBioAssays().size() + " bioassays associated with ee before cleanup." );
+            Collection<ArrayDesign> availableArrayDesigns = new HashSet<ArrayDesign>();
+            for ( Object convertedObject : this.convertedResult ) {
+                if ( convertedObject instanceof ArrayDesign ) {
+                    log.info( convertedObject );
+                    availableArrayDesigns.add( ( ArrayDesign ) convertedObject );
+                }
+            }
+
+            if ( availableArrayDesigns.size() > 1 ) {
+                throw new IllegalStateException( "More than one array design without acceptable mapping to bioassays." );
+            } else if ( availableArrayDesigns.size() == 0 ) {
+                log.warn( "No arrayDesigns and none associated with the bioassays" );
+                return null;
+            }
+            return availableArrayDesigns.iterator().next();
+
+        }
+
+        if ( ee.getBioAssays().size() < array2BioAssay.size() ) {
+            throw new IllegalStateException(
+                    "Something went wrong, the experiment has fewer bioassays than arrays used. Expected "
+                            + array2BioAssay.size() + ", got " + ee.getBioAssays().size() );
+        }
+
+        log.info( array2BioAssay.size() + " assays based on array count; " + ee.getBioAssays().size()
+                + " bioassays associated with ee before cleanup." );
+        return null;
 
     }
 
@@ -381,7 +417,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
      * @param type
      * @return
      */
-    private Collection<Object> getConvertedDataForType( Class type, Collection<?> mageDomainObjects ) {
+    private Collection<Object> getConvertedDataForType( Class<? extends Object> type, Collection<?> mageDomainObjects ) {
         if ( mageDomainObjects == null ) return null;
 
         Collection<Object> localResult = new ArrayList<Object>();
@@ -409,18 +445,6 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
     public Object convert( Object mageObject ) {
         if ( mageObject == null ) return null;
         return mageConverterHelper.convert( mageObject );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.loader.expression.mage.MageMLConverterHelper#getBioAssayDimensions()
-     */
-    public BioAssayDimensions getBioAssayDimensions() {
-        return this.mageConverterHelper.getBioAssayDimensions();
-    }
-
-    public Collection<BioAssay> getQuantitationTypeBioAssays() {
-        return this.mageConverterHelper.getQuantitationTypeBioAssays();
     }
 
 }

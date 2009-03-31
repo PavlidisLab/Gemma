@@ -60,7 +60,6 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.ArchiveFetcher#deleteAfterUnpack(boolean)
      */
     public void setDeleteAfterUnpack( boolean doDelete ) {
@@ -69,7 +68,6 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Fetcher#setForce(boolean)
      */
     @Override
@@ -121,14 +119,13 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
      * @return
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     protected Collection<LocalFile> listFiles( String remoteFile, File newDir, Collection<LocalFile> result )
             throws IOException {
 
         if ( result == null ) result = new HashSet<LocalFile>();
-        for ( File file : ( Collection<File> ) FileTools.listDirectoryFiles( newDir ) ) {
+        for ( File file : FileTools.listDirectoryFiles( newDir ) ) {
             if ( excludePattern != null && file.getPath().endsWith( excludePattern ) ) continue;
-            log.info( "\t" + file.getCanonicalPath() );
+            // log.info( "\t" + file.getCanonicalPath() );
             LocalFile newFile = LocalFile.Factory.newInstance();
             newFile.setLocalURL( file.toURI().toURL() );
             newFile.setRemoteURL( new File( remoteFile ).toURI().toURL() );
@@ -137,7 +134,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
         }
 
         // recurse into subdirectories.
-        for ( File file : ( Collection<File> ) FileTools.listSubDirectories( newDir ) ) {
+        for ( File file : FileTools.listSubDirectories( newDir ) ) {
             listFiles( remoteFile, file, result );
         }
         return result;

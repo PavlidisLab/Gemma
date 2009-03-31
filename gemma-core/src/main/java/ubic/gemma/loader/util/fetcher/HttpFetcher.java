@@ -51,36 +51,56 @@ public class HttpFetcher extends AbstractFetcher {
     private static final int INFO_UPDATE_INTERVAL = 3000;
 
     /**
-     * The identifier is the URL for the file.
-     * 
+     * @pram url
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
-    public Collection<LocalFile> fetch( String identifier ) {
-        log.info( "Seeking " + identifier + " file " );
+    public Collection<LocalFile> fetch( String url ) {
+        return fetch( url, null );
+    }
+
+    /**
+     * @param url
+     * @param outputFileName
+     * @return
+     */
+    public Collection<LocalFile> fetch( String url, String outputFileName ) {
+        log.info( "Seeking " + url );
 
         this.localBasePath = ConfigUtils.getDownloadPath();
 
         try {
 
-            String host = ( new URL( identifier ) ).getHost();
-            String filePath = ( new URL( identifier ) ).getPath();
+            String host = ( new URL( url ) ).getHost();
+            String filePath = ( new URL( url ) ).getPath();
 
             if ( StringUtils.isBlank( host ) ) {
-                throw new IllegalArgumentException( identifier + " was not parsed into a valid URL" );
+                throw new IllegalArgumentException( url + " was not parsed into a valid URL" );
             }
 
             if ( StringUtils.isBlank( filePath ) ) {
                 filePath = "index.html";
             }
+
+            filePath = url.replace( host, "" );
+            filePath = filePath.replace( "http://", "" );
+            filePath = filePath.replace( '?', '_' );
+            filePath = filePath.replace( '=', '_' );
+            filePath = filePath.replace( '&', '_' );
             filePath = filePath.replace( '/', '_' );
             filePath = filePath.replaceFirst( "^_", "" );
 
             File newDir = mkdir( host );
-            final String outputFileName = formLocalFilePath( filePath, newDir );
+
+            final String output;
+            if ( outputFileName == null ) {
+                output = formLocalFilePath( filePath, newDir );
+            } else {
+                output = outputFileName;
+            }
 
             // FIXME if the file doesn't exist, we still get a response with a 404.
-            FutureTask<Boolean> future = this.defineTask( outputFileName, identifier );
-            return this.doTask( future, identifier, outputFileName );
+            FutureTask<Boolean> future = this.defineTask( output, url );
+            return this.doTask( future, url, output );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -138,7 +158,7 @@ public class HttpFetcher extends AbstractFetcher {
                 try {
                     Thread.sleep( INFO_UPDATE_INTERVAL );
                 } catch ( InterruptedException ie ) {
-                    
+
                 }
                 log.info( ( new File( outputFileName ).length() + " bytes read" ) );
             }
@@ -175,7 +195,6 @@ public class HttpFetcher extends AbstractFetcher {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
      */
     @Override
@@ -185,7 +204,6 @@ public class HttpFetcher extends AbstractFetcher {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
      */
     @Override

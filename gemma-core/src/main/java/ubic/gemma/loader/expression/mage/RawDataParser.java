@@ -88,7 +88,6 @@ public class RawDataParser implements FileCombiningParser {
      * @param dimension2
      * @param dimensiom
      */
-    @SuppressWarnings("unchecked")
     public RawDataParser( List<BioAssay> bioAssays, BioAssayDimensions dimensions ) {
         super();
         if ( bioAssays == null || bioAssays.size() == 0 || dimensions == null )
@@ -114,7 +113,6 @@ public class RawDataParser implements FileCombiningParser {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Parser#getResults()
      */
     public Collection<Object> getResults() {
@@ -147,7 +145,6 @@ public class RawDataParser implements FileCombiningParser {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.FileCombiningParser#parse(java.util.List)
      */
     public void parse( List<File> files ) throws IOException {
@@ -163,7 +160,6 @@ public class RawDataParser implements FileCombiningParser {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
     public Object parseOneLine( String line ) {

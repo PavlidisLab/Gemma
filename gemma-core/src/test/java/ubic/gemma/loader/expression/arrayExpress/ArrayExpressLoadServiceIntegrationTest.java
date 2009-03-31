@@ -18,30 +18,178 @@
  */
 package ubic.gemma.loader.expression.arrayExpress;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
- * These are full-sized tests (but not too big)
+ * These are full-sized tests (but not too big), we don't actually load it into the db, just test the download and
+ * parsing, conversion and merge with processed data.
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTest {
 
+    /**
+     * This only works if you have GPL81 fully loaded!!
+     * 
+     * @throws Exception
+     */
     final public void testLoad() throws Exception {
         endTransaction();
-        // Affymetrix GeneChip® Murine Genome U74Av2 [MG_U74Av2] = GPL81   
+        // Affymetrix GeneChip® Murine Genome U74Av2 [MG_U74Av2] = GPL81
+        ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        ArrayDesign ad = ads.findByShortName( "GPL81" );
+
+        if ( ads.getCompositeSequenceCount( ad ) < 12000 ) {
+            log.warn( "Skipping integration test, GPL81 is not fully loaded" );
+            return;
+        }
+
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
-        ExpressionExperiment experiment = svc.load( "E-MEXP-955", "GPL81", false );
+        ExpressionExperiment experiment = svc.load( "E-MEXP-955", "GPL81", false, false );
         assertNotNull( experiment );
     }
 
-    final public void testLoadWithAEDesign() throws Exception {
+    /**
+     * sample name problem...this fails.
+     * 
+     * @throws Exception
+     */
+    final public void testLoadWithAEDesign1() throws Exception {
         endTransaction();
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
-        ExpressionExperiment experiment = svc.load( "E-MEXP-297", null, true ); // uses A-MEXP-153
+        ExpressionExperiment experiment = svc.load( "E-MEXP-297", null, true, false ); // uses A-MEXP-153
         assertNotNull( experiment );
+
+        Set<String> probeNames = new HashSet<String>();
+        for ( BioAssay ba : experiment.getBioAssays() ) {
+            ArrayDesign ad = ba.getArrayDesignUsed();
+            assertNotNull( ad );
+            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+                probeNames.add( cs.getName() );
+            }
+        }
+
+        assertEquals( 1000, experiment.getRawExpressionDataVectors().size() );
+        for ( DesignElementDataVector dedv : experiment.getRawExpressionDataVectors() ) {
+            assertTrue( probeNames.contains( dedv.getDesignElement().getName() ) );
+        }
+    }
+
+    /**
+     * Affy platform, easy
+     * 
+     * @throws Exception
+     */
+    final public void testLoadWithAEDesign2() throws Exception {
+        endTransaction();
+        ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
+        ExpressionExperiment experiment = svc.load( "E-MEXP-955", null, true, false );
+        assertNotNull( experiment );
+
+        Set<String> probeNames = new HashSet<String>();
+        for ( BioAssay ba : experiment.getBioAssays() ) {
+            ArrayDesign ad = ba.getArrayDesignUsed();
+            assertNotNull( ad );
+            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+                probeNames.add( cs.getName() );
+            }
+        }
+
+        assertEquals( 12488, experiment.getRawExpressionDataVectors().size() );
+        for ( DesignElementDataVector dedv : experiment.getRawExpressionDataVectors() ) {
+            assertTrue( probeNames.contains( dedv.getDesignElement().getName() ) );
+        }
+    }
+
+    /**
+     * works...
+     * 
+     * @throws Exception
+     */
+    final public void testLoadWithAEDesign3() throws Exception {
+        endTransaction();
+        ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
+        ExpressionExperiment experiment = svc.load( "E-TABM-631", null, true, false ); // uses A-MEXP-691, Illumina
+        assertNotNull( experiment );
+
+        Set<String> probeNames = new HashSet<String>();
+        for ( BioAssay ba : experiment.getBioAssays() ) {
+            ArrayDesign ad = ba.getArrayDesignUsed();
+            assertNotNull( ad );
+            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+                probeNames.add( cs.getName() );
+            }
+        }
+
+        assertEquals( 7, experiment.getQuantitationTypes().size() );
+        assertEquals( 331072, experiment.getRawExpressionDataVectors().size() );
+        for ( DesignElementDataVector dedv : experiment.getRawExpressionDataVectors() ) {
+            assertTrue( probeNames.contains( dedv.getDesignElement().getName() ) );
+        }
+    }
+
+    /**
+     * A-SMDB-681 - SMD Mus musculus Array, spotted. QT names a pain, array design not referenced from the MAGE-ML.
+     * 
+     * @throws Exception
+     */
+    final public void testLoadWithAEDesign4() throws Exception {
+        endTransaction();
+        ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
+        ExpressionExperiment experiment = svc.load( "E-SMDB-1853", null, true, false );
+        assertNotNull( experiment );
+
+        Set<String> probeNames = new HashSet<String>();
+        for ( BioAssay ba : experiment.getBioAssays() ) {
+            ArrayDesign ad = ba.getArrayDesignUsed();
+            assertNotNull( ad );
+            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+                probeNames.add( cs.getName() );
+            }
+        }
+
+        assertEquals( 10, experiment.getQuantitationTypes().size() );
+        assertEquals( 331072, experiment.getRawExpressionDataVectors().size() );
+        for ( DesignElementDataVector dedv : experiment.getRawExpressionDataVectors() ) {
+            assertTrue( probeNames.contains( dedv.getDesignElement().getName() ) );
+        }
+    }
+
+    /**
+     * E-MEXP-740. Affy design, but good test anyway
+     * 
+     * @throws Exception
+     */
+    final public void testLoadWithAEDesign5() throws Exception {
+        endTransaction();
+        ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
+        ExpressionExperiment experiment = svc.load( "E-MEXP-740", null, true, false );
+        assertNotNull( experiment );
+
+        Set<String> probeNames = new HashSet<String>();
+        for ( BioAssay ba : experiment.getBioAssays() ) {
+            ArrayDesign ad = ba.getArrayDesignUsed();
+            assertNotNull( ad );
+            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+                probeNames.add( cs.getName() );
+            }
+        }
+
+        assertEquals( 1, experiment.getQuantitationTypes().size() );
+        assertEquals( 12625, experiment.getRawExpressionDataVectors().size() );
+        for ( DesignElementDataVector dedv : experiment.getRawExpressionDataVectors() ) {
+            assertTrue( probeNames.contains( dedv.getDesignElement().getName() ) );
+        }
     }
 
 }

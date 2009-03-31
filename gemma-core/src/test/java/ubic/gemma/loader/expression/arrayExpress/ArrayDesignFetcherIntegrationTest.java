@@ -32,19 +32,21 @@ public class ArrayDesignFetcherIntegrationTest extends TestCase {
     /**
      * Test method for {@link ubic.gemma.loader.expression.arrayExpress.ArrayDesignFetcher#fetch(java.lang.String)}.
      */
-    public final void testFetch() {
+    public final void testFetch() throws Exception {
         ArrayDesignFetcher fetcher = new ArrayDesignFetcher();
         Collection<LocalFile> results = fetcher.fetch( "A-AFFY-6" );
-        assertEquals( 2, results.size() );
+        assertEquals( 1, results.size() );
+
     }
 
     /**
      * This has no composite sequences - just reporters.
      */
-    public final void testFetchNoCompositeSequences() {
+    public final void testFetch2() throws Exception {
         ArrayDesignFetcher fetcher = new ArrayDesignFetcher();
         Collection<LocalFile> results = fetcher.fetch( "A-FPMI-3" );
         assertEquals( 1, results.size() );
+
     }
 
 }

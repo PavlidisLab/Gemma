@@ -69,11 +69,9 @@ public class MageMLPreprocessor implements Preprocessor {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Preprocessor#preprocess(java.util.List,
-     *      ubic.gemma.loader.expression.mage.BioAssayDimensions)
+     * ubic.gemma.loader.expression.mage.BioAssayDimensions)
      */
-    @SuppressWarnings("unchecked")
     public void preprocess( List<BioAssay> bioAssays, BioAssayDimensions dimensions ) throws IOException {
 
         rdp.setDimensions( dimensions );
@@ -282,7 +280,6 @@ public class MageMLPreprocessor implements Preprocessor {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.expression.mage.RawDataParser#setSelector(int)
      */
     public void setSelector( int selector ) {

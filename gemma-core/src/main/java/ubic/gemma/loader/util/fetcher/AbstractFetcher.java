@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.FutureTask;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -54,7 +55,7 @@ public abstract class AbstractFetcher implements Fetcher {
      */
     protected boolean allowUseExisting = true;
 
-    protected static final int INFO_UPDATE_INTERVAL = 2000;
+    protected static final int INFO_UPDATE_INTERVAL = 5000;
 
     protected abstract void initConfig();
 
@@ -85,13 +86,43 @@ public abstract class AbstractFetcher implements Fetcher {
                 boolean cancelled = future.cancel( true );
                 if ( cancelled ) {
                     log.info( "Download stopped successfully." );
-                } else {
-                    throw new RuntimeException( "Cancellation failed." );
+                    return false;
                 }
+                throw new RuntimeException( "Cancellation failed." );
+
             }
 
             if ( log.isInfoEnabled() ) {
                 log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param future
+     * @return true if it finished normally, false if it was cancelled.
+     */
+    protected boolean waitForDownload( FutureTask<Boolean> future ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        long lastTime = timer.getTime();
+        while ( !future.isDone() && !future.isCancelled() ) {
+            try {
+                Thread.sleep( INFO_UPDATE_INTERVAL );
+            } catch ( InterruptedException ie ) {
+                log.info( "Cancelling download" );
+                boolean cancelled = future.cancel( true );
+                if ( cancelled ) {
+                    log.info( "Download stopped successfully." );
+                    return false;
+                }
+                throw new RuntimeException( "Cancellation failed." );
+
+            }
+
+            if ( log.isInfoEnabled() && timer.getTime() > ( lastTime + 2000L ) ) {
+                log.info( "Waiting ... " + timer.getTime() + "ms elapsed...." );
             }
         }
         return true;

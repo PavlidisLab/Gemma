@@ -74,7 +74,7 @@ public class MgedOntologyHelper {
      * 
      * @return
      */
-    public Collection getClassNames() {
+    public Collection<String> getClassNames() {
         return this.classIndex.keySet();
     }
 
@@ -732,50 +732,40 @@ public class MgedOntologyHelper {
 
         private boolean withinEnum = false;
 
-        @SuppressWarnings("unused")
         public void characters( char[] ch, int start, int length ) {
         }
 
         public void endDocument() {
         }
 
-        @SuppressWarnings("unused")
         public void endElement( String namespaceURI, String localName, String qName ) {
             path.pop();
         }
 
-        @SuppressWarnings("unused")
         public void endPrefixMapping( String prefix ) {
         }
 
-        @SuppressWarnings("unused")
         public void error( SAXParseException exception ) {
         }
 
-        @SuppressWarnings("unused")
         public void fatalError( SAXParseException exception ) {
         }
 
-        @SuppressWarnings("unused")
         public void ignorableWhitespace( char[] ch, int start, int length ) {
         }
 
-        @SuppressWarnings("unused")
         public void processingInstruction( String target, String data ) {
         }
 
-        @SuppressWarnings("unused")
         public void setDocumentLocator( Locator locator ) {
         }
 
-        @SuppressWarnings("unused")
         public void skippedEntity( String name ) {
         }
 
         public void startDocument() {
         }
 
-        @SuppressWarnings("unused")
         public void startElement( String namespaceURI, String localName, String qName, Attributes atts ) {
             path.push( qName );
             if ( qName.equals( "daml:Class" ) ) {
@@ -857,11 +847,9 @@ public class MgedOntologyHelper {
             }
         }
 
-        @SuppressWarnings("unused")
         public void startPrefixMapping( String prefix, String uri ) {
         }
 
-        @SuppressWarnings("unused")
         public void warning( SAXParseException exception ) {
         }
 
@@ -890,9 +878,9 @@ public class MgedOntologyHelper {
 
         public String getAsString() {
             String result = "";
-            Iterator it = list.iterator();
+            Iterator<String> it = list.iterator();
             while ( it.hasNext() ) {
-                result += ( String ) it.next();
+                result += it.next();
                 if ( it.hasNext() ) {
                     result += "/";
                 }

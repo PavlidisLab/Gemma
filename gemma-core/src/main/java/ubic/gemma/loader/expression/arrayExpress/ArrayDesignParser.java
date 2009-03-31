@@ -27,7 +27,8 @@ import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
- * Parses the flat files from ArrayExpress.
+ * Parses the flat files from ArrayExpress. Format is a little complicated. Some have reporters, some
+ * compositeSequences.
  * 
  * @author pavlidis
  * @version $Id$
@@ -46,13 +47,129 @@ public class ArrayDesignParser extends BasicLineParser<CompositeSequence> {
         return results;
     }
 
+    boolean isSpotted = false;
+    Integer reporterNameField = null;
+    Integer csNameField = null;
+    Integer csIdentifierField = null;
+    Integer reporterIdentifierField = null;
+    Integer sequenceField = null;
+    Integer reporterDescriptionField = null;
+    Integer csDescriptionField = null;
+
+    boolean useReporterId = false;
+
+    /**
+     * @param useReporterId the useReporterId to set
+     */
+    public void setUseReporterId( boolean useReporterId ) {
+        this.useReporterId = useReporterId;
+    }
+
+    @SuppressWarnings("null")
     public CompositeSequence parseOneLine( String line ) {
+
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
         if ( fields.length < 2 ) return null;
+
+        if ( csNameField == null ) {
+            parseHeader( fields );
+            return null;
+        }
+
         CompositeSequence cs = CompositeSequence.Factory.newInstance();
-        cs.setName( fields[1] );
-        cs.setDescription( fields[0] );
+
+        String csName = null;
+        // String reporterName = null;
+        String csDescription = null;
+        String reporterDescription = null;
+        // String sequence = null;
+        String reporterIdentifier = null;
+        String csIdentifier = null;
+
+        if ( csIdentifierField != null ) {
+            csIdentifier = fields[csIdentifierField];
+        }
+
+        if ( csNameField != null ) {
+            csName = fields[csNameField];
+        } else if ( csIdentifier != null ) {
+            csName = csIdentifier;
+        }
+
+        // if ( reporterNameField != null ) {
+        // reporterName = fields[reporterNameField];
+        // }
+
+        if ( csDescriptionField != null ) {
+            csDescription = fields[csDescriptionField];
+        }
+
+        if ( reporterDescriptionField != null ) {
+            reporterDescription = fields[reporterDescriptionField];
+        }
+
+        if ( csIdentifierField != null ) {
+            csIdentifier = getUnqualifiedIdentifier( fields[csIdentifierField] );
+        }
+
+        if ( reporterIdentifierField != null ) {
+            reporterIdentifier = getUnqualifiedIdentifier( fields[reporterIdentifierField] );
+        }
+
+        // if ( sequenceField != null ) {
+        // sequence = fields[sequenceField];
+        // }
+
+        String probeName = null;
+        String probeDescription = null;
+
+        if ( this.useReporterId || csName.equals( "-" ) ) {
+            probeName = reporterIdentifier;
+        } else {
+            probeName = csIdentifier;
+        }
+
+        if ( csDescription != null ) {
+            probeDescription = csDescription.equals( "-" ) ? "" : csDescription;
+        } else if ( reporterDescription != null ) {
+            probeDescription = reporterDescription.equals( "-" ) ? "" : reporterDescription;
+        }
+
+        cs.setName( probeName );
+        cs.setDescription( probeDescription );
         return cs;
+    }
+
+    private String getUnqualifiedIdentifier( String identifier ) {
+        return identifier.substring( identifier.lastIndexOf( ':' ) + 1, identifier.length() );
+    }
+
+    private void parseHeader( String[] fields ) {
+        for ( int i = 0; i < fields.length; i++ ) {
+
+            String field = fields[i];
+
+            if ( field.equalsIgnoreCase( "CompositeSequence Name" ) ) {
+                csNameField = i;
+            } else if ( field.equalsIgnoreCase( "Reporter Identifier" ) ) {
+                reporterIdentifierField = i;
+            } else if ( field.equalsIgnoreCase( "CompositeSequence Identifier" ) ) {
+                csIdentifierField = i;
+            } else if ( field.equalsIgnoreCase( "Reporter Name" ) ) {
+                reporterNameField = i;
+            } else if ( field.equalsIgnoreCase( "Reporter actual Sequence" ) ) {
+                sequenceField = i;
+            } else if ( field.equalsIgnoreCase( "Reporter Comment" ) ) {
+                reporterDescriptionField = i;
+            } else if ( field.equalsIgnoreCase( "CompositeSequence Comment" ) ) {
+                csDescriptionField = i;
+            } else if ( field.equalsIgnoreCase( "MetaColumn" ) ) {
+                isSpotted = true;
+            } else if ( field.equalsIgnoreCase( "" ) ) {
+            }
+
+        }
+
     }
 
 }

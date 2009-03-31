@@ -51,6 +51,15 @@ public class ProcessedDataFileParser extends LineMapParser<String, Map<String, L
     // Array of samples in the order they appear.
     private Object[] samples;
 
+    private boolean usingReporters = false;
+
+    /**
+     * @return the useReporters
+     */
+    public boolean isUsingReporters() {
+        return usingReporters;
+    }
+
     public ProcessedDataFileParser() {
         super();
         results = new HashMap<String, Map<String, List<String>>>();
@@ -93,15 +102,12 @@ public class ProcessedDataFileParser extends LineMapParser<String, Map<String, L
     private Map<String, List<String>> parseDataLine( String[] fields ) {
         String rawProbeNameString = fields[0];
 
-        String compositeSequenceName;
-
-        String[] subFields = rawProbeNameString.split( ":" );
-        compositeSequenceName = subFields[subFields.length - 1];
+        String compositeSequenceName = getUnqualifiedIdentifier( rawProbeNameString );
 
         if ( results.containsKey( compositeSequenceName ) ) {
             /*
              * This is actually okay. We're sometimes parsing multiple files, so the second one + will have the same
-             * names. FIXME we can add a check per file.
+             * names. FIXME we can add a check per file. ALSO some data sets have the same platform more than once.
              */
             // throw new IllegalStateException( "Duplicate compositeSequencename" );
         }
@@ -127,19 +133,31 @@ public class ProcessedDataFileParser extends LineMapParser<String, Map<String, L
     }
 
     /**
+     * @param identifier
+     * @return
+     */
+    private String getUnqualifiedIdentifier( String identifier ) {
+        return identifier.substring( identifier.lastIndexOf( ':' ) + 1, identifier.length() );
+    }
+
+    /**
      * @param header
      */
     private void parseSecondLine( String[] header ) {
         headerMap = new HashMap<String, List<Integer>>();
-        for ( int i = 1; i < header.length; i++ ) {
+        for ( int i = 0; i < header.length; i++ ) {
             String field = header[i];
-            String[] subFields = field.split( ":" );
-            String quantitationType;
-            if ( subFields.length > 1 ) {
-                quantitationType = subFields[1];
-            } else {
-                quantitationType = subFields[0];
+
+            if ( i == 0 ) {
+                if ( field.contains( "Reporter" ) ) {
+                    usingReporters = true;
+                } else {
+                    usingReporters = false;
+                }
+                continue;
             }
+
+            String quantitationType = getUnqualifiedIdentifier( field );
             if ( !headerMap.containsKey( quantitationType ) ) {
                 headerMap.put( quantitationType, new ArrayList<Integer>() );
             }
@@ -151,15 +169,15 @@ public class ProcessedDataFileParser extends LineMapParser<String, Map<String, L
      * @param fields
      */
     private void parseFirstLine( String[] fields ) {
-        List<String> samples = new ArrayList<String>();
+        List<String> s = new ArrayList<String>();
         for ( int i = 1; i < fields.length; i++ ) {
             String sampleName = fields[i];
-            if ( !samples.contains( sampleName ) ) {
-                samples.add( sampleName );
+            if ( !s.contains( sampleName ) ) {
+                s.add( sampleName );
             }
         }
 
-        this.samples = samples.toArray();
+        this.samples = s.toArray();
 
     }
 

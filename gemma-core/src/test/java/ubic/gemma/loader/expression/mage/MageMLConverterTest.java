@@ -515,8 +515,66 @@ public class MageMLConverterTest extends AbstractMageTest {
 
         boolean found = false;
         for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
-            if ( qt.getName().equals( "Signal" ) ) {
+            log.info( qt );
+            if ( qt.getName().equals( "CHPSignal" ) ) {
                 assertEquals( ScaleType.LINEAR, qt.getScale() );
+                assertEquals( PrimitiveType.DOUBLE, qt.getRepresentation() );
+                assertTrue( qt.getIsPreferred() );
+                found = true;
+            }
+        }
+        assertTrue( found );
+
+    }
+
+    /**
+     * Has no array package.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("null")
+    public final void testConvert8() throws Exception {
+        /* invoke mageMLParser */
+        InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
+                + "E-SMDB-1853-Exptset_1853.part.xml" );
+
+        assert mageMLParser != null;
+
+        mageMLParser.parse( istMageExamples );
+
+        /* get results from parsing step */
+        log.info( "Tally:\n" + mageMLParser );
+        Collection<Object> mageObjects = mageMLParser.getResults();
+        log.debug( "number of SDOs: " + mageObjects.size() );
+
+        istMageExamples.close();
+
+        ExpressionExperiment expressionExperiment = null;
+
+        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        log.debug( "number of GDOs: " + gemmaObjects.size() );
+
+        int numExpExp = 0;
+        for ( Object obj : gemmaObjects ) {
+            if ( obj instanceof ExpressionExperiment ) {
+                expressionExperiment = ( ExpressionExperiment ) obj;
+                numExpExp++;
+            }
+            if ( log.isDebugEnabled() ) {
+                log.debug( obj.getClass() + ": " + obj );
+            }
+        }
+
+        assertNotNull( expressionExperiment );
+        assertEquals( 1, numExpExp );
+        assertEquals( 20, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
+
+        boolean found = false;
+        for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
+            if ( qt.getName().equals( "LOG_RAT2N_MEAN" ) ) {
+                assertEquals( ScaleType.LOG2, qt.getScale() );
                 assertEquals( PrimitiveType.DOUBLE, qt.getRepresentation() );
                 assertTrue( qt.getIsPreferred() );
                 found = true;

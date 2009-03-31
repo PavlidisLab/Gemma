@@ -158,8 +158,7 @@ public class DataFileFetcher extends SmdFetcher {
      * 
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
-    @Override
-    @SuppressWarnings("unused")
+    @Override 
     public Collection<LocalFile> fetch( String identifier ) {
         throw new UnsupportedOperationException();
     }

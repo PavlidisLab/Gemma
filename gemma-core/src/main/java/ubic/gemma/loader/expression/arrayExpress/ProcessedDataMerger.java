@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.loader.expression.geo.QuantitationTypeParameterGuesser;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -49,6 +50,10 @@ public class ProcessedDataMerger {
     private static Log log = LogFactory.getLog( ProcessedDataMerger.class.getName() );
     private ByteArrayConverter byteConverter = new ByteArrayConverter();
 
+    private String getUnqualifiedIdentifier( String identifier ) {
+        return identifier.substring( identifier.lastIndexOf( ':' ) + 1, identifier.length() );
+    }
+
     /**
      * @param mageMlResult Result from the MAGE-ML Converter. This should NOT be persisted yet.
      * @param quantitationTypes Obtained from the MAGE-ML Converter.
@@ -62,6 +67,7 @@ public class ProcessedDataMerger {
         Map<String, QuantitationType> qtNameMap = new HashMap<String, QuantitationType>();
         for ( QuantitationType qt : quantitationTypes ) {
             qtNameMap.put( qt.getName(), qt );
+            qtNameMap.put( getUnqualifiedIdentifier( qt.getName() ), qt );
         }
 
         Collection<BioAssay> bioAssays = mageMlResult.getBioAssays();
@@ -104,6 +110,10 @@ public class ProcessedDataMerger {
 
         for ( int i = 0; i < sampleName.length; i++ ) {
             if ( !nameMap.containsKey( sampleName[i] ) ) {
+                log.error( "Sample name doesn't match MAGE-ML! Available names: " );
+                for ( String name : nameMap.keySet() ) {
+                    log.error( name );
+                }
                 throw new IllegalStateException( "Sample name in Processed data " + sampleName[i]
                         + " does not match the MAGE-ML" );
             }
@@ -114,28 +124,27 @@ public class ProcessedDataMerger {
         Collection<QuantitationType> usedQuantitationTypes = new HashSet<QuantitationType>();
         int count = 0;
 
-        boolean warnedAboutMissingQt = false;
+        // boolean warnedAboutMissingQt = false;
         boolean warnedAboutLackOfData = false;
 
         for ( String csName : processedData.keySet() ) {
+
+            if ( StringUtils.isBlank( csName ) ) {
+                continue;
+            }
+
             Map<String, List<String>> data = processedData.get( csName );
             CompositeSequence cs = csNameMap.get( csName );
             if ( cs == null ) {
-                throw new IllegalStateException( "CompositeSequence name in Processed data " + csName
-                        + " does not match the MAGE-ML" );
+                throw new IllegalStateException( "CompositeSequence name '" + csName
+                        + "' in Processed data  does not match the array design" );
             }
 
+            /*
+             * Quantitation types...
+             */
             for ( String qtName : data.keySet() ) {
-                QuantitationType type = qtNameMap.get( qtName );
-                if ( type == null ) {
-                    if ( !warnedAboutMissingQt ) {
-                        log.warn( "QuantitationType name in Processed data '" + qtName
-                                + "' does not match anything in the MAGE-ML; valid choices are: "
-                                + StringUtils.join( qtNameMap.keySet(), ',' ) + "; additional warnings suppressed" );
-                        warnedAboutMissingQt = true;
-                    }
-                    continue;
-                }
+                QuantitationType type = locateOrGenerateQuantitationType( mageMlResult, qtNameMap, qtName );
 
                 usedQuantitationTypes.add( type );
                 List<String> rawData = data.get( qtName );
@@ -166,6 +175,12 @@ public class ProcessedDataMerger {
                 mageMlResult.getRawExpressionDataVectors().add( dv );
             }
 
+            if ( usedQuantitationTypes.size() == 0 ) {
+
+                throw new IllegalStateException(
+                        "No quantitation types were matched between the processed data and the MAGE-ML" );
+            }
+
             if ( ++count % 5000 == 0 ) {
                 log.info( "Processed data for " + count + " composite sequences" );
             }
@@ -184,6 +199,63 @@ public class ProcessedDataMerger {
 
         log.info( "Processed data for " + count + " composite sequences, got "
                 + mageMlResult.getRawExpressionDataVectors().size() + " raw data vectors." );
+    }
+
+    /**
+     * Try to find the qt from the mage-ml otherwise just make one up.
+     * 
+     * @param mageMlResult
+     * @param qtNameMap
+     * @param qtName
+     * @return
+     */
+    private QuantitationType locateOrGenerateQuantitationType( ExpressionExperiment mageMlResult,
+            Map<String, QuantitationType> qtNameMap, String qtName ) {
+        QuantitationType type = qtNameMap.get( qtName );
+        if ( type == null ) {
+
+            /*
+             * Try alternative.
+             */
+            type = qtNameMap.get( getUnqualifiedIdentifier( qtName ) );
+
+            if ( type == null ) {
+
+                // try even harder.
+                boolean foundUniqueMatch = true;
+                for ( String qtmapkey : qtNameMap.keySet() ) {
+                    if ( qtmapkey.contains( qtName ) ) {
+                        if ( type == null ) {
+                            log.debug( "Found possible approximate match to " + qtName + ": " + qtmapkey );
+                            type = qtNameMap.get( qtmapkey );
+                        } else {
+                            foundUniqueMatch = false;
+                        }
+                    }
+                }
+
+                if ( type == null || foundUniqueMatch == false ) {
+
+                    /*
+                     * Damn, just make one up.
+                     */
+                    QuantitationType qt = QuantitationType.Factory.newInstance();
+                    qt.setName( qtName );
+                    QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, qtName, null );
+                    mageMlResult.getQuantitationTypes().add( qt );
+                    type = qt;
+                    //
+                    // if ( !warnedAboutMissingQt ) {
+                    // log.warn( "QuantitationType name in Processed data '" + qtName
+                    // + "' does not uniquely match anything in the MAGE-ML, so one was made up to suit" );
+                    //
+                    // warnedAboutMissingQt = true;
+                    // }
+                }
+                // continue;
+            }
+        }
+        return type;
     }
 
     /**

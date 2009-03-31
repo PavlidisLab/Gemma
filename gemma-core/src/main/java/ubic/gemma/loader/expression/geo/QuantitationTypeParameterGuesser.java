@@ -280,10 +280,13 @@ public class QuantitationTypeParameterGuesser {
         isPreferredNamePatterns.add( "dchip" );
         isPreferredNamePatterns.add( "chpsignal" );
         isPreferredNamePatterns.add( "signal" );
+        isPreferredNamePatterns.add( ".*?log_rat2n_mean" );
 
     }
 
     /**
+     * Determine if a quanttiation type is 'preferred'.
+     * 
      * @param qt
      * @return
      */
@@ -293,7 +296,6 @@ public class QuantitationTypeParameterGuesser {
         // log.info( qt + " is not normalized " );
         // return false; // definitely not
         // }
-
         String name = qt.getName().toLowerCase();
         for ( String patt : isPreferredNamePatterns ) {
             if ( name.matches( patt ) ) {
@@ -591,7 +593,14 @@ public class QuantitationTypeParameterGuesser {
             Object exampleValue ) {
 
         String namelc = name.toLowerCase();
-        String descriptionlc = description.toLowerCase();
+
+        String descriptionlc = null;
+
+        if ( description != null ) {
+            descriptionlc = description.toLowerCase();
+        } else {
+            descriptionlc = "";
+        }
 
         /*
          * Here are our default values.
@@ -625,7 +634,7 @@ public class QuantitationTypeParameterGuesser {
             rType = PrimitiveType.INT;
         }
 
-        if ( name.contains( "Probe ID" ) || description.equalsIgnoreCase( "Probe Set ID" )
+        if ( name.contains( "Probe ID" ) || descriptionlc.equalsIgnoreCase( "Probe Set ID" )
                 || name.equals( "experiment name" ) ) {
             /*
              * special case...not a quantitation type.
@@ -635,7 +644,7 @@ public class QuantitationTypeParameterGuesser {
             gType = GeneralType.CATEGORICAL;
         }
 
-        if ( description.contains( "qualitative" ) ) {
+        if ( descriptionlc.contains( "qualitative" ) ) {
             gType = GeneralType.CATEGORICAL;
         }
 
