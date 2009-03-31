@@ -49,31 +49,35 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected static final int NUM_BINS = 2048;
     protected static final int HALF_BIN = NUM_BINS / 2;
     protected static final Log log = LogFactory.getLog( MatrixRowPairPearsonAnalysis.class );
-    protected CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
-    protected int minSamplesToKeepCorrelation = 0;
-    protected double storageThresholdValue;
-    protected ObjectArrayList keepers = null;
-    protected BitMatrix used = null;
-    protected int numMissing;
-    protected double globalTotal = 0.0; // used to store the running total of the matrix values.
-    protected double globalMean = 0.0; // mean of the entire distribution.
-    protected int numVals = 0; // number of values actually stored in the matrix
+
     protected ExpressionDataDoubleMatrix dataMatrix;
-
-    protected boolean[] hasGenesCache;
-    protected Map<ExpressionDataMatrixRowElement, DesignElement> rowMapCache = new HashMap<ExpressionDataMatrixRowElement, DesignElement>();
-    protected int minNumUsed = 3;
-
-    protected boolean[] hasMissing = null;
-    protected double upperTailThreshold = 0.0;
-    protected boolean useAbsoluteValue = false;
-    protected double lowerTailThreshold = 0.0;
-    protected double pValueThreshold = 0.0;
-    protected boolean histogramIsFilled = false;
-    protected Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = null;
-    protected Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
-
     protected int[] fastHistogram = new int[NUM_BINS];
+    protected Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
+    protected double globalMean = 0.0; // mean of the entire distribution.
+    protected double globalTotal = 0.0; // used to store the running total of the matrix values.
+    protected boolean[] hasGenesCache;
+    protected boolean[] hasMissing = null;
+    protected boolean histogramIsFilled = false;
+    protected ObjectArrayList keepers = null;
+    protected double lowerTailThreshold = 0.0;
+
+    protected int minNumUsed = 3;
+    protected int minSamplesToKeepCorrelation = 0;
+    protected int numMissing;
+
+    protected int numVals = 0; // number of values actually stored in the matrix
+    protected Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = null;
+    protected double pValueThreshold = 0.0;
+    protected CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
+    protected Map<ExpressionDataMatrixRowElement, DesignElement> rowMapCache = new HashMap<ExpressionDataMatrixRowElement, DesignElement>();
+    protected double storageThresholdValue;
+    protected double upperTailThreshold = 0.0;
+
+    protected boolean useAbsoluteValue = false;
+
+    protected BitMatrix used = null;
+
+    protected boolean usePvalueThreshold = true;
     private int numUniqueGenes = 0;
 
     private boolean omitNegativeCorrelationLinks = false;
@@ -125,6 +129,13 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         // bin 1024 = correlation of 0.0 1024/1024 - 1 = 0
         // bin 0 = correlation of -1.0 : 0/1024 - 1 = -1
         return ( ( double ) i / HALF_BIN ) - 1.0;
+    }
+
+    /**
+     * @return the usePvalueThreshold
+     */
+    public boolean isUsePvalueThreshold() {
+        return usePvalueThreshold;
     }
 
     /**
@@ -195,6 +206,13 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
+     * @param omitNegativeCorrelationLinks the omitNegativeCorrelationLinks to set
+     */
+    public void setOmitNegativeCorrelationLinks( boolean omitNegativeCorrelationLinks ) {
+        this.omitNegativeCorrelationLinks = omitNegativeCorrelationLinks;
+    }
+
+    /**
      * @param k double
      */
     public void setPValueThreshold( double k ) {
@@ -222,6 +240,13 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      */
     public void setUseAbsoluteValue( boolean k ) {
         useAbsoluteValue = k;
+    }
+
+    /**
+     * @param usePvalueThreshold the usePvalueThreshold to set
+     */
+    public void setUsePvalueThreshold( boolean usePvalueThreshold ) {
+        this.usePvalueThreshold = usePvalueThreshold;
     }
 
     /**
@@ -352,14 +377,14 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         }
 
         if ( upperTailThreshold != 0.0 && c > upperTailThreshold
-                && correctedPvalue( i, j, correl, numused ) < this.pValueThreshold ) {
+                && ( this.usePvalueThreshold && correctedPvalue( i, j, correl, numused ) < this.pValueThreshold ) ) {
 
             keepers.add( new Link( i, j, correl ) );
             return true;
         }
 
         else if ( !useAbsoluteValue && lowerTailThreshold != 0.0 && c < lowerTailThreshold
-                && correctedPvalue( i, j, correl, numused ) < this.pValueThreshold ) {
+                && ( this.usePvalueThreshold && correctedPvalue( i, j, correl, numused ) < this.pValueThreshold ) ) {
             keepers.add( new Link( i, j, correl ) );
             return true;
         }
@@ -477,12 +502,5 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             }
         }
         log.info( "Mapping Stats: " + ArrayUtils.toString( stats ) );
-    }
-
-    /**
-     * @param omitNegativeCorrelationLinks the omitNegativeCorrelationLinks to set
-     */
-    public void setOmitNegativeCorrelationLinks( boolean omitNegativeCorrelationLinks ) {
-        this.omitNegativeCorrelationLinks = omitNegativeCorrelationLinks;
     }
 }

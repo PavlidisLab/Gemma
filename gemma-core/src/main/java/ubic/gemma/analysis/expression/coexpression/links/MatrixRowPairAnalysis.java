@@ -56,6 +56,14 @@ public interface MatrixRowPairAnalysis {
 
     public void setPValueThreshold( double k );
 
+    /**
+     * Default is true; set to false to disable use of the pvalue threshold, in which case only the upper and lower tail
+     * thresholds will be used.
+     * 
+     * @param useIt
+     */
+    public void setUsePvalueThreshold( boolean useIt );
+
     public void setOmitNegativeCorrelationLinks( boolean omitNegativeCorrelationLinks );
 
     public void setDuplicateMap( Map<CompositeSequence, Collection<Collection<Gene>>> m1 );
