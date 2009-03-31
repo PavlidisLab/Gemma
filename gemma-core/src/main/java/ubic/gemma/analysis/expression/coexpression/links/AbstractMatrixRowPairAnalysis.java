@@ -377,14 +377,14 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         }
 
         if ( upperTailThreshold != 0.0 && c > upperTailThreshold
-                && ( this.usePvalueThreshold && correctedPvalue( i, j, correl, numused ) < this.pValueThreshold ) ) {
+                && ( !this.usePvalueThreshold || correctedPvalue( i, j, correl, numused ) < this.pValueThreshold ) ) {
 
             keepers.add( new Link( i, j, correl ) );
             return true;
         }
 
         else if ( !useAbsoluteValue && lowerTailThreshold != 0.0 && c < lowerTailThreshold
-                && ( this.usePvalueThreshold && correctedPvalue( i, j, correl, numused ) < this.pValueThreshold ) ) {
+                && ( !this.usePvalueThreshold || correctedPvalue( i, j, correl, numused ) < this.pValueThreshold ) ) {
             keepers.add( new Link( i, j, correl ) );
             return true;
         }
