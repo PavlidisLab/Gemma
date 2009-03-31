@@ -52,4 +52,12 @@ public class AbstractCLITestCase extends TestCase {
         return path;
     }
 
+    /**
+     * Here to keep auto-test-runners happy (e.g. Eclipse)
+     */
+    public final void testDummy() {
+        assertTrue( true );
+        return;
+    }
+
 }
