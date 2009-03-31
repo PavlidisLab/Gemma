@@ -47,10 +47,11 @@ public class ProbeMapperConfig {
     public String toString() {
         return "# Configuration:\n# blatScoreThreshold=" + this.blatScoreThreshold + "\n# identityThreshold="
                 + this.identityThreshold + "\n# maximumRepeatFraction=" + this.maximumRepeatFraction
-                + "\n# nonSpecificSiteCountThreshold=" + this.nonSpecificSiteCountThreshold + "\n# useRefGene="
-                + this.useRefGene + "\n# useAcembly=" + this.useAcembly + "\n# useNscan=" + this.useNscan
-                + "\n# useEnsembl=" + this.useEnsembl + "\n# useMrnas=" + this.useMrnas + "\n# useMiRNA="
-                + this.useMiRNA + "\n# useEsts=" + this.useEsts + "\n# useKnownGene=" + this.useKnownGene + "\n";
+                + "\n# nonSpecificSiteCountThreshold=" + this.nonSpecificSiteCountThreshold
+                + "\n# minimumExonOverlapFraction=" + this.minimumExonOverlapFraction + "\n# useRefGene=" + this.useRefGene
+                + "\n# useAcembly=" + this.useAcembly + "\n# useNscan=" + this.useNscan + "\n# useEnsembl="
+                + this.useEnsembl + "\n# useMrnas=" + this.useMrnas + "\n# useMiRNA=" + this.useMiRNA + "\n# useEsts="
+                + this.useEsts + "\n# useKnownGene=" + this.useKnownGene + "\n";
 
     }
 
