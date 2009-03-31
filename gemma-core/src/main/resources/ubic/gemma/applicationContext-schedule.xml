@@ -19,7 +19,7 @@
 				<ref local="arrayDesignReportTrigger"/>
 				<ref local="expressionExperimentReportTrigger"/>
 				<ref local="whatsNewTrigger"/>
-				<ref local="hibernateStatsTrigger"/>
+			<!--	<ref local="hibernateStatsTrigger"/> Functionality now provided by the monitor page. -->
 				<ref local="gene2CsUpdateTrigger"/>
 			</list>
 		</property>
@@ -80,17 +80,17 @@
 			<value>0 40 0 ? * *</value><!-- daily at 00:40 (should only update if it needs to) -->
 		</property>
 	</bean>
-	<bean id="hibernateStatsTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	<!-- <bean id="hibernateStatsTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
 		<property name="jobDetail">
 			<ref bean="hibernateStatsJobDetail"/>
 		</property>
 		<property name="repeatInterval">
-			<value>1800000</value> <!-- every 30 minutes -->
+			<value>1800000</value>  
 		</property>
 		<property name="startDelay">
-			<value>1800000</value><!-- after the first 30 minutes -->
+			<value>1800000</value> 
 		</property>
-	</bean>
+	</bean> -->
 	
 	<!-- Job details -->
 	<bean id="indexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
@@ -127,14 +127,14 @@
 			<value>generateWeeklyReport</value>
 		</property>
 	</bean>
-	<bean id="hibernateStatsJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<!-- <bean id="hibernateStatsJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="hibernateMonitor"/>
 		</property>
 		<property name="targetMethod">
 			<value>getStats</value>
 		</property>
-	</bean>
+	</bean> -->
 	<bean id="gene2CsUpdateJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="tableMaintenanceUtil"/>
