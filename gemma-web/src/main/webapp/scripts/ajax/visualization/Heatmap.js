@@ -33,6 +33,15 @@ var Heatmap = function() {
 	
 		//Creates 1 canvas per row of the heat map
 	function drawMap(vectorObjs,target, colors, config) {
+
+//Attempt to put in load mask failed.  worked but never saw spinner		
+//		Ext.apply(this, {
+//			loadMask : new Ext.LoadMask(target, {
+//				msg : "Constructing HeatMap..."
+//			})
+//		});
+
+		//this.loadMask.show();
 		
 			var binSize = (2*CLIP)/colors.length;
 			var panelSize = target.getWidth() - TRIM;
@@ -98,6 +107,7 @@ var Heatmap = function() {
 					Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + usablePanelSize + "px;font-size:8px");
 				}
 			}
+			//this.loadMask.hide();
 		}
 
 		/**

@@ -1,7 +1,6 @@
 Ext.namespace('Gemma');
 
 Gemma.ZOOM_PLOT_SIZE = 400;	//This constant doesn't get picked up intime from VisualizationWidget.js
-Gemma.HEATMAP_VIEW = false;
 
 Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 	id : 'CoexpressionVisualizationWindow',
@@ -51,18 +50,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 
 	initComponent : function() {
 
-		var template;
-		if (Gemma.HEATMAP_VIEW){
-			template =  new Gemma.HeatmapTemplate('<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
-				'</tpl></tpl>')			
-		}
-		else{
-			template = new Gemma.ProfileTemplate(
-				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
-				'</tpl></tpl>')			
-		}
+		var template = Gemma.getTemplate();
 		
 		this.dv = new Ext.DataView({
 			autoHeight : true,
@@ -72,18 +60,19 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 
 			tpl : template,
 			
-					setTemplate : function(tpl, refresh){
-			this.tpl = tpl;
-			if(refresh){
-				this.refresh();
-			}else{
-				var sel = this.getSelectedIndexes();
-				this.tpl.overwrite(this.el, this.collectData(this.store.getRange(), 0));
-				this.all.fill(Ext.query(this.itemSelector, this.el.dom));
-				this.updateIndexes(0);
-				this.select(sel);
-			}
-		},
+			setTemplate : function(tpl, refresh){
+				//TODO factor this out and create custom DataView (also in DiffExpressionVisualizationWidget)
+				this.tpl = tpl;
+					if(refresh){
+						this.refresh();
+					}else{
+						var sel = this.getSelectedIndexes();
+						this.tpl.overwrite(this.el, this.collectData(this.store.getRange(), 0));
+						this.all.fill(Ext.query(this.itemSelector, this.el.dom));
+						this.updateIndexes(0);
+						this.select(sel);
+					}
+				},
 
 			
 			listeners : {
@@ -154,12 +143,14 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 						genes : genes,
 						label : probe + " (" + geneNames + ")",
 						labelID : probeId,
-						probe : { id : probeId, name : probe},
-						points : coordinateObject,
 						factor : factor,
 						lines : {
 							lineWidth : Gemma.LINE_THICKNESS
-						}
+						},
+						//Needs to be added so switching views work 
+						probe : { id : probeId, name : probe},
+						points : coordinateObject
+
 
 					};
 
@@ -288,30 +279,31 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 	},
 	
 	switchView : function(){
+
+		//TODO: change title in zoompanel (remove red and black info about genes)
+		//TODO: change info on button to relfect curent state of viewing
 		toggleButton = Ext.get("toggleView");
-		//console.log(toggleButton);
 
 		if (Gemma.HEATMAP_VIEW){
 			//toggleButton.setText("HeatMap View");
+//			this.thumbnailPanel.setTitle(queryGene.officialSymbol + " (red) with " + coexpressedGene.officialSymbol
+//				+ " (black)  <br>" + downloadDedvLink);
 			Gemma.HEATMAP_VIEW = false;
 		}
 		else{
 			//toggleButton.setText("Graph View")
+//			this.thumbnailPanel.setTitle(queryGene.officialSymbol + " with " + coexpressedGene.officialSymbol
+//				+ " <br> " + downloadDedvLink);
+				
+			var zoomLegendDiv = $("zoomLegend");
+			if (zoomLegendDiv){
+				zoomLegendDiv.innerHTML = '';
+			}
+			
 			Gemma.HEATMAP_VIEW = true;
 		}
 		
-		var template;
-		if (Gemma.HEATMAP_VIEW){
-			template =  new Gemma.HeatmapTemplate('<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
-				'</tpl></tpl>')			
-		}
-		else{
-			template = new Gemma.ProfileTemplate(
-				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
-				'</tpl></tpl>')			
-		}
+		var template = Gemma.getTemplate();
 		
 		this.dv.setTemplate ( template, false);
 		 

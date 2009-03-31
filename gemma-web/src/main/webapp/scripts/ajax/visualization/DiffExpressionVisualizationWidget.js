@@ -2,6 +2,7 @@ Ext.namespace('Gemma');
 
 Gemma.ZOOM_PLOT_SIZE = 400;
 
+
 Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	id : 'VisualizationDifferentialWindow',
 	closeAction : 'destroy',
@@ -14,6 +15,9 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	stateful : false,
 	
 	initComponent : function() {
+		
+		var template = Gemma.getTemplate();  //get the correct view (heatmap or graph
+			
 		this.dv = new Ext.DataView({
 			autoHeight : true,
 			emptyText : 'Unable to visualize missing data',
@@ -22,11 +26,22 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						readMethod : DEDVController.getDEDVForDiffExVisualization
 					}),
 
-			tpl : new Gemma.ProfileTemplate(
-					'<tpl for="."><tpl for="eevo">',
-					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}</b>: <small> {[sprintf("%.35s",values.name)]} </small> <i> {[(values.minPvalue < 1) ? sprintf("%.3e", values.minPvalue) : "-"]}  </i></div>',
-					'</tpl></tpl>'),
+			tpl : template, 
+			
+			setTemplate : function(tpl, refresh){
+			//TODO factor this out and create custom DataView (also in CoexpressionExpressionVisualizationWidget)
 
+				this.tpl = tpl;
+					if(refresh){
+						this.refresh();
+					}else{
+						var sel = this.getSelectedIndexes();
+						this.tpl.overwrite(this.el, this.collectData(this.store.getRange(), 0));
+						this.all.fill(Ext.query(this.itemSelector, this.el.dom));
+						this.updateIndexes(0);
+						this.select(sel);
+					}
+				},
 			listeners : {
 				selectionchange : {
 					fn : function(dv, nodes) {
@@ -94,7 +109,11 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 							lineWidth : Gemma.LINE_THICKNESS
 						},
 						labelID : probeId,
-						factor : factor
+						factor : factor,
+						//Need to be added so switching views work
+						probe : { id : probeId, name : probe},
+						points : coordinateObject
+
 					};
 
 					flotrData.push(plotConfig);
@@ -176,7 +195,14 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 							profiles = record.get("profiles");
 						}
 
-						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+						if (Gemma.HEATMAP_VIEW){
+							$('graphzoompanel').innerHTML = '';
+							Heatmap.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+						}
+						else {
+							Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+
+						}
 
 					},
 
@@ -189,20 +215,56 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 							this.show();
 						}
 
-						Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+						if (Gemma.HEATMAP_VIEW){
+							$('graphzoompanel').innerHTML = '';
+							Heatmap.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+						}
+						else {
+							Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+
+						}
 
 					}
 
 				});
 
 		Ext.apply(this, {
-					items : [this.thumbnailPanel, this.zoomPanel]
+					items : [this.thumbnailPanel, this.zoomPanel],
+					buttons : [{
+						text : "Switch View",
+						id : "toggleView",
+						handler : this.switchView.createDelegate(this, [], false)
+						}]
 				});
 
 		Gemma.VisualizationDifferentialWindow.superclass.initComponent.call(this);
 
 	},
 
+	switchView : function(){
+
+		//TODO: change info on button to relfect curent state of viewing
+		toggleButton = Ext.get("toggleView");
+
+		if (Gemma.HEATMAP_VIEW){
+			Gemma.HEATMAP_VIEW = false;
+		}
+		else{	
+			var zoomLegendDiv = $("zoomLegend");
+			if (zoomLegendDiv){
+				zoomLegendDiv.innerHTML = '';
+			}
+			
+			Gemma.HEATMAP_VIEW = true;
+		}
+		
+		var template = Gemma.getTemplate();
+		
+		this.dv.setTemplate ( template, false);
+		 
+		
+	},
+	
 	displayWindow : function(eeIds, gene, threshold, factorMap) {
 
 		this.setTitle("Visualization of gene: <a   target='_blank' ext:qtip=' "+ gene.officialSymbol+ " ' href='/Gemma/gene/showGene.html?id=" + gene.id + "'> " + gene.officialName + "</a>");

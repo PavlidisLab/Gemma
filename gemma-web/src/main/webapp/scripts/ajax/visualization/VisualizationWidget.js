@@ -139,6 +139,8 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 				}
 			}
 		});
+		
+		
 
 Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 
@@ -158,6 +160,26 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 			}
 		});
 
+		
+Gemma.HEATMAP_VIEW = false;
+
+Gemma.getTemplate = function(){
+		var template;
+		if (Gemma.HEATMAP_VIEW){
+			template =  new Gemma.HeatmapTemplate('<tpl for="."><tpl for="eevo">',
+				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
+				'</tpl></tpl>')			
+		}
+		else{
+			template = new Gemma.ProfileTemplate(
+				'<tpl for="."><tpl for="eevo">',
+				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
+				'</tpl></tpl>')			
+		}
+		
+		return template;
+	
+}
 		
 Gemma.VisualizationWindow = function(config) {
 

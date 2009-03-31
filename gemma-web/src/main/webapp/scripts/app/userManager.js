@@ -13,7 +13,7 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-	if (Ext.isIE && !Ext.isIE7) {
+	if (Ext.isIE && Ext.isIE6) {
 		Ext.DomHelper.append('errorMessage', {
 			tag : 'p',
 			cls : 'trouble',

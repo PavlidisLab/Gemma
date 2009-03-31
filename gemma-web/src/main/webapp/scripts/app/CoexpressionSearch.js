@@ -7,7 +7,7 @@ Ext.onReady(function() {
 	var admin = dwr.util.getValue("hasAdmin");
 	var user = dwr.util.getValue("hasUser");
 
-	if (Ext.isIE && !Ext.isIE7) {
+	if (Ext.isIE && Ext.isIE6) {
 		Ext.DomHelper.append('coexpression-all', {
 			tag : 'p',
 			cls : 'trouble',

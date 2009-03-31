@@ -10,7 +10,7 @@ Ext.onReady(function() {
 
 	var admin = dwr.util.getValue("hasAdmin");
 
-	if (Ext.isIE && !Ext.isIE7) {
+	if (Ext.isIE && Ext.isIE6) {
 		Ext.DomHelper.append('diffExpression-form', {
 			tag : 'p',
 			cls : 'trouble',
