@@ -259,35 +259,39 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.update( bioSequence );
+                session.lock( bioSequence, LockMode.NONE );
                 Hibernate.initialize( bioSequence );
-
-                bioSequence.getBioSequence2GeneProduct().size();
+                Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
 
                 if ( bioSequence.getTaxon() != null && bioSequence.getTaxon().getId() != null ) {
-                    session.update( bioSequence.getTaxon() );
+                    Hibernate.initialize( bioSequence.getTaxon() );
                 }
 
                 DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
 
                 if ( dbEntry != null ) {
-                    session.update( dbEntry );
-                    session.update( dbEntry.getExternalDatabase() );
+                    Hibernate.initialize( dbEntry );
+                    Hibernate.initialize( dbEntry.getExternalDatabase() );
+                    session.evict( dbEntry );
                 }
 
                 for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
                     GeneProduct geneProduct = bs2gp.getGeneProduct();
                     Gene g = geneProduct.getGene();
                     if ( g != null ) {
-                        g.getAliases().size();
+                        Hibernate.initialize( g );
+                        Hibernate.initialize( g.getAliases() );
+                        session.evict( g );
                     }
+                    session.evict( geneProduct );
+
                 }
 
                 session.evict( bioSequence );
-                /*
-                 * For reasons unclear, biosequence is still a proxy at this point.
-                 */
-                EntityUtils.unProxy( bioSequence );
+                // /*
+                // * For reasons unclear, biosequence is still a proxy at this point.
+                // */
+                // EntityUtils.unProxy( bioSequence );
                 return null;
             }
         } );
