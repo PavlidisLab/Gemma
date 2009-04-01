@@ -1495,7 +1495,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                      */
                     mayBeOneChannel = true;
                     break;
-                } else if ( ChannelUtils.isSignalChannela( qt.getName() ) ) {
+                } else if ( ChannelUtils.isSignalChannelA( qt.getName() ) ) {
                     hasIntensityA = true;
                     if ( hasIntensityB ) {
                         hasBothIntensities = true;
