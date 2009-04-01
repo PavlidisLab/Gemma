@@ -3,8 +3,8 @@
 <%@ page import="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"%>
 <jsp:useBean id="arrayDesign" scope="request" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
 
-<!DOCTYPE html PUBLIC "-//W3C//Dtd html 4.01 transitional//EN">
 <head>
+
 	<title><jsp:getProperty name="arrayDesign" property="shortName" /> - <jsp:getProperty name="arrayDesign"
 			property="name" /></title>
 
@@ -16,23 +16,26 @@
 	<security:authorize ifAnyGranted="admin">
 		<script type="text/javascript">
 	Ext.namespace('Gemma');
-	Ext.onReady(function() {
-	var id = dwr.util.getValue("auditableId");
- 	if (!id) { return; }
-	var clazz = dwr.util.getValue("auditableClass");
-	var auditable = {
-		id : id,
-		classDelegatingFor : clazz
-	};
-	var grid = new Gemma.AuditTrailGrid({
-		renderTo : 'auditTrail',
-		auditable : auditable
+	Ext.onReady( function() {
+		var id = dwr.util.getValue("auditableId");
+		if (!id) {
+			return;
+		}
+		var clazz = dwr.util.getValue("auditableClass");
+		var auditable = {
+			id :id,
+			classDelegatingFor :clazz
+		};
+		var grid = new Gemma.AuditTrailGrid( {
+			renderTo :'auditTrail',
+			auditable :auditable
+		});
 	});
-});
 </script>
 	</security:authorize>
 
 </head>
+
 
 <h2>
 	Details for: "
@@ -54,7 +57,8 @@
 <div id="progress-area"></div>
 
 <!--  Summary of array design associations -->
-<c:if test="${ summary != ''}">
+
+<c:if test="${ summary != null}">
 	<table class='datasummaryarea'>
 		<caption>
 			Sequence analysis details
@@ -143,6 +147,7 @@
 
 			</td>
 		</tr>
+
 		<tr>
 			<td colspan="2">
 				<security:authorize ifAnyGranted="admin">
@@ -158,11 +163,11 @@
 			<td colspan="2">
 				<a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img src="/Gemma/images/help.png" />
 				</a>
-				<%--"<Gemma:help helpFile='sequenceAnalysisHelp.html'/>" --%>
 			</td>
 		</tr>
 	</table>
 </c:if>
+
 
 <table style="width: 70%">
 
@@ -206,6 +211,7 @@
 			%>
 		</td>
 	</tr>
+
 	<tr>
 		<td class="label">
 			Species
@@ -386,12 +392,13 @@
 						<c:otherwise>
 							<a class="annotationLink" href="<c:url value="${bioProcessAnnotationLink }" />">Biological Process only</a>
 						</c:otherwise>
-					</c:choose> 
+					</c:choose>
 				</c:otherwise>
 			</c:choose>
 		</td>
 	</tr>
 </table>
+
 
 <security:authorize ifAnyGranted="admin">
 	<div id="auditTrail"></div>
@@ -417,8 +424,7 @@
 				<td COLSPAN="2">
 					<div align="left">
 						<input type="button"
-							onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=<%=request.getAttribute("id")%>'"
-							value="Edit">
+							onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=<%=request.getAttribute("id")%>'" value="Edit">
 					</div>
 				</td>
 			</security:authorize>

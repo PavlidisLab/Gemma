@@ -329,6 +329,7 @@ public class ArrayExpressLoadService {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( arrayId );
+        ad.setShortName( arrayId ); 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         de.setExternalDatabase( MageMLConverterHelper.getArrayExpressReference() );
         de.setAccession( arrayId );

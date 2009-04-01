@@ -37,6 +37,7 @@ import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -190,6 +191,11 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
                 for ( BioAssay ba : ee.getBioAssays() ) {
                     if ( ba.getSamplesUsed().size() == 0 ) {
                         throw new IllegalStateException( "No biomaterials for bioassay " + ba );
+                    }
+                    for(BioMaterial bm : ba.getSamplesUsed())  {
+                        if (bm.getSourceTaxon() == null) {
+                            throw new IllegalStateException("No taxon for biomaterial: " + bm);
+                        }
                     }
                 }
 

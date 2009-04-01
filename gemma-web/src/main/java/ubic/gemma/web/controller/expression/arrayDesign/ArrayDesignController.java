@@ -61,6 +61,7 @@ import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -592,7 +593,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         String sId = request.getParameter( "id" );
         String sShowMerge = request.getParameter( "showMerg" );
         String sShowOrph = request.getParameter( "showOrph" );
-        
+
         boolean showMergees = Boolean.parseBoolean( sShowMerge );
         boolean showOrphans = Boolean.parseBoolean( sShowOrph );
 
@@ -756,7 +757,13 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return
      */
     private String formatTechnologyType( ArrayDesign arrayDesign ) {
-        String techType = arrayDesign.getTechnologyType().getValue();
+        TechnologyType technologyType = arrayDesign.getTechnologyType();
+
+        if ( technologyType == null ) {
+            return "Not specified";
+        }
+
+        String techType = technologyType.getValue();
         String colorString = "";
         if ( techType.equalsIgnoreCase( "ONECOLOR" ) ) {
             colorString = "one-color";
@@ -765,7 +772,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         } else if ( techType.equalsIgnoreCase( "DUALMODE" ) ) {
             colorString = "dual mode";
         } else {
-            colorString = "No color";
+            colorString = "Not specified";
         }
         return colorString;
     }

@@ -317,6 +317,9 @@ public class ArrayDesignAnnotationService {
      * @return
      */
     public static String mungeFileName( String fileBaseName ) {
+        if ( fileBaseName == null ) {
+            return null;
+        }
         return fileBaseName.replaceAll( Pattern.quote( File.separator ), "_" );
     }
 
