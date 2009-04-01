@@ -99,7 +99,14 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment, this
                 .getSession() );
         for ( ArrayDesign ad : arrayDesignsUsed ) {
-            if ( !ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
+            TechnologyType technologyType = ad.getTechnologyType();
+
+            if ( technologyType == null ) {
+                throw new IllegalStateException(
+                        "Array designs must have a technology type assigned before processed vector computation" );
+            }
+
+            if ( !technologyType.equals( TechnologyType.ONECOLOR ) ) {
                 isTwoChannel = true;
             }
         }
