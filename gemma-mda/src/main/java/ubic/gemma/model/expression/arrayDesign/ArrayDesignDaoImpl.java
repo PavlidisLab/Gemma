@@ -990,9 +990,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @SuppressWarnings("unchecked")
     private Map<Long, Integer> getExpressionExperimentCountMap() {
-        final String queryString = "select ad.id, count(distinct ee) from ArrayDesignImpl ad, "
-                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed adb where "
-                + " adb=ad group by ad";
+        final String queryString = "select ad.id, count(distinct ee) from   "
+                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
 
         Map<Long, Integer> eeCount = new HashMap<Long, Integer>();
         List<Object[]> list = getHibernateTemplate().find( queryString );
