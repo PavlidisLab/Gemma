@@ -42,6 +42,7 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -394,6 +395,13 @@ public class ArrayExpressLoadService {
 
         File sdrf = sdrfs.iterator().next().asFile();
 
+        boolean isTwoColor = false;
+        for ( BioAssay ba : bioAssays ) {
+            if ( ba.getSamplesUsed().size() > 1 ) {
+                isTwoColor = true;
+            }
+        }
+
         /*
          * Throw-away parser for SDRF
          */
@@ -451,6 +459,7 @@ public class ArrayExpressLoadService {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( arrayId );
+        ad.setTechnologyType( isTwoColor ? TechnologyType.TWOCOLOR : TechnologyType.ONECOLOR );
         ad.setShortName( arrayId );
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         de.setExternalDatabase( MageMLConverterHelper.getArrayExpressReference() );
