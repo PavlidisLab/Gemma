@@ -471,6 +471,7 @@ public class QuantitationTypeParameterGuesser {
                     if ( type.equals( PrimitiveType.INT ) && !couldBeInt ) {
                         continue;
                     }
+
                     return type;
                 }
             }
@@ -618,18 +619,17 @@ public class QuantitationTypeParameterGuesser {
         sType = guessScaleType( namelc, descriptionlc );
         qType = guessType( namelc, descriptionlc );
         rType = guessPrimitiveType( namelc, descriptionlc, exampleValue );
+
         isBackground = guessIsBackground( namelc, descriptionlc ) && maybeBackground( namelc, descriptionlc );
         isBackgroundSubtracted = isBackgroundSubtracted( namelc, descriptionlc );
         isNormalized = isNormalized( namelc, descriptionlc );
         isRatio = isRatio( namelc, descriptionlc );
 
         if ( qType.equals( StandardQuantitationType.AMOUNT ) ) {
-            // rType = PrimitiveType.DOUBLE;
             gType = GeneralType.QUANTITATIVE;
         } else if ( qType.equals( StandardQuantitationType.PRESENTABSENT ) ) {
             gType = GeneralType.CATEGORICAL;
             sType = ScaleType.OTHER;
-            // rType = PrimitiveType.STRING;
         } else if ( qType.equals( StandardQuantitationType.COORDINATE ) ) {
             rType = PrimitiveType.INT;
         }
@@ -667,5 +667,6 @@ public class QuantitationTypeParameterGuesser {
         if ( qt.getIsPreferred() == null ) qt.setIsPreferred( isPreferred( qt ) );
 
         if ( qt.getIsMaskedPreferred() == null ) qt.setIsMaskedPreferred( Boolean.FALSE );
+
     }
 }

@@ -161,7 +161,6 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
 
         for ( Object object : convertedResult ) {
             if ( object instanceof QuantitationType ) {
-                log.info( object );
                 ee.getQuantitationTypes().add( ( QuantitationType ) object );
             }
         }
@@ -192,9 +191,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
                     if ( ba.getSamplesUsed().size() == 0 ) {
                         throw new IllegalStateException( "No biomaterials for bioassay " + ba );
                     }
-                    for(BioMaterial bm : ba.getSamplesUsed())  {
-                        if (bm.getSourceTaxon() == null) {
-                            throw new IllegalStateException("No taxon for biomaterial: " + bm);
+                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                        if ( bm.getSourceTaxon() == null ) {
+                            throw new IllegalStateException( "No taxon for biomaterial: " + bm );
                         }
                     }
                 }
@@ -267,12 +266,15 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
                          * single array design in the first place.
                          */
                         if ( ba.getArrayDesignUsed() == null ) {
-                            // Not sure this ever works.
-                            if ( singleArrayDesign == null ) {
-                                log.warn( "No array design available for " + ba );
-                            }
 
-                            ba.setArrayDesignUsed( singleArrayDesign );
+                            /*
+                             * I don't think this every actually is false at this point.
+                             */
+                            if ( singleArrayDesign == null ) {
+                                // / log.warn( "No array design available for " + ba );
+                            } else {
+                                ba.setArrayDesignUsed( singleArrayDesign );
+                            }
                         }
 
                         keep = true;

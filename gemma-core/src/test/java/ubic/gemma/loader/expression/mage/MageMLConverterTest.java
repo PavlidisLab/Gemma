@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.util.ChannelUtils;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -596,25 +597,60 @@ public class MageMLConverterTest extends AbstractMageTest {
         assertNotNull( expressionExperiment.getSource() );
         assertNotNull( expressionExperiment.getAccession() );
 
+        assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+        for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+            assertEquals( 20, ef.getFactorValues().size() );
+        }
+
+        /*
+         * Has temperature as a factor; this _really_ should be a fixed-level factor but it's stored as a measurement,
+         * not a characteristic.
+         */
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             assertEquals( 2, ba.getSamplesUsed().size() );
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertNotNull( bm.getSourceTaxon() );
+                assertEquals( 1, bm.getFactorValues().size() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    assertNotNull( fv.getMeasurement() );
+                }
             }
 
         }
 
         boolean found = false;
+        boolean foundBA = false;
+        boolean foundBB = false;
+        boolean foundSA = false;
+        boolean foundSB = false;
         for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
             if ( qt.getName().equals( "LOG_RAT2N_MEAN" ) ) {
                 assertEquals( ScaleType.LOG2, qt.getScale() );
-                assertEquals( PrimitiveType.DOUBLE, qt.getRepresentation() );
+                assertEquals( "For " + qt, PrimitiveType.DOUBLE, qt.getRepresentation() );
                 assertTrue( qt.getIsPreferred() );
                 found = true;
             }
+
+            if ( ChannelUtils.isBackgroundChannelA( qt.getName() ) ) {
+                assertEquals( "For " + qt, PrimitiveType.DOUBLE, qt.getRepresentation() );
+                foundBA = true;
+            }
+            if ( ChannelUtils.isBackgroundChannelB( qt.getName() ) ) {
+                assertEquals( "For " + qt, PrimitiveType.DOUBLE, qt.getRepresentation() );
+                foundBB = true;
+            }
+            if ( ChannelUtils.isSignalChannelA( qt.getName() ) ) {
+                assertEquals( "For " + qt, PrimitiveType.DOUBLE, qt.getRepresentation() );
+                foundSA = true;
+            }
+            if ( ChannelUtils.isSignalChannelB( qt.getName() ) ) {
+                assertEquals( "For " + qt, PrimitiveType.DOUBLE, qt.getRepresentation() );
+                foundSB = true;
+            }
+
         }
-        assertTrue( found );
+        assertTrue( found && foundBA && foundBB && foundSA && foundSB );
 
     }
 

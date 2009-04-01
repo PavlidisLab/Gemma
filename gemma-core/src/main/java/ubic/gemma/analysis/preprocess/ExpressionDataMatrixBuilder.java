@@ -165,7 +165,7 @@ public class ExpressionDataMatrixBuilder {
             } else if ( ChannelUtils.isBackgroundChannelB( name ) ) {
                 neededQtTypes.add( qType );
                 log.info( "Background B=" + qType );
-            } else if ( ChannelUtils.isSignalChannela( name ) ) {
+            } else if ( ChannelUtils.isSignalChannelA( name ) ) {
                 neededQtTypes.add( qType );
                 log.info( "Signal A=" + qType );
             } else if ( ChannelUtils.isSignalChannelB( name ) ) {
@@ -684,7 +684,7 @@ public class ExpressionDataMatrixBuilder {
                 } else if ( result.getBackgroundChannelB( dim ) == null && ChannelUtils.isBackgroundChannelB( name ) ) {
                     result.addBackgroundChannelB( dim, qType );
                     log.info( "Background B=" + qType );
-                } else if ( result.getSignalChannelA( dim ) == null && ChannelUtils.isSignalChannela( name ) ) {
+                } else if ( result.getSignalChannelA( dim ) == null && ChannelUtils.isSignalChannelA( name ) ) {
                     result.addSignalChannelA( dim, qType );
                     log.info( "Signal A=" + qType );
                 } else if ( result.getSignalChannelB( dim ) == null && ChannelUtils.isSignalChannelB( name ) ) {

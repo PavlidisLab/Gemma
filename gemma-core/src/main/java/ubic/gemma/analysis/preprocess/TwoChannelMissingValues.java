@@ -183,6 +183,10 @@ public class TwoChannelMissingValues {
     }
 
     /**
+     * Attempt to compute 'missing value' information for a two-channel data set. We attempt to do this even if we are
+     * missing background intensity information or one intensity channel, though obviously it is better to have all four
+     * sets of values.
+     * 
      * @param source
      * @param preferred
      * @param signalChannelA
@@ -210,7 +214,10 @@ public class TwoChannelMissingValues {
         source.getQuantitationTypes().add( present );
 
         int count = 0;
-        for ( ExpressionDataMatrixRowElement element : signalChannelA.getRowElements() ) {
+
+        ExpressionDataDoubleMatrix baseChannel = signalChannelA == null ? signalChannelB : signalChannelA;
+
+        for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
 
             DesignElement designElement = element.getDesignElement();
 
@@ -218,15 +225,22 @@ public class TwoChannelMissingValues {
             vect.setQuantitationType( present );
             vect.setExpressionExperiment( source );
             vect.setDesignElement( designElement );
-            vect.setBioAssayDimension( signalChannelA.getBioAssayDimension( designElement ) );
+            vect.setBioAssayDimension( baseChannel.getBioAssayDimension( designElement ) );
 
             int numCols = preferred.columns( designElement );
 
             boolean[] detectionCalls = new boolean[numCols];
             Double[] prefRow = preferred.getRow( designElement );
 
-            Double[] signalA = signalChannelA.getRow( designElement );
-            Double[] signalB = signalChannelB != null ? signalChannelB.getRow( designElement ) : null;
+            Double[] signalA = null;
+            if ( signalChannelA != null ) {
+                signalA = signalChannelA.getRow( designElement );
+            }
+
+            Double[] signalB = null;
+            if ( signalChannelB != null ) {
+                signalB = signalChannelB.getRow( designElement );
+            }
             Double[] bkgA = null;
             Double[] bkgB = null;
 
@@ -253,8 +267,8 @@ public class TwoChannelMissingValues {
 
                 if ( bkgB != null ) bkgBV = bkgB[col];
 
-                Double sigAV = signalA[col] == null ? 0.0 : signalA[col];
-                Double sigBV = signalB[col] == null ? 0.0 : signalB[col];
+                Double sigAV = ( signalA == null || signalA[col] == null ) ? 0.0 : signalA[col];
+                Double sigBV = ( signalB == null || signalB[col] == null ) ? 0.0 : signalB[col];
 
                 boolean call = computeCall( signalToNoiseThreshold, sigAV, sigBV, bkgAV, bkgBV );
                 detectionCalls[col] = call;
@@ -278,6 +292,17 @@ public class TwoChannelMissingValues {
         return results;
     }
 
+    /**
+     * Decide if the data point is 'prsent'. Note that we try to compute this even if we lack both channels, it's better
+     * than nothing.
+     * 
+     * @param signalToNoiseThreshold
+     * @param sigAV
+     * @param sigBV
+     * @param bkgAV
+     * @param bkgBV
+     * @return
+     */
     private boolean computeCall( double signalToNoiseThreshold, Double sigAV, Double sigBV, Double bkgAV, Double bkgBV ) {
         if ( sigAV == null && sigBV == null ) return false;
 
@@ -334,22 +359,30 @@ public class TwoChannelMissingValues {
             ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
             ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold ) {
         // not exhaustive...
-        if ( preferred == null || signalChannelA == null || signalChannelB == null ) {
-            throw new IllegalArgumentException( "Must have data matrices" );
+        if ( preferred == null || ( signalChannelA == null && signalChannelB == null ) ) {
+            throw new IllegalArgumentException( "Must have at least preferred and one intensity data matrix" );
         }
 
         if ( ( bkgChannelA != null && bkgChannelA.rows() == 0 ) || ( bkgChannelB != null && bkgChannelB.rows() == 0 ) ) {
             throw new IllegalArgumentException( "Background values must not be empty when non-null" );
         }
 
-        if ( !( signalChannelA.rows() == signalChannelB.rows() ) ) {
-            log.warn( "Collection sizes probably should match in channel A and B " + signalChannelA.rows() + " != "
-                    + signalChannelB.rows() );
-        }
+        if ( signalChannelA != null && signalChannelB != null ) {
+            if ( !( signalChannelA.rows() == signalChannelB.rows() ) ) {
+                log.warn( "Collection sizes probably should match in channel A and B " + signalChannelA.rows() + " != "
+                        + signalChannelB.rows() );
+            }
 
-        if ( !( signalChannelA.rows() == preferred.rows() ) ) { // vectors with all-missing data are already removed
-            log.warn( "Collection sizes probably should match in channel A and preferred type " + signalChannelA.rows()
-                    + " != " + preferred.rows() );
+            if ( !( signalChannelA.rows() == preferred.rows() ) ) { // vectors with all-missing data are already removed
+                log.warn( "Collection sizes probably should match in channel A and preferred type "
+                        + signalChannelA.rows() + " != " + preferred.rows() );
+            }
+            int numSamplesA = signalChannelA.columns();
+            int numSamplesB = signalChannelB.columns();
+
+            if ( numSamplesA != numSamplesB || numSamplesB != preferred.columns() ) {
+                throw new IllegalArgumentException( "Number of samples doesn't match!" );
+            }
         }
 
         if ( ( bkgChannelA != null && bkgChannelB != null ) && bkgChannelA.rows() != bkgChannelB.rows() )
@@ -358,13 +391,6 @@ public class TwoChannelMissingValues {
 
         if ( signalToNoiseThreshold <= 0.0 ) {
             throw new IllegalArgumentException( "Signal-to-noise threshold must be greater than zero" );
-        }
-
-        int numSamplesA = signalChannelA.columns();
-        int numSamplesB = signalChannelB.columns();
-
-        if ( numSamplesA != numSamplesB || numSamplesB != preferred.columns() ) {
-            throw new IllegalArgumentException( "Number of samples doesn't match!" );
         }
 
     }

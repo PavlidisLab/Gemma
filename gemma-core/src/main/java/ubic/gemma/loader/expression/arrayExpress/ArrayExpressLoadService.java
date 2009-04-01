@@ -19,6 +19,7 @@
 package ubic.gemma.loader.expression.arrayExpress;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -108,11 +109,212 @@ public class ArrayExpressLoadService {
      */
     public ExpressionExperiment load( String accession, String adAccession, boolean allowArrayExpressDesign,
             boolean useDb ) {
-        DataFileFetcher dfFetcher = new DataFileFetcher();
-        ProcessedDataFetcher pdFetcher = new ProcessedDataFetcher();
-        ProcessedDataFileParser pdParser = new ProcessedDataFileParser();
+
+        ArrayDesign selectedAd = getSelectedArrayDesign( adAccession, allowArrayExpressDesign );
+
+        Collection<LocalFile> filesToUse = fetchProcessedData( accession );
+
+        Collection<Object> mageMlConvertedObjects = fetchAndConvertMageML( accession );
+
+        ProcessedDataFileParser pdParser = parseProcessedDataFiles( filesToUse );
+
+        ExpressionExperiment ee = processAndMerge( accession, allowArrayExpressDesign, selectedAd,
+                mageMlConvertedObjects, pdParser );
+
+        if ( useDb ) {
+            ExpressionExperiment persistedEE = ( ExpressionExperiment ) persisterHelper.persist( ee );
+            updateReports( persistedEE );
+            return persistedEE;
+        }
+        return ee;
+    }
+
+    /**
+     * Designed for test purposes, not likely to be used otherwise. Writes to the database.
+     * 
+     * @param mageMlStream
+     * @param processedDataStream
+     * @param accession In ArrayExpress, e.g. E-TAMB-1
+     * @param adAccession
+     * @return
+     */
+    public ExpressionExperiment load( InputStream mageMlStream, InputStream processedDataStream, String accession,
+            String adAccession ) {
+
+        ArrayDesign selectedAd = getSelectedArrayDesign( adAccession, true );
+
+        Collection<Object> mageMlConvertedObjects = fetchAndConvertMageML( mageMlStream );
+
+        ProcessedDataFileParser pdParser = parseProcessedData( processedDataStream );
+
+        ExpressionExperiment ee = processAndMerge( accession, true, selectedAd, mageMlConvertedObjects, pdParser );
+
+        processArrayDesignInfo( accession, ee.getBioAssays(), pdParser.isUsingReporters() );
+
+        ExpressionExperiment persistedEE = ( ExpressionExperiment ) persisterHelper.persist( ee );
+        updateReports( persistedEE );
+        return persistedEE;
+
+    }
+
+    /**
+     * @param accession
+     * @param allowArrayExpressDesign
+     * @param selectedAd
+     * @param mageMlConvertedObjects
+     * @param pdParser
+     * @return
+     */
+    private ExpressionExperiment processAndMerge( String accession, boolean allowArrayExpressDesign,
+            ArrayDesign selectedAd, Collection<Object> mageMlConvertedObjects, ProcessedDataFileParser pdParser ) {
+        ExpressionExperiment ee = locateExpressionExperimentInMageResults( mageMlConvertedObjects );
+        ee.setShortName( accession );
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
+        assert bioAssays != null && bioAssays.size() > 0;
+
+        log.info( "MAGE conversion: located raw expression experiment: " + ee );
+        // use the AD given by mage
+        if ( selectedAd == null ) {
+            if ( allowArrayExpressDesign ) {
+                log.info( "Filling in array design information" );
+                processArrayDesignInfo( accession, bioAssays, pdParser.isUsingReporters() );
+            } else {
+                throw new IllegalStateException(
+                        "You must provide a valid array design from Gemma, or allow loader to get it from ArrayExpress" );
+            }
+        } else { // the user selected an AD in the system, make sure all the bioAssays point to it.
+            log.info( "Using specified Array Design: " + selectedAd.getShortName() );
+            processArrayDesignInfo( bioAssays, selectedAd );
+        }
+
+        log.info( "Merging processed data with expression experiment from MAGE-ML" );
+        Collection<QuantitationType> qts = ee.getQuantitationTypes(); // locateQuantitationTypesInMageResults(
+        // result );
+
+        if ( qts.size() == 0 ) {
+            throw new IllegalStateException( "No quantitation types found" );
+        }
+
         ProcessedDataMerger pdMerger = new ProcessedDataMerger();
 
+        pdMerger.merge( ee, qts, pdParser.getMap(), pdParser.getSamples() );
+        return ee;
+    }
+
+    /**
+     * @param inputStream
+     * @return
+     */
+    private ProcessedDataFileParser parseProcessedData( InputStream inputStream ) {
+        log.info( "Parsing processed data" );
+        /*
+         * This does not handle the case of multiple files.
+         */
+        ProcessedDataFileParser pdParser = new ProcessedDataFileParser();
+
+        try {
+            pdParser.parse( inputStream );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+        return pdParser;
+    }
+
+    /**
+     * @param filesToUse
+     * @return
+     */
+    private ProcessedDataFileParser parseProcessedDataFiles( Collection<LocalFile> filesToUse ) {
+        log.info( "Parsing processed data" );
+        /*
+         * This handles the case of multiple files.
+         */
+        ProcessedDataFileParser pdParser = new ProcessedDataFileParser();
+
+        for ( LocalFile file : filesToUse ) {
+            InputStream is;
+            try {
+                is = FileTools.getInputStreamFromPlainOrCompressedFile( file.getLocalURL().getPath() );
+
+                // results accumulate here.
+                pdParser.parse( is );
+            } catch ( FileNotFoundException e ) {
+                throw new RuntimeException( e );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+        return pdParser;
+    }
+
+    /**
+     * @param accession
+     * @return
+     */
+    private Collection<Object> fetchAndConvertMageML( InputStream mageMLInputStream ) {
+
+        MageMLParser mlp = new MageMLParser();
+        try {
+            mlp.parse( mageMLInputStream );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+        Collection<Object> parseResult = mlp.getResults();
+
+        log.info( "Parsing MAGE-ML" );
+        log.info( "Converting MAGE objects" );
+        Collection<Object> result = mageMLConverter.convert( parseResult );
+        return result;
+    }
+
+    /**
+     * @param accession
+     * @return
+     */
+    private Collection<Object> fetchAndConvertMageML( String accession ) {
+        log.info( "Downloading MAGE-ML file package" );
+        DataFileFetcher dfFetcher = new DataFileFetcher();
+        Collection<LocalFile> files = dfFetcher.fetch( accession );
+        LocalFile mageMlFile = dfFetcher.getMageMlFile( files );
+        if ( mageMlFile == null ) {
+            throw new IllegalArgumentException( "There is no MAGE-ML file for " + accession + ", halting processing" );
+        }
+
+        String mageMLpath = mageMlFile.getLocalURL().getPath();
+        MageMLParser mlp = new MageMLParser();
+        try {
+            mlp.parse( mageMLpath );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+        Collection<Object> parseResult = mlp.getResults();
+
+        log.info( "Parsing MAGE-ML" );
+        log.info( "Converting MAGE objects" );
+        Collection<Object> result = mageMLConverter.convert( parseResult );
+        return result;
+    }
+
+    private Collection<LocalFile> fetchProcessedData( String accession ) {
+        log.info( "Fetching processed data" );
+        ProcessedDataFetcher pdFetcher = new ProcessedDataFetcher();
+        Collection<LocalFile> pdFiles = pdFetcher.fetch( accession );
+        Collection<LocalFile> filesToUse = pdFetcher.getProcessedDataFile( pdFiles );
+        if ( filesToUse.size() == 0 ) {
+            throw new IllegalArgumentException( "There is no processed data for " + accession + ", halting processing" );
+        }
+        return filesToUse;
+    }
+
+    /**
+     * @param adAccession
+     * @param allowArrayExpressDesign
+     * @return selected array design, if any, otherwise null.
+     */
+    private ArrayDesign getSelectedArrayDesign( String adAccession, boolean allowArrayExpressDesign ) {
         ArrayDesign selectedAd = null;
         if ( adAccession != null ) {
             selectedAd = this.arrayDesignService.findByName( adAccession );
@@ -121,97 +323,17 @@ public class ArrayExpressLoadService {
             if ( selectedAd == null ) selectedAd = this.arrayDesignService.findByShortName( adAccession );
 
             if ( selectedAd == null ) {
-                log.error( "The array design selected doesn't exist in the system: " + adAccession
-                        + ", halting processing" );
-                return null;
+                throw new IllegalArgumentException( "The array design selected doesn't exist in the system: "
+                        + adAccession + ", halting processing" );
             }
-        } else if ( allowArrayExpressDesign ) {
-            log.info( "Attempting to get array design from ArrayExpress" );
         }
 
-        MageMLParser mlp = new MageMLParser();
-
-        log.info( "Fetching processed data" );
-        Collection<LocalFile> pdFiles = pdFetcher.fetch( accession );
-        Collection<LocalFile> filesToUse = pdFetcher.getProcessedDataFile( pdFiles );
-        if ( filesToUse.size() == 0 ) {
-            log.error( "There is no processed data for " + accession + ", halting processing" );
-            return null;
+        if ( selectedAd == null && !allowArrayExpressDesign ) {
+            throw new IllegalArgumentException( "No array design matching " + adAccession
+                    + " in system, and not allowing ArrayExpress array design import. Stopping processing." );
         }
 
-        log.info( "Downloading MAGE-ML file package" );
-        Collection<LocalFile> files = dfFetcher.fetch( accession );
-        LocalFile mageMlFile = dfFetcher.getMageMlFile( files );
-        if ( mageMlFile == null ) {
-            log.error( "There is no MAGE-ML file for " + accession + ", halting processing" );
-            return null;
-        }
-
-        String mageMLpath = mageMlFile.getLocalURL().getPath();
-
-        log.info( "Parsing MAGE-ML" );
-        try {
-            mlp.parse( mageMLpath );
-
-            Collection<Object> parseResult = mlp.getResults();
-
-            log.info( "Converting MAGE objects" );
-            Collection<Object> result = mageMLConverter.convert( parseResult );
-
-            ExpressionExperiment ee = locateExpressionExperimentInMageResults( result );
-            ee.setShortName( accession );
-
-            Collection<BioAssay> bioAssays = ee.getBioAssays();
-            assert bioAssays != null && bioAssays.size() > 0;
-
-            log.info( "MAGE conversion: located raw expression experiment: " + ee );
-
-            log.info( "Parsing processed data" );
-            /*
-             * This handles the case of multiple files.
-             */
-            for ( LocalFile file : filesToUse ) {
-                InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( file.getLocalURL().getPath() );
-                // results accumulate here.
-                pdParser.parse( is );
-            }
-
-            // If we made it this far, and selectedAd is null we know an AD was never specified so go ahead and
-            // use the AD given by mage
-            if ( selectedAd == null ) {
-                if ( allowArrayExpressDesign ) {
-                    log.info( "Filling in array design information" );
-                    processArrayDesignInfo( accession, bioAssays, pdParser.isUsingReporters() );
-                } else {
-                    throw new IllegalStateException(
-                            "You must provide a valid array design from Gemma, or allow loader to get it from ArrayExpress" );
-                }
-            } else { // the user selected an AD in the system, make sure all the bioAssays point to it.
-                log.info( "Using specified Array Design: " + selectedAd.getShortName() );
-                processArrayDesignInfo( bioAssays, selectedAd );
-            }
-
-            log.info( "Merging processed data with expression experiment from MAGE-ML" );
-            Collection<QuantitationType> qts = ee.getQuantitationTypes(); // locateQuantitationTypesInMageResults(
-            // result );
-
-            if ( qts.size() == 0 ) {
-                throw new IllegalStateException( "No quantitation types found" );
-            }
-
-            pdMerger.merge( ee, qts, pdParser.getMap(), pdParser.getSamples() );
-
-            if ( useDb ) {
-                ExpressionExperiment persistedEE = ( ExpressionExperiment ) persisterHelper.persist( ee );
-                updateReports( persistedEE );
-                return persistedEE;
-            }
-            return ee;
-
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-
+        return selectedAd;
     }
 
     /**
@@ -329,7 +451,7 @@ public class ArrayExpressLoadService {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( arrayId );
-        ad.setShortName( arrayId ); 
+        ad.setShortName( arrayId );
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         de.setExternalDatabase( MageMLConverterHelper.getArrayExpressReference() );
         de.setAccession( arrayId );

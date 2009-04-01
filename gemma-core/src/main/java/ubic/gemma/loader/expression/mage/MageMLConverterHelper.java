@@ -533,14 +533,14 @@ public class MageMLConverterHelper {
             URL localURL = findLocalMageExternalDataFile( dataExternal.getFilenameURI() );
             if ( localURL == null ) {
 
-                // keep from getting warned multiple times.
-                if ( log.isWarnEnabled() && !missingFiles.contains( dataExternal.getFilenameURI() ) ) {
-                    log.warn( "External data file " + dataExternal.getFilenameURI()
-                            + " not found; Data derived from MAGE BioAssayData " + mageObj.getName()
-                            + " will not have reachable external data." );
-                    missingFiles.add( dataExternal.getFilenameURI() );
-
-                }
+                // // keep from getting warned multiple times.
+                // if ( log.isWarnEnabled() && !missingFiles.contains( dataExternal.getFilenameURI() ) ) {
+                // log.warn( "External data file " + dataExternal.getFilenameURI()
+                // + " not found; Data derived from MAGE BioAssayData " + mageObj.getName()
+                // + " will not have reachable external data." );
+                // missingFiles.add( dataExternal.getFilenameURI() );
+                //
+                // }
 
                 // key part...local file is null.
                 return null;
@@ -1288,8 +1288,12 @@ public class MageMLConverterHelper {
             log.debug( "DerivedBioAssayMap, but no sourcebioAssays" );
         } else {
             if ( bioAssays.size() > 1 ) {
-                log.warn( "More than one sourcebioAssay for a DerivedBioAssay: " + mageObj.getIdentifier() + " has "
-                        + bioAssays.size() + " sourceBioAssays, skipping" );
+
+                /*
+                 * This is ... just confusing.
+                 */
+                // log.warn( "More than one sourcebioAssay for a DerivedBioAssay: " + mageObj.getIdentifier() + " has "
+                // + bioAssays.size() + " sourceBioAssays, skipping" );
                 return null;
             }
 
@@ -2578,6 +2582,15 @@ public class MageMLConverterHelper {
 
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
+
+        /*
+         * This can be filled in altready through convertDataType. It causes problems when this is an intensity value,
+         * we really need to treat as a double. Let the parameter guesser figure it out.
+         */
+        if ( result.getRepresentation().equals( PrimitiveType.INT ) && result.getName().toLowerCase().contains( "mean" )
+                || result.getName().toLowerCase().contains( "median" ) ) {
+            result.setRepresentation( null );
+        }
 
         QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( result, result.getName(), result
                 .getDescription() );
@@ -3922,9 +3935,9 @@ public class MageMLConverterHelper {
             ArrayDesign ad = bac.getArray().getArrayDesign();
             if ( ad == null ) {
                 /*
-                 * This happens if the ArrayDesign package is missing, e.g. E-SMDB-1853. We'll have trouble later.
+                 * This happens if the ArrayDesign package is missing, e.g. E-SMDB-1853. Pain but we deal with it later.
                  */
-                log.warn( "No array Design for " + result + " from " + mageObj );
+                // log.warn( "No array Design for " + result + " from " + mageObj );
             } else {
                 ubic.gemma.model.expression.arrayDesign.ArrayDesign conv = convertArrayDesign( ad );
 

@@ -141,7 +141,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
 
     /**
      * E-SMDB-1853 uses A-SMDB-681 - SMD Mus musculus Array, spotted. QT names a pain, array design not referenced from
-     * the MAGE-ML, rows in the data file missing names....etc. etc.
+     * the MAGE-ML, rows in the data file missing names....etc. etc. This is also tested in the MageMLConverter.
      * 
      * @throws Exception
      */
@@ -167,6 +167,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
          * Processed data file has 42624 raw data rows, 40595 unique reporters. Indexed by Composite Sequences, of which
          * there are ~18000 unique names (most have no name, like '-'). There are 10 different quantitation types in the
          * raw data file. There are only 11236 named rows in the processed data file, the others have no CS name.
+         * Another problem: there is no channel 1 data in the processed data file.
          */
         assertEquals( 17799, probeNames.size() );
         assertEquals( 10, experiment.getQuantitationTypes().size() );

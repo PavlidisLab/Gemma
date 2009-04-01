@@ -26,6 +26,7 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoFamilyParser;
@@ -96,8 +97,50 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertEquals( 10, calls.size() );
     }
 
+    /**
+     * Somewhat slow test ...
+     * 
+     * @throws Exception
+     */
+    final public void testMissingValuesESMDB1853() throws Exception {
+
+        ArrayExpressLoadService aels = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
+
+        InputStream mageMlStream = this.getClass().getResourceAsStream(
+                "/data/loader/expression/mage/E-SMDB-1853-Exptset_1853.part.xml" );
+        InputStream pdStream = this.getClass().getResourceAsStream(
+                "/data/loader/expression/mage/E-SMDB-1853.processedE-SMDB-1853-processed-data-1343366234.test.txt" );
+
+        ExpressionExperiment expExp = aels.load( mageMlStream, pdStream, "E-SMDB-1853", null );
+
+        Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
+
+        assertEquals( 99, calls.size() );
+
+        // // if ( log.isDebugEnabled() ) {
+        // ByteArrayConverter bac = new ByteArrayConverter();
+        //
+        // BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
+        // System.err.print( "\n" );
+        // for ( BioAssay bas : dim.getBioAssays() ) {
+        // System.err.print( "\t" + bas );
+        // }
+        // System.err.print( "\n" );
+        // for ( DesignElementDataVector vector : calls ) {
+        // System.err.print( vector.getDesignElement() );
+        // byte[] dat = vector.getData();
+        // boolean[] row = bac.byteArrayToBooleans( dat );
+        // for ( boolean b : row ) {
+        // System.err.print( "\t" + b );
+        // }
+        // System.err.print( "\n" );
+        // }
+        // // }
+
+    }
+
     @SuppressWarnings("unchecked")
-    public void testMissingValueGSE523() throws Exception {
+    final public void testMissingValueGSE523() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE523_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
