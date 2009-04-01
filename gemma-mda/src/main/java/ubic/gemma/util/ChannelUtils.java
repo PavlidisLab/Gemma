@@ -32,7 +32,7 @@ public class ChannelUtils {
      * @return
      */
     public static boolean isBackgroundChannelA( String name ) {
-        return name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" )
+        return name.equals( "CH1B(N)?_(MEDIAN|MEAN)" ) || name.equals( "CH1_BKD" )
                 || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
                 || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" )
                 || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" )
@@ -46,7 +46,7 @@ public class ChannelUtils {
      * @return
      */
     public static boolean isBackgroundChannelB( String name ) {
-        return name.equals( "CH2B_MEDIAN" ) || name.equals( "CH2_BKD" )
+        return name.equals( "CH2B(N)?_(MEDIAN|MEAN)" ) || name.equals( "CH2_BKD" )
                 || name.toLowerCase().matches( "b635[\\s_\\.](mean|median)" )
                 || name.equals( "BACKGROUND_CHANNEL 2MEDIAN" ) || name.equals( "R_BG_MEDIAN" )
                 || name.equals( "Ch2BkgMedian" ) || name.equals( "ch2.Background" ) || name.equals( "CH2_BKG_MEAN" )
@@ -60,8 +60,8 @@ public class ChannelUtils {
      * @param name
      * @return
      */
-    public static boolean isSignalChannela( String name ) {
-        return name.matches( "CH1(I)?_MEDIAN" ) || name.matches( "CH1(I)?_MEAN" ) || name.equals( "RAW_DATA" )
+    public static boolean isSignalChannelA( String name ) {
+        return name.matches( "CH1(I)?(N)?_MEDIAN" ) || name.matches( "CH1(I)?(N)?_MEAN" ) || name.equals( "RAW_DATA" )
                 || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 1MEDIAN" )
                 || name.toLowerCase().matches( "ch1_smtm" ) || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
                 || name.equals( "ch1.Intensity" ) || name.matches( "CH1_SIG_(MEAN|MEDIAN)" )
@@ -79,13 +79,13 @@ public class ChannelUtils {
      * @return
      */
     public static boolean isSignalChannelB( String name ) {
-        return name.matches( "CH2(I)?_MEDIAN" ) || name.matches( "CH2(I)?_MEAN" ) || name.equals( "RAW_CONTROL" )
-                || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 2MEDIAN" )
-                || name.toLowerCase().matches( "ch2_smtm" ) || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
-                || name.equals( "ch2.Intensity" ) || name.matches( "CH2_SIG_(MEAN|MEDIAN)" )
-                || name.equals( "CH2_ Median" ) || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" )
-                || name.toUpperCase().matches( "NORM(.*)CH2" ) || name.equals( "CH2Mean" )
-                || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
+        return name.matches( "CH2(I)?(N)?_MEDIAN" ) || name.matches( "CH2(I)?(N)?_MEAN" )
+                || name.equals( "RAW_CONTROL" ) || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" )
+                || name.equals( "SIGNAL_CHANNEL 2MEDIAN" ) || name.toLowerCase().matches( "ch2_smtm" )
+                || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" ) || name.equals( "ch2.Intensity" )
+                || name.matches( "CH2_SIG_(MEAN|MEDIAN)" ) || name.equals( "CH2_ Median" )
+                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" )
+                || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
                 || name.equals( "rProcessedSignal" );
     }
 
