@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -156,6 +157,9 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
             assertNotNull( ad );
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
                 probeNames.add( cs.getName() );
+            }
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertNotNull( bm.getSourceTaxon() );
             }
         }
 

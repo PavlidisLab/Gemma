@@ -744,41 +744,53 @@ public class MageMLConverterHelper {
                 }
             }
 
+            if ( resultBioMaterial.getSourceTaxon() == null ) {
+                convertCharacteristicToTaxon( resultBioMaterial );
+            }
+
         } else if ( resultBioMaterial.getSourceTaxon() == null && mageObj instanceof BioSource ) {
-            // explicitly convert the taxon over.
-            Characteristic found = null;
-            for ( Characteristic character : resultBioMaterial.getCharacteristics() ) {
-
-                assert character.getCategory() != null;
-
-                if ( character.getCategory().equals( "Organism" ) ) {
-                    String scientificName = character.getValue();
-                    Taxon t = Taxon.Factory.newInstance();
-                    t.setScientificName( scientificName );
-                    resultBioMaterial.setSourceTaxon( t );
-                    found = character;
-                    break;
-                }
-            }
-
-            if ( found == null && log.isWarnEnabled() ) {
-                log.warn( "There is no organism information available for " + resultBioMaterial + " (converting from "
-                        + mageObj + "; Information is usually in BioSource" );
-            } else {
-
-                /*
-                 * remove the taxon characteristic from the biomaterial - it is redundant.
-                 */
-                resultBioMaterial.getCharacteristics().remove( found );
-
-                if ( log.isDebugEnabled() )
-                    log.debug( "Found " + resultBioMaterial.getSourceTaxon() + " from ontology entries for "
-                            + resultBioMaterial );
-            }
-
+            convertCharacteristicToTaxon( resultBioMaterial );
         }
 
         return resultBioMaterial;
+    }
+
+    /**
+     * @param resultBioMaterial
+     * @return
+     */
+    private Characteristic convertCharacteristicToTaxon(
+            ubic.gemma.model.expression.biomaterial.BioMaterial resultBioMaterial ) {
+        // explicitly convert the taxon over.
+        Characteristic found = null;
+        for ( Characteristic character : resultBioMaterial.getCharacteristics() ) {
+
+            assert character.getCategory() != null;
+
+            if ( character.getCategory().equals( "Organism" ) ) {
+                String scientificName = character.getValue();
+                Taxon t = Taxon.Factory.newInstance();
+                t.setScientificName( scientificName );
+                resultBioMaterial.setSourceTaxon( t );
+                found = character;
+                break;
+            }
+        }
+
+        if ( found == null && log.isWarnEnabled() ) {
+            log.warn( "There is no organism information available for " + resultBioMaterial );
+        } else {
+
+            /*
+             * remove the taxon characteristic from the biomaterial - it is redundant.
+             */
+            resultBioMaterial.getCharacteristics().remove( found );
+
+            if ( log.isDebugEnabled() )
+                log.debug( "Found " + resultBioMaterial.getSourceTaxon() + " from ontology entries for "
+                        + resultBioMaterial );
+        }
+        return found;
     }
 
     /**

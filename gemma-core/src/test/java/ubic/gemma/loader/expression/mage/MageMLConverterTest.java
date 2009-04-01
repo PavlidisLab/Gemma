@@ -103,6 +103,7 @@ public class MageMLConverterTest extends AbstractMageTest {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertEquals( 1, bm.getFactorValues().size() );
+                assertNotNull( bm.getSourceTaxon() );
             }
         }
 
@@ -182,6 +183,7 @@ public class MageMLConverterTest extends AbstractMageTest {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertEquals( 1, bm.getFactorValues().size() );
+                assertNotNull( bm.getSourceTaxon() );
             }
         }
 
@@ -252,6 +254,7 @@ public class MageMLConverterTest extends AbstractMageTest {
             assertTrue( "Got: " + ba.getName(), ba.getName().contains( "DBA" ) );
             assertEquals( 2, ba.getSamplesUsed().size() );
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertNotNull( bm.getSourceTaxon() );
                 assertTrue( bm.getFactorValues().size() >= 2 );
                 for ( FactorValue fv : bm.getFactorValues() ) {
                     if ( fv.getCharacteristics().size() > 1 ) {
@@ -308,6 +311,15 @@ public class MageMLConverterTest extends AbstractMageTest {
             if ( log.isDebugEnabled() ) {
                 log.debug( obj.getClass() + ": " + obj );
             }
+        }
+
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            assertEquals( 2, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertEquals( 1, bm.getBioAssaysUsedIn().size() );
+                assertNotNull( bm.getSourceTaxon() );
+            }
+
         }
 
         assertNotNull( expressionExperiment );
@@ -368,6 +380,7 @@ public class MageMLConverterTest extends AbstractMageTest {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertEquals( 3, bm.getFactorValues().size() );
+                assertNotNull( bm.getSourceTaxon() );
             }
         }
 
@@ -448,7 +461,9 @@ public class MageMLConverterTest extends AbstractMageTest {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertEquals( 3, bm.getFactorValues().size() );
+                assertNotNull( bm.getSourceTaxon() );
             }
+
         }
 
         /*
@@ -513,6 +528,16 @@ public class MageMLConverterTest extends AbstractMageTest {
         assertNotNull( expressionExperiment.getSource() );
         assertNotNull( expressionExperiment.getAccession() );
 
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            assertEquals( 1, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertEquals( 1, bm.getBioAssaysUsedIn().size() );
+                assertEquals( 2, bm.getFactorValues().size() );
+                assertNotNull( bm.getSourceTaxon() );
+            }
+
+        }
+
         boolean found = false;
         for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
             log.info( qt );
@@ -570,6 +595,15 @@ public class MageMLConverterTest extends AbstractMageTest {
         assertEquals( 20, expressionExperiment.getBioAssays().size() );
         assertNotNull( expressionExperiment.getSource() );
         assertNotNull( expressionExperiment.getAccession() );
+
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            assertEquals( 2, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertEquals( 1, bm.getBioAssaysUsedIn().size() );
+                assertNotNull( bm.getSourceTaxon() );
+            }
+
+        }
 
         boolean found = false;
         for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
