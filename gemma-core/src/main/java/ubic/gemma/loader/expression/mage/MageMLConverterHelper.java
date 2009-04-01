@@ -2587,7 +2587,8 @@ public class MageMLConverterHelper {
          * This can be filled in altready through convertDataType. It causes problems when this is an intensity value,
          * we really need to treat as a double. Let the parameter guesser figure it out.
          */
-        if ( result.getRepresentation().equals( PrimitiveType.INT ) && result.getName().toLowerCase().contains( "mean" )
+        if ( result.getRepresentation() != null && result.getRepresentation().equals( PrimitiveType.INT )
+                && result.getName().toLowerCase().contains( "mean" )
                 || result.getName().toLowerCase().contains( "median" ) ) {
             result.setRepresentation( null );
         }
