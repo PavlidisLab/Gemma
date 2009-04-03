@@ -22,9 +22,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 				});
 
 		this.isAdmin = Ext.get("hasAdmin").getValue() == 'true';
-		this.isUser =   Ext.get("hasUser").getValue() == 'true';
+		this.isUser = Ext.get("hasUser").getValue() == 'true';
 		this.editable = this.isAdmin || this.isUser;
-		
 
 		/*
 		 * Load the EE information via an ajax call.
@@ -127,7 +126,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						minLength : 7,
 						maxLength : 9,
 						allowNegative : false,
-						emptyText : this.isAdmin|| this.isUser ? 'Enter pubmed id': 'Not Available',
+						emptyText : this.isAdmin || this.isUser ? 'Enter pubmed id' : 'Not Available',
 						width : 100,
 						id : 'pubmed-id-field',
 						enableKeyEvents : true,
@@ -242,7 +241,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
 				+ id
 				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></a>';
-		if (ee.technologyType != 'ONECOLOR' && ee.hasBothIntensities) {
+		if (ee.technologyType != 'ONECOLOR') {
 			if (ee.dateMissingValueAnalysis) {
 				var type = ee.missingValueAnalysisEventType;
 				var color = "#000";
@@ -261,7 +260,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 			}
 
 		} else {
-			return '<span style="color:#CCF;">NA</span>';
+			return '<span ext:qtip="Only relevant for two-channel microarray studies" style="color:#CCF;">NA</span>';
 		}
 	},
 
@@ -344,12 +343,13 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 				+ '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
 				+ e.id
 				+ '"  target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></a>&nbsp;';
-				
-			 if (this.isAdmin){
-			 	adminLinks = adminLinks
-			 	+ '<a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment(' + e.id
-				+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></a>&nbsp;';			 
-			 }
+
+		if (this.isAdmin) {
+			adminLinks = adminLinks
+					+ '<a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
+					+ e.id
+					+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></a>&nbsp;';
+		}
 
 		var pubmedRegion = {};
 
@@ -386,10 +386,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		manager.on('tagsUpdated', function() {
 					tagView.store.reload();
 				});
-				
+
 		manager.on('done', function() {
-				window.location.reload();
-			});
+					window.location.reload();
+				});
 
 		manager.on('reportUpdated', function(data) {
 					ob = data[0];
@@ -483,8 +483,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					// height : 100,
 					value : e.description
 				});
-				
-				var nameArea = new Ext.form.TextArea({
+
+		var nameArea = new Ext.form.TextArea({
 					id : 'name',
 					fieldLabel : 'Name',
 					allowBlank : false,
@@ -499,11 +499,11 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						'keyup' : {
 							fn : function(e) {
 								if (Ext.getCmp('name').isDirty() && Ext.getCmp('name').isValid()) {
-										// show save button
-										Ext.getCmp('update-button-region').show();
-									} else {
-										Ext.getCmp('update-button-region').hide();
-									}
+									// show save button
+									Ext.getCmp('update-button-region').show();
+								} else {
+									Ext.getCmp('update-button-region').hide();
+								}
 							}
 						}
 					},
