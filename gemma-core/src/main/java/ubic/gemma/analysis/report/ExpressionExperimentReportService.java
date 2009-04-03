@@ -95,6 +95,7 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
      * (non-Javadoc)
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
+    @Override
     public void afterPropertiesSet() throws Exception {
         this.taskId = TaskRunningService.generateTaskId();
     }
@@ -381,6 +382,7 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
      * (non-Javadoc)
      * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
      */
+    @Override
     public String getTaskId() {
         return taskId;
     }
@@ -682,7 +684,10 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
         }
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * @param ids
+     * @return
+     */
     private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
         /*
          * Because this method returns the results, we have to screen.
