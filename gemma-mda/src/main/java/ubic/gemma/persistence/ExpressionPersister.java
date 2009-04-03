@@ -504,11 +504,20 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
-     * If there are factorvalues, make sure they are used by biomaterials.
+     * If there are factorvalues, check if they are setup right and if they are used by biomaterials.
      * 
      * @param expExp
      */
     private void checkExperimentalDesign( ExpressionExperiment expExp ) {
+
+        if ( expExp == null ) {
+            return;
+        }
+
+        if ( expExp.getExperimentalDesign() == null ) {
+            log.warn( "No experimental design!" );
+            return;
+        }
 
         Collection<ExperimentalFactor> efs = expExp.getExperimentalDesign().getExperimentalFactors();
 
