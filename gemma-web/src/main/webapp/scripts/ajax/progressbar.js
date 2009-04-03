@@ -1,6 +1,8 @@
 /**
  * Progressbar.js.
  * 
+ * @Deprecated Use ProgressWidget.js instead.
+ * 
  * 
  * To use:
  * 
@@ -129,7 +131,6 @@ Ext.extend(progressbar, Ext.util.Observable, {
 
 	stopProgress : function() {
 		window.clearInterval(this.timeoutid);
-		// Ext.DomHelper.overwrite("progress-area", "");
 		this.previousMessage = null;
 		this.waiting = false;
 	},
@@ -242,10 +243,23 @@ Ext.extend(progressbar, Ext.util.Observable, {
 			return;
 
 		if (this.previousMessage != messages && messages.length > 0) {
+
+			/*
+			 * Add messages, TODO but if they are long truncate them.
+			 */
+
 			this.previousMessage = messages;
+
 			document.getElementById("progressTextArea").innerHTML += messages;
 			document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
 		} else {
+
+			/*
+			 * Show "...", but reset the "..." once in a while.
+			 */
+			document.getElementById("progressTextArea").innerHTML = document.getElementById("progressTextArea").innerHTML
+					.replace(".......", "");
+
 			document.getElementById("progressTextArea").innerHTML += ".";
 			document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
 		}

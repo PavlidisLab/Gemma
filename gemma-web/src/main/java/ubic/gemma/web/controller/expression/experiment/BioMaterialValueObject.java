@@ -65,7 +65,15 @@ public class BioMaterialValueObject {
             String factorValueId = String.format( "fv%d", fv.getId() );
             this.factors.put( factorId, getExperimentalFactorString( factor ) );
             this.factorValues.put( factorValueId, getFactorValueString( fv ) );
-            this.factorIdToFactorValueId.put( factorId, factorValueId );
+
+            if ( fv.getMeasurement() == null ) {
+                this.factorIdToFactorValueId.put( factorId, factorValueId );
+            } else {
+                /*
+                 * use the actual value, not the factorvalue id.
+                 */
+                this.factorIdToFactorValueId.put( factorId, factorValues.get( factorValueId ) );
+            }
         }
     }
 
@@ -90,7 +98,13 @@ public class BioMaterialValueObject {
     }
 
     private String getFactorValueString( FactorValue value ) {
-        return getCharacteristicString( value.getCharacteristics() );
+        if ( !value.getCharacteristics().isEmpty() ) {
+            return getCharacteristicString( value.getCharacteristics() );
+        } else if ( value.getMeasurement() != null ) {
+            return value.getMeasurement().getValue();
+        } else {
+            return value.getValue();
+        }
     }
 
     public long getId() {

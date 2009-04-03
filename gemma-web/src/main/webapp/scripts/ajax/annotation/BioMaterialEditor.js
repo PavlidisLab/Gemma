@@ -66,35 +66,52 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					id : "bm",
 					header : "BioMaterial",
 					dataIndex : "bmName",
-					sortable : true
+					sortable : true,
+					tooltip : 'BioMaterial (sample) name/details'
 				}, {
 					id : "ba",
 					header : "BioAssay",
 					dataIndex : "baName",
-					sortable : true
+					sortable : true,
+					tooltip : 'BioAssay name/details'
 				}];
 
-		this.factorValueCombos = [];
+		this.factorValueEditors = [];
 
 		for (var i = 0; i < factors.length; i++) {
 			var factor = factors[i];
 			var factorId = "factor" + factor.id;
 
-			/*
-			 * Create one factorValueCombo per factor. It contains all the factor values.
-			 */
-			this.factorValueCombos[factorId] = new Gemma.FactorValueCombo({
-						id : factorId + '-valuecombo',
-						lazyInit : false,
-						lazyRender : true,
-						record : this.fvRecord,
-						data : factor.values
-					});
-
 			var editor;
-			if (this.editable) {
-				editor = this.factorValueCombos[factorId];
+			var continuous = factor.type == "Continuous";
+			if (continuous) {
+
+				editor = new Ext.form.NumberField({
+							id : factorId + '-valueeditor',
+							lazyInit : false,
+							lazyRender : true,
+							record : this.fvRecord,
+							continuous : continuous, // might be useful.
+							data : factor.values
+						});
+			} else {
+
+				/*
+				 * Create one factorValueCombo per factor. It contains all the factor values.
+				 */
+				editor = new Gemma.FactorValueCombo({
+							id : factorId + '-valueeditor',
+							lazyInit : false,
+							lazyRender : true,
+							record : this.fvRecord,
+							continuous : continuous,
+							data : factor.values
+						});
+
+				// console.log("Categorical");
 			}
+
+			this.factorValueEditors[factorId] = editor;
 
 			// factorValueValueObjects
 			if (factor.values) {
@@ -109,18 +126,31 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			 * Generate a function to render the factor values as displayed in the cells. At this point factorValue
 			 * contains all the possible values for this factor.
 			 */
-			var rend = this.createValueRenderer();
+			var rend = null;
+			if (!continuous) {
+				rend = this.createValueRenderer();
+			}
 
 			/*
 			 * Define the column for this particular factor.
 			 */
+			var ue = null;
+			if (this.editable) {
+				ue = editor;
+			}
+
+			var label = factor.description ? factor.description : factor.name
+					+ (factor.name === factor.description ? "" : " (" + factor.name + ")");
+
 			columns.push({
 						id : factorId,
-						header : factor.name,
+						header : label,
 						dataIndex : factorId,
 						renderer : rend,
-						editor : editor,
-						sortable : true
+						editor : ue,
+						tooltip : label,
+						sortable : true,
+						continuous : continuous
 					});
 
 		}
@@ -212,17 +242,27 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}, this);
 
 		if (this.editable) {
+
 			/**
 			 * Editing of a specific record fires this.
 			 */
 			this.on("afteredit", function(e) {
-						var factorId = this.getColumnModel().getColumnId(e.column);
-						var combo = this.factorValueCombos[factorId];
-						var fvvo = combo.getFactorValue();
-						e.record.set(factorId, fvvo.id);
-						this.getTopToolbar().saveButton.enable();
-						this.getView().refresh();
-					}, this);
+				var factorId = this.getColumnModel().getColumnId(e.column);
+				var editor = this.factorValueEditors[factorId];
+
+				if (editor.continuous) {
+					// e.record.set(factorId, editor.value); // use the value, not the id
+				} else {
+					var fvvo = editor.getFactorValue();
+					e.record.set(factorId, fvvo.id);
+				}
+
+				// if (e.originalValue != e.value) {
+				this.getTopToolbar().saveButton.enable();
+				this.getView().refresh();
+					// }
+
+				}, this);
 
 			/**
 			 * Bulk update biomaterial -> factorvalue associations (must click save to persist)
@@ -249,9 +289,10 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 								id : row.id,
 								factorIdToFactorValueId : {}
 							};
-							// looking for 'factor569' -> fv54910
+
 							for (var j in row) {
-								if (typeof row[j] == 'string' && row[j].indexOf("fv") >= 0) {
+								if (typeof j == 'string' && j.indexOf("factor") >= 0) {
+									console.log(j + "...." + row[j]);
 									bmvo.factorIdToFactorValueId[j] = row[j];
 								}
 							}
@@ -323,10 +364,6 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}
 			}
 
-			// for (var factorId in factors) {
-			// var k = bmvo.factorIdToFactorValueId[factorId];
-			// data[i].push(k);
-			// }
 		}
 		return data;
 	},
@@ -364,10 +401,13 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}]),
 
 	reloadFactorValues : function() {
-		for (var i in this.factorValueCombos) {
-			var factorId = this.factorValueCombos[i];
+		for (var i in this.factorValueEditors) {
+			var factorId = this.factorValueEditors[i];
 			if (typeof factorId == 'string' && factorId.substring(0, 6) == "factor") {
-				var combo = this.factorValueCombos[factorId];
+				var combo = this.factorValueEditors[factorId];
+
+				// careful for coninuous.
+
 				var column = this.getColumnModel().getColumnById(factorId);
 				combo.setExperimentalFactor(combo.experimentalFactor.id, function(r, options, success) {
 							this.fvMap = {};
@@ -387,10 +427,6 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	createValueRenderer : function() {
 
 		return function(value, metadata, record, row, col, ds) {
-			/*
-			 * If we have the factor values map already (should!), return the descriptive string. Otherwise we display
-			 * 'fv123' etc. If the value is blank, we just return blank.
-			 */
 
 			if (!value) {
 				return "-";
@@ -448,6 +484,10 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 							});
 
 					this.factorCombo.on("select", function(combo, record, index) {
+
+								/*
+								 * FIXME, don't enable this if the factor is continuous.
+								 */
 								this.factorValueCombo.setExperimentalFactor(record.id);
 								this.factorValueCombo.enable();
 							}, this);

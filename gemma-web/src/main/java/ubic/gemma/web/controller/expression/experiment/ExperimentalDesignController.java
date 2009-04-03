@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -547,17 +548,52 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      */
     private void updateBioMaterial( BioMaterialValueObject bmvo ) {
         BioMaterial bm = bioMaterialService.load( bmvo.getId() );
-        bm.getFactorValues().clear();
-        for ( String fvIdString : bmvo.getFactorIdToFactorValueId().values() ) {
-            if ( fvIdString.matches( "fv\\d+" ) ) {
-                long fvId = Long.parseLong( fvIdString.substring( 2 ) );
+
+        Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
+        Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId();
+        for ( String factorIdString : factorIdToFactorValueId.keySet() ) {
+            String factorValueString = factorIdToFactorValueId.get( factorIdString );
+
+            assert factorIdString.matches( "factor\\d+" );
+            Long factorId = Long.parseLong( factorIdString.substring( 6 ) );
+
+            if ( factorValueString.matches( "fv\\d+" ) ) {
+                // categorical
+                long fvId = Long.parseLong( factorValueString.substring( 2 ) );
                 FactorValue fv = factorValueService.load( fvId );
                 if ( fv == null ) {
                     throw new EntityNotFoundException( "No such factorValue with id=" + fvId );
                 }
-                bm.getFactorValues().add( fv );
+                updatedFactorValues.add( fv );
+            } else {
+                // continuous.
+
+                // it's the actual value. This will only make sense if the value is a measurement.
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    if ( fv.getExperimentalFactor().getId().equals( factorId ) ) {
+                        if ( fv.getMeasurement() == null ) {
+                            log.warn( "Should have been a measurement associated with fv=" + fv );
+                            continue;
+                        }
+
+                        if ( !fv.getMeasurement().getValue().equals( factorValueString ) ) {
+                            log.debug( "Updating continuous value on biomaterial:" + bmvo + ", factor="
+                                    + fv.getExperimentalFactor() + " value= '" + factorValueString + "'" );
+                            fv.getMeasurement().setValue( factorValueString );
+                        } else {
+                            log.debug( "Value unchanged from " + fv.getMeasurement().getValue() );
+                        }
+                        // always add...
+                        updatedFactorValues.add( fv );
+                        break;
+                    }
+                }
             }
         }
+
+        bm.getFactorValues().clear();
+        bm.getFactorValues().addAll( updatedFactorValues );
+
         bioMaterialService.update( bm );
     }
 

@@ -140,6 +140,28 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 				this.addEvents('done', 'fail', 'cancel');
 			},
 
+			/**
+			 * Handle failure of the server to respond to a check.
+			 * 
+			 * @param {}
+			 *            data
+			 * @param {}
+			 *            e
+			 */
+			handleResponseFailure : function(data, e) {
+				/*
+				 * keep going. Hopefully just a temporary network lapse.
+				 */
+			},
+
+			/**
+			 * Handle failure of a job.
+			 * 
+			 * @param {}
+			 *            data
+			 * @param {}
+			 *            e
+			 */
 			handleFailure : function(data, e) {
 				this.stopProgress();
 				var messageText = "";
@@ -184,7 +206,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 
 				var callParams = [];
 				var callback = this.updateProgress.createDelegate(this);
-				var errorHandler = this.handleFailure.createDelegate(this);
+				var errorHandler = this.handleResponseFailure.createDelegate(this);
 				callParams.push(callback);
 				callParams.push(errorHandler);
 
@@ -239,11 +261,18 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 				}
 
 				if (this.previousMessage != messages && messages.length > 0) {
-					this.previousMessage = messages;
-					this.progressBar.updateText(messages);
 					this.allMessages = this.allMessages + messagesToSave;
-					// document.getElementById("progressTextArea").innerHTML += messages;
+
+					// chop them if they are too long
+					messages = Ext.util.Format.ellipses(messages, 200);
+
+					this.previousMessage = messages;
+
+					this.progressBar.updateText(messages);
+
 				} else {
+					this.progressBar.text = this.progressBar.text.replace('.......', '');
+
 					this.progressBar.updateText(this.progressBar.text + '.');
 				}
 			},

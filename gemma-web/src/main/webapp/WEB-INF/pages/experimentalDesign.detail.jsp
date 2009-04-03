@@ -140,4 +140,4 @@
 
 <div id="factorValuePanel" class="x-hide-display" style="margin-bottom: 1em;"></div>
 
-<div id="bioMaterialsPanel" class="x-hide-display"></div>
+<div id="bioMaterialsPanel" class="x-hide-display" ></div>

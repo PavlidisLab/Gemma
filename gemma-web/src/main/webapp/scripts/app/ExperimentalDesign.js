@@ -99,7 +99,10 @@ Ext.onReady(function() {
 						id : 'biomaterial-grid-panel',
 						eeId : eeId,
 						edId : edId,
-						height : 645,
+						viewConfig : {
+			 // forceFit : true
+						},
+						height : 740,
 						width : 1000,
 						editable : editable
 					});
@@ -157,8 +160,16 @@ Ext.onReady(function() {
 					});
 
 			experimentalFactorGrid.on("experimentalfactorselected", function(factor) {
-						factorValueGrid.setTitle("Factor values for : " + factor.get("name"));
-						factorValueGrid.setExperimentalFactor(factor.get("id"));
+
+						if (factor.get("type") == "Continuous") {
+							factorValueGrid
+									.setTitle("Continuous values not displayed here, see the 'sample details' tab");
+							factorValueGrid.disable();
+						} else {
+							factorValueGrid.enable();
+							factorValueGrid.setTitle("Factor values for : " + factor.get("name"));
+							factorValueGrid.setExperimentalFactor(factor.get("id"));
+						}
 					});
 
 			factorValueGrid.on("factorvaluecreate", function(fvgrid, fvs) {
