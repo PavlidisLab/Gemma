@@ -140,7 +140,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             return null;
 
         } else if ( results.size() == 1 ) {
-            return ( BioSequence ) results.iterator().next();
+            return results.iterator().next();
         } else {
             return null;
         }
@@ -158,7 +158,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             return existingBioSequence;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
-        return ( BioSequence ) create( bioSequence );
+        return create( bioSequence );
     }
 
     @Override
