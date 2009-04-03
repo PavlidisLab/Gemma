@@ -34,7 +34,8 @@ public abstract class ExperimentalDesignDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<ExperimentalDesign> create( final int transform,
+            final java.util.Collection<ExperimentalDesign> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.create - 'entities' can not be null" );
         }
@@ -353,7 +354,7 @@ public abstract class ExperimentalDesignDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<ExperimentalDesign> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExperimentalDesign.update - 'entities' can not be null" );
         }

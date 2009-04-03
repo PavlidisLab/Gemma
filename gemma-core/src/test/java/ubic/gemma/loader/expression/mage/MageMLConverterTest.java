@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -104,6 +105,9 @@ public class MageMLConverterTest extends AbstractMageTest {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertEquals( 1, bm.getFactorValues().size() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    assertNotNull( fv.getExperimentalFactor() );
+                }
                 assertNotNull( bm.getSourceTaxon() );
             }
         }
@@ -185,6 +189,9 @@ public class MageMLConverterTest extends AbstractMageTest {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertEquals( 1, bm.getFactorValues().size() );
                 assertNotNull( bm.getSourceTaxon() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    assertNotNull( fv.getExperimentalFactor() );
+                }
             }
         }
 
@@ -256,8 +263,11 @@ public class MageMLConverterTest extends AbstractMageTest {
             assertEquals( 2, ba.getSamplesUsed().size() );
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertNotNull( bm.getSourceTaxon() );
-                assertTrue( bm.getFactorValues().size() >= 2 );
+                // assertTrue( "Got: " + bm.getFactorValues().size() + " for " + bm, bm.getFactorValues().size() >= 2 );
                 for ( FactorValue fv : bm.getFactorValues() ) {
+
+                    assertNotNull( fv.getExperimentalFactor() );
+
                     if ( fv.getCharacteristics().size() > 1 ) {
                         assertNotNull( fv.getCharacteristics().iterator().next().getValue() );
                     } else {
@@ -319,6 +329,9 @@ public class MageMLConverterTest extends AbstractMageTest {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertNotNull( bm.getSourceTaxon() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    assertNotNull( fv.getExperimentalFactor() );
+                }
             }
 
         }
@@ -382,6 +395,9 @@ public class MageMLConverterTest extends AbstractMageTest {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertEquals( 3, bm.getFactorValues().size() );
                 assertNotNull( bm.getSourceTaxon() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    assertNotNull( fv.getExperimentalFactor() );
+                }
             }
         }
 
@@ -393,6 +409,8 @@ public class MageMLConverterTest extends AbstractMageTest {
         for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
             assertEquals( 2, factor.getFactorValues().size() );
             for ( FactorValue fv : factor.getFactorValues() ) {
+                assertNotNull( fv.getExperimentalFactor() );
+
                 assertEquals( 1, fv.getCharacteristics().size() );
                 for ( Characteristic c : fv.getCharacteristics() ) {
                     assertNotNull( c.getValue() );
@@ -463,6 +481,9 @@ public class MageMLConverterTest extends AbstractMageTest {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertEquals( 3, bm.getFactorValues().size() );
                 assertNotNull( bm.getSourceTaxon() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    assertNotNull( fv.getExperimentalFactor() );
+                }
             }
 
         }
@@ -475,8 +496,8 @@ public class MageMLConverterTest extends AbstractMageTest {
         for ( ExperimentalFactor factor : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
             assertTrue( factor.getFactorValues().size() >= 3 );
             for ( FactorValue fv : factor.getFactorValues() ) {
-                log.info( fv );
                 assertEquals( 1, fv.getCharacteristics().size() );
+                assertEquals( factor, fv.getExperimentalFactor() );
                 for ( Characteristic c : fv.getCharacteristics() ) {
                     assertNotNull( c.getValue() );
                 }
@@ -535,13 +556,15 @@ public class MageMLConverterTest extends AbstractMageTest {
                 assertEquals( 1, bm.getBioAssaysUsedIn().size() );
                 assertEquals( 2, bm.getFactorValues().size() );
                 assertNotNull( bm.getSourceTaxon() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    assertNotNull( fv.getExperimentalFactor() );
+                }
             }
 
         }
 
         boolean found = false;
         for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
-            log.info( qt );
             if ( qt.getName().equals( "CHPSignal" ) ) {
                 assertEquals( ScaleType.LINEAR, qt.getScale() );
                 assertEquals( PrimitiveType.DOUBLE, qt.getRepresentation() );
@@ -554,7 +577,7 @@ public class MageMLConverterTest extends AbstractMageTest {
     }
 
     /**
-     * Has no array package.
+     * Has no array package, has 20 bioassays, 40 biomaterials. Missing channel 1 information.
      * 
      * @throws Exception
      */
@@ -599,7 +622,11 @@ public class MageMLConverterTest extends AbstractMageTest {
 
         assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
         for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
-            assertEquals( 20, ef.getFactorValues().size() );
+            assertEquals( 2, ef.getFactorValues().size() );
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                assertNotNull( fv.getMeasurement() );
+                assertEquals( ef, fv.getExperimentalFactor() );
+            }
         }
 
         /*
@@ -613,10 +640,14 @@ public class MageMLConverterTest extends AbstractMageTest {
                 assertNotNull( bm.getSourceTaxon() );
                 assertEquals( 1, bm.getFactorValues().size() );
                 for ( FactorValue fv : bm.getFactorValues() ) {
+                    assertNotNull( fv.getExperimentalFactor() );
                     assertNotNull( fv.getMeasurement() );
+                    assertNotNull( fv.getMeasurement().getUnit() );
+                    assertEquals( "degree_C", fv.getMeasurement().getUnit().getUnitNameCV() );
+                    assertEquals( PrimitiveType.DOUBLE, fv.getMeasurement().getRepresentation() );
+                    assertEquals( MeasurementType.ABSOLUTE, fv.getMeasurement().getType() );
                 }
             }
-
         }
 
         boolean found = false;
@@ -650,7 +681,11 @@ public class MageMLConverterTest extends AbstractMageTest {
             }
 
         }
-        assertTrue( found && foundBA && foundBB && foundSA && foundSB );
+
+        /*
+         * Note that this ee has these defined in the mageml, but they're missing from the processeddata.
+         */
+        assertTrue( found && foundBB && foundSB && foundBA && foundSA );
 
     }
 

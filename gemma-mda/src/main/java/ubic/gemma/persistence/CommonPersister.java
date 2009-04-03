@@ -46,6 +46,8 @@ import ubic.gemma.model.common.description.LocalFileService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementService;
+import ubic.gemma.model.common.measurement.Unit;
+import ubic.gemma.model.common.measurement.UnitService;
 import ubic.gemma.model.common.protocol.Hardware;
 import ubic.gemma.model.common.protocol.HardwareApplication;
 import ubic.gemma.model.common.protocol.HardwareService;
@@ -74,12 +76,15 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
  * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
  * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
+ * @spring.property name="unitService" ref="unitService"
  * @author pavlidis
  * @version $Id$
  */
 abstract public class CommonPersister extends AbstractPersister {
 
     protected AuditTrailService auditTrailService;
+
+    protected BibliographicReferenceService bibliographicReferenceService;
 
     protected ContactService contactService;
 
@@ -99,8 +104,6 @@ abstract public class CommonPersister extends AbstractPersister {
 
     protected PersonService personService;
 
-    protected UserService userService;
-
     protected ProtocolService protocolService;
 
     protected QuantitationTypeService quantitationTypeService;
@@ -109,11 +112,13 @@ abstract public class CommonPersister extends AbstractPersister {
 
     protected SoftwareService softwareService;
 
-    protected BibliographicReferenceService bibliographicReferenceService;
+    protected UnitService unitService;
 
-    // protected TermRelationshipService termRelationshipService;
+    protected UserService userService;
 
     Map<Object, QuantitationType> quantitationTypeCache = new HashMap<Object, QuantitationType>();
+
+    // protected TermRelationshipService termRelationshipService;
 
     /*
      * (non-Javadoc)
@@ -131,6 +136,8 @@ abstract public class CommonPersister extends AbstractPersister {
             return persistContact( ( Contact ) entity );
         } else if ( entity instanceof Hardware ) {
             return persistHardware( ( Hardware ) entity );
+        } else if ( entity instanceof Unit ) {
+            return persistUnit( ( Unit ) entity );
         } else if ( entity instanceof QuantitationType ) {
             return persistQuantitationType( ( QuantitationType ) entity );
         } else if ( entity instanceof ExternalDatabase ) {
@@ -247,6 +254,13 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     public void setSoftwareService( SoftwareService softwareService ) {
         this.softwareService = softwareService;
+    }
+
+    /**
+     * @param unitService the unitService to set
+     */
+    public void setUnitService( UnitService unitService ) {
+        this.unitService = unitService;
     }
 
     /**
@@ -447,6 +461,12 @@ abstract public class CommonPersister extends AbstractPersister {
         return localFileService.findOrCreate( file );
     }
 
+    protected Unit persistUnit( Unit unit ) {
+        if ( unit == null ) return null;
+        if ( !isTransient( unit ) ) return unit;
+        return this.unitService.findOrCreate( unit );
+    }
+
     /**
      * Unlike many entities, measurements are 'unique' - there is no 'findOrCreate' method.
      * 
@@ -454,6 +474,11 @@ abstract public class CommonPersister extends AbstractPersister {
      * @return
      */
     protected Measurement persistMeasurement( Measurement measurement ) {
+
+        if ( measurement.getUnit() != null ) {
+            measurement.setUnit( persistUnit( measurement.getUnit() ) );
+        }
+
         return measurementService.create( measurement );
     }
 

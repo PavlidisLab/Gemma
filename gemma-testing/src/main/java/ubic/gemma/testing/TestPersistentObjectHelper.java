@@ -119,6 +119,7 @@ public class TestPersistentObjectHelper {
             if ( iter.hasNext() ) {
                 fvCol.add( iter.next() );
             } else {
+                // start over.
                 iter = allFactorValues.iterator();
                 fvCol.add( iter.next() );
             }
@@ -292,6 +293,9 @@ public class TestPersistentObjectHelper {
      * @param dosequence Should the array design get all the sequence information filled in? (true = slower)
      */
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( boolean dosequence ) {
+
+        this.allFactorValues.clear();
+
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
@@ -405,7 +409,6 @@ public class TestPersistentObjectHelper {
      * @param dosequence If true, biosequences and biosequence2GeneProduct associations are filled in (slower).
      * @return ArrayDesign
      */
-    @SuppressWarnings("unchecked")
     public ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames, boolean dosequence ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 

@@ -190,7 +190,7 @@
 		</property>
 		<property name="hibernateProperties">
 			<props>
-				<prop key="hibernate.show_sql">false</prop>
+				
 				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</prop>
 				<prop key="hibernate.max_fetch_depth">3</prop>
 				<prop key="hibernate.jdbc.fetch_size">500</prop>
@@ -203,7 +203,8 @@
 				<prop key="hibernate.generate_statistics">true</prop>
 				<prop key="hibernate.cache.use_structured_entries">true</prop>
 				<!-- <prop key="hibernate.format_sql">true</prop>
-					<prop key="hibernate.use_sql_comments">true</prop>-->
+					<prop key="hibernate.use_sql_comments">true</prop>
+				<prop key="hibernate.show_sql">true</prop>  -->
 			</props>
 		</property>
 		<property name="cacheProvider">
@@ -420,6 +421,11 @@
 				ubic.gemma.model.common.auditAndSecurity.AuditEventService.getNewSinceDate=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.auditAndSecurity.AuditEventService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.measurement.MeasurementService.create=PROPAGATION_REQUIRED
+				ubic.gemma.model.common.measurement.UnitService.create=PROPAGATION_REQUIRED
+				ubic.gemma.model.common.measurement.UnitService.update=PROPAGATION_REQUIRED
+				ubic.gemma.model.common.measurement.UnitService.remove=PROPAGATION_REQUIRED
+				ubic.gemma.model.common.measurement.UnitService.load=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.common.measurement.UnitService.loadAll=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.protocol.HardwareService.find=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.protocol.HardwareService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.protocol.HardwareService.update=PROPAGATION_REQUIRED
@@ -3728,6 +3734,26 @@
 		</property>
 		<property name="proxyInterfaces">
 			<value>ubic.gemma.model.common.measurement.MeasurementService
+			</value>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>serviceTransactionInterceptor</value>
+				<value>hibernateInterceptor</value>
+			</list>
+		</property>
+	</bean>
+	<!-- UnitService Service Proxy with inner UnitService Service Implementation -->
+	<bean id="unitService" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="target">
+			<bean class="ubic.gemma.model.common.measurement.UnitServiceImpl">
+				<property name="unitDao">
+					<ref bean="unitDao" />
+				</property>
+			</bean>
+		</property>
+		<property name="proxyInterfaces">
+			<value>ubic.gemma.model.common.measurement.UnitService
 			</value>
 		</property>
 		<property name="interceptorNames">

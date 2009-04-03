@@ -41,6 +41,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -535,6 +536,12 @@ public class BusinessKey {
         }
     }
 
+    public static void checkValidKey( Unit unit ) {
+        if ( unit == null || StringUtils.isBlank( unit.getUnitNameCV() ) ) {
+            throw new IllegalArgumentException( unit + " did not have a valid key" );
+        }
+    }
+
     /**
      * @param bioSequence
      */
@@ -753,7 +760,7 @@ public class BusinessKey {
 
     /**
      * @param session
-     * @param ontologyEntry
+     * @param arrayDesign
      * @return
      */
     public static Criteria createQueryObject( Session session, ArrayDesign arrayDesign ) {
@@ -764,7 +771,24 @@ public class BusinessKey {
 
     /**
      * @param session
-     * @param ontologyEntry
+     * @param unit
+     * @return
+     */
+    public static Criteria createQueryObject( Session session, Unit unit ) {
+        Criteria queryObject = session.createCriteria( Unit.class );
+
+        if ( unit.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", unit.getId() ) );
+        } else if ( unit.getUnitNameCV() != null ) {
+            queryObject.add( Restrictions.eq( "unitNameCV", unit.getUnitNameCV() ) );
+        }
+
+        return queryObject;
+    }
+
+    /**
+     * @param session
+     * @param bioAssay
      * @return
      */
     public static Criteria createQueryObject( Session session, BioAssay bioAssay ) {

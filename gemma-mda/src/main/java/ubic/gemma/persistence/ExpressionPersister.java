@@ -39,8 +39,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.biomaterial.Compound;
@@ -58,7 +56,6 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
 
 /**
  * @spring.property name="factorValueService" ref="factorValueService"
- * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="bioMaterialService" ref="bioMaterialService"
@@ -70,8 +67,6 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
  * @version $Id$
  */
 abstract public class ExpressionPersister extends ArrayDesignPersister {
-
-    private DesignElementDataVectorService designElementDataVectorService;
 
     private ExpressionExperimentService expressionExperimentService;
 
@@ -154,13 +149,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     public void setCompoundService( CompoundService compoundService ) {
         this.compoundService = compoundService;
-    }
-
-    /**
-     * @param designElementDataVectorService The designElementDataVectorService to set.
-     */
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
     }
 
     /**
@@ -308,6 +296,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @return
      */
     private ExperimentalFactor fillInExperimentalFactorAssociations( ExperimentalFactor experimentalFactor ) {
+        if ( experimentalFactor == null ) return null;
         if ( !isTransient( experimentalFactor ) ) return experimentalFactor;
 
         persistCollectionElements( experimentalFactor.getAnnotations() );
@@ -362,6 +351,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }
         }
+
+        // measurement will cascade, but not unit.
+        if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
+            factorValue.getMeasurement().setUnit( persistUnit( factorValue.getMeasurement().getUnit() ) );
+        }
+
     }
 
     /**
@@ -492,6 +487,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             expExp.setExperimentalDesign( experimentalDesign );
         }
 
+        checkExperimentalDesign( expExp );
+
         // this does most of the preparatory work.
         processBioAssays( expExp );
         expExp = expressionExperimentService.create( expExp );
@@ -504,6 +501,62 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         }
 
         return expExp;
+    }
+
+    /**
+     * If there are factorvalues, make sure they are used by biomaterials.
+     * 
+     * @param expExp
+     */
+    private void checkExperimentalDesign( ExpressionExperiment expExp ) {
+
+        Collection<ExperimentalFactor> efs = expExp.getExperimentalDesign().getExperimentalFactors();
+
+        if ( efs.size() == 0 ) return;
+
+        log.info( "Checking experimental design for valid setup" );
+
+        Collection<BioAssay> bioAssays = expExp.getBioAssays();
+
+        /*
+         * note this is very inefficient but it doesn't matter.
+         */
+        for ( ExperimentalFactor ef : efs ) {
+            log.info( "Checking: " + ef + ", " + ef.getFactorValues().size() + " factor values to check..." );
+
+            for ( FactorValue fv : ef.getFactorValues() ) {
+
+                if ( fv.getExperimentalFactor() == null || !fv.getExperimentalFactor().equals( ef ) ) {
+                    throw new IllegalStateException( "Factor value " + fv + " should have had experimental factor "
+                            + ef + ", it had " + fv.getExperimentalFactor() );
+                }
+
+                boolean found = false;
+                // make sure there is at least one bioassay using it.
+                for ( BioAssay ba : bioAssays ) {
+                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                        for ( FactorValue fvb : bm.getFactorValues() ) {
+
+                            // they should be persistent already at this point.
+                            if ( ( fvb.getId() != null || fv.getId() != null ) && fvb.equals( fv ) && fvb == fv ) {
+                                // Note we use == because they should be the same objects.
+                                found = true;
+                            }
+                        }
+                    }
+                }
+                if ( !found ) {
+                    /*
+                     * Basically this means there is factorvalue but no biomaterial is associated with it. This can
+                     * happen...especially with test objects, so we just warn.
+                     */
+                    // throw new IllegalStateException( "Unused factorValue: No bioassay..biomaterial association with "
+                    // + fv );
+                    log.warn( "Unused factorValue: No bioassay..biomaterial association with " + fv );
+                }
+            }
+
+        }
     }
 
     /**

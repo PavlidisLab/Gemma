@@ -38,6 +38,7 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
      * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#find(ubic.gemma.model.expression.experiment.
      * ExperimentalDesign)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public ExperimentalDesign find( ExperimentalDesign ExperimentalDesign ) {
         try {
@@ -80,7 +81,7 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
             return existingExperimentalDesign;
         }
         log.debug( "Creating new ExperimentalDesign: " + experimentalDesign.getName() );
-        return ( ExperimentalDesign ) create( experimentalDesign );
+        return create( experimentalDesign );
     }
 
     /*

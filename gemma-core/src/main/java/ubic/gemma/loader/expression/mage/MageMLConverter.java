@@ -34,12 +34,14 @@ import org.biomage.BioAssay.PhysicalBioAssay;
 import org.biomage.BioAssayData.BioAssayMap;
 
 import ubic.gemma.loader.util.converter.Converter;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Class to parse MAGE-ML files and convert them into Gemma domain objects SDO.
@@ -62,15 +64,6 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
         super();
         this.mageConverterHelper = new MageMLConverterHelper();
 
-    }
-
-    /**
-     * This is provided for tests.
-     * 
-     * @param path
-     */
-    protected void addLocalExternalDataPath( String path ) {
-        mageConverterHelper.addLocalExternalDataPath( path );
     }
 
     /*
@@ -119,7 +112,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
             }
         }
 
-        // fillInBioMaterialFactorValues( convertedResult );
+        fillInBioMaterialFactorValues();
         fillInExpressionExperimentQuantitationTypes();
         cleanupBioAssays();
 
@@ -129,92 +122,150 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
         return convertedResult;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
+     */
+    public Object convert( Object mageObject ) {
+        if ( mageObject == null ) return null;
+        return mageConverterHelper.convert( mageObject );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.loader.expression.mage.MageMLConverter#getBioAssayQuantitationTypeDimension(org.biomage.BioAssay.BioAssay
+     * )
+     */
+    public List<ubic.gemma.model.common.quantitationtype.QuantitationType> getBioAssayQuantitationTypeDimension(
+            BioAssay bioAssay ) {
+        assert isConverted;
+        return this.mageConverterHelper.getBioAssayQuantitationTypeDimension( bioAssay );
+    }
+
     /**
-     * @param objects
-     * @param c
+     * @return all the converted BioAssay objects.
+     */
+    public List<BioAssay> getConvertedBioAssays() {
+        List<BioAssay> result = new ArrayList<BioAssay>();
+        for ( Object object : convertedResult ) {
+            if ( object instanceof BioAssay ) {
+                result.add( ( BioAssay ) object );
+            }
+        }
+        log.info( "Found " + result.size() + " bioassays" );
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        Map<String, Integer> tally = new HashMap<String, Integer>();
+        for ( Object element : convertedResult ) {
+            String clazz = element.getClass().getName();
+            if ( !tally.containsKey( clazz ) ) {
+                tally.put( clazz, new Integer( 0 ) );
+            }
+            tally.put( clazz, new Integer( ( tally.get( clazz ) ).intValue() + 1 ) );
+        }
+
+        for ( String clazz : tally.keySet() ) {
+            buf.append( tally.get( clazz ) + " " + clazz + "s\n" );
+        }
+
+        return buf.toString();
+    }
+
+    /**
+     * This is provided for tests.
+     * 
+     * @param path
+     */
+    protected void addLocalExternalDataPath( String path ) {
+        mageConverterHelper.addLocalExternalDataPath( path );
+    }
+
+    /**
+     * @param ee
+     * @param array2BioAssay
      * @return
      */
-    private Collection<Object> processMGEDClass( Collection<? extends Object> objects, Class<? extends Object> c ) {
-        Collection<Object> convertedObjects = getConvertedDataForType( c, objects );
-        if ( convertedObjects != null && convertedObjects.size() > 0 ) {
-            log.info( "Adding " + convertedObjects.size() + " converted " + c.getName() + "s" );
-            convertedResult.addAll( convertedObjects );
-        } else {
-            log.debug( "Converted " + objects.size() + " " + c.getName() + "s" );
+    private ArrayDesign checkArrayDesigns( ExpressionExperiment ee,
+            Map<String, Collection<org.biomage.BioAssay.BioAssay>> array2BioAssay ) {
+
+        if ( array2BioAssay.size() == 0 ) {
+
+            /*
+             * I'm not sure this has ever been triggered.
+             */
+            log.info( ee.getBioAssays().size() + " bioassays associated with ee before cleanup." );
+            Collection<ArrayDesign> availableArrayDesigns = new HashSet<ArrayDesign>();
+            for ( Object convertedObject : this.convertedResult ) {
+                if ( convertedObject instanceof ArrayDesign ) {
+                    log.info( convertedObject );
+                    availableArrayDesigns.add( ( ArrayDesign ) convertedObject );
+                }
+            }
+
+            if ( availableArrayDesigns.size() > 1 ) {
+                throw new IllegalStateException( "More than one array design without acceptable mapping to bioassays." );
+            } else if ( availableArrayDesigns.size() == 0 ) {
+                log.warn( "No arrayDesigns and none associated with the bioassays" );
+                return null;
+            }
+            return availableArrayDesigns.iterator().next();
+
         }
-        return convertedObjects;
+
+        if ( ee.getBioAssays().size() < array2BioAssay.size() ) {
+            throw new IllegalStateException(
+                    "Something went wrong, the experiment has fewer bioassays than arrays used. Expected "
+                            + array2BioAssay.size() + ", got " + ee.getBioAssays().size() );
+        }
+
+        log.info( array2BioAssay.size() + " assays based on array count; " + ee.getBioAssays().size()
+                + " bioassays associated with ee before cleanup." );
+        return null;
+
     }
 
     /**
-     * Populate the quantitation types in the EE.
+     * @param a
+     * @param that
+     * @return
      */
-    private void fillInExpressionExperimentQuantitationTypes() {
-        ExpressionExperiment ee = null;
-        for ( Object object : convertedResult ) {
-            if ( object instanceof ExpressionExperiment ) {
-                if ( ee != null )
-                    throw new IllegalStateException( "Can't convert more than one EE from MAGE-ML at a time." );
-                ee = ( ExpressionExperiment ) object;
-            }
+    private boolean checkGuts( FactorValue a, FactorValue that ) {
+        if ( a.getValue() != null ) {
+            if ( that.getValue() == null ) return false;
+            if ( a.getValue().equals( that.getValue() ) ) return true;
         }
-        assert ee != null;
 
-        for ( Object object : convertedResult ) {
-            if ( object instanceof QuantitationType ) {
-                ee.getQuantitationTypes().add( ( QuantitationType ) object );
-            }
+        if ( a.getMeasurement() != null ) {
+            if ( that.getMeasurement() == null ) return false;
+            if ( a.getMeasurement().equals( that.getMeasurement() ) ) return true;
         }
-    }
 
-    /**
-     * Check that we have a valid structure.
-     */
-    private void validate() {
-        ExpressionExperiment ee = null;
-        for ( Object object : convertedResult ) {
-            if ( object instanceof ExpressionExperiment ) {
-                if ( ee != null )
-                    throw new IllegalStateException( "Can't convert more than one EE from MAGE-ML at a time." );
-                ee = ( ExpressionExperiment ) object;
-            }
+        if ( a.getCharacteristics().size() > 0 ) {
+            if ( that.getCharacteristics().size() != a.getCharacteristics().size() ) return false;
 
-            if ( ee != null ) {
-
-                if ( ee.getSource() == null ) {
-                    throw new IllegalStateException( "Should be source" );
-                }
-
-                if ( ee.getBioAssays().size() == 0 ) {
-                    throw new IllegalStateException( "No bioassays" );
-                }
-                for ( BioAssay ba : ee.getBioAssays() ) {
-                    if ( ba.getSamplesUsed().size() == 0 ) {
-                        throw new IllegalStateException( "No biomaterials for bioassay " + ba );
-                    }
-                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        if ( bm.getSourceTaxon() == null ) {
-                            throw new IllegalStateException( "No taxon for biomaterial: " + bm );
+            for ( Characteristic c : a.getCharacteristics() ) {
+                boolean match = false;
+                for ( Characteristic c2 : that.getCharacteristics() ) {
+                    if ( c.equals( c2 ) ) {
+                        if ( match ) {
+                            return false;
                         }
+                        match = true;
                     }
                 }
-
-                // for ( QuantitationType qt : ee.getQuantitationTypes() ) {
-                // log.info( qt );
-                // }
-
-                if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 0 ) {
-                    for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-                        if ( ef.getFactorValues().size() == 0 ) {
-                            /*
-                             * Let it go ...
-                             */
-                            log.warn( "Factor with no factor values: " + ef );
-                        }
-                    }
-                }
+                if ( !match ) return false;
             }
 
+            return true;
         }
+
+        // everything is empy...
+        return true;
     }
 
     /**
@@ -331,92 +382,94 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
     }
 
     /**
-     * @param ee
-     * @param array2BioAssay
-     * @return
+     * 
      */
-    private ArrayDesign checkArrayDesigns( ExpressionExperiment ee,
-            Map<String, Collection<org.biomage.BioAssay.BioAssay>> array2BioAssay ) {
+    private void fillInBioMaterialFactorValues() {
+        ExpressionExperiment ee = null;
+        for ( Object object : convertedResult ) {
+            if ( object instanceof ExpressionExperiment ) ee = ( ExpressionExperiment ) object;
+        }
+        assert ee != null;
 
-        if ( array2BioAssay.size() == 0 ) {
+        Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
 
-            /*
-             * I'm not sure this has ever been triggered.
-             */
-            log.info( ee.getBioAssays().size() + " bioassays associated with ee before cleanup." );
-            Collection<ArrayDesign> availableArrayDesigns = new HashSet<ArrayDesign>();
-            for ( Object convertedObject : this.convertedResult ) {
-                if ( convertedObject instanceof ArrayDesign ) {
-                    log.info( convertedObject );
-                    availableArrayDesigns.add( ( ArrayDesign ) convertedObject );
+        for ( BioAssay assay : bioAssays ) {
+            for ( BioMaterial bm : assay.getSamplesUsed() ) {
+
+                /* First, don't bother doing this if they are already filled in */
+                boolean ok = true;
+                for ( FactorValue value : bm.getFactorValues() ) {
+                    if ( value.getExperimentalFactor() == null ) {
+                        ok = false;
+                    }
                 }
+
+                if ( ok ) continue;
+
+                log.info( "Checking factor values on biomaterial " + bm );
+                Collection<FactorValue> factorValues = new HashSet<FactorValue>();
+                for ( FactorValue value : bm.getFactorValues() ) {
+
+                    FactorValue efFactorValue = findMatchingFactorValue( value, experimentalFactors );
+
+                    if ( efFactorValue == null ) {
+                        throw new IllegalStateException( "No experimental-factor bound factor value found for " + value );
+                    }
+
+                    if ( efFactorValue.getExperimentalFactor() == null )
+                        log.info( "experimental-factor bound factor value " + efFactorValue
+                                + " has null experimental factor" );
+                    factorValues.add( efFactorValue );
+                }
+                bm.setFactorValues( factorValues );
+                log.info( "biomaterial " + bm + " has " + factorValues.size() + " factor values: " + factorValues );
             }
-
-            if ( availableArrayDesigns.size() > 1 ) {
-                throw new IllegalStateException( "More than one array design without acceptable mapping to bioassays." );
-            } else if ( availableArrayDesigns.size() == 0 ) {
-                log.warn( "No arrayDesigns and none associated with the bioassays" );
-                return null;
-            }
-            return availableArrayDesigns.iterator().next();
-
         }
-
-        if ( ee.getBioAssays().size() < array2BioAssay.size() ) {
-            throw new IllegalStateException(
-                    "Something went wrong, the experiment has fewer bioassays than arrays used. Expected "
-                            + array2BioAssay.size() + ", got " + ee.getBioAssays().size() );
-        }
-
-        log.info( array2BioAssay.size() + " assays based on array count; " + ee.getBioAssays().size()
-                + " bioassays associated with ee before cleanup." );
-        return null;
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.loader.expression.mage.MageMLConverter#getBioAssayQuantitationTypeDimension(org.biomage.BioAssay.BioAssay
-     * )
-     */
-    public List<ubic.gemma.model.common.quantitationtype.QuantitationType> getBioAssayQuantitationTypeDimension(
-            BioAssay bioAssay ) {
-        assert isConverted;
-        return this.mageConverterHelper.getBioAssayQuantitationTypeDimension( bioAssay );
     }
 
     /**
-     * @return all the converted BioAssay objects.
+     * Populate the quantitation types in the EE.
      */
-    public List<BioAssay> getConvertedBioAssays() {
-        List<BioAssay> result = new ArrayList<BioAssay>();
+    private void fillInExpressionExperimentQuantitationTypes() {
+        ExpressionExperiment ee = null;
         for ( Object object : convertedResult ) {
-            if ( object instanceof BioAssay ) {
-                result.add( ( BioAssay ) object );
+            if ( object instanceof ExpressionExperiment ) {
+                if ( ee != null )
+                    throw new IllegalStateException( "Can't convert more than one EE from MAGE-ML at a time." );
+                ee = ( ExpressionExperiment ) object;
             }
         }
-        log.info( "Found " + result.size() + " bioassays" );
-        return result;
+        assert ee != null;
+
+        for ( Object object : convertedResult ) {
+            if ( object instanceof QuantitationType ) {
+                ee.getQuantitationTypes().add( ( QuantitationType ) object );
+            }
+        }
     }
 
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        Map<String, Integer> tally = new HashMap<String, Integer>();
-        for ( Object element : convertedResult ) {
-            String clazz = element.getClass().getName();
-            if ( !tally.containsKey( clazz ) ) {
-                tally.put( clazz, new Integer( 0 ) );
+    /**
+     * @param needle
+     * @param haystack
+     * @return
+     */
+    private FactorValue findMatchingFactorValue( FactorValue needle, Collection<ExperimentalFactor> haystack ) {
+        for ( ExperimentalFactor factor : haystack ) {
+            for ( FactorValue candidate : factor.getFactorValues() ) {
+                // log.info( factorValue );
+
+                /*
+                 * We don't use plain old equals here because the factor isn't filled in for our needle.
+                 */
+                boolean match = checkGuts( needle, candidate );
+
+                if ( match ) {
+                    return candidate;
+                }
             }
-            tally.put( clazz, new Integer( ( tally.get( clazz ) ).intValue() + 1 ) );
         }
-
-        for ( String clazz : tally.keySet() ) {
-            buf.append( tally.get( clazz ) + " " + clazz + "s\n" );
-        }
-
-        return buf.toString();
+        return null;
     }
 
     /**
@@ -446,13 +499,88 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
         return localResult;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
+    /**
+     * @param objects
+     * @param c
+     * @return
      */
-    public Object convert( Object mageObject ) {
-        if ( mageObject == null ) return null;
-        return mageConverterHelper.convert( mageObject );
+    private Collection<Object> processMGEDClass( Collection<? extends Object> objects, Class<? extends Object> c ) {
+        Collection<Object> convertedObjects = getConvertedDataForType( c, objects );
+        if ( convertedObjects != null && convertedObjects.size() > 0 ) {
+            log.info( "Adding " + convertedObjects.size() + " converted " + c.getName() + "s" );
+            convertedResult.addAll( convertedObjects );
+        } else {
+            log.debug( "Converted " + objects.size() + " " + c.getName() + "s" );
+        }
+        return convertedObjects;
+    }
+
+    /**
+     * Check that we have a valid structure.
+     */
+    private void validate() {
+        ExpressionExperiment ee = null;
+        for ( Object object : convertedResult ) {
+            if ( object instanceof ExpressionExperiment ) {
+                if ( ee != null )
+                    throw new IllegalStateException( "Can't convert more than one EE from MAGE-ML at a time." );
+                ee = ( ExpressionExperiment ) object;
+            }
+
+            if ( ee != null ) {
+
+                if ( ee.getSource() == null ) {
+                    throw new IllegalStateException( "Should be source" );
+                }
+
+                if ( ee.getBioAssays().size() == 0 ) {
+                    throw new IllegalStateException( "No bioassays" );
+                }
+                for ( BioAssay ba : ee.getBioAssays() ) {
+                    if ( ba.getSamplesUsed().size() == 0 ) {
+                        throw new IllegalStateException( "No biomaterials for bioassay " + ba );
+                    }
+                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                        if ( bm.getSourceTaxon() == null ) {
+                            throw new IllegalStateException( "No taxon for biomaterial: " + bm );
+                        }
+
+                        for ( FactorValue fv : bm.getFactorValues() ) {
+                            if ( fv.getExperimentalFactor() == null ) {
+                                throw new IllegalStateException(
+                                        "Biomaterial factor value had no experimental factor defined: " + fv );
+                            }
+                        }
+
+                    }
+                }
+
+                if ( ee.getQuantitationTypes().size() == 0 ) {
+                    throw new IllegalStateException( "Zero quantitation types!" );
+                }
+
+                if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 0 ) {
+                    for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+                        if ( ef.getFactorValues().size() == 0 ) {
+                            /*
+                             * Let it go ...
+                             */
+                            log.warn( "Factor with no factor values: " + ef );
+                        }
+
+                        for ( FactorValue fv : ef.getFactorValues() ) {
+                            if ( fv.getExperimentalFactor() == null || !fv.getExperimentalFactor().equals( ef ) ) {
+                                throw new IllegalStateException(
+                                        "Factor value didn't have experimental factor filled in correctly: " + fv
+                                                + ", factor should have been " + ef );
+                            }
+                        }
+
+                    }
+                }
+            }
+
+        }
     }
 
 }

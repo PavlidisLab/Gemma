@@ -91,6 +91,8 @@ public class DesignMatrixRowValueObject implements Serializable {
             }
         } else if ( !StringUtils.isEmpty( factorValue.getValue() ) ) {
             buf.append( factorValue.getValue() );
+        } else if ( factorValue.getMeasurement() != null ) {
+            buf.append( factorValue.getMeasurement().getValue() );
         }
         return buf.toString();
     }

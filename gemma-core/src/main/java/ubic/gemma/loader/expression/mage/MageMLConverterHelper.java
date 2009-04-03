@@ -19,6 +19,8 @@
 package ubic.gemma.loader.expression.mage;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -90,6 +92,7 @@ import org.biomage.DesignElement.ReporterCompositeMap;
 import org.biomage.DesignElement.ReporterPosition;
 import org.biomage.Experiment.Experiment;
 import org.biomage.Experiment.ExperimentDesign;
+import org.biomage.Measurement.TemperatureUnit;
 import org.biomage.Measurement.Unit;
 import org.biomage.Measurement.Measurement.KindCV;
 import org.biomage.Measurement.Measurement.Type;
@@ -2038,12 +2041,25 @@ public class MageMLConverterHelper {
         result.setOtherKind( mageObj.getOtherKind() );
         result.setKindCV( convertKindCV( mageObj.getKindCV() ) );
 
-        if ( mageObj.getValue() != null ) result.setValue( mageObj.getValue().toString() );
+        result.setUnit( convertUnit( mageObj.getUnit() ) );
+
+        result.setRepresentation( PrimitiveType.STRING );
+        if ( mageObj.getValue() != null ) {
+            result.setValue( mageObj.getValue().toString() );
+
+            boolean isDouble = false;
+            try {
+                Double.parseDouble( result.getValue() );
+                isDouble = true;
+            } catch ( Exception e ) {
+            }
+
+            if ( isDouble ) result.setRepresentation( PrimitiveType.DOUBLE );
+
+        }
 
         result.setType( convertMeasurementType( mageObj.getType() ) );
 
-        result.setRepresentation( PrimitiveType.STRING ); // FIXME This is somewhat silly as the QuantitationType has
-        // the primitive type.
         return result;
     }
 
@@ -2941,7 +2957,17 @@ public class MageMLConverterHelper {
 
         ubic.gemma.model.common.measurement.Unit result = ubic.gemma.model.common.measurement.Unit.Factory
                 .newInstance();
-        result.setUnitNameCV( unit.getUnitName() );
+        StringWriter w = new StringWriter();
+        try {
+            unit.writeAttributes( w );
+        } catch ( IOException e ) {
+
+        }
+        String att = w.toString();
+
+        att = att.replaceAll( ".+?=\"(.+?)\"", "$1" );
+
+        result.setUnitNameCV( att );
         return result;
     }
 

@@ -21,14 +21,23 @@ package ubic.gemma.loader.expression.arrayExpress;
 import java.util.HashSet;
 import java.util.Set;
 
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.ChannelUtils;
 
 /**
  * These are full-sized tests (but not too big), we don't actually load it into the db, just test the download and
@@ -141,27 +150,95 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
 
     /**
      * E-SMDB-1853 uses A-SMDB-681 - SMD Mus musculus Array, spotted. QT names a pain, array design not referenced from
-     * the MAGE-ML, rows in the data file missing names....etc. etc. This is also tested in the MageMLConverter.
+     * the MAGE-ML, rows in the data file missing names....etc. etc. This is also tested in the MageMLConverter
      * 
      * @throws Exception
      */
     final public void testLoadWithAEDesign4() throws Exception {
         endTransaction();
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
-        ExpressionExperiment experiment = svc.load( "E-SMDB-1853", null, true, false );
-        assertNotNull( experiment );
+        ExpressionExperiment expressionExperiment = svc.load( "E-SMDB-1853", null, true, true ); // <----
+        assertNotNull( expressionExperiment );
+
+        ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+
+        /*
+         * Make sure we start with the persistent instance. This is just paranoia.
+         */
+        expressionExperiment = ees.load( expressionExperiment.getId() );
+        ees.thaw( expressionExperiment );
 
         Set<String> probeNames = new HashSet<String>();
-        for ( BioAssay ba : experiment.getBioAssays() ) {
-            ArrayDesign ad = ba.getArrayDesignUsed();
-            assertNotNull( ad );
-            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-                probeNames.add( cs.getName() );
-            }
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                assertNotNull( bm.getSourceTaxon() );
+        assertEquals( 20, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment );
+        assertEquals( 20, expressionExperiment.getBioAssays().size() );
+        assertNotNull( expressionExperiment.getSource() );
+        assertNotNull( expressionExperiment.getAccession() );
+
+        assertEquals( 1, expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() );
+        for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+            assertEquals( 2, ef.getFactorValues().size() );
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                assertNotNull( fv.getMeasurement() );
+                assertEquals( ef, fv.getExperimentalFactor() );
             }
         }
+
+        /*
+         * Has temperature as a factor; this _really_ should be a fixed-level factor but it's stored as a measurement,
+         * not a characteristic.
+         */
+        ArrayDesign ad = null;
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            if ( ad == null ) {
+                ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+                ads.thawLite( ba.getArrayDesignUsed() );
+                for ( CompositeSequence cs : ba.getArrayDesignUsed().getCompositeSequences() ) {
+                    probeNames.add( cs.getName() );
+                }
+                ad = ba.getArrayDesignUsed();
+            }
+            assertEquals( 2, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertNotNull( bm.getSourceTaxon() );
+                assertEquals( 1, bm.getFactorValues().size() );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    assertNotNull( fv.getMeasurement() );
+                    assertNotNull( fv.getMeasurement().getUnit() );
+                    assertEquals( "degree_C", fv.getMeasurement().getUnit().getUnitNameCV() );
+                    assertEquals( PrimitiveType.DOUBLE, fv.getMeasurement().getRepresentation() );
+                    assertEquals( MeasurementType.ABSOLUTE, fv.getMeasurement().getType() );
+                }
+            }
+        }
+
+        boolean found = false;
+        boolean foundBB = false;
+        boolean foundSB = false;
+        for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
+
+            if ( qt.getName().equals( "LOG_RAT2N_MEAN" ) ) {
+                assertEquals( ScaleType.LOG2, qt.getScale() );
+                assertEquals( "For " + qt, PrimitiveType.DOUBLE, qt.getRepresentation() );
+                assertTrue( qt.getIsPreferred() );
+                found = true;
+            }
+
+            if ( ChannelUtils.isBackgroundChannelB( qt.getName() ) ) {
+                assertEquals( "For " + qt, PrimitiveType.DOUBLE, qt.getRepresentation() );
+                foundBB = true;
+            }
+            if ( ChannelUtils.isSignalChannelB( qt.getName() ) ) {
+                assertEquals( "For " + qt, PrimitiveType.DOUBLE, qt.getRepresentation() );
+                foundSB = true;
+            }
+
+        }
+
+        // Note we're missing the data for the other channel, it's not in the processed data file.
+        assertTrue( found );
+        assertTrue( foundBB );
+        assertTrue( foundSB );
 
         /*
          * Processed data file has 42624 raw data rows, 40595 unique reporters. Indexed by Composite Sequences, of which
@@ -170,15 +247,22 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
          * Another problem: there is no channel 1 data in the processed data file.
          */
         assertEquals( 17799, probeNames.size() );
-        assertEquals( 10, experiment.getQuantitationTypes().size() );
-        assertEquals( 112360, experiment.getRawExpressionDataVectors().size() );
-        for ( DesignElementDataVector dedv : experiment.getRawExpressionDataVectors() ) {
+
+        DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
+                .getBean( "designElementDataVectorService" );
+
+        dedvs.thaw( expressionExperiment.getRawExpressionDataVectors() );
+
+        assertEquals( 10, expressionExperiment.getQuantitationTypes().size() );
+        assertEquals( 112360, expressionExperiment.getRawExpressionDataVectors().size() );
+        for ( DesignElementDataVector dedv : expressionExperiment.getRawExpressionDataVectors() ) {
             assertTrue( probeNames.contains( dedv.getDesignElement().getName() ) );
+            assertEquals( 20, dedv.getBioAssayDimension().getBioAssays().size() );
         }
     }
 
     /**
-     * E-MEXP-740. Affy design, but good test anyway
+     * E-MEXP-740. Affy design, but good test anyway (this was successfully loaded into Gemma a while ago)
      * 
      * @throws Exception
      */
@@ -201,6 +285,41 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
         assertEquals( 12625, experiment.getRawExpressionDataVectors().size() );
         for ( DesignElementDataVector dedv : experiment.getRawExpressionDataVectors() ) {
             assertTrue( probeNames.contains( dedv.getDesignElement().getName() ) );
+        }
+    }
+
+    /**
+     * Another SMDB one. Missing channel 1 data.
+     * 
+     * @throws Exception
+     */
+    final public void testLoadWithAEDesign6() throws Exception {
+        endTransaction();
+        ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
+        ExpressionExperiment experiment = svc.load( "E-SMDB-3827", null, true, false );
+        assertNotNull( experiment );
+
+        Set<String> probeNames = new HashSet<String>();
+        assertEquals( 16, experiment.getBioAssays().size() );
+
+        for ( BioAssay ba : experiment.getBioAssays() ) {
+            ArrayDesign ad = ba.getArrayDesignUsed();
+            assertNotNull( ad );
+            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+                probeNames.add( cs.getName() );
+            }
+            assertEquals( 2, ba.getSamplesUsed().size() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertNotNull( bm.getSourceTaxon() );
+            }
+        }
+
+        assertEquals( 13487, probeNames.size() );
+        assertEquals( 10, experiment.getQuantitationTypes().size() );
+        assertEquals( 134870, experiment.getRawExpressionDataVectors().size() );
+        for ( DesignElementDataVector dedv : experiment.getRawExpressionDataVectors() ) {
+            assertTrue( probeNames.contains( dedv.getDesignElement().getName() ) );
+            assertEquals( 16, dedv.getBioAssayDimension().getBioAssays().size() );
         }
     }
 

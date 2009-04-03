@@ -22,7 +22,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -49,11 +48,45 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
 
         /*
          * at this point, we know we have two FactorValues, at least one of which is transient, so we have to look at
-         * the fields; to do this, just compare the hashcodes, which already incorporate all of the important fields...
+         * the fields; pain in butt
          */
-        return ObjectUtils.equals( this.getExperimentalFactor(), that.getExperimentalFactor() )
-                && ObjectUtils.equals( this.getMeasurement(), that.getMeasurement() )
-                && ObjectUtils.equals( this.getCharacteristics(), that.getCharacteristics() );
+
+        return checkGuts( that );
+
+    }
+
+    private boolean checkGuts( FactorValue that ) {
+        if ( this.getValue() != null ) {
+            if ( that.getValue() == null ) return false;
+            if ( this.getValue().equals( that.getValue() ) ) return true;
+        }
+
+        if ( this.getMeasurement() != null ) {
+            if ( that.getMeasurement() == null ) return false;
+            if ( this.getMeasurement().equals( that.getMeasurement() ) ) return true;
+        }
+
+        if ( this.getCharacteristics().size() > 0 ) {
+            if ( that.getCharacteristics().size() != this.getCharacteristics().size() ) return false;
+
+            for ( Characteristic c : this.getCharacteristics() ) {
+                boolean match = false;
+                for ( Characteristic c2 : that.getCharacteristics() ) {
+                    if ( c.equals( c2 ) ) {
+                        if ( match ) {
+                            return false;
+                        }
+                        match = true;
+                    }
+                }
+                if ( !match ) return false;
+            }
+
+            return true;
+        }
+
+        // everything is empy...
+        return true;
     }
 
     @Override

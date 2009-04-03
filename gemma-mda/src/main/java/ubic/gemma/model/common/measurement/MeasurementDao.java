@@ -36,55 +36,19 @@ public interface MeasurementDao {
     public final static int TRANSFORM_NONE = 0;
 
     /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.measurement.Measurement)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
-     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
-     * objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.measurement.Measurement)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will
-     * <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a value
-     * object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform, ubic.gemma.model.common.measurement.Measurement measurement );
-
-    /**
      * Creates a new instance of ubic.gemma.model.common.measurement.Measurement and adds from the passed in
      * <code>entities</code> collection
      * 
      * @param entities the collection of ubic.gemma.model.common.measurement.Measurement instances to create.
      * @return the created instances.
      */
-    public java.util.Collection create( java.util.Collection entities );
+    public java.util.Collection<Measurement> create( java.util.Collection<Measurement> entities );
 
     /**
      * Creates an instance of ubic.gemma.model.common.measurement.Measurement and adds it to the persistent store.
      */
     public ubic.gemma.model.common.measurement.Measurement create(
             ubic.gemma.model.common.measurement.Measurement measurement );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
 
     /**
      * Loads an instance of ubic.gemma.model.common.measurement.Measurement from the persistent store.
@@ -96,21 +60,7 @@ public interface MeasurementDao {
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<Measurement> loadAll();
 
     /**
      * Removes the instance of ubic.gemma.model.common.measurement.Measurement having the given <code>identifier</code>
@@ -121,7 +71,7 @@ public interface MeasurementDao {
     /**
      * Removes all entities in the given <code>entities<code> collection.
      */
-    public void remove( java.util.Collection entities );
+    public void remove( java.util.Collection<Measurement> entities );
 
     /**
      * Removes the instance of ubic.gemma.model.common.measurement.Measurement from the persistent store.
@@ -131,7 +81,7 @@ public interface MeasurementDao {
     /**
      * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public void update( java.util.Collection entities );
+    public void update( java.util.Collection<Measurement> entities );
 
     /**
      * Updates the <code>measurement</code> instance in the persistent store.

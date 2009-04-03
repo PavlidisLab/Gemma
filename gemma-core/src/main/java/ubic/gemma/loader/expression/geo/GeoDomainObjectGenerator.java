@@ -412,8 +412,10 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             if ( StringUtils.isBlank( geoAccession ) ) {
                 throw new InvalidAccessionException( "GEO accession must not be blank. Enter a  GSE, GDS or GPL" );
             }
-            throw new InvalidAccessionException( "'" + geoAccession
-                    + "' is not understood by Gemma; must be a GSE, GDS or GPL" );
+            throw new InvalidAccessionException(
+                    "'"
+                            + geoAccession
+                            + "' is not understood by Gemma; must be a GSE, GDS or GPL. Did you choose the right source database?" );
         }
 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance( ed );

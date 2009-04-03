@@ -1412,7 +1412,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             return;
         }
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
-            
+
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( ee, LockMode.NONE );
 
@@ -1439,6 +1439,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         Hibernate.initialize( factor.getAnnotations() );
                         for ( FactorValue f : factor.getFactorValues() ) {
                             Hibernate.initialize( f.getCharacteristics() );
+                            if ( f.getMeasurement() != null ) {
+                                Hibernate.initialize( f.getMeasurement() );
+                                if ( f.getMeasurement().getUnit() != null ) {
+                                    Hibernate.initialize( f.getMeasurement().getUnit() );
+                                }
+                            }
                         }
                         session.evict( factor );
                     }

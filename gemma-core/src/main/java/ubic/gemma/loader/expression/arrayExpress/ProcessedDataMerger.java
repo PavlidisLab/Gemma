@@ -121,6 +121,8 @@ public class ProcessedDataMerger {
             bad.getBioAssays().add( nameMap.get( sampleName[i] ) );
         }
 
+        assert bad.getBioAssays().size() == bioAssays.size();
+
         Collection<QuantitationType> usedQuantitationTypes = new HashSet<QuantitationType>();
         int count = 0;
 
@@ -158,6 +160,11 @@ public class ProcessedDataMerger {
                     continue;
                 }
 
+                if ( rawData.size() != bad.getBioAssays().size() ) {
+                    throw new IllegalStateException( "Expected " + bad.getBioAssays().size()
+                            + " values per data vector, got " + rawData.size() );
+                }
+
                 RawExpressionDataVector dv = RawExpressionDataVector.Factory.newInstance();
                 dv.setExpressionExperiment( mageMlResult );
                 dv.setQuantitationType( type );
@@ -167,6 +174,7 @@ public class ProcessedDataMerger {
                 byte[] dat = convertData( rawData, type );
 
                 if ( dat == null || dat.length == 0 ) {
+                    // blank line or some other such crap.
                     continue;
                 }
 
@@ -181,7 +189,7 @@ public class ProcessedDataMerger {
                         "No quantitation types were matched between the processed data and the MAGE-ML" );
             }
 
-            if ( ++count % 5000 == 0 ) {
+            if ( ++count % 10000 == 0 ) {
                 log.info( "Processed data for " + count + " composite sequences" );
             }
 

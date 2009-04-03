@@ -849,7 +849,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return redirectToList( request );
         }
 
-        Long id = Long.parseLong( request.getParameter( "id" ) );
+        Long id = null;
+
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
+        }
 
         if ( id == null ) {
             // should be a validator error on submit

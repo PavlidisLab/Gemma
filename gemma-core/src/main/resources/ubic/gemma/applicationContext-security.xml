@@ -410,6 +410,12 @@
                 ubic.gemma.model.common.description.ExternalDatabaseService.findOrCreate=user,admin
                 ubic.gemma.model.common.description.ExternalDatabaseService.remove=user,admin
                 ubic.gemma.model.common.description.ExternalDatabaseService.loadAll=user,admin,ROLE_ANONYMOUS
+              	ubic.gemma.model.common.measurement.MeasurementService.create=user,admin
+				ubic.gemma.model.common.measurement.UnitService.create=user,admin
+				ubic.gemma.model.common.measurement.UnitService.update=admin
+				ubic.gemma.model.common.measurement.UnitService.remove=admin
+				ubic.gemma.model.common.measurement.UnitService.load=user,admin,ROLE_ANONYMOUS
+				ubic.gemma.model.common.measurement.UnitService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.description.NotedReferenceListService.createNewList=user,admin
                 ubic.gemma.model.common.description.NotedReferenceListService.addReferenceToList=user,admin
                 ubic.gemma.model.common.description.NotedReferenceListService.getAllReferencesForList=user,admin

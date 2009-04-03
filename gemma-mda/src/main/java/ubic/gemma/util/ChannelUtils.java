@@ -1,5 +1,3 @@
-package ubic.gemma.util;
-
 /*
  * The Gemma project
  * 
@@ -18,8 +16,12 @@ package ubic.gemma.util;
  * limitations under the License.
  *
  */
+package ubic.gemma.util;
 
 /**
+ * Determine if a quantitation type (by name) represents background or signal. This includes a variety of cases, some of
+ * them 'special'.
+ * 
  * @author paul
  * @version $Id$
  */
@@ -32,7 +34,7 @@ public class ChannelUtils {
      * @return
      */
     public static boolean isBackgroundChannelA( String name ) {
-        return name.equals( "CH1B(N)?_(MEDIAN|MEAN)" ) || name.equals( "CH1_BKD" )
+        return name.matches( "CH1B(N)?_(MEDIAN|MEAN)" ) || name.equals( "CH1_BKD" )
                 || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
                 || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" )
                 || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" )
@@ -46,7 +48,7 @@ public class ChannelUtils {
      * @return
      */
     public static boolean isBackgroundChannelB( String name ) {
-        return name.equals( "CH2B(N)?_(MEDIAN|MEAN)" ) || name.equals( "CH2_BKD" )
+        return name.matches( "CH2B(N)?_(MEDIAN|MEAN)" ) || name.equals( "CH2_BKD" )
                 || name.toLowerCase().matches( "b635[\\s_\\.](mean|median)" )
                 || name.equals( "BACKGROUND_CHANNEL 2MEDIAN" ) || name.equals( "R_BG_MEDIAN" )
                 || name.equals( "Ch2BkgMedian" ) || name.equals( "ch2.Background" ) || name.equals( "CH2_BKG_MEAN" )
