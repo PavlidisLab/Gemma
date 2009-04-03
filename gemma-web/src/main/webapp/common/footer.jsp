@@ -7,7 +7,7 @@
 
 	<span class="left"><a href="http://www.ubc.ca"><img style="padding: 0 20px"
 				src="<c:url value="/images/logo/logo_ubc.jpg"/>" /> </a> </span>
-	<span class="left">Centre for High-Throughput Biology&nbsp;|&nbsp;Copyright &copy; 2007-2008 &nbsp;</span>
+	<span class="left">Centre for High-Throughput Biology&nbsp;|&nbsp;Copyright &copy; 2007-2009 &nbsp;</span>
 
 	<c:if test="${pageContext.request.remoteUser != null}">
 		<span class="right"> | <fmt:message key="user.status" /> <security:authentication property="principal.username" /> | <a

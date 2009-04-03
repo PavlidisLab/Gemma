@@ -29,7 +29,7 @@
 		</Menu>
 		<Menu name="UserMenu" title="My Gemma" roles="admin,user">
 			<Item name="EeCurate" title="Manage data" page="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" />
-			<Item name="Upload data" description="Upload expression data" title="menu.uploaddata" page="/expressionExperiment/upload.html" />
+			<Item name="Upload data" description="Upload your expression data" title="menu.uploaddata" page="/expressionExperiment/upload.html" />
 			<Item name="UserMenu" title="menu.user" description="User Menu" page="/userProfile.html" />
 		</Menu>
 		<Menu name="ResourcesMenu" title="resourcesMenu.title">
@@ -44,7 +44,7 @@
 				location="http://www.chibi.ubc.ca/Gemma/resources/thanks.html" />
 		</Menu>
 		<Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="admin">
-			<Item name="LoadData" title="Load data" page="/loadExpressionExperiment.html" />
+			<Item name="LoadData" title="Add data" description="Import from GEO or ArrayExpress" page="/loadExpressionExperiment.html" />
 			<Item name="BrowseGeo" title="Browse GEO" page="/geoBrowser/showBatch.html" />
 			<Item name="CharBrowse" title="Search annotations" page="/characteristicBrowser.html" />
 			<Item name="ViewUsers" title="menu.admin.users" page="/userManager.html" />
