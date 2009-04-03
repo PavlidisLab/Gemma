@@ -10,11 +10,12 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 
 	displayField : 'name',
 	valueField : 'id',
-	editable : false,
+	editable : true,
 	loadingText : "Loading ...",
 	listWidth : 450,
 	forceSelection : true,
-	mode : 'remote',
+	typeAhead : true,
+	mode : 'local',
 	triggerAction : 'all',
 	emptyText : 'Select an array design',
 
@@ -64,7 +65,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 									direction : 'ASC'
 								},
 								proxy : new Ext.data.DWRProxy(ArrayDesignController.getArrayDesigns, {
-											baseParams : [[], true, false]
+											baseParams : [[], true, true]
 										}),
 								reader : new Ext.data.ListRangeReader({
 											id : "id"
