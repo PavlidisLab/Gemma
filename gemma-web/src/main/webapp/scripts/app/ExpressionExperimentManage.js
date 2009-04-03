@@ -23,8 +23,7 @@ Ext.onReady(function() {
 
 	var store = new Gemma.PagingDataStore({
 
-				proxy : new Ext.data.DWRProxy(
-						ExpressionExperimentController.loadStatusSummaries),
+				proxy : new Ext.data.DWRProxy(ExpressionExperimentController.loadStatusSummaries),
 
 				reader : new Ext.data.ListRangeReader({
 							id : "id"
@@ -35,7 +34,7 @@ Ext.onReady(function() {
 					field : 'dateCreated',
 					direction : 'DESC'
 				}
-	});
+			});
 
 	manager.on('done', function() {
 				store.reload();
@@ -125,7 +124,7 @@ Ext.onReady(function() {
 		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
 				+ id
 				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run missing value analysis" alt="missing value computation"  /></a>';
-		if (record.get('technologyType') != 'ONECOLOR' && record.get('hasBothIntensities')) {
+		if (record.get('technologyType') != 'ONECOLOR') {
 			if (record.get('dateMissingValueAnalysis')) {
 				var type = record.get('missingValueAnalysisEventType');
 				var color = "#000";
@@ -357,10 +356,9 @@ Ext.onReady(function() {
 	store.load({
 				params : [null, limit]
 			});
-	
+
 	store.on("loadexception", function(scope, args, data, e) {
-				Ext.Msg.alert('Session expired?', data
-								+ ".  \nTry signing in again.");
+				Ext.Msg.alert('Session expired?', data + ".  \nTry signing in again.");
 			});
 });
 
