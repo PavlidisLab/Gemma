@@ -252,6 +252,10 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
             int numBins, int min, int max, double[] pvalues ) {
 
+        if ( pvalues == null ) {
+            return null;
+        }
+
         Collection<Histogram> hists = new HashSet<Histogram>();
 
         Histogram hist = new Histogram( histFileName, numBins, min, max );
