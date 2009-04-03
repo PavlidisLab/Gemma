@@ -197,6 +197,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										}.createDelegate(this),
 										errorHandler : function(error) {
 											Ext.Msg.alert("Deletion failed", error);
+											Ext.getBody().unmask();
 										}.createDelegate(this)
 									});
 							ExpressionExperimentController.deleteById.apply(this, callParams);
@@ -230,6 +231,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										}.createDelegate(this),
 										errorHandler : function(error) {
 											Ext.Msg.alert("Link analysis failed", error);
+											Ext.getBody().unmask();
 										}.createDelegate(this)
 									});
 							LinkAnalysisController.run.apply(this, callParams);
@@ -263,6 +265,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										}.createDelegate(this),
 										errorHandler : function(error) {
 											Ext.Msg.alert("Missing value analysis failed", error);
+											Ext.getBody().unmask();
 										}.createDelegate(this)
 									});
 							TwoChannelMissingValueController.run.apply(this, callParams);
@@ -365,6 +368,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											}.createDelegate(this),
 											errorHandler : function(error) {
 												Ext.Msg.alert("Diff. Analysis failed", error);
+												Ext.getBody().unmask();
 											}.createDelegate(this)
 										});
 
@@ -463,6 +467,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 														}.createDelegate(this),
 														errorHandler : function(error) {
 															Ext.Msg.alert("Diff. Analysis failed", error);
+															Ext.getBody().unmask();
 														}.createDelegate(this)
 													});
 
