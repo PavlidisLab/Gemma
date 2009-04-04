@@ -264,7 +264,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         log.info( "Starting R analysis ... please wait!" );
         log.debug( pvalueCmd.toString() );
 
-        log.info( "Calculating p values" );
+        log.info( "Calculating p values.  R analysis started." );
         double[] pvalues = rc.doubleArrayEvalWithLogging( pvalueCmd );
 
         if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
@@ -285,7 +285,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         String fStatisticCmd = fStatisticBuf.toString() + "[1,]";
         log.debug( fStatisticCmd.toString() );
 
-        log.info( "Calculating f statistics" );
+        log.info( "Calculating f statistics.  R analysis started." );
         double[] fstatistics = rc.doubleArrayEvalWithLogging( fStatisticCmd );
 
         /* q-value */
