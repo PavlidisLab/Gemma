@@ -87,9 +87,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, java.util.Collection)
+     * 
+     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     *      .ExpressionExperiment, java.util.Collection)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
@@ -170,11 +170,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         log.info( "Starting R analysis ... please wait!" );
         log.debug( pvalueCommand.toString() );
 
-        RLoggingThread rLoggingPValThread = RLoggingThreadFactory.createRLoggingThread();
-
-        double[] pvalues = rc.doubleArrayEval( pvalueCommand.toString() );
-
-        rLoggingPValThread.done();
+        double[] pvalues = rc.doubleArrayEvalWithLogging( pvalueCommand.toString() );
 
         /* write out histogram */
         writePValuesHistogram( pvalues, expressionExperiment, null );
@@ -188,11 +184,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         log.debug( tstatisticCommand.toString() );
 
-        RLoggingThread rLoggingTStatThread = RLoggingThreadFactory.createRLoggingThread();
-
-        double[] tstatistics = rc.doubleArrayEval( tstatisticCommand.toString() );
-
-        rLoggingTStatThread.done();
+        double[] tstatistics = rc.doubleArrayEvalWithLogging( tstatisticCommand.toString() );
 
         /* q-value */
         double[] qvalues = super.getQValues( pvalues );
@@ -244,9 +236,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     * java.util.ArrayList, int, int, int, double[])
+     * 
+     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     *      java.util.ArrayList, int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,

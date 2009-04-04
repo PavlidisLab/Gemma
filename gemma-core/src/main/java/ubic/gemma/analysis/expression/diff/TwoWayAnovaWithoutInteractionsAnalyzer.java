@@ -65,9 +65,9 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     * java.util.ArrayList, int, int, int, double[])
+     * 
+     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     *      java.util.ArrayList, int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
@@ -159,11 +159,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         log.info( "Starting R analysis ... please wait!" );
         log.debug( command.toString() );
 
-        RLoggingThread rLoggingThread = RLoggingThreadFactory.createRLoggingThread();
-
-        TwoWayAnovaResult anovaResult = rc.twoWayAnovaEval( command.toString() );
-
-        rLoggingThread.done();
+        TwoWayAnovaResult anovaResult = rc.twoWayAnovaEvalWithLogging( command.toString() );
 
         if ( anovaResult == null ) throw new IllegalStateException( "No pvalues returned" );
 

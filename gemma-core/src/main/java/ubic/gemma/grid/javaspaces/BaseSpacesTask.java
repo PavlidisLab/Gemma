@@ -46,6 +46,7 @@ public abstract class BaseSpacesTask implements SpacesTask {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -54,6 +55,7 @@ public abstract class BaseSpacesTask implements SpacesTask {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
      */
     public String getTaskId() {
@@ -62,6 +64,7 @@ public abstract class BaseSpacesTask implements SpacesTask {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.grid.javaspaces.SpacesTask#setTaskId(java.lang.String)
      */
     public void setTaskId( String taskId ) {
@@ -85,12 +88,22 @@ public abstract class BaseSpacesTask implements SpacesTask {
         Logger logger = LogManager.getLogger( "ubic.gemma" );
         logger.setLevel( Level.INFO );
 
+        Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
+        baseCodeLogger.setLevel( Level.INFO );
+
         if ( gigaSpacesTemplate == null )
             throw new RuntimeException( "Will not be able to log information for the task " + clazz.getSimpleName() );
 
         SpacesProgressAppender javaSpacesAppender = new SpacesProgressAppender( gigaSpacesTemplate, taskId );
+
+        /* Add the appender to the gemma logger */
         if ( !logger.isAttached( javaSpacesAppender ) ) {
             logger.addAppender( javaSpacesAppender );
+        }
+
+        /* Add the appender to the basecode logger */
+        if ( !baseCodeLogger.isAttached( javaSpacesAppender ) ) {
+            baseCodeLogger.addAppender( javaSpacesAppender );
         }
         return javaSpacesAppender;
     }
@@ -101,8 +114,15 @@ public abstract class BaseSpacesTask implements SpacesTask {
      */
     public void tidyProgress( SpacesProgressAppender spacesProgressAppender ) {
         if ( spacesProgressAppender != null ) {
+
+            /* Remove the appender from the gemma logger */
             Logger logger = LogManager.getLogger( "ubic.gemma" );
             logger.removeAppender( spacesProgressAppender );
+
+            /* Remove the appender from the basecode logger */
+            Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
+            baseCodeLogger.removeAppender( spacesProgressAppender );
+
             spacesProgressAppender.removeProgressEntry();
         }
     }

@@ -82,9 +82,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.analysis.diff.AbstractDifferentialExpressionAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
+     * 
+     * @see ubic.gemma.analysis.diff.AbstractDifferentialExpressionAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression
+     *      .experiment.ExpressionExperiment)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment ) {
@@ -97,9 +97,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, java.util.Collection)
+     * 
+     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     *      .ExpressionExperiment, java.util.Collection)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
@@ -117,9 +117,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     * java.util.ArrayList, int, int, int, double[])
+     * 
+     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     *      java.util.ArrayList, int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
@@ -264,11 +264,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         log.info( "Starting R analysis ... please wait!" );
         log.debug( pvalueCmd.toString() );
 
-        RLoggingThread rLoggingPValThread = RLoggingThreadFactory.createRLoggingThread();
-
-        double[] pvalues = rc.doubleArrayEval( pvalueCmd );
-
-        rLoggingPValThread.done();
+        double[] pvalues = rc.doubleArrayEvalWithLogging( pvalueCmd );
 
         if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
@@ -288,11 +284,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         String fStatisticCmd = fStatisticBuf.toString() + "[1,]";
         log.debug( fStatisticCmd.toString() );
 
-        RLoggingThread rLoggingFStatThread = RLoggingThreadFactory.createRLoggingThread();
-
-        double[] fstatistics = rc.doubleArrayEval( fStatisticCmd );
-
-        rLoggingFStatThread.done();
+        double[] fstatistics = rc.doubleArrayEvalWithLogging( fStatisticCmd );
 
         /* q-value */
         double[] qvalues = super.getQValues( pvalues );
