@@ -264,15 +264,14 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 					this.allMessages = this.allMessages + messagesToSave;
 
 					// chop them if they are too long
-					messages = Ext.util.Format.ellipses(messages, 200);
+					messages = Ext.util.Format.ellipsis(messages, 70);
 
 					this.previousMessage = messages;
 
 					this.progressBar.updateText(messages);
 
 				} else {
-					this.progressBar.text = this.progressBar.text.replace('.......', '');
-
+					this.progressBar.updateText(this.progressBar.text.replace('.......', ''));
 					this.progressBar.updateText(this.progressBar.text + '.');
 				}
 			},
