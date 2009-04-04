@@ -170,6 +170,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         log.info( "Starting R analysis ... please wait!" );
         log.debug( pvalueCommand.toString() );
 
+        log.info( "Calculating p values" );
         double[] pvalues = rc.doubleArrayEvalWithLogging( pvalueCommand.toString() );
 
         /* write out histogram */
@@ -184,6 +185,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         log.debug( tstatisticCommand.toString() );
 
+        log.info( "Calculating t statistics" );
         double[] tstatistics = rc.doubleArrayEvalWithLogging( tstatisticCommand.toString() );
 
         /* q-value */
