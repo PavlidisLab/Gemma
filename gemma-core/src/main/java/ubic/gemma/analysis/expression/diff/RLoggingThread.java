@@ -18,7 +18,6 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -38,11 +37,10 @@ public class RLoggingThread extends Thread {
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Thread#run()
      */
     public void run() {
-        StopWatch watch = new StopWatch();
-        watch.start();
 
         int count = 1;
         while ( !done ) {
@@ -55,7 +53,6 @@ public class RLoggingThread extends Thread {
             log.info( "R is still running.  " + count + " min elapsed." );
             count++;
         }
-        watch.stop();
         return;
     }
 
