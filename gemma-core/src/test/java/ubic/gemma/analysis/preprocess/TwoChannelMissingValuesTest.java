@@ -25,8 +25,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.lang.RandomStringUtils;
 
-import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
+import ubic.basecode.io.ByteArrayConverter; 
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoFamilyParser;

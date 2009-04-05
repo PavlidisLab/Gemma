@@ -87,7 +87,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gse1133Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE1133", false, true, false, false, true  );
+                "GSE1133", false, true, false, false, true );
         ee = results.iterator().next(); // fixme, need to delete both.
         eeService.thawLite( ee );
         assertNotNull( ee.getPrimaryPublication() );
@@ -109,7 +109,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE5949short" ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE5949", false, true, false, false, true  );
+                    "GSE5949", false, true, false, false, true );
             ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             log.info( "Test skipped because GSE5949 was already loaded - clean the DB before running the test" );
@@ -133,7 +133,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ExpressionExperiment newee;
         try {
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GDS472", false, true, false, false, true  );
+                    "GDS472", false, true, false, false, true );
             newee = results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
@@ -162,9 +162,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         ExpressionDataMatrix matrix = builder.getPreferredData();
 
-        assertTrue( matrix != null );
-
-        assertTrue( matrix != null );
+        assertNotNull( matrix );
 
         assertEquals( 31, matrix.rows() );
 
@@ -179,7 +177,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.expression.geo.service.AbstractGeoServiceTest#init()
      */
     @Override
@@ -187,7 +184,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void onSetUp() throws Exception {
         super.onSetUp();
@@ -201,13 +197,12 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         endTransaction();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void onTearDown() throws Exception {
         super.onTearDown();
         try {
             if ( ee != null ) {
-                eeService.delete( ee );
+                // eeService.delete( ee );
             }
         } catch ( Exception e ) {
             log.error( "Error while deleting test data: " + ee, e );
@@ -218,11 +213,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     /*
      * Please leave this here, we use it to load data sets for chopping.
      */
-    @SuppressWarnings("unchecked")
     void fetchASeries( String accession ) throws Exception {
         endTransaction();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        geoService.fetchAndLoad( accession, false, false, false, false, true  );
+        geoService.fetchAndLoad( accession, false, false, false, false, true );
     }
 
     /**

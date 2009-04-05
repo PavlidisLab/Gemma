@@ -116,23 +116,40 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             missingValueVectors = this.getMissingValueVectors( expressionExperiment );
         }
 
+        log.info( missingValueVectors.size() + " missing value vectors" );
+
         Collection<RawExpressionDataVector> preferredDataVectors = this.getPreferredDataVectors( expressionExperiment );
         if ( preferredDataVectors.isEmpty() ) {
             throw new IllegalArgumentException( "No preferred data vectors for " + expressionExperiment );
         }
 
+        log.info( preferredDataVectors.size() + " preferred data vectors" );
+
         Collection<DoubleVectorValueObject> maskedVectorObjects = maskAndUnpack( preferredDataVectors,
                 missingValueVectors );
 
+        log.info( maskedVectorObjects.size() + " masked vectors" );
+
         /*
-         * Create the vectors.
+         * Create the vectors. Do a sanity check that we don't have more than we should
          */
+        Collection<DesignElement> seenDes = new HashSet<DesignElement>();
         QuantitationType preferredMaskedDataQuantitationType = getPreferredMaskedDataQuantitationType( preferredDataVectors
                 .iterator().next().getQuantitationType() );
         Collection<ProcessedExpressionDataVector> result = new ArrayList<ProcessedExpressionDataVector>();
         for ( DoubleVectorValueObject dvvo : maskedVectorObjects ) {
+
+            DesignElement designElement = dvvo.getDesignElement();
+
+            if ( seenDes.contains( designElement ) ) {
+                // defensive programming, this happens.
+                throw new IllegalStateException( "Duplicated design element: " + designElement
+                        + "; make sure the experiment has only one 'preferred' quantitation type." );
+            }
+
             result.add( ( ProcessedExpressionDataVector ) dvvo
                     .toDesignElementDataVector( preferredMaskedDataQuantitationType ) );
+            seenDes.add( designElement );
         }
 
         Collection<ProcessedExpressionDataVector> results = this.create( result );
@@ -581,6 +598,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return unpackedData;
     }
 
+    /**
+     * @param data
+     * @return
+     */
     private Collection<DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data ) {
         Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
         for ( DesignElementDataVector v : data ) {
@@ -620,6 +641,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes );
     }
 
+    @Override
     public void remove( ProcessedExpressionDataVector designElementDataVector ) {
         this.getHibernateTemplate().delete( designElementDataVector );
 
