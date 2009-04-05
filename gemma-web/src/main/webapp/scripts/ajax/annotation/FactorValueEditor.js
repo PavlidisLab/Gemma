@@ -48,6 +48,31 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		}
 	},
 
+	createNew : function() {
+		var ef = this.experimentalFactor;
+		var oldmsg = this.loadMask.msg;
+		this.loadMask.msg = "Creating new factor value";
+		this.loadMask.show();
+
+		var callback = function() {
+			this.loadMask.hide();
+			this.loadMask.msg = oldmsg;
+			this.factorValueCreated(ef);
+			this.getTopToolbar().characteristicToolbar.setExperimentalFactor(ef.id);
+		}.createDelegate(this);
+
+		var errorHandler = function(er) {
+			this.loadMask.hide();
+			this.loadMask.msg = oldmsg;
+			Ext.Msg.alert("Error", er);
+		}.createDelegate(this);
+
+		ExperimentalDesignController.createFactorValue(this.experimentalFactor, {
+					callback : callback,
+					errorHandler : errorHandler
+				});
+	},
+
 	initComponent : function() {
 
 		this.columns = [{
@@ -197,30 +222,11 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 									'You should save your changes before creating new values. Are you sure you want to erase them?',
 									function(but) {
 										if (but == 'yes') {
-											var ef = this.experimentalFactor;
-											var oldmsg = this.loadMask.msg;
-											this.loadMask.msg = "Creating new factor value";
-											this.loadMask.show();
-
-											var callback = function() {
-												this.loadMask.hide();
-												this.loadMask.msg = oldmsg;
-												this.factorValueCreated(ef);
-												this.getTopToolbar().characteristicToolbar.setExperimentalFactor(ef.id);
-											}.createDelegate(this);
-
-											var errorHandler = function(er) {
-												this.loadMask.hide();
-												this.loadMask.msg = oldmsg;
-												Ext.Msg.alert("Error", er);
-											}.createDelegate(this);
-
-											ExperimentalDesignController.createFactorValue(this.experimentalFactor, {
-														callback : callback,
-														errorHandler : errorHandler
-													});
+											this.createNew();
 										}
 									}.createDelegate(this));
+				} else {
+					this.createNew();
 				}
 
 			}.createDelegate(this));
