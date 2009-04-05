@@ -238,7 +238,17 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}, this);
 
 		this.getTopToolbar().on("refresh", function() {
-					this.init();
+					if (this.store.getModifiedRecords().length > 0) {
+						Ext.Msg.confirm('Unsaved changes!',
+								'You have unsaved changes, are you sure you want to refresh?',
+
+								function(but) {
+									if (but == 'yes') {
+										this.init();
+									}
+								}.createDelegate(this));
+					}
+
 				}, this);
 
 		if (this.editable) {
@@ -292,7 +302,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 							for (var j in row) {
 								if (typeof j == 'string' && j.indexOf("factor") >= 0) {
-									//console.log(j + "...." + row[j]);
+									// console.log(j + "...." + row[j]);
 									bmvo.factorIdToFactorValueId[j] = row[j];
 								}
 							}
@@ -441,7 +451,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	rowExpander : new Ext.grid.RowExpander({
 		tpl : new Ext.Template(
-				"<dl style='margin-left: 1em; margin-bottom: 2px;'><dt>BioMaterial {bmName}</dt><dd>{bmDesc}<br>{bmChars}</dd>",
+				"<dl style='background-color:#EEE;padding:2px;margin-left:1em;margin-bottom:2px;'><dt>BioMaterial {bmName}</dt><dd>{bmDesc}<br>{bmChars}</dd>",
 				"<dt>BioAssay {baName}</dt><dd>{baDesc}</dd></dl>")
 	})
 

@@ -559,7 +559,11 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             assert factorIdString.matches( "factor\\d+" );
             Long factorId = Long.parseLong( factorIdString.substring( 6 ) );
 
-            if ( factorValueString.matches( "fv\\d+" ) ) {
+            if ( StringUtils.isBlank( factorValueString ) ) {
+                // no value provided, that's okay, the curator can fill it in later.
+                continue;
+
+            } else if ( factorValueString.matches( "fv\\d+" ) ) {
                 // categorical
                 long fvId = Long.parseLong( factorValueString.substring( 2 ) );
                 FactorValue fv = factorValueService.load( fvId );
@@ -595,11 +599,11 @@ public class ExperimentalDesignController extends BaseMultiActionController {
                 if ( !found ) {
                     /*
                      * What happens if there is no value set for this factor already? Have to load the factor, create a
-                     * factor value, fill it in...maybe need a template. But normally there would be a value, even if
-                     * NaN.
+                     * factor value. But there should be one
                      */
-                    throw new IllegalStateException( "Sorry, biomaterial " + bmvo + " didn't have a value for factor="
-                            + factorId + ", and one cannot be added at this time." );
+                    throw new IllegalStateException( "Sorry, biomaterial " + bmvo
+                            + " didn't have a value for continuous factor=" + factorId
+                            + ", and one cannot be added at this time." );
                 }
 
             }
