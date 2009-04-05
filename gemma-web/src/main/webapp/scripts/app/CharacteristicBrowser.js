@@ -12,6 +12,7 @@ Ext.onReady(function() {
 				useDefaultToolbar : false,
 				showParent : true,
 				width : 1200,
+				height : 500,
 				noInitialLoad : true,
 				pageSize : 30
 			});
