@@ -1,5 +1,11 @@
 Ext.namespace('Gemma');
 
+/**
+ * Display experimental factors, allow editing.
+ * 
+ * @class Gemma.ExperimentalFactorGrid
+ * @extends Gemma.GemmaGridPanel
+ */
 Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 			loadMask : true,
@@ -248,84 +254,90 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		});
 
+/**
+ * Accept entry of data for a new factor, including category and whether it is a continuous variable.
+ * 
+ * @class Gemma.ExperimentalFactorAddWindow
+ * @extends Ext.Window
+ */
 Gemma.ExperimentalFactorAddWindow = Ext.extend(Ext.Window, {
 
-			modal : true,
-			closeAction : 'close',
-			title : "Fill in new factor details",
+	modal : true,
+	closeAction : 'close',
+	title : "Fill in new factor details",
 
-			initComponent : function() {
+	initComponent : function() {
 
-				Ext.apply(this, {
-							items : [{
-										xtype : 'form',
-										bodyStyle : "padding:10px",
-										monitorValid : true,
-										id : 'factor-create-form',
-										items : [new Gemma.MGEDCombo({
-															id : 'factor-mged-combo',
-															emptyText : "Select a category",
-															fieldLabel : "Category",
-															allowBlank : false,
-															termKey : "factor"
-														}), {
-													xtype : 'textfield',
-													width : 250,
-													id : 'factor-description-field',
-													allowBlank : false,
-													fieldLabel : "Description",
-													emptyText : "Type a short distinctive description"
-												}, {
-													xtype : 'checkbox',
-													id : 'factor-type-checkbox',
-													fieldLabel : 'Continuous',
-													tooltip : "Check if continuous variable"
-												}]
-									}],
-							buttons : [{
-										text : "Create",
-										id : 'factor-create-button',
-										tooltip : "Create the new experimental factor",
-										disabled : true,
-										handler : function() {
-											this.fireEvent("done", this.getExperimentalFactorValueObject());
-											this.close();
-										},
-										scope : this
-									}, {
-										text : "Cancel",
-										handler : function() {
-											this.close();
-										},
-										scope : this
-									}]
-						});
-
-				Gemma.ExperimentalFactorAddWindow.superclass.initComponent.call(this);
-
-				this.addEvents("done");
-
-				Ext.getCmp('factor-create-form').on('clientvalidation', function(form, valid) {
-							if (valid) {
-								Ext.getCmp('factor-create-button').enable();
-							} else {
-								Ext.getCmp('factor-create-button').disable();
-							}
-						});
-			},
-
-			getExperimentalFactorValueObject : function() {
-				var category = Ext.getCmp('factor-mged-combo').getTerm();
-				var description = Ext.getCmp('factor-description-field').getValue();
-				return {
-					name : category.term,
-					description : description,
-					category : category.term,
-					categoryUri : category.uri,
-					type : Ext.getCmp('factor-type-checkbox').getValue() ? "Continuous" : "Categorical"
-				};
-			}
+		Ext.apply(this, {
+			items : [{
+				xtype : 'form',
+				bodyStyle : "padding:10px",
+				monitorValid : true,
+				id : 'factor-create-form',
+				items : [new Gemma.MGEDCombo({
+									id : 'factor-mged-combo',
+									emptyText : "Select a category",
+									fieldLabel : "Category",
+									allowBlank : false,
+									termKey : "factor"
+								}), {
+							xtype : 'textfield',
+							width : 250,
+							id : 'factor-description-field',
+							allowBlank : false,
+							fieldLabel : "Description",
+							emptyText : "Type a short distinctive description such as 'control vs. drug'"
+						}, {
+							xtype : 'checkbox',
+							id : 'factor-type-checkbox',
+							fieldLabel : 'Continuous',
+							tooltip : "Check if the factor is a measurement that can take arbitrary numerical values. If in doubt leave this unchecked."
+						}]
+			}],
+			buttons : [{
+						text : "Create",
+						id : 'factor-create-button',
+						tooltip : "Create the new experimental factor",
+						disabled : true,
+						handler : function() {
+							this.fireEvent("done", this.getExperimentalFactorValueObject());
+							this.close();
+						},
+						scope : this
+					}, {
+						text : "Cancel",
+						handler : function() {
+							this.close();
+						},
+						scope : this
+					}]
 		});
+
+		Gemma.ExperimentalFactorAddWindow.superclass.initComponent.call(this);
+
+		this.addEvents("done");
+
+		Ext.getCmp('factor-create-form').on('clientvalidation', function(form, valid) {
+					if (valid) {
+						Ext.getCmp('factor-create-button').enable();
+					} else {
+						Ext.getCmp('factor-create-button').disable();
+					}
+				});
+	},
+
+	getExperimentalFactorValueObject : function() {
+		var category = Ext.getCmp('factor-mged-combo').getTerm();
+		var description = Ext.getCmp('factor-description-field').getValue();
+		return {
+			name : category.term,
+			description : description,
+			category : category.term,
+			categoryUri : category.uri,
+			type : Ext.getCmp('factor-type-checkbox').getValue() ? "Continuous" : "Categorical"
+		};
+	}
+});
 
 Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 
@@ -334,7 +346,7 @@ Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 
 				this.createButton = new Ext.Toolbar.Button({
 							text : "Add new",
-							tooltip : "Add a new experimental factor",
+							tooltip : "Add a new experimental factor to the design",
 							disabled : false,
 							handler : function() {
 								var w = new Gemma.ExperimentalFactorAddWindow();
@@ -348,7 +360,7 @@ Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 
 				this.deleteButton = new Ext.Toolbar.Button({
 							text : "Delete",
-							tooltip : "Delete the selected experimental factors",
+							tooltip : "Delete the selected experimental factor(s)",
 							disabled : true,
 							handler : function() {
 								Ext.Msg.confirm('Deleting records', 'Are you sure? This cannot be undone',

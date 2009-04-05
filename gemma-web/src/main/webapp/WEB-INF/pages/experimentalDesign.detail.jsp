@@ -4,8 +4,7 @@
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <head>
-	<title><fmt:message key="experimentalDesign.details" />
-	</title>
+	<title><fmt:message key="experimentalDesign.details" /></title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' useRandomParam="false" />
 	<jwr:script src='/scripts/app/eeDataFetch.js' />
 	<jwr:script src='/scripts/app/ExperimentalDesign.js' />
@@ -120,8 +119,9 @@
 			<p>
 				Use the form below to populate the experimental design details. Alternatively you can
 				<a href="#" onClick="showDesignUploadForm()">upload</a> a design description file. Instructions are
-				<a target="_blank" href="<c:url value='/static/experimentalDesign/uploadDesign_help.html' />">here</a>. If you want
-				to use the upload method, you can get a blank
+				<a target="_blank"
+					href="<c:url value='http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Experimental+Design+Upload' />">here</a>.
+				If you want to use the upload method, you can get a blank
 				<a href="#"
 					onClick="fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">template
 					file</a> to get started.
@@ -140,4 +140,4 @@
 
 <div id="factorValuePanel" class="x-hide-display" style="margin-bottom: 1em;"></div>
 
-<div id="bioMaterialsPanel" class="x-hide-display" ></div>
+<div id="bioMaterialsPanel" class="x-hide-display"></div>

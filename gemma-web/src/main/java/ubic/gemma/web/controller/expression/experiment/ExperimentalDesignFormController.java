@@ -107,8 +107,7 @@ public class ExperimentalDesignFormController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
-    @Override
-    @SuppressWarnings("unused")
+    @Override 
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 

@@ -383,7 +383,7 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 				this.saveButton = new Ext.Toolbar.Button({
 							text : "Save",
 							id : 'factor-value-save-button',
-							tooltip : "Commit changes to  factor values",
+							tooltip : "Commit changes to factor values",
 							disabled : true,
 							handler : function() {
 								this.saveButton.disable();
@@ -509,7 +509,8 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 									Ext.Msg.alert("You must select a factor value and set a characteristic.");
 								} else {
 									this.createButton.disable();
-									// removed in response to bug 1016 mgedCombo.reset();
+									// removed in response to bug 1016
+									// mgedCombo.reset();
 									this.charCombo.reset();
 									this.fireEvent("create", this.factorValue, c);
 								}

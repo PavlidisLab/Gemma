@@ -45,13 +45,35 @@ import ubic.gemma.util.FactorValueVector;
  */
 public class DesignMatrixRowValueObject implements Serializable {
 
+    public static final class Factory {
+
+        public static Collection<DesignMatrixRowValueObject> getDesignMatrix( ExpressionExperiment expressionExperiment ) {
+
+            CountingMap<FactorValueVector> assayCount = new CountingMap<FactorValueVector>();
+            for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
+                for ( BioMaterial sample : assay.getSamplesUsed() ) {
+                    assayCount.increment( new FactorValueVector( sample.getFactorValues() ) );
+                }
+            }
+
+            Collection<DesignMatrixRowValueObject> matrix = new ArrayList<DesignMatrixRowValueObject>();
+            List<FactorValueVector> keys = assayCount.sortedKeyList( true );
+            for ( FactorValueVector key : keys ) {
+                matrix.add( new DesignMatrixRowValueObject( key, assayCount.get( key ) ) );
+            }
+            return matrix;
+
+        }
+
+    }
+
     private static final long serialVersionUID = 1;
+
+    private int count;
 
     private List<String> factors;
 
     private Map<String, String> factorValueMap;
-
-    private int count;
 
     public DesignMatrixRowValueObject( FactorValueVector factorValues, int n ) {
         factors = new ArrayList<String>();
@@ -64,19 +86,69 @@ public class DesignMatrixRowValueObject implements Serializable {
         count = n;
     }
 
+    /**
+     * @return the count
+     */
+    public int getCount() {
+        return count;
+    }
+
+    /**
+     * @return the factors
+     */
+    public List<String> getFactors() {
+        return factors;
+    }
+
+    /**
+     * @return the factorValues
+     */
+    public Map<String, String> getFactorValueMap() {
+        return factorValueMap;
+    }
+
+    /**
+     * @param count the count to set
+     */
+    public void setCount( int count ) {
+        this.count = count;
+    }
+
+    /**
+     * @param factors the factors to set
+     */
+    public void setFactors( List<String> factors ) {
+        this.factors = factors;
+    }
+
+    /**
+     * @param factorValues the factorValues to set
+     */
+    public void setFactorValueMap( Map<String, String> factorValueMap ) {
+        this.factorValueMap = factorValueMap;
+    }
+
+    /**
+     * @param factor
+     * @return A unique string for the factor, but hopefully human-readable.
+     */
     private String getFactorString( ExperimentalFactor factor ) {
-        return factor.getName();
-    }
-
-    private String getFactorValueString( List<FactorValue> factorValues ) {
-        StringBuffer buf = new StringBuffer();
-        for ( Iterator<FactorValue> i = factorValues.iterator(); i.hasNext(); ) {
-            buf.append( getFactorValueString( i.next() ) );
-            if ( i.hasNext() ) buf.append( ", " );
+        if ( StringUtils.isBlank( factor.getDescription() ) || factor.getDescription().equals( factor.getName() ) ) {
+            return factor.getName();
         }
-        return buf.toString();
+        String result = factor.getName() + " (" + StringUtils.abbreviate( factor.getDescription(), 25 ) + ")";
+
+        if ( factorValueMap.containsKey( result ) ) {
+            result = result + " [" + factor.getId() + "]";
+        }
+        return result;
+
     }
 
+    /**
+     * @param factorValue
+     * @return
+     */
     private String getFactorValueString( FactorValue factorValue ) {
         StringBuffer buf = new StringBuffer();
         if ( !factorValue.getCharacteristics().isEmpty() ) {
@@ -98,67 +170,16 @@ public class DesignMatrixRowValueObject implements Serializable {
     }
 
     /**
-     * @return the factors
+     * @param factorValues
+     * @return
      */
-    public List<String> getFactors() {
-        return factors;
-    }
-
-    /**
-     * @param factors the factors to set
-     */
-    public void setFactors( List<String> factors ) {
-        this.factors = factors;
-    }
-
-    /**
-     * @return the factorValues
-     */
-    public Map<String, String> getFactorValueMap() {
-        return factorValueMap;
-    }
-
-    /**
-     * @param factorValues the factorValues to set
-     */
-    public void setFactorValueMap( Map<String, String> factorValueMap ) {
-        this.factorValueMap = factorValueMap;
-    }
-
-    /**
-     * @return the count
-     */
-    public int getCount() {
-        return count;
-    }
-
-    /**
-     * @param count the count to set
-     */
-    public void setCount( int count ) {
-        this.count = count;
-    }
-
-    public static final class Factory {
-
-        public static Collection<DesignMatrixRowValueObject> getDesignMatrix( ExpressionExperiment expressionExperiment ) {
-
-            CountingMap<FactorValueVector> assayCount = new CountingMap<FactorValueVector>();
-            for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
-                for ( BioMaterial sample : assay.getSamplesUsed() ) {
-                    assayCount.increment( new FactorValueVector( sample.getFactorValues() ) );
-                }
-            }
-
-            Collection<DesignMatrixRowValueObject> matrix = new ArrayList<DesignMatrixRowValueObject>();
-            List<FactorValueVector> keys = assayCount.sortedKeyList( true );
-            for ( FactorValueVector key : keys ) {
-                matrix.add( new DesignMatrixRowValueObject( key, assayCount.get( key ) ) );
-            }
-            return matrix;
-
+    private String getFactorValueString( List<FactorValue> factorValues ) {
+        StringBuffer buf = new StringBuffer();
+        for ( Iterator<FactorValue> i = factorValues.iterator(); i.hasNext(); ) {
+            buf.append( getFactorValueString( i.next() ) );
+            if ( i.hasNext() ) buf.append( ", " );
         }
-
+        return buf.toString();
     }
 
 }

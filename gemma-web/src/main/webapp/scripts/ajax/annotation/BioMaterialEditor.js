@@ -292,7 +292,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 							for (var j in row) {
 								if (typeof j == 'string' && j.indexOf("factor") >= 0) {
-									console.log(j + "...." + row[j]);
+									//console.log(j + "...." + row[j]);
 									bmvo.factorIdToFactorValueId[j] = row[j];
 								}
 							}
@@ -404,21 +404,22 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		for (var i in this.factorValueEditors) {
 			var factorId = this.factorValueEditors[i];
 			if (typeof factorId == 'string' && factorId.substring(0, 6) == "factor") {
-				var combo = this.factorValueEditors[factorId];
-
-				// careful for coninuous.
-
+				var editor = this.factorValueEditors[factorId];
 				var column = this.getColumnModel().getColumnById(factorId);
-				combo.setExperimentalFactor(combo.experimentalFactor.id, function(r, options, success) {
-							this.fvMap = {};
-							for (var i = 0; i < r.length; ++i) {
-								var rec = r[i];
-								this.fvMap["fv" + rec.get("id")] = rec.get("factorValue");
-							}
-							var renderer = this.createValueRenderer();
-							column.renderer = renderer;
-							this.getView().refresh();
-						}.createDelegate(this));
+
+				// this should not fire if it's a continuous variable; this is for combos.
+				if (editor.setExperimentalFactor) {
+					editor.setExperimentalFactor(editor.experimentalFactor.id, function(r, options, success) {
+								this.fvMap = {};
+								for (var i = 0; i < r.length; ++i) {
+									var rec = r[i];
+									this.fvMap["fv" + rec.get("id")] = rec.get("factorValue");
+								}
+								var renderer = this.createValueRenderer();
+								column.renderer = renderer;
+								this.getView().refresh();
+							}.createDelegate(this));
+				}
 			}
 		}
 		this.getTopToolbar().factorValueCombo.store.reload();

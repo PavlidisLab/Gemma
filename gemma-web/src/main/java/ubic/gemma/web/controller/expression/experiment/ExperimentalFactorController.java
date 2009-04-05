@@ -36,6 +36,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="methodNameResolver" ref="experimentalFactorActions"
  * @deprecated This is no longer used and can probably be deleted (corresponding entry in spring config too)
  */
+@Deprecated
 public class ExperimentalFactorController extends BaseMultiActionController {
 
     private ExperimentalFactorService experimentalFactorService = null;

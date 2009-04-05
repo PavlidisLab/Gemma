@@ -26,7 +26,8 @@ var DesignMatrix = {
 			columns.push({
 						header : factors[i],
 						dataIndex : factors[i],
-						sortable : "true"
+						sortable : "true",
+						tooltip : factors[i]
 					});
 		}
 
@@ -69,8 +70,8 @@ var DesignMatrix = {
 						autoFill : true
 					}
 				});
-		this.grid.render();
-		this.grid.doLayout();
+		// this.grid.render();
+		// this.grid.doLayout();
 	},
 
 	init : function(entityDelegator) {
