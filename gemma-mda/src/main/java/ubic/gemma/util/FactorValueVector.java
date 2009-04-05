@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -38,7 +39,8 @@ public class FactorValueVector {
     /**
      * An ordered list of ExperimentalFactors represented in this vector. The order must be guaranteed across all
      * FactorValueVectors. i.e.: any two FactorValueVectors containing FactorValues for the same ExperimentalFactors
-     * must maintain this list in the same order.
+     * must maintain this list in the same order. [FIXME I don't see why this is necessary, as there can be only one
+     * FactorValue per Factor per vector ? I fixed it so at least we don't get duplicates.]
      */
     private List<ExperimentalFactor> factors;
     private static final DescribableComparator factorComparator = DescribableComparator.getInstance();
@@ -46,24 +48,47 @@ public class FactorValueVector {
     /**
      * A map from ExperimentalFactor to an ordered list of FactorValues. The order must be guaranteed as above.
      */
-    private Map<ExperimentalFactor, List<FactorValue>> valuesForFactor;
+    private Map<ExperimentalFactor, TreeSet<FactorValue>> valuesForFactor;
     private static final FactorValueComparator factorValueComparator = FactorValueComparator.getInstance();
 
     private String key;
 
-    public FactorValueVector( Collection<FactorValue> values ) {
+    /**
+     * @param factors for the experiment
+     * @param values for one sample
+     */
+    public FactorValueVector( Collection<ExperimentalFactor> factors, Collection<FactorValue> values ) {
 
-        valuesForFactor = new HashMap<ExperimentalFactor, List<FactorValue>>();
+        valuesForFactor = new HashMap<ExperimentalFactor, TreeSet<FactorValue>>();
+
+        for ( ExperimentalFactor f : factors ) {
+
+            boolean found = false;
+            for ( FactorValue v : values ) {
+                if ( v.getExperimentalFactor().equals( f ) ) {
+                    getValuesForFactor( f ).add( v );
+                    found = true;
+                    break;
+                }
+            }
+
+            // Make sure we add a value for each factor; in this case we have a missing value.
+            if ( !found ) {
+                getValuesForFactor( f ).add( null );
+            }
+
+        }
+
         for ( FactorValue value : values ) {
             if ( value.getExperimentalFactor() != null ) {
                 getValuesForFactor( value.getExperimentalFactor() ).add( value );
             }
         }
-        for ( List<FactorValue> storedValues : valuesForFactor.values() ) {
-            Collections.sort( storedValues, factorValueComparator );
-        }
-        factors = new ArrayList<ExperimentalFactor>( valuesForFactor.keySet() );
-        Collections.sort( factors, factorComparator );
+        // for ( TreeSet<FactorValue> storedValues : valuesForFactor.values() ) {
+        // Collections.sort( storedValues, factorValueComparator );
+        // }
+        this.factors = new ArrayList<ExperimentalFactor>( valuesForFactor.keySet() );
+        Collections.sort( this.factors, factorComparator );
 
         key = buildKey();
 
@@ -80,13 +105,15 @@ public class FactorValueVector {
         return factors;
     }
 
-    public List<FactorValue> getValuesForFactor( ExperimentalFactor factor ) {
-        List<FactorValue> values = valuesForFactor.get( factor );
-        if ( values == null ) {
-            values = new ArrayList<FactorValue>();
-            valuesForFactor.put( factor, values );
+    /**
+     * @param factor
+     * @return
+     */
+    public Collection<FactorValue> getValuesForFactor( ExperimentalFactor factor ) {
+        if ( !valuesForFactor.containsKey( factor ) ) {
+            valuesForFactor.put( factor, new TreeSet<FactorValue>( factorValueComparator ) );
         }
-        return values;
+        return valuesForFactor.get( factor );
     }
 
     @Override
@@ -99,7 +126,10 @@ public class FactorValueVector {
         return key;
     }
 
-    protected String buildKey() {
+    /**
+     * @return
+     */
+    private String buildKey() {
         StringBuffer buf = new StringBuffer();
         buf.append( "[" );
         for ( Iterator<ExperimentalFactor> i = factors.iterator(); i.hasNext(); ) {

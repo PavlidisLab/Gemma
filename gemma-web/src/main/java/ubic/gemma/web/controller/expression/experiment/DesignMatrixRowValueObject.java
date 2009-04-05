@@ -41,18 +41,30 @@ import ubic.gemma.util.FactorValueVector;
  * For the display of a summary table about experimental design.
  * 
  * @author luke
+ * @author paul fixed to handle incomplete designs
  * @version $Id$
  */
 public class DesignMatrixRowValueObject implements Serializable {
 
+    /**
+     * @author paul
+     * @version $Id$
+     */
     public static final class Factory {
 
+        /**
+         * @param expressionExperiment
+         * @return
+         */
         public static Collection<DesignMatrixRowValueObject> getDesignMatrix( ExpressionExperiment expressionExperiment ) {
+
+            Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign()
+                    .getExperimentalFactors();
 
             CountingMap<FactorValueVector> assayCount = new CountingMap<FactorValueVector>();
             for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
                 for ( BioMaterial sample : assay.getSamplesUsed() ) {
-                    assayCount.increment( new FactorValueVector( sample.getFactorValues() ) );
+                    assayCount.increment( new FactorValueVector( factors, sample.getFactorValues() ) );
                 }
             }
 
@@ -150,6 +162,10 @@ public class DesignMatrixRowValueObject implements Serializable {
      * @return
      */
     private String getFactorValueString( FactorValue factorValue ) {
+
+        // missing data.
+        if ( factorValue == null ) return "";
+
         StringBuffer buf = new StringBuffer();
         if ( !factorValue.getCharacteristics().isEmpty() ) {
             for ( Iterator<Characteristic> i = factorValue.getCharacteristics().iterator(); i.hasNext(); ) {
@@ -159,9 +175,9 @@ public class DesignMatrixRowValueObject implements Serializable {
                  * Note we don't use toString here because it includes the category, uri, etc.
                  */
                 buf.append( characteristic.getValue() );
-                if ( i.hasNext() ) buf.append( ", " );
+                if ( i.hasNext() ) buf.append( " " );
             }
-        } else if ( !StringUtils.isEmpty( factorValue.getValue() ) ) {
+        } else if ( StringUtils.isNotBlank( factorValue.getValue() ) ) {
             buf.append( factorValue.getValue() );
         } else if ( factorValue.getMeasurement() != null ) {
             buf.append( factorValue.getMeasurement().getValue() );
@@ -173,10 +189,11 @@ public class DesignMatrixRowValueObject implements Serializable {
      * @param factorValues
      * @return
      */
-    private String getFactorValueString( List<FactorValue> factorValues ) {
+    private String getFactorValueString( Collection<FactorValue> factorValues ) {
         StringBuffer buf = new StringBuffer();
         for ( Iterator<FactorValue> i = factorValues.iterator(); i.hasNext(); ) {
-            buf.append( getFactorValueString( i.next() ) );
+            FactorValue fv = i.next();
+            buf.append( getFactorValueString( fv ) );
             if ( i.hasNext() ) buf.append( ", " );
         }
         return buf.toString();
