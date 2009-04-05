@@ -1,6 +1,5 @@
 package ubic.gemma.util;
 
-
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -47,7 +46,7 @@ public class AnchorTagUtil {
     }
 
     public static String getExperimentalDesignLink( Long edId, String link, String hover ) {
-        return getLink( String.format( "/Gemma/expressionExperiment/showExperimnetalDesign.html?id=%d", edId ),
+        return getLink( String.format( "/Gemma/expressionExperiment/showExperimentalDesign.html?id=%d", edId ),
                 "ExperimentalDesign " + ( StringUtils.isBlank( link ) ? "" : ": " + link ), hover );
     }
 
