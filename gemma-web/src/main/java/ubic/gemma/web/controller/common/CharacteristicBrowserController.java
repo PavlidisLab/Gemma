@@ -297,10 +297,15 @@ public class CharacteristicBrowserController extends BaseFormController {
             avo.setParentDescription( bm.getDescription() );
             avo.setParentLink( AnchorTagUtil.getBioMaterialLink( bm.getId(), avo.getParentName() ) );
             ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
-            avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
-            avo.setParentOfParentDescription( ee.getDescription() );
-            avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo
-                    .getParentOfParentName() ) );
+
+            if ( ee != null ) {
+                avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
+                avo.setParentOfParentDescription( ee.getDescription() );
+                avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo
+                        .getParentOfParentName() ) );
+            } else {
+                log.warn( "Expression experiment for " + bm + " was null" );
+            }
         } else if ( parent instanceof FactorValue ) {
             FactorValue fv = ( FactorValue ) parent;
             avo.setParentDescription( String.format( "FactorValue: %s : %s", fv.getExperimentalFactor().getName(), fv
