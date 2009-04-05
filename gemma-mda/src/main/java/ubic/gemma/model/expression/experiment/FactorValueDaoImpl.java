@@ -44,6 +44,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
      * ubic.gemma.model.expression.experiment.FactorValueDaoBase#find(ubic.gemma.model.expression.experiment.FactorValue
      * )
      */
+    @SuppressWarnings("unchecked")
     @Override
     public FactorValue find( FactorValue factorValue ) {
         try {
@@ -98,40 +99,43 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
     public void remove( FactorValue factorValue ) {
         final FactorValue toDelete = factorValue;
 
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( Session session ) throws HibernateException {
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    @SuppressWarnings("unchecked")
+                    public Object doInHibernate( Session session ) throws HibernateException {
 
-                log.info( "Loading data for deletion..." );
-                session.update( toDelete );
+                        log.debug( "Deleting: " + toDelete );
+                        session.update( toDelete );
 
-                /*
-                 * everything but the association to BioMaterials is taken care of by the cascade...
-                 */
-                final String queryString = "FROM BioMaterialImpl AS bm LEFT JOIN bm.factorValues AS fv "
-                        + "WHERE fv = :fv";
-                // List list = getHibernateTemplate().findByNamedParam( queryString, "fv", toDelete );
-                Query query = session.createQuery( queryString );
-                query.setEntity( "fv", toDelete );
-                for ( Object[] row : ( List<Object[]> ) query.list() ) {
-                    BioMaterial bm = ( BioMaterial ) row[0];
-                    bm.getFactorValues().remove( toDelete );
-                    session.update( bm );
-                    // session.evict( bm ); // required?
-                }
+                        final String queryString = "from BioMaterialImpl as bm inner join bm.factorValues AS fv "
+                                + "WHERE fv = :fv";
+                        // List list = getHibernateTemplate().findByNamedParam( queryString, "fv", toDelete );
+                        Query query = session.createQuery( queryString );
+                        query.setEntity( "fv", toDelete );
+                        for ( Object[] row : ( List<Object[]> ) query.list() ) {
+                            BioMaterial bm = ( BioMaterial ) row[0];
+                            bm.getFactorValues().remove( toDelete );
+                            session.update( bm );
+                            // session.evict( bm ); // required?
+                        }
 
-                session.delete( toDelete );
-                session.flush();
-                session.clear();
+                        ExperimentalFactor experimentalFactor = toDelete.getExperimentalFactor();
+                        experimentalFactor.getFactorValues().remove( toDelete );
 
-                log.info( "Deleted " + toDelete );
-                return null;
-            }
-        } );
+                        session.update( experimentalFactor );
+
+                        toDelete.setExperimentalFactor( null );
+                        session.delete( toDelete );
+
+                        return null;
+                    }
+                } );
     }
 
     /**
      * @param results
      */
+    @SuppressWarnings("unchecked")
     private void debug( List results ) {
         StringBuilder sb = new StringBuilder();
         sb.append( "\nFactorValues found:\n" );

@@ -153,7 +153,8 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     /**
      * Creates a new FactorValue and adds it to the ExperimentalFactor specified by the EntityDelegator. The new
      * FactorValue may have some initial Characteristics created to match any previously existing FactorValues for the
-     * same ExperimentalFactor.
+     * same ExperimentalFactor. Note that this applies only to 'categorical' variables. For continuous variables, you
+     * merely set the value.
      * 
      * @param e an EntityDelegator representing an ExperimentalFactor
      */
@@ -337,7 +338,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 
     /**
      * Returns FactorValueValueObjects for each FactorValue in the ExperimentalFactor specified by the EntityDelegator.
-     * There will be one row per FactorValue.
+     * There will be one row per FactorValue
      * 
      * @param e an EntityDelegator representing an ExperimentalFactor
      * @return a collection of FactorValueValueObjects
@@ -348,12 +349,12 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 
         Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
         for ( FactorValue value : ef.getFactorValues() ) {
-            Characteristic category = value.getExperimentalFactor().getCategory();
-            if ( category == null ) {
-                category = Characteristic.Factory.newInstance();
-                category.setValue( value.getExperimentalFactor().getName() );
+            Characteristic efCategory = value.getExperimentalFactor().getCategory();
+            if ( efCategory == null ) {
+                efCategory = Characteristic.Factory.newInstance();
+                efCategory.setValue( value.getExperimentalFactor().getName() );
             }
-            result.add( new FactorValueValueObject( value, category ) );
+            result.add( new FactorValueValueObject( value, efCategory ) );
         }
         return result;
     }
@@ -376,6 +377,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
                     result.add( new FactorValueValueObject( value, c ) );
                 }
             } else {
+                // We just use the experimental factor's characteristic.
                 Characteristic category = value.getExperimentalFactor().getCategory();
                 if ( category == null ) {
                     category = Characteristic.Factory.newInstance();
@@ -550,7 +552,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         BioMaterial bm = bioMaterialService.load( bmvo.getId() );
 
         Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
-        Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId();
+        Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
         for ( String factorIdString : factorIdToFactorValueId.keySet() ) {
             String factorValueString = factorIdToFactorValueId.get( factorIdString );
 
@@ -566,30 +568,45 @@ public class ExperimentalDesignController extends BaseMultiActionController {
                 }
                 updatedFactorValues.add( fv );
             } else {
-                // continuous.
-
-                // it's the actual value. This will only make sense if the value is a measurement.
+                // continuous, the value send is the actual value, not an id. This will only make sense if the value is
+                // a measurement.
+                boolean found = false;
+                // find the right factor value.
                 for ( FactorValue fv : bm.getFactorValues() ) {
                     if ( fv.getExperimentalFactor().getId().equals( factorId ) ) {
                         if ( fv.getMeasurement() == null ) {
-                            log.warn( "Should have been a measurement associated with fv=" + fv );
-                            continue;
-                        }
-
-                        if ( !fv.getMeasurement().getValue().equals( factorValueString ) ) {
+                            throw new IllegalStateException( "Should have been a measurement associated with fv=" + fv
+                                    + ", cannot update." );
+                        } else if ( !fv.getMeasurement().getValue().equals( factorValueString ) ) {
                             log.debug( "Updating continuous value on biomaterial:" + bmvo + ", factor="
                                     + fv.getExperimentalFactor() + " value= '" + factorValueString + "'" );
                             fv.getMeasurement().setValue( factorValueString );
                         } else {
                             log.debug( "Value unchanged from " + fv.getMeasurement().getValue() );
                         }
+
                         // always add...
                         updatedFactorValues.add( fv );
+                        found = true;
                         break;
                     }
                 }
+
+                if ( !found ) {
+                    /*
+                     * What happens if there is no value set for this factor already? Have to load the factor, create a
+                     * factor value, fill it in...maybe need a template. But normally there would be a value, even if
+                     * NaN.
+                     */
+                    throw new IllegalStateException( "Sorry, biomaterial " + bmvo + " didn't have a value for factor="
+                            + factorId + ", and one cannot be added at this time." );
+                }
+
             }
         }
+
+        // <= because we might have just added one.
+        assert bm.getFactorValues().size() <= updatedFactorValues.size();
 
         bm.getFactorValues().clear();
         bm.getFactorValues().addAll( updatedFactorValues );

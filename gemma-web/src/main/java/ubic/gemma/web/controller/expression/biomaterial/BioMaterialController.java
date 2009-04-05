@@ -174,7 +174,6 @@ public class BioMaterialController extends BaseMultiActionController {
      * @param ids
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {
         return bioMaterialService.loadMultiple( ids );
     }
@@ -267,10 +266,9 @@ public class BioMaterialController extends BaseMultiActionController {
 
     private String getLabelFromUri( String uri ) {
         OntologyResource resource = ontologyService.getResource( uri );
-        if ( resource != null )
-            return resource.getLabel();
-        else
-            return null;
+        if ( resource != null ) return resource.getLabel();
+
+        return null;
     }
 
     /**
@@ -278,7 +276,6 @@ public class BioMaterialController extends BaseMultiActionController {
      * @param response
      * @return
      */
-    @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "bioMaterials" ).addObject( "bioMaterials", bioMaterialService.loadAll() );
     }

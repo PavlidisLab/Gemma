@@ -124,7 +124,8 @@ public class FactorValueValueObject implements Serializable {
 
     /**
      * @param value
-     * @param c
+     * @param c - specific characteristic we're focusing on (yes, this is confusing). Note that if the FV has no
+     *        characteristics, you can pass in the ExperimentalFactor's characteristic instead.
      */
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
 
@@ -135,36 +136,28 @@ public class FactorValueValueObject implements Serializable {
             this.setMeasurement( true );
             this.value = value.getMeasurement().getValue();
             this.setCharId( value.getMeasurement().getId() );
-        } else if ( c.getId() != null ) {
+        } else if ( c != null && c.getId() != null ) {
             this.setCharId( c.getId() );
+        } else {
+            this.value = value.getValue();
         }
 
-        this.setCategory( c.getCategory() );
-        this.setValue( c.getValue() );
-        if ( c instanceof VocabCharacteristic ) {
-            VocabCharacteristic vc = ( VocabCharacteristic ) c;
-            this.setCategoryUri( vc.getCategoryUri() );
-            this.setValueUri( vc.getValueUri() );
+        if ( c != null ) {
+            this.setCategory( c.getCategory() );
+            this.setValue( c.getValue() );
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                this.setCategoryUri( vc.getCategoryUri() );
+                this.setValueUri( vc.getValueUri() );
+            }
         }
     }
 
+    /**
+     * @param fv
+     */
     public FactorValueValueObject( FactorValue fv ) {
-
-        this.id = fv.getId();
-        this.factor = "";
-
-        if ( fv.getCharacteristics().size() > 0 ) {
-            for ( Characteristic c : fv.getCharacteristics() ) {
-                factor += c.getValue();
-                // FIXME: with will always be the category and description of the last characteristic....
-                category = c.getCategory();
-                description = c.getDescription();
-            }
-
-        } else {
-            factor += fv.getValue();
-        }
-
+        this( fv, fv.getExperimentalFactor().getCategory() );
     }
 
     public FactorValueValueObject( ExperimentalFactor ef ) {
@@ -216,9 +209,7 @@ public class FactorValueValueObject implements Serializable {
         if ( fv.getCharacteristics().size() > 0 ) {
             for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
                 Characteristic c = iter.next();
-                // buf.append( c.getCategory() );
-                // buf.append( ": " );
-                buf.append( c.getValue() == null ? "no value" : c.getValue() );
+                buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
                 if ( iter.hasNext() ) buf.append( ", " );
             }
         } else if ( fv.getMeasurement() != null ) {
