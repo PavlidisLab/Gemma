@@ -59,19 +59,19 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
      */
     private static final String EXPERIMENT_LOCAL_NAME = "experimentDEDV";
 
-    /**
-     * Sets the "business service" to delegate to.
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
-        this.expressionExperimentService = ees;
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
     }
 
     public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
         this.expressionDataMatrixService = expressionDataMatrixService;
     }
 
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
+    /**
+     * Sets the "business service" to delegate to.
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
+        this.expressionExperimentService = ees;
     }
 
     /**
@@ -82,7 +82,6 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -100,17 +99,15 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
         Document doc = readReport( DEFAULT_FILENAME + eeid + DEFAULT_EXTENSION );
 
         if ( doc != null ) {
-            //Successfully got report from disk            
+            // Successfully got report from disk
             watch.stop();
             Long time = watch.getTime();
             log.info( "XML response for ee" + eeid + " retrieved from disk in " + time + "ms." );
 
             return doc.getDocumentElement();
-            
+
         }
-        
-               
-        
+
         // Build the matrix
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeid ) );
         expressionExperimentService.thawLite( ee );
@@ -157,7 +154,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for ee:"+ eeid + " created from scratch in " + time + "ms." );
+        log.info( "XML response for ee:" + eeid + " created from scratch in " + time + "ms." );
         writeReport( responseWrapper, document, DEFAULT_FILENAME + eeid );
         return responseWrapper;
 

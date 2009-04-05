@@ -40,7 +40,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog(ExperimentIdEndpoint.class);
+    private static Log log = LogFactory.getLog( ExperimentIdEndpoint.class );
 
     private ExpressionExperimentService expressionExperimentService;
 
@@ -67,7 +67,7 @@ public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( EXPERIMENT_LOCAL_NAME );
         String eeName = "";
 
@@ -77,7 +77,7 @@ public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {
             eeName = id;
         }
         log.info( "XML input read: expression experiment shortname, " + eeName );
-        
+
         ExpressionExperiment ee = expressionExperimentService.findByShortName( eeName );
 
         if ( ee == null ) {
@@ -90,11 +90,11 @@ public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {
         eeId.add( ee.getId().toString() );
 
         Element wrapper = buildWrapper( document, eeId, "ee_id" );
-        
+
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for Expression Experiment Id result built in " + time + "ms." );   
-        
+        log.info( "XML response for Expression Experiment Id result built in " + time + "ms." );
+
         return wrapper;
 
     }

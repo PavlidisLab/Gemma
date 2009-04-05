@@ -42,7 +42,7 @@ import ubic.gemma.model.genome.TaxonService;
 
 public class ExperimentIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog(ExperimentIDbyTaxonEndpoint.class);
+    private static Log log = LogFactory.getLog( ExperimentIDbyTaxonEndpoint.class );
 
     private ExpressionExperimentService expressionExperimentService;
     private TaxonService taxonService;
@@ -71,11 +71,10 @@ public class ExperimentIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( EXPERIMENT_LOCAL_NAME );
         Collection<String> taxonResults = getSingleNodeValue( requestElement, "taxon_id" );
         String taxonId = "";
@@ -83,9 +82,9 @@ public class ExperimentIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
         for ( String id : taxonResults ) {
             taxonId = id;
         }
-        
+
         log.info( "XML input read: taxon id, " + taxonId );
-        
+
         // Get EE matched with Taxon
         Taxon tax = taxonService.load( Long.parseLong( taxonId ) );
         if ( tax == null ) {
@@ -104,7 +103,7 @@ public class ExperimentIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
         Element wrapper = buildWrapper( document, eeIds, "ee_ids" );
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for Expression Experiment Id results built in " + time + "ms." );   
+        log.info( "XML response for Expression Experiment Id results built in " + time + "ms." );
         return wrapper;
 
     }

@@ -76,25 +76,17 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
      */
     public static final String LOCAL_NAME = "differentialExpressionProbeResult";
 
+    public void setDifferentialExpressionAnalysisResultService(
+            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
+        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
+    }
+
     /**
      * Sets the "business service" to delegate to.
      */
     public void setDifferentialExpressionAnalysisService(
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
-
-    public void setDifferentialExpressionAnalysisResultService(
-            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
-        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
-    }
-
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -105,6 +97,14 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         this.expressionExperimentSetService = expressionExperimentSetService;
     }
 
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
      * 
@@ -113,7 +113,6 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -251,6 +250,14 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
 
     }
 
+    private Collection<ExpressionExperiment> getEEIds( ExpressionExperimentSet expressionExperimentSet ) {
+        List<Long> ids = new ArrayList<Long>( expressionExperimentSet.getExperiments().size() );
+        for ( Securable dataset : expressionExperimentSet.getExperiments() ) {
+            ids.add( dataset.getId() );
+        }
+        return expressionExperimentService.loadMultiple( ids );
+    }
+
     private Collection<Gene> retainGenesInCorrectTaxon( Collection<Gene> rawGeneCol, Taxon taxon ) {
         Collection<Gene> genesToUse = new HashSet<Gene>();
         for ( Gene gene : rawGeneCol ) {
@@ -260,15 +267,6 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
                 log.error( "Gene does not match " + taxon.toString() + ": " + gene.getOfficialSymbol() );
         }
         return genesToUse;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Collection<ExpressionExperiment> getEEIds( ExpressionExperimentSet expressionExperimentSet ) {
-        List<Long> ids = new ArrayList<Long>( expressionExperimentSet.getExperiments().size() );
-        for ( Securable dataset : expressionExperimentSet.getExperiments() ) {
-            ids.add( dataset.getId() );
-        }
-        return expressionExperimentService.loadMultiple( ids );
     }
 
 }

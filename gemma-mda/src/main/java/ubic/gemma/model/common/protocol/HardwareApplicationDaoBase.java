@@ -132,8 +132,7 @@ public abstract class HardwareApplicationDaoBase extends HibernateDaoSupport imp
         if ( id == null ) {
             throw new IllegalArgumentException( "HardwareApplication.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.protocol.HardwareApplication entity = ( ubic.gemma.model.common.protocol.HardwareApplication ) this
-                .load( id );
+        ubic.gemma.model.common.protocol.HardwareApplication entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

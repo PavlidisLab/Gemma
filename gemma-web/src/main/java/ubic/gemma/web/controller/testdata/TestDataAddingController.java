@@ -56,32 +56,30 @@ public class TestDataAddingController extends SimpleFormController {
         this.externalDatabaseService = externalDatabaseService;
     }
 
-     /*
+    /*
      * (non-Javadoc)
-     *
      * @see
-     org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse)
+     * org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest
+     * , javax.servlet.http.HttpServletResponse)
      */
-     @Override
-     @SuppressWarnings("unused")
-     protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-     BindException error ) throws Exception {
-     TestPersistentObjectHelper helper = new TestPersistentObjectHelper();
-     helper.setPersisterHelper( this.persisterHelper );
-     helper.setExternalDatabaseService( externalDatabaseService );
-    
-     ProgressJob job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), request
-     .getRemoteUser(), "Test data adding to the database" );
-     ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies( false ); // no sequences.
-     // This is just a
-     // test.
-     ProgressManager.destroyProgressJob( job );
-    
-     ModelAndView mav = new ModelAndView( getSuccessView() );
-     mav.addObject( "expressionExperiment", ee );
-     return mav;
-     }
+    @Override
+    protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException error ) throws Exception {
+        TestPersistentObjectHelper helper = new TestPersistentObjectHelper();
+        helper.setPersisterHelper( this.persisterHelper );
+        helper.setExternalDatabaseService( externalDatabaseService );
+
+        ProgressJob job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), request
+                .getRemoteUser(), "Test data adding to the database" );
+        ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies( false ); // no sequences.
+        // This is just a
+        // test.
+        ProgressManager.destroyProgressJob( job );
+
+        ModelAndView mav = new ModelAndView( getSuccessView() );
+        mav.addObject( "expressionExperiment", ee );
+        return mav;
+    }
 
     /**
      * @param persisterHelper the persisterHelper to set
@@ -92,11 +90,11 @@ public class TestDataAddingController extends SimpleFormController {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+     * @see
+     * org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest
+     * )
      */
     @Override
-    @SuppressWarnings("unused")
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         return ExpressionExperiment.Factory.newInstance();
     }

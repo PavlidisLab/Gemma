@@ -72,9 +72,8 @@ public class TaskCompletionController extends BaseFormController {
             View view = ( ( ModelAndView ) result ).getView();
             if ( view instanceof RedirectView ) {
                 return ( ( RedirectView ) view ).getUrl();
-            } else {
-                return null;
-            }
+             }
+            return null;
         }
         return result;
     }
@@ -84,7 +83,6 @@ public class TaskCompletionController extends BaseFormController {
      * done and the results are needed.
      */
     @Override
-    @SuppressWarnings("unused")
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
         String taskId = request.getParameter( TaskRunningService.JOB_ATTRIBUTE );

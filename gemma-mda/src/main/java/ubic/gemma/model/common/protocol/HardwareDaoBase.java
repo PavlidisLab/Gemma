@@ -203,7 +203,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      */
 
     public Hardware load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.protocol.Hardware ) this.load( TRANSFORM_NONE, id );
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
@@ -234,7 +234,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
         if ( id == null ) {
             throw new IllegalArgumentException( "Hardware.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.protocol.Hardware entity = ( ubic.gemma.model.common.protocol.Hardware ) this.load( id );
+        ubic.gemma.model.common.protocol.Hardware entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

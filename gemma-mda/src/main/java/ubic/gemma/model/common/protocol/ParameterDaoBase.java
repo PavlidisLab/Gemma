@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.common.protocol;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
@@ -34,18 +34,21 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.protocol.ParameterDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<Parameter> create( final int transform, final java.util.Collection<Parameter> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Parameter.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.protocol.Parameter ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<Parameter> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -53,19 +56,19 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.protocol.ParameterDao#create(int transform,
      *      ubic.gemma.model.common.protocol.Parameter)
      */
-    public Object create( final int transform, final ubic.gemma.model.common.protocol.Parameter parameter ) {
+    public Parameter create( final int transform, final ubic.gemma.model.common.protocol.Parameter parameter ) {
         if ( parameter == null ) {
             throw new IllegalArgumentException( "Parameter.create - 'parameter' can not be null" );
         }
         this.getHibernateTemplate().save( parameter );
-        return this.transformEntity( transform, parameter );
+        return ( Parameter ) this.transformEntity( transform, parameter );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.ParameterDao#create(java.util.Collection)
      */
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<Parameter> create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -73,20 +76,20 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.protocol.ParameterDao#create(ubic.gemma.model.common.protocol.Parameter)
      */
     public Parameter create( ubic.gemma.model.common.protocol.Parameter parameter ) {
-        return ( ubic.gemma.model.common.protocol.Parameter ) this.create( TRANSFORM_NONE, parameter );
+        return this.create( TRANSFORM_NONE, parameter );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.ParameterDao#load(int, java.lang.Long)
      */
 
-    public Object load( final int transform, final java.lang.Long id ) {
+    public Parameter load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Parameter.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate()
                 .get( ubic.gemma.model.common.protocol.ParameterImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.protocol.Parameter ) entity );
+        return ( Parameter ) transformEntity( transform, ( ubic.gemma.model.common.protocol.Parameter ) entity );
     }
 
     /**
@@ -94,15 +97,14 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      */
 
     public Parameter load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.protocol.Parameter ) this.load( TRANSFORM_NONE, id );
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.ParameterDao#loadAll()
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+ 
+    public java.util.Collection<Parameter> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -110,8 +112,9 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.protocol.ParameterDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<Parameter> loadAll( final int transform ) {
+        final java.util.Collection<Parameter> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.protocol.ParameterImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -125,8 +128,7 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
         if ( id == null ) {
             throw new IllegalArgumentException( "Parameter.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.protocol.Parameter entity = ( ubic.gemma.model.common.protocol.Parameter ) this
-                .load( id );
+        ubic.gemma.model.common.protocol.Parameter entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -136,7 +138,7 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<Parameter> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Parameter.remove - 'entities' can not be null" );
         }
@@ -157,18 +159,21 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<Parameter> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Parameter.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.protocol.Parameter ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<Parameter> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**
@@ -194,7 +199,7 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      * @see #transformEntity(int,ubic.gemma.model.common.protocol.Parameter)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<Parameter> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

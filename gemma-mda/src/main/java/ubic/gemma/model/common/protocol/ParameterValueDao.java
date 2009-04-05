@@ -44,7 +44,7 @@ public interface ParameterValueDao {
      * objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
+    public java.util.Collection<ParameterValue> create( int transform, java.util.Collection<ParameterValue> entities );
 
     /**
      * <p>
@@ -55,7 +55,7 @@ public interface ParameterValueDao {
      * object for example). By default, transformation does not occur.
      * </p>
      */
-    public Object create( int transform, ubic.gemma.model.common.protocol.ParameterValue parameterValue );
+    public ParameterValue create( int transform, ubic.gemma.model.common.protocol.ParameterValue parameterValue );
 
     /**
      * Creates a new instance of ubic.gemma.model.common.protocol.ParameterValue and adds from the passed in
@@ -64,7 +64,7 @@ public interface ParameterValueDao {
      * @param entities the collection of ubic.gemma.model.common.protocol.ParameterValue instances to create.
      * @return the created instances.
      */
-    public java.util.Collection create( java.util.Collection entities );
+    public java.util.Collection<ParameterValue> create( java.util.Collection<ParameterValue> entities );
 
     /**
      * Creates an instance of ubic.gemma.model.common.protocol.ParameterValue and adds it to the persistent store.
@@ -84,7 +84,7 @@ public interface ParameterValueDao {
      * @param id the identifier of the entity to load.
      * @return either the entity or the object transformed from the entity.
      */
-    public Object load( int transform, java.lang.Long id );
+    public ParameterValue load( int transform, java.lang.Long id );
 
     /**
      * Loads an instance of ubic.gemma.model.common.protocol.ParameterValue from the persistent store.
@@ -96,7 +96,7 @@ public interface ParameterValueDao {
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<ParameterValue> loadAll();
 
     /**
      * <p>
@@ -110,7 +110,7 @@ public interface ParameterValueDao {
      * @param transform the flag indicating what transformation to use.
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<ParameterValue> loadAll( final int transform );
 
     /**
      * Removes the instance of ubic.gemma.model.common.protocol.ParameterValue having the given <code>identifier</code>
@@ -121,7 +121,7 @@ public interface ParameterValueDao {
     /**
      * Removes all entities in the given <code>entities<code> collection.
      */
-    public void remove( java.util.Collection entities );
+    public void remove( java.util.Collection<ParameterValue> entities );
 
     /**
      * Removes the instance of ubic.gemma.model.common.protocol.ParameterValue from the persistent store.
@@ -131,7 +131,7 @@ public interface ParameterValueDao {
     /**
      * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public void update( java.util.Collection entities );
+    public void update( java.util.Collection<ParameterValue> entities );
 
     /**
      * Updates the <code>parameterValue</code> instance in the persistent store.

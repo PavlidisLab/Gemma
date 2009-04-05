@@ -70,11 +70,10 @@ public class GeneIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( EXPERIMENT_LOCAL_NAME );
         Collection<String> taxonResults = getSingleNodeValue( requestElement, "taxon_id" );
         String taxonId = "";
@@ -82,9 +81,9 @@ public class GeneIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
         for ( String id : taxonResults ) {
             taxonId = id;
         }
-        
-        log.info( "XML input read: taxon id, "+taxonId );
-        
+
+        log.info( "XML input read: taxon id, " + taxonId );
+
         // Get Gene matched with Taxon
         Taxon tax = taxonService.load( Long.parseLong( taxonId ) );
 
@@ -103,7 +102,7 @@ public class GeneIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
         Element wrapper = buildWrapper( document, geneIds, "gene_ids" );
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for gene id results built in " + time + "ms." );   
+        log.info( "XML response for gene id results built in " + time + "ms." );
         return wrapper;
 
     }

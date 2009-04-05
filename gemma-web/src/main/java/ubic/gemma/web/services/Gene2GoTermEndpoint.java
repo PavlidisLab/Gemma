@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,7 +34,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Given a collection of Gene IDs, will return a collection of Gene Ontology URIs for each gene.
@@ -77,16 +77,15 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( GENE2GO_LOCAL_NAME );
 
         Collection<String> geneResult = getArrayValues( requestElement, "gene_ids" );
 
-        log.info( "XML input read: "+geneResult.size()+" gene ids" );
+        log.info( "XML input read: " + geneResult.size() + " gene ids" );
         // start building the wrapper
         // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
- //       log.info( "Building " + GENE2GO_LOCAL_NAME + " XML response" );
-     
+        // log.info( "Building " + GENE2GO_LOCAL_NAME + " XML response" );
 
         String elementName1 = "gene_id";
         String elementName2 = "goIdList";
@@ -127,7 +126,7 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
         }
         watch.stop();
         Long time = watch.getTime();
-//        log.info( "Finished generating result. Sending response to client." );
+        // log.info( "Finished generating result. Sending response to client." );
         log.info( "XML response for GO Term results built in " + time + "ms." );
 
         return responseWrapper;

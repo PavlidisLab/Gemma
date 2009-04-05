@@ -92,7 +92,6 @@ public class BioSequenceController extends BaseMultiActionController {
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         BioSequence bioSequence = bioSequenceService.load( id );
@@ -100,12 +99,9 @@ public class BioSequenceController extends BaseMultiActionController {
             addMessage( request, "object.notfound", new Object[] { "Biosequence " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
-        ModelAndView mav = new ModelAndView("bioSequence.detail");
+        ModelAndView mav = new ModelAndView( "bioSequence.detail" );
         mav.addObject( "bioSequence", bioSequence );
         return mav;
     }
 
-
-    
-    
 }

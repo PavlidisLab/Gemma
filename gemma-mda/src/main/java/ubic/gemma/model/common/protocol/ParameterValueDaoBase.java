@@ -32,7 +32,8 @@ public abstract class ParameterValueDaoBase extends org.springframework.orm.hibe
     /**
      * @see ubic.gemma.model.common.protocol.ParameterValueDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<ParameterValue> create( final int transform,
+            final java.util.Collection<ParameterValue> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ParameterValue.create - 'entities' can not be null" );
         }
@@ -40,9 +41,9 @@ public abstract class ParameterValueDaoBase extends org.springframework.orm.hibe
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.common.protocol.ParameterValue ) entityIterator
-                                    .next() );
+                        for ( java.util.Iterator<ParameterValue> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
                         }
                         return null;
                     }
@@ -54,19 +55,20 @@ public abstract class ParameterValueDaoBase extends org.springframework.orm.hibe
      * @see ubic.gemma.model.common.protocol.ParameterValueDao#create(int transform,
      *      ubic.gemma.model.common.protocol.ParameterValue)
      */
-    public Object create( final int transform, final ubic.gemma.model.common.protocol.ParameterValue parameterValue ) {
+    public ParameterValue create( final int transform,
+            final ubic.gemma.model.common.protocol.ParameterValue parameterValue ) {
         if ( parameterValue == null ) {
             throw new IllegalArgumentException( "ParameterValue.create - 'parameterValue' can not be null" );
         }
         this.getHibernateTemplate().save( parameterValue );
-        return this.transformEntity( transform, parameterValue );
+        return ( ParameterValue ) this.transformEntity( transform, parameterValue );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.ParameterValueDao#create(java.util.Collection)
      */
     @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<ParameterValue> create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -75,41 +77,42 @@ public abstract class ParameterValueDaoBase extends org.springframework.orm.hibe
      */
     public ubic.gemma.model.common.protocol.ParameterValue create(
             ubic.gemma.model.common.protocol.ParameterValue parameterValue ) {
-        return ( ubic.gemma.model.common.protocol.ParameterValue ) this.create( TRANSFORM_NONE, parameterValue );
+        return this.create( TRANSFORM_NONE, parameterValue );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.ParameterValueDao#load(int, java.lang.Long)
      */
-    public Object load( final int transform, final java.lang.Long id ) {
+    public ParameterValue load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ParameterValue.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.common.protocol.ParameterValueImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.protocol.ParameterValue ) entity );
+        return ( ParameterValue ) transformEntity( transform,
+                ( ubic.gemma.model.common.protocol.ParameterValue ) entity );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.ParameterValueDao#load(java.lang.Long)
      */
     public ubic.gemma.model.common.protocol.ParameterValue load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.protocol.ParameterValue ) this.load( TRANSFORM_NONE, id );
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.ParameterValueDao#loadAll()
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+     */ 
+    public java.util.Collection<ParameterValue> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.ParameterValueDao#loadAll(int)
      */
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<ParameterValue> loadAll( final int transform ) {
+        final java.util.Collection<ParameterValue> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.protocol.ParameterValueImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -131,7 +134,7 @@ public abstract class ParameterValueDaoBase extends org.springframework.orm.hibe
     /**
      * @see ubic.gemma.model.common.protocol.ParameterValueDao#remove(java.util.Collection)
      */
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<ParameterValue> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ParameterValue.remove - 'entities' can not be null" );
         }
@@ -151,7 +154,7 @@ public abstract class ParameterValueDaoBase extends org.springframework.orm.hibe
     /**
      * @see ubic.gemma.model.common.protocol.ParameterValueDao#update(java.util.Collection)
      */
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<ParameterValue> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ParameterValue.update - 'entities' can not be null" );
         }
@@ -159,8 +162,9 @@ public abstract class ParameterValueDaoBase extends org.springframework.orm.hibe
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.common.protocol.ParameterValue ) entityIterator.next() );
+                        for ( java.util.Iterator<ParameterValue> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }
@@ -189,7 +193,7 @@ public abstract class ParameterValueDaoBase extends org.springframework.orm.hibe
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.common.protocol.ParameterValue)
      */
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<ParameterValue> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

@@ -33,7 +33,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- *Used for determining which array designs were used in a given expression experiment (EE) 
+ *Used for determining which array designs were used in a given expression experiment (EE)
+ * 
  * @author klc, gavin
  * @version$Id$
  */
@@ -62,11 +63,10 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( ARRAY_LOCAL_NAME );
         String eeId = "";
         Collection<String> eeResult = getSingleNodeValue( requestElement, "ee_id" );
@@ -75,7 +75,7 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
             eeId = id;
 
         log.info( "XML input read: expression experiment id, " + eeId );
-        
+
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
         if ( ee == null ) {
             String msg = "No experiment with id, " + eeId + " can be found.";
@@ -88,16 +88,16 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
         // build collection to pass to wrapper
         Collection<String> values = new HashSet<String>();
         for ( ArrayDesign ad : ads ) {
-            values.add( ad.getShortName());
+            values.add( ad.getShortName() );
         }
 
         Element wrapper = buildWrapper( document, values, "arrayDesign_names" );
-        
+
         watch.stop();
         Long time = watch.getTime();
-       
-        log.info( "XML response for array design names used result built in " + time + "ms." );   
-        
+
+        log.info( "XML response for array design names used result built in " + time + "ms." );
+
         return wrapper;
     }
 

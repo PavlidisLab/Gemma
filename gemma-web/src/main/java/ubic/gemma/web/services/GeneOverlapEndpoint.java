@@ -36,11 +36,11 @@ import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 
 /**
- *given a query gene id & collection of target gene ids will determine the overlapping Go terms (intersection) 
- *between each pair of Query Gene and Target Gene. 
-*The actual overlapping go terms will be returned as a single string delimited by white space. 
+ *given a query gene id & collection of target gene ids will determine the overlapping Go terms (intersection) between
+ * each pair of Query Gene and Target Gene. The actual overlapping go terms will be returned as a single string
+ * delimited by white space.
  * 
- * @author gavin, klc 
+ * @author gavin, klc
  * @version$Id$
  */
 
@@ -79,7 +79,7 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( LOCAL_NAME );
 
         String queryInput = "";
@@ -93,13 +93,13 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
         for ( String gene_id : geneResult ) {
             geneIdLongs.add( Long.parseLong( gene_id ) );
         }
-        
-        log.info( "XML input read: query gene id, "+queryInput+", against "+geneResult.size()+" other genes" );
+
+        log.info( "XML input read: query gene id, " + queryInput + ", against " + geneResult.size() + " other genes" );
 
         // start building the wrapper
         // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
         // start building the wrapper
-        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint            
+        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
 
         String elementName1 = "gene";
         String elementName2 = "overlap_GO_terms";
@@ -108,7 +108,7 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
         Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
-        //get query gene object from query gene id
+        // get query gene object from query gene id
         Long queryId = Long.parseLong( queryInput );
         Gene queryGene = geneService.load( queryId );
         if ( queryGene == null ) {
@@ -121,7 +121,7 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
 
         Collection<Long> geneCol = gene2Ot.keySet();
 
-        //for each gene
+        // for each gene
         for ( Long geneId : geneCol ) {
 
             // get the labels and store them
@@ -143,7 +143,7 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
         }
         watch.stop();
         Long time = watch.getTime();
-       
+
         log.info( "XML response for gene overlap results built in " + time + "ms." );
         return responseWrapper;
 

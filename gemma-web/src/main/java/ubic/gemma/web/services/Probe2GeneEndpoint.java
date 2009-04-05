@@ -35,7 +35,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * Used for determining what genes a probe assays for.  Given a probe name and an array Design Id will return a list of gene ids 
+ * Used for determining what genes a probe assays for. Given a probe name and an array Design Id will return a list of
+ * gene ids
  * 
  * @author gavin, klc
  * @version$Id$
@@ -45,25 +46,24 @@ public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
 
     private static Log log = LogFactory.getLog( Probe2GeneEndpoint.class );
 
-    
     private CompositeSequenceService compositeSequenceService;
-    
+
     private ArrayDesignService arrayDesignService;
-   
 
     /**
      * The local name of the expected request/response.
      */
     private static final String PROBE_LOCAL_NAME = "probe2Gene";
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
     /**
      * Sets the "business service" to delegate to.
      */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
-    }
-    
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     /**
@@ -74,48 +74,46 @@ public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
-    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {        
+    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( PROBE_LOCAL_NAME );
-       
+
         String probeName = "";
         Collection<String> probeResults = getSingleNodeValue( requestElement, "probe_name" );
         for ( String name : probeResults ) {
             probeName = name;
         }
-        
+
         String adid = "";
         Collection<String> adResults = getSingleNodeValue( requestElement, "array_design_identifier" );
         for ( String id : adResults ) {
             adid = id;
         }
-        ArrayDesign ad = arrayDesignService.load( Long.parseLong( adid) );
-       
-        //get genes, given probe (which is unique to an Array Design
-        //therefore, the Array Design Identifier input is not really necessary                
-        log.info( "XML input read: probe name, "+probeName+" & array design, "+ad );
-        
+        ArrayDesign ad = arrayDesignService.load( Long.parseLong( adid ) );
+
+        // get genes, given probe (which is unique to an Array Design
+        // therefore, the Array Design Identifier input is not really necessary
+        log.info( "XML input read: probe name, " + probeName + " & array design, " + ad );
+
         CompositeSequence cs = compositeSequenceService.findByName( ad, probeName );
         Collection<Gene> geneCol = compositeSequenceService.getGenes( cs );
-        
+
         // start building the wrapper
         // build xml manually rather than use buildWrapper inherited from AbstractGemmeEndpoint
         String elementName1 = "geneIdList";
 
-
-        //build results in the form of a collection
+        // build results in the form of a collection
         Collection<String> geneIds = new HashSet<String>();
-        for (Gene gene : geneCol){
+        for ( Gene gene : geneCol ) {
             geneIds.add( gene.getId().toString() );
         }
-        
-        Element wrapper = buildWrapper(document, geneIds, elementName1 );
+
+        Element wrapper = buildWrapper( document, geneIds, elementName1 );
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for gene id result (from gene symbol) built in " + time + "ms." );   
+        log.info( "XML response for gene id result (from gene symbol) built in " + time + "ms." );
         return wrapper;
     }
 

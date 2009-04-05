@@ -70,7 +70,7 @@ public class ProtocolDaoImpl extends ubic.gemma.model.common.protocol.ProtocolDa
             return newProtocol;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new protocol: " + protocol );
-        return ( Protocol ) create( protocol );
+        return create( protocol );
     }
 
 }

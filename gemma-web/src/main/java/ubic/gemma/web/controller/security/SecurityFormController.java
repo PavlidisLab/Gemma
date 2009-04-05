@@ -197,7 +197,6 @@ public class SecurityFormController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
@@ -213,12 +212,10 @@ public class SecurityFormController extends BaseFormController {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
+     * javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
      */
     @Override
-    @SuppressWarnings("unused")
     protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
         log.debug( "onSubmit" );

@@ -34,8 +34,8 @@ import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 
 /**
- * Given a collection of Gene ID, will return a collection of Gene Ontology IDs (ie. GO:0039392) and their 
- * corresponding descriptions.
+ * Given a collection of Gene ID, will return a collection of Gene Ontology IDs (ie. GO:0039392) and their corresponding
+ * descriptions.
  * 
  * @author klc, gavin
  * @version$Id$
@@ -73,7 +73,6 @@ public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -81,7 +80,7 @@ public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {
         setLocalName( LOCAL_NAME );
 
         Collection<String> geneInput = getArrayValues( requestElement, "gene_id" );
-        //        String geneString = geneInput.iterator().next();
+        // String geneString = geneInput.iterator().next();
 
         log.info( "XML input read: " + geneInput.size() + " gene ids " );
 
@@ -98,16 +97,16 @@ public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {
         for ( Gene gene : geneCol ) {
             Collection<OntologyTerm> terms = geneOntologyService.getGOTerms( gene );
 
-            // see if there the gene is annotated with any go terms else, print NaN for the 2 output fields 
-            //get the labels for the gene and store them
+            // see if there the gene is annotated with any go terms else, print NaN for the 2 output fields
+            // get the labels for the gene and store them
             if ( terms != null ) {
                 for ( OntologyTerm ot : terms ) {
-                    
-                    //gene id output
+
+                    // gene id output
                     Element e1 = document.createElement( "gene_id" );
-                    e1.appendChild( document.createTextNode( gene.getId().toString() ) );                    
+                    e1.appendChild( document.createTextNode( gene.getId().toString() ) );
                     responseElement.appendChild( e1 );
-                    
+
                     String goTerm = GeneOntologyService.asRegularGoId( ot );
                     Element e2 = document.createElement( "go_id" );
                     e2.appendChild( document.createTextNode( goTerm ) );
@@ -118,11 +117,11 @@ public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {
                     responseElement.appendChild( e3 );
                 }
             } else {
-//              gene id output
+                // gene id output
                 Element e1 = document.createElement( "gene_id" );
-                e1.appendChild( document.createTextNode( gene.getId().toString() ) );                    
+                e1.appendChild( document.createTextNode( gene.getId().toString() ) );
                 responseElement.appendChild( e1 );
-                
+
                 Element e2 = document.createElement( "go_id" );
                 e2.appendChild( document.createTextNode( "NaN" ) );
                 responseElement.appendChild( e2 );

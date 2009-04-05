@@ -32,10 +32,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
-  *Expression Experiments in Gemma contain annotations. These annotations can be retrieved using this service.  
-  *The category often just an ontology URI and the term is the URI of the annotation.  
-  *The category is left blank for terms that are not from ontologies (free text). 
-  * The evidence code represents how the annotation came to be.  (http://www.geneontology.org/GO.evidence.shtml)
+ *Expression Experiments in Gemma contain annotations. These annotations can be retrieved using this service. The
+ * category often just an ontology URI and the term is the URI of the annotation. The category is left blank for terms
+ * that are not from ontologies (free text). The evidence code represents how the annotation came to be.
+ * (http://www.geneontology.org/GO.evidence.shtml)
  * 
  * @author klc, gavin
  * @version$Id$
@@ -46,8 +46,6 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
     private static Log log = LogFactory.getLog( ExperimentAnnotationEndpoint.class );
 
     private ExpressionExperimentService expressionExperimentService;
-
-   
 
     /**
      * The local name of the expected request/response.
@@ -61,8 +59,6 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
         this.expressionExperimentService = ExpressionExperimentService;
     }
 
-   
-
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
      * 
@@ -74,14 +70,14 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( LOCAL_NAME );
 
         Collection<String> eeResult = getArrayValues( requestElement, "ee_ids" );
 
-        log.info( "XML Input read: "+ eeResult.size()+" expression experiment(s)"  );
+        log.info( "XML Input read: " + eeResult.size() + " expression experiment(s)" );
         // start building the wrapper
-        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint             
+        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
@@ -92,34 +88,33 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
 
             eeId = Long.parseLong( eeString );
             ExpressionExperiment ee = expressionExperimentService.load( eeId );
-            
+
             if ( ee == null ) {
                 String msg = "No expression experiment with id, " + eeId + ", can be found.";
                 return buildBadResponse( document, msg );
             }
             expressionExperimentService.thawLite( ee );
-            Collection<Characteristic> characterCol = ee.getCharacteristics();            
-                
-           
-            for (Characteristic character : characterCol){
-                            
+            Collection<Characteristic> characterCol = ee.getCharacteristics();
+
+            for ( Characteristic character : characterCol ) {
+
                 String elementString1 = eeId.toString();
                 String elementString2 = character.getValue();
                 String elementString4 = character.getEvidenceCode().getValue();
                 String elementString3 = character.getCategory();
-    
+
                 Element e1 = document.createElement( "ee_id" );
                 e1.appendChild( document.createTextNode( elementString1 ) );
                 responseElement.appendChild( e1 );
-    
+
                 Element e2 = document.createElement( "Category" );
                 e2.appendChild( document.createTextNode( elementString3 ) );
                 responseElement.appendChild( e2 );
-                
-                Element e3 = document.createElement( "Terms");
+
+                Element e3 = document.createElement( "Terms" );
                 e3.appendChild( document.createTextNode( elementString2 ) );
                 responseElement.appendChild( e3 );
-                
+
                 Element e4 = document.createElement( "EvidenceCode" );
                 e4.appendChild( document.createTextNode( elementString4 ) );
                 responseElement.appendChild( e4 );
@@ -127,8 +122,8 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
         }
         watch.stop();
         Long time = watch.getTime();
-        //log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for Experiment Annotation result built in " + time + "ms." );       
+        // log.info( "Finished generating result. Sending response to client." );
+        log.info( "XML response for Experiment Annotation result built in " + time + "ms." );
         return responseWrapper;
 
     }

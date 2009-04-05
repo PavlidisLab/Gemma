@@ -71,19 +71,19 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
      */
     public static final int MAX_RESULTS = 100;
 
-    /**
-     * Sets the "business service" to delegate to.
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
+    public void setgeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
+        this.geneCoexpressionService = geneCoexpressionService;
     }
 
     public void setGeneService( GeneService geneS ) {
         this.geneService = geneS;
     }
 
-    public void setgeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
-        this.geneCoexpressionService = geneCoexpressionService;
+    /**
+     * Sets the "business service" to delegate to.
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
     /**

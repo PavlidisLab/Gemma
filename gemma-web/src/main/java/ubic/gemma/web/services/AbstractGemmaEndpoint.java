@@ -88,45 +88,65 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         return true;
     }
 
-    protected void setLocalName( String localName ) {
-        this.localName = localName;
+    /**
+     * Function to handle construction of output in xml for a bad response
+     */
+    protected Element buildBadResponse( Document document, String msg ) {
+        Element responseWrapper = document.createElementNS( NAMESPACE_URI, localName );
+        Element responseElement = document.createElementNS( NAMESPACE_URI, localName + RESPONSE );
+        responseWrapper.appendChild( responseElement );
+
+        responseElement.appendChild( document.createTextNode( msg ) );
+
+        log.warn( localName + ": " + msg );
+        return responseWrapper;
     }
 
     /**
-     * Function that handles the retrieval of xml input. Use this method if there is only one value in the input but
-     * generically, this method can also store multiple input values as well. This will depend on how the xml is parsed
-     * by the client. TODO Still need to test on different types of client requests.
+     * Function to handle the constructing of output in xml format for returning the response to the client. Use this
+     * method for simple value returns such as single value or a single array of values. building Mapped values is not
+     * supported with this method. If values being passed in are null or contain no values, then a string msg will be
+     * returned
      * 
-     * @param requestElement - xml request in node hierarchy
-     * @param document -
-     * @param tagName
-     * @return a collection contain one string element
+     * @param document
+     * @param values - a collection of the values (in String format) to be returned to the client
+     * @param elementName
+     * @return
      */
-    /*
-     * TODO return value should be single string object. Note that many services will be affected should we make this
-     * change.
-     */
-    protected Collection<String> getSingleNodeValue( Element requestElement, String tagName ) {
-        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
-        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-        authenticate();
-        Collection<String> value = new HashSet<String>();
-        String node = "";
-        // get the Element with name = tagName
-        NodeList children = requestElement.getElementsByTagName( tagName ).item( 0 ).getChildNodes();
-        // iterate over the child nodes
-        for ( int i = 0; i < children.getLength(); i++ ) {
+    protected Element buildWrapper( Document document, Collection<String> values, String elementName ) {
 
-            if ( children.item( i ).getNodeType() == Node.TEXT_NODE ) {
-                node = children.item( i ).getNodeValue();
-                value.add( node );
+        Element responseWrapper = document.createElementNS( NAMESPACE_URI, localName );
+        Element responseElement = document.createElementNS( NAMESPACE_URI, localName + RESPONSE );
+        responseWrapper.appendChild( responseElement );
+
+        if ( values == null || values.isEmpty() )
+            responseElement.appendChild( document.createTextNode( "No " + elementName + " result" ) );
+        else {
+            // Need to create a list (array) of the geneIds
+            for ( String value : values ) {
+                Element e = document.createElement( elementName );
+                e.appendChild( document.createTextNode( value ) );
+                responseElement.appendChild( e );
             }
-            node = null;
         }
-        if ( value.isEmpty() ) {
-            // throw new IllegalArgumentException( "Could not find request text node" );
+        return responseWrapper;
+    }
+
+    /**
+     * @param data
+     * @return a string delimited representation of the objects array passed in.
+     */
+    protected String encode( Object[] data ) {
+        StringBuffer result = new StringBuffer();
+
+        for ( int i = 0; i < data.length; i++ ) {
+            if ( i == 0 )
+                result.append( data[i] );
+            else
+                result.append( DELIMITER + data[i] );
         }
-        return value;
+
+        return result.toString();
     }
 
     /**
@@ -193,64 +213,106 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     }
 
     /**
-     * Function to handle the constructing of output in xml format for returning the response to the client. Use this
-     * method for simple value returns such as single value or a single array of values. building Mapped values is not
-     * supported with this method. If values being passed in are null or contain no values, then a string msg will be
-     * returned
+     * Function that handles the retrieval of xml input. Use this method if there is only one value in the input but
+     * generically, this method can also store multiple input values as well. This will depend on how the xml is parsed
+     * by the client. TODO Still need to test on different types of client requests.
      * 
-     * @param document
-     * @param values - a collection of the values (in String format) to be returned to the client
-     * @param elementName
-     * @return
+     * @param requestElement - xml request in node hierarchy
+     * @param document -
+     * @param tagName
+     * @return a collection contain one string element
      */
-    protected Element buildWrapper( Document document, Collection<String> values, String elementName ) {
+    /*
+     * TODO return value should be single string object. Note that many services will be affected should we make this
+     * change.
+     */
+    protected Collection<String> getSingleNodeValue( Element requestElement, String tagName ) {
+        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
+        authenticate();
+        Collection<String> value = new HashSet<String>();
+        String node = "";
+        // get the Element with name = tagName
+        NodeList children = requestElement.getElementsByTagName( tagName ).item( 0 ).getChildNodes();
+        // iterate over the child nodes
+        for ( int i = 0; i < children.getLength(); i++ ) {
 
-        Element responseWrapper = document.createElementNS( NAMESPACE_URI, localName );
-        Element responseElement = document.createElementNS( NAMESPACE_URI, localName + RESPONSE );
-        responseWrapper.appendChild( responseElement );
-
-        if ( values == null || values.isEmpty() )
-            responseElement.appendChild( document.createTextNode( "No " + elementName + " result" ) );
-        else {
-            // Need to create a list (array) of the geneIds
-            for ( String value : values ) {
-                Element e = document.createElement( elementName );
-                e.appendChild( document.createTextNode( value ) );
-                responseElement.appendChild( e );
+            if ( children.item( i ).getNodeType() == Node.TEXT_NODE ) {
+                node = children.item( i ).getNodeValue();
+                value.add( node );
             }
+            node = null;
         }
-        return responseWrapper;
+        if ( value.isEmpty() ) {
+            // throw new IllegalArgumentException( "Could not find request text node" );
+        }
+        return value;
     }
 
     /**
-     * Function to handle construction of output in xml for a bad response
+     * Looks to parse a previously generated xml report that was saved to disk. Returns null if it fails to do so.
+     * 
+     * @param InputStream from an existing xml file
+     * @return An XML document
+     * @throws IOException
      */
-    protected Element buildBadResponse( Document document, String msg ) {
-        Element responseWrapper = document.createElementNS( NAMESPACE_URI, localName );
-        Element responseElement = document.createElementNS( NAMESPACE_URI, localName + RESPONSE );
-        responseWrapper.appendChild( responseElement );
+    protected Document readReport( InputStream is ) throws IOException {
 
-        responseElement.appendChild( document.createTextNode( msg ) );
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setIgnoringComments( true );
+        factory.setValidating( false );
+        Document document = null;
 
-        log.warn( localName + ": " + msg );
-        return responseWrapper;
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            builder = factory.newDocumentBuilder();
+            document = builder.parse( is );
+        } catch ( ParserConfigurationException pce ) {
+            log.error( "Could not configure parser for reading report.  Error is: " + pce );
+            throw ( new RuntimeException( pce ) );
+        } catch ( SAXException se ) {
+            log.error( "Could not parse report Error is: " + se );
+            throw ( new RuntimeException( se ) );
+
+        }
+
+        return document;
+
     }
 
     /**
-     * @param data
-     * @return a string delimited representation of the objects array passed in.
+     * uses the default path of gemmaData/datafile/xml/ to look for reports.
+     * 
+     * @param filename needs the xml suffix
+     * @return
+     * @throws IOException
      */
-    protected String encode( Object[] data ) {
-        StringBuffer result = new StringBuffer();
+    protected Document readReport( String filename ) throws IOException {
+        String path = HOME_DIR + File.separatorChar + "dataFiles" + File.separatorChar + "xml" + File.separatorChar;
+        return readReport( path, filename );
 
-        for ( int i = 0; i < data.length; i++ ) {
-            if ( i == 0 )
-                result.append( data[i] );
-            else
-                result.append( DELIMITER + data[i] );
-        }
+    }
 
-        return result.toString();
+    /**
+     * @param path
+     * @param fileName
+     * @return xml document for the given path
+     * @throws IOException
+     */
+    protected Document readReport( String path, String fileName ) throws IOException {
+
+        File file = new File( path, fileName );
+
+        if ( !file.exists() ) return null;
+
+        // TODO: only load file if it is not out of date
+        InputStream is = new FileInputStream( path + fileName );
+
+        return readReport( is );
+    }
+
+    protected void setLocalName( String localName ) {
+        this.localName = localName;
     }
 
     /**
@@ -286,68 +348,6 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
-    }
-
-    /**
-     * uses the default path of gemmaData/datafile/xml/ to look for reports.
-     * 
-     * @param filename needs the xml suffix
-     * @return
-     * @throws IOException
-     */
-    protected Document readReport( String filename ) throws IOException {
-        String path = HOME_DIR + File.separatorChar + "dataFiles" + File.separatorChar + "xml" + File.separatorChar;
-        return readReport( path, filename );
-
-    }
-
-    /**
-     * @param path
-     * @param fileName
-     * @return xml document for the given path
-     * @throws IOException
-     */
-    protected Document readReport( String path, String fileName ) throws IOException {
-
-        File file = new File( path, fileName );
-
-        if ( !file.exists() ) return null;
-
-        // TODO: only load file if it is not out of date
-        InputStream is = new FileInputStream( path + fileName );
-
-        return readReport( is );
-    }
-
-    /**
-     * Looks to parse a previously generated xml report that was saved to disk. Returns null if it fails to do so.
-     * 
-     * @param InputStream from an existing xml file
-     * @return An XML document
-     * @throws IOException
-     */
-    protected Document readReport( InputStream is ) throws IOException {
-
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setIgnoringComments( true );
-        factory.setValidating( false );
-        Document document = null;
-
-        try {
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            builder = factory.newDocumentBuilder();
-            document = builder.parse( is );
-        } catch ( ParserConfigurationException pce ) {
-            log.error( "Could not configure parser for reading report.  Error is: " + pce );
-            throw ( new RuntimeException( pce ) );
-        } catch ( SAXException se ) {
-            log.error( "Could not parse report Error is: " + se );
-            throw ( new RuntimeException( se ) );
-
-        }
-
-        return document;
 
     }
 }

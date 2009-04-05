@@ -89,7 +89,6 @@ public class BioAssayFormController extends BaseFormController {
         else
             ba = BioAssay.Factory.newInstance();
 
-
         return ba;
     }
 
@@ -156,7 +155,6 @@ public class BioAssayFormController extends BaseFormController {
      * @throws Exception
      */
     @Override
-    @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 

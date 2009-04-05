@@ -35,7 +35,8 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- *for a given Official Gene Symbol and Taxon ID  will return all the probes IDs and their array design IDs  that assay for that given gene.
+ *for a given Official Gene Symbol and Taxon ID will return all the probes IDs and their array design IDs that assay
+ * for that given gene.
  * 
  * @author gavin, klc
  * @version$Id$
@@ -56,19 +57,19 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
      */
     private static final String PROBE_LOCAL_NAME = "gene2Probe";
 
-    /**
-     * Sets the "business service" to delegate to.
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
     }
 
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
+    }
+
+    /**
+     * Sets the "business service" to delegate to.
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
     /**
@@ -79,14 +80,13 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( PROBE_LOCAL_NAME );
 
-        //FIXME this should take gene_id
+        // FIXME this should take gene_id
         String geneSymbol = "";
         Collection<String> geneResults = getSingleNodeValue( requestElement, "gene_official_symbol" );
         for ( String id : geneResults ) {
@@ -98,24 +98,24 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
         for ( String id : taxonResults ) {
             taxonid = id;
         }
-        
-        log.info( "XML iput read: Gene symbol, "+geneSymbol+" & taxon id, "+ taxonid );
+
+        log.info( "XML iput read: Gene symbol, " + geneSymbol + " & taxon id, " + taxonid );
         // get the probe and array design info
-        //get taxon
+        // get taxon
         Taxon taxon = taxonService.load( Long.parseLong( taxonid ) );
         if ( taxon == null ) {
             String msg = "No taxon with id, " + taxonid + ", can be found.";
             return buildBadResponse( document, msg );
         }
 
-        //get gene, gven taxon and symbol
+        // get gene, gven taxon and symbol
         Gene gene = geneService.findByOfficialSymbol( geneSymbol, taxon );
         if ( gene == null ) {
             String msg = "No gene with symbol, " + geneSymbol + ", can be found.";
             return buildBadResponse( document, msg );
         }
 
-        //get probe
+        // get probe
         Collection<CompositeSequence> csCol = compositeSequenceService.findByGene( gene );
         if ( csCol == null || csCol.isEmpty() ) {
             String msg = "No composite sequence can be found.";
@@ -128,17 +128,15 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
         String elementName1 = "probe_id";
         String elementName2 = "array_design_identifier";
 
-        
-       
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, PROBE_LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, PROBE_LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
         for ( CompositeSequence cs : csCol ) {
-            //CompositeSequence id
+            // CompositeSequence id
             String elementString1 = cs.getId().toString();
 
-            //corresponding ArrayDesign identifier
+            // corresponding ArrayDesign identifier
             String elementString2 = cs.getArrayDesign().getId().toString();
 
             Element e1 = document.createElement( elementName1 );
@@ -151,7 +149,7 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
         }
         watch.stop();
         Long time = watch.getTime();
-        //log.info( "Finished generating result. Sending response to client." );
+        // log.info( "Finished generating result. Sending response to client." );
         log.info( "XML response for Probe result built in " + time + "ms." );
         return responseWrapper;
     }

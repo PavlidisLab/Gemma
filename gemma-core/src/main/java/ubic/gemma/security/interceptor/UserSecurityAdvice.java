@@ -21,7 +21,6 @@ package ubic.gemma.security.interceptor;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 
 import org.springframework.security.AccessDeniedException;
 import org.springframework.security.Authentication;
@@ -54,7 +53,6 @@ public class UserSecurityAdvice implements MethodBeforeAdvice {
     public final static String ACCESS_DENIED = "Access Denied: Only administrators are allowed to modify other users.";
     protected final Log log = LogFactory.getLog( UserSecurityAdvice.class );
 
-    @SuppressWarnings("unused")
     public void before( Method method, Object[] args, Object target ) throws Throwable {
         SecurityContext ctx = SecurityContextHolder.getContext();
 
@@ -105,8 +103,7 @@ public class UserSecurityAdvice implements MethodBeforeAdvice {
                 // get the list of roles the user is trying add
                 Collection<String> userRoles = new HashSet<String>();
                 if ( user.getRoles() != null ) {
-                    for ( Iterator it = user.getRoles().iterator(); it.hasNext(); ) {
-                        UserRole role = ( UserRole ) it.next();
+                    for ( UserRole role : user.getRoles() ) {
                         userRoles.add( role.getName() );
                     }
                 }

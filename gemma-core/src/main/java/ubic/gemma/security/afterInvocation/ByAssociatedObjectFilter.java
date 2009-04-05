@@ -80,10 +80,9 @@ public abstract class ByAssociatedObjectFilter implements AfterInvocationProvide
      * @return Object
      * @throws AccessDeniedException
      */
-    @SuppressWarnings("unused")
     public final Object decide( Authentication authentication, Object object, ConfigAttributeDefinition config,
             Object returnedObject ) throws AccessDeniedException {
-        
+
         Collection configAttribs = config.getConfigAttributes();
         Iterator iter = configAttribs.iterator();
 

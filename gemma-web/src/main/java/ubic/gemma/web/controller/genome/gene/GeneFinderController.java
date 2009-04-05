@@ -58,7 +58,6 @@ public class GeneFinderController extends BaseFormController {
     }
 
     @Override
-    @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
@@ -130,9 +129,8 @@ public class GeneFinderController extends BaseFormController {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
+     * javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
      */
     @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )

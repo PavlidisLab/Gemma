@@ -75,7 +75,7 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( PLOC_LOCAL_NAME );
         Collection<String> geneResults = getSingleNodeValue( requestElement, "gene_id" );
         String geneId = "";
@@ -84,7 +84,7 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
             geneId = id;
         }
 
-        log.info( "XML input read: gene id, "+geneId );
+        log.info( "XML input read: gene id, " + geneId );
         // get the physical location of gene using GeneService
         Gene gene = geneService.load( Long.parseLong( geneId ) );
 
@@ -162,7 +162,7 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         // physLoc.add(Long.toString(minNT));
         // physLoc.add(Long.toString(maxNT));
         Element wrapper = buildLocationWrapper( document, chromId, Long.toString( minNT ), Long.toString( maxNT ) );
-        
+
         watch.stop();
         Long time = watch.getTime();
         log.info( "XML response for physical location result built in " + time + "ms." );
@@ -170,7 +170,6 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
     }
 
     private Element buildLocationWrapper( Document document, String chrom, String min, String max ) {
-       
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, PLOC_LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, PLOC_LOCAL_NAME + RESPONSE );
@@ -188,25 +187,19 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         e3.appendChild( document.createTextNode( max ) );
         responseElement.appendChild( e3 );
 
-        
-
         return responseWrapper;
     }
 
     private Long getMaxNT( String strand, Long nt, int ntLength ) {
         if ( strand.equals( "-" ) )
             return nt;
-        else {
-            return ( nt + ntLength );
-        }
+        return ( nt + ntLength );
     }
 
     private Long getMinNT( String strand, Long nt, int ntLength ) {
         if ( strand.equals( "-" ) )
             return ( nt - ntLength );
-        else {
-            return nt;
-        }
+        return nt;
     }
 
 }

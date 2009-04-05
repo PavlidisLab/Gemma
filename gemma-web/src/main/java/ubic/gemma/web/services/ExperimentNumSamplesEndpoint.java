@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * Used for determining the number of samples (biomaterials) associated with a given expression experiment 
+ * Used for determining the number of samples (biomaterials) associated with a given expression experiment
  * 
  * @author klc, gavin
  * @version$Id$
@@ -67,7 +67,7 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( EXPERIMENT_LOCAL_NAME );
         String eeId = "";
 
@@ -76,8 +76,8 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
         for ( String id : eeResult )
             eeId = id;
 
-        log.info("XML input read: expression experiment id, " + eeId );
-        
+        log.info( "XML input read: expression experiment id, " + eeId );
+
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
         if ( ee == null ) {
             String msg = "No Expression Experiment with id, " + ee + " can be found.";
@@ -91,11 +91,11 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
         values.add( bmCount.toString() );
 
         Element wrapper = buildWrapper( document, values, "eeNumSample_id" );
-        
+
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for Expression Experiment Sample Number result built in " + time + "ms." );   
-        
+        log.info( "XML response for Expression Experiment Sample Number result built in " + time + "ms." );
+
         return wrapper;
 
     }

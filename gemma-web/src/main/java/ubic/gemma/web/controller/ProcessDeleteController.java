@@ -54,7 +54,6 @@ public class ProcessDeleteController extends BaseFormController {
      * 
      */
     @Override
-    @SuppressWarnings("unused")
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
 
@@ -79,9 +78,7 @@ public class ProcessDeleteController extends BaseFormController {
      * @throws ServletException
      */
     @Override
-    @SuppressWarnings("unused")
-    protected Object formBackingObject( 
-    HttpServletRequest request ) {
+    protected Object formBackingObject( HttpServletRequest request ) {
 
         // FIXME do you need this method at all?
 

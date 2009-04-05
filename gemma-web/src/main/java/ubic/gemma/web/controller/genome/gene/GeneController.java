@@ -37,6 +37,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
@@ -110,7 +111,7 @@ public class GeneController extends BaseMultiActionController {
      * @return
      * @spring.webremote include="true"
      */
-    public Collection getProducts( EntityDelegator geneDelegator ) {
+    public Collection<GeneProduct> getProducts( EntityDelegator geneDelegator ) {
         Long id = geneDelegator.getId();
         Gene gene = geneService.load( id );
         return gene.getProducts();

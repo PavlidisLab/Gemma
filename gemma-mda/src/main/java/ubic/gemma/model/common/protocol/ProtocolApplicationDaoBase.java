@@ -132,8 +132,7 @@ public abstract class ProtocolApplicationDaoBase extends
         if ( id == null ) {
             throw new IllegalArgumentException( "ProtocolApplication.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.protocol.ProtocolApplication entity = ( ubic.gemma.model.common.protocol.ProtocolApplication ) this
-                .load( id );
+        ubic.gemma.model.common.protocol.ProtocolApplication entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

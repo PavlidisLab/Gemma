@@ -78,7 +78,7 @@ public class BioMaterialFormController extends BaseFormController {
      * @return Map
      */
     @Override
-    @SuppressWarnings( { "unchecked", "unused" })
+    @SuppressWarnings( { "unchecked" })
     protected Map<String, Collection<ExternalDatabase>> referenceData( HttpServletRequest request ) {
         Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
         Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();
@@ -136,7 +136,6 @@ public class BioMaterialFormController extends BaseFormController {
      * @throws Exception
      */
     @Override
-    @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 

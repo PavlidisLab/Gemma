@@ -93,9 +93,8 @@ public class GoldenPathSequenceLoadController extends SimpleFormController {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
-     *      org.springframework.web.bind.ServletRequestDataBinder)
+     * org.springframework.web.bind.ServletRequestDataBinder)
      */
     @Override
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) throws Exception {
@@ -105,11 +104,11 @@ public class GoldenPathSequenceLoadController extends SimpleFormController {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#referenceData(javax.servlet.http.HttpServletRequest,
-     *      java.lang.Object, org.springframework.validation.Errors)
+     * @see
+     * org.springframework.web.servlet.mvc.SimpleFormController#referenceData(javax.servlet.http.HttpServletRequest,
+     * java.lang.Object, org.springframework.validation.Errors)
      */
-    @SuppressWarnings( { "unchecked", "unused" })
+    @SuppressWarnings( { "unchecked" })
     @Override
     protected Map referenceData( HttpServletRequest request ) throws Exception {
 

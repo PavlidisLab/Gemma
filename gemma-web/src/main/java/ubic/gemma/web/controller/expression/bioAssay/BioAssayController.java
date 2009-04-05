@@ -74,7 +74,6 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         log.debug( request.getParameter( "id" ) );
@@ -100,7 +99,6 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
      * @param response
      * @return ModelAndView
      */
-    @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         String sId = request.getParameter( "id" );
         Collection<BioAssay> bioAssays = new ArrayList<BioAssay>();
@@ -143,7 +141,7 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
         if ( bioAssay == null ) {
             throw new EntityNotFoundException( "BioAssay with id=" + id + " not found" );
         }
-        return startJob( new RemoveBioAssayJob( bioAssay, sampleRemoveService ) );
+        return startJob( new RemoveBioAssayJob( bioAssay ) );
     }
 
     /**
@@ -151,16 +149,13 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
      */
     class RemoveBioAssayJob extends BackgroundControllerJob<ModelAndView> {
 
-        private SampleRemoveService sampleRemoveService;
         private BioAssay bioAssay;
 
-        public RemoveBioAssayJob( BioAssay bioAssay, SampleRemoveService sampleRemoveService ) {
+        public RemoveBioAssayJob( BioAssay bioAssay ) {
             super( getMessageUtil() );
-            this.sampleRemoveService = sampleRemoveService;
             this.bioAssay = bioAssay;
         }
 
-        @SuppressWarnings("unchecked")
         public ModelAndView call() throws Exception {
 
             init();

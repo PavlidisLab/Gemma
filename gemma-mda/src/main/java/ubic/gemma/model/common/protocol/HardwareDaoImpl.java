@@ -71,7 +71,7 @@ public class HardwareDaoImpl extends ubic.gemma.model.common.protocol.HardwareDa
         if ( newHardware != null ) {
             return newHardware;
         }
-        return ( Hardware ) create( hardware );
+        return create( hardware );
     }
 
 }

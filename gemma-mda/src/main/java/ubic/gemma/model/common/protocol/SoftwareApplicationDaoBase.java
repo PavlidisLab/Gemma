@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.common.protocol;
 
 /**
@@ -38,14 +38,17 @@ public abstract class SoftwareApplicationDaoBase extends
         if ( entities == null ) {
             throw new IllegalArgumentException( "SoftwareApplication.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.protocol.SoftwareApplication ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform, ( ubic.gemma.model.common.protocol.SoftwareApplication ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -128,8 +131,7 @@ public abstract class SoftwareApplicationDaoBase extends
         if ( id == null ) {
             throw new IllegalArgumentException( "SoftwareApplication.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.protocol.SoftwareApplication entity = ( ubic.gemma.model.common.protocol.SoftwareApplication ) this
-                .load( id );
+        ubic.gemma.model.common.protocol.SoftwareApplication entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -164,14 +166,16 @@ public abstract class SoftwareApplicationDaoBase extends
         if ( entities == null ) {
             throw new IllegalArgumentException( "SoftwareApplication.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.protocol.SoftwareApplication ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.common.protocol.SoftwareApplication ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**

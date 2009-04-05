@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * Used for getting the Short Name given an Expression Experiment ID  eg: 793 --> GSE10470
+ * Used for getting the Short Name given an Expression Experiment ID eg: 793 --> GSE10470
  * 
  * @author klc, gavin
  * @version$Id$
@@ -64,23 +64,20 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
 
         setLocalName( EXPERIMENT_LOCAL_NAME );
-        String eeId = "";
-
-        Collection<String> eeInput = getArrayValues( requestElement, "ee_ids" );        
+        Collection<String> eeInput = getArrayValues( requestElement, "ee_ids" );
         Collection<Long> eeLongs = new HashSet<Long>();
-        for (String ee : eeInput)
+        for ( String ee : eeInput )
             eeLongs.add( Long.parseLong( ee ) );
         log.info( "XML input read: expression experiment id, " + eeInput );
 
-        Collection<ExpressionExperiment> eeCol = expressionExperimentService.loadMultiple( eeLongs  );
+        Collection<ExpressionExperiment> eeCol = expressionExperimentService.loadMultiple( eeLongs );
 
-        if ( eeCol == null || eeCol.isEmpty()) {
+        if ( eeCol == null || eeCol.isEmpty() ) {
             String msg = "No input Expression Experiments can be found.";
             return buildBadResponse( document, msg );
         }
@@ -89,15 +86,15 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
         Element responseElement = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
-        for (ExpressionExperiment ee : eeCol){
+        for ( ExpressionExperiment ee : eeCol ) {
             Element e1 = document.createElement( "ee_id" );
             e1.appendChild( document.createTextNode( ee.getId().toString() ) );
             responseElement.appendChild( e1 );
-            
+
             Element e2 = document.createElement( "ee_shortName" );
             e2.appendChild( document.createTextNode( ee.getShortName() ) );
             responseElement.appendChild( e2 );
-    
+
             Element e3 = document.createElement( "ee_name" );
             e3.appendChild( document.createTextNode( ee.getName() ) );
             responseElement.appendChild( e3 );
@@ -105,7 +102,7 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for Expression Experiment Names result built in " + time + "ms." );    
+        log.info( "XML response for Expression Experiment Names result built in " + time + "ms." );
 
         return responseWrapper;
     }

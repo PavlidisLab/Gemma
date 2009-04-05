@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -57,6 +58,10 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
      */
     private static final String EXPERIMENT_LOCAL_NAME = "dEDVfromEEIDGeneID";
 
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
     /**
      * Sets the "business service" to delegate to.
      */
@@ -64,9 +69,39 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
         this.geneService = geneService;
     }
 
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
+    public void setProcessedExpressionDataVectorService(
+            ProcessedExpressionDataVectorService processedExpressionDataVectorService ) {
+        this.processedExpressionDataVectorService = processedExpressionDataVectorService;
     }
+
+    // /**
+    // * overloaded method for buildWrapper
+    // */
+    // protected Element buildWrapper(String localName, Document document,
+    // Map<Integer, String> values1, Map<Integer, String> values2, String
+    // elementName1, String elementName2){
+    // Element responseWrapper = document.createElementNS(NAMESPACE_URI,
+    // localName);
+    // Element responseElement = document.createElementNS(NAMESPACE_URI,
+    // localName + RESPONSE);
+    // responseWrapper.appendChild(responseElement);
+    //
+    // if (values1 == null || values1.isEmpty())
+    // responseElement.appendChild(document
+    // .createTextNode("No "+elementName1 +" result"));
+    // else {
+    // // Need to create a list (array) of the geneIds
+    // for (int i=0; i<values1.keySet().size(); i++){
+    // Element e1 = document.createElement(elementName1);
+    // e1.appendChild(document.createTextNode(values1.get(i)));
+    // responseElement.appendChild(e1);
+    // Element e2 = document.createElement(elementName2);
+    // e2.appendChild(document.createTextNode(values2.get(i)));
+    // responseElement.appendChild(e2);
+    // }
+    // }
+    // return responseWrapper;
+    // }
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
@@ -175,47 +210,6 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
 
     }
 
-    // /**
-    // * overloaded method for buildWrapper
-    // */
-    // protected Element buildWrapper(String localName, Document document,
-    // Map<Integer, String> values1, Map<Integer, String> values2, String
-    // elementName1, String elementName2){
-    // Element responseWrapper = document.createElementNS(NAMESPACE_URI,
-    // localName);
-    // Element responseElement = document.createElementNS(NAMESPACE_URI,
-    // localName + RESPONSE);
-    // responseWrapper.appendChild(responseElement);
-    //
-    // if (values1 == null || values1.isEmpty())
-    // responseElement.appendChild(document
-    // .createTextNode("No "+elementName1 +" result"));
-    // else {
-    // // Need to create a list (array) of the geneIds
-    // for (int i=0; i<values1.keySet().size(); i++){
-    // Element e1 = document.createElement(elementName1);
-    // e1.appendChild(document.createTextNode(values1.get(i)));
-    // responseElement.appendChild(e1);
-    // Element e2 = document.createElement(elementName2);
-    // e2.appendChild(document.createTextNode(values2.get(i)));
-    // responseElement.appendChild(e2);
-    // }
-    // }
-    // return responseWrapper;
-    // }
-
-    /**
-     * helper method to convert Gene to ID's (string format). Order will not be maintained, since the original
-     * collection was a HashSet object anyways
-     */
-    private Collection<String> gene2ID( Collection<Gene> geneCol ) {
-        Collection<String> geneIds = new HashSet<String>();
-        for ( Gene gene : geneCol ) {
-            geneIds.add( gene.getId().toString() );
-        }
-        return geneIds;
-    }
-
     /**
      * @param data
      * @return a string delimited representation of the double array passed in.
@@ -234,9 +228,16 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
         return result.toString();
     }
 
-    public void setProcessedExpressionDataVectorService(
-            ProcessedExpressionDataVectorService processedExpressionDataVectorService ) {
-        this.processedExpressionDataVectorService = processedExpressionDataVectorService;
+    /**
+     * helper method to convert Gene to ID's (string format). Order will not be maintained, since the original
+     * collection was a HashSet object anyways
+     */
+    private Collection<String> gene2ID( Collection<Gene> geneCol ) {
+        Collection<String> geneIds = new HashSet<String>();
+        for ( Gene gene : geneCol ) {
+            geneIds.add( gene.getId().toString() );
+        }
+        return geneIds;
     }
 
 }

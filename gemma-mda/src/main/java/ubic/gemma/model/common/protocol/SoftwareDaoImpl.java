@@ -63,6 +63,6 @@ public class SoftwareDaoImpl extends ubic.gemma.model.common.protocol.SoftwareDa
         if ( newSoftware != null ) {
             return newSoftware;
         }
-        return ( Software ) create( software );
+        return create( software );
     }
 }

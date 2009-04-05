@@ -39,7 +39,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 
 public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
 
-    
     private ArrayDesignService arrayDesignService;
     private static Log log = LogFactory.getLog( ArrayDesignIdentifierByNameEndpoint.class );
 
@@ -55,9 +54,9 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
         this.arrayDesignService = ads;
     }
 
-//    public void setSearchService( SearchService ss ) {
-//        this.searchService = ss;
-//    }
+    // public void setSearchService( SearchService ss ) {
+    // this.searchService = ss;
+    // }
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
@@ -70,7 +69,7 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( ARRAY_LOCAL_NAME );
         String adName = "";
         // get GO id from request
@@ -111,12 +110,12 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
         Collection<String> adId = new HashSet<String>();
         adId.add( ad.getId().toString() );
 
-         Element wrapper = buildWrapper( document, adId, "arrayDesign_ids" );
-        
-         watch.stop();
-         Long time = watch.getTime();
-         log.info( "XML response for array design id result built in " + time + "ms." );
-         return wrapper;
+        Element wrapper = buildWrapper( document, adId, "arrayDesign_ids" );
+
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "XML response for array design id result built in " + time + "ms." );
+        return wrapper;
     }
 
 }
