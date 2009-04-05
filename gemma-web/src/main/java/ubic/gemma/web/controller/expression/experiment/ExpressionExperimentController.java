@@ -768,7 +768,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
-    public void setexperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
+    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
         this.experimentalFactorService = experimentalFactorService;
     }
 
