@@ -227,7 +227,10 @@ public class LinkAnalysisService {
 
             log.info( "Done with processing of " + ee );
         } catch ( Exception e ) {
-            logFailure( ee, e );
+
+            if ( linkAnalysisConfig.isUseDb() ) {
+                logFailure( ee, e );
+            }
             throw new RuntimeException( e );
         }
 
@@ -651,12 +654,12 @@ public class LinkAnalysisService {
     private void writeLinks( final LinkAnalysis la, FilterConfig filterConfig, Writer wr ) throws IOException {
         Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
-        double subsetSize = la.getConfig().getSubsetSize();        
-        if(la.getConfig().isSubset() && links.size() > subsetSize){
+        double subsetSize = la.getConfig().getSubsetSize();
+        if ( la.getConfig().isSubset() && links.size() > subsetSize ) {
             la.getConfig().setSubsetUsed( true );
         }
         wr.write( la.getConfig().toString() );
-        wr.write(filterConfig.toString());
+        wr.write( filterConfig.toString() );
         NumberFormat nf = NumberFormat.getInstance();
         nf.setMaximumFractionDigits( 4 );
 
@@ -672,13 +675,12 @@ public class LinkAnalysisService {
         int numPrinted = 0;
         Random generator = new Random();
         double rand = 0.0;
-        double fraction = subsetSize/links.size();
-        
-        
+        double fraction = subsetSize / links.size();
+
         for ( int n = links.size(); i < n; i++ ) {
-            if(la.getConfig().isSubsetUsed()){
+            if ( la.getConfig().isSubsetUsed() ) {
                 rand = generator.nextDouble();
-                if(rand > fraction) continue;
+                if ( rand > fraction ) continue;
             }
             Object val = links.getQuick( i );
             if ( val == null ) continue;
@@ -736,11 +738,13 @@ public class LinkAnalysisService {
             }
 
         }
-        if(la.getConfig().isSubset() && links.size() > subsetSize){//subset option activated
-            log.info( "Done, " + numPrinted + "/" + links.size() + " links printed (subset printed with some filtered)" );
-            //wr.write("# Amount of links before subsetting/after subsetting: " + links.size() + "/" + numPrinted + "\n" );
-        }
-        else{
+        if ( la.getConfig().isSubset() && links.size() > subsetSize ) {// subset option activated
+            log
+                    .info( "Done, " + numPrinted + "/" + links.size()
+                            + " links printed (subset printed with some filtered)" );
+            // wr.write("# Amount of links before subsetting/after subsetting: " + links.size() + "/" + numPrinted +
+            // "\n" );
+        } else {
             log.info( "Done, " + numPrinted + "/" + links.size() + " links printed (some may have been filtered)" );
         }
         wr.flush();
