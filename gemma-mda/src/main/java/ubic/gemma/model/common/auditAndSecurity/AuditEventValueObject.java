@@ -42,8 +42,9 @@ public class AuditEventValueObject implements java.io.Serializable {
     private String performer;
 
     public AuditEventValueObject( AuditEvent ae ) {
-        this.setPerformer( ae.getPerformer().getUserName() );
-        this.setAction( ae.getAction().getValue() );
+        if ( ae.getPerformer() != null ) this.setPerformer( ae.getPerformer().getUserName() );
+
+        if ( ae.getAction() != null ) this.setAction( ae.getAction().getValue() );
         this.setEventType( ae.getEventType() );
         this.setNote( ae.getNote() );
         this.setDate( ae.getDate() );
@@ -53,9 +54,8 @@ public class AuditEventValueObject implements java.io.Serializable {
     public String getActionName() {
         if ( this.getAction().equals( AuditAction.CREATE ) ) {
             return "Create";
-        } else {
-            return "Update";
         }
+        return "Update";
     }
 
     public String getEventTypeName() {
