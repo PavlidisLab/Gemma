@@ -211,7 +211,6 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			 * Create a new factorvalue
 			 */
 			this.getTopToolbar().on("create", function() {
-
 				/*
 				 * Avoid accidents...
 				 */
@@ -222,6 +221,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 									'You should save your changes before creating new values. Are you sure you want to erase them?',
 									function(but) {
 										if (but == 'yes') {
+											this.store.rejectChanges();
+
 											this.createNew();
 										}
 									}.createDelegate(this));
@@ -325,6 +326,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	factorValuesChanged : function(fvs) {
 		this.refresh();
+		this.store.rejectChanges();
 		var ct = this.getTopToolbar().characteristicToolbar;
 		ct.factorValueCombo.store.reload();
 		this.fireEvent('factorvaluechange', this, fvs);
@@ -332,15 +334,35 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	factorValuesDeleted : function(fvs) {
 		this.refresh();
+		this.store.rejectChanges();
 		var ct = this.getTopToolbar().characteristicToolbar;
 		ct.factorValueCombo.store.reload();
 		this.fireEvent('factorvaluedelete', this, fvs);
 	},
 
-	setExperimentalFactor : function(efId) {
+	changeExperimentalFactor : function(efId) {
 		this.experimentalFactor.id = efId;
-		this.refresh([this.experimentalFactor]);
+		this.store.rejectChanges(); // reset.
+
+		this.refresh([this.experimentalFactor]); // causes a load.
 		this.getTopToolbar().setExperimentalFactor(efId);
+	},
+
+	setExperimentalFactor : function(efId) {
+
+		if (this.store.getModifiedRecords().length > 0) {
+			Ext.Msg
+					.confirm(
+							'Unsaved changes!',
+							'You should save your changes before switching to another factor. Are you sure you want to lose your changes?',
+							function(but) {
+								if (but == 'yes') {
+									this.changeExperimentalFactor(efId);
+								}
+							}.createDelegate(this));
+		} else {
+			this.changeExperimentalFactor(efId);
+		}
 	},
 
 	/**
