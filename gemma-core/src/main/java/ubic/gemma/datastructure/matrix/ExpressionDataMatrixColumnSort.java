@@ -241,13 +241,36 @@ public class ExpressionDataMatrixColumnSort {
             chunks.put( fv, new ArrayList<BioMaterial>() );
         }
 
+        /*
+         * What if bm doesn't have a value for the factorvalue. Need a dummy value.
+         */
+        FactorValue dummy = FactorValue.Factory.newInstance( ef );
+        dummy.setValue( "" );
+        dummy.setId( -1L );
+        chunks.put( dummy, new ArrayList<BioMaterial>() );
+
         for ( BioMaterial bm : bms ) {
+            boolean found = false;
             for ( FactorValue fv : bm.getFactorValues() ) {
+                if ( fv.getExperimentalFactor().equals( ef ) ) {
+                    found = true;
+                }
                 if ( chunks.containsKey( fv ) ) {
                     chunks.get( fv ).add( bm );
                 }
             }
+
+            if ( !found ) {
+                if ( log.isDebugEnabled() ) log.debug( bm + " has no value for factor=" + ef + "; using dummy value" );
+                chunks.get( dummy ).add( bm );
+            }
+
         }
+
+        if ( chunks.get( dummy ).size() == 0 ) {
+            chunks.remove( dummy );
+        }
+
         return chunks;
     }
 

@@ -36,6 +36,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -51,7 +52,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author paul
  * @version $Id$
  */
-public class ExpressionDataMatrixColumnSortTest extends TestCase {
+public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
     private static Log log = LogFactory.getLog( ExpressionDataMatrixColumnSortTest.class );
 
     // ExpressionExperimentService expressionExperimentService;
@@ -146,7 +147,12 @@ public class ExpressionDataMatrixColumnSortTest extends TestCase {
             ba.getSamplesUsed().add( bm );
 
             for ( ExperimentalFactor ef : factors ) {
-                int k = RandomUtils.nextInt( 3 );
+
+                /*
+                 * Note: if we use 4, then some of the biomaterials will not have a factorvalue for each factor. This is
+                 * realistic. Use 3 to fill it in completely.
+                 */
+                int k = RandomUtils.nextInt( 4 );
                 int m = 0;
                 FactorValue toUse = null;
                 for ( FactorValue fv : ef.getFactorValues() ) {
@@ -156,8 +162,8 @@ public class ExpressionDataMatrixColumnSortTest extends TestCase {
                     }
                     m++;
                 }
-                assert toUse != null;
-                bm.getFactorValues().add( toUse );
+
+                if ( toUse != null ) bm.getFactorValues().add( toUse );
                 // log.info( ba + " -> " + bm + " -> " + ef + " -> " + toUse );
             }
         }
@@ -169,5 +175,19 @@ public class ExpressionDataMatrixColumnSortTest extends TestCase {
         assertEquals( 100, ordered.size() );
 
     }
+
+    // public void testOrderByExperimentalDesignC() throws Exception {
+    //
+    // BioAssayDimensionService bads = ( BioAssayDimensionService ) this.getBean( "bioAssayDimensionService" );
+    // for ( long i = 1; i < 100; i++ ) {
+    // BioAssayDimension bad = bads.load( i );
+    // if ( bad != null ) {
+    // log.info( bad.getId() );
+    // EmptyExpressionMatrix mat = new EmptyExpressionMatrix( bad );
+    // List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
+    // assertTrue( ordered.size() > 0 );
+    // }
+    // }
+    // }
 
 }
