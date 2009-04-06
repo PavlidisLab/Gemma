@@ -352,7 +352,7 @@ Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 								var w = new Gemma.ExperimentalFactorAddWindow();
 								w.on('done', function(object) {
 											this.fireEvent('create', object);
-										}.createDelegate(this))
+										}.createDelegate(this));
 								w.show();
 							},
 							scope : this

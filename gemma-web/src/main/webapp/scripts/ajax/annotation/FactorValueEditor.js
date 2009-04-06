@@ -135,9 +135,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		 * The checkboxes defined here require that this.form be set: a <form> element wrapping the div that this goes
 		 * in. Clumsy but it works.
 		 */
-		var groupTextTpl = this.editable
-				? '<input id="{[ values.rs[0].data.id ]}" type="checkbox" name="selectedFactorValues" value="{[ values.rs[0].data.id ]}" />&nbsp;&nbsp; '
-				: '';
+		var groupTextTpl = this.editable ? '<input id="{[ values.rs[0].data.id ]}" type="checkbox"'
+				+ ' name="selectedFactorValues" value="{[ values.rs[0].data.id ]}" />&nbsp;&nbsp; ' : '';
 		groupTextTpl = groupTextTpl + '{[ values.rs[0].data.factorValue ]}';
 
 		this.view = new Ext.grid.GroupingView({
@@ -274,7 +273,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			this.getTopToolbar().on("undo", this.revertSelected.createDelegate(this), this);
 
 			this.getTopToolbar().on("toggleExpand", function() {
-						this.getView().toggleAllGroups()
+						this.getView().toggleAllGroups();
 					}.createDelegate(this), this);
 
 		}
