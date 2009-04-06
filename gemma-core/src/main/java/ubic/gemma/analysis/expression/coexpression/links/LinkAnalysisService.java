@@ -739,8 +739,7 @@ public class LinkAnalysisService {
 
         }
         if ( la.getConfig().isSubset() && links.size() > subsetSize ) {// subset option activated
-            log
-                    .info( "Done, " + numPrinted + "/" + links.size()
+            log.info( "Done, " + numPrinted + "/" + links.size()
                             + " links printed (subset printed with some filtered)" );
             // wr.write("# Amount of links before subsetting/after subsetting: " + links.size() + "/" + numPrinted +
             // "\n" );
