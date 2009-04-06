@@ -189,7 +189,8 @@ public class LinkAnalysisConfig implements Serializable {
         }
         else{
             buf.append( "# lowerCutUsed:fwe\n" );
-        }        
+        }
+        buf.append( "# singularThreshold:" + this.getSingularThreshold() + "\n" );
         return buf.toString();
     }
 
