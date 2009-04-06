@@ -280,7 +280,7 @@ public class QuantitationTypeParameterGuesser {
         isPreferredNamePatterns.add( "dchip" );
         isPreferredNamePatterns.add( "chpsignal" );
         isPreferredNamePatterns.add( "signal" );
-        isPreferredNamePatterns.add( ".*?log_rat2n_mean" );
+        // isPreferredNamePatterns.add( ".*?log_rat2n_mean" );
 
     }
 
