@@ -294,7 +294,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		if (ct) {
 			ct.on("create", function(f, c) {
 						var callback = function() {
-							console.log("reload");
+							// console.log("reload");
 							ct.factorValueCombo.store.reload();
 							this.factorValuesChanged.call(this, []);
 							// TODO do something to reset the text of the
