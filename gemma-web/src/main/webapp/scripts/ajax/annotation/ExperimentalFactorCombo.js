@@ -7,7 +7,7 @@ Gemma.ExperimentalFactorCombo = Ext.extend(Ext.form.ComboBox, {
 			// if it differs from
 			// name.
 			displayField : 'name',
-			tpl : new Ext.XTemplate('<tpl for="."><div class="x-combo-list-item">{name}  ({description})</div></tpl>'),
+			tpl : new Ext.XTemplate('<tpl for="."><div class="x-combo-list-item">{name} <tpl if="name != description && description" > ({description})</tpl></div></tpl>'),
 			listWidth : 250,
 
 			record : Ext.data.Record.create([{

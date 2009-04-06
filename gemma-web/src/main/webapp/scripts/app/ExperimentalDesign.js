@@ -106,8 +106,11 @@ Ext.onReady(function() {
 						width : 1000,
 						editable : editable
 					});
-			bioMaterialEditor.init();
 
+			/*
+			 * If we init before the tab is rendered, then the scroll bars don't show up.
+			 */
+			// bioMaterialEditor.init();
 			var experimentalFactorGrid = new Gemma.ExperimentalFactorGrid({
 						id : 'experimental-factor-grid',
 						title : "Experimental Factors",
@@ -144,7 +147,7 @@ Ext.onReady(function() {
 						defaults : {
 							layout : 'fit'
 						},
-						layoutOnTabChange : true,
+						layoutOnTabChange : false,
 						activeTab : 0,
 						items : [{
 									contentEl : "experimentalFactorPanel",
@@ -153,6 +156,15 @@ Ext.onReady(function() {
 									contentEl : "bioMaterialsPanel",
 									title : "Sample details"
 								}]
+					});
+
+			/*
+			 * Only initialize once we are viewing the tab to help ensure the scroll bars are rendered right away.
+			 */
+			tabPanel.on('tabchange', function(panel, tab) {
+						if (!bioMaterialEditor.firstInitDone && tab.contentEl == 'bioMaterialsPanel') {
+							bioMaterialEditor.init();
+						}
 					});
 
 			experimentalFactorGrid.on("experimentalfactorchange", function(efgrid, efs) {

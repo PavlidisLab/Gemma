@@ -5,6 +5,8 @@ Ext.namespace('Gemma');
  */
 Gemma.BioMaterialEditor = function(config) {
 	return {
+		
+		firstInitDone : false,
 		originalConfig : config,
 		expressionExperiment : {
 			id : config.eeId,
@@ -42,6 +44,7 @@ Gemma.BioMaterialEditor = function(config) {
 
 			}
 
+			firstInitDone = true;
 			ExperimentalDesignController.getBioMaterials(this.expressionExperiment, this.firstCallback
 							.createDelegate(this));
 		}
@@ -51,7 +54,7 @@ Gemma.BioMaterialEditor = function(config) {
 Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	loadMask : true,
-	autoExpandColumn : 'bm',
+	autoExpandColumn : 'bm-column',
 	fvMap : {},
 
 	/**
@@ -63,14 +66,16 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	 */
 	createColumns : function(factors) {
 		var columns = [this.rowExpander, {
-					id : "bm",
+					id : "bm-column",
 					header : "BioMaterial",
 					dataIndex : "bmName",
 					sortable : true,
+					width : 120,
 					tooltip : 'BioMaterial (sample) name/details'
 				}, {
-					id : "ba",
+					id : "ba-column",
 					header : "BioAssay",
+					width : 150,
 					dataIndex : "baName",
 					sortable : true,
 					tooltip : 'BioAssay name/details'
@@ -139,8 +144,10 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				ue = editor;
 			}
 
+			// text used for header of the column.
 			var label = factor.description ? factor.description : factor.name
-					+ (factor.name === factor.description ? "" : " (" + factor.name + ")");
+					+ (factor.name == factor.description || factor.description == "" ? "" : " (" + factor.description
+							+ ")");
 
 			columns.push({
 						id : factorId,
@@ -148,6 +155,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						dataIndex : factorId,
 						renderer : rend,
 						editor : ue,
+						width : 120,
 						tooltip : label,
 						sortable : true,
 						continuous : continuous
@@ -339,6 +347,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					params : {},
 					callback : function() {
 						this.getStore().sort("bmName");
+						this.getStore().fireEvent("datachanged");
 					},
 					scope : this
 				});

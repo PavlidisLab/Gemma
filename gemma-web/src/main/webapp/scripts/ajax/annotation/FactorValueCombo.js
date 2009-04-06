@@ -12,6 +12,7 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 			editable : false,
 			mode : "local",
 			triggerAction : "all",
+			listWidth : 200,
 
 			record : Ext.data.Record.create([{
 						name : "charId",
