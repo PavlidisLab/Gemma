@@ -31,6 +31,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -1009,6 +1011,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             expressionExperimentReportService.fillEventInformation( expressionExperiments );
         }
 
+        if ( !SecurityService.isUserAdmin() ) {
+            removeTroubledEes( expressionExperiments );
+        }
+
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
 
         mav.addObject( "expressionExperiments", expressionExperiments );
@@ -1023,36 +1029,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @return ModelAndView
      */
     public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
-        // String sId = request.getParameter( "id" );
-        //
-        // String limitS = request.getParameter( "limit" );
-        //
-        // int limit = -1;
-        // if ( StringUtils.isNotBlank( limitS ) ) {
-        // try {
-        // limit = Integer.parseInt( limitS );
-        // } catch ( NumberFormatException e ) {
-        // throw new RuntimeException( "Invalid format for 'limit', it must be an integer" );
-        // }
-        // }
-        //
-        // Collection<ExpressionExperimentValueObject> expressionExperiments = loadStatusSummaries( sId, limit );
-        // Long numExpressionExperiments = new Long( expressionExperiments.size() );
-        // ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
-        //
-        // if ( expressionExperiments.size() == 0 ) {
-        // this.saveMessage( request, "There are no datasets to display." );
-        // } else {
-        // this.saveMessage( request, "Displaying " + expressionExperiments.size() + " datasets" );
-        // }
-        //
-        // mav.addObject( "expressionExperiments", expressionExperiments );
-        // mav.addObject( "numExpressionExperiments", numExpressionExperiments );
-        //
-        // return mav;
-
         return new ModelAndView( "expressionExperimentLinkSummary" );
-
     }
 
     /**
@@ -1345,6 +1322,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         StopWatch timer = new StopWatch();
         timer.start();
 
+        /*
+         * FIXME remove troubled.
+         */
+
         /* Filtering for security happens here. */
         if ( filterDataForUser ) {
             if ( eeIds == null ) {
@@ -1541,6 +1522,38 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ModelAndView redirectToList( HttpServletRequest request ) {
         this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+    }
+
+    /**
+     * FIXME partly duplicates code from ExpressionExperimentManipulatingCLI
+     * 
+     * @param ees
+     */
+    @SuppressWarnings("unchecked")
+    private void removeTroubledEes( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos == null || eevos.size() == 0 ) {
+            log.warn( "No experiments to remove troubled from" );
+            return;
+        }
+
+        Collection<Long> ees = new HashSet<Long>();
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            ees.add( eevo.getId() );
+        }
+
+        int size = ees.size();
+        final Map<Long, AuditEvent> trouble = expressionExperimentService.getLastTroubleEvent( ees );
+        CollectionUtils.filter( eevos, new Predicate() {
+            public boolean evaluate( Object e ) {
+                boolean hasTrouble = trouble.get( ( ( ExpressionExperimentValueObject ) e ).getId() ) != null;
+                return !hasTrouble;
+            }
+        } );
+        int newSize = ees.size();
+        if ( newSize != size ) {
+            assert newSize < size;
+            log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
+        }
     }
 
 }
