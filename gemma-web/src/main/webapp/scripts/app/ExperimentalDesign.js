@@ -135,7 +135,7 @@ Ext.onReady(function() {
 						width : 1000,
 						renderTo : "experimentalFactorPanel",
 						items : [experimentalFactorGrid, factorValueGrid]
-					})
+					});
 
 			var tabPanel = new Ext.TabPanel({
 						renderTo : "experimentalDesignPanel",
