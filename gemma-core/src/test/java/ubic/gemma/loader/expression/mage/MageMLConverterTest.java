@@ -685,7 +685,7 @@ public class MageMLConverterTest extends AbstractMageTest {
         /*
          * Note that this ee has these defined in the mageml, but they're missing from the processeddata.
          */
-        assertTrue( found && foundBB && foundSB && foundBA && foundSA );
+        assertTrue( foundBB && foundSB && foundBA && foundSA );
 
     }
 
