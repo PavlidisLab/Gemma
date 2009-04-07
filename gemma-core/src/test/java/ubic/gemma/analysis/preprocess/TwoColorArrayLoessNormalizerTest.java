@@ -68,7 +68,7 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
      */
     public void testNormalize() throws Exception {
         if ( !connected ) {
-            log.warn( "Could not connect to RServe, skipping test." );
+            log.warn( "Could not connect to R, skipping test." );
             return;
         }
         DoubleMatrixReader reader = new DoubleMatrixReader();
@@ -91,7 +91,7 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
 
     public void testNormalizeNoBg() throws Exception {
         if ( !connected ) {
-            log.warn( "Could not connect to RServe, skipping test." );
+            log.warn( "Could not connect to R, skipping test." );
             return;
         }
         DoubleMatrixReader reader = new DoubleMatrixReader();
@@ -102,7 +102,7 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
 
         assert maRf != null && maGf != null;
 
-        DoubleMatrix result = normalizer.normalize( maRf, maGf );
+        DoubleMatrix<String, String> result = normalizer.normalize( maRf, maGf );
 
         assertEquals( 100, result.rows() );
         assertEquals( 4, result.columns() );
