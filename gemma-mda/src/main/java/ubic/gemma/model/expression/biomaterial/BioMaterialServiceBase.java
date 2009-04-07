@@ -91,19 +91,6 @@ public abstract class BioMaterialServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#getBioMaterials()
-     */
-    public java.util.Collection getBioMaterials() {
-        try {
-            return this.handleGetBioMaterials();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.biomaterial.BioMaterialServiceException(
-                    "Error performing 'ubic.gemma.model.expression.biomaterial.BioMaterialService.getBioMaterials()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#load(java.lang.Long)
      */
     public ubic.gemma.model.expression.biomaterial.BioMaterial load( final java.lang.Long id ) {
@@ -119,7 +106,7 @@ public abstract class BioMaterialServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<BioMaterial> loadAll() {
         try {
             return this.handleLoadAll();
         } catch ( Throwable th ) {
@@ -132,7 +119,7 @@ public abstract class BioMaterialServiceBase extends ubic.gemma.model.common.Aud
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadMultiple(java.util.Collection)
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+    public java.util.Collection<BioMaterial> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -204,11 +191,6 @@ public abstract class BioMaterialServiceBase extends ubic.gemma.model.common.Aud
      */
     protected abstract ubic.gemma.model.expression.biomaterial.BioMaterial handleFindOrCreate(
             ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #getBioMaterials()}
-     */
-    protected abstract java.util.Collection<BioMaterial> handleGetBioMaterials() throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}

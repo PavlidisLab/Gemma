@@ -385,11 +385,13 @@
                 ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.thaw=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate=user,admin
 				ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService.findOrCreate=user,admin
-                ubic.gemma.model.expression.biomaterial.BioMaterialService.getBioMaterials=user,admin
+				ubic.gemma.model.expression.biomaterial.BioMaterialService.countAll=user,admin,ROLE_ANONYMOUS 
+                ubic.gemma.model.expression.biomaterial.BioMaterialService.update=user,admin
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.findOrCreate=user,admin 
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.remove=user,admin
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.load=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.loadAll=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.biomaterial.BioMaterialService.loadMultiple=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.biomaterial.TreatmentService.getTreatments=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.biomaterial.TreatmentService.saveTreatment=user,admin 
                 ubic.gemma.model.expression.biomaterial.CompoundService.find=user,admin,ROLE_ANONYMOUS

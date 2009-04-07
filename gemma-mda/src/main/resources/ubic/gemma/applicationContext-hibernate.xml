@@ -628,8 +628,7 @@
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.remove=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.load=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.update=PROPAGATION_REQUIRED
-				ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService.findOrCreate=PROPAGATION_REQUIRED
-				ubic.gemma.model.expression.biomaterial.BioMaterialService.getBioMaterials=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService.findOrCreate=PROPAGATION_REQUIRED 
 				ubic.gemma.model.expression.biomaterial.BioMaterialService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.biomaterial.BioMaterialService.remove=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.biomaterial.BioMaterialService.load=PROPAGATION_REQUIRED,readOnly

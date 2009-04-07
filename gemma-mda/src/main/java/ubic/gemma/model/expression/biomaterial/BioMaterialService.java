@@ -55,11 +55,6 @@ public interface BioMaterialService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
-    public java.util.Collection<BioMaterial> getBioMaterials();
-
-    /**
-     * 
-     */
     public ubic.gemma.model.expression.biomaterial.BioMaterial load( java.lang.Long id );
 
     /**
