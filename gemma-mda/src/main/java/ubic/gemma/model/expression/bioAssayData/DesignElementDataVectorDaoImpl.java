@@ -110,6 +110,9 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     @SuppressWarnings("unchecked")
     @Override
     protected void handleThaw( final Collection<T> designElementDataVectors ) throws Exception {
+
+        if ( designElementDataVectors == null ) return;
+
         Session session = this.getSessionFactory().getCurrentSession();
 
         FlushMode oldFlushMode = session.getFlushMode();
