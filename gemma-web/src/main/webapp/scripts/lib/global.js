@@ -343,6 +343,16 @@ function confirmDelete(obj) {
 	}
 }
 
+
+function confirmAction(msg ) {
+	ans = confirm(msg);
+	if (ans) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 function highlightTableRows(tableId) {
 	var previousClass = null;
 	var table = document.getElementById(tableId);

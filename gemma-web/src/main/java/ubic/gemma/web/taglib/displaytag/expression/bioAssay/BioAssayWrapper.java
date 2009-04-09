@@ -29,9 +29,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
- * <p>
- * See http://displaytag.sourceforge.net/10/tut_decorators.html and http://displaytag.sourceforge.net/10/tut_links.html
- * for explanation of how this works.
  * 
  * @author keshav
  * @version $Id$
@@ -68,9 +65,10 @@ public class BioAssayWrapper extends TableDecorator {
         }
 
         // FIXME wire to AJAX call.
+        // confirmAction is stored in global.js
         return "<form action=\"/Gemma/bioAssay/markBioAssayOutlier.html?id=" + object.getId()
-                + "\" onSubmit=\"return confirmDelete('Bioassay " + object.getName()
-                + "')\" method=\"post\"><input type=\"submit\"  value=\"Outlier\" /></form>";
+                + "\" onSubmit=\"return confirmAction('Are you sure you want to flag Bioassay " + object.getName()
+                + " as an outlier?')\" method=\"post\"><input title=\"Mark this sample as an outlier.\"  type=\"submit\"  value=\"Outlier\" /></form>";
 
     }
 

@@ -1,6 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<title><fmt:message key="bioAssays.title" /></title>
+<title><fmt:message key="bioAssays.title" />
+</title>
 
 <h2>
 	<fmt:message key="bioAssays.title" />
@@ -9,7 +10,7 @@
 </h2>
 <p>
 	View the
-	<a href='<c:url value="/experimentalDesign/showExperimentalDesign.html?id=${expressionExperiment.id }" />'>Experimental
+	<a href='<c:url value="/experimentalDesign/showExperimentalDesign.html?eeid=${expressionExperiment.id }" />'>Experimental
 		design</a>
 </p>
 

@@ -37,7 +37,7 @@
 		<h3>
 			<fmt:message key="experimentalDesign.title" />
 			&nbsp;
-			<a title="Open the design details window" target="_blank"
+			<a title="Go to the design details"
 				href="/Gemma/experimentalDesign/showExperimentalDesign.html?eeid=${expressionExperiment.id}"> <img
 					src="/Gemma/images/magnifier.png" /> </a>
 		</h3>

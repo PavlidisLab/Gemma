@@ -162,7 +162,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		var result = '';
 		for (var i = 0; i < arrayDesigns.length; i++) {
 			var ad = arrayDesigns[i];
-			result = result + '<a target="_blank" href="/Gemma/arrays/showArrayDesign.html?id=' + ad.id + '">'
+			result = result + '<a href="/Gemma/arrays/showArrayDesign.html?id=' + ad.id + '">'
 					+ ad.shortName + '</a> - ' + ad.name;
 			if (i < arrayDesigns.length - 1) {
 				result = result + "<br/>";
@@ -184,6 +184,25 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 			logo = '/Gemma/images/logo/arrayExpressTiny.png';
 			result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
 					+ ee.accession + '"><img src="' + logo + '"/></a>';
+		}
+
+		return result;
+
+	},
+
+	/**
+	 * Link for samples details page.
+	 * 
+	 * @param {}
+	 *            ee
+	 * @return {}
+	 */
+	renderSamples : function(ee) {
+		var result = ee.bioAssayCount;
+		if (this.editable) {
+			result = result
+					+ '&nbsp;&nbsp<a href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
+					+ ee.id + '"><img src="/Gemma/images/icons/magnifier.png"/></a>';
 		}
 
 		return result;
@@ -342,7 +361,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></a>'
 				+ '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
 				+ e.id
-				+ '"  target="_blank"><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></a>&nbsp;';
+				+ '"  ><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></a>&nbsp;';
 
 		if (this.isAdmin) {
 			adminLinks = adminLinks
@@ -591,7 +610,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					}, {
 						html : 'Samples:'
 					}, {
-						html : e.bioAssayCount,
+						html : this.renderSamples(e),
 						width : 60
 					}, {
 						html : 'Profiles:'
