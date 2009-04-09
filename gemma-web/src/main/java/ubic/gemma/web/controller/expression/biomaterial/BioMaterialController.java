@@ -93,11 +93,19 @@ public class BioMaterialController extends BaseMultiActionController {
 
         log.debug( request.getParameter( "id" ) );
 
-        Long id = Long.parseLong( request.getParameter( "id" ) );
+        Long id = null;
+
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            saveMessage( request, "Must provide a biomaterial id" );
+            return new ModelAndView( "mainMenu.html" );
+        }
 
         if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide a biomaterial id" );
+            // should also be a validation error, on 'submit'.
+            saveMessage( request, "Must provide a biomaterial id" );
+            return new ModelAndView( "mainMenu.html" );
         }
 
         BioMaterial bioMaterial = bioMaterialService.load( id );

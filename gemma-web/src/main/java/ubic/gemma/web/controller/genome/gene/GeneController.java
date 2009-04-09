@@ -155,9 +155,18 @@ public class GeneController extends BaseMultiActionController {
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings( { "unused", "unchecked" })
+    @SuppressWarnings( { "unchecked" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
+
+        Long id = null;
+
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+            return new ModelAndView( "mainMenu.html" );
+        }
+
         Gene gene = geneService.load( id );
         if ( gene == null ) {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );

@@ -62,7 +62,7 @@ import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
  */
 public class CharacteristicBrowserController extends BaseFormController {
 
-    private static Log log = LogFactory.getLog( CharacteristicBrowserController.class.getName() );
+    private static Log specialLogger = LogFactory.getLog( CharacteristicBrowserController.class.getName() );
 
     CharacteristicService characteristicService;
     ExpressionExperimentService expressionExperimentService;
@@ -100,8 +100,8 @@ public class CharacteristicBrowserController extends BaseFormController {
         if ( StringUtils.isBlank( valuePrefix ) ) {
             return results;
         }
-        Collection chars = characteristicService.findByValue( valuePrefix );
-        Map charToParent = characteristicService.getParents( chars );
+        Collection<Characteristic> chars = characteristicService.findByValue( valuePrefix );
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( chars );
         for ( Object o : chars ) {
             Characteristic c = ( Characteristic ) o;
             Object parent = charToParent.get( c );
@@ -131,14 +131,14 @@ public class CharacteristicBrowserController extends BaseFormController {
      * @param chars
      */
     public void removeCharacteristics( Collection<Characteristic> chars ) {
-        log.info( "Delete " + chars.size() + " characteristics..." );
-        Map charToParent = characteristicService.getParents( chars );
+        specialLogger.info( "Delete " + chars.size() + " characteristics..." );
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( chars );
         for ( Characteristic cFromClient : chars ) {
             Characteristic cFromDatabase = characteristicService.load( cFromClient.getId() );
             Object parent = charToParent.get( cFromDatabase );
             removeFromParent( cFromDatabase, parent );
             characteristicService.delete( cFromDatabase );
-            log.info( "Characteristic deleted: " + cFromDatabase + " (associated with " + parent + ")" );
+            specialLogger.info( "Characteristic deleted: " + cFromDatabase + " (associated with " + parent + ")" );
         }
     }
 
@@ -147,10 +147,10 @@ public class CharacteristicBrowserController extends BaseFormController {
      */
     public void updateCharacteristics( Collection<Characteristic> chars ) {
         if ( chars.size() == 0 ) return;
-        log.info( "Updating " + chars.size() + " characteristics..." );
+        specialLogger.info( "Updating " + chars.size() + " characteristics..." );
         StopWatch timer = new StopWatch();
         timer.start();
-        Map charToParent = characteristicService.getParents( chars );
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( chars );
         for ( Characteristic cFromClient : chars ) {
             Long characteristicId = cFromClient.getId();
             if ( characteristicId == null ) {
@@ -212,14 +212,14 @@ public class CharacteristicBrowserController extends BaseFormController {
                 if ( vcFromClient != null ) {
                     if ( vcFromDatabase.getValueUri() == null
                             || !vcFromDatabase.getValueUri().equals( vcFromClient.getValueUri() ) ) {
-                        log.info( "Characteristic value update: " + vcFromDatabase + " " + vcFromDatabase.getValueUri()
+                        specialLogger.info( "Characteristic value update: " + vcFromDatabase + " " + vcFromDatabase.getValueUri()
                                 + " -> " + vcFromDatabase.getValueUri() + " associated with " + parent );
                         vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
                     }
 
                     if ( vcFromDatabase.getCategory() == null
                             || !vcFromDatabase.getCategoryUri().equals( vcFromClient.getCategoryUri() ) ) {
-                        log.info( "Characteristic category update: " + vcFromDatabase + " "
+                        specialLogger.info( "Characteristic category update: " + vcFromDatabase + " "
                                 + vcFromDatabase.getCategoryUri() + " -> " + vcFromDatabase.getCategoryUri()
                                 + " associated with " + parent );
                         vcFromDatabase.setCategoryUri( vcFromClient.getCategoryUri() );
@@ -231,7 +231,7 @@ public class CharacteristicBrowserController extends BaseFormController {
                 cFromDatabase.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
             } else {
                 if ( !cFromDatabase.getEvidenceCode().equals( cFromClient.getEvidenceCode() ) ) {
-                    log.info( "Characteristic evidence code update: " + cFromDatabase + " "
+                    specialLogger.info( "Characteristic evidence code update: " + cFromDatabase + " "
                             + cFromDatabase.getEvidenceCode() + " -> " + cFromClient.getEvidenceCode() );
                 }
                 cFromDatabase.setEvidenceCode( cFromClient.getEvidenceCode() ); // let them change it.

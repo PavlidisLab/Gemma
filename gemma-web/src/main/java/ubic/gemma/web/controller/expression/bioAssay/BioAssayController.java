@@ -53,7 +53,7 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
 
     private BioAssayService bioAssayService = null;
 
-    private final String identifierNotFound = "Must provide a valid BioAssay identifier";
+    private final String identifierNotFound = "You must provide a valid BioAssay identifier";
 
     private SampleRemoveService sampleRemoveService;
 
@@ -78,11 +78,19 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
 
         log.debug( request.getParameter( "id" ) );
 
-        Long id = Long.parseLong( request.getParameter( "id" ) );
+        Long id = null;
+
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            saveMessage( request, identifierNotFound );
+            return new ModelAndView( "mainMenu.html" );
+        }
 
         if ( id == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( identifierNotFound );
+            saveMessage( request, identifierNotFound );
+            return new ModelAndView( "mainMenu.html" );
         }
 
         BioAssay bioAssay = bioAssayService.load( id );
