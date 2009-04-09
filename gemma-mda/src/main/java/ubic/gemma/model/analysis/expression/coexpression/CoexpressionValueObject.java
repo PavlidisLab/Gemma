@@ -338,7 +338,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     /**
-     * @return
+     * @return the negativeScores, a map of EEID->ProbeID->Correlation score.
      */
     public double getNegativeScore() {
 
@@ -429,7 +429,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     /**
-     * @return the positiveScores
+     * @return the positiveScores, a map of EEID->ProbeID->Correlation score.
      */
     public Map<Long, Map<Long, Double>> getPositiveScores() {
         return positiveScores;
