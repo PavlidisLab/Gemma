@@ -78,23 +78,30 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
     private void processExperiment( ExpressionExperiment ee ) {
 
-        this.eeService.thawLite( ee );
+        try {
+            this.eeService.thawLite( ee );
 
-        AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditTrailService" );
-        AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-        if ( this.arrayDesignName != null ) {
-            ArrayDesign ad = locateArrayDesign( this.arrayDesignName );
-            if ( ad == null ) {
-                log.error( "Unknown array design" );
-                bail( ErrorCode.INVALID_OPTION );
+            AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+            AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
+            if ( this.arrayDesignName != null ) {
+                ArrayDesign ad = locateArrayDesign( this.arrayDesignName );
+                if ( ad == null ) {
+                    log.error( "Unknown array design" );
+                    bail( ErrorCode.INVALID_OPTION );
+                }
+                arrayDesignService.thawLite( ad );
+                serv.switchExperimentToArrayDesign( ee, ad );
+
+                auditEventService.addUpdateEvent( ee, type, "Switched to use " + ad );
+
+            } else {
+                serv.switchExperimentToMergedPlatform( ee );
+                auditEventService.addUpdateEvent( ee, type, "Switched to use merged array Design " );
             }
-            arrayDesignService.thawLite( ad );
-            serv.switchExperimentToArrayDesign( ee, ad );
-            auditEventService.addUpdateEvent( ee, type, "Switched to use " + ad );
 
-        } else {
-            serv.switchExperimentToMergedPlatform( ee );
-            auditEventService.addUpdateEvent( ee, type, "Switched to use merged array Design " );
+            super.successObjects.add( ee.toString() );
+        } catch ( Exception e ) {
+            super.errorObjects.add( ee + ": " + e.getMessage() );
         }
     }
 
