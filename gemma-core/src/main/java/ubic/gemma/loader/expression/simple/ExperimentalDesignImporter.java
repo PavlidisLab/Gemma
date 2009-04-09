@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
@@ -54,7 +55,8 @@ import ubic.gemma.ontology.OntologyTerm;
 
 /**
  * <p>
- * Parse a description of ExperimentalFactors from a file, and associate it with a given ExpressionExperiment.
+ * Parse a description of ExperimentalFactors from a file, and associate it with a given ExpressionExperiment. The
+ * format is specified by {@link ExperimentalDesignWriter}
  * </p>
  * <p>
  * Example of format, where 'Category' is an MGED term and 'Type' is either "Categorical' or 'Continuous' with no extra
@@ -82,16 +84,21 @@ import ubic.gemma.ontology.OntologyTerm;
  * @spring.property name="experimentalDesignService" ref="experimentalDesignService"
  * @author Paul
  * @version $Id$
+ * @see ExperimentalDesignWriter
  */
 public class ExperimentalDesignImporter {
+
+    enum FactorType {
+        CATEGORICAL, CONTINUOUS
+    }
 
     public static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "$";
 
     private static Log log = LogFactory.getLog( ExperimentalDesignImporter.class.getName() );
-
     private BioMaterialService bioMaterialService;
-    private FactorValueService factorValueService;
     private ExperimentalDesignService experimentalDesignService;
+    private FactorValueService factorValueService;
+
     private MgedOntologyService mgedOntologyService;
 
     /**
@@ -182,6 +189,18 @@ public class ExperimentalDesignImporter {
         }
         updateBioMaterials( bms, ed );
 
+    }
+
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
+
+    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
+        this.experimentalDesignService = experimentalDesignService;
+    }
+
+    public void setFactorValueService( FactorValueService factorValueService ) {
+        this.factorValueService = factorValueService;
     }
 
     public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
@@ -285,75 +304,6 @@ public class ExperimentalDesignImporter {
     }
 
     /**
-     * Replace the placeholder factorvalues associated with the biomaterials with the persistent ones.
-     * 
-     * @param bms
-     * @param design
-     */
-    private void updateBioMaterials( Collection<BioMaterial> bms, ExperimentalDesign design ) {
-        assert design.getExperimentalFactors().size() > 0;
-        Collection<FactorValue> usedFactorValues = new HashSet<FactorValue>();
-        for ( BioMaterial bm : bms ) {
-            Collection<FactorValue> values = new HashSet<FactorValue>();
-            /*
-             * For each factor, find a value that matches the one on the biomaterial.
-             */
-            factor: for ( ExperimentalFactor factor : design.getExperimentalFactors() ) {
-                boolean found = false;
-                for ( FactorValue temp : bm.getFactorValues() ) {
-
-                    // if ( temp.getId() != null ) {
-                    // // don't throw away old factors, but it won't be replaced either.
-                    // values.add( temp );
-                    // continue factor;
-                    // }
-
-                    if ( !temp.getExperimentalFactor().getName().equals( factor.getName() ) ) {
-                        continue;
-                    }
-
-                    if ( log.isDebugEnabled() ) log.debug( "Trying to find match for " + temp );
-
-                    for ( FactorValue fv : factor.getFactorValues() ) {
-                        if ( log.isDebugEnabled() ) log.debug( "Candidate: " + fv );
-                        assert temp.getValue() != null;
-                        assert fv.getValue() != null;
-
-                        if ( temp.getValue().equals( fv.getValue() ) ) {
-                            values.add( factorValueService.load( fv.getId() ) );
-                            found = true;
-                            log.debug( "Match found for " + temp );
-                            continue factor;
-                        }
-                    }
-                }
-                if ( !found ) {
-                    // this is not uncommon...
-                    log.debug( "Missing data for " + factor + " on " + bm );
-                }
-            }
-            usedFactorValues.addAll( values );
-            bm.setFactorValues( values );
-            bioMaterialService.update( bm );
-        }
-
-        /*
-         * Remove factors that were never used. This is necessary because the design file could contain information
-         * about samples that aren't in the current data set.
-         */
-        for ( ExperimentalFactor factor : design.getExperimentalFactors() ) {
-            for ( Iterator<FactorValue> fvit = factor.getFactorValues().iterator(); fvit.hasNext(); ) {
-                if ( !usedFactorValues.contains( fvit.next() ) ) {
-                    fvit.remove();
-                }
-            }
-        }
-
-        this.experimentalDesignService.update( design );
-
-    }
-
-    /**
      * 
      */
     private Map<String, BioMaterial> buildBmMap( ExpressionExperiment experiment ) {
@@ -439,6 +389,24 @@ public class ExperimentalDesignImporter {
 
         column2Factor.put( columnHeader, ef );
 
+    }
+
+    /**
+     * make sure the biomaterial doesn't already have a factorvalue for the given factor.
+     * 
+     * @param ef
+     * @param bm
+     */
+    private void checkForDuplicateValueForFactorOnBiomaterial( ExperimentalFactor ef, BioMaterial bm ) {
+        for ( FactorValue existingfv : bm.getFactorValues() ) {
+            assert existingfv.getExperimentalFactor() != null;
+            if ( existingfv.getExperimentalFactor().equals( ef ) ) {
+                /*
+                 * We might change this to allow either over-writing or skipping.
+                 */
+                throw new IllegalStateException( bm + " already has a factorvalue for " + ef + "(" + existingfv + ")" );
+            }
+        }
     }
 
     /**
@@ -571,37 +539,72 @@ public class ExperimentalDesignImporter {
     }
 
     /**
-     * make sure the biomaterial doesn't already have a factorvalue for the given factor.
+     * Replace the placeholder factorvalues associated with the biomaterials with the persistent ones.
      * 
-     * @param ef
-     * @param bm
+     * @param bms
+     * @param design
      */
-    private void checkForDuplicateValueForFactorOnBiomaterial( ExperimentalFactor ef, BioMaterial bm ) {
-        for ( FactorValue existingfv : bm.getFactorValues() ) {
-            assert existingfv.getExperimentalFactor() != null;
-            if ( existingfv.getExperimentalFactor().equals( ef ) ) {
-                /*
-                 * We might change this to allow either over-writing or skipping.
-                 */
-                throw new IllegalStateException( bm + " already has a factorvalue for " + ef + "(" + existingfv + ")" );
+    private void updateBioMaterials( Collection<BioMaterial> bms, ExperimentalDesign design ) {
+        assert design.getExperimentalFactors().size() > 0;
+        Collection<FactorValue> usedFactorValues = new HashSet<FactorValue>();
+        for ( BioMaterial bm : bms ) {
+            Collection<FactorValue> values = new HashSet<FactorValue>();
+            /*
+             * For each factor, find a value that matches the one on the biomaterial.
+             */
+            factor: for ( ExperimentalFactor factor : design.getExperimentalFactors() ) {
+                boolean found = false;
+                for ( FactorValue temp : bm.getFactorValues() ) {
+
+                    // if ( temp.getId() != null ) {
+                    // // don't throw away old factors, but it won't be replaced either.
+                    // values.add( temp );
+                    // continue factor;
+                    // }
+
+                    if ( !temp.getExperimentalFactor().getName().equals( factor.getName() ) ) {
+                        continue;
+                    }
+
+                    if ( log.isDebugEnabled() ) log.debug( "Trying to find match for " + temp );
+
+                    for ( FactorValue fv : factor.getFactorValues() ) {
+                        if ( log.isDebugEnabled() ) log.debug( "Candidate: " + fv );
+                        assert temp.getValue() != null;
+                        assert fv.getValue() != null;
+
+                        if ( temp.getValue().equals( fv.getValue() ) ) {
+                            values.add( factorValueService.load( fv.getId() ) );
+                            found = true;
+                            log.debug( "Match found for " + temp );
+                            continue factor;
+                        }
+                    }
+                }
+                if ( !found ) {
+                    // this is not uncommon...
+                    log.debug( "Missing data for " + factor + " on " + bm );
+                }
+            }
+            usedFactorValues.addAll( values );
+            bm.setFactorValues( values );
+            bioMaterialService.update( bm );
+        }
+
+        /*
+         * Remove factors that were never used. This is necessary because the design file could contain information
+         * about samples that aren't in the current data set.
+         */
+        for ( ExperimentalFactor factor : design.getExperimentalFactors() ) {
+            for ( Iterator<FactorValue> fvit = factor.getFactorValues().iterator(); fvit.hasNext(); ) {
+                if ( !usedFactorValues.contains( fvit.next() ) ) {
+                    fvit.remove();
+                }
             }
         }
-    }
 
-    enum FactorType {
-        CATEGORICAL, CONTINUOUS
-    }
+        this.experimentalDesignService.update( design );
 
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    public void setFactorValueService( FactorValueService factorValueService ) {
-        this.factorValueService = factorValueService;
-    }
-
-    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
-        this.experimentalDesignService = experimentalDesignService;
     }
 
 }

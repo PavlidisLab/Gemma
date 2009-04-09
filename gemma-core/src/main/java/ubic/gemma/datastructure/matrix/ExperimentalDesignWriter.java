@@ -40,8 +40,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
+ * Output compatible with {@link ExperimentalDesignImporter}.
+ * 
  * @author keshav
  * @version $Id$
+ * @see ExperimentalDesignImporter
  */
 public class ExperimentalDesignWriter {
 
@@ -139,8 +142,7 @@ public class ExperimentalDesignWriter {
             buf.append( " Type=" );
 
             Iterator<FactorValue> factorValuesIt = ef.getFactorValues().iterator();
-            if ( factorValuesIt.hasNext()
-                    && factorValuesIt.next().getMeasurement() == null ) {
+            if ( factorValuesIt.hasNext() && factorValuesIt.next().getMeasurement() == null ) {
                 buf.append( "Categorical" );
             } else {
                 buf.append( "Continuous" );
