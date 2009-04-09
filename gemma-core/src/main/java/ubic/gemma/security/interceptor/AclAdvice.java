@@ -105,6 +105,44 @@ public class AclAdvice implements AfterReturningAdvice {
 
     private SecurableDao<? extends Securable> securableDao;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
+     *      java.lang.Object[], java.lang.Object)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
+
+        assert args != null;
+        Object persistentObject = getPersistentObject( retValue, m, args );
+
+        Session sess = crudUtils.getSessionFactory().openSession();
+
+        try {
+            Hibernate.initialize( persistentObject );
+        } catch ( HibernateException e ) {
+            // this can result in a second objet being created if the object is
+            // already in a session that has not been
+            // flushed.
+            persistentObject = sess.merge( persistentObject );
+        }
+
+        if ( persistentObject == null ) return;
+        if ( Collection.class.isAssignableFrom( persistentObject.getClass() ) ) {
+            for ( Object o : ( Collection<Object> ) persistentObject ) {
+                if ( !Securable.class.isAssignableFrom( persistentObject.getClass() ) ) {
+                    return; // they will all be the same type.
+                }
+                processObject( m, o );
+            }
+        } else { // note that check for securable is in the pointcut.
+            processObject( m, persistentObject );
+        }
+
+        sess.close();
+    }
+
     /**
      * Creates the acl_permission object and the acl_object_identity object.
      * 
@@ -177,44 +215,6 @@ public class AclAdvice implements AfterReturningAdvice {
             // throw ( ignored );
             // }
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
-     *      java.lang.Object[], java.lang.Object)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
-
-        assert args != null;
-        Object persistentObject = getPersistentObject( retValue, m, args );
-
-        Session sess = crudUtils.getSessionFactory().openSession();
-
-        try {
-            Hibernate.initialize( persistentObject );
-        } catch ( HibernateException e ) {
-            // this can result in a second objet being created if the object is
-            // already in a session that has not been
-            // flushed.
-            persistentObject = sess.merge( persistentObject );
-        }
-
-        if ( persistentObject == null ) return;
-        if ( Collection.class.isAssignableFrom( persistentObject.getClass() ) ) {
-            for ( Object o : ( Collection<Object> ) persistentObject ) {
-                if ( !Securable.class.isAssignableFrom( persistentObject.getClass() ) ) {
-                    return; // they will all be the same type.
-                }
-                processObject( m, o );
-            }
-        } else { // note that check for securable is in the pointcut.
-            processObject( m, persistentObject );
-        }
-
-        sess.close();
     }
 
     /**
