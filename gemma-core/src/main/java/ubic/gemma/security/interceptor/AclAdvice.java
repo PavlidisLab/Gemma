@@ -116,8 +116,9 @@ public class AclAdvice implements AfterReturningAdvice {
         if ( securableDao.getAclObjectIdentityId( object ) != null ) return;
 
         /*
-         * When adding a new user to the system, make sure they can see the public data by adding a control node for
-         * that user and set the acl_object_identity of this to CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID
+         * When adding a new user to the system, make sure they can see the public data by adding a "control node" (row
+         * in acl_permission table) for that user and set the acl_object_identity of this to
+         * CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID
          */
         if ( object instanceof UserImpl ) {
             User u = ( User ) object;
@@ -180,8 +181,9 @@ public class AclAdvice implements AfterReturningAdvice {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
-     * java.lang.Object[], java.lang.Object)
+     *      java.lang.Object[], java.lang.Object)
      */
     @SuppressWarnings( { "unchecked" })
     public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
