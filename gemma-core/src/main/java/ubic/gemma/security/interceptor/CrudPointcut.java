@@ -31,7 +31,7 @@ import ubic.gemma.persistence.CrudUtils;
  * 
  * @author pavlidis
  * @version $Id$
- * @see ubic.gemma.security.interceptor.AddOrRemoveFromACLInterceptor
+ * @see ubic.gemma.security.interceptor.AclAdvice
  */
 public class CrudPointcut extends StaticMethodMatcherPointcut {
 

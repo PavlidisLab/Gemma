@@ -55,6 +55,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.BaseDependencyInjectionSpringContextTest#onSetUpInTransaction()
      */
     @Override
@@ -114,7 +115,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
 
     /**
      * Test removing an arrayDesign with the correct authorization privileges. The security interceptor should be called
-     * on this method, as should the AddOrRemoveFromACLInterceptor.
+     * on this method, as should the AclInterceptor.
      * 
      * @throws Exception
      */
@@ -128,7 +129,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
 
     /**
      * Test removing an arrayDesign without the correct authorization. The security interceptor should be called on this
-     * method, as should the AddOrRemoveFromACLInterceptor. You should get an AccessDeniedException.
+     * method, as should the AclInterceptor. You should get an AccessDeniedException.
      * 
      * @throws Exception
      */

@@ -79,15 +79,15 @@ import ubic.gemma.util.ReflectionUtil;
  * @spring.property name="securableDao" ref="securableDao"
  */
 @SuppressWarnings("deprecation")
-public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
+public class AclAdvice implements AfterReturningAdvice {
 
     CrudUtils crudUtils;
 
-    public AddOrRemoveFromACLInterceptor() {
+    public AclAdvice() {
         this.crudUtils = new CrudUtils();
     }
 
-    private static Log log = LogFactory.getLog( AddOrRemoveFromACLInterceptor.class.getName() );
+    private static Log log = LogFactory.getLog( AclAdvice.class.getName() );
 
     /**
      * For some types of Securables, we don't put permissions on them directly, but on the containing object. Example:

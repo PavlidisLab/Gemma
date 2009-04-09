@@ -29,7 +29,7 @@ import org.springframework.aop.support.StaticMethodMatcherPointcut;
  * 
  * @author pavlidis
  * @version $Id$
- * @see ubic.gemma.security.interceptor.AddOrRemoveFromACLInterceptor
+ * @see ubic.gemma.security.interceptor.AclAdvice
  */
 public class AclPointcut extends StaticMethodMatcherPointcut {
 
