@@ -54,6 +54,33 @@
 		<Gemma:expressionQC ee="${expressionExperiment.id}" />
 	</div>
 
+
+
+	<div style="padding-bottom:12px;" id="qts">
+		<h3>
+			Quantitation types
+		</h3>
+		<display:table name="quantitationTypes" class="scrollTable"
+			requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html" id="dataVectorList" pagesize="100"
+			decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
+			<%--<display:column property="data" sortable="false" title="Get data" />--%>
+			<display:column property="qtName" sortable="true" maxWords="20" titleKey="name" />
+			<display:column property="description" sortable="true" maxLength="20" titleKey="description" />
+			<display:column property="qtPreferredStatus" sortable="true" maxWords="20" titleKey="quantitationType.preferred" />
+			<display:column property="qtRatioStatus" sortable="true" maxWords="20" titleKey="quantitationType.ratio" />
+			<display:column property="qtBackground" sortable="true" maxWords="20" titleKey="quantitationType.background" />
+			<display:column property="qtBackgroundSubtracted" sortable="true" maxWords="20"
+				titleKey="quantitationType.backgroundSubtracted" />
+			<display:column property="qtNormalized" sortable="true" maxWords="20" titleKey="quantitationType.normalized" />
+			<display:column property="generalType" sortable="true" />
+			<display:column property="type" sortable="true" />
+			<display:column property="representation" sortable="true" title="Repr." />
+			<display:column property="scale" sortable="true" />
+			<display:setProperty name="basic.empty.showtable" value="false" />
+		</display:table>
+
+	</div>
+
 	<security:authorize ifAnyGranted="admin">
 		<div id="history" style="padding: 5px;">
 		</div>
@@ -81,5 +108,3 @@
 <security:authorize ifNotGranted="user">
 	<input type="hidden" name="hasUser" id="hasUser" value="" />
 </security:authorize>
-
-
