@@ -144,7 +144,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 Collection<? extends DesignElementDataVector> vectorsForQt = getVectorsForOneQuantitationType( oldAd,
                         type );
 
-                if ( vectorsForQt.size() == 0 ) {
+                if ( vectorsForQt == null || vectorsForQt.size() == 0 ) {
                     /*
                      * This can happen when the quantitation types vary for the array designs.
                      */

@@ -21,13 +21,10 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
-import java.util.Map;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * @author pavlidis
@@ -37,14 +34,38 @@ import ubic.gemma.model.genome.Gene;
 public class DesignElementDataVectorServiceImpl extends
         ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase {
 
+    /**
+     * @param vectors
+     * @return
+     */
+    private Class<? extends DesignElementDataVector> getVectorClass(
+            Collection<? extends DesignElementDataVector> vectors ) {
+        Class<? extends DesignElementDataVector> vectorClass = null;
+        for ( DesignElementDataVector designElementDataVector : vectors ) {
+            if ( vectorClass == null ) {
+                vectorClass = designElementDataVector.getClass();
+            }
+            if ( !vectorClass.equals( designElementDataVector.getClass() ) ) {
+                throw new IllegalArgumentException( "Two types of vector in one collection, not supported" );
+            }
+        }
+        return vectorClass;
+    }
+
     @Override
     protected Integer handleCountAll() throws Exception {
         return this.getRawExpressionDataVectorDao().countAll();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<? extends DesignElementDataVector> handleCreate(
             Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+
+        if ( vectors == null || vectors.isEmpty() ) {
+            return vectors;
+        }
+
         Class<? extends DesignElementDataVector> vectorClass = getVectorClass( vectors );
 
         if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
@@ -62,7 +83,8 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected Collection<RawExpressionDataVector> handleFind( Collection quantitationTypes ) throws Exception {
+    protected Collection<RawExpressionDataVector> handleFind( Collection<QuantitationType> quantitationTypes )
+            throws Exception {
         return this.getRawExpressionDataVectorDao().find( quantitationTypes );
     }
 
@@ -83,23 +105,12 @@ public class DesignElementDataVectorServiceImpl extends
         return this.getRawExpressionDataVectorDao().load( id );
     }
 
-    private Class<? extends DesignElementDataVector> getVectorClass(
-            Collection<? extends DesignElementDataVector> vectors ) {
-        Class<? extends DesignElementDataVector> vectorClass = null;
-        for ( DesignElementDataVector designElementDataVector : vectors ) {
-            if ( vectorClass == null ) {
-                vectorClass = designElementDataVector.getClass();
-            }
-            if ( !vectorClass.equals( designElementDataVector.getClass() ) ) {
-                throw new IllegalArgumentException( "Two types of vector in one collection, not supported" );
-            }
-        }
-        return vectorClass;
-    }
-
+    @SuppressWarnings("unchecked")
     @Override
     protected void handleRemove( Collection<? extends DesignElementDataVector> vectors ) throws Exception {
-
+        if ( vectors == null || vectors.isEmpty() ) {
+            return;
+        }
         Class<? extends DesignElementDataVector> vectorClass = getVectorClass( vectors );
 
         if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
@@ -138,8 +149,14 @@ public class DesignElementDataVectorServiceImpl extends
         this.getRawExpressionDataVectorDao().removeDataForQuantitationType( quantitationType );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void handleThaw( Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+
+        if ( vectors == null || vectors.isEmpty() ) {
+            return;
+        }
+
         Class<? extends DesignElementDataVector> vectorClass = getVectorClass( vectors );
 
         if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
@@ -154,8 +171,14 @@ public class DesignElementDataVectorServiceImpl extends
         this.getRawExpressionDataVectorDao().thaw( designElementDataVector );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void handleUpdate( Collection<? extends DesignElementDataVector> vectors ) throws Exception {
+
+        if ( vectors == null || vectors.isEmpty() ) {
+            return;
+        }
+
         Class<? extends DesignElementDataVector> vectorClass = getVectorClass( vectors );
 
         if ( vectorClass.equals( RawExpressionDataVector.class ) ) {

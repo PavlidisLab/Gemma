@@ -61,6 +61,11 @@ public abstract class ExpressionExperimentVectorManipulatingService {
             QuantitationType type ) {
         Collection<? extends DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( arrayDesign,
                 type );
+
+        if ( vectorsForQt == null || vectorsForQt.isEmpty() ) {
+            return null;
+        }
+
         designElementDataVectorService.thaw( vectorsForQt );
         return vectorsForQt;
     }
