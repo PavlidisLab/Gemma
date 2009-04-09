@@ -65,7 +65,6 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Exception e = processCommandLine( "Merge vectors across array designs", args );
@@ -101,13 +100,19 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
      * @param expressionExperiment
      */
     private void processExperiment( ExpressionExperiment expressionExperiment ) {
-        eeService.thawLite( expressionExperiment );
-        if ( this.dimId != null ) {
-            mergingService.mergeVectors( expressionExperiment, dimId );
-        } else {
-            mergingService.mergeVectors( expressionExperiment );
-        }
+        try {
+            eeService.thawLite( expressionExperiment );
+            if ( this.dimId != null ) {
+                mergingService.mergeVectors( expressionExperiment, dimId );
+            } else {
+                mergingService.mergeVectors( expressionExperiment );
+            }
+            super.successObjects.add( expressionExperiment.toString() );
+        } catch ( Exception e ) {
+            log.error( e, e );
+            super.errorObjects.add( expressionExperiment + ": " + e.getMessage() );
 
+        }
         log.info( "Finished processing " + expressionExperiment );
     }
 }
