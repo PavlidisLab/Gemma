@@ -93,16 +93,17 @@ public class AclAdvice implements AfterReturningAdvice {
      * For some types of Securables, we don't put permissions on them directly, but on the containing object. Example:
      * reporter - we secure the arrayDesign, but not the reporter, even though Reporter is Securable.
      */
-    private static final Class[] additionalSecurableClasses = { DatabaseEntry.class, Relationship.class, Taxon.class,
-            GeneAlias.class };
+    private static final Class<?>[] additionalSecurableClasses = { DatabaseEntry.class, Relationship.class,
+            Taxon.class, GeneAlias.class };
 
-    private static final Collection<Class> unsecuredClasses = new UnsecuredSecurableSet( additionalSecurableClasses );
+    private static final Collection<Class<? extends Securable>> unsecuredClasses = new UnsecuredSecurableSet(
+            additionalSecurableClasses );
 
     private BasicAclExtendedDao basicAclExtendedDao;
 
     private CustomAclDao customAclDao;
 
-    private SecurableDao securableDao;
+    private SecurableDao<? extends Securable> securableDao;
 
     /**
      * Creates the acl_permission object and the acl_object_identity object.
@@ -179,9 +180,8 @@ public class AclAdvice implements AfterReturningAdvice {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
-     *      java.lang.Object[], java.lang.Object)
+     * java.lang.Object[], java.lang.Object)
      */
     @SuppressWarnings( { "unchecked" })
     public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
@@ -264,6 +264,7 @@ public class AclAdvice implements AfterReturningAdvice {
      * @param m
      * @param object
      */
+    @SuppressWarnings("unchecked")
     private void processAssociations( Method m, Object object ) throws IllegalAccessException,
             InvocationTargetException {
 
@@ -309,7 +310,7 @@ public class AclAdvice implements AfterReturningAdvice {
                 /*
                  * This block was previously commented out because of lazy-load problems.
                  */
-                Collection associatedObjects = ( Collection ) associatedObject;
+                Collection<Object> associatedObjects = ( Collection<Object> ) associatedObject;
                 if ( Hibernate.isInitialized( associatedObjects ) ) {
                     for ( Object object2 : associatedObjects ) {
                         if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
@@ -508,7 +509,7 @@ public class AclAdvice implements AfterReturningAdvice {
     /**
      * @param securableDao
      */
-    public void setSecurableDao( SecurableDao securableDao ) {
+    public void setSecurableDao( SecurableDao<? extends Securable> securableDao ) {
         this.securableDao = securableDao;
     }
 }

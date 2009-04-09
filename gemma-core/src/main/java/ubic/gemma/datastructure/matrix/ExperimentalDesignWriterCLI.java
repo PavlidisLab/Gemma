@@ -51,7 +51,6 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override
@@ -61,7 +60,6 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#buildOptions()
      */
     @Override
@@ -76,10 +74,8 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         processCommandLine( "experimentalDesignWriterCLI", args );
@@ -110,7 +106,6 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#processOptions()
      */
     @Override

@@ -21,7 +21,6 @@ package ubic.gemma.datastructure.matrix;
 import java.util.Collection;
 import java.util.List;
 
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
