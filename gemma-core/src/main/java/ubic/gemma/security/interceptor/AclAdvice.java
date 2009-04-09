@@ -131,7 +131,7 @@ public class AclAdvice implements AfterReturningAdvice {
         if ( persistentObject == null ) return;
         if ( Collection.class.isAssignableFrom( persistentObject.getClass() ) ) {
             for ( Object o : ( Collection<Object> ) persistentObject ) {
-                if ( !Securable.class.isAssignableFrom( persistentObject.getClass() ) ) {
+                if ( !Securable.class.isAssignableFrom( o.getClass() ) ) {
                     return; // they will all be the same type.
                 }
                 processObject( m, o );
