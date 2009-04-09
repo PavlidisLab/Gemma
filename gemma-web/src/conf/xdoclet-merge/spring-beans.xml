@@ -38,7 +38,7 @@
 			<prop key="/bioAssay/*">bioAssayController</prop>
 			<prop key="/bioAssay/editBioAssay.html">bioAssayFormController</prop>
 			<prop key="/bioMaterial/editBioMaterial.html">bioMaterialFormController</prop>
-			<prop key="/bioMaterial/*">bioMaterialController</prop>
+			<prop key="/bioMaterial/*">bioMaterialController</prop> 
 			<prop key="/compositeSequence/*">compositeSequenceController</prop>
 			<prop key="/experimentalDesign/*">experimentalDesignController</prop>
 			<prop key="/experimentalDesign/editExperimentalDesign.html">experimentalDesignFormController</prop>
@@ -1567,6 +1567,7 @@
 	<property name="mappings">
 		<props>
 			<prop key="/arrays/showAllArrayDesigns.html">showAll</prop>
+			<prop key="/arrays/">showAll</prop>
 			<prop key="/arrays/showAllArrayDesignStatistics.html">showAll</prop>
 			<prop key="/arrays/deleteArrayDesign.html">delete</prop>
 			<prop key="/arrays/showArrayDesign.html">show</prop>
@@ -1575,15 +1576,6 @@
 			<prop key="/arrays/filterArrayDesigns.html">filter</prop>
 			<prop key="/arrays/generateArrayDesignSummary.html">generateSummary</prop>
 			<prop key="/arrays/downloadAnnotationFile.html">downloadAnnotationFile</prop>
-		</props>
-	</property>
-</bean>
-<bean id="designElementActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
-	<property name="mappings">
-		<props>
-			<prop key="/designElement/showAllDesignElements.html">showAll</prop>
-			<prop key="/designElement/deleteDesignElement.html">delete</prop>
-			<prop key="/designElement/showDesignElement.html">show</prop>
 		</props>
 	</property>
 </bean>
@@ -1658,6 +1650,7 @@
 		<props>
 			<prop key="/gene/showAllGenes.html">showAll</prop>
 			<prop key="/gene/showGene.html">show</prop>
+			<prop key="/gene/">show</prop>
 			<prop key="/gene/showCompositeSequences.html">showCompositeSequences</prop>
 		</props>
 	</property>
@@ -1667,6 +1660,7 @@
 		<props>
 			<prop key="/bioAssay/showAllBioAssays.html">showAll</prop>
 			<prop key="/bioAssay/showBioAssay.html">show</prop>
+			<prop key="/bioAssay/">show</prop>
 			<prop key="/bioAssay/markBioAssayOutlier.html">makeOutlier</prop>
 		</props>
 	</property>
@@ -1676,6 +1670,7 @@
 		<props>
 			<prop key="/bioMaterial/showAllBioMaterials.html">showAll</prop>
 			<prop key="/bioMaterial/showBioMaterial.html">show</prop>
+			<prop key="/bioMaterial/">show</prop>
 			<prop key="/bioMaterial/annotate.html">annot</prop>
 		</props>
 	</property>
