@@ -42,7 +42,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * CLI for computing and persisting the 'present' calls for two-channel data
+ * CLI for computing and persisting the 'present' calls for two-channel data -- AND creates the processed data vectors
+ * (saving you a step!)
  * 
  * @author Paul
  * @version $Id$
@@ -84,7 +85,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     @Override
     public String getShortDesc() {
-        return "Computes missing value information on two-channel microarray experiments";
+        return "Computes missing value information and updates processed data vectors on two-channel microarray experiments";
     }
 
     /*
