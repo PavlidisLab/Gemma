@@ -36,19 +36,23 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
 
     /*
      * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis
-     * .expression.ExpressionExperimentSet)
+     * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#find(ubic.gemma.model.expression.experiment.
+     * BioAssaySet)
      */
-    @Override
     @SuppressWarnings("unchecked")
-    protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
-            throws Exception {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select a from ExpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
-                        "eeset", expressionExperimentSet );
+    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select ees from ExpressionExperimentSetImpl ees inner join ees.experiments e where e = :ee", "ee",
+                bioAssaySet );
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
+        List result = this.getHibernateTemplate().find(
+                "select distinct ees from ExpressionExperimentSetImpl ees"
+                        + " inner join ees.experiments where size(ees.experiments) > 1" );
+        // log.info(result.size());
+        return result;
     }
 
     /*
@@ -64,23 +68,19 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
 
     /*
      * (non-Javadoc)
-     * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#find(ubic.gemma.model.expression.experiment.
-     * BioAssaySet)
+     * @see
+     * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis
+     * .expression.ExpressionExperimentSet)
      */
+    @Override
     @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select ees from ExpressionExperimentSetImpl ees inner join ees.experiments e where e = :ee", "ee",
-                bioAssaySet );
-    }
-
-    @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
-         List result = this.getHibernateTemplate().find(
-                "select distinct ees from ExpressionExperimentSetImpl ees"
-                        + " inner join ees.experiments where size(ees.experiments) > 1" );
-        // log.info(result.size());
-         return result;
+    protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
+            throws Exception {
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select a from ExpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
+                        "eeset", expressionExperimentSet );
     }
 
 }

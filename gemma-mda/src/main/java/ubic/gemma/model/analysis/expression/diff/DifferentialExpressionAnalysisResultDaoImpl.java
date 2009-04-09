@@ -48,29 +48,30 @@ public class DifferentialExpressionAnalysisResultDaoImpl extends
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetExperimentalFactors(ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult)
-     */
-    @Override
-    protected Collection handleGetExperimentalFactors(
-            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) throws Exception {
+    public void thawAnalysisResult( final DifferentialExpressionAnalysisResult result ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
 
-        final String queryString = "select ef from ExpressionAnalysisResultSetImpl rs"
-                + " inner join rs.results r inner join rs.experimentalFactor ef where r=:differentialExpressionAnalysisResult";
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
 
-        String[] paramNames = { "differentialExpressionAnalysisResult" };
-        Object[] objectValues = { differentialExpressionAnalysisResult };
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( result, LockMode.NONE );
+                Hibernate.initialize( result );
 
-        return this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
-
+                if ( result instanceof ProbeAnalysisResult ) {
+                    ProbeAnalysisResult par = ( ProbeAnalysisResult ) result;
+                    CompositeSequence cs = par.getProbe();
+                    Hibernate.initialize( cs );
+                }
+                return null;
+            }
+        } );
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetExperimentalFactors(java.util.Collection)
+     * @see
+     * ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetExperimentalFactors
+     * (java.util.Collection)
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -108,23 +109,24 @@ public class DifferentialExpressionAnalysisResultDaoImpl extends
         return factorsByResult;
 
     }
-    
-    public void thawAnalysisResult( final DifferentialExpressionAnalysisResult result  ) throws Exception {
-        HibernateTemplate templ = this.getHibernateTemplate();
 
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetExperimentalFactors
+     * (ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult)
+     */
+    @Override
+    protected Collection handleGetExperimentalFactors(
+            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) throws Exception {
 
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( result, LockMode.NONE );
-                Hibernate.initialize( result );               
+        final String queryString = "select ef from ExpressionAnalysisResultSetImpl rs"
+                + " inner join rs.results r inner join rs.experimentalFactor ef where r=:differentialExpressionAnalysisResult";
 
-                        if ( result instanceof ProbeAnalysisResult ) {
-                            ProbeAnalysisResult par = ( ProbeAnalysisResult ) result;
-                            CompositeSequence cs = par.getProbe();
-                            Hibernate.initialize( cs );
-                        }
-                return null;
-            }
-        } );
+        String[] paramNames = { "differentialExpressionAnalysisResult" };
+        Object[] objectValues = { differentialExpressionAnalysisResult };
+
+        return this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
+
     }
 }

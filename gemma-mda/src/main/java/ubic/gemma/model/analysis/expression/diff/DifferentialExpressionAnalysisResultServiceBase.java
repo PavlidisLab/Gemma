@@ -25,8 +25,8 @@ package ubic.gemma.model.analysis.expression.diff;
 /**
  * <p>
  * Spring Service base class for
- * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService</code>, provides
- * access to all services and entities referenced by this service.
+ * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService</code>, provides access
+ * to all services and entities referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService
@@ -36,36 +36,19 @@ public abstract class DifferentialExpressionAnalysisResultServiceBase implements
 
     private ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDao differentialExpressionAnalysisResultDao;
 
-    /**
-     * Sets the reference to <code>differentialExpressionAnalysisResult</code>'s DAO.
-     */
-    public void setDifferentialExpressionAnalysisResultDao(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDao differentialExpressionAnalysisResultDao ) {
-        this.differentialExpressionAnalysisResultDao = differentialExpressionAnalysisResultDao;
-    }
-
-    /**
-     * Gets the reference to <code>differentialExpressionAnalysisResult</code>'s DAO.
-     */
-    protected ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDao getDifferentialExpressionAnalysisResultDao() {
-        return this.differentialExpressionAnalysisResultDao;
-    }
-
     private ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
 
     /**
-     * Sets the reference to <code>expressionAnalysisResultSet</code>'s DAO.
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService#getExperimentalFactors(java.util.Collection)
      */
-    public void setExpressionAnalysisResultSetDao(
-            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao ) {
-        this.expressionAnalysisResultSetDao = expressionAnalysisResultSetDao;
-    }
-
-    /**
-     * Gets the reference to <code>expressionAnalysisResultSet</code>'s DAO.
-     */
-    protected ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao getExpressionAnalysisResultSetDao() {
-        return this.expressionAnalysisResultSetDao;
+    public java.util.Map getExperimentalFactors( final java.util.Collection differentialExpressionAnalysisResults ) {
+        try {
+            return this.handleGetExperimentalFactors( differentialExpressionAnalysisResults );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService.getExperimentalFactors(java.util.Collection differentialExpressionAnalysisResults)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -83,31 +66,20 @@ public abstract class DifferentialExpressionAnalysisResultServiceBase implements
     }
 
     /**
-     * Performs the core logic for
-     * {@link #getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult)}
+     * Sets the reference to <code>differentialExpressionAnalysisResult</code>'s DAO.
      */
-    protected abstract java.util.Collection handleGetExperimentalFactors(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService#getExperimentalFactors(java.util.Collection)
-     */
-    public java.util.Map getExperimentalFactors( final java.util.Collection differentialExpressionAnalysisResults ) {
-        try {
-            return this.handleGetExperimentalFactors( differentialExpressionAnalysisResults );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService.getExperimentalFactors(java.util.Collection differentialExpressionAnalysisResults)' --> "
-                            + th, th );
-        }
+    public void setDifferentialExpressionAnalysisResultDao(
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDao differentialExpressionAnalysisResultDao ) {
+        this.differentialExpressionAnalysisResultDao = differentialExpressionAnalysisResultDao;
     }
 
     /**
-     * Performs the core logic for {@link #getExperimentalFactors(java.util.Collection)}
+     * Sets the reference to <code>expressionAnalysisResultSet</code>'s DAO.
      */
-    protected abstract java.util.Map handleGetExperimentalFactors(
-            java.util.Collection differentialExpressionAnalysisResults ) throws java.lang.Exception;
+    public void setExpressionAnalysisResultSetDao(
+            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao ) {
+        this.expressionAnalysisResultSetDao = expressionAnalysisResultSetDao;
+    }
 
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService#thaw(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
@@ -123,46 +95,17 @@ public abstract class DifferentialExpressionAnalysisResultServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)}
+     * Gets the reference to <code>differentialExpressionAnalysisResult</code>'s DAO.
      */
-    protected abstract void handleThaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    protected ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDao getDifferentialExpressionAnalysisResultDao() {
+        return this.differentialExpressionAnalysisResultDao;
     }
 
     /**
-     * Gets the message source available to this service.
+     * Gets the reference to <code>expressionAnalysisResultSet</code>'s DAO.
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> in the underlying message bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     */
-    protected String getMessage( final String key ) {
-        return this.getMessages().getMessage( key, null, null );
-    }
-
-    /**
-     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message
-     * bundle.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     */
-    protected String getMessage( final String key, final Object[] arguments ) {
-        return this.getMessages().getMessage( key, arguments, null );
+    protected ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao getExpressionAnalysisResultSetDao() {
+        return this.expressionAnalysisResultSetDao;
     }
 
     /**
@@ -177,5 +120,61 @@ public abstract class DifferentialExpressionAnalysisResultServiceBase implements
             final java.util.Locale locale ) {
         return this.getMessages().getMessage( key, arguments, locale );
     }
+
+    /**
+     * Gets the message having the given <code>key</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     */
+    protected String getMessage( final String key ) {
+        return this.getMessages().getMessage( key, null, null );
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> and <code>arguments</code> in the underlying message bundle.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     */
+    protected String getMessage( final String key, final Object[] arguments ) {
+        return this.getMessages().getMessage( key, arguments, null );
+    }
+
+    /**
+     * Gets the message source available to this service.
+     */
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
+    }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #getExperimentalFactors(java.util.Collection)}
+     */
+    protected abstract java.util.Map handleGetExperimentalFactors(
+            java.util.Collection differentialExpressionAnalysisResults ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for
+     * {@link #getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult)}
+     */
+    protected abstract java.util.Collection handleGetExperimentalFactors(
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)}
+     */
+    protected abstract void handleThaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet )
+            throws java.lang.Exception;
 
 }

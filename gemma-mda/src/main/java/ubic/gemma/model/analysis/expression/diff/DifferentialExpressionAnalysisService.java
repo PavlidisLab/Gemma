@@ -40,7 +40,20 @@ public interface DifferentialExpressionAnalysisService extends
     /**
      * 
      */
-    public void thaw( java.util.Collection expressionAnalyses );
+    public void delete( java.lang.Long idToDelete );
+
+    /**
+     * 
+     */
+    public java.util.Collection find( ubic.gemma.model.genome.Gene gene,
+            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
+
+    /**
+     * <p>
+     * Given a collection of ids, return a map of id -> differential expression analysis (one per id).
+     * </p>
+     */
+    public java.util.Map findByInvestigationIds( java.util.Collection investigationIds );
 
     /**
      * <p>
@@ -77,31 +90,18 @@ public interface DifferentialExpressionAnalysisService extends
     /**
      * 
      */
-    public void delete( java.lang.Long idToDelete );
+    public java.util.Collection getResultSets(
+            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+
+    /**
+     * 
+     */
+    public void thaw( java.util.Collection expressionAnalyses );
 
     /**
      * 
      */
     public void thaw(
             ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
-
-    /**
-     * 
-     */
-    public java.util.Collection find( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
-
-    /**
-     * 
-     */
-    public java.util.Collection getResultSets(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
-
-    /**
-     * <p>
-     * Given a collection of ids, return a map of id -> differential expression analysis (one per id).
-     * </p>
-     */
-    public java.util.Map findByInvestigationIds( java.util.Collection investigationIds );
 
 }

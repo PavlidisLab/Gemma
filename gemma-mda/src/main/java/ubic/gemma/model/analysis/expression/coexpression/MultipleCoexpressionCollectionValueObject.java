@@ -48,27 +48,6 @@ public class MultipleCoexpressionCollectionValueObject {
     }
 
     /**
-     * @return the MultipleCoexpressonTypeValueObject for standard genes
-     */
-    public MultipleCoexpressionTypeValueObject getGeneCoexpressionType() {
-        return this.geneCoexpressionData;
-    }
-
-    /**
-     * @return the MultipleCoexpressionTypeValueObject for predicted Genes
-     */
-    public MultipleCoexpressionTypeValueObject getPredictedCoexpressionType() {
-        return this.predictedCoexpressionData;
-    }
-
-    /**
-     * @return the MultipleCoexpressonTypeValueObject for probe aligned regions
-     */
-    public MultipleCoexpressionTypeValueObject getProbeAlignedCoexpressionType() {
-        return this.alignedCoexpressionData;
-    }
-
-    /**
      * @return those coexpressed genes that are common to multiple query genes
      */
     public Collection<CommonCoexpressionValueObject> getCommonCoexpressedGenes() {
@@ -90,6 +69,23 @@ public class MultipleCoexpressionCollectionValueObject {
     }
 
     /**
+     * This gives the amount of time we had to wait for the queries (which can be less than the time per query because
+     * of threading)
+     * 
+     * @return
+     */
+    public double getElapsedWallSeconds() {
+        return elapsedWallSeconds;
+    }
+
+    /**
+     * @return the MultipleCoexpressonTypeValueObject for standard genes
+     */
+    public MultipleCoexpressionTypeValueObject getGeneCoexpressionType() {
+        return this.geneCoexpressionData;
+    }
+
+    /**
      * @return the minimum number of query genes with which a result gene must exhibit coexpression to be displayed
      */
     public int getMinimumCommonQueries() {
@@ -97,11 +93,17 @@ public class MultipleCoexpressionCollectionValueObject {
     }
 
     /**
-     * @param minimumCommonQueryGenes the minimum number of query genes with which a result gene must exhibit
-     *        coexpression to be displayed
+     * @return the number of Genes
      */
-    public void setMinimumCommonQueries( int minimumCommonQueryGenes ) {
-        this.minimumCommonQueryGenes = minimumCommonQueryGenes;
+    public int getNumGenes() {
+        return this.geneCoexpressionData.getNumberOfGenes();
+    }
+
+    /**
+     * @return the numPredictedGenes
+     */
+    public int getNumPredictedGenes() {
+        return this.predictedCoexpressionData.getNumberOfGenes();
     }
 
     // /**
@@ -112,11 +114,24 @@ public class MultipleCoexpressionCollectionValueObject {
     // }
 
     /**
-     * @return the query genes
+     * @return the numProbeAlignedRegions
      */
-    public Collection<Gene> getQueryGenes() {
-        // return queries.keySet();
-        return queryGenes;
+    public int getNumProbeAlignedRegions() {
+        return this.alignedCoexpressionData.getNumberOfGenes();
+    }
+
+    /**
+     * @return the MultipleCoexpressionTypeValueObject for predicted Genes
+     */
+    public MultipleCoexpressionTypeValueObject getPredictedCoexpressionType() {
+        return this.predictedCoexpressionData;
+    }
+
+    /**
+     * @return the MultipleCoexpressonTypeValueObject for probe aligned regions
+     */
+    public MultipleCoexpressionTypeValueObject getProbeAlignedCoexpressionType() {
+        return this.alignedCoexpressionData;
     }
 
     /**
@@ -146,34 +161,11 @@ public class MultipleCoexpressionCollectionValueObject {
     }
 
     /**
-     * @return the number of Genes
+     * @return the query genes
      */
-    public int getNumGenes() {
-        return this.geneCoexpressionData.getNumberOfGenes();
-    }
-
-    /**
-     * @return the numPredictedGenes
-     */
-    public int getNumPredictedGenes() {
-        return this.predictedCoexpressionData.getNumberOfGenes();
-    }
-
-    /**
-     * @return the numProbeAlignedRegions
-     */
-    public int getNumProbeAlignedRegions() {
-        return this.alignedCoexpressionData.getNumberOfGenes();
-    }
-
-    /**
-     * This gives the amount of time we had to wait for the queries (which can be less than the time per query because
-     * of threading)
-     * 
-     * @return
-     */
-    public double getElapsedWallSeconds() {
-        return elapsedWallSeconds;
+    public Collection<Gene> getQueryGenes() {
+        // return queries.keySet();
+        return queryGenes;
     }
 
     /**
@@ -183,5 +175,13 @@ public class MultipleCoexpressionCollectionValueObject {
      */
     public void setElapsedWallTimeElapsed( double elapsedWallMillisSeconds ) {
         this.elapsedWallSeconds = elapsedWallMillisSeconds / 1000.0;
+    }
+
+    /**
+     * @param minimumCommonQueryGenes the minimum number of query genes with which a result gene must exhibit
+     *        coexpression to be displayed
+     */
+    public void setMinimumCommonQueries( int minimumCommonQueryGenes ) {
+        this.minimumCommonQueryGenes = minimumCommonQueryGenes;
     }
 }

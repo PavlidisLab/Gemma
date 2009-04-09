@@ -31,9 +31,17 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface DifferentialExpressionAnalysisDao extends
         ubic.gemma.model.analysis.expression.ExpressionAnalysisDao<DifferentialExpressionAnalysis> {
     /**
+     * <p>
+     * Find results for a given resultSet.
+     * </p>
+     */
+    public java.util.Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
+            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
+
+    /**
      * 
      */
-    public void thaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
+    public java.util.Map findByInvestigationIds( java.util.Collection<Long> investigationIds );
 
     /**
      * @param gene
@@ -69,26 +77,18 @@ public interface DifferentialExpressionAnalysisDao extends
     /**
      * 
      */
-    public void thaw(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
-
-    /**
-     * <p>
-     * Find results for a given resultSet.
-     * </p>
-     */
-    public java.util.Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
-
-    /**
-     * 
-     */
     public java.util.Collection getResultSets(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
      * 
      */
-    public java.util.Map findByInvestigationIds( java.util.Collection<Long> investigationIds );
+    public void thaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
+
+    /**
+     * 
+     */
+    public void thaw(
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
 }

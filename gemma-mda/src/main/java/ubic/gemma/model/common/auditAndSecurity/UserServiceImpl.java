@@ -36,7 +36,6 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#handleLoadAllRoles()
      */
     @Override
@@ -57,7 +56,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         UserRole newRole = UserRole.Factory.newInstance();
         newRole.setName( role );
         newRole.setUserName( user.getUserName() );
-        newRole = ( UserRole ) this.getUserRoleDao().create( newRole ); // should cascade anyway.
+        newRole = this.getUserRoleDao().create( newRole ); // should cascade anyway.
         if ( user.getRoles() == null ) user.setRoles( new HashSet() );
         Collection<UserRole> roles = user.getRoles();
         roles.add( newRole );
@@ -89,7 +88,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         }
 
         try {
-            return ( User ) this.getUserDao().create( user );
+            return this.getUserDao().create( user );
         } catch ( DataIntegrityViolationException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         } catch ( org.springframework.dao.InvalidDataAccessResourceUsageException e ) {
@@ -110,7 +109,6 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleFindByEmail(java.lang.String)
      */
     @Override
@@ -120,7 +118,6 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleFindByUserName(java.lang.String)
      */
     @Override
@@ -133,7 +130,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
      */
     @Override
     protected User handleLoad( Long id ) throws java.lang.Exception {
-        return ( User ) this.getUserDao().load( id );
+        return this.getUserDao().load( id );
     }
 
     /**
@@ -146,7 +143,6 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleUpdate(ubic.gemma.model.common.auditAndSecurity
      * .User)

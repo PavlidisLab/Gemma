@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.genome;
 
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
-
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type

@@ -82,6 +82,7 @@ public abstract class BehavioralQtlDaoBase extends BaseQtlDaoImpl<BehavioralQtl>
      *      ubic.gemma.model.genome.PhysicalMarker, ubic.gemma.model.genome.PhysicalMarker)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalMarkers( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalMarker startMarker,
@@ -103,6 +104,7 @@ public abstract class BehavioralQtlDaoBase extends BaseQtlDaoImpl<BehavioralQtl>
      *      ubic.gemma.model.genome.PhysicalMarker)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalMarkers( final int transform,
             final ubic.gemma.model.genome.PhysicalMarker startMarker,
@@ -119,6 +121,7 @@ public abstract class BehavioralQtlDaoBase extends BaseQtlDaoImpl<BehavioralQtl>
      *      ubic.gemma.model.genome.PhysicalMarker, ubic.gemma.model.genome.PhysicalMarker)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalMarkers( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalMarker startMarker,
@@ -131,6 +134,7 @@ public abstract class BehavioralQtlDaoBase extends BaseQtlDaoImpl<BehavioralQtl>
      *      ubic.gemma.model.genome.PhysicalMarker)
      */
 
+    @Override
     public java.util.Collection findByPhysicalMarkers( ubic.gemma.model.genome.PhysicalMarker startMarker,
             ubic.gemma.model.genome.PhysicalMarker endMarker ) {
         return this.findByPhysicalMarkers( TRANSFORM_NONE, startMarker, endMarker );
@@ -184,7 +188,7 @@ public abstract class BehavioralQtlDaoBase extends BaseQtlDaoImpl<BehavioralQtl>
         if ( id == null ) {
             throw new IllegalArgumentException( "BehavioralQtl.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.BehavioralQtl entity = ( ubic.gemma.model.genome.BehavioralQtl ) this.load( id );
+        ubic.gemma.model.genome.BehavioralQtl entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -253,6 +257,7 @@ public abstract class BehavioralQtlDaoBase extends BaseQtlDaoImpl<BehavioralQtl>
      * @see #transformEntity(int,ubic.gemma.model.genome.BehavioralQtl)
      */
 
+    @Override
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through

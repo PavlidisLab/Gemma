@@ -9,20 +9,6 @@ public class AnnotationAssociationServiceImpl implements AnnotationAssociationSe
 
     AnnotationAssociationDao annotationAssociationDao;
 
-    /**
-     * @return the annotationAssociationDao
-     */
-    public AnnotationAssociationDao getAnnotationAssociationDao() {
-        return annotationAssociationDao;
-    }
-
-    /**
-     * @param annotationAssociationDao the annotationAssociationDao to set
-     */
-    public void setAnnotationAssociationDao( AnnotationAssociationDao annotationAssociationDao ) {
-        this.annotationAssociationDao = annotationAssociationDao;
-    }
-
     public AnnotationAssociation create( AnnotationAssociation annotationAssociation ) {
         return this.getAnnotationAssociationDao().create( annotationAssociation );
     }
@@ -31,20 +17,27 @@ public class AnnotationAssociationServiceImpl implements AnnotationAssociationSe
         return this.getAnnotationAssociationDao().create( anCollection );
     }
 
-    public Collection<AnnotationAssociation> find( Gene gene ) {
-        return this.getAnnotationAssociationDao().find( gene );
-    }
-
     public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
         return this.getAnnotationAssociationDao().find( bioSequence );
     }
 
-    public AnnotationAssociation load( Long id ) {
-        return this.getAnnotationAssociationDao().load( id );
+    public Collection<AnnotationAssociation> find( Gene gene ) {
+        return this.getAnnotationAssociationDao().find( gene );
+    }
+
+    /**
+     * @return the annotationAssociationDao
+     */
+    public AnnotationAssociationDao getAnnotationAssociationDao() {
+        return annotationAssociationDao;
     }
 
     public Collection<AnnotationAssociation> load( Collection<Long> ids ) {
         return this.getAnnotationAssociationDao().load( ids );
+    }
+
+    public AnnotationAssociation load( Long id ) {
+        return this.getAnnotationAssociationDao().load( id );
     }
 
     public void remove( AnnotationAssociation annotationAssociation ) {
@@ -55,6 +48,13 @@ public class AnnotationAssociationServiceImpl implements AnnotationAssociationSe
     public void remove( Collection<AnnotationAssociation> anCollection ) {
         this.getAnnotationAssociationDao().remove( anCollection );
 
+    }
+
+    /**
+     * @param annotationAssociationDao the annotationAssociationDao to set
+     */
+    public void setAnnotationAssociationDao( AnnotationAssociationDao annotationAssociationDao ) {
+        this.annotationAssociationDao = annotationAssociationDao;
     }
 
     public void thaw( AnnotationAssociation annotationAssociation ) {

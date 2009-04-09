@@ -36,7 +36,7 @@ public interface PersonService {
     /**
      * 
      */
-    public java.util.Collection findByFullName( java.lang.String name, java.lang.String lastName );
+    public java.util.Collection<Person> findByFullName( java.lang.String name, java.lang.String lastName );
 
     /**
      * 
@@ -47,7 +47,7 @@ public interface PersonService {
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<Person> loadAll();
 
     /**
      * 

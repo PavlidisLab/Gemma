@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.common.description;
 
 /**
@@ -36,14 +36,17 @@ public abstract class PublicationTypeDaoBase extends org.springframework.orm.hib
         if ( entities == null ) {
             throw new IllegalArgumentException( "PublicationType.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.description.PublicationType ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform, ( ubic.gemma.model.common.description.PublicationType ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -152,14 +155,16 @@ public abstract class PublicationTypeDaoBase extends org.springframework.orm.hib
         if ( entities == null ) {
             throw new IllegalArgumentException( "PublicationType.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.description.PublicationType ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.common.description.PublicationType ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**

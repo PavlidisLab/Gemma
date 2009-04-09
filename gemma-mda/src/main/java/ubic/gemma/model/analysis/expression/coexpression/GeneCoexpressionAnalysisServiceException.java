@@ -35,40 +35,6 @@ public class GeneCoexpressionAnalysisServiceException extends java.lang.RuntimeE
     private static final long serialVersionUID = 2804030504158720884L;
 
     /**
-     * The default constructor for <code>GeneCoexpressionAnalysisServiceException</code>.
-     */
-    public GeneCoexpressionAnalysisServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>GeneCoexpressionAnalysisServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public GeneCoexpressionAnalysisServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>GeneCoexpressionAnalysisServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public GeneCoexpressionAnalysisServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>GeneCoexpressionAnalysisServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public GeneCoexpressionAnalysisServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class GeneCoexpressionAnalysisServiceException extends java.lang.RuntimeE
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>GeneCoexpressionAnalysisServiceException</code>.
+     */
+    public GeneCoexpressionAnalysisServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>GeneCoexpressionAnalysisServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public GeneCoexpressionAnalysisServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>GeneCoexpressionAnalysisServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public GeneCoexpressionAnalysisServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>GeneCoexpressionAnalysisServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public GeneCoexpressionAnalysisServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

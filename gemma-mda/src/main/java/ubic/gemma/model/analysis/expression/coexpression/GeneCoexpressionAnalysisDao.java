@@ -29,18 +29,18 @@ public interface GeneCoexpressionAnalysisDao extends
         ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDao<GeneCoexpressionAnalysis> {
     /**
      * <p>
-     * Get the number of data sets analyzed .
-     * </p>
-     */
-    public int getNumDatasetsAnalyzed(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
-
-    /**
-     * <p>
      * This is needed to allow security filtering of the EE collection
      * </p>
      */
     public java.util.Collection getDatasetsAnalyzed(
+            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
+
+    /**
+     * <p>
+     * Get the number of data sets analyzed .
+     * </p>
+     */
+    public int getNumDatasetsAnalyzed(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
 
     /**

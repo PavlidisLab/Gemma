@@ -129,8 +129,7 @@ public abstract class PropertyDaoBase extends HibernateDaoSupport implements
         if ( id == null ) {
             throw new IllegalArgumentException( "Property.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.description.Property entity = ( ubic.gemma.model.common.description.Property ) this
-                .load( id );
+        ubic.gemma.model.common.description.Property entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

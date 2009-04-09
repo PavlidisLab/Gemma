@@ -38,6 +38,20 @@ public abstract class ProbeCoexpressionAnalysisServiceBase extends
     private ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;
 
     /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService#create(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
+     */
+    public ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis create(
+            final ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
+        try {
+            return this.handleCreate( probeCoexpressionAnalysis );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService.create(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * Sets the reference to <code>probeCoexpressionAnalysis</code>'s DAO.
      */
     public void setProbeCoexpressionAnalysisDao(
@@ -50,20 +64,6 @@ public abstract class ProbeCoexpressionAnalysisServiceBase extends
      */
     protected ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao getProbeCoexpressionAnalysisDao() {
         return this.probeCoexpressionAnalysisDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService#create(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
-     */
-    public ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis create(
-            final ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
-        try {
-            return this.handleCreate( probeCoexpressionAnalysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService.create(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis)' --> "
-                            + th, th );
-        }
     }
 
     /**

@@ -310,8 +310,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
         if ( id == null ) {
             throw new IllegalArgumentException( "Organization.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.auditAndSecurity.Organization entity = ( ubic.gemma.model.common.auditAndSecurity.Organization ) this
-                .load( id );
+        ubic.gemma.model.common.auditAndSecurity.Organization entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

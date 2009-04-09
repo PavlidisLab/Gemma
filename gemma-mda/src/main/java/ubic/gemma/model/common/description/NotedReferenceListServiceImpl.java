@@ -54,7 +54,7 @@ public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.descr
         NotedReferenceList result = NotedReferenceList.Factory.newInstance();
         result.setUser( owner );
         result.setName( name );
-        result = ( NotedReferenceList ) this.getNotedReferenceListDao().create( result );
+        result = this.getNotedReferenceListDao().create( result );
         return result;
     }
 

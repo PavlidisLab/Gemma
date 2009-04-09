@@ -16,16 +16,16 @@ public class QueryGeneCoexpressionDataPair {
     }
 
     /**
-     * @return the queryGene
-     */
-    public Gene getQueryGene() {
-        return queryGene;
-    }
-
-    /**
      * @return the coexpressionData
      */
     public CoexpressionValueObject getCoexpressionData() {
         return coexpressionData;
+    }
+
+    /**
+     * @return the queryGene
+     */
+    public Gene getQueryGene() {
+        return queryGene;
     }
 }

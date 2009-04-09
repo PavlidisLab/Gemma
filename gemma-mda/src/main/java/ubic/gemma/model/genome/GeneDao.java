@@ -223,7 +223,8 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      * returned.
      * 
      * @param physicalLocation
-     * @param useStrand if true, the nearest Gene on the same strand will be found. Otherwise the nearest gene on either strand will be returned.
+     * @param useStrand if true, the nearest Gene on the same strand will be found. Otherwise the nearest gene on either
+     *        strand will be returned.
      * @return
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );

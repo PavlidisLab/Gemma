@@ -94,7 +94,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
             return existingBibliographicReference;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new bibliographicReference: " + bibliographicReference );
-        return ( BibliographicReference ) create( bibliographicReference );
+        return create( bibliographicReference );
     }
 
     @Override

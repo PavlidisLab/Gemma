@@ -35,40 +35,6 @@ public class DifferentialExpressionAnalysisResultServiceException extends java.l
     private static final long serialVersionUID = 2258463339838083319L;
 
     /**
-     * The default constructor for <code>DifferentialExpressionAnalysisResultServiceException</code>.
-     */
-    public DifferentialExpressionAnalysisResultServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>DifferentialExpressionAnalysisResultServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public DifferentialExpressionAnalysisResultServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>DifferentialExpressionAnalysisResultServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public DifferentialExpressionAnalysisResultServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>DifferentialExpressionAnalysisResultServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public DifferentialExpressionAnalysisResultServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -102,5 +68,39 @@ public class DifferentialExpressionAnalysisResultServiceException extends java.l
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>DifferentialExpressionAnalysisResultServiceException</code>.
+     */
+    public DifferentialExpressionAnalysisResultServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>DifferentialExpressionAnalysisResultServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public DifferentialExpressionAnalysisResultServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>DifferentialExpressionAnalysisResultServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public DifferentialExpressionAnalysisResultServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>DifferentialExpressionAnalysisResultServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public DifferentialExpressionAnalysisResultServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

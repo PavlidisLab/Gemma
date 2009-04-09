@@ -27,6 +27,10 @@ package ubic.gemma.model.genome;
  */
 public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeServiceBase {
 
+    public Chromosome find( String name, Taxon taxon ) {
+        return this.getChromosomeDao().find( name, taxon );
+    }
+
     /**
      * @see ubic.gemma.model.genome.ChromosomeService#find(ubic.gemma.model.genome.Chromosome)
      */
@@ -44,10 +48,6 @@ public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeSer
             throws java.lang.Exception {
         return this.getChromosomeDao().findOrCreate( chromosome );
 
-    }
-
-    public Chromosome find( String name, Taxon taxon ) {
-        return this.getChromosomeDao().find( name, taxon );
     }
 
 }

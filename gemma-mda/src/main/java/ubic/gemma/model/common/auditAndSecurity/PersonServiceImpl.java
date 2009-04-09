@@ -38,7 +38,7 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
      */
     @Override
     protected Person handleCreate( Person person ) throws Exception {
-        return ( Person ) this.getPersonDao().create( person );
+        return this.getPersonDao().create( person );
     }
 
     @Override
@@ -121,7 +121,7 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
      */
     protected Person handleSavePerson( ubic.gemma.model.common.auditAndSecurity.Person person )
             throws java.lang.Exception {
-        return ( Person ) this.getPersonDao().create( person );
+        return this.getPersonDao().create( person );
     }
 
 }

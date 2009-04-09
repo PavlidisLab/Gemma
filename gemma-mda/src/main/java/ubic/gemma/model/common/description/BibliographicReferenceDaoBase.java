@@ -418,6 +418,19 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     }
 
     /**
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadMultiple(java.util.Collection)
+     */
+    public java.util.Collection<BibliographicReference> load( final java.util.Collection ids ) {
+        try {
+            return this.handleLoadMultiple( ids );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceDao.loadMultiple(java.util.Collection ids)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadAll()
      */
 
@@ -435,19 +448,6 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
                 ubic.gemma.model.common.description.BibliographicReferenceImpl.class );
         this.transformEntities( transform, results );
         return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadMultiple(java.util.Collection)
-     */
-    public java.util.Collection<BibliographicReference> load( final java.util.Collection ids ) {
-        try {
-            return this.handleLoadMultiple( ids );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceDao.loadMultiple(java.util.Collection ids)' --> "
-                            + th, th );
-        }
     }
 
     /**

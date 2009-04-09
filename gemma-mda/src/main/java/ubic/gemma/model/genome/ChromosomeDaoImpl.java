@@ -22,7 +22,6 @@
  */
 package ubic.gemma.model.genome;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -66,24 +65,6 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         }
     }
 
-    @Override
-    public Chromosome findOrCreate( Chromosome chromosome ) {
-        Chromosome existing = this.find( chromosome );
-        if ( existing != null ) {
-            assert existing.getId() != null;
-            return existing;
-        }
-        return create( chromosome );
-    }
-
-    private String debug( List results ) {
-        StringBuilder buf = new StringBuilder();
-        for ( Object object : results ) {
-            buf.append( object + "\n" );
-        }
-        return buf.toString();
-    }
-
     public Chromosome find( String name, Taxon taxon ) {
         if ( StringUtils.isBlank( name ) ) {
             throw new IllegalArgumentException( "Name cannot be blank" );
@@ -101,5 +82,23 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
             throw new IllegalStateException( "Multiple chromosomes match '" + name + "' in " + taxon );
         }
         return null;
+    }
+
+    @Override
+    public Chromosome findOrCreate( Chromosome chromosome ) {
+        Chromosome existing = this.find( chromosome );
+        if ( existing != null ) {
+            assert existing.getId() != null;
+            return existing;
+        }
+        return create( chromosome );
+    }
+
+    private String debug( List results ) {
+        StringBuilder buf = new StringBuilder();
+        for ( Object object : results ) {
+            buf.append( object + "\n" );
+        }
+        return buf.toString();
     }
 }

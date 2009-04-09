@@ -197,8 +197,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
         if ( id == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.description.VocabCharacteristic entity = ( ubic.gemma.model.common.description.VocabCharacteristic ) this
-                .load( id );
+        ubic.gemma.model.common.description.VocabCharacteristic entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

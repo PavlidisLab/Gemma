@@ -45,13 +45,27 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
 
     private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
 
+    public Collection<Gene> find( PhysicalLocation physicalLocation ) {
+        return this.getGeneDao().find( physicalLocation );
+    }
+
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
         return this.getGeneDao().findNearest( physicalLocation, useStrand );
     }
 
     @Override
+    public Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( Collection<Gene> genes,
+            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGenesOnly ) {
+        return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, knownGenesOnly, interGenesOnly );
+    }
+
+    @Override
     public void handleThawLite( Collection<Gene> genes ) {
         this.getGeneDao().thawLite( genes );
+    }
+
+    public void thawLite( Gene gene ) {
+        this.getGeneDao().thawLite( gene );
     }
 
     @Override
@@ -170,12 +184,6 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     protected CoexpressionCollectionValueObject handleGetCoexpressedGenes( Gene gene,
             Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly ) throws Exception {
         return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency, knownGenesOnly );
-    }
-
-    @Override
-    public Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGenesOnly ) {
-        return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, knownGenesOnly, interGenesOnly );
     }
 
     /*
@@ -304,14 +312,6 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     @Override
     protected void handleUpdate( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception {
         this.getGeneDao().update( gene );
-    }
-
-    public void thawLite( Gene gene ) {
-        this.getGeneDao().thawLite( gene );
-    }
-
-    public Collection<Gene> find( PhysicalLocation physicalLocation ) {
-        return this.getGeneDao().find( physicalLocation );
     }
 
 }

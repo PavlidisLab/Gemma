@@ -345,8 +345,7 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
         if ( id == null ) {
             throw new IllegalArgumentException( "ExternalDatabase.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.description.ExternalDatabase entity = ( ubic.gemma.model.common.description.ExternalDatabase ) this
-                .load( id );
+        ubic.gemma.model.common.description.ExternalDatabase entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

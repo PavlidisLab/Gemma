@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.common.description;
 
 /**
@@ -106,14 +106,16 @@ public abstract class BibRefAnnotationDaoBase extends org.springframework.orm.hi
         if ( entities == null ) {
             throw new IllegalArgumentException( "BibRefAnnotation.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.description.BibRefAnnotation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.common.description.BibRefAnnotation ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**

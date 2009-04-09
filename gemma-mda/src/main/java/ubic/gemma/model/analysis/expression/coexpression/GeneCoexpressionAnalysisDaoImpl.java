@@ -82,19 +82,6 @@ public class GeneCoexpressionAnalysisDaoImpl extends
 
     }
 
-    @Override
-    protected void handleThaw( final GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( geneCoexpressionAnalysis, LockMode.NONE );
-                Hibernate.initialize( geneCoexpressionAnalysis );
-                Hibernate.initialize( geneCoexpressionAnalysis.getExpressionExperimentSetAnalyzed() );
-                return null;
-            }
-        } );
-    }
-
     /*
      * (non-Javadoc)
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigation(ubic.gemma.model.analysis.Investigation)
@@ -131,6 +118,12 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
+    protected Collection handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
+        final String queryString = "select e from GeneCoexpressionAnalysisImpl g inner join g.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e where g=:g";
+        return getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
+    }
+
+    @Override
     protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
         final String queryString = "select count(e) from GeneCoexpressionAnalysisImpl g inner join g.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e where g=:g";
         List list = getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
@@ -138,9 +131,16 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
-    protected Collection handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
-        final String queryString = "select e from GeneCoexpressionAnalysisImpl g inner join g.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e where g=:g";
-        return getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
+    protected void handleThaw( final GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( geneCoexpressionAnalysis, LockMode.NONE );
+                Hibernate.initialize( geneCoexpressionAnalysis );
+                Hibernate.initialize( geneCoexpressionAnalysis.getExpressionExperimentSetAnalyzed() );
+                return null;
+            }
+        } );
     }
 
 }

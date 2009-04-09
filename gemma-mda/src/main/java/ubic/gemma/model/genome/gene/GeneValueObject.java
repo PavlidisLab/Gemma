@@ -21,147 +21,130 @@ package ubic.gemma.model.genome.gene;
 
 /**
  * Took out of the model, can edit by hand
+ * 
  * @author kelsey
  * @version
  */
-public class GeneValueObject
-    implements java.io.Serializable
-{
+public class GeneValueObject implements java.io.Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -7098036090107647318L;
 
-    
-    public GeneValueObject()
-    {
+    private java.lang.Long id;
+
+    private java.lang.String name;
+
+    private java.lang.String ncbiId;
+
+    private java.lang.String officialSymbol;
+
+    private java.lang.String officialName;
+
+    private java.lang.String description;
+
+    public GeneValueObject() {
     }
 
-    public GeneValueObject(java.lang.Long id, java.lang.String name, java.lang.String ncbiId, java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description)
-    {
+    /**
+     * Copies constructor from other GeneValueObject
+     * 
+     * @param otherBean, cannot be <code>null</code>
+     * @throws java.lang.NullPointerException if the argument is <code>null</code>
+     */
+    public GeneValueObject( GeneValueObject otherBean ) {
+        this( otherBean.getId(), otherBean.getName(), otherBean.getNcbiId(), otherBean.getOfficialSymbol(), otherBean
+                .getOfficialName(), otherBean.getDescription() );
+    }
+
+    public GeneValueObject( java.lang.Long id, java.lang.String name, java.lang.String ncbiId,
+            java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description ) {
         this.id = id;
         this.name = name;
         this.ncbiId = ncbiId;
         this.officialSymbol = officialSymbol;
         this.officialName = officialName;
         this.description = description;
-    }
-
-    /**
-     * Copies constructor from other GeneValueObject
-     *
-     * @param otherBean, cannot be <code>null</code>
-     * @throws java.lang.NullPointerException if the argument is <code>null</code>
-     */
-    public GeneValueObject(GeneValueObject otherBean)
-    {
-        this(otherBean.getId(), otherBean.getName(), otherBean.getNcbiId(), otherBean.getOfficialSymbol(), otherBean.getOfficialName(), otherBean.getDescription());
     }
 
     /**
      * Copies all properties from the argument value object into this value object.
      */
-    public void copy(GeneValueObject otherBean)
-    {
-        if (otherBean != null)
-        {
-            this.setId(otherBean.getId());
-            this.setName(otherBean.getName());
-            this.setNcbiId(otherBean.getNcbiId());
-            this.setOfficialSymbol(otherBean.getOfficialSymbol());
-            this.setOfficialName(otherBean.getOfficialName());
-            this.setDescription(otherBean.getDescription());
+    public void copy( GeneValueObject otherBean ) {
+        if ( otherBean != null ) {
+            this.setId( otherBean.getId() );
+            this.setName( otherBean.getName() );
+            this.setNcbiId( otherBean.getNcbiId() );
+            this.setOfficialSymbol( otherBean.getOfficialSymbol() );
+            this.setOfficialName( otherBean.getOfficialName() );
+            this.setDescription( otherBean.getDescription() );
         }
     }
 
-    private java.lang.Long id;
-
     /**
      * 
      */
-    public java.lang.Long getId()
-    {
-        return this.id;
-    }
-
-    public void setId(java.lang.Long id)
-    {
-        this.id = id;
-    }
-
-    private java.lang.String name;
-
-    /**
-     * 
-     */
-    public java.lang.String getName()
-    {
-        return this.name;
-    }
-
-    public void setName(java.lang.String name)
-    {
-        this.name = name;
-    }
-
-    private java.lang.String ncbiId;
-
-    /**
-     * 
-     */
-    public java.lang.String getNcbiId()
-    {
-        return this.ncbiId;
-    }
-
-    public void setNcbiId(java.lang.String ncbiId)
-    {
-        this.ncbiId = ncbiId;
-    }
-
-    private java.lang.String officialSymbol;
-
-    /**
-     * 
-     */
-    public java.lang.String getOfficialSymbol()
-    {
-        return this.officialSymbol;
-    }
-
-    public void setOfficialSymbol(java.lang.String officialSymbol)
-    {
-        this.officialSymbol = officialSymbol;
-    }
-
-    private java.lang.String officialName;
-
-    /**
-     * 
-     */
-    public java.lang.String getOfficialName()
-    {
-        return this.officialName;
-    }
-
-    public void setOfficialName(java.lang.String officialName)
-    {
-        this.officialName = officialName;
-    }
-
-    private java.lang.String description;
-
-    /**
-     * 
-     */
-    public java.lang.String getDescription()
-    {
+    public java.lang.String getDescription() {
         return this.description;
     }
 
-    public void setDescription(java.lang.String description)
-    {
+    /**
+     * 
+     */
+    public java.lang.Long getId() {
+        return this.id;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getName() {
+        return this.name;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getNcbiId() {
+        return this.ncbiId;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getOfficialName() {
+        return this.officialName;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getOfficialSymbol() {
+        return this.officialSymbol;
+    }
+
+    public void setDescription( java.lang.String description ) {
         this.description = description;
+    }
+
+    public void setId( java.lang.Long id ) {
+        this.id = id;
+    }
+
+    public void setName( java.lang.String name ) {
+        this.name = name;
+    }
+
+    public void setNcbiId( java.lang.String ncbiId ) {
+        this.ncbiId = ncbiId;
+    }
+
+    public void setOfficialName( java.lang.String officialName ) {
+        this.officialName = officialName;
+    }
+
+    public void setOfficialSymbol( java.lang.String officialSymbol ) {
+        this.officialSymbol = officialSymbol;
     }
 
     // ubic.gemma.model.genome.gene.GeneValueObject value-object java merge-point

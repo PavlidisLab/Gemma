@@ -224,22 +224,6 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
      * @see ubic.gemma.model.genome.gene.GeneService#getCoexpressedGenes(ubic.gemma.model.genome.Gene,
      *      java.util.Collection, java.lang.Integer, boolean)
      */
-    public CoexpressionCollectionValueObject getCoexpressedGenes( final ubic.gemma.model.genome.Gene gene,
-            final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
-            final boolean knownGenesOnly ) {
-        try {
-            return this.handleGetCoexpressedGenes( gene, ees, stringency, knownGenesOnly );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.gene.GeneServiceException(
-                    "Error performing 'ubic.gemma.model.genome.gene.GeneService.getCoexpressedGenes(ubic.gemma.model.genome.Gene gene, java.util.Collection ees, java.lang.Integer stringency, boolean knownGenesOnly)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneService#getCoexpressedGenes(ubic.gemma.model.genome.Gene,
-     *      java.util.Collection, java.lang.Integer, boolean)
-     */
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes(
             final Collection<ubic.gemma.model.genome.Gene> genes,
             final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
@@ -249,6 +233,22 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.gene.GeneServiceException(
                     "Error performing 'ubic.gemma.model.genome.gene.GeneService.getCoexpressedGenes(Collection<ubic.gemma.model.genome.Gene> genes, java.util.Collection ees, java.lang.Integer stringency, boolean knownGenesOnly)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneService#getCoexpressedGenes(ubic.gemma.model.genome.Gene,
+     *      java.util.Collection, java.lang.Integer, boolean)
+     */
+    public CoexpressionCollectionValueObject getCoexpressedGenes( final ubic.gemma.model.genome.Gene gene,
+            final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
+            final boolean knownGenesOnly ) {
+        try {
+            return this.handleGetCoexpressedGenes( gene, ees, stringency, knownGenesOnly );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.gene.GeneServiceException(
+                    "Error performing 'ubic.gemma.model.genome.gene.GeneService.getCoexpressedGenes(ubic.gemma.model.genome.Gene gene, java.util.Collection ees, java.lang.Integer stringency, boolean knownGenesOnly)' --> "
                             + th, th );
         }
     }
@@ -586,17 +586,17 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
      * Performs the core logic for
      * {@link #getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection, java.lang.Integer, boolean)}
      */
-    protected abstract CoexpressionCollectionValueObject handleGetCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly )
-            throws java.lang.Exception;
+    protected abstract Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes(
+            Collection<ubic.gemma.model.genome.Gene> genes, java.util.Collection<? extends BioAssaySet> ees,
+            java.lang.Integer stringency, boolean knownGenesOnly, boolean interGenesOnly ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection, java.lang.Integer, boolean)}
      */
-    protected abstract Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes(
-            Collection<ubic.gemma.model.genome.Gene> genes, java.util.Collection<? extends BioAssaySet> ees,
-            java.lang.Integer stringency, boolean knownGenesOnly, boolean interGenesOnly ) throws java.lang.Exception;
+    protected abstract CoexpressionCollectionValueObject handleGetCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for

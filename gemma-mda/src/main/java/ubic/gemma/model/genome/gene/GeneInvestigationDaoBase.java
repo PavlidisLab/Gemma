@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import ubic.gemma.model.analysis.Investigation;
 
 /**
  * <p>
@@ -150,7 +149,7 @@ public abstract class GeneInvestigationDaoBase extends
      */
 
     public GeneInvestigation load( java.lang.Long id ) {
-        return ( ubic.gemma.model.genome.gene.GeneInvestigation ) this.load( TRANSFORM_NONE, id );
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
@@ -181,8 +180,7 @@ public abstract class GeneInvestigationDaoBase extends
         if ( id == null ) {
             throw new IllegalArgumentException( "GeneInvestigation.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.gene.GeneInvestigation entity = ( ubic.gemma.model.genome.gene.GeneInvestigation ) this
-                .load( id );
+        ubic.gemma.model.genome.gene.GeneInvestigation entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

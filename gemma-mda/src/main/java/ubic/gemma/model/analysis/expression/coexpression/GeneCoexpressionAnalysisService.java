@@ -35,10 +35,12 @@ public interface GeneCoexpressionAnalysisService extends
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
 
     /**
-     * 
+     * <p>
+     * This is required only to allow security filtering of the expression experiment collections.
+     * </p>
      */
-    public void update(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoExpressionAnalysis );
+    public java.util.Collection getDatasetsAnalyzed(
+            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
 
     /**
      * <p>
@@ -49,17 +51,15 @@ public interface GeneCoexpressionAnalysisService extends
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
 
     /**
-     * <p>
-     * This is required only to allow security filtering of the expression experiment collections.
-     * </p>
-     */
-    public java.util.Collection getDatasetsAnalyzed(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
-
-    /**
      * 
      */
     public void thaw(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis );
+
+    /**
+     * 
+     */
+    public void update(
+            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoExpressionAnalysis );
 
 }

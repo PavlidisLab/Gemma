@@ -44,7 +44,7 @@ public interface JobInfoDao {
      * objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection create( int transform, java.util.Collection entities );
+    public java.util.Collection<JobInfo> create( int transform, java.util.Collection<JobInfo> entities );
 
     /**
      * <p>
@@ -55,7 +55,7 @@ public interface JobInfoDao {
      * object for example). By default, transformation does not occur.
      * </p>
      */
-    public Object create( int transform, ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo );
+    public JobInfo create( int transform, ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo );
 
     /**
      * Creates a new instance of ubic.gemma.model.common.auditAndSecurity.JobInfo and adds from the passed in
@@ -64,7 +64,7 @@ public interface JobInfoDao {
      * @param entities the collection of ubic.gemma.model.common.auditAndSecurity.JobInfo instances to create.
      * @return the created instances.
      */
-    public java.util.Collection create( java.util.Collection entities );
+    public java.util.Collection<JobInfo> create( java.util.Collection<JobInfo> entities );
 
     /**
      * Creates an instance of ubic.gemma.model.common.auditAndSecurity.JobInfo and adds it to the persistent store.
@@ -84,7 +84,7 @@ public interface JobInfoDao {
      * @param id the identifier of the entity to load.
      * @return either the entity or the object transformed from the entity.
      */
-    public Object load( int transform, java.lang.Long id );
+    public JobInfo load( int transform, java.lang.Long id );
 
     /**
      * Loads an instance of ubic.gemma.model.common.auditAndSecurity.JobInfo from the persistent store.
@@ -96,7 +96,7 @@ public interface JobInfoDao {
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<JobInfo> loadAll();
 
     /**
      * <p>
@@ -110,7 +110,7 @@ public interface JobInfoDao {
      * @param transform the flag indicating what transformation to use.
      * @return the loaded entities.
      */
-    public java.util.Collection loadAll( final int transform );
+    public java.util.Collection<JobInfo> loadAll( final int transform );
 
     /**
      * Removes the instance of ubic.gemma.model.common.auditAndSecurity.JobInfo having the given <code>identifier</code>
@@ -121,7 +121,7 @@ public interface JobInfoDao {
     /**
      * Removes all entities in the given <code>entities<code> collection.
      */
-    public void remove( java.util.Collection entities );
+    public void remove( java.util.Collection<JobInfo> entities );
 
     /**
      * Removes the instance of ubic.gemma.model.common.auditAndSecurity.JobInfo from the persistent store.
@@ -131,7 +131,7 @@ public interface JobInfoDao {
     /**
      * Updates all instances in the <code>entities</code> collection in the persistent store.
      */
-    public void update( java.util.Collection entities );
+    public void update( java.util.Collection<JobInfo> entities );
 
     /**
      * Updates the <code>jobInfo</code> instance in the persistent store.

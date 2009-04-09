@@ -33,7 +33,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.HardwareDao#create(int, java.util.Collection)
      */
 
-    public java.util.Collection<Hardware> create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<Hardware> create( final int transform, final java.util.Collection<Hardware> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Hardware.create - 'entities' can not be null" );
         }
@@ -41,8 +41,9 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.common.protocol.Hardware ) entityIterator.next() );
+                        for ( java.util.Iterator<Hardware> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
                         }
                         return null;
                     }
@@ -54,20 +55,19 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.HardwareDao#create(int transform,
      *      ubic.gemma.model.common.protocol.Hardware)
      */
-    public Object create( final int transform, final ubic.gemma.model.common.protocol.Hardware hardware ) {
+    public Hardware create( final int transform, final ubic.gemma.model.common.protocol.Hardware hardware ) {
         if ( hardware == null ) {
             throw new IllegalArgumentException( "Hardware.create - 'hardware' can not be null" );
         }
         this.getHibernateTemplate().save( hardware );
-        return this.transformEntity( transform, hardware );
+        return ( Hardware ) this.transformEntity( transform, hardware );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.HardwareDao#create(java.util.Collection)
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<Hardware> create( final java.util.Collection<Hardware> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -75,7 +75,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.HardwareDao#create(ubic.gemma.model.common.protocol.Hardware)
      */
     public Hardware create( ubic.gemma.model.common.protocol.Hardware hardware ) {
-        return ( ubic.gemma.model.common.protocol.Hardware ) this.create( TRANSFORM_NONE, hardware );
+        return this.create( TRANSFORM_NONE, hardware );
     }
 
     /**
@@ -83,7 +83,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      *      ubic.gemma.model.common.protocol.Hardware)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
+    public Hardware find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.protocol.Hardware hardware ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -92,24 +92,22 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.protocol.Hardware"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.protocol.Hardware"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.protocol.Hardware ) result );
-        return result;
+        return ( Hardware ) result;
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.HardwareDao#find(int, ubic.gemma.model.common.protocol.Hardware)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final ubic.gemma.model.common.protocol.Hardware hardware ) {
+    public Hardware find( final int transform, final ubic.gemma.model.common.protocol.Hardware hardware ) {
         return this.find( transform,
                 "from ubic.gemma.model.common.protocol.Hardware as hardware where hardware.hardware = :hardware",
                 hardware );
@@ -119,25 +117,24 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.HardwareDao#find(java.lang.String,
      *      ubic.gemma.model.common.protocol.Hardware)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.common.protocol.Hardware find( final java.lang.String queryString,
             final ubic.gemma.model.common.protocol.Hardware hardware ) {
-        return ( ubic.gemma.model.common.protocol.Hardware ) this.find( TRANSFORM_NONE, queryString, hardware );
+        return this.find( TRANSFORM_NONE, queryString, hardware );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.HardwareDao#find(ubic.gemma.model.common.protocol.Hardware)
      */
     public ubic.gemma.model.common.protocol.Hardware find( ubic.gemma.model.common.protocol.Hardware hardware ) {
-        return ( ubic.gemma.model.common.protocol.Hardware ) this.find( TRANSFORM_NONE, hardware );
+        return this.find( TRANSFORM_NONE, hardware );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.HardwareDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.common.protocol.Hardware)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
+    @SuppressWarnings("unchecked")
+    public Hardware findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.protocol.Hardware hardware ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -146,23 +143,22 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.protocol.Hardware"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.protocol.Hardware"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.protocol.Hardware ) result );
-        return result;
+        return ( Hardware ) result;
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.HardwareDao#findOrCreate(int, ubic.gemma.model.common.protocol.Hardware)
      */
-    @SuppressWarnings( { "unchecked" })
     public Object findOrCreate( final int transform, final ubic.gemma.model.common.protocol.Hardware hardware ) {
         return this.findOrCreate( transform,
                 "from ubic.gemma.model.common.protocol.Hardware as hardware where hardware.hardware = :hardware",
@@ -173,10 +169,9 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.HardwareDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.common.protocol.Hardware)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.common.protocol.Hardware findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.common.protocol.Hardware hardware ) {
-        return ( ubic.gemma.model.common.protocol.Hardware ) this.findOrCreate( TRANSFORM_NONE, queryString, hardware );
+        return this.findOrCreate( TRANSFORM_NONE, queryString, hardware );
     }
 
     /**
@@ -209,9 +204,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
     /**
      * @see ubic.gemma.model.common.protocol.HardwareDao#loadAll()
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+    public java.util.Collection<Hardware> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -219,8 +212,9 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.HardwareDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<Hardware> loadAll( final int transform ) {
+        final java.util.Collection<Hardware> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.protocol.HardwareImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -273,8 +267,9 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
                 new org.springframework.orm.hibernate3.HibernateCallback() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.common.protocol.Hardware ) entityIterator.next() );
+                        for ( java.util.Iterator<Hardware> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }
@@ -304,7 +299,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see #transformEntity(int,ubic.gemma.model.common.protocol.Hardware)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<Hardware> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

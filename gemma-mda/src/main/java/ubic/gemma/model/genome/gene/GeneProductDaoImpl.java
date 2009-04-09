@@ -137,7 +137,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
             return existingGeneProduct;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new geneProduct: " + geneProduct.getName() );
-        return ( GeneProduct ) create( geneProduct );
+        return create( geneProduct );
     }
 
     /*

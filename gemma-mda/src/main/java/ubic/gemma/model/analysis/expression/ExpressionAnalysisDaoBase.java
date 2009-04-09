@@ -35,24 +35,6 @@ public abstract class ExpressionAnalysisDaoBase<T extends ExpressionAnalysis> ex
         ubic.gemma.model.analysis.expression.ExpressionAnalysisDao<T> {
 
     /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisDao#findByName(java.lang.String)
-     */
-
-    @Override
-    public java.util.Collection<T> findByName( java.lang.String name ) {
-        return this.findByName( TRANSFORM_NONE, name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisDao#findByName(java.lang.String, java.lang.String)
-     */
-
-    @Override
-    public java.util.Collection<T> findByName( final java.lang.String queryString, final java.lang.String name ) {
-        return this.findByName( TRANSFORM_NONE, queryString, name );
-    }
-
-    /**
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisDao#findByName(int, java.lang.String)
      */
 
@@ -81,28 +63,21 @@ public abstract class ExpressionAnalysisDaoBase<T extends ExpressionAnalysis> ex
     }
 
     /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.analysis.expression.ExpressionAnalysisDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
-     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in
-     *        {@link ubic.gemma.model.analysis.expression.ExpressionAnalysisDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
+     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisDao#findByName(java.lang.String)
      */
-    protected Object transformEntity( final int transform, final T entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
+
+    @Override
+    public java.util.Collection<T> findByName( java.lang.String name ) {
+        return this.findByName( TRANSFORM_NONE, name );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisDao#findByName(java.lang.String, java.lang.String)
+     */
+
+    @Override
+    public java.util.Collection<T> findByName( final java.lang.String queryString, final java.lang.String name ) {
+        return this.findByName( TRANSFORM_NONE, queryString, name );
     }
 
     /**
@@ -118,12 +93,39 @@ public abstract class ExpressionAnalysisDaoBase<T extends ExpressionAnalysis> ex
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.analysis.expression.ExpressionAnalysis)
      */
+    @Override
     protected void transformEntities( final int transform, final java.util.Collection<T> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:
                 // do nothing;
         }
+    }
+
+    /**
+     * Allows transformation of entities into value objects (or something else for that matter), when the
+     * <code>transform</code> flag is set to one of the constants defined in
+     * <code>ubic.gemma.model.analysis.expression.ExpressionAnalysisDao</code>, please note that the
+     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
+     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
+     * 
+     * @param transform one of the constants declared in
+     *        {@link ubic.gemma.model.analysis.expression.ExpressionAnalysisDao}
+     * @param entity an entity that was found
+     * @return the transformed entity (i.e. new value object, etc)
+     * @see #transformEntities(int,java.util.Collection)
+     */
+    @Override
+    protected Object transformEntity( final int transform, final T entity ) {
+        Object target = null;
+        if ( entity != null ) {
+            switch ( transform ) {
+                case TRANSFORM_NONE: // fall-through
+                default:
+                    target = entity;
+            }
+        }
+        return target;
     }
 
 }

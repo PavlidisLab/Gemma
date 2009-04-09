@@ -286,7 +286,7 @@ public abstract class BlatAssociationDaoBase extends HibernateDaoSupport impleme
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<BlatAssociation> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
-                            update( ( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation ) entityIterator.next() );
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

@@ -71,21 +71,6 @@ public class MultipleCoexpressionTypeValueObject {
     }
 
     /**
-     * @param gene the Gene of interest
-     * @return a subset of the CommonCoexpressionValueObjects that exhibit coexpression with the specified Gene
-     */
-    public CommonCoexpressionValueObject getQueriesForGene( Gene gene ) {
-        synchronized ( this ) {
-            CommonCoexpressionValueObject queries = geneToQueries.get( gene );
-            if ( queries == null ) {
-                queries = new CommonCoexpressionValueObject( gene );
-                geneToQueries.put( gene, queries );
-            }
-            return queries;
-        }
-    }
-
-    /**
      * @param cutoff the minimum number of query genes to pass the filter
      * @return those coexpressed genes that are common to multiple query genes
      */
@@ -104,17 +89,11 @@ public class MultipleCoexpressionTypeValueObject {
     }
 
     /**
-     * @return the number of genes
+     * @param eeID expressionExperiment ID
+     * @return an expressionexperimentValueObject or null if it isn't there
      */
-    public int getNumberOfGenes() {
-        return geneToQueries.keySet().size();
-    }
-
-    /**
-     * @return the expressionExperiments that were searched for coexpression
-     */
-    public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
-        return expressionExperiments.values();
+    public ExpressionExperimentValueObject getExpressionExperiment( Long eeID ) {
+        return expressionExperiments.get( eeID );
     }
 
     /**
@@ -125,11 +104,42 @@ public class MultipleCoexpressionTypeValueObject {
     }
 
     /**
-     * @param eeID expressionExperiment ID
-     * @return an expressionexperimentValueObject or null if it isn't there
+     * @return the expressionExperiments that were searched for coexpression
      */
-    public ExpressionExperimentValueObject getExpressionExperiment( Long eeID ) {
-        return expressionExperiments.get( eeID );
+    public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
+        return expressionExperiments.values();
+    }
+
+    public Long getLinkCountForEE( Long id ) {
+
+        ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
+
+        if ( ( eeVo == null ) || ( eeVo.getCoexpressionLinkCount() == null ) ) return ( long ) 0;
+
+        return eeVo.getCoexpressionLinkCount();
+
+    }
+
+    /**
+     * @return the number of genes
+     */
+    public int getNumberOfGenes() {
+        return geneToQueries.keySet().size();
+    }
+
+    /**
+     * @param gene the Gene of interest
+     * @return a subset of the CommonCoexpressionValueObjects that exhibit coexpression with the specified Gene
+     */
+    public CommonCoexpressionValueObject getQueriesForGene( Gene gene ) {
+        synchronized ( this ) {
+            CommonCoexpressionValueObject queries = geneToQueries.get( gene );
+            if ( queries == null ) {
+                queries = new CommonCoexpressionValueObject( gene );
+                geneToQueries.put( gene, queries );
+            }
+            return queries;
+        }
     }
 
     /**
@@ -143,16 +153,6 @@ public class MultipleCoexpressionTypeValueObject {
         if ( ( eeVo == null ) || ( eeVo.getRawCoexpressionLinkCount() == null ) ) return ( long ) 0;
 
         return eeVo.getRawCoexpressionLinkCount();
-    }
-
-    public Long getLinkCountForEE( Long id ) {
-
-        ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
-
-        if ( ( eeVo == null ) || ( eeVo.getCoexpressionLinkCount() == null ) ) return ( long ) 0;
-
-        return eeVo.getCoexpressionLinkCount();
-
     }
 
     private Gene getGene( CoexpressionValueObject coexpressed ) {

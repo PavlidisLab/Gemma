@@ -45,7 +45,7 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
 
     @Override
     protected Characteristic handleCreate( Characteristic c ) throws Exception {
-        return ( Characteristic ) this.getCharacteristicDao().create( c );
+        return this.getCharacteristicDao().create( c );
     }
 
     @Override
@@ -117,7 +117,7 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
 
     @Override
     protected Characteristic handleLoad( Long id ) throws Exception {
-        return ( Characteristic ) this.getCharacteristicDao().load( id );
+        return this.getCharacteristicDao().load( id );
     }
 
     @Override

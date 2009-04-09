@@ -34,7 +34,7 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
      */
     protected ubic.gemma.model.common.auditAndSecurity.Contact handleCreate(
             ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception {
-        return ( Contact ) this.getContactDao().create( contact );
+        return this.getContactDao().create( contact );
     }
 
     /**

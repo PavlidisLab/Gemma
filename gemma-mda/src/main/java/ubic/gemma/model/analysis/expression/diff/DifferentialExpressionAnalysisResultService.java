@@ -34,14 +34,14 @@ public interface DifferentialExpressionAnalysisResultService {
     /**
      * 
      */
-    public java.util.Collection getExperimentalFactors(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
+    public java.util.Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
+            java.util.Collection differentialExpressionAnalysisResults );
 
     /**
      * 
      */
-    public java.util.Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            java.util.Collection differentialExpressionAnalysisResults );
+    public java.util.Collection getExperimentalFactors(
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
     /**
      * 

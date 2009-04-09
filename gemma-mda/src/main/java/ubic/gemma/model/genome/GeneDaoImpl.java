@@ -74,6 +74,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     private static final int WINDOW_INCREMENT = 500;
 
     /*
+     * FIXME use a regular ehcache so we can use timeouts.
+     */
+    private HashMap<Long, Collection<Long>> gene2CsCache = new HashMap<Long, Collection<Long>>();
+
+    /*
      * (non-Javadoc)
      * @see ubic.gemma.model.genome.GeneDaoBase#find(ubic.gemma.model.genome.Gene)
      */
@@ -303,6 +308,26 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return this.load( geneValueObject.getId() );
     }
 
+    public void thawLite( final Gene gene ) {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+
+                // FIXME: (klc) This was using session.lock before but was getting a Non-Unique Entity Error
+                // using session.get fixes but might not be correct for cases where g != gene but gene.id==g.id
+                // (different object in memory but actually same gene; ie same id)
+                // session.lock( gene, LockMode.NONE );
+
+                Gene g = ( Gene ) session.get( GeneImpl.class, gene.getId() );
+                Hibernate.initialize( g );
+                session.evict( gene );
+
+                return null;
+            }
+        } );
+
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected Integer handleCountAll() throws Exception {
@@ -526,36 +551,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * Fill in specificity information.
-     * 
-     * @param knownGenesOnly
-     * @param coexpressions
-     * @throws Exception
-     */
-    private void postProcessSpecificity( boolean knownGenesOnly, final CoexpressionCollectionValueObject coexpressions )
-            throws Exception {
-        // fill in information about the query gene
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Collection<Long> queryGeneProbeIds = coexpressions.getQueryGeneProbes();
-        Collection<Long> targetGeneProbeIds = coexpressions.getTargetGeneProbes();
-
-        Map<Long, Collection<Long>> querySpecificity = getCS2GeneMap( queryGeneProbeIds );
-        Map<Long, Collection<Long>> targetSpecificity = getCS2GeneMap( targetGeneProbeIds );
-
-        coexpressions.setQueryGeneSpecifityInfo( querySpecificity );
-        coexpressions.setTargetGeneSpecificityInfo( targetSpecificity );
-
-        postProcess( coexpressions, knownGenesOnly );
-
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Specificity postprocessing: " + timer.getTime() + "ms" );
-        }
-
-    }
-
-    /**
      * Gets a count of the CompositeSequences related to the gene identified by the given id.
      * 
      * @param id
@@ -771,26 +766,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         } );
     }
 
-    public void thawLite( final Gene gene ) {
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-
-                // FIXME: (klc) This was using session.lock before but was getting a Non-Unique Entity Error
-                // using session.get fixes but might not be correct for cases where g != gene but gene.id==g.id
-                // (different object in memory but actually same gene; ie same id)
-                // session.lock( gene, LockMode.NONE );
-
-                Gene g = ( Gene ) session.get( GeneImpl.class, gene.getId() );
-                Hibernate.initialize( g );
-                session.evict( gene );
-
-                return null;
-            }
-        } );
-
-    }
-
     /**
      * @param coexpressions
      * @param eeID
@@ -951,6 +926,88 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
+     * For queries involving multiple genes as inputs. This query does not return 'self-links' (gene coexpressed with
+     * itself) which happens when two probes for the same gene are correlated. Query outputs:
+     * <ol >
+     * <li>output gene id</li>
+     * <li>output gene name</li>
+     * <li>output gene official name</li>
+     * <li>expression experiment
+     * <li>pvalue</li>
+     * <li>score</li>
+     * <li>query gene probe id</li>
+     * <li>output gene probe id</li>
+     * <li>output gene type (predicted etc)</li>
+     * <li>expression experiment name</li>
+     * </ol>
+     * 
+     * @param p2pClassName
+     * @param in
+     * @param out
+     * @param eeIds this is required.
+     * @param knownGenesOnly
+     * @param interGeneOnly true to restrict to links among the query genes only (this will not work correctly if you
+     *        only put in one gene!)
+     * @return
+     */
+    private String getNativeBatchQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds,
+            boolean knownGenesOnly, boolean interGeneOnly ) {
+        String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
+        String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
+        String eeClause = "";
+
+        // note that with current index scheme, you have to have EE ids specified.
+        if ( eeIds.size() > 0 ) {
+            eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
+            eeClause += StringUtils.join( eeIds.iterator(), "," );
+            eeClause += ") AND ";
+        } else {
+            log.warn( "This query may run very slowly without EE restriction" );
+        }
+
+        String knownGeneClause = "";
+        if ( knownGenesOnly ) {
+            knownGeneClause = " gcOut.GTYPE = 'GeneImpl' AND ";
+        }
+
+        String interGeneOnlyClause = "";
+
+        if ( interGeneOnly ) {
+            interGeneOnlyClause = " AND gcOut.GENE in (:ids) ";
+        }
+
+        String p2pClass = getP2PTableNameForClassName( p2pClassName );
+
+        /**
+         * Fields:
+         * 
+         * <pre>
+         * 0 Geneid
+         * 1 exper
+         * 2 pvalue
+         * 3 score
+         * 4 csin
+         * 5 csout
+         * 6 genetype
+         * 7 queryGene id
+         * </pre>
+         */
+        String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
+                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcOut.GTYPE as geneType, gcIn.GENE as queryGeneId FROM GENE2CS gcIn INNER JOIN "
+                + p2pClass
+                + " coexp ON gcIn.CS=coexp."
+                + inKey
+                + " "
+                + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
+                + outKey
+                + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
+                + " WHERE "
+                + eeClause + knownGeneClause + " gcIn.GENE in (:ids) " + interGeneOnlyClause;
+
+        return query;
+    }
+
+    /**
      * This query does not return 'self-links' (gene coexpressed with itself) which happens when two probes for the same
      * gene are correlated. Query outputs:
      * <ol >
@@ -1032,88 +1089,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          */
 
         // log.info( query );
-        return query;
-    }
-
-    /**
-     * For queries involving multiple genes as inputs. This query does not return 'self-links' (gene coexpressed with
-     * itself) which happens when two probes for the same gene are correlated. Query outputs:
-     * <ol >
-     * <li>output gene id</li>
-     * <li>output gene name</li>
-     * <li>output gene official name</li>
-     * <li>expression experiment
-     * <li>pvalue</li>
-     * <li>score</li>
-     * <li>query gene probe id</li>
-     * <li>output gene probe id</li>
-     * <li>output gene type (predicted etc)</li>
-     * <li>expression experiment name</li>
-     * </ol>
-     * 
-     * @param p2pClassName
-     * @param in
-     * @param out
-     * @param eeIds this is required.
-     * @param knownGenesOnly
-     * @param interGeneOnly true to restrict to links among the query genes only (this will not work correctly if you
-     *        only put in one gene!)
-     * @return
-     */
-    private String getNativeBatchQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds,
-            boolean knownGenesOnly, boolean interGeneOnly ) {
-        String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
-        String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
-        String eeClause = "";
-
-        // note that with current index scheme, you have to have EE ids specified.
-        if ( eeIds.size() > 0 ) {
-            eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
-            eeClause += StringUtils.join( eeIds.iterator(), "," );
-            eeClause += ") AND ";
-        } else {
-            log.warn( "This query may run very slowly without EE restriction" );
-        }
-
-        String knownGeneClause = "";
-        if ( knownGenesOnly ) {
-            knownGeneClause = " gcOut.GTYPE = 'GeneImpl' AND ";
-        }
-
-        String interGeneOnlyClause = "";
-
-        if ( interGeneOnly ) {
-            interGeneOnlyClause = " AND gcOut.GENE in (:ids) ";
-        }
-
-        String p2pClass = getP2PTableNameForClassName( p2pClassName );
-
-        /**
-         * Fields:
-         * 
-         * <pre>
-         * 0 Geneid
-         * 1 exper
-         * 2 pvalue
-         * 3 score
-         * 4 csin
-         * 5 csout
-         * 6 genetype
-         * 7 queryGene id
-         * </pre>
-         */
-        String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
-                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcOut.GTYPE as geneType, gcIn.GENE as queryGeneId FROM GENE2CS gcIn INNER JOIN "
-                + p2pClass
-                + " coexp ON gcIn.CS=coexp."
-                + inKey
-                + " "
-                + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
-                + outKey
-                + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
-                + " WHERE "
-                + eeClause + knownGeneClause + " gcIn.GENE in (:ids) " + interGeneOnlyClause;
-
         return query;
     }
 
@@ -1223,6 +1198,36 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
+     * Fill in specificity information.
+     * 
+     * @param knownGenesOnly
+     * @param coexpressions
+     * @throws Exception
+     */
+    private void postProcessSpecificity( boolean knownGenesOnly, final CoexpressionCollectionValueObject coexpressions )
+            throws Exception {
+        // fill in information about the query gene
+        StopWatch timer = new StopWatch();
+        timer.start();
+        Collection<Long> queryGeneProbeIds = coexpressions.getQueryGeneProbes();
+        Collection<Long> targetGeneProbeIds = coexpressions.getTargetGeneProbes();
+
+        Map<Long, Collection<Long>> querySpecificity = getCS2GeneMap( queryGeneProbeIds );
+        Map<Long, Collection<Long>> targetSpecificity = getCS2GeneMap( targetGeneProbeIds );
+
+        coexpressions.setQueryGeneSpecifityInfo( querySpecificity );
+        coexpressions.setTargetGeneSpecificityInfo( targetSpecificity );
+
+        postProcess( coexpressions, knownGenesOnly );
+
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Specificity postprocessing: " + timer.getTime() + "ms" );
+        }
+
+    }
+
+    /**
      * @param queryGene
      * @param geneMap
      * @param queryObject
@@ -1247,51 +1252,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             processCoexpQueryResult( queryGenes, scroll, coexpressions );
         }
 
-    }
-
-    /**
-     * @param queryGenes
-     * @param resultSet
-     * @param coexpressions
-     */
-    private void processCoexpQueryResult( Map<Long, Gene> queryGenes, ScrollableResults resultSet,
-            Map<Gene, CoexpressionCollectionValueObject> coexpressions ) {
-
-        Long coexpressedGene = resultSet.getLong( 0 );
-        Long eeID = resultSet.getLong( 1 );
-        Double pvalue = resultSet.getDouble( 2 );
-        Double score = resultSet.getDouble( 3 );
-        Long queryProbe = resultSet.getLong( 4 );
-        Long coexpressedProbe = resultSet.getLong( 5 );
-        String geneType = resultSet.getString( 6 );
-        Long queryGeneId = resultSet.getLong( 7 );
-
-        if ( queryGeneId.equals( coexpressedGene ) ) {
-            return;
-        }
-
-        Gene queryGene = queryGenes.get( queryGeneId );
-        assert queryGene != null : queryGeneId + " did not match given queries";
-        CoexpressionCollectionValueObject ccvo = coexpressions.get( queryGene );
-        assert ccvo != null;
-        addResult( ccvo, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, geneType, coexpressedProbe );
-
-        /*
-         * Cache the result.
-         */
-        CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
-        coExVOForCache.setQueryGene( queryGene );
-        coExVOForCache.setCoexpressedGene( coexpressedGene );
-        coExVOForCache.setGeneType( geneType );
-        coExVOForCache.setExpressionExperiment( eeID );
-        coExVOForCache.setScore( score );
-        coExVOForCache.setPvalue( pvalue );
-        coExVOForCache.setQueryProbe( queryProbe );
-        coExVOForCache.setCoexpressedProbe( coexpressedProbe );
-        if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
-        this.getProbe2ProbeCoexpressionCache().addToCache( eeID, coExVOForCache );
-
-        this.getProbe2ProbeCoexpressionCache().retrieve( eeID, coExVOForCache.getQueryGene() );
     }
 
     /**
@@ -1340,10 +1300,50 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     }
 
-    /*
-     * FIXME use a regular ehcache so we can use timeouts.
+    /**
+     * @param queryGenes
+     * @param resultSet
+     * @param coexpressions
      */
-    private HashMap<Long, Collection<Long>> gene2CsCache = new HashMap<Long, Collection<Long>>();
+    private void processCoexpQueryResult( Map<Long, Gene> queryGenes, ScrollableResults resultSet,
+            Map<Gene, CoexpressionCollectionValueObject> coexpressions ) {
+
+        Long coexpressedGene = resultSet.getLong( 0 );
+        Long eeID = resultSet.getLong( 1 );
+        Double pvalue = resultSet.getDouble( 2 );
+        Double score = resultSet.getDouble( 3 );
+        Long queryProbe = resultSet.getLong( 4 );
+        Long coexpressedProbe = resultSet.getLong( 5 );
+        String geneType = resultSet.getString( 6 );
+        Long queryGeneId = resultSet.getLong( 7 );
+
+        if ( queryGeneId.equals( coexpressedGene ) ) {
+            return;
+        }
+
+        Gene queryGene = queryGenes.get( queryGeneId );
+        assert queryGene != null : queryGeneId + " did not match given queries";
+        CoexpressionCollectionValueObject ccvo = coexpressions.get( queryGene );
+        assert ccvo != null;
+        addResult( ccvo, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, geneType, coexpressedProbe );
+
+        /*
+         * Cache the result.
+         */
+        CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
+        coExVOForCache.setQueryGene( queryGene );
+        coExVOForCache.setCoexpressedGene( coexpressedGene );
+        coExVOForCache.setGeneType( geneType );
+        coExVOForCache.setExpressionExperiment( eeID );
+        coExVOForCache.setScore( score );
+        coExVOForCache.setPvalue( pvalue );
+        coExVOForCache.setQueryProbe( queryProbe );
+        coExVOForCache.setCoexpressedProbe( coexpressedProbe );
+        if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
+        this.getProbe2ProbeCoexpressionCache().addToCache( eeID, coExVOForCache );
+
+        this.getProbe2ProbeCoexpressionCache().retrieve( eeID, coExVOForCache.getQueryGene() );
+    }
 
     /**
      * @param csId2geneIds

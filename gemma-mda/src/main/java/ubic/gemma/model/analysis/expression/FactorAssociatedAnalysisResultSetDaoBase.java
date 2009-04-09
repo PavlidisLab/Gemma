@@ -74,51 +74,6 @@ public abstract class FactorAssociatedAnalysisResultSetDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao#update(ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet)
-     */
-    public void update(
-            ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet factorAssociatedAnalysisResultSet ) {
-        if ( factorAssociatedAnalysisResultSet == null ) {
-            throw new IllegalArgumentException(
-                    "FactorAssociatedAnalysisResultSet.update - 'factorAssociatedAnalysisResultSet' can not be null" );
-        }
-        this.getHibernateTemplate().update( factorAssociatedAnalysisResultSet );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisResultSetDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "FactorAssociatedAnalysisResultSet.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet ) entityIterator
-                                    .next() );
-                        }
-                        return null;
-                    }
-                } );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao#remove(ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet)
-     */
-    public void remove(
-            ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet factorAssociatedAnalysisResultSet ) {
-        if ( factorAssociatedAnalysisResultSet == null ) {
-            throw new IllegalArgumentException(
-                    "FactorAssociatedAnalysisResultSet.remove - 'factorAssociatedAnalysisResultSet' can not be null" );
-        }
-        this.getHibernateTemplate().delete( factorAssociatedAnalysisResultSet );
-    }
-
-    /**
      * @see ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao#remove(java.lang.Long)
      */
     @Override
@@ -145,6 +100,73 @@ public abstract class FactorAssociatedAnalysisResultSetDaoBase extends
     }
 
     /**
+     * @see ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao#remove(ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet)
+     */
+    public void remove(
+            ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet factorAssociatedAnalysisResultSet ) {
+        if ( factorAssociatedAnalysisResultSet == null ) {
+            throw new IllegalArgumentException(
+                    "FactorAssociatedAnalysisResultSet.remove - 'factorAssociatedAnalysisResultSet' can not be null" );
+        }
+        this.getHibernateTemplate().delete( factorAssociatedAnalysisResultSet );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisResultSetDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "FactorAssociatedAnalysisResultSet.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao#update(ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet)
+     */
+    public void update(
+            ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet factorAssociatedAnalysisResultSet ) {
+        if ( factorAssociatedAnalysisResultSet == null ) {
+            throw new IllegalArgumentException(
+                    "FactorAssociatedAnalysisResultSet.update - 'factorAssociatedAnalysisResultSet' can not be null" );
+        }
+        this.getHibernateTemplate().update( factorAssociatedAnalysisResultSet );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet)} method. This
+     * method does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
+
+    /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
      * <code>transform</code> flag is set to one of the constants defined in
      * <code>ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao</code>, please note that the
@@ -168,28 +190,6 @@ public abstract class FactorAssociatedAnalysisResultSetDaoBase extends
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet)} method. This
-     * method does not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

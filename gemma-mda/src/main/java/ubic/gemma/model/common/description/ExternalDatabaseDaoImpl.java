@@ -71,6 +71,6 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
             return existingExternalDatabase;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new externalDatabase: " + externalDatabase.getName() );
-        return ( ExternalDatabase ) create( externalDatabase );
+        return create( externalDatabase );
     }
 }

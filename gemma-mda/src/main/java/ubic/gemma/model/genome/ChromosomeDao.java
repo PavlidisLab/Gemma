@@ -92,6 +92,15 @@ public interface ChromosomeDao {
     public Object find( int transform, ubic.gemma.model.genome.Chromosome chromosome );
 
     /**
+     * Find a chromosome by name and taxon
+     * 
+     * @param name
+     * @param taxon
+     * @return
+     */
+    public Chromosome find( String name, Taxon taxon );
+
+    /**
      * <p>
      * Does the same thing as {@link #find(ubic.gemma.model.genome.Chromosome)} with an additional argument called
      * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
@@ -205,14 +214,5 @@ public interface ChromosomeDao {
      * Updates the <code>chromosome</code> instance in the persistent store.
      */
     public void update( ubic.gemma.model.genome.Chromosome chromosome );
-
-    /**
-     * Find a chromosome by name and taxon
-     * 
-     * @param name
-     * @param taxon
-     * @return
-     */
-    public Chromosome find( String name, Taxon taxon );
 
 }

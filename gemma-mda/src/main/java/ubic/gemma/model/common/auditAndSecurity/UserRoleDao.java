@@ -37,7 +37,7 @@ public interface UserRoleDao extends BaseDao<UserRole> {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection findRolesByRoleName( int transform, java.lang.String name );
+    public java.util.Collection<UserRole> findRolesByRoleName( int transform, java.lang.String name );
 
     /**
      * <p>
@@ -46,12 +46,12 @@ public interface UserRoleDao extends BaseDao<UserRole> {
      * in {@link #findRolesByRoleName(int, java.lang.String name)}.
      * </p>
      */
-    public java.util.Collection findRolesByRoleName( int transform, String queryString, java.lang.String name );
+    public java.util.Collection<UserRole> findRolesByRoleName( int transform, String queryString, java.lang.String name );
 
     /**
      * 
      */
-    public java.util.Collection findRolesByRoleName( java.lang.String name );
+    public java.util.Collection<UserRole> findRolesByRoleName( java.lang.String name );
 
     /**
      * <p>
@@ -60,7 +60,7 @@ public interface UserRoleDao extends BaseDao<UserRole> {
      * in {@link #findRolesByRoleName(java.lang.String)}.
      * </p>
      */
-    public java.util.Collection findRolesByRoleName( String queryString, java.lang.String name );
+    public java.util.Collection<UserRole> findRolesByRoleName( String queryString, java.lang.String name );
 
     /**
      * <p>
@@ -71,7 +71,7 @@ public interface UserRoleDao extends BaseDao<UserRole> {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection findRolesByUserName( int transform, java.lang.String userName );
+    public java.util.Collection<UserRole> findRolesByUserName( int transform, java.lang.String userName );
 
     /**
      * <p>
@@ -80,14 +80,15 @@ public interface UserRoleDao extends BaseDao<UserRole> {
      * in {@link #findRolesByUserName(int, java.lang.String userName)}.
      * </p>
      */
-    public java.util.Collection findRolesByUserName( int transform, String queryString, java.lang.String userName );
+    public java.util.Collection<UserRole> findRolesByUserName( int transform, String queryString,
+            java.lang.String userName );
 
     /**
      * <p>
      * Return all roles
      * </p>
      */
-    public java.util.Collection findRolesByUserName( java.lang.String userName );
+    public java.util.Collection<UserRole> findRolesByUserName( java.lang.String userName );
 
     /**
      * <p>
@@ -96,6 +97,6 @@ public interface UserRoleDao extends BaseDao<UserRole> {
      * in {@link #findRolesByUserName(java.lang.String)}.
      * </p>
      */
-    public java.util.Collection findRolesByUserName( String queryString, java.lang.String userName );
+    public java.util.Collection<UserRole> findRolesByUserName( String queryString, java.lang.String userName );
 
 }

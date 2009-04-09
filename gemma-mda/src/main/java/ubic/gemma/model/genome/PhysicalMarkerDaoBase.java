@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.genome;
 
 import java.util.Collection;
@@ -38,14 +38,16 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
         if ( entities == null ) {
             throw new IllegalArgumentException( "PhysicalMarker.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.genome.PhysicalMarker ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform, ( ubic.gemma.model.genome.PhysicalMarker ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -113,6 +115,7 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
      * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByNcbiId(java.lang.String, java.lang.String)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection<PhysicalMarker> findByNcbiId( final java.lang.String queryString,
             final java.lang.String ncbiId ) {
@@ -124,6 +127,7 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection<PhysicalMarker> findByPhysicalLocation( final int transform,
             final java.lang.String queryString, final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -142,6 +146,7 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection<PhysicalMarker> findByPhysicalLocation( final int transform,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -157,6 +162,7 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection<PhysicalMarker> findByPhysicalLocation( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -167,6 +173,7 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
      * @see ubic.gemma.model.genome.PhysicalMarkerDao#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     public java.util.Collection<PhysicalMarker> findByPhysicalLocation(
             ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( TRANSFORM_NONE, location );
@@ -205,8 +212,6 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
         }
     }
 
-    protected abstract Collection<PhysicalMarker> handleLoad( Collection<Long> ids );
-
     /**
      * @see ubic.gemma.model.genome.PhysicalMarkerDao#loadAll()
      */
@@ -235,7 +240,7 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
         if ( id == null ) {
             throw new IllegalArgumentException( "PhysicalMarker.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.PhysicalMarker entity = ( ubic.gemma.model.genome.PhysicalMarker ) this.load( id );
+        ubic.gemma.model.genome.PhysicalMarker entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -270,14 +275,16 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
         if ( entities == null ) {
             throw new IllegalArgumentException( "PhysicalMarker.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.genome.PhysicalMarker ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.genome.PhysicalMarker ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**
@@ -289,6 +296,8 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
         }
         this.getHibernateTemplate().update( physicalMarker );
     }
+
+    protected abstract Collection<PhysicalMarker> handleLoad( Collection<Long> ids );
 
     /**
      * Transforms a collection of entities using the
@@ -303,6 +312,7 @@ public abstract class PhysicalMarkerDaoBase extends ubic.gemma.model.genome.Chro
      * @see #transformEntity(int,ubic.gemma.model.genome.PhysicalMarker)
      */
 
+    @Override
     protected void transformEntities( final int transform, final java.util.Collection<PhysicalMarker> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through

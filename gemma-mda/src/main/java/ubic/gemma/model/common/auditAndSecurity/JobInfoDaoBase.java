@@ -32,7 +32,7 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<JobInfo> create( final int transform, final java.util.Collection<JobInfo> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "JobInfo.create - 'entities' can not be null" );
         }
@@ -54,12 +54,12 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.JobInfo)
      */
-    public Object create( final int transform, final ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
+    public JobInfo create( final int transform, final ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
         if ( jobInfo == null ) {
             throw new IllegalArgumentException( "JobInfo.create - 'jobInfo' can not be null" );
         }
         this.getHibernateTemplate().save( jobInfo );
-        return this.transformEntity( transform, jobInfo );
+        return ( JobInfo ) this.transformEntity( transform, jobInfo );
     }
 
     /**
@@ -75,19 +75,19 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
      */
     public ubic.gemma.model.common.auditAndSecurity.JobInfo create(
             ubic.gemma.model.common.auditAndSecurity.JobInfo jobInfo ) {
-        return ( ubic.gemma.model.common.auditAndSecurity.JobInfo ) this.create( TRANSFORM_NONE, jobInfo );
+        return this.create( TRANSFORM_NONE, jobInfo );
     }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoDao#load(int, java.lang.Long)
      */
-    public Object load( final int transform, final java.lang.Long id ) {
+    public JobInfo load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "JobInfo.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.common.auditAndSecurity.JobInfoImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.JobInfo ) entity );
+        return ( JobInfo ) transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.JobInfo ) entity );
     }
 
     /**

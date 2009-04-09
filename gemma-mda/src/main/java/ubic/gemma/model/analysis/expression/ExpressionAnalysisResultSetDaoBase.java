@@ -31,6 +31,59 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends
         ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao {
 
     /**
+     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(int, java.util.Collection)
+     */
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ExpressionAnalysisResultSet.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform,
+                                    ( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet ) entityIterator
+                                            .next() );
+                        }
+                        return null;
+                    }
+                } );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(int transform,
+     *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
+     */
+    public Object create( final int transform,
+            final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet ) {
+        if ( expressionAnalysisResultSet == null ) {
+            throw new IllegalArgumentException(
+                    "ExpressionAnalysisResultSet.create - 'expressionAnalysisResultSet' can not be null" );
+        }
+        this.getHibernateTemplate().save( expressionAnalysisResultSet );
+        return this.transformEntity( transform, expressionAnalysisResultSet );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
+     */
+    public ubic.gemma.model.analysis.AnalysisResultSet create(
+            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet ) {
+        return ( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet ) this.create( TRANSFORM_NONE,
+                expressionAnalysisResultSet );
+    }
+
+    /**
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#load(int, java.lang.Long)
      */
     @Override
@@ -72,102 +125,6 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
-     */
-    public ubic.gemma.model.analysis.AnalysisResultSet create(
-            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet ) {
-        return ( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet ) this.create( TRANSFORM_NONE,
-                expressionAnalysisResultSet );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(int transform,
-     *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
-     */
-    public Object create( final int transform,
-            final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet ) {
-        if ( expressionAnalysisResultSet == null ) {
-            throw new IllegalArgumentException(
-                    "ExpressionAnalysisResultSet.create - 'expressionAnalysisResultSet' can not be null" );
-        }
-        this.getHibernateTemplate().save( expressionAnalysisResultSet );
-        return this.transformEntity( transform, expressionAnalysisResultSet );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(int, java.util.Collection)
-     */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ExpressionAnalysisResultSet.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform,
-                                    ( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet ) entityIterator
-                                            .next() );
-                        }
-                        return null;
-                    }
-                } );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#update(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
-     */
-    public void update( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet ) {
-        if ( expressionAnalysisResultSet == null ) {
-            throw new IllegalArgumentException(
-                    "ExpressionAnalysisResultSet.update - 'expressionAnalysisResultSet' can not be null" );
-        }
-        this.getHibernateTemplate().update( expressionAnalysisResultSet );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisResultSetDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ExpressionAnalysisResultSet.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet ) entityIterator
-                                    .next() );
-                        }
-                        return null;
-                    }
-                } );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#remove(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
-     */
-    public void remove( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet ) {
-        if ( expressionAnalysisResultSet == null ) {
-            throw new IllegalArgumentException(
-                    "ExpressionAnalysisResultSet.remove - 'expressionAnalysisResultSet' can not be null" );
-        }
-        this.getHibernateTemplate().delete( expressionAnalysisResultSet );
-    }
-
-    /**
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#remove(java.lang.Long)
      */
     @Override
@@ -194,6 +151,17 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends
     }
 
     /**
+     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#remove(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
+     */
+    public void remove( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet ) {
+        if ( expressionAnalysisResultSet == null ) {
+            throw new IllegalArgumentException(
+                    "ExpressionAnalysisResultSet.remove - 'expressionAnalysisResultSet' can not be null" );
+        }
+        this.getHibernateTemplate().delete( expressionAnalysisResultSet );
+    }
+
+    /**
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#thaw(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
      */
     public void thaw( final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {
@@ -207,10 +175,64 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends
     }
 
     /**
+     * @see ubic.gemma.model.analysis.AnalysisResultSetDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ExpressionAnalysisResultSet.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#update(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
+     */
+    public void update( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet ) {
+        if ( expressionAnalysisResultSet == null ) {
+            throw new IllegalArgumentException(
+                    "ExpressionAnalysisResultSet.update - 'expressionAnalysisResultSet' can not be null" );
+        }
+        this.getHibernateTemplate().update( expressionAnalysisResultSet );
+    }
+
+    /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)}
      */
     protected abstract void handleThaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet )
             throws java.lang.Exception;
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)} method. This
+     * method does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
+     */
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
+    }
 
     /**
      * Allows transformation of entities into value objects (or something else for that matter), when the
@@ -236,28 +258,6 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)} method. This
-     * method does not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

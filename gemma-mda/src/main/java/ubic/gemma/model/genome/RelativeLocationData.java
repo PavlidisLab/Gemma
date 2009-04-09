@@ -30,42 +30,15 @@ public class RelativeLocationData {
     private boolean overlapsGene = false;
     private boolean isOnSameStrand = false;
 
-    public boolean isOnSameStrand() {
-        return isOnSameStrand;
-    }
-
-    public void setOnSameStrand( boolean isOnSameStrand ) {
-        this.isOnSameStrand = isOnSameStrand;
-    }
-
     private long range = 0L;
 
-    /**
-     * @return the range
-     */
-    public long getRange() {
-        return range;
-    }
-
-    /**
-     * @param range the range to set
-     */
-    public void setRange( long range ) {
-        this.range = range;
-    }
-
-    /**
-     * @return the physicalLocation
-     */
-    public PhysicalLocation getPhysicalLocation() {
-        return physicalLocation;
-    }
-
-    /**
-     * @param physicalLocation the physicalLocation to set
-     */
-    public void setPhysicalLocation( PhysicalLocation physicalLocation ) {
+    public RelativeLocationData( PhysicalLocation physicalLocation, Gene nearestGene, GeneProduct nearestGeneProduct,
+            PhysicalLocation nearestGeneProductPhysicalLocation ) {
+        super();
         this.physicalLocation = physicalLocation;
+        this.nearestGene = nearestGene;
+        this.nearestGeneProduct = nearestGeneProduct;
+        this.nearestGeneProductPhysicalLocation = nearestGeneProductPhysicalLocation;
     }
 
     /**
@@ -76,24 +49,10 @@ public class RelativeLocationData {
     }
 
     /**
-     * @param nearestGene the nearestGene to set
-     */
-    public void setNearestGene( Gene nearestGene ) {
-        this.nearestGene = nearestGene;
-    }
-
-    /**
      * @return the nearestGeneProduct
      */
     public GeneProduct getNearestGeneProduct() {
         return nearestGeneProduct;
-    }
-
-    /**
-     * @param nearestGeneProduct the nearestGeneProduct to set
-     */
-    public void setNearestGeneProduct( GeneProduct nearestGeneProduct ) {
-        this.nearestGeneProduct = nearestGeneProduct;
     }
 
     /**
@@ -104,10 +63,17 @@ public class RelativeLocationData {
     }
 
     /**
-     * @param nearestGeneProductPhysicalLocation the nearestGeneProductPhysicalLocation to set
+     * @return the physicalLocation
      */
-    public void setNearestGeneProductPhysicalLocation( PhysicalLocation nearestGeneProductPhysicalLocation ) {
-        this.nearestGeneProductPhysicalLocation = nearestGeneProductPhysicalLocation;
+    public PhysicalLocation getPhysicalLocation() {
+        return physicalLocation;
+    }
+
+    /**
+     * @return the range
+     */
+    public long getRange() {
+        return range;
     }
 
     /**
@@ -117,11 +83,8 @@ public class RelativeLocationData {
         return isContainedWithinGene;
     }
 
-    /**
-     * @param isContainedWithinGene the isContainedWithinGene to set
-     */
-    public void setContainedWithinGene( boolean isContainedWithinGene ) {
-        this.isContainedWithinGene = isContainedWithinGene;
+    public boolean isOnSameStrand() {
+        return isOnSameStrand;
     }
 
     /**
@@ -132,19 +95,56 @@ public class RelativeLocationData {
     }
 
     /**
+     * @param isContainedWithinGene the isContainedWithinGene to set
+     */
+    public void setContainedWithinGene( boolean isContainedWithinGene ) {
+        this.isContainedWithinGene = isContainedWithinGene;
+    }
+
+    /**
+     * @param nearestGene the nearestGene to set
+     */
+    public void setNearestGene( Gene nearestGene ) {
+        this.nearestGene = nearestGene;
+    }
+
+    /**
+     * @param nearestGeneProduct the nearestGeneProduct to set
+     */
+    public void setNearestGeneProduct( GeneProduct nearestGeneProduct ) {
+        this.nearestGeneProduct = nearestGeneProduct;
+    }
+
+    /**
+     * @param nearestGeneProductPhysicalLocation the nearestGeneProductPhysicalLocation to set
+     */
+    public void setNearestGeneProductPhysicalLocation( PhysicalLocation nearestGeneProductPhysicalLocation ) {
+        this.nearestGeneProductPhysicalLocation = nearestGeneProductPhysicalLocation;
+    }
+
+    public void setOnSameStrand( boolean isOnSameStrand ) {
+        this.isOnSameStrand = isOnSameStrand;
+    }
+
+    /**
      * @param overlapsGene the overlapsGene to set
      */
     public void setOverlapsGene( boolean overlapsGene ) {
         this.overlapsGene = overlapsGene;
     }
 
-    public RelativeLocationData( PhysicalLocation physicalLocation, Gene nearestGene, GeneProduct nearestGeneProduct,
-            PhysicalLocation nearestGeneProductPhysicalLocation ) {
-        super();
+    /**
+     * @param physicalLocation the physicalLocation to set
+     */
+    public void setPhysicalLocation( PhysicalLocation physicalLocation ) {
         this.physicalLocation = physicalLocation;
-        this.nearestGene = nearestGene;
-        this.nearestGeneProduct = nearestGeneProduct;
-        this.nearestGeneProductPhysicalLocation = nearestGeneProductPhysicalLocation;
+    }
+
+    /**
+     * @param range the range to set
+     */
+    public void setRange( long range ) {
+        this.range = range;
     }
 
 }

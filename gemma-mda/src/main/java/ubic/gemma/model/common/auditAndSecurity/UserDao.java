@@ -30,6 +30,12 @@ import ubic.gemma.persistence.BaseDao;
 public interface UserDao extends BaseDao<User> {
 
     /**
+     * @param contact
+     * @return
+     */
+    public User find( User contact );
+
+    /**
      * 
      */
     public ubic.gemma.model.common.auditAndSecurity.User findByEmail( java.lang.String email );
@@ -67,11 +73,5 @@ public interface UserDao extends BaseDao<User> {
      * </p>
      */
     public ubic.gemma.model.common.auditAndSecurity.User findByUserName( String queryString, java.lang.String userName );
-
-    /**
-     * @param contact
-     * @return
-     */
-    public User find( User contact );
 
 }

@@ -91,7 +91,7 @@ public class CandidateGeneListServiceImpl extends ubic.gemma.model.genome.gene.C
 
     @Override
     protected CandidateGeneList handleSaveCandidateGeneList( CandidateGeneList candidateGeneList ) throws Exception {
-        return ( CandidateGeneList ) this.getCandidateGeneListDao().create( candidateGeneList );
+        return this.getCandidateGeneListDao().create( candidateGeneList );
     }
 
     @Override

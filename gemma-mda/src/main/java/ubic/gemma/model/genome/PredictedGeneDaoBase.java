@@ -55,16 +55,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
     };
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObject(ubic.gemma.model.genome.Gene)
-     */
-    public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject(
-            final ubic.gemma.model.genome.PredictedGene entity ) {
-        final ubic.gemma.model.genome.gene.GeneValueObject target = new ubic.gemma.model.genome.gene.GeneValueObject();
-        toGeneValueObject( entity, target );
-        return target;
-    }
-
-    /**
      * @see ubic.gemma.model.genome.PredictedGeneDao#create(int, java.util.Collection)
      */
 
@@ -204,6 +194,7 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByNcbiId(java.lang.String, java.lang.String)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
         return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
@@ -352,6 +343,7 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -370,6 +362,7 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final int transform,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -383,6 +376,7 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -393,6 +387,7 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     public java.util.Collection findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( TRANSFORM_NONE, location );
     }
@@ -452,6 +447,46 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
         return ( ubic.gemma.model.genome.Gene ) this.findOrCreate( TRANSFORM_NONE, gene );
     }
 
+    public abstract PredictedGene geneValueObjectToEntity( GeneValueObject geneValueObject );
+
+    /**
+     * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject,
+     *      ubic.gemma.model.genome.Gene)
+     */
+    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject source,
+            ubic.gemma.model.genome.PredictedGene target, boolean copyIfNull ) {
+        if ( copyIfNull || source.getOfficialSymbol() != null ) {
+            target.setOfficialSymbol( source.getOfficialSymbol() );
+        }
+        if ( copyIfNull || source.getOfficialName() != null ) {
+            target.setOfficialName( source.getOfficialName() );
+        }
+        if ( copyIfNull || source.getNcbiId() != null ) {
+            target.setNcbiId( source.getNcbiId() );
+        }
+        if ( copyIfNull || source.getName() != null ) {
+            target.setName( source.getName() );
+        }
+        if ( copyIfNull || source.getDescription() != null ) {
+            target.setDescription( source.getDescription() );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntityCollection(java.util.Collection)
+     */
+    public final void geneValueObjectToEntityCollection( java.util.Collection instances ) {
+        if ( instances != null ) {
+            for ( final java.util.Iterator iterator = instances.iterator(); iterator.hasNext(); ) {
+                // - remove an objects that are null or not of the correct instance
+                if ( !( iterator.next() instanceof ubic.gemma.model.genome.gene.GeneValueObject ) ) {
+                    iterator.remove();
+                }
+            }
+            org.apache.commons.collections.CollectionUtils.transform( instances, GeneValueObjectToEntityTransformer );
+        }
+    }
+
     /**
      * @see ubic.gemma.model.genome.PredictedGeneDao#load(int, java.lang.Long)
      */
@@ -500,7 +535,7 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
         if ( id == null ) {
             throw new IllegalArgumentException( "PredictedGene.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.PredictedGene entity = ( ubic.gemma.model.genome.PredictedGene ) this.load( id );
+        ubic.gemma.model.genome.PredictedGene entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -525,6 +560,39 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
             throw new IllegalArgumentException( "PredictedGene.remove - 'predictedGene' can not be null" );
         }
         this.getHibernateTemplate().delete( predictedGene );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObject(ubic.gemma.model.genome.Gene)
+     */
+    public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject(
+            final ubic.gemma.model.genome.PredictedGene entity ) {
+        final ubic.gemma.model.genome.gene.GeneValueObject target = new ubic.gemma.model.genome.gene.GeneValueObject();
+        toGeneValueObject( entity, target );
+        return target;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObject(ubic.gemma.model.genome.Gene,
+     *      ubic.gemma.model.genome.gene.GeneValueObject)
+     */
+    public void toGeneValueObject( ubic.gemma.model.genome.PredictedGene source,
+            ubic.gemma.model.genome.gene.GeneValueObject target ) {
+        target.setId( source.getId() );
+        target.setName( source.getName() );
+        target.setNcbiId( source.getNcbiId() );
+        target.setOfficialSymbol( source.getOfficialSymbol() );
+        target.setOfficialName( source.getOfficialName() );
+        target.setDescription( source.getDescription() );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObjectCollection(java.util.Collection)
+     */
+    public final void toGeneValueObjectCollection( java.util.Collection entities ) {
+        if ( entities != null ) {
+            org.apache.commons.collections.CollectionUtils.transform( entities, GENEVALUEOBJECT_TRANSFORMER );
+        }
     }
 
     /**
@@ -558,83 +626,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
     }
 
     /**
-     * Transforms a collection of entities using the {@link #transformEntity(int,ubic.gemma.model.genome.PredictedGene)}
-     * method. This method does not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.PredictedGeneDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.PredictedGene)
-     */
-
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case ubic.gemma.model.genome.GeneDao.TRANSFORM_GENEVALUEOBJECT:
-                toGeneValueObjectCollection( entities );
-                break;
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    public abstract PredictedGene geneValueObjectToEntity( GeneValueObject geneValueObject );
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject,
-     *      ubic.gemma.model.genome.Gene)
-     */
-    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject source,
-            ubic.gemma.model.genome.PredictedGene target, boolean copyIfNull ) {
-        if ( copyIfNull || source.getOfficialSymbol() != null ) {
-            target.setOfficialSymbol( source.getOfficialSymbol() );
-        }
-        if ( copyIfNull || source.getOfficialName() != null ) {
-            target.setOfficialName( source.getOfficialName() );
-        }
-        if ( copyIfNull || source.getNcbiId() != null ) {
-            target.setNcbiId( source.getNcbiId() );
-        }
-        if ( copyIfNull || source.getName() != null ) {
-            target.setName( source.getName() );
-        }
-        if ( copyIfNull || source.getDescription() != null ) {
-            target.setDescription( source.getDescription() );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntityCollection(java.util.Collection)
-     */
-    public final void geneValueObjectToEntityCollection( java.util.Collection instances ) {
-        if ( instances != null ) {
-            for ( final java.util.Iterator iterator = instances.iterator(); iterator.hasNext(); ) {
-                // - remove an objects that are null or not of the correct instance
-                if ( !( iterator.next() instanceof ubic.gemma.model.genome.gene.GeneValueObject ) ) {
-                    iterator.remove();
-                }
-            }
-            org.apache.commons.collections.CollectionUtils.transform( instances, GeneValueObjectToEntityTransformer );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObject(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.genome.gene.GeneValueObject)
-     */
-    public void toGeneValueObject( ubic.gemma.model.genome.PredictedGene source,
-            ubic.gemma.model.genome.gene.GeneValueObject target ) {
-        target.setId( source.getId() );
-        target.setName( source.getName() );
-        target.setNcbiId( source.getNcbiId() );
-        target.setOfficialSymbol( source.getOfficialSymbol() );
-        target.setOfficialName( source.getOfficialName() );
-        target.setDescription( source.getDescription() );
-    }
-
-    /**
      * Default implementation for transforming the results of a report query into a value object. This implementation
      * exists for convenience reasons only. It needs only be overridden in the {@link GeneDaoImpl} class if you intend
      * to use reporting queries.
@@ -657,11 +648,26 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObjectCollection(java.util.Collection)
+     * Transforms a collection of entities using the {@link #transformEntity(int,ubic.gemma.model.genome.PredictedGene)}
+     * method. This method does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.PredictedGeneDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.genome.PredictedGene)
      */
-    public final void toGeneValueObjectCollection( java.util.Collection entities ) {
-        if ( entities != null ) {
-            org.apache.commons.collections.CollectionUtils.transform( entities, GENEVALUEOBJECT_TRANSFORMER );
+
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case ubic.gemma.model.genome.GeneDao.TRANSFORM_GENEVALUEOBJECT:
+                toGeneValueObjectCollection( entities );
+                break;
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
         }
     }
 

@@ -203,6 +203,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findByNcbiId(java.lang.String, java.lang.String)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
         return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
@@ -213,6 +214,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -231,6 +233,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final int transform,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -244,6 +247,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -254,6 +258,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     public java.util.Collection findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( TRANSFORM_NONE, location );
     }
@@ -434,7 +439,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
         if ( id == null ) {
             throw new IllegalArgumentException( "GeneProduct.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.gene.GeneProduct entity = ( ubic.gemma.model.genome.gene.GeneProduct ) this.load( id );
+        ubic.gemma.model.genome.gene.GeneProduct entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -579,6 +584,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      * @see #transformEntity(int,ubic.gemma.model.genome.gene.GeneProduct)
      */
 
+    @Override
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case ubic.gemma.model.genome.gene.GeneProductDao.TRANSFORM_GENEPRODUCTVALUEOBJECT:

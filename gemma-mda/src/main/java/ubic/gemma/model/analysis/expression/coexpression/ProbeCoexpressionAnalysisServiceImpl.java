@@ -47,12 +47,14 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
         return this.getProbeCoexpressionAnalysisDao().create( probeCoexpressionAnalysis );
     }
 
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
-     */
     @Override
-    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
-        return this.getProbeCoexpressionAnalysisDao().loadAll();
+    protected void handleDelete( Long idToDelete ) throws Exception {
+        this.getProbeCoexpressionAnalysisDao().remove( idToDelete );
+    }
+
+    @Override
+    protected void handleDelete( ProbeCoexpressionAnalysis toDelete ) throws Exception {
+        this.getProbeCoexpressionAnalysisDao().remove( toDelete );
     }
 
     @Override
@@ -63,6 +65,11 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
     @Override
     protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
         return this.getProbeCoexpressionAnalysisDao().findByInvestigations( investigations );
+    }
+
+    @Override
+    protected Collection handleFindByName( String name ) throws Exception {
+        return this.getProbeCoexpressionAnalysisDao().findByName( name );
     }
 
     @Override
@@ -100,23 +107,16 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected void handleDelete( Long idToDelete ) throws Exception {
-        this.getProbeCoexpressionAnalysisDao().remove( idToDelete );
-    }
-
-    @Override
-    protected void handleDelete( ProbeCoexpressionAnalysis toDelete ) throws Exception {
-        this.getProbeCoexpressionAnalysisDao().remove( toDelete );
-    }
-
-    @Override
-    protected Collection handleFindByName( String name ) throws Exception {
-        return this.getProbeCoexpressionAnalysisDao().findByName( name );
-    }
-
-    @Override
     protected ProbeCoexpressionAnalysis handleLoad( Long id ) throws Exception {
         return this.getProbeCoexpressionAnalysisDao().load( id );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
+     */
+    @Override
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+        return this.getProbeCoexpressionAnalysisDao().loadAll();
     }
 
 }

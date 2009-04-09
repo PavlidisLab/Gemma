@@ -23,24 +23,24 @@ public interface AnnotationAssociationService {
 
     public Collection<AnnotationAssociation> create( Collection<AnnotationAssociation> anCollection );
 
+    public Collection<AnnotationAssociation> find( BioSequence bioSequence );
+
+    public Collection<AnnotationAssociation> find( Gene gene );
+
+    public Collection<AnnotationAssociation> load( Collection<Long> id );
+
+    public AnnotationAssociation load( Long id );
+
     public void remove( AnnotationAssociation annotationAssociation );
 
     public void remove( Collection<AnnotationAssociation> anCollection );
 
-    public void update( AnnotationAssociation annotationAssociation );
-
-    public void update( Collection<AnnotationAssociation> anCollection );
-
-    public AnnotationAssociation load( Long id );
-
-    public Collection<AnnotationAssociation> load( Collection<Long> id );
-
-    public Collection<AnnotationAssociation> find( Gene gene );
-
-    public Collection<AnnotationAssociation> find( BioSequence bioSequence );
-
     public void thaw( AnnotationAssociation annotationAssociation );
 
     public void thaw( Collection<AnnotationAssociation> anCollection );
+
+    public void update( AnnotationAssociation annotationAssociation );
+
+    public void update( Collection<AnnotationAssociation> anCollection );
 
 }

@@ -53,7 +53,7 @@ public class BibliographicReferenceServiceImpl extends
     protected BibliographicReference handleCreate(
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
-        return ( BibliographicReference ) getBibliographicReferenceDao().create( bibliographicReference );
+        return getBibliographicReferenceDao().create( bibliographicReference );
     }
 
     /**
@@ -121,7 +121,7 @@ public class BibliographicReferenceServiceImpl extends
 
     @Override
     protected BibliographicReference handleLoad( Long id ) throws Exception {
-        return ( BibliographicReference ) this.getBibliographicReferenceDao().load( id );
+        return this.getBibliographicReferenceDao().load( id );
     }
 
     /*
@@ -131,7 +131,7 @@ public class BibliographicReferenceServiceImpl extends
      * .Long)
      */
     protected BibliographicReference handleLoadBibliographicReference( Long id ) throws Exception {
-        return ( BibliographicReference ) getBibliographicReferenceDao().load( id );
+        return getBibliographicReferenceDao().load( id );
     }
 
     @Override

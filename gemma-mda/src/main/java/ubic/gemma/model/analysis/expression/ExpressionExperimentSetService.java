@@ -40,7 +40,21 @@ public interface ExpressionExperimentSetService {
     /**
      * 
      */
-    public void update( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
+    public java.util.Collection<ExpressionExperimentSet> findByName( java.lang.String name );
+
+    /**
+     * <p>
+     * Get analyses that use this set. Note that if this collection is not empty, modification of the
+     * expressionexperimentset should be disallowed.
+     * </p>
+     */
+    public java.util.Collection<ExpressionAnalysis> getAnalyses(
+            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.analysis.expression.ExpressionExperimentSet load( java.lang.Long id );
 
     /**
      * 
@@ -63,20 +77,6 @@ public interface ExpressionExperimentSetService {
     /**
      * 
      */
-    public ubic.gemma.model.analysis.expression.ExpressionExperimentSet load( java.lang.Long id );
-
-    /**
-     * <p>
-     * Get analyses that use this set. Note that if this collection is not empty, modification of the
-     * expressionexperimentset should be disallowed.
-     * </p>
-     */
-    public java.util.Collection<ExpressionAnalysis> getAnalyses(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
-
-    /**
-     * 
-     */
-    public java.util.Collection<ExpressionExperimentSet> findByName( java.lang.String name );
+    public void update( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
 
 }

@@ -326,6 +326,13 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
+     * @return the stringency Filter Value
+     */
+    public int getStringency() {
+        return supportThreshold;
+    }
+
+    /**
      * @return all the probes for all the target genes.
      */
     public Collection<Long> getTargetGeneProbes() {
@@ -337,13 +344,6 @@ public class CoexpressionCollectionValueObject {
             }
         }
         return result;
-    }
-
-    /**
-     * @return the stringency Filter Value
-     */
-    public int getStringency() {
-        return supportThreshold;
     }
 
     /**
@@ -458,17 +458,6 @@ public class CoexpressionCollectionValueObject {
         }
     }
 
-    private void addTargetSpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
-        if ( this.knownGeneCoexpressionData.getExpressionExperiment( eeID ) != null )
-            this.knownGeneCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
-
-        if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
-            this.predictedCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
-
-        if ( this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID ) != null )
-            this.probeAlignedRegionCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
-    }
-
     private void addQuerySpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
         if ( this.knownGeneCoexpressionData.getExpressionExperiment( eeID ) != null )
             this.knownGeneCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
@@ -478,6 +467,17 @@ public class CoexpressionCollectionValueObject {
 
         if ( this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID ) != null )
             this.probeAlignedRegionCoexpressionData.addQuerySpecificityInfo( eeID, probe2GeneMap );
+    }
+
+    private void addTargetSpecificityData( Long eeID, Map<Long, Collection<Long>> probe2GeneMap ) {
+        if ( this.knownGeneCoexpressionData.getExpressionExperiment( eeID ) != null )
+            this.knownGeneCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
+
+        if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
+            this.predictedCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
+
+        if ( this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID ) != null )
+            this.probeAlignedRegionCoexpressionData.addTargetSpecificityInfo( eeID, probe2GeneMap );
     }
 
 }

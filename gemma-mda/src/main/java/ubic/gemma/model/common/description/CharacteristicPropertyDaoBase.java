@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.common.description;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
@@ -38,15 +38,18 @@ public abstract class CharacteristicPropertyDaoBase extends HibernateDaoSupport 
         if ( entities == null ) {
             throw new IllegalArgumentException( "CharacteristicProperty.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.common.description.CharacteristicProperty ) entityIterator
-                            .next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform,
+                                    ( ubic.gemma.model.common.description.CharacteristicProperty ) entityIterator
+                                            .next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -131,8 +134,7 @@ public abstract class CharacteristicPropertyDaoBase extends HibernateDaoSupport 
         if ( id == null ) {
             throw new IllegalArgumentException( "CharacteristicProperty.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.description.CharacteristicProperty entity = ( ubic.gemma.model.common.description.CharacteristicProperty ) this
-                .load( id );
+        ubic.gemma.model.common.description.CharacteristicProperty entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -168,14 +170,17 @@ public abstract class CharacteristicPropertyDaoBase extends HibernateDaoSupport 
         if ( entities == null ) {
             throw new IllegalArgumentException( "CharacteristicProperty.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.common.description.CharacteristicProperty ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.common.description.CharacteristicProperty ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**

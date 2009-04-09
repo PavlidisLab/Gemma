@@ -193,8 +193,7 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
         if ( id == null ) {
             throw new IllegalArgumentException( "Characteristic.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.description.Characteristic entity = ( ubic.gemma.model.common.description.Characteristic ) this
-                .load( id );
+        ubic.gemma.model.common.description.Characteristic entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

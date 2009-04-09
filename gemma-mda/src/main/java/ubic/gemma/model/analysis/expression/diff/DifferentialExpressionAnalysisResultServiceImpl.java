@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 
 /**
  * @author keshav
@@ -32,10 +31,26 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 public class DifferentialExpressionAnalysisResultServiceImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceBase {
 
+    public void thawAnalysisResult( DifferentialExpressionAnalysisResult result ) throws Exception {
+        this.getDifferentialExpressionAnalysisResultDao().thawAnalysisResult( result );
+    }
+
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceBase#handleGetExperimentalFactors(ubic.gemma.model.expression.analysis.expression.diff.DifferentialExpressionAnalysisResult)
+     * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceBase#
+     * handleGetExperimentalFactors(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetExperimentalFactors( Collection differentialExpressionAnalysisResults ) throws Exception {
+        return this.getDifferentialExpressionAnalysisResultDao().getExperimentalFactors(
+                differentialExpressionAnalysisResults );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceBase#
+     * handleGetExperimentalFactors
+     * (ubic.gemma.model.expression.analysis.expression.diff.DifferentialExpressionAnalysisResult)
      */
     @Override
     protected Collection handleGetExperimentalFactors(
@@ -44,24 +59,9 @@ public class DifferentialExpressionAnalysisResultServiceImpl extends
                 differentialExpressionAnalysisResult );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceBase#handleGetExperimentalFactors(java.util.Collection)
-     */
-    @Override
-    protected Map handleGetExperimentalFactors( Collection differentialExpressionAnalysisResults ) throws Exception {
-        return this.getDifferentialExpressionAnalysisResultDao().getExperimentalFactors(
-                differentialExpressionAnalysisResults );
-    }
-
     @Override
     protected void handleThaw( ExpressionAnalysisResultSet resultSet ) throws Exception {
         this.getExpressionAnalysisResultSetDao().thaw( resultSet );
     }
-    
-    public void thawAnalysisResult( DifferentialExpressionAnalysisResult result  ) throws Exception {
-        this.getDifferentialExpressionAnalysisResultDao().thawAnalysisResult( result );
-   }
-    
+
 }

@@ -27,7 +27,6 @@ import ubic.gemma.persistence.BaseDao;
 /**
  * @see ubic.gemma.model.genome.gene.BibReferenceCandidateGene
  */
-public interface BibReferenceCandidateGeneDao extends
-        BaseDao<BibReferenceCandidateGene> {
+public interface BibReferenceCandidateGeneDao extends BaseDao<BibReferenceCandidateGene> {
 
 }

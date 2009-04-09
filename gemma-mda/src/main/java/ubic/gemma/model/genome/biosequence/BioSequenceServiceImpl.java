@@ -44,7 +44,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      */
     @Override
     protected BioSequence handleCreate( BioSequence bioSequence ) throws Exception {
-        return ( BioSequence ) this.getBioSequenceDao().create( bioSequence );
+        return this.getBioSequenceDao().create( bioSequence );
     }
 
     /*
@@ -127,7 +127,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      */
     @Override
     protected BioSequence handleLoad( long id ) throws Exception {
-        return ( BioSequence ) this.getBioSequenceDao().load( id );
+        return this.getBioSequenceDao().load( id );
     }
 
     /*

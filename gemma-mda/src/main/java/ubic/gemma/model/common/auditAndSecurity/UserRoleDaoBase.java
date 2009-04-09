@@ -166,7 +166,7 @@ public abstract class UserRoleDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserRoleDao#load(int, java.lang.Long)
      */
-    
+
     public Object load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "UserRole.load - 'id' can not be null" );
@@ -179,7 +179,7 @@ public abstract class UserRoleDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserRoleDao#load(java.lang.Long)
      */
-    
+
     public UserRole load( java.lang.Long id ) {
         return ( ubic.gemma.model.common.auditAndSecurity.UserRole ) this.load( TRANSFORM_NONE, id );
     }
@@ -187,7 +187,7 @@ public abstract class UserRoleDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserRoleDao#loadAll()
      */
-    
+
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
@@ -196,7 +196,7 @@ public abstract class UserRoleDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserRoleDao#loadAll(int)
      */
-    
+
     public java.util.Collection loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.auditAndSecurity.UserRoleImpl.class );
@@ -207,13 +207,12 @@ public abstract class UserRoleDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserRoleDao#remove(java.lang.Long)
      */
-    
+
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "UserRole.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.auditAndSecurity.UserRole entity = ( ubic.gemma.model.common.auditAndSecurity.UserRole ) this
-                .load( id );
+        ubic.gemma.model.common.auditAndSecurity.UserRole entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -222,7 +221,7 @@ public abstract class UserRoleDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    
+
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "UserRole.remove - 'entities' can not be null" );
@@ -243,7 +242,7 @@ public abstract class UserRoleDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "UserRole.update - 'entities' can not be null" );
@@ -283,7 +282,7 @@ public abstract class UserRoleDaoBase extends HibernateDaoSupport implements
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.UserRole)
      */
-    
+
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through

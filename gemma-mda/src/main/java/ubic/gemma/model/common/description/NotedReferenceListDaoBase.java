@@ -130,8 +130,7 @@ public abstract class NotedReferenceListDaoBase extends HibernateDaoSupport impl
         if ( id == null ) {
             throw new IllegalArgumentException( "NotedReferenceList.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.description.NotedReferenceList entity = ( ubic.gemma.model.common.description.NotedReferenceList ) this
-                .load( id );
+        ubic.gemma.model.common.description.NotedReferenceList entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

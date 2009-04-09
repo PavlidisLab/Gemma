@@ -321,8 +321,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
         if ( id == null ) {
             throw new IllegalArgumentException( "CandidateGeneList.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.gene.CandidateGeneList entity = ( ubic.gemma.model.genome.gene.CandidateGeneList ) this
-                .load( id );
+        ubic.gemma.model.genome.gene.CandidateGeneList entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

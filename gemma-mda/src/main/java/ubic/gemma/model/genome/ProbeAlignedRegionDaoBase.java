@@ -589,8 +589,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
         if ( id == null ) {
             throw new IllegalArgumentException( "ProbeAlignedRegion.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.ProbeAlignedRegion entity = ( ubic.gemma.model.genome.ProbeAlignedRegion ) this
-                .load( id );
+        ubic.gemma.model.genome.ProbeAlignedRegion entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

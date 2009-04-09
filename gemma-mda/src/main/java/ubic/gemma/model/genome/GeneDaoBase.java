@@ -44,20 +44,6 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     private Probe2ProbeCoexpressionCache probe2ProbeCoexpressionCache;
 
     /**
-     * @return the probe2ProbeCoexpressionCache
-     */
-    public Probe2ProbeCoexpressionCache getProbe2ProbeCoexpressionCache() {
-        return probe2ProbeCoexpressionCache;
-    }
-
-    /**
-     * @param probe2ProbeCoexpressionCache the probe2ProbeCoexpressionCache to set
-     */
-    public void setProbe2ProbeCoexpressionCache( Probe2ProbeCoexpressionCache probe2ProbeCoexpressionCache ) {
-        this.probe2ProbeCoexpressionCache = probe2ProbeCoexpressionCache;
-    }
-
-    /**
      * This anonymous transformer is designed to transform entities or report query results (which result in an array of
      * objects) to {@link ubic.gemma.model.genome.gene.GeneValueObject} using the Jakarta Commons-Collections
      * Transformation API.
@@ -172,14 +158,14 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      */
     public ubic.gemma.model.genome.Gene find( final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene ) {
-        return ( ubic.gemma.model.genome.Gene ) this.find( TRANSFORM_NONE, queryString, gene );
+        return this.find( TRANSFORM_NONE, queryString, gene );
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#find(ubic.gemma.model.genome.Gene)
      */
     public ubic.gemma.model.genome.Gene find( ubic.gemma.model.genome.Gene gene ) {
-        return ( ubic.gemma.model.genome.Gene ) this.find( TRANSFORM_NONE, gene );
+        return this.find( TRANSFORM_NONE, gene );
     }
 
     /**
@@ -247,6 +233,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(java.lang.String, java.lang.String)
      */
 
+    @Override
     public java.util.Collection<Gene> findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
         return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
     }
@@ -388,6 +375,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection<Gene> findByPhysicalLocation( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
@@ -405,6 +393,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @see ubic.gemma.model.genome.GeneDao#findByPhysicalLocation(int, ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     public java.util.Collection<Gene> findByPhysicalLocation( final int transform,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( transform,
@@ -416,6 +405,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     public java.util.Collection<Gene> findByPhysicalLocation( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( TRANSFORM_NONE, queryString, location );
@@ -425,6 +415,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @see ubic.gemma.model.genome.GeneDao#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
      */
 
+    @Override
     public java.util.Collection<Gene> findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( TRANSFORM_NONE, location );
     }
@@ -614,6 +605,13 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     }
 
     /**
+     * @return the probe2ProbeCoexpressionCache
+     */
+    public Probe2ProbeCoexpressionCache getProbe2ProbeCoexpressionCache() {
+        return probe2ProbeCoexpressionCache;
+    }
+
+    /**
      * @see ubic.gemma.model.genome.GeneDao#load(int, java.lang.Long)
      */
 
@@ -712,7 +710,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.Gene entity = ( ubic.gemma.model.genome.Gene ) this.load( id );
+        ubic.gemma.model.genome.Gene entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -737,6 +735,13 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
             throw new IllegalArgumentException( "Gene.remove - 'gene' can not be null" );
         }
         this.getHibernateTemplate().delete( gene );
+    }
+
+    /**
+     * @param probe2ProbeCoexpressionCache the probe2ProbeCoexpressionCache to set
+     */
+    public void setProbe2ProbeCoexpressionCache( Probe2ProbeCoexpressionCache probe2ProbeCoexpressionCache ) {
+        this.probe2ProbeCoexpressionCache = probe2ProbeCoexpressionCache;
     }
 
     /**
@@ -962,6 +967,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @see #transformEntity(int,ubic.gemma.model.genome.Gene)
      */
 
+    @Override
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case ubic.gemma.model.genome.GeneDao.TRANSFORM_GENEVALUEOBJECT:

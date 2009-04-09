@@ -38,6 +38,11 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
 
     /**
+     * 
+     */
+    public java.util.Collection<ExpressionExperimentSet> findByName( java.lang.String name );
+
+    /**
      * <p>
      * Get analyses that use this set. Note that if this collection is not empty, modification of the
      * expressionexperimentset should be disallowed.
@@ -50,10 +55,5 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      * @return ExpressionExperimentSets that have more than 1 experiment in them.
      */
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
-
-    /**
-     * 
-     */
-    public java.util.Collection<ExpressionExperimentSet> findByName( java.lang.String name );
 
 }

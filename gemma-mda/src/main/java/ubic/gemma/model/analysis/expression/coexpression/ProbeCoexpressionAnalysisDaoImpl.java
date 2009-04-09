@@ -37,11 +37,9 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
         ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDaoBase {
 
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) {
-        final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as poa inner join poa.experimentsAnalyzed  as ee "
-                + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+        final String queryString = "select distinct a from ProbeCoexpressionAnalysisImpl a where :e in elements (a.experimentsAnalyzed)";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
     @SuppressWarnings("unchecked")
@@ -56,8 +54,10 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
-    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
-        final String queryString = "select distinct a from ProbeCoexpressionAnalysisImpl a where :e in elements (a.experimentsAnalyzed)";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
+    protected Collection handleFindByTaxon( Taxon taxon ) {
+        final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as poa inner join poa.experimentsAnalyzed  as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 }

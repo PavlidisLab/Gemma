@@ -40,7 +40,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     @Override
     protected ubic.gemma.model.genome.gene.GeneProduct handleCreate(
             ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
-        return ( GeneProduct ) this.getGeneProductDao().create( geneProduct );
+        return this.getGeneProductDao().create( geneProduct );
     }
 
     /**
@@ -93,7 +93,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      */
     @Override
     protected ubic.gemma.model.genome.gene.GeneProduct handleLoad( java.lang.Long id ) throws java.lang.Exception {
-        return ( GeneProduct ) this.getGeneProductDao().load( id );
+        return this.getGeneProductDao().load( id );
     }
 
     /*

@@ -36,21 +36,6 @@ public abstract class ExpressionExperimentSetServiceBase implements
     private ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao expressionExperimentSetDao;
 
     /**
-     * Sets the reference to <code>expressionExperimentSet</code>'s DAO.
-     */
-    public void setExpressionExperimentSetDao(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao expressionExperimentSetDao ) {
-        this.expressionExperimentSetDao = expressionExperimentSetDao;
-    }
-
-    /**
-     * Gets the reference to <code>expressionExperimentSet</code>'s DAO.
-     */
-    protected ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao getExpressionExperimentSetDao() {
-        return this.expressionExperimentSetDao;
-    }
-
-    /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     public ubic.gemma.model.analysis.expression.ExpressionExperimentSet create(
@@ -63,13 +48,6 @@ public abstract class ExpressionExperimentSetServiceBase implements
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
-     */
-    protected abstract ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleCreate(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
@@ -85,88 +63,17 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#findByName(java.lang.String)
      */
-    protected abstract void handleDelete(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
-     */
-    public void update( final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
+    public java.util.Collection<ExpressionExperimentSet> findByName( final java.lang.String name ) {
         try {
-            this.handleUpdate( expressionExperimentSet );
+            return this.handleFindByName( name );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet)' --> "
+                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.findByName(java.lang.String name)' --> "
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
-     */
-    protected abstract void handleUpdate(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadAll()
-     */
-    public java.util.Collection<ExpressionExperimentSet> loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAll()' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract java.util.Collection<ExpressionExperimentSet> handleLoadAll() throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
-     */
-    public java.util.Collection<ExpressionExperimentSet> loadUserSets(
-            final ubic.gemma.model.common.auditAndSecurity.User user ) {
-        try {
-            return this.handleLoadUserSets( user );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadUserSets(ubic.gemma.model.common.auditAndSecurity.User user)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)}
-     */
-    protected abstract java.util.Collection<ExpressionExperimentSet> handleLoadUserSets(
-            ubic.gemma.model.common.auditAndSecurity.User user ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#load(java.lang.Long)
-     */
-    public ubic.gemma.model.analysis.expression.ExpressionExperimentSet load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.load(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
@@ -183,46 +90,84 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#load(java.lang.Long)
      */
-    protected abstract java.util.Collection<ExpressionAnalysis> handleGetAnalyses(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#findByName(java.lang.String)
-     */
-    public java.util.Collection<ExpressionExperimentSet> findByName( final java.lang.String name ) {
+    public ubic.gemma.model.analysis.expression.ExpressionExperimentSet load( final java.lang.Long id ) {
         try {
-            return this.handleFindByName( name );
+            return this.handleLoad( id );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.findByName(java.lang.String name)' --> "
+                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.load(java.lang.Long id)' --> "
                             + th, th );
         }
     }
 
     /**
-     * Performs the core logic for {@link #findByName(java.lang.String)}
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadAll()
      */
-    protected abstract java.util.Collection<ExpressionExperimentSet> handleFindByName( java.lang.String name )
-            throws java.lang.Exception;
-
-    /**
-     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
-     * 
-     * @return the current principal
-     */
-    protected java.security.Principal getPrincipal() {
-        return ubic.gemma.spring.PrincipalStore.get();
+    public java.util.Collection<ExpressionExperimentSet> loadAll() {
+        try {
+            return this.handleLoadAll();
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAll()' --> "
+                            + th, th );
+        }
     }
 
     /**
-     * Gets the message source available to this service.
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
      */
-    protected org.springframework.context.MessageSource getMessages() {
-        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
-                "messageSource" );
+    public java.util.Collection<ExpressionExperimentSet> loadUserSets(
+            final ubic.gemma.model.common.auditAndSecurity.User user ) {
+        try {
+            return this.handleLoadUserSets( user );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadUserSets(ubic.gemma.model.common.auditAndSecurity.User user)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Sets the reference to <code>expressionExperimentSet</code>'s DAO.
+     */
+    public void setExpressionExperimentSetDao(
+            ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao expressionExperimentSetDao ) {
+        this.expressionExperimentSetDao = expressionExperimentSetDao;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     */
+    public void update( final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
+        try {
+            this.handleUpdate( expressionExperimentSet );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * Gets the reference to <code>expressionExperimentSet</code>'s DAO.
+     */
+    protected ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao getExpressionExperimentSetDao() {
+        return this.expressionExperimentSetDao;
+    }
+
+    /**
+     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
+     * <code>locale</code>.
+     * 
+     * @param key the key of the message in the messages.properties message bundle.
+     * @param arguments any arguments to substitute when resolving the message.
+     * @param locale the locale of the messages to retrieve.
+     */
+    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
+            final java.util.Locale locale ) {
+        return this.getMessages().getMessage( key, arguments, locale );
     }
 
     /**
@@ -245,16 +190,71 @@ public abstract class ExpressionExperimentSetServiceBase implements
     }
 
     /**
-     * Gets the message having the given <code>key</code> using the given <code>arguments</code> for the given
-     * <code>locale</code>.
-     * 
-     * @param key the key of the message in the messages.properties message bundle.
-     * @param arguments any arguments to substitute when resolving the message.
-     * @param locale the locale of the messages to retrieve.
+     * Gets the message source available to this service.
      */
-    protected String getMessage( final java.lang.String key, final java.lang.Object[] arguments,
-            final java.util.Locale locale ) {
-        return this.getMessages().getMessage( key, arguments, locale );
+    protected org.springframework.context.MessageSource getMessages() {
+        return ( org.springframework.context.MessageSource ) ubic.gemma.spring.BeanLocator.instance().getBean(
+                "messageSource" );
     }
+
+    /**
+     * Gets the current <code>principal</code> if one has been set, otherwise returns <code>null</code>.
+     * 
+     * @return the current principal
+     */
+    protected java.security.Principal getPrincipal() {
+        return ubic.gemma.spring.PrincipalStore.get();
+    }
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
+     */
+    protected abstract ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleCreate(
+            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
+     */
+    protected abstract void handleDelete(
+            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByName(java.lang.String)}
+     */
+    protected abstract java.util.Collection<ExpressionExperimentSet> handleFindByName( java.lang.String name )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
+     */
+    protected abstract java.util.Collection<ExpressionAnalysis> handleGetAnalyses(
+            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #load(java.lang.Long)}
+     */
+    protected abstract ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleLoad( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadAll()}
+     */
+    protected abstract java.util.Collection<ExpressionExperimentSet> handleLoadAll() throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)}
+     */
+    protected abstract java.util.Collection<ExpressionExperimentSet> handleLoadUserSets(
+            ubic.gemma.model.common.auditAndSecurity.User user ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
+     */
+    protected abstract void handleUpdate(
+            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
+            throws java.lang.Exception;
 
 }

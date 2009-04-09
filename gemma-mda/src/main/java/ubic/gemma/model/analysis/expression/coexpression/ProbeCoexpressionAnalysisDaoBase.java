@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.analysis.expression.coexpression;
 
 /**
@@ -31,55 +31,27 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
         implements ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao {
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#load(int, java.lang.Long)
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#create(int,
+     *      java.util.Collection)
      */
-
-    public ProbeCoexpressionAnalysis load( final int transform, final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.load - 'id' can not be null" );
+    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.create - 'entities' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl.class, id );
-        return ( ProbeCoexpressionAnalysis ) transformEntity( transform,
-                ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#load(java.lang.Long)
-     */
-
-    public ProbeCoexpressionAnalysis load( java.lang.Long id ) {
-        return ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) this.load(
-                TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#loadAll()
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#loadAll(int)
-     */
-
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl.class );
-        this.transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#create(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
-     */
-    public ProbeCoexpressionAnalysis create(
-            ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
-        return ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) this.create(
-                TRANSFORM_NONE, probeCoexpressionAnalysis );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create(
+                                    transform,
+                                    ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) entityIterator
+                                            .next() );
+                        }
+                        return null;
+                    }
+                } );
+        return entities;
     }
 
     /**
@@ -105,112 +77,12 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#create(int,
-     *      java.util.Collection)
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#create(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create(
-                            transform,
-                            ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) entityIterator
-                                    .next() );
-                }
-                return null;
-            }
-        }  );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#update(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
-     */
-    public void update(
+    public ProbeCoexpressionAnalysis create(
             ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
-        if ( probeCoexpressionAnalysis == null ) {
-            throw new IllegalArgumentException(
-                    "ProbeCoexpressionAnalysis.update - 'probeCoexpressionAnalysis' can not be null" );
-        }
-        this.getHibernateTemplate().update( probeCoexpressionAnalysis );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-
-    public void update( final java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) entityIterator
-                            .next() );
-                }
-                return null;
-            }
-        }  );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#remove(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
-     */
-    public void remove(
-            ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
-        if ( probeCoexpressionAnalysis == null ) {
-            throw new IllegalArgumentException(
-                    "ProbeCoexpressionAnalysis.remove - 'probeCoexpressionAnalysis' can not be null" );
-        }
-        this.getHibernateTemplate().delete( probeCoexpressionAnalysis );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#remove(java.lang.Long)
-     */
-
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis entity = ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) this
-                .load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-
-    public void remove( java.util.Collection entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#findByName(java.lang.String)
-     */
-
-    public java.util.Collection findByName( java.lang.String name ) {
-        return this.findByName( TRANSFORM_NONE, name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#findByName(java.lang.String,
-     *      java.lang.String)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
-        return this.findByName( TRANSFORM_NONE, queryString, name );
+        return ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) this.create(
+                TRANSFORM_NONE, probeCoexpressionAnalysis );
     }
 
     /**
@@ -218,6 +90,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      *      java.lang.String)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
@@ -228,6 +101,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      *      java.lang.String, java.lang.String)
      */
 
+    @Override
     @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
@@ -242,21 +116,208 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getRecipient(java.lang.Long)
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#findByName(java.lang.String)
      */
 
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
+    @Override
+    public java.util.Collection findByName( java.lang.String name ) {
+        return this.findByName( TRANSFORM_NONE, name );
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getRecipient(java.lang.String,
-     *      java.lang.Long)
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#findByName(java.lang.String,
+     *      java.lang.String)
+     */
+
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
+        return this.findByName( TRANSFORM_NONE, queryString, name );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getAclObjectIdentityId(int,
+     *      java.lang.String, ubic.gemma.model.common.Securable)
      */
 
     @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
+    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform,
+                ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getAclObjectIdentityId(int,
+     *      ubic.gemma.model.common.Securable)
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
+        return this
+                .getAclObjectIdentityId(
+                        transform,
+                        "from ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis as probeCoexpressionAnalysis where probeCoexpressionAnalysis.securable = :securable",
+                        securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getAclObjectIdentityId(java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     */
+
+    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMask(int,
+     *      java.lang.String, ubic.gemma.model.common.Securable)
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public Object getMask( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform,
+                ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMask(int,
+     *      ubic.gemma.model.common.Securable)
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
+        return this
+                .getMask(
+                        transform,
+                        "from ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis as probeCoexpressionAnalysis where probeCoexpressionAnalysis.securable = :securable",
+                        securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMask(java.lang.String,
+     *      ubic.gemma.model.common.Securable)
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public java.lang.Integer getMask( final java.lang.String queryString,
+            final ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMask(ubic.gemma.model.common.Securable)
+     */
+
+    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
+        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMasks(int,
+     *      java.lang.String, java.util.Collection)
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public Object getMasks( final int transform, final java.lang.String queryString,
+            final java.util.Collection securables ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securables );
+        argNames.add( "securables" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
+                                + queryString + "'" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        result = transformEntity( transform,
+                ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMasks(int,
+     *      java.util.Collection)
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public Object getMasks( final int transform, final java.util.Collection securables ) {
+        return this
+                .getMasks(
+                        transform,
+                        "from ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis as probeCoexpressionAnalysis where probeCoexpressionAnalysis.securables = :securables",
+                        securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMasks(java.lang.String,
+     *      java.util.Collection)
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
+        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMasks(java.util.Collection)
+     */
+
+    public java.util.Map getMasks( java.util.Collection securables ) {
+        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
     }
 
     /**
@@ -302,188 +363,159 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getRecipient(java.lang.Long)
      */
 
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
+    public java.lang.String getRecipient( java.lang.Long id ) {
+        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getRecipient(java.lang.String,
+     *      java.lang.Long)
      */
 
     @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
+        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#load(int, java.lang.Long)
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis as probeCoexpressionAnalysis where probeCoexpressionAnalysis.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getAclObjectIdentityId(int,
-     *      java.lang.String, ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public ProbeCoexpressionAnalysis load( final int transform, final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.load - 'id' can not be null" );
         }
-        result = transformEntity( transform,
-                ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) result );
-        return result;
+        final Object entity = this.getHibernateTemplate().get(
+                ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl.class, id );
+        return ( ProbeCoexpressionAnalysis ) transformEntity( transform,
+                ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) entity );
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMask(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#load(java.lang.Long)
      */
 
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
+    public ProbeCoexpressionAnalysis load( java.lang.Long id ) {
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMask(int,
-     *      ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#loadAll()
      */
 
     @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis as probeCoexpressionAnalysis where probeCoexpressionAnalysis.securable = :securable",
-                        securable );
+    public java.util.Collection loadAll() {
+        return this.loadAll( TRANSFORM_NONE );
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMask(int,
-     *      java.lang.String, ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#loadAll(int)
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+    public java.util.Collection loadAll( final int transform ) {
+        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+                ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl.class );
+        this.transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#remove(java.lang.Long)
+     */
+
+    @Override
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.remove - 'id' can not be null" );
         }
-        result = transformEntity( transform,
-                ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMasks(java.util.Collection)
-     */
-
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMasks(java.lang.String,
-     *      java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMasks(int,
-     *      java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis as probeCoexpressionAnalysis where probeCoexpressionAnalysis.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#getMasks(int,
-     *      java.lang.String, java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis entity = this.load( id );
+        if ( entity != null ) {
+            this.remove( entity );
         }
-        result = transformEntity( transform,
-                ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) result );
-        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     */
+
+    @Override
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#remove(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
+     */
+    public void remove(
+            ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
+        if ( probeCoexpressionAnalysis == null ) {
+            throw new IllegalArgumentException(
+                    "ProbeCoexpressionAnalysis.remove - 'probeCoexpressionAnalysis' can not be null" );
+        }
+        this.getHibernateTemplate().delete( probeCoexpressionAnalysis );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
+     */
+
+    @Override
+    public void update( final java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#update(ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
+     */
+    public void update(
+            ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
+        if ( probeCoexpressionAnalysis == null ) {
+            throw new IllegalArgumentException(
+                    "ProbeCoexpressionAnalysis.update - 'probeCoexpressionAnalysis' can not be null" );
+        }
+        this.getHibernateTemplate().update( probeCoexpressionAnalysis );
+    }
+
+    /**
+     * Transforms a collection of entities using the
+     * {@link #transformEntity(int,ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)} method.
+     * This method does not instantiate a new collection.
+     * <p/>
+     * This method is to be used internally only.
+     * 
+     * @param transform one of the constants declared in
+     *        <code>ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao</code>
+     * @param entities the collection of entities to transform
+     * @return the same collection as the argument, but this time containing the transformed entities
+     * @see #transformEntity(int,ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
+     */
+
+    @Override
+    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+        switch ( transform ) {
+            case TRANSFORM_NONE: // fall-through
+            default:
+                // do nothing;
+        }
     }
 
     /**
@@ -510,28 +542,6 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
             }
         }
         return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)} method.
-     * This method does not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
-     */
-
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
     }
 
 }

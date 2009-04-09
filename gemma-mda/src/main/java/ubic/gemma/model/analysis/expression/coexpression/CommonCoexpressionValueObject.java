@@ -80,6 +80,61 @@ public class CommonCoexpressionValueObject {
     }
 
     /**
+     * Initialize the vector of 'bits'.
+     * 
+     * @param eeIds
+     */
+    public void computeExperimentBits( List<Long> eeIds ) {
+        experimentBitList.clear();
+        for ( Long long1 : eeIds ) {
+            if ( positiveExperimentIds.contains( long1 ) || negativeExperimentIds.contains( long1 ) ) {
+                experimentBitList.add( 20 );
+            } else {
+                experimentBitList.add( 1 );
+            }
+        }
+    }
+
+    /**
+     * @return the collection of query genes this gene was coexpressed with
+     */
+    public Collection<Gene> getCommonCoexpressedQueryGenes() {
+        return commonCoexpressedQueryGenes;
+    }
+
+    /**
+     * @return the collection of query genes this gene was positively coexpressed with
+     */
+    public Collection<Gene> getCommonNegativeCoexpressedQueryGenes() {
+        return commonNegativeCoexpressedQueryGenes;
+    }
+
+    /**
+     * @return the collection of query genes this gene was positively coexpressed with
+     */
+    public Collection<Gene> getCommonPositiveCoexpressedQueryGenes() {
+        return commonPositiveCoexpressedQueryGenes;
+    }
+
+    /**
+     * @return a collection of EE ids that contributed to this genes negative expression
+     */
+    public Collection<Long> getEEContributing2NegativeLinks() {
+        return negativeExperimentIds;
+    }
+
+    /**
+     * @return a collectino of EEids that contributed to this genes positive expression
+     */
+    public Collection<Long> getEEContributing2PositiveLinks() {
+        return positiveExperimentIds;
+    }
+
+    public String getExperimentBitList() {
+        return StringUtils.join( experimentBitList, "," );
+    }
+
+    /**
      * @return the geneId
      */
     public Long getGeneId() {
@@ -92,6 +147,14 @@ public class CommonCoexpressionValueObject {
     public String getGeneName() {
         return gene.getName();
     }
+
+    // /**
+    // * @return the collection of CoexpressionCollectionValueObjects representing the query genes this gene was
+    // coexpressed with
+    // */
+    // public Collection<QueryGeneCoexpressionDataPair> getCommonCoexpressionData() {
+    // return commonCoexpressionData;
+    // }
 
     /**
      * @return the geneOfficialName
@@ -108,74 +171,11 @@ public class CommonCoexpressionValueObject {
     }
 
     /**
-     * @return the collection of query genes this gene was coexpressed with
-     */
-    public Collection<Gene> getCommonCoexpressedQueryGenes() {
-        return commonCoexpressedQueryGenes;
-    }
-
-    /**
-     * @return the collection of query genes this gene was positively coexpressed with
-     */
-    public Collection<Gene> getCommonPositiveCoexpressedQueryGenes() {
-        return commonPositiveCoexpressedQueryGenes;
-    }
-
-    /**
-     * @return the collection of query genes this gene was positively coexpressed with
-     */
-    public Collection<Gene> getCommonNegativeCoexpressedQueryGenes() {
-        return commonNegativeCoexpressedQueryGenes;
-    }
-
-    /**
-     * @return a collectino of EEids that contributed to this genes positive expression
-     */
-    public Collection<Long> getEEContributing2PositiveLinks() {
-        return positiveExperimentIds;
-    }
-
-    /**
-     * @return a collection of EE ids that contributed to this genes negative expression
-     */
-    public Collection<Long> getEEContributing2NegativeLinks() {
-        return negativeExperimentIds;
-    }
-
-    // /**
-    // * @return the collection of CoexpressionCollectionValueObjects representing the query genes this gene was
-    // coexpressed with
-    // */
-    // public Collection<QueryGeneCoexpressionDataPair> getCommonCoexpressionData() {
-    // return commonCoexpressionData;
-    // }
-
-    /**
      * Function to return the max of negative or positive link count. This is used for sorting.
      * 
      * @return the max of negative or positive link count
      */
     public Integer getMaxLinkCount() {
         return Math.max( commonPositiveCoexpressedQueryGenes.size(), commonNegativeCoexpressedQueryGenes.size() );
-    }
-
-    public String getExperimentBitList() {
-        return StringUtils.join( experimentBitList, "," );
-    }
-
-    /**
-     * Initialize the vector of 'bits'.
-     * 
-     * @param eeIds
-     */
-    public void computeExperimentBits( List<Long> eeIds ) {
-        experimentBitList.clear();
-        for ( Long long1 : eeIds ) {
-            if ( positiveExperimentIds.contains( long1 ) || negativeExperimentIds.contains( long1 ) ) {
-                experimentBitList.add( 20 );
-            } else {
-                experimentBitList.add( 1 );
-            }
-        }
     }
 }

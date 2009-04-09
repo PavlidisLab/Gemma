@@ -33,6 +33,163 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao {
 
     /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(int,
+     *      java.util.Collection)
+     */
+    public java.util.Collection<DifferentialExpressionAnalysis> create( final int transform,
+            final java.util.Collection<DifferentialExpressionAnalysis> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "DifferentialExpressionAnalysis.create - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<DifferentialExpressionAnalysis> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
+        return entities;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(int transform,
+     *      ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
+     */
+    public DifferentialExpressionAnalysis create(
+            final int transform,
+            final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        if ( differentialExpressionAnalysis == null ) {
+            throw new IllegalArgumentException(
+                    "DifferentialExpressionAnalysis.create - 'differentialExpressionAnalysis' can not be null" );
+        }
+        this.getHibernateTemplate().save( differentialExpressionAnalysis );
+        return this.transformEntity( transform, differentialExpressionAnalysis );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(java.util.Collection)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection create( final java.util.Collection entities ) {
+        return create( TRANSFORM_NONE, entities );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
+     */
+    public DifferentialExpressionAnalysis create(
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        return this.create( TRANSFORM_NONE, differentialExpressionAnalysis );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#find(ubic.gemma.model.genome.Gene,
+     *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
+     */
+    public java.util.Collection<DifferentialExpressionAnalysis> find( final ubic.gemma.model.genome.Gene gene,
+            final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, final double threshold ) {
+        try {
+            return this.handleFind( gene, resultSet, threshold );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.find(ubic.gemma.model.genome.Gene gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByInvestigationIds(java.util.Collection)
+     */
+    public java.util.Map findByInvestigationIds( final java.util.Collection<Long> investigationIds ) {
+        try {
+            return this.handleFindByInvestigationIds( investigationIds );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.findByInvestigationIds(java.util.Collection investigationIds)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(int,
+     *      java.lang.String)
+     */
+    @Override
+    public java.util.Collection<DifferentialExpressionAnalysis> findByName( final int transform,
+            final java.lang.String name ) {
+        return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(int,
+     *      java.lang.String, java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public java.util.Collection<DifferentialExpressionAnalysis> findByName( final int transform,
+            final java.lang.String queryString, final java.lang.String name ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( name );
+        argNames.add( "name" );
+        java.util.List<DifferentialExpressionAnalysis> results = this.getHibernateTemplate().findByNamedParam(
+                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() );
+        transformEntities( transform, results );
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(java.lang.String)
+     */
+
+    @Override
+    public java.util.Collection<DifferentialExpressionAnalysis> findByName( java.lang.String name ) {
+        return this.findByName( TRANSFORM_NONE, name );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(java.lang.String,
+     *      java.lang.String)
+     */
+    @Override
+    public java.util.Collection<DifferentialExpressionAnalysis> findByName( final java.lang.String queryString,
+            final java.lang.String name ) {
+        return this.findByName( TRANSFORM_NONE, queryString, name );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)
+     */
+    public java.util.Collection<ExpressionExperiment> findExperimentsWithAnalyses(
+            final ubic.gemma.model.genome.Gene gene ) {
+        try {
+            return this.handleFindExperimentsWithAnalyses( gene );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene gene)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    public java.util.Collection getResultSets(
+            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
+        try {
+            return this.handleGetResultSets( expressionExperiment );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#load(int, java.lang.Long)
      */
 
@@ -75,105 +232,6 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
-     */
-    public DifferentialExpressionAnalysis create(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        return this.create( TRANSFORM_NONE, differentialExpressionAnalysis );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(int transform,
-     *      ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
-     */
-    public DifferentialExpressionAnalysis create(
-            final int transform,
-            final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        if ( differentialExpressionAnalysis == null ) {
-            throw new IllegalArgumentException(
-                    "DifferentialExpressionAnalysis.create - 'differentialExpressionAnalysis' can not be null" );
-        }
-        this.getHibernateTemplate().save( differentialExpressionAnalysis );
-        return this.transformEntity( transform, differentialExpressionAnalysis );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(int,
-     *      java.util.Collection)
-     */
-    public java.util.Collection<DifferentialExpressionAnalysis> create( final int transform,
-            final java.util.Collection<DifferentialExpressionAnalysis> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DifferentialExpressionAnalysis.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<DifferentialExpressionAnalysis> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( transform, entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
-        return entities;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#update(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
-     */
-    public void update(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        if ( differentialExpressionAnalysis == null ) {
-            throw new IllegalArgumentException(
-                    "DifferentialExpressionAnalysis.update - 'differentialExpressionAnalysis' can not be null" );
-        }
-        this.getHibernateTemplate().update( differentialExpressionAnalysis );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-
-    public void update( final java.util.Collection<DifferentialExpressionAnalysis> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DifferentialExpressionAnalysis.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<DifferentialExpressionAnalysis> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#remove(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
-     */
-    public void remove(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        if ( differentialExpressionAnalysis == null ) {
-            throw new IllegalArgumentException(
-                    "DifferentialExpressionAnalysis.remove - 'differentialExpressionAnalysis' can not be null" );
-        }
-        this.getHibernateTemplate().delete( differentialExpressionAnalysis );
-    }
-
-    /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#remove(java.lang.Long)
      */
 
@@ -199,50 +257,15 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(java.lang.String)
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#remove(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
-
-    @Override
-    public java.util.Collection<DifferentialExpressionAnalysis> findByName( java.lang.String name ) {
-        return this.findByName( TRANSFORM_NONE, name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(java.lang.String,
-     *      java.lang.String)
-     */
-    @Override
-    public java.util.Collection<DifferentialExpressionAnalysis> findByName( final java.lang.String queryString,
-            final java.lang.String name ) {
-        return this.findByName( TRANSFORM_NONE, queryString, name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(int,
-     *      java.lang.String)
-     */
-    @Override
-    public java.util.Collection<DifferentialExpressionAnalysis> findByName( final int transform,
-            final java.lang.String name ) {
-        return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(int,
-     *      java.lang.String, java.lang.String)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public java.util.Collection<DifferentialExpressionAnalysis> findByName( final int transform,
-            final java.lang.String queryString, final java.lang.String name ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( name );
-        argNames.add( "name" );
-        java.util.List<DifferentialExpressionAnalysis> results = this.getHibernateTemplate().findByNamedParam(
-                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
+    public void remove(
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        if ( differentialExpressionAnalysis == null ) {
+            throw new IllegalArgumentException(
+                    "DifferentialExpressionAnalysis.remove - 'differentialExpressionAnalysis' can not be null" );
+        }
+        this.getHibernateTemplate().delete( differentialExpressionAnalysis );
     }
 
     /**
@@ -259,32 +282,6 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     }
 
     /**
-     * Performs the core logic for {@link #thaw(java.util.Collection)}
-     */
-    protected abstract void handleThaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)
-     */
-    public java.util.Collection<ExpressionExperiment> findExperimentsWithAnalyses(
-            final ubic.gemma.model.genome.Gene gene ) {
-        try {
-            return this.handleFindExperimentsWithAnalyses( gene );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene gene)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)}
-     */
-    protected abstract java.util.Collection<ExpressionExperiment> handleFindExperimentsWithAnalyses(
-            ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
     public void thaw(
@@ -299,26 +296,36 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     }
 
     /**
-     * Performs the core logic for
-     * {@link #thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)}
+     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    protected abstract void handleThaw(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis )
-            throws java.lang.Exception;
+
+    public void update( final java.util.Collection<DifferentialExpressionAnalysis> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "DifferentialExpressionAnalysis.update - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<DifferentialExpressionAnalysis> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
+    }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#find(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#update(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
-    public java.util.Collection<DifferentialExpressionAnalysis> find( final ubic.gemma.model.genome.Gene gene,
-            final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, final double threshold ) {
-        try {
-            return this.handleFind( gene, resultSet, threshold );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.find(ubic.gemma.model.genome.Gene gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold)' --> "
-                            + th, th );
+    public void update(
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        if ( differentialExpressionAnalysis == null ) {
+            throw new IllegalArgumentException(
+                    "DifferentialExpressionAnalysis.update - 'differentialExpressionAnalysis' can not be null" );
         }
+        this.getHibernateTemplate().update( differentialExpressionAnalysis );
     }
 
     /**
@@ -331,18 +338,16 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
             throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * Performs the core logic for {@link #findByInvestigationIds(java.util.Collection)}
      */
-    public java.util.Collection getResultSets(
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
-        try {
-            return this.handleGetResultSets( expressionExperiment );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
-    }
+    protected abstract java.util.Map handleFindByInvestigationIds( java.util.Collection<Long> investigationIds )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)}
+     */
+    protected abstract java.util.Collection<ExpressionExperiment> handleFindExperimentsWithAnalyses(
+            ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
@@ -352,49 +357,18 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
             throws java.lang.Exception;
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByInvestigationIds(java.util.Collection)
+     * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    public java.util.Map findByInvestigationIds( final java.util.Collection<Long> investigationIds ) {
-        try {
-            return this.handleFindByInvestigationIds( investigationIds );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao.findByInvestigationIds(java.util.Collection investigationIds)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findByInvestigationIds(java.util.Collection)}
-     */
-    protected abstract java.util.Map handleFindByInvestigationIds( java.util.Collection<Long> investigationIds )
+    protected abstract void handleThaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses )
             throws java.lang.Exception;
 
     /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
-     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in
-     *        {@link ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
+     * Performs the core logic for
+     * {@link #thaw(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)}
      */
-    protected DifferentialExpressionAnalysis transformEntity( final int transform,
-            final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return ( DifferentialExpressionAnalysis ) target;
-    }
+    protected abstract void handleThaw(
+            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis )
+            throws java.lang.Exception;
 
     /**
      * Transforms a collection of entities using the
@@ -416,6 +390,33 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
             default:
                 // do nothing;
         }
+    }
+
+    /**
+     * Allows transformation of entities into value objects (or something else for that matter), when the
+     * <code>transform</code> flag is set to one of the constants defined in
+     * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao</code>, please note that the
+     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
+     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
+     * 
+     * @param transform one of the constants declared in
+     *        {@link ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao}
+     * @param entity an entity that was found
+     * @return the transformed entity (i.e. new value object, etc)
+     * @see #transformEntities(int,java.util.Collection)
+     */
+    @Override
+    protected DifferentialExpressionAnalysis transformEntity( final int transform,
+            final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis entity ) {
+        Object target = null;
+        if ( entity != null ) {
+            switch ( transform ) {
+                case TRANSFORM_NONE: // fall-through
+                default:
+                    target = entity;
+            }
+        }
+        return ( DifferentialExpressionAnalysis ) target;
     }
 
 }
