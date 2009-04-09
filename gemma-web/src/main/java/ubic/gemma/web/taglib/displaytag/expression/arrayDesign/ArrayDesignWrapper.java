@@ -42,43 +42,107 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
-    public String getStatus() {
-        return getTroubleFlag().concat( getValidatedFlag() );
-    }
-
-    public String getTroubleFlag() {
+    public String getColor() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        StringBuffer buf = new StringBuffer();
-        if ( object.getTroubleEvent() != null ) {
-            buf
-                    .append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-            buf.append( StringEscapeUtils.escapeHtml( object.getTroubleEvent().toString() ) );
-            buf.append( "' />" );
+
+        if ( object == null ) {
+            return "?";
         }
-        return buf.toString();
-    }
 
-    public String getValidatedFlag() {
-        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        StringBuffer buf = new StringBuffer();
-        if ( object.getValidationEvent() != null ) {
-            buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
-            buf.append( StringEscapeUtils.escapeHtml( object.getValidationEvent().toString() ) );
-            buf.append( "' />" );
+        String colorString = "";
+        if ( object.getColor() == null ) {
+            colorString = "?";
+        } else if ( object.getColor().equalsIgnoreCase( "ONECOLOR" ) ) {
+            colorString = "one";
+        } else if ( object.getColor().equalsIgnoreCase( "TWOCOLOR" ) ) {
+            colorString = "two";
+        } else if ( object.getColor().equalsIgnoreCase( "DUALMODE" ) ) {
+            colorString = "dual";
+        } else {
+            colorString = "No color";
         }
-        return buf.toString();
+        return colorString;
     }
 
-    public String getLastSequenceUpdateDate() {
+    /**
+     * @return
+     */
+    public String getDelete() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
 
+        if ( object == null || object.getExpressionExperimentCount() == null
+                || object.getExpressionExperimentCount() == 0 ) {
+            // FIXME wire to AJAX call.
+            return "<form action=\"deleteArrayDesign.html?id=" + object.getId()
+                    + "\" onSubmit=\"return confirmDelete('Array Design " + object.getName()
+                    + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
+        }
+        return "";
+
+    }
+
+    /**
+     * @return
+     */
+    public String getExpressionExperimentCountLink() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( object != null && object.getExpressionExperimentCount() != null
+                && object.getExpressionExperimentCount() > 0 ) {
+            Long id = object.getId();
+
+            return object.getExpressionExperimentCount().toString();
+            // This string doesn't work. Sorting by expression experiments used bombs (mosly likely because of the
+            // comparator is expecting a number)
+            // + " <a title=\"Click for details\" href=\"showExpressionExperimentsFromArrayDesign.html?id=5"
+            // + "\">" + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
+        }
+
+        return "0";
+    }
+
+    public String getIsMerged() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( ( object.getIsMerged() != null ) && ( object.getIsMerged() ) ) {
+            return "[";
+        } else {
+            return "";
+        }
+    }
+
+    public String getIsMergee() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( ( object.getIsMergee() != null ) && ( object.getIsMergee() ) ) {
+            return "]";
+        } else {
+            return "";
+        }
+    }
+
+    public String getIsSubsumed() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( ( object.getIsSubsumed() != null ) && ( object.getIsSubsumed() ) ) {
+            return "<<";
+        } else {
+            return "";
+        }
+    }
+
+    public String getIsSubsumer() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( ( object.getIsSubsumer() != null ) && ( object.getIsSubsumer() ) ) {
+            return ">>";
+        } else {
+            return "";
+        }
+    }
+
+    public String getLastGeneMappingDate() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        Date dateObject = object.getLastGeneMapping();
         // if it has been merged, put NA for 'not applicable'
         if ( getIsSubsumed().length() > 0 || getIsMergee().length() > 0 ) {
             return "NA";
         }
-
-        Date dateObject = object.getLastSequenceUpdate();
-
         if ( dateObject != null ) {
             boolean mostRecent = determineIfMostRecent( dateObject, object );
             String fullDate = dateObject.toString();
@@ -110,6 +174,53 @@ public class ArrayDesignWrapper extends TableDecorator {
         }
     }
 
+    public String getLastSequenceAnalysisDate() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        Date dateObject = object.getLastSequenceAnalysis();
+        // if it has been merged, put NA for 'not applicable'
+        if ( getIsSubsumed().length() > 0 || getIsMergee().length() > 0 ) {
+            return "NA";
+        }
+        if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+        } else {
+            return "[None]";
+        }
+    }
+
+    public String getLastSequenceUpdateDate() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+
+        // if it has been merged, put NA for 'not applicable'
+        if ( getIsSubsumed().length() > 0 || getIsMergee().length() > 0 ) {
+            return "NA";
+        }
+
+        Date dateObject = object.getLastSequenceUpdate();
+
+        if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+        } else {
+            return "[None]";
+        }
+    }
+
+    public String getRefreshReport() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        if ( object == null ) {
+            return "Array Design unavailable";
+        }
+        return "<input type=\"button\" value=\"Refresh\" " + "\" onClick=\"updateReport(" + object.getId() + ")\" >";
+    }
+
     public String getShortName() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         String result = object.getShortName();
@@ -135,81 +246,8 @@ public class ArrayDesignWrapper extends TableDecorator {
         return result;
     }
 
-    public String getIsSubsumed() {
-        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( ( object.getIsSubsumed() != null ) && ( object.getIsSubsumed() ) ) {
-            return "<<";
-        } else {
-            return "";
-        }
-    }
-
-    public String getIsSubsumer() {
-        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( ( object.getIsSubsumer() != null ) && ( object.getIsSubsumer() ) ) {
-            return ">>";
-        } else {
-            return "";
-        }
-    }
-
-    public String getIsMerged() {
-        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( ( object.getIsMerged() != null ) && ( object.getIsMerged() ) ) {
-            return "[";
-        } else {
-            return "";
-        }
-    }
-
-    public String getIsMergee() {
-        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( ( object.getIsMergee() != null ) && ( object.getIsMergee() ) ) {
-            return "]";
-        } else {
-            return "";
-        }
-    }
-
-    private String formatIfRecent( boolean mostRecent, String shortDate ) {
-        shortDate = mostRecent ? "<strong>" + shortDate + "</strong>" : shortDate;
-        return shortDate;
-    }
-
-    public String getLastSequenceAnalysisDate() {
-        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        Date dateObject = object.getLastSequenceAnalysis();
-        // if it has been merged, put NA for 'not applicable'
-        if ( getIsSubsumed().length() > 0 || getIsMergee().length() > 0 ) {
-            return "NA";
-        }
-        if ( dateObject != null ) {
-            boolean mostRecent = determineIfMostRecent( dateObject, object );
-            String fullDate = dateObject.toString();
-            String shortDate = StringUtils.left( fullDate, 10 );
-            shortDate = formatIfRecent( mostRecent, shortDate );
-            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            return "[None]";
-        }
-    }
-
-    public String getLastGeneMappingDate() {
-        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        Date dateObject = object.getLastGeneMapping();
-        // if it has been merged, put NA for 'not applicable'
-        if ( getIsSubsumed().length() > 0 || getIsMergee().length() > 0 ) {
-            return "NA";
-        }
-        if ( dateObject != null ) {
-            boolean mostRecent = determineIfMostRecent( dateObject, object );
-            String fullDate = dateObject.toString();
-            String shortDate = StringUtils.left( fullDate, 10 );
-            shortDate = formatIfRecent( mostRecent, shortDate );
-            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            return "[None]";
-        }
+    public String getStatus() {
+        return getTroubleFlag().concat( getValidatedFlag() );
     }
 
     /**
@@ -244,68 +282,27 @@ public class ArrayDesignWrapper extends TableDecorator {
         return buf.toString();
     }
 
-    /**
-     * @return
-     */
-    public String getExpressionExperimentCountLink() {
+    public String getTroubleFlag() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if (object != null && object.getExpressionExperimentCount() != null && object.getExpressionExperimentCount() > 0 ) {
-            Long id = object.getId();
-
-            return object.getExpressionExperimentCount().toString();
-//This string doesn't work. Sorting by expression experiments used bombs (mosly likely because of the comparator is expecting a number)            
-//                    + " <a title=\"Click for details\" href=\"showExpressionExperimentsFromArrayDesign.html?id=5"
-//                    + "\">" + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
+        StringBuffer buf = new StringBuffer();
+        if ( object.getTroubleEvent() != null ) {
+            buf
+                    .append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( object.getTroubleEvent().toString() ) );
+            buf.append( "' />" );
         }
-
-        return "0";
+        return buf.toString();
     }
 
-    /**
-     * @return
-     */
-    public String getDelete() {
+    public String getValidatedFlag() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-
-        if ( object == null || object.getExpressionExperimentCount() == null
-                || object.getExpressionExperimentCount() == 0 ) {
-            // FIXME wire to AJAX call.
-            return "<form action=\"deleteArrayDesign.html?id=" + object.getId()
-                    + "\" onSubmit=\"return confirmDelete('Array Design " + object.getName()
-                    + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
+        StringBuffer buf = new StringBuffer();
+        if ( object.getValidationEvent() != null ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( object.getValidationEvent().toString() ) );
+            buf.append( "' />" );
         }
-        return "";
-
-    }
-
-    public String getRefreshReport() {
-        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        if ( object == null ) {
-            return "Array Design unavailable";
-        }
-        return "<input type=\"button\" value=\"Refresh\" " + "\" onClick=\"updateReport(" + object.getId() + ")\" >";
-    }
-
-    public String getColor() {
-        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-
-        if ( object == null ) {
-            return "?";
-        }
-
-        String colorString = "";
-        if ( object.getColor() == null ) {
-            colorString = "?";
-        } else if ( object.getColor().equalsIgnoreCase( "ONECOLOR" ) ) {
-            colorString = "one";
-        } else if ( object.getColor().equalsIgnoreCase( "TWOCOLOR" ) ) {
-            colorString = "two";
-        } else if ( object.getColor().equalsIgnoreCase( "DUALMODE" ) ) {
-            colorString = "dual";
-        } else {
-            colorString = "No color";
-        }
-        return colorString;
+        return buf.toString();
     }
 
     /**
@@ -326,6 +323,11 @@ public class ArrayDesignWrapper extends TableDecorator {
         if ( repDate != null && dateObject.before( repDate ) ) return false;
 
         return true;
+    }
+
+    private String formatIfRecent( boolean mostRecent, String shortDate ) {
+        shortDate = mostRecent ? "<strong>" + shortDate + "</strong>" : shortDate;
+        return shortDate;
     }
 
 }

@@ -43,6 +43,18 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
+    public String getCompositeSequenceNameLink() {
+        if ( getCurrentRowObject() == null ) return "";
+        CompositeSequenceMapValueObject object = ( CompositeSequenceMapValueObject ) getCurrentRowObject();
+        String name = object.getCompositeSequenceName();
+        String id = object.getCompositeSequenceId();
+        // call ajax, then call onload function to initialize scrolltable
+        String nameLink = "<a href='/Gemma/compositeSequence/showCompositeSequence.html?id=" + id
+                + "' onclick=\"ajaxAnywhere.getAJAX('/Gemma/compositeSequence/showAjaxCompositeSequence.html?id=" + id
+                + "');showblatres(" + id + ");return false;\"> " + name + " </a>";
+        return nameLink;
+    }
+
     public String getGeneList() {
         CompositeSequenceMapValueObject object = ( CompositeSequenceMapValueObject ) getCurrentRowObject();
         Collection gVos = object.getGenes().values();
@@ -92,16 +104,5 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
         }
         return retVal.toString();
 
-    }
-
-    public String getCompositeSequenceNameLink() {
-        if ( getCurrentRowObject() == null ) return "";
-        CompositeSequenceMapValueObject object = ( CompositeSequenceMapValueObject ) getCurrentRowObject();
-        String name = object.getCompositeSequenceName();
-        String id = object.getCompositeSequenceId();
-        // call ajax, then call onload function to initialize scrolltable
-        String nameLink = "<a href='/Gemma/compositeSequence/showCompositeSequence.html?id=" + id + "' onclick=\"ajaxAnywhere.getAJAX('/Gemma/compositeSequence/showAjaxCompositeSequence.html?id="
-                + id + "');showblatres(" + id + ");return false;\"> " + name + " </a>";
-        return nameLink;
     }
 }

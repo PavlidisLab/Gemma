@@ -66,7 +66,7 @@ public abstract class BlatResultDaoBase extends
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -83,7 +83,7 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#find(int, java.lang.String,
      *      ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -110,7 +110,7 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#find(int,
      *      ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object find( final int transform, final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         return this
                 .find(
@@ -123,7 +123,7 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#find(java.lang.String,
      *      ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public ubic.gemma.model.genome.sequenceAnalysis.BlatResult find( final java.lang.String queryString,
             final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         return ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) this.find( TRANSFORM_NONE, queryString,
@@ -142,7 +142,7 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#findByBioSequence(int, java.lang.String,
      *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByBioSequence( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -159,7 +159,7 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#findByBioSequence(int,
      *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByBioSequence( final int transform,
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         return this.findByBioSequence( transform, "from BlatResultImpl br where br.querySequence = :bioSequence",
@@ -170,7 +170,7 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#findByBioSequence(java.lang.String,
      *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByBioSequence( final java.lang.String queryString,
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         return this.findByBioSequence( TRANSFORM_NONE, queryString, bioSequence );
@@ -187,7 +187,7 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -214,7 +214,7 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#findOrCreate(int,
      *      ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findOrCreate( final int transform,
             final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         return this
@@ -228,7 +228,7 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public ubic.gemma.model.genome.sequenceAnalysis.BlatResult findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         return ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) this.findOrCreate( TRANSFORM_NONE, queryString,
@@ -281,7 +281,6 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#loadAll()
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
