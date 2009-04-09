@@ -54,16 +54,15 @@
 </h2>
 
 <div id="messages" style="margin: 10px; width: 400px"></div>
-<div id="progress-area"></div>
 
 <!--  Summary of array design associations -->
 
-<c:if test="${ summary != null}">
-	<table class='datasummaryarea'>
-		<caption>
-			Sequence analysis details
-		</caption>
 
+<table class='datasummaryarea'>
+	<caption>
+		Sequence analysis details
+	</caption>
+	<c:if test="${ summary != null}">
 		<tr>
 			<td>
 
@@ -147,26 +146,25 @@
 
 			</td>
 		</tr>
-
-		<tr>
-			<td colspan="2">
-				<security:authorize ifAnyGranted="admin">
-					<input type="button" value="Refresh report" onClick="updateReport(${arrayDesign.id })" />
-				</security:authorize>
-			</td>
-		</tr>
-		<tr>
-			<script>
+	</c:if>
+	<tr>
+		<td colspan="2">
+			<security:authorize ifAnyGranted="admin">
+				<input type="button" value="Refresh report" onClick="updateReport(${arrayDesign.id })" />
+			</security:authorize>
+		</td>
+	</tr>
+	<tr>
+		<script>
 		var text = '<Gemma:help helpFile="sequenceAnalysisHelp.html"/>';
 		function doit(event) {showWideHelpTip(event,text); }
 		</script>
-			<td colspan="2">
-				<a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img src="/Gemma/images/help.png" />
-				</a>
-			</td>
-		</tr>
-	</table>
-</c:if>
+		<td colspan="2">
+			<a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img src="/Gemma/images/help.png" /> </a>
+		</td>
+	</tr>
+</table>
+
 
 
 <table style="width: 70%">
