@@ -182,7 +182,7 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
 
                 /* the design file */
                 if ( eedId != null ) {
-                    f = expressionDataFileService.writeOrLocateDesignFile( ee, false );
+                    f = expressionDataFileService.writeOrLocateDesignFile( ee, true ); // overwrite, it's fast.
                 }
                 /* the data file */
                 else {
