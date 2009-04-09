@@ -24,7 +24,7 @@ package ubic.gemma.model.common.auditAndSecurity;
  * @author pavlidis
  * @version $Id$
  */
-public class PersonImpl extends ubic.gemma.model.common.auditAndSecurity.Person implements java.io.Serializable {
+public class PersonImpl extends ubic.gemma.model.common.auditAndSecurity.Person {
     /** The serial version UID of this class. Needed for serialization. */
     private static final long serialVersionUID = -3335182453066930211L;
 
