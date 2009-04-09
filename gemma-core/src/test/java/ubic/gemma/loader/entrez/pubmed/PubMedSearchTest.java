@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -81,11 +82,7 @@ public class PubMedSearchTest extends TestCase {
             log.warn( "Test skipped due to unknown host exception" );
             return;
         } catch ( java.io.IOException e ) {
-            if ( e.getMessage().contains( "503" ) || e.getMessage().contains( "502" ) ) {
-                log.warn( "Test skipped due to a 50x from NCBI" );
-                return;
-            }
-            throw e;
+            checkCause( e );
         }
     }
 
@@ -103,12 +100,16 @@ public class PubMedSearchTest extends TestCase {
             log.warn( "Test skipped due to unknown host exception" );
             return;
         } catch ( java.io.IOException e ) {
-            if ( e.getMessage().contains( "503" ) || e.getMessage().contains( "502" ) ) {
-                log.warn( "Test skipped due to a 50x from NCBI" );
-                return;
-            }
-            throw e;
+            checkCause( e );
         }
+    }
+
+    private void checkCause( java.io.IOException e ) throws IOException {
+        if ( e.getMessage().contains( "503" ) || e.getMessage().contains( "502" ) ) {
+            log.warn( "Test skipped due to a 50x from NCBI" );
+            return;
+        }
+        throw e;
     }
 
     /*
@@ -129,11 +130,7 @@ public class PubMedSearchTest extends TestCase {
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
         } catch ( java.io.IOException e ) {
-            if ( e.getMessage().contains( "503" ) || e.getMessage().contains( "502" ) ) {
-                log.warn( "Test skipped due to a 50x from NCBI" );
-                return;
-            }
-            throw e;
+            checkCause( e );
         }
 
         return;
