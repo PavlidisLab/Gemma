@@ -51,7 +51,8 @@ public class AclPointcut extends StaticMethodMatcherPointcut {
      * @return
      */
     private boolean methodsTriggersACLAddition( Method m ) {
-        return m.getName().equals( "create" ) || m.getName().equals( "save" ) || m.getName().equals( "findOrCreate" );
+        return m.getName().equals( "create" ) || m.getName().equals( "save" ) || m.getName().equals( "findOrCreate" )
+                || m.getName().equals( "update" );
     }
 
     /**

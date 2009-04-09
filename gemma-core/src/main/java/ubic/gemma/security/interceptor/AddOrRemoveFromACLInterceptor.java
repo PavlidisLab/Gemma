@@ -45,6 +45,7 @@ import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.model.association.Relationship;
 import ubic.gemma.model.common.Securable;
+import ubic.gemma.model.common.SecurableDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserImpl;
 import ubic.gemma.model.common.auditAndSecurity.UserRoleImpl;
@@ -64,8 +65,8 @@ import ubic.gemma.util.ReflectionUtil;
  * interceptor are run for all new objects (to add security if needed) and when objects are deleted.
  * <p>
  * Implementation Note: For permissions modification to be triggered, the method name must match certain patterns, which
- * include "create" and "remove". Other methods that would require changes to permissions will not work without
- * modifying the source code.
+ * include "create", "update", and "remove". These patterns are defined in the {@link AclPointcut}. Other methods that
+ * would require changes to permissions will not work without modifying the source code.
  * 
  * @author keshav
  * @author pavlidis
@@ -75,6 +76,7 @@ import ubic.gemma.util.ReflectionUtil;
  * @spring.property name="crudUtils" ref="crudUtils"
  * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  * @spring.property name="customAclDao" ref="customAclDao"
+ * @spring.property name="securableDao" ref="securableDao"
  */
 @SuppressWarnings("deprecation")
 public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
@@ -100,12 +102,17 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
     private CustomAclDao customAclDao;
 
+    private SecurableDao securableDao;
+
     /**
      * Creates the acl_permission object and the acl_object_identity object.
      * 
      * @param object The domain object.
      */
     public void addPermission( Securable object ) {
+
+        /* If the securable already has an acl object identity, then don't add another one. */
+        if ( securableDao.getAclObjectIdentityId( object ) != null ) return;
 
         /*
          * When adding a new user to the system, make sure they can see the public data by adding a control node for
@@ -172,8 +179,9 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
-     * java.lang.Object[], java.lang.Object)
+     *      java.lang.Object[], java.lang.Object)
      */
     @SuppressWarnings( { "unchecked" })
     public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
@@ -339,7 +347,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         if ( log.isDebugEnabled() ) {
             log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
         }
-        if ( CrudUtils.methodIsCreate( m ) ) {
+        if ( CrudUtils.methodIsCreate( m ) || CrudUtils.methodIsUpdate( m ) ) {
             addPermission( ( Securable ) object );
             processAssociations( m, object );
         } else if ( CrudUtils.methodIsDelete( m ) ) {
@@ -495,5 +503,12 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     public void setCustomAclDao( CustomAclDao customAclDao ) {
         this.customAclDao = customAclDao;
+    }
+
+    /**
+     * @param securableDao
+     */
+    public void setSecurableDao( SecurableDao securableDao ) {
+        this.securableDao = securableDao;
     }
 }
