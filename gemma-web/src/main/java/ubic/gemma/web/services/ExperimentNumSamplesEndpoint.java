@@ -76,7 +76,7 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
         for ( String id : eeResult )
             eeId = id;
 
-        log.info( "XML input read: expression experiment id, " + eeId );
+        log.debug( "XML input read: expression experiment id, " + eeId );
 
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
         if ( ee == null ) {
@@ -94,7 +94,7 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for Expression Experiment Sample Number result built in " + time + "ms." );
+        log.debug( "XML response for Expression Experiment Sample Number result built in " + time + "ms." );
 
         return wrapper;
 

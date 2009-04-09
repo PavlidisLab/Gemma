@@ -73,7 +73,7 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
         Collection<Long> eeLongs = new HashSet<Long>();
         for ( String ee : eeInput )
             eeLongs.add( Long.parseLong( ee ) );
-        log.info( "XML input read: expression experiment id, " + eeInput );
+        log.debug( "XML input read: expression experiment id, " + eeInput );
 
         Collection<ExpressionExperiment> eeCol = expressionExperimentService.loadMultiple( eeLongs );
 
@@ -102,7 +102,7 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for Expression Experiment Names result built in " + time + "ms." );
+        log.debug( "XML response for Expression Experiment Names result built in " + time + "ms." );
 
         return responseWrapper;
     }

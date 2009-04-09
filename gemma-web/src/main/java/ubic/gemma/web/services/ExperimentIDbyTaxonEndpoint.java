@@ -83,7 +83,7 @@ public class ExperimentIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
             taxonId = id;
         }
 
-        log.info( "XML input read: taxon id, " + taxonId );
+        log.debug( "XML input read: taxon id, " + taxonId );
 
         // Get EE matched with Taxon
         Taxon tax = taxonService.load( Long.parseLong( taxonId ) );
@@ -103,7 +103,7 @@ public class ExperimentIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
         Element wrapper = buildWrapper( document, eeIds, "ee_ids" );
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for Expression Experiment Id results built in " + time + "ms." );
+        log.debug( "XML response for Expression Experiment Id results built in " + time + "ms." );
         return wrapper;
 
     }

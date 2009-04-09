@@ -135,7 +135,7 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
             geneIDLong.add( Long.parseLong( id ) );
         Collection<Gene> geneResult = geneService.loadMultiple( geneIDLong );
 
-        log.info( "XML input read: " + eeIdResult.size() + " experiment ids & " + geneIdResult.size() + " gene ids" );
+        log.debug( "XML input read: " + eeIdResult.size() + " experiment ids & " + geneIdResult.size() + " gene ids" );
 
         Collection<DoubleVectorValueObject> vectors = processedExpressionDataVectorService.getProcessedDataArrays(
                 eeObjs, geneResult );
@@ -192,7 +192,7 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
         watch.stop();
         Long time = watch.getTime();
         // log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for design element data vector results built in " + time + "ms." );
+        log.debug( "XML response for design element data vector results built in " + time + "ms." );
         // log.info( "Finished generating matrix. Sending response to client." );
 
         // naming convention for the xml file report

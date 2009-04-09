@@ -163,7 +163,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         watch.stop();
         Long time = watch.getTime();
 
-        log.info( "XML response for dedv rank results built in " + time + "ms." );
+        log.debug( "XML response for dedv rank results built in " + time + "ms." );
 
         return responseWrapper;
 

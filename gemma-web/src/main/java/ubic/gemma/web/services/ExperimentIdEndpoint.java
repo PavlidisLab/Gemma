@@ -76,7 +76,7 @@ public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {
         for ( String id : eeResults ) {
             eeName = id;
         }
-        log.info( "XML input read: expression experiment shortname, " + eeName );
+        log.debug( "XML input read: expression experiment shortname, " + eeName );
 
         ExpressionExperiment ee = expressionExperimentService.findByShortName( eeName );
 
@@ -93,7 +93,7 @@ public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for Expression Experiment Id result built in " + time + "ms." );
+        log.debug( "XML response for Expression Experiment Id result built in " + time + "ms." );
 
         return wrapper;
 
