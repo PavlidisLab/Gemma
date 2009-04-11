@@ -353,7 +353,7 @@
                 ubic.gemma.model.expression.designElement.ReporterService.remove=user,admin
                 ubic.gemma.model.expression.designElement.ReporterService.create=user,admin
                 ubic.gemma.model.expression.designElement.ReporterService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadMultiple=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ             
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
@@ -482,7 +482,7 @@
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.findOrCreate=user,admin
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.update=user,admin
-                ubic.gemma.model.common.quantitationtype.QuantitationTypeService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.common.quantitationtype.QuantitationTypeService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeService.remove=user,admin 
                 ubic.gemma.model.genome.biosequence.BioSequenceService.find=user,admin,ROLE_ANONYMOUS
@@ -514,7 +514,7 @@
                 ubic.gemma.model.genome.gene.GeneProductService.findOrCreate=user,admin
                 ubic.gemma.model.genome.gene.GeneProductService.delete=user,admin
                 ubic.gemma.model.genome.gene.GeneProductService.update=user,admin
-                ubic.gemma.model.genome.gene.GeneProductService.load=user,admin,ROLE_ANONYMOUS 
+                ubic.gemma.model.genome.gene.GeneProductService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ 
                 ubic.gemma.model.genome.TaxonService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.TaxonService.update=user,admin 
                 ubic.gemma.model.genome.TaxonService.remove=user,admin
@@ -527,7 +527,7 @@
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.delete=user,admin
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.findByName=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAllMultiExperimentSets=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.create=admin
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.update=admin
