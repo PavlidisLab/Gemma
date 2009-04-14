@@ -158,6 +158,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     }
 
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome
+     * .Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
+     */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<DifferentialExpressionAnalysis> handleFind( Gene gene, ExpressionAnalysisResultSet resultSet,
@@ -174,6 +180,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return this.getHibernateTemplate().findByNamedParam( findByResultSet, paramNames, objectValues );
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByInvestigation(ubic.gemma.model.analysis.Investigation)
+     */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<DifferentialExpressionAnalysis> handleFindByInvestigation( Investigation investigation )
@@ -182,6 +192,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindByInvestigationIds(
+     * java.util.Collection)
+     */
     @Override
     protected Map<Long, DifferentialExpressionAnalysis> handleFindByInvestigationIds( Collection<Long> investigationIds )
             throws Exception {
@@ -198,6 +214,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return results;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByInvestigations(java.util.Collection)
+     */
     @Override
     protected Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
             Collection investigations ) throws Exception {
@@ -219,8 +239,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return results;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) {
+    protected Collection<DifferentialExpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.expressionExperimentSetAnalyzed eesa inner join eesa.experiments as ee "
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
@@ -233,13 +258,14 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindExperimentsWithAnalyses
      * (ubic.gemma.model.genome.Gene)
      */
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
 
         Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
-
+        Collection<ExpressionExperiment> result = new HashSet<ExpressionExperiment>();
         if ( probes.size() == 0 ) {
-            return new HashSet<ExpressionExperiment>();
+            return result;
         }
 
         /*
@@ -252,16 +278,52 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 + " inner join ba.samplesUsed sa inner join ba.arrayDesignUsed ad"
                 + " inner join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon.id = "
                 + gene.getTaxon().getId();
-        return this.getHibernateTemplate().findByNamedParam( queryString, "probes", probes );
+
+        int batchSize = 1000;
+
+        /*
+         * If 'probes' is too large, query will fail so we have to batch. Yes, it can happen!
+         */
+
+        Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
+        for ( CompositeSequence probe : probes ) {
+            batch.add( probe );
+
+            if ( batch.size() == batchSize ) {
+                result.addAll( this.getHibernateTemplate().findByNamedParam( queryString, "probes", batch ) );
+                batch.clear();
+            }
+
+        }
+
+        if ( batch.size() > 0 ) {
+            result.addAll( this.getHibernateTemplate().findByNamedParam( queryString, "probes", batch ) );
+        }
+
+        return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleGetResultSets(ubic.gemma
+     * .model.expression.experiment.ExpressionExperiment)
+     */
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetResultSets( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected Collection<ExpressionAnalysisResultSet> handleGetResultSets( ExpressionExperiment expressionExperiment )
+            throws Exception {
         final String query = "select r from ExpressionAnalysisResultSetImpl r inner join r.analysis a"
                 + " inner join a.expressionExperimentSetAnalyzed eeset inner join eeset.experiments ee where ee=:expressionExperiment ";
         return this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", expressionExperiment );
     }
 
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleThaw(ubic.gemma.model.analysis
+     * .expression.diff.DifferentialExpressionAnalysis)
+     */
     @Override
     protected void handleThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
