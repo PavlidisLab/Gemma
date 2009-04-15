@@ -574,11 +574,18 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             missingValueMap.put( bv.getDesignElement(), bv );
         }
 
+        boolean warned = false;
         for ( DoubleVectorValueObject rv : unpackedData ) {
             double[] data = rv.getData();
             DesignElement de = rv.getDesignElement();
             BooleanVectorValueObject mv = missingValueMap.get( de );
             if ( mv == null ) {
+                if ( !warned && log.isWarnEnabled() )
+                    log.warn( "No mask vector for " + de
+                            + ", additional warnings for missing masks for this job will be skipped" );
+                // we're missing a mask vector for it for some reason, but still flag it as effectively masked.
+                rv.setMasked( true );
+                warned = true;
                 continue;
             }
 
