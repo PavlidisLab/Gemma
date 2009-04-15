@@ -5,12 +5,17 @@ import ubic.gemma.security.authentication.ManualAuthenticationProcessing
 import java.util.concurrent.atomic.AtomicBoolean
 
 class SpringSupport {
-    
+
     private ctx
-	
+
+    SpringSupport() {
+        this(null, null)
+    }
+
+
     SpringSupport(String userName, String password) {
 
-        def b = new AtomicBoolean(false);
+	def b = new AtomicBoolean(false);
         System.err.print "Loading Spring context "
         def t = new Thread() {
             while(!b.get()) {
@@ -18,21 +23,25 @@ class SpringSupport {
                 System.err.print '.'
             }
             System.err.println 'Ready'
-        }
+	}
 
         t.start();
 
-        ctx = SpringContextUtil.getApplicationContext(false, false, false, false);
+	ctx = SpringContextUtil.getApplicationContext(false, true, false, false);
         b.set(true)
-        t.join()
-            
-        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx.getBean( "manualAuthenticationProcessing" );
-            
-        def success = manAuthentication.validateRequest( userName, password )
-        if ( !success ) {
-            throw( "Not authenticated. Make sure you entered a valid username (got " + userName + ") and/or password" )
-        } else {
-            println( "Logged in as " + userName )
+	t.join()
+
+	ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx.getBean( "manualAuthenticationProcessing" );
+
+        if (userName == null && password == null) {
+                manAuthentication.anonymousAuthentication()
+	} else {
+                def success = manAuthentication.validateRequest( userName, password )
+                if ( !success ) {
+                    throw( "Not authenticated. Make sure you entered a valid username (got " + userName + ") and/or password" )
+		} else {
+                    println( "Logged in as " + userName )
+                }
         }
 
     }
@@ -42,8 +51,7 @@ class SpringSupport {
     }
 
     def shutdown() {
-        ctx.close();
+	ctx.close();
     }
 }
-
 
