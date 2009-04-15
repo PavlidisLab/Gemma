@@ -335,32 +335,31 @@ public class ExpressionExperimentFormController extends BaseFormController {
             for ( Long newBioMaterialId : newBioMaterials ) {
                 if ( oldBioMaterials.contains( newBioMaterialId ) ) {
                     continue;
-                } else {
-                    BioMaterial newMaterial;
-                    if ( newBioMaterialId < 0 ) { // This kludge signifies that it is a 'brand new' biomaterial.
-                        // model the new biomaterial after the old one for the bioassay (we're taking a guess here.)
-                        if ( bMats.size() > 1 ) {
-                            // log.warn("");
-                        }
-
-                        BioMaterial oldBioMaterial = bMats.iterator().next();
-                        // newMaterial = BioMaterial.Factory.newInstance();
-                        newMaterial = bioMaterialService.copy( oldBioMaterial );
-                        // newMaterial.setDescription( oldBioMaterial.getDescription() + " [Created by Gemma]" );
-                        // newMaterial.setMaterialType( oldBioMaterial.getMaterialType() );
-                        // newMaterial.setCharacteristics( oldBioMaterial.getCharacteristics() );
-                        // newMaterial.setTreatments( oldBioMaterial.getTreatments() );
-                        // newMaterial.setSourceTaxon( oldBioMaterial.getSourceTaxon() );
-                        // newMaterial.setFactorValues( oldBioMaterial.getFactorValues() );
-                        newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
-                        newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
-                    } else {
-                        newMaterial = bioMaterialService.load( newBioMaterialId );
+                }
+                BioMaterial newMaterial;
+                if ( newBioMaterialId < 0 ) { // This kludge signifies that it is a 'brand new' biomaterial.
+                    // model the new biomaterial after the old one for the bioassay (we're taking a guess here.)
+                    if ( bMats.size() > 1 ) {
+                        // log.warn("");
                     }
 
-                    bioAssayService.addBioMaterialAssociation( bioAssay, newMaterial );
-
+                    BioMaterial oldBioMaterial = bMats.iterator().next();
+                    // newMaterial = BioMaterial.Factory.newInstance();
+                    newMaterial = bioMaterialService.copy( oldBioMaterial );
+                    // newMaterial.setDescription( oldBioMaterial.getDescription() + " [Created by Gemma]" );
+                    // newMaterial.setMaterialType( oldBioMaterial.getMaterialType() );
+                    // newMaterial.setCharacteristics( oldBioMaterial.getCharacteristics() );
+                    // newMaterial.setTreatments( oldBioMaterial.getTreatments() );
+                    // newMaterial.setSourceTaxon( oldBioMaterial.getSourceTaxon() );
+                    // newMaterial.setFactorValues( oldBioMaterial.getFactorValues() );
+                    newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
+                    newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
+                } else {
+                    newMaterial = bioMaterialService.load( newBioMaterialId );
                 }
+
+                bioAssayService.addBioMaterialAssociation( bioAssay, newMaterial );
+
             }
 
             // put all unnecessary associations in a collection
@@ -460,10 +459,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     qType.setName( newName );
                     qType.setIsNormalized( newisNormalized );
 
-                    if ( !oldName.equals( newName ) ) {
+                    if ( newName != null && ( oldName == null || !oldName.equals( newName ) ) ) {
                         dirty = true;
                     }
-                    if ( !oldDescription.equals( newDescription ) ) {
+                    if ( newDescription != null
+                            && ( oldDescription == null || !oldDescription.equals( newDescription ) ) ) {
                         dirty = true;
                     }
                     if ( !gentype.equals( newgentype ) ) {
