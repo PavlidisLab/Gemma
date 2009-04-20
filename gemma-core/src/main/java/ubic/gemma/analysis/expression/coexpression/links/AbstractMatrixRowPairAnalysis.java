@@ -108,7 +108,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     /**
      * @return baseCode.dataStructure.NamedMatrix
      */
-    public Matrix2D getMatrix() {
+    public Matrix2D<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement, Double> getMatrix() {
         return results;
     }
 
@@ -333,7 +333,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             DesignElement de = element.getDesignElement();
             rowMapCache.put( element, de );
 
-            Collection geneIdSet = this.probeToGeneMap.get( de );
+            Collection<Collection<Gene>> geneIdSet = this.probeToGeneMap.get( de );
             Integer i = element.getIndex();
             hasGenesCache[i] = geneIdSet != null && geneIdSet.size() > 0;
 
@@ -434,6 +434,11 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      */
     protected void setCorrel( int i, int j, double correl, int numused ) {
         if ( Double.isNaN( correl ) ) return;
+
+        if ( correl < -1.0 || correl > 1.0 ) {
+            throw new IllegalArgumentException( "Invalid correlation value: " + correl );
+        }
+
         double acorrel = Math.abs( correl );
 
         // it is possible, due to roundoff, to overflow the bins.
