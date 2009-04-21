@@ -97,7 +97,7 @@ public class SpearmanMetricsTest extends TestCase {
 
         SpearmanMetrics test = new SpearmanMetrics( 10 );
 
-        double actualValue = test.spearman( ranksIA.elements(), ranksIB.elements(), 7.713624, 7.745967, 5, 5 );
+        double actualValue = test.correlFast( ranksIA.elements(), ranksIB.elements(), 7.713624, 7.745967, 5, 5 );
         double expectedValue = 0.7113033;
         assertEquals( expectedValue, actualValue, 0.0001 );
     }

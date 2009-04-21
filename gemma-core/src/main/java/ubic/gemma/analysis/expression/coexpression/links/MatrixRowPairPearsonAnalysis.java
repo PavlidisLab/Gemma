@@ -340,12 +340,37 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
      * @return double
      */
     protected double correlFast( double[] ival, double[] jval, int i, int j ) {
-        if ( rowSumSquaresSqrt[i] == 0 || rowSumSquaresSqrt[j] == 0 ) return Double.NaN;
+        double ssi = rowSumSquaresSqrt[i];
+        double ssj = rowSumSquaresSqrt[j];
+        double mi = rowMeans[i];
+        double mj = rowMeans[j];
+
+        return correlFast( ival, jval, ssi, ssj, mi, mj );
+    }
+
+    /**
+     * Compute a correlation. For Spearman, the values entered must be the ranks.
+     * 
+     * @param ival
+     * @param jval
+     * @param ssi root sum squared deviation
+     * @param ssj root sum squared deviation
+     * @param mi row mean of the ranks
+     * @param mj row mean of the ranks
+     * @return
+     */
+    protected double correlFast( double[] ival, double[] jval, double ssi, double ssj, double mi, double mj ) {
+        if ( ssi == 0 || ssj == 0 ) return Double.NaN;
         double sxy = 0.0;
         for ( int k = 0, n = ival.length; k < n; k++ ) {
-            sxy += ( ival[k] - rowMeans[i] ) * ( jval[k] - rowMeans[j] );
+
+            sxy += ( ival[k] - mi ) * ( jval[k] - mj );
         }
-        return sxy / ( rowSumSquaresSqrt[i] * rowSumSquaresSqrt[j] );
+        double c = sxy / ( ssi * ssj );
+
+        assert c > -1.0001 && c < 1.0001 : c;
+
+        return c;
     }
 
     /**
