@@ -250,22 +250,30 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
             return Double.NaN;
         }
 
-        double[] xjc = new double[numused];
-        double[] yjc = new double[numused];
-        int v = 0;
-        for ( int k = 0; k < vectorA.length; k++ ) {
-            if ( usedA[k] && usedB[k] ) {
-                xjc[v] = vectorA[k];
-                yjc[v] = vectorB[k];
-                v++;
-            }
-        }
+        double[] xjc;
+        double[] yjc;
 
-        /*
-         * Retransform
-         */
-        xjc = Rank.rankTransform( new DoubleArrayList( xjc ) ).elements();
-        yjc = Rank.rankTransform( new DoubleArrayList( yjc ) ).elements();
+        if ( numused == vectorA.length ) {
+            xjc = vectorA;
+            yjc = vectorB;
+        } else {
+            xjc = new double[numused];
+            yjc = new double[numused];
+            int v = 0;
+            for ( int k = 0; k < vectorA.length; k++ ) {
+                if ( usedA[k] && usedB[k] ) {
+                    xjc[v] = vectorA[k];
+                    yjc[v] = vectorB[k];
+                    v++;
+                }
+            }
+
+            /*
+             * Retransform
+             */
+            xjc = Rank.rankTransform( new DoubleArrayList( xjc ) ).elements();
+            yjc = Rank.rankTransform( new DoubleArrayList( yjc ) ).elements();
+        }
 
         double correl = 0.0;
         double sxy = 0.0;
