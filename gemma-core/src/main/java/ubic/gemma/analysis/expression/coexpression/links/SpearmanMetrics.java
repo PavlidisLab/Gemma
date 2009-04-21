@@ -38,7 +38,9 @@ import cern.colt.list.ObjectArrayList;
  * @author paul
  * @version $Id$
  */
-public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
+public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
+
+    double[][] rankTransformedData = null;
 
     /**
      * @param
@@ -72,7 +74,6 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
      */
     public QuantitationType getMetricType() {
@@ -93,7 +94,6 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
      */
     public double correctedPvalue( int i, int j, double correl, int numused ) {
@@ -130,7 +130,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
     }
 
     /**
-     * Main method.
+     * Compute correlations.
      */
     public void calculateMetrics() {
 
@@ -145,18 +145,15 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
 
         boolean doCalcs = this.needToCalculateMetrics();
         boolean[][] usedB = null;
-        double[][] rankTransformedData = null;
 
         if ( doCalcs ) {
             // Temporarily copy the data in this matrix, for performance, and rank transform.
             usedB = new boolean[numrows][numcols];
-            rankTransformedData = getRankTransformedData( usedB );
+
+            getRankTransformedData( usedB );
         }
 
         /* for each vector, compare it to all other vectors */
-
-        // value to use if there are no missing values.
-        double denom = ( Math.pow( numcols, 2 ) - 1 ) * numcols;
 
         ExpressionDataMatrixRowElement itemA = null;
         double[] vectorA = null;
@@ -187,29 +184,14 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
 
                 /* if there are no missing values, use the faster method of calculation */
                 if ( !thisRowHasMissing && !hasMissing[j] ) {
-                    setCorrel( i, j, this.correlFast( vectorA, vectorB, denom ), numcols );
+                    setCorrel( i, j, this.correlFast( vectorA, vectorB, i, j ), numcols );
                     continue;
                 }
 
-                /*
-                 * Compute rho using method that allows for missing values.
-                 */
-                int numused = 0;
-                double sse = 0.0;
-                for ( int k = 0; k < vectorA.length; k++ ) {
-                    if ( !usedB[i][k] || !usedB[j][k] ) { /* avoid double.isnan() calls */
-                        continue;
-                    }
-                    sse += Math.pow( vectorA[k] - vectorB[k], 2 );
-                    numused++;
-                }
+                spearman( vectorA, vectorB, usedB[i], usedB[j], i, j );
 
-                if ( numused < minNumUsed ) {
-                    setCorrel( i, j, Double.NaN, 0 );
-                } else {
-                    double rho = 1.0 - sse / ( Math.pow( numused, 3 ) - numused );
-                    setCorrel( i, j, rho, numused );
-                }
+                ++numComputed;
+
             }
 
             ++numComputed;
@@ -224,18 +206,77 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
     }
 
     /**
-     * @param usedB will be filled in, if not null.
-     * @return rank-transformed data.
+     * @param vectorA
+     * @param vectorB
+     * @param usedA
+     * @param usedB
+     * @param i
+     * @param j
+     * @return
      */
-    private double[][] getRankTransformedData( boolean[][] usedB ) {
+    protected double spearman( double[] vectorA, double[] vectorB, boolean[] usedA, boolean[] usedB, int i, int j ) {
+
+        /* because we assume there might be ties, we compute the correlation of the ranks. */
+        double correl = 0.0;
+        int numused = 0;
+        double sxy = 0.0;
+        double sxx = 0.0;
+        double syy = 0.0;
+        double sx = 0.0;
+        double sy = 0.0;
+        for ( int k = 0; k < vectorA.length; k++ ) {
+            double xj = vectorA[k];
+            double yj = vectorB[k];
+            if ( usedA[k] && usedB[k] ) { /* this is a bit faster than calling Double.isNan */
+                sx += xj;
+                sy += yj;
+                sxy += xj * yj;
+                sxx += xj * xj;
+                syy += yj * yj;
+                numused++;
+            }
+        }
+
+        if ( numused < minNumUsed )
+            setCorrel( i, j, Double.NaN, 0 );
+        else {
+            double denom = correlationNorm( numused, sxx, sx, syy, sy );
+            if ( denom <= 0.0 ) { // means variance is zero for one of the vectors.
+                setCorrel( i, j, 0.0, numused );
+            } else {
+                correl = ( sxy - sx * sy / numused ) / Math.sqrt( denom );
+
+                // small range deviations (roundoff) are okay but shouldn't be big ones!
+                assert correl < 1.0001 && correl > -1.0001;
+
+                // roundoff protection.
+                if ( correl < -1.0 )
+                    correl = -1.0;
+                else if ( correl > 1.0 ) correl = 1.0;
+
+                setCorrel( i, j, correl, numused );
+            }
+        }
+
+        return correl;
+    }
+
+    /**
+     * @param usedB will be filled in, if not null. This also precomputes the row statistics (row means and sumsq
+     *        deviations)
+     * @return rank-transformed data, breaking ties by averaging ranks, if necessary.
+     */
+    private void getRankTransformedData( boolean[][] usedB ) {
         int numrows = this.dataMatrix.rows();
         int numcols = this.dataMatrix.columns();
-        double[][] rankTransformedData;
         rankTransformedData = new double[numrows][];
-        for ( int i = 0; i < numrows; i++ ) { // first vector
+
+        for ( int i = 0; i < numrows; i++ ) {
 
             Double[] row = this.dataMatrix.getRow( i );
-            double r[] = new double[row.length];
+
+            // make a copy.
+            double[] r = new double[row.length];
             for ( int m = 0, v = row.length; m < v; m++ ) {
                 r[m] = row[m];
             }
@@ -249,30 +290,14 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
             rankTransformedData[i] = ri;
 
             if ( usedB != null ) {
-                for ( int j = 0; j < numcols; j++ ) { // second vector
+                for ( int j = 0; j < numcols; j++ ) {
                     usedB[i][j] = used.get( i, j ); // this is only needed if we use it below, speeds things up
                     // slightly.
                 }
             }
         }
-        return rankTransformedData;
-    }
 
-    /**
-     * Compute the rank correlation, when there are no missing values.
-     * 
-     * @param ival double[]
-     * @param jval double[]
-     * @param denom n(n^2-1), to avoid having to compute this every time.
-     * @return double
-     */
-    protected double correlFast( double[] ival, double[] jval, double denom ) {
-        double sse = 0.0;
-        int n = ival.length;
-        for ( int i = 0; i < n; i++ ) {
-            sse += Math.pow( ival[i] - jval[i], 2 );
-        }
-        return 1.0 - 6.0 * sse / denom;
+        rowStatistics();
     }
 
     /**
@@ -283,12 +308,9 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
         int numcols = this.dataMatrix.columns();
         boolean docalcs = this.needToCalculateMetrics();
 
-        double[][] rankTransformedData = null;
         if ( docalcs ) {
-            rankTransformedData = getRankTransformedData( null );
+            getRankTransformedData( null );
         }
-
-        double denom = Math.pow( numcols, 3 ) - 1;
 
         /*
          * For each vector, compare it to all other vectors, avoid repeating things; skip items that don't have genes
@@ -317,7 +339,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
                 }
 
                 double[] vectorB = rankTransformedData[j];
-                setCorrel( i, j, correlFast( vectorA, vectorB, denom ), numcols );
+                setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
                 ++numComputed;
             }
             if ( ++count % 2000 == 0 ) {
@@ -329,4 +351,27 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
         finishMetrics();
     }
 
+    /**
+     * Calculate mean and sumsqsqrt for each row -- using the ranks of course!
+     */
+    @Override
+    protected void rowStatistics() {
+        int numrows = rankTransformedData.length;
+        this.rowMeans = new double[numrows];
+        this.rowSumSquaresSqrt = new double[numrows];
+        for ( int i = 0, numcols = rankTransformedData[0].length; i < numrows; i++ ) {
+            double ax = 0.0;
+            double sxx = 0.0;
+            for ( int j = 0; j < numcols; j++ ) {
+                ax += this.rankTransformedData[i][j];
+            }
+            rowMeans[i] = ( ax / numcols );
+
+            for ( int j = 0; j < numcols; j++ ) {
+                double xt = this.rankTransformedData[i][j] - rowMeans[i]; /* deviation from mean */
+                sxx += xt * xt; /* sum of squared error */
+            }
+            rowSumSquaresSqrt[i] = Math.sqrt( sxx );
+        }
+    }
 }

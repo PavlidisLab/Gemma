@@ -35,39 +35,45 @@ public class SpearmanMetricsTest extends TestCase {
      * &gt; a&lt;-c(49.0, 43.0, 310.0, 20.0, 20.0, 688.0, 498.0, 533.0, 723.0, 1409.0,279.0);
      * &gt; b&lt;-c(1545.0, 1287.0, 2072.0, 1113.0, 676.0, 2648.0, 2478.0, 2574.0, 3554.0,5155.0, 1624.0);
      * &gt; cor(a,b, method=&quot;spearman&quot;);
-     * [1] 0.9977247 
+     * [1] 0.9977247
      * </pre>
      */
-    public void testCorrelFast() {
+    public void testCorrel() {
 
         // note the nominal tie
         double[] a = new double[] { 49.0, 43.0, 310.0, 20.0, 20.0, 688.0, 498.0, 533.0, 723.0, 1409.0, 279.0 };
         double[] b = new double[] { 1545.0, 1287.0, 2072.0, 1113.0, 676.0, 2648.0, 2478.0, 2574.0, 3554.0, 5155.0,
                 1624.0 };
 
+        boolean[] usedA = new boolean[] { true, true, true, true, true, true, true, true, true, true, true, true, true,
+                true, true, true };
+        boolean[] usedB = new boolean[] { true, true, true, true, true, true, true, true, true, true, true, true, true,
+                true, true, true };
+
         DoubleArrayList ranksIA = Rank.rankTransform( new DoubleArrayList( a ) );
         DoubleArrayList ranksIB = Rank.rankTransform( new DoubleArrayList( b ) );
 
-        double denom = ( Math.pow( a.length, 2 ) - 1 ) * a.length;
+        SpearmanMetrics test = new SpearmanMetrics( 10 );
 
-        SpearmanMetrics test = new SpearmanMetrics( 1 );
-
-        double actualValue = test.correlFast( ranksIA.elements(), ranksIB.elements(), denom );
+        double actualValue = test.spearman( ranksIA.elements(), ranksIB.elements(), usedA, usedB, 0, 1 );
         double expectedValue = 0.9977247;
         assertEquals( expectedValue, actualValue, 0.0001 );
 
     }
 
-    public void testCorrelFastFromRanks() {
+    public void testCorrelFromRanks() {
 
         double[] a = new double[] { 4.0, 3.0, 6.0, 1.5, 1.5, 9.0, 7.0, 8.0, 10.0, 11.0, 5.0 };
         double[] b = new double[] { 4.0, 3.0, 6.0, 2, 1, 9, 7, 8, 10, 11, 5 };
 
-        double denom = Math.pow( a.length, 3 ) - a.length;
+        boolean[] usedA = new boolean[] { true, true, true, true, true, true, true, true, true, true, true, true, true,
+                true, true, true };
+        boolean[] usedB = new boolean[] { true, true, true, true, true, true, true, true, true, true, true, true, true,
+                true, true, true };
 
-        SpearmanMetrics test = new SpearmanMetrics( 1 );
+        SpearmanMetrics test = new SpearmanMetrics( 10 );
 
-        double actualValue = test.correlFast( a, b, denom );
+        double actualValue = test.spearman( a, b, usedA, usedB, 0, 1 );
         double expectedValue = 0.9977247;
         assertEquals( expectedValue, actualValue, 0.00001 );
 

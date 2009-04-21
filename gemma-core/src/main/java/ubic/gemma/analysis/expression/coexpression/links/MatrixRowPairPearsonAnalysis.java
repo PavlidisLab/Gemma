@@ -53,6 +53,9 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
     protected double[] rowMeans = null;
     protected double[] rowSumSquaresSqrt = null;
 
+    protected MatrixRowPairPearsonAnalysis() {
+    }
+
     /**
      * @param
      */
@@ -112,6 +115,8 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
                     data[i][j] = this.dataMatrix.get( i, j );
                 }
             }
+
+            rowStatistics();
         }
 
         /* for each vector, compare it to all other vectors */
@@ -124,7 +129,6 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
             itemA = this.dataMatrix.getRowElement( i );
             if ( !this.hasGene( itemA ) ) continue;
             if ( docalcs ) {
-                rowStatistics();
                 vectorA = data[i];
             }
 
@@ -324,7 +328,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
      * @param syy double
      * @param sy double
      */
-    private double correlationNorm( int n, double sxx, double sx, double syy, double sy ) {
+    protected double correlationNorm( int n, double sxx, double sx, double syy, double sy ) {
         return ( sxx - sx * sx / n ) * ( syy - sy * sy / n );
     }
 
@@ -335,7 +339,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
      * @param j int
      * @return double
      */
-    private double correlFast( double[] ival, double[] jval, int i, int j ) {
+    protected double correlFast( double[] ival, double[] jval, int i, int j ) {
         if ( rowSumSquaresSqrt[i] == 0 || rowSumSquaresSqrt[j] == 0 ) return Double.NaN;
         double sxy = 0.0;
         for ( int k = 0, n = ival.length; k < n; k++ ) {
@@ -347,7 +351,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
     /**
      * Calculate mean and sumsqsqrt for each row
      */
-    private void rowStatistics() {
+    protected void rowStatistics() {
         int numrows = dataMatrix.rows();
         this.rowMeans = new double[numrows];
         this.rowSumSquaresSqrt = new double[numrows];

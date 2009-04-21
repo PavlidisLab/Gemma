@@ -61,16 +61,26 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected ObjectArrayList keepers = null;
     protected double lowerTailThreshold = 0.0;
 
+    /**
+     * If fewer than this number values are available, the correlation is rejected. This helps keep the correlation
+     * distribution reasonable. (FIXME we might want to set this higher!)
+     */
     protected int minNumUsed = 3;
-    protected int minSamplesToKeepCorrelation = 0;
+
+    // store total number of missing values.
     protected int numMissing;
 
     protected int numVals = 0; // number of values actually stored in the matrix
+
     protected Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = null;
     protected double pValueThreshold = 0.0;
+
     protected CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
+
     protected Map<ExpressionDataMatrixRowElement, DesignElement> rowMapCache = new HashMap<ExpressionDataMatrixRowElement, DesignElement>();
+
     protected double storageThresholdValue;
+
     protected double upperTailThreshold = 0.0;
 
     protected boolean useAbsoluteValue = false;
