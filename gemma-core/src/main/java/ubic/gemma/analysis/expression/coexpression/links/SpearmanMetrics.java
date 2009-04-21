@@ -43,6 +43,14 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
     double[][] rankTransformedData = null;
 
     /**
+     * This overrides value from AbstractMatrixRowPairAnalysis. If fewer than this number values are available, the
+     * correlation is rejected. This helps keep the correlation distribution reasonable. (FIXME we might want to set
+     * this even higher!) This is primarily relevant when there are missing values in the data, but to be consistent we
+     * check it for other cases as well.
+     */
+    protected int minNumUsed = 8;
+
+    /**
      * @param
      */
     public SpearmanMetrics( ExpressionDataDoubleMatrix dataMatrix ) {
@@ -142,6 +150,12 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
         // int numused;
         int numrows = this.dataMatrix.rows();
         int numcols = this.dataMatrix.columns();
+
+        if ( numcols < this.minNumUsed ) {
+            throw new IllegalArgumentException(
+                    "Sorry, Spearman correlations will not be computed unless there are at least " + this.minNumUsed
+                            + " data points per vector, current data has only " + numcols + " columns." );
+        }
 
         boolean doCalcs = this.needToCalculateMetrics();
         boolean[][] usedB = null;
