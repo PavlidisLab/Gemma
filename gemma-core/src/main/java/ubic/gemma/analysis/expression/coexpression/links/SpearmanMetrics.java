@@ -231,46 +231,77 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
     protected double spearman( double[] vectorA, double[] vectorB, boolean[] usedA, boolean[] usedB, int i, int j ) {
 
         /* because we assume there might be ties, we compute the correlation of the ranks. */
-        double correl = 0.0;
+
+        /*
+         * Note that if there are missing values, the precomputed ranks will be wrong. Strictly the ranks need to be
+         * -recomputed-.
+         */
+
+        // first count the number of mutually present values
         int numused = 0;
+        for ( int k = 0; k < vectorA.length; k++ ) {
+            if ( usedA[k] && usedB[k] ) {
+                numused++;
+            }
+        }
+
+        if ( numused < minNumUsed ) {
+            setCorrel( i, j, Double.NaN, 0 );
+            return Double.NaN;
+        }
+
+        double[] xjc = new double[numused];
+        double[] yjc = new double[numused];
+        int v = 0;
+        for ( int k = 0; k < vectorA.length; k++ ) {
+            if ( usedA[k] && usedB[k] ) {
+                xjc[v] = vectorA[k];
+                yjc[v] = vectorB[k];
+                v++;
+            }
+        }
+
+        /*
+         * Retransform
+         */
+        xjc = Rank.rankTransform( new DoubleArrayList( xjc ) ).elements();
+        yjc = Rank.rankTransform( new DoubleArrayList( yjc ) ).elements();
+
+        double correl = 0.0;
         double sxy = 0.0;
         double sxx = 0.0;
         double syy = 0.0;
         double sx = 0.0;
         double sy = 0.0;
-        for ( int k = 0; k < vectorA.length; k++ ) {
-            double xj = vectorA[k];
-            double yj = vectorB[k];
-            if ( usedA[k] && usedB[k] ) { /* this is a bit faster than calling Double.isNan */
-                sx += xj;
-                sy += yj;
-                sxy += xj * yj;
-                sxx += xj * xj;
-                syy += yj * yj;
-                numused++;
-            }
+        numused = 0;
+        for ( int k = 0; k < xjc.length; k++ ) {
+            double xj = xjc[k];
+            double yj = yjc[k];
+            sx += xj;
+            sy += yj;
+            sxy += xj * yj;
+            sxx += xj * xj;
+            syy += yj * yj;
+            numused++;
         }
 
-        if ( numused < minNumUsed )
-            setCorrel( i, j, Double.NaN, 0 );
-        else {
-            double denom = correlationNorm( numused, sxx, sx, syy, sy );
-            if ( denom <= 0.0 ) { // means variance is zero for one of the vectors.
-                setCorrel( i, j, 0.0, numused );
-            } else {
-                correl = ( sxy - sx * sy / numused ) / Math.sqrt( denom );
-
-                // small range deviations (roundoff) are okay but shouldn't be big ones!
-                assert correl < 1.0001 && correl > -1.0001;
-
-                // roundoff protection.
-                if ( correl < -1.0 )
-                    correl = -1.0;
-                else if ( correl > 1.0 ) correl = 1.0;
-
-                setCorrel( i, j, correl, numused );
-            }
+        double denom = correlationNorm( numused, sxx, sx, syy, sy );
+        if ( denom <= 0.0 ) { // means variance is zero for one of the vectors.
+            setCorrel( i, j, 0.0, numused );
+            return 0.0;
         }
+
+        correl = ( sxy - sx * sy / numused ) / Math.sqrt( denom );
+
+        // small range deviations (roundoff) are okay but shouldn't be big ones!
+        assert correl < 1.0001 && correl > -1.0001;
+
+        // roundoff protection.
+        if ( correl < -1.0 )
+            correl = -1.0;
+        else if ( correl > 1.0 ) correl = 1.0;
+
+        setCorrel( i, j, correl, numused );
 
         return correl;
     }
