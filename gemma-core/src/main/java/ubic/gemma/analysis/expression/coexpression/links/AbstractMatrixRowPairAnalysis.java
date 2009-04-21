@@ -63,9 +63,10 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     /**
      * If fewer than this number values are available, the correlation is rejected. This helps keep the correlation
-     * distribution reasonable. (FIXME we might want to set this higher!)
+     * distribution reasonable. (FIXME we might want to set this higher! -- PP changed from 3 to 6) This is only
+     * relevant when there are missing values in the data, otherwise we don't check this.
      */
-    protected int minNumUsed = 3;
+    protected int minNumUsed = 6;
 
     // store total number of missing values.
     protected int numMissing;
