@@ -220,7 +220,7 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
     }
 
     /**
-     * @param vectorA
+     * @param vectorA 
      * @param vectorB
      * @param usedA
      * @param usedB
