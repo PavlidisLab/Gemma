@@ -179,7 +179,8 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					html : {
 						id : 'zoomLegend',
 						tag : 'div',
-						style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px; float:left;'
+						style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px; float:left;',
+						html : "legend"
 					}
 
 				});
