@@ -98,7 +98,9 @@ public class LinkAnalysis {
 
         log.info( "Current Options: \n" + this.config );
         this.calculateDistribution();
-        this.writeDistribution();
+
+        if ( this.config.isUseDb() ) this.writeDistribution();
+
         this.getLinks();
 
     }
@@ -246,12 +248,12 @@ public class LinkAnalysis {
                     + " items are present)" );
             if ( scoreAtP > 0.9 ) {
                 log.warn( "This data set has a very high threshold for statistical significance!" );
-            }  
+            }
         }
         this.metricMatrix.setPValueThreshold( maxP ); // this is the corrected
         // value.
 
-        //choose cut points, with one independent criterion or the most stringent criteria
+        // choose cut points, with one independent criterion or the most stringent criteria
         if ( config.getSingularThreshold().equals( "none" ) ) {
             config.setUpperTailCut( Math.max( scoreAtP, cdfUpperCutScore ) );
             if ( config.getUpperTailCut() == scoreAtP ) {
@@ -269,29 +271,27 @@ public class LinkAnalysis {
             } else if ( config.getLowerTailCut() == cdfLowerCutScore ) {
                 config.setLowerCdfCutUsed( true );
             }
-        }
-        else if(config.getSingularThreshold().equals( "fwe" )){
-            config.setUpperTailCut(scoreAtP);
+        } else if ( config.getSingularThreshold().equals( "fwe" ) ) {
+            config.setUpperTailCut( scoreAtP );
             log.info( "Final upper cut is " + form.format( config.getUpperTailCut() ) );
             if ( !config.isAbsoluteValue() ) {
-                config.setLowerTailCut(-scoreAtP);
+                config.setLowerTailCut( -scoreAtP );
                 log.info( "Final lower cut is " + form.format( config.getLowerTailCut() ) );
             }
             config.setUpperCdfCutUsed( false );
             config.setLowerCdfCutUsed( false );
-        }
-        else if(config.getSingularThreshold().equals( "cdfCut" )){
-            config.setUpperTailCut(cdfUpperCutScore);
+        } else if ( config.getSingularThreshold().equals( "cdfCut" ) ) {
+            config.setUpperTailCut( cdfUpperCutScore );
             log.info( "Final upper cut is " + form.format( config.getUpperTailCut() ) );
             if ( !config.isAbsoluteValue() ) {
-                config.setLowerTailCut(cdfLowerCutScore);
+                config.setLowerTailCut( cdfLowerCutScore );
                 log.info( "Final lower cut is " + form.format( config.getLowerTailCut() ) );
             }
-            metricMatrix.setUsePvalueThreshold( false );//use only cdfCut exclusively to keep links
+            metricMatrix.setUsePvalueThreshold( false );// use only cdfCut exclusively to keep links
             config.setUpperCdfCutUsed( true );
-            config.setLowerCdfCutUsed( true );            
+            config.setLowerCdfCutUsed( true );
         }
-        
+
         metricMatrix.setUpperTailThreshold( config.getUpperTailCut() );
         if ( config.isAbsoluteValue() ) {
             metricMatrix.setLowerTailThreshold( config.getUpperTailCut() );
