@@ -228,7 +228,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( "normalizemethod" ) ) {
             String optionValue = getOptionValue( "normalizemethod" );
 
-            NormalizationMethod value = NormalizationMethod.valueOf( optionValue.toUpperCase() );
+            NormalizationMethod value = NormalizationMethod.valueOf( optionValue);
             if ( value == null ) {
                 log.error( "No such normalization method: " + value );
                 this.bail( ErrorCode.INVALID_OPTION );
