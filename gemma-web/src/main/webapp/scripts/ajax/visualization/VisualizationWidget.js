@@ -41,7 +41,7 @@ Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {});
 Gemma.SELECTED = 2; // Multiply the line thickness by this factor when it is selected in the legend
 Gemma.LINE_THICKNESS = 1;
 Gemma.ZOOM_LINE_THICKNESS = 2;
-Gemma.PLOT_SIZE = 100;
+Gemma.PLOT_SIZE = 150;
 
 Gemma.HOT_FADE_COLOR = "#FFDDDD";
 Gemma.COLD_FADE_COLOR = "#DDDDDD";

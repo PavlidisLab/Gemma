@@ -52,13 +52,32 @@ var Heatmap = function() {
 			var panelHeight = target.getHeight() - TRIM;
 			
 			var calculatedBoxHeight = Math.ceil(panelHeight/vectorObjs.length);
-			var boxHeight = calculatedBoxHeight > MIN_BOX_HEIGHT ? calculatedBoxHeight : MIN_BOX_HEIGHT;
-				
+			if (calculatedBoxHeight > MIN_BOX_HEIGHT){
+				boxHeight = calculatedBoxHeight;
+			}
+			else{
+				 boxHeight =  MIN_BOX_HEIGHT;
+				 // resize containing div because possible scrollover over elements below 
+				 if ((MIN_BOX_HEIGHT*vectorObjs.length) > panelHeight){						 	
+				 	panelHeight =  MIN_BOX_HEIGHT*vectorObjs.length;
+				 	//FIXME: need to change targets width but doesn't work. Keeps making a a new child div. 
+				 	//temporary fix, made thumbnails size bigger so this case is less likely. 
+//				 	console.log(target);
+//				 	target = Ext.DomHelper.overwrite(target,{
+//				 			id : "GSE4600_vis",
+//							tag : 'div',
+//							width : panelWidth,
+//							height : panelHeight,
+//							style : "width:" + panelWidth  + ";height:" + panelHeight
+//						} , true);	
+				 }
+				 
+			}
 			var calculatedBoxWidth = Math.ceil( usablePanelWidth / vectorObjs[0].data.length);
 			var boxWidth = calculatedBoxWidth > MIN_BOX_WIDTH ? calculatedBoxWidth: MIN_BOX_WIDTH;
 			
 			if (config.legend && config.legend.show && config.legend.container)
-				insertLegend(config.legend.container);
+				insertVerticleLegend(config.legend.container);
 			
 			for (var i = 0; i < vectorObjs.length; i++) {
 				
@@ -110,6 +129,7 @@ var Heatmap = function() {
 				if (config.label){
 					
 					var text = Ext.DomHelper.append(canvasDiv, {
+						        id : "heatmaplabel" + Ext.id(),
 								tag : 'div',
 								html : (vectorObjs[i].label) ?" <a  href='/Gemma/compositeSequence/show.html?id="+vectorObjs[i].labelID +"' target='_blank' ext:qtip= '" + vectorObjs[i].label + "'> " + Ext.util.Format.ellipsis( vectorObjs[i].label, MAX_LABEL_LENGTH_CHAR) + "</a>" : "n/a" 
 							}, true);
@@ -129,37 +149,43 @@ var Heatmap = function() {
 		
 		function insertLegend(container){
 
-				if(container == null)
-							return;
+				if(!container)
+					return;
 				
 							
 				var legendDiv = $(container);	
-//				var extlegendDiv = Ext.get("zoomLegend");
 				var legendWidth = legendDiv.getWidth() - 10;
 				var legendHeight = 10; //legendDiv.getHeight();
 				var legendBoxWidth = Math.floor( legendWidth/COLOR_16.length);
 								
 
 				//TODO Get min/max labels for the legend. No luck adding a div to show info or drawing the numbers.... nothing shows up....
-//				var posRangeLabel = Ext.DomHelper.append(extlegendDiv, {
-//								tag : 'div',
-//								html :"3"
-//							}, true);
-//							
-//				var negRangeLabel = Ext.DomHelper.append(extlegendDiv, {
-//								tag : 'div',
-//								html : "-3"
-//							}, true);
 
-//				Ext.DomHelper.applyStyles(posRangeLabel, "position:absolute;top:0px;left:" + legendWidth + "px;font-size:8px");
-//				Ext.DomHelper.applyStyles(negRangeLabel, "position:absolute;top:0px;left:0px;font-size:8px");
+				var extlegendDiv = Ext.get("zoomLegend");
+				var posRangeLabel = Ext.DomHelper.append(extlegendDiv, {
+								id : "legendLabel" + Ext.id(),
+								tag : 'div',
+								html :"3"
+							}, true);
+							
+				var negRangeLabel = Ext.DomHelper.append(extlegendDiv, {
+								id : "legendlabel" + Ext.id(),
+								tag : 'div',
+								html : "-3"
+							}, true);
+
+				Ext.DomHelper.applyStyles(posRangeLabel, "position:absolute;top:0px;left:" + legendWidth + "px;font-size:8px");
+				Ext.DomHelper.applyStyles(negRangeLabel, "position:absolute;top:0px;left:0px;font-size:8px");
 				
 				
-				var ctx = constructCanvas(legendDiv, legendWidth, legendHeight);
 
 				//ctx.fillText("-3",0,0);
+			
 				var offset = 5;
 				for (var j = 0; j < COLOR_16.length; j++) {
+					
+				var ctx = constructCanvas(legendDiv, legendWidth, legendHeight);
+					
 					ctx.fillStyle = COLOR_16[j];
 					ctx.fillRect(offset, 0, legendBoxWidth, legendHeight);
 					offset = offset + legendBoxWidth;
@@ -168,6 +194,76 @@ var Heatmap = function() {
 				
 				
 		}
+		
+		function insertVerticleLegend(container){
+			
+				if(!container)
+					return;
+							
+				var legendDiv = $(container);	
+				legendDiv.innerHTML = '';
+				
+				var legendWidth = legendDiv.getWidth() - 10;
+				var legendHeight = legendDiv.getHeight();
+				var boxsize = 12; 
+				var binsize = 2*CLIP/COLOR_16.length;
+				var rangeMin = -CLIP;
+			
+			for (var i = 0; i < COLOR_16.length; i++) {
+				
+				var rowLabel = sprintf("%.4s",rangeMin) + " to " + sprintf("%.4s",rangeMin + binsize);	
+				rangeMin = rangeMin+binsize;
+				
+				var legendRowId = "heatmapLegendRow" + Ext.id();
+				Ext.DomHelper.append(legendDiv, {
+							id : legendRowId,
+							tag : 'div',
+							width : legendWidth,
+							height : boxSize,
+							style : "width:" + legendWidth  + ";height:" + boxSize
+						});
+
+				var ctx = constructCanvas($(legendRowId), boxsize, boxsize);						
+					ctx.fillStyle = COLOR_16[i];
+					ctx.fillRect(0, 0, boxsize, boxsize);
+
+				var legendRowDiv = Ext.get(legendRowId);
+				var text = Ext.DomHelper.append(legendRowDiv, {
+						        id : "legendRowlabel" + Ext.id(),
+								tag : 'div',
+								html : rowLabel
+							}, true);
+				Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + boxsize + "px;font-size:10px");
+			
+			}
+			
+			//Add The NAN color to legend. 
+			
+				var legendRowId = "heatmapLegendRow" + Ext.id();
+				Ext.DomHelper.append(legendDiv, {
+							id : legendRowId,
+							tag : 'div',
+							width : legendWidth,
+							height : boxSize,
+							style : "width:" + legendWidth  + ";height:" + boxSize
+						});
+
+				var ctx = constructCanvas($(legendRowId), boxsize, boxsize);						
+					ctx.fillStyle = NAN_COLOR;
+					ctx.fillRect(0, 0, boxsize, boxsize);
+
+				var legendRowDiv = Ext.get(legendRowId);
+				var text = Ext.DomHelper.append(legendRowDiv, {
+						        id : "legendRowlabel" + Ext.id(),
+								tag : 'div',
+								html : " NaN"
+							}, true);
+				Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + boxsize + "px;font-size:10px");
+			
+			
+		}
+			
+		
 		/**
 		 * Function: (private) constructCanvas
 		 * 
