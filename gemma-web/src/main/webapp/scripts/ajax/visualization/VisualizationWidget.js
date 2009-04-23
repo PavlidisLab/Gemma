@@ -41,7 +41,7 @@ Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {});
 Gemma.SELECTED = 2; // Multiply the line thickness by this factor when it is selected in the legend
 Gemma.LINE_THICKNESS = 1;
 Gemma.ZOOM_LINE_THICKNESS = 2;
-Gemma.PLOT_SIZE = 150;
+Gemma.PLOT_SIZE = 100;
 
 Gemma.HOT_FADE_COLOR = "#FFDDDD";
 Gemma.COLD_FADE_COLOR = "#DDDDDD";
@@ -78,17 +78,20 @@ Gemma.geneContained = function(geneName, arrayOfGenes) {
 
 };
 
+//FYI: if sort functions return number < 0  then "a object" gets a lower index value in sorted array
+
 Gemma.graphSort = function(a, b) {
 
-	// sorts data by importance 1st
-	if (a.factor > b.factor) {
+	// sorts data by importance 1st 
+	//factor is 1 or 2.  If 2 then signifigant if 1 then not signifigant
+	if (a.factor > b.factor)
 		return 1;
-	} else if (a.factor < b.factor) {
+		
+	if (a.factor < b.factor) 
 		return -1;
-	}
-
-	// if equal importance than sort by gene name
-	else {
+	
+	
+	//All Else being equal, then sort by gene name 
 		if (a.genes[0].name > b.genes[0].name) {
 			return 1;
 		} else if (a.genes[0].name < b.genes[0].name) {
@@ -96,9 +99,65 @@ Gemma.graphSort = function(a, b) {
 		} else {
 			return (a.labelID > b.labelID);
 		}
-
-	}
+	
 };
+
+
+
+//Sorts backwards becaues flotr draws them in given order (if reversed then validated probes will be drawn 1st and have greyed out lines on top
+Gemma.sortByFactor = function(a, b) {
+
+	// sorts data by importance 1st 
+	//factor is 1 or 2.  If 2 then signifigant if 1 then not signifigant
+	if (a.factor > b.factor)
+		return 1;
+		
+	if (a.factor < b.factor) 
+		return -1;
+
+
+	//If a coepxression query then sort the query gene 1st (red)
+	if (a.color && b.color && (a.color != b.color)){
+		return	(a.color == "red") ? 1:-1;
+	}	
+	
+	//All Else being equal, then sort by gene name 
+		if (a.genes[0].name > b.genes[0].name) {
+			return 1;
+		} else if (a.genes[0].name < b.genes[0].name) {
+			return -1;
+		} else {
+			return (a.labelID > b.labelID);
+		}
+	
+};
+
+Gemma.sortByCoexpressedGene = function(a, b) {
+
+	//If a coepxression query then sort the query gene 1st (red)
+	if (!a.color || !b.color){
+		return 0;
+	}
+				
+	if (a.color != b.color){
+	
+		if (a.color == Gemma.HOT_FADE_COLOR && b.color == "red")
+			return 0;
+		if (b.color == Gemma.HOT_FADE_COLOR && a.color == "red")
+			return 0;
+			
+		if (a.color == Gemma.COLD_FADE_COLOR && b.color == "black")
+			return 0;
+		if (b.color == Gemma.COLD_FADE_COLOR && a.color == "black")
+			return 0;
+			
+		return	((a.color == "red") ||(a.color ==  Gemma.HOT_FADE_COLOR)) ? -1:1;
+	}
+	
+	return 0;
+	
+};
+
 
 Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 

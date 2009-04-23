@@ -80,6 +80,8 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					fn : function(dv, nodes) {
 
 						var record = dv.getRecords(nodes)[0];
+						if (!record) return;
+						
 						var eevo = record.get("eevo");
 						var profiles = record.get("profiles");
 
@@ -157,7 +159,6 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					flotrData.push(plotConfig);
 				}
 				data.profiles = flotrData;
-
 				// Sort data so that greyed out lines get drawn 1st (don't overlap signifigant probes)
 				data.profiles.sort(Gemma.graphSort);
 
@@ -179,8 +180,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					html : {
 						id : 'zoomLegend',
 						tag : 'div',
-						style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px; float:left;',
-						html : "legend"
+						style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px; float:left;'
 					}
 
 				});
@@ -236,9 +236,12 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 
 						if (Gemma.HEATMAP_VIEW){
 							$('graphzoompanel').innerHTML = '';
+							//Sort data for heatmap view.
+							profiles.sort(Gemma.sortByCoexpressedGene);
 							Heatmap.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 						}
 						else {
+							profiles.sort(Gemma.sortByFactor);
 							Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
 						}
@@ -255,9 +258,11 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 
 						if (Gemma.HEATMAP_VIEW){
 							$('graphzoompanel').innerHTML = '';
+							profiles.sort(Gemma.sortByCoexpressedGene);
 							Heatmap.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 						}
 						else{
+							profiles.sort(Gemma.sortByFactor);
 							Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
 						}

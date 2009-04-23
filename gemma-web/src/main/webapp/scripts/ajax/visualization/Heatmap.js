@@ -58,21 +58,27 @@ var Heatmap = function() {
 			else{
 				 boxHeight =  MIN_BOX_HEIGHT;
 				 // resize containing div because possible scrollover over elements below 
-				 if ((MIN_BOX_HEIGHT*vectorObjs.length) > panelHeight){						 	
-				 	panelHeight =  MIN_BOX_HEIGHT*vectorObjs.length;
-				 	//FIXME: need to change targets width but doesn't work. Keeps making a a new child div. 
-				 	//temporary fix, made thumbnails size bigger so this case is less likely. 
-//				 	console.log(target);
-//				 	target = Ext.DomHelper.overwrite(target,{
-//				 			id : "GSE4600_vis",
-//							tag : 'div',
-//							width : panelWidth,
-//							height : panelHeight,
-//							style : "width:" + panelWidth  + ";height:" + panelHeight
-//						} , true);	
-				 }
-				 
+				 if ((MIN_BOX_HEIGHT*vectorObjs.length) > panelHeight){		
+				 	
+				 	//update height
+					 panelHeight =  MIN_BOX_HEIGHT*vectorObjs.length;
+					 	
+					 panelId = "heatmapScrollPanel" + Ext.id();					 
+					 //Create a scroll panel to put in
+					 var scrollPanel = new Ext.Panel({		
+					 		autoScroll : true,
+							stateful : false,
+							applyTo : target,
+							html : {
+								id : panelId,
+								tag : 'div'															
+							}
+						});
+					//update target 	
+					target = $(panelId);
+					 }	 
 			}
+			
 			var calculatedBoxWidth = Math.ceil( usablePanelWidth / vectorObjs[0].data.length);
 			var boxWidth = calculatedBoxWidth > MIN_BOX_WIDTH ? calculatedBoxWidth: MIN_BOX_WIDTH;
 			
@@ -127,11 +133,16 @@ var Heatmap = function() {
 				
 				//Add label or not
 				if (config.label){
-					
+					var rowLabel = "n/a";
+					if (vectorObjs[i].label){
+						var fullLabel = vectorObjs[i].label;
+						var geneLabel = fullLabel.substring(fullLabel.indexOf('(') + 1, fullLabel.indexOf(')') );						
+						rowLabel = " <a  href='/Gemma/compositeSequence/show.html?id="+vectorObjs[i].labelID +"' target='_blank' ext:qtip= '" + vectorObjs[i].label + "'> " + Ext.util.Format.ellipsis( geneLabel, MAX_LABEL_LENGTH_CHAR) + "</a>"
+					}
 					var text = Ext.DomHelper.append(canvasDiv, {
 						        id : "heatmaplabel" + Ext.id(),
 								tag : 'div',
-								html : (vectorObjs[i].label) ?" <a  href='/Gemma/compositeSequence/show.html?id="+vectorObjs[i].labelID +"' target='_blank' ext:qtip= '" + vectorObjs[i].label + "'> " + Ext.util.Format.ellipsis( vectorObjs[i].label, MAX_LABEL_LENGTH_CHAR) + "</a>" : "n/a" 
+								html : rowLabel 
 							}, true);
 					Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + usablePanelWidth + "px;font-size:8px");
 				}
