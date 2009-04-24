@@ -159,6 +159,12 @@ Gemma.sortByCoexpressedGene = function(a, b) {
 };
 
 
+Gemma.sortByPValue= function(a, b) {
+	return a.pValue - b.pValue;
+	
+};
+
+
 Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 
 			graphConfig : {
@@ -227,18 +233,18 @@ Gemma.getTemplate = function(){
 		if (Gemma.HEATMAP_VIEW){
 			template =  new Gemma.HeatmapTemplate('<tpl for="."><tpl for="eevo">',
 				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
-				'</tpl></tpl>')			
+				'</tpl></tpl>');			
 		}
 		else{
 			template = new Gemma.ProfileTemplate(
 				'<tpl for="."><tpl for="eevo">',
 				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
-				'</tpl></tpl>')			
+				'</tpl></tpl>');			
 		}
 		
 		return template;
 	
-}
+};
 		
 Gemma.VisualizationWindow = function(config) {
 

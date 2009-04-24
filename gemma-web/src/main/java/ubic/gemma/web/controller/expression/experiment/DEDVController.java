@@ -614,15 +614,9 @@ public class DEDVController extends BaseFormController {
         // Create collection of visualizationValueObject for flotr on js side
         int i = 0;
         for ( EE2PValue ee2P : sortedEE ) {
-            Collection<Long> validatedProbeIdList = new ArrayList<Long>();
-            if ( validatedProbes.get( ee2P.getEEId() ) != null && !validatedProbes.get( ee2P.getEEId() ).isEmpty() ) {
-                for ( DifferentialExpressionValueObject devo : validatedProbes.get( ee2P.getEEId() ) ) {
-                    validatedProbeIdList.add( devo.getProbeId() );
-                }
-            }
-
+    
             VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ), genes,
-                    validatedProbeIdList, ee2P.getPValue() );
+                     ee2P.getPValue(),validatedProbes.get( ee2P.getEEId() )  );
 
             /*
              * Set up the experimental designinfo so we can show it above the graph.
@@ -703,7 +697,7 @@ public class DEDVController extends BaseFormController {
                 validatedProbeList = validatedProbes.get( ee.getId() );
             }
             Collection<DoubleVectorValueObject> vectors = vvoMap.get( ee );
-            VisualizationValueObject vvo = new VisualizationValueObject( vectors, genes, validatedProbeList );
+            VisualizationValueObject vvo = new VisualizationValueObject( vectors, genes, validatedProbeList);
 
             /*
              * Set up the experimental designinfo so we can show it above the graph.

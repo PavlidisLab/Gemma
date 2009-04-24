@@ -48,14 +48,16 @@ public class GeneExpressionProfile {
     DesignElement probe;
     int factor;
     private String color = "black";
+    private double pValue;
 
-    public GeneExpressionProfile( DoubleVectorValueObject vector, String color, int factor ) {
+    public GeneExpressionProfile( DoubleVectorValueObject vector, String color, int factor, double pValue ) {
         this.genes = convert2GeneValueObjects( vector.getGenes() );
         this.probe = vector.getDesignElement();
         this.probe.setArrayDesign( null );
         this.points = new ArrayList<DoublePoint>();
         this.factor = factor;
-
+        this.pValue = pValue;
+        
         if ( color != null ) {
             this.color = color;
         }
@@ -133,6 +135,14 @@ public class GeneExpressionProfile {
 
     public void setFactor( int factor ) {
         this.factor = factor;
+    }
+
+    public double getPValue() {
+        return pValue;
+    }
+
+    public void setPValue( double value ) {
+        pValue = value;
     }
 
 }

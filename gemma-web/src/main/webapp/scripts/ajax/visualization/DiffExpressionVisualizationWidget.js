@@ -46,7 +46,9 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 				selectionchange : {
 					fn : function(dv, nodes) {
 
-						var record = dv.getRecords(nodes)[0];
+						var record = dv.getRecords(nodes)[0];					
+						if (!record) return;
+						
 						var eevo = record.get("eevo");
 						var profiles = record.get("profiles");
 
@@ -68,7 +70,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 			prepareData : function(data) {
 
 				// Need to transform the coordinate data from an object to an
-				// array for flotr
+				// array for flotr.  Happens every time window is refreshed/resized might be able to add a performance boost by not doing twice...
 				// probe, genes
 				var flotrData = [];
 				var coordinateProfile = data.profiles;
@@ -81,6 +83,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					var genes = coordinateProfile[i].genes;
 					var color = coordinateProfile[i].color;
 					var factor = coordinateProfile[i].factor;
+					var pvalue = coordinateProfile[i].PValue;
+					
 					if (factor < 2) {
 						/*
 						 * Note that using a 'less greyed' color here because the greyd lines often are by themselves on
@@ -104,7 +108,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						data : oneProfile,
 						color : color,
 						genes : genes,
-						label : probe + " (" + geneNames + ")",
+						label : pvalue + " (" + geneNames + ")",
 						lines : {
 							lineWidth : Gemma.LINE_THICKNESS
 						},
@@ -112,7 +116,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						factor : factor,
 						//Need to be added so switching views work
 						probe : { id : probeId, name : probe},
-						points : coordinateObject
+						points : coordinateObject,
+						PValue : pvalue
 
 					};
 
@@ -186,20 +191,25 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					refreshWindow : function(profiles) {
 						// Should redraw to fit current window width and hight.
 
-						if (profiles == null) {
-							var window = this.findParentByType(Gemma.VisualizationDifferentialWindow)
+						if (!profiles) {
+							var window = this.findParentByType(Gemma.VisualizationDifferentialWindow);
 							var record = window.dv.getSelectedRecords()[0];
 							// This gets called because window gets resized at startup.
 							if (record == null)
 								return;
 							profiles = record.get("profiles");
+							if (!profiles)
+								return;
 						}
 
 						if (Gemma.HEATMAP_VIEW){
 							$('graphzoompanel').innerHTML = '';
+								//Sort data for heatmap view.
+							profiles.sort(Gemma.sortByPValue);
 							Heatmap.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 						}
 						else {
+							profiles.sort(Gemma.graphSort);
 							Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
 						}
@@ -217,9 +227,11 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 						if (Gemma.HEATMAP_VIEW){
 							$('graphzoompanel').innerHTML = '';
+							profiles.sort(Gemma.sortByPValue);
 							Heatmap.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 						}
 						else {
+							profiles.sort(Gemma.graphSort);
 							Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
 						}
@@ -260,7 +272,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 		
 		var template = Gemma.getTemplate();
 		
-		this.dv.setTemplate ( template, false);
+		this.dv.setTemplate(template, false);
 		 
 		
 	},

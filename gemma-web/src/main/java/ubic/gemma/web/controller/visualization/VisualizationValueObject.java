@@ -30,6 +30,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -83,15 +84,6 @@ public class VisualizationValueObject {
         this.profiles = new HashSet<GeneExpressionProfile>();
     }
 
-    /**
-     * @param vectors from a single expression experiment.
-     * @param genes Is list so that order is gauranteed. Need this so that color's are consistent. Query gene is always
-     *        black, coexpressed is always red.
-     * @throws IllegalArgumentException if vectors are mixed between EEs.
-     */
-    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes ) {
-        this( vectors, genes, null, null );
-    }
 
     /**
      * @param Vectors to be plotted (should come from a single expression experiment)
@@ -113,7 +105,7 @@ public class VisualizationValueObject {
      * @param minPvalue
      */
     public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes,
-            Collection<Long> validatedProbeList, Double minPvalue ) {
+            Collection<Long> validatedProbeIdList, Double minPvalue ) {
         this();
 
         populateColorMap( genes );
@@ -135,11 +127,66 @@ public class VisualizationValueObject {
             }
 
             int valid = 1;
-            if ( validatedProbeList != null && validatedProbeList.contains( vector.getDesignElement().getId() ) ) {
+            if ( validatedProbeIdList != null && validatedProbeIdList.contains( vector.getDesignElement().getId() ) ) {
                 valid = 2;
             }
 
-            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid );
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, 0 );
+
+            // If points is empty dont add
+            if ( profile.getPoints() != null ) profiles.add( profile );
+
+        }
+    }
+    /**
+     * @param vectors
+     * @param genes
+     * @param validatedProbeList
+     * @param minPvalue
+     */
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes, Double minPvalue, Collection<DifferentialExpressionValueObject> validatedProbes ) {
+        this();
+
+        populateColorMap( genes );
+
+        Collection<Long> validatedProbeIdList = new ArrayList<Long>();
+        if ( validatedProbes != null && !validatedProbes.isEmpty() ) {
+            for ( DifferentialExpressionValueObject devo : validatedProbes ) {
+                validatedProbeIdList.add( devo.getProbeId() );
+            }
+        }
+        
+        for ( DoubleVectorValueObject vector : vectors ) {
+            if ( this.eevo == null ) {
+                setEEwithPvalue( vector.getExpressionExperiment(), minPvalue );
+            } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
+                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "
+                        + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
+            }
+
+            String color = null;
+            for ( Gene g : genes ) {
+                if ( !vector.getGenes().contains( g ) ) {
+                    continue;
+                }
+                color = colorMap.get( g.getId() );
+            }
+
+                int valid = 1;
+                double pValue=0;  //FIXME  What should default value be?
+                
+                if (validatedProbes != null){
+                    
+                    for(DifferentialExpressionValueObject devo : validatedProbes){
+                        if (devo.getProbeId() == vector.getDesignElement().getId()){
+                                log.debug("Id's equal: " + devo.getProbeId());
+                                pValue = devo.getP();
+                                valid = 2;
+                                break;
+                        }
+                    }
+                }
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, pValue);
 
             // If points is empty dont add
             if ( profile.getPoints() != null ) profiles.add( profile );
@@ -153,7 +200,7 @@ public class VisualizationValueObject {
     public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
         this();
         setEE( dvvo.getExpressionExperiment() );
-        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo, null, 0 );
+        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo, null, 0,0 );
         profiles.add( profile );
     }
 

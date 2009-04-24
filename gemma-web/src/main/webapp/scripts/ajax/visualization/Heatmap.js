@@ -21,7 +21,7 @@ var Heatmap = function() {
 	var COLOR_16 = ["rgb(0, 0, 0)","rgb(32, 0, 0)", "rgb(64, 0, 0)", "rgb(96, 0, 0)", 
 	"rgb(128, 0, 0)","rgb(159, 32, 0)", "rgb(191, 64, 0)", "rgb(223, 96, 0)", 
 	"rgb(255, 128, 0)", "rgb(255, 159, 32)", "rgb(255, 191, 64)", "rgb(255, 223, 96)",
-	"rgb(255, 255, 128)", "rgb(255, 255, 159)", "rgb(255, 255, 191)" , "rgb(255, 255, 223)", "rgb(255, 255, 255)"];
+	"rgb(255, 255, 128)", "rgb(255, 255, 159)", "rgb(255, 255, 191)", "rgb(255, 255, 223)", "rgb(255, 255, 255)"];
 	
 	
 	function HeatMap(container, data, config) {
@@ -137,7 +137,7 @@ var Heatmap = function() {
 					if (vectorObjs[i].label){
 						var fullLabel = vectorObjs[i].label;
 						var geneLabel = fullLabel.substring(fullLabel.indexOf('(') + 1, fullLabel.indexOf(')') );						
-						rowLabel = " <a  href='/Gemma/compositeSequence/show.html?id="+vectorObjs[i].labelID +"' target='_blank' ext:qtip= '" + vectorObjs[i].label + "'> " + Ext.util.Format.ellipsis( geneLabel, MAX_LABEL_LENGTH_CHAR) + "</a>"
+						rowLabel = " <a  href='/Gemma/compositeSequence/show.html?id="+vectorObjs[i].labelID +"' target='_blank' ext:qtip= '" + vectorObjs[i].label + "'> " + Ext.util.Format.ellipsis( geneLabel, MAX_LABEL_LENGTH_CHAR) + "</a>";
 					}
 					var text = Ext.DomHelper.append(canvasDiv, {
 						        id : "heatmaplabel" + Ext.id(),
@@ -230,8 +230,8 @@ var Heatmap = function() {
 							id : legendRowId,
 							tag : 'div',
 							width : legendWidth,
-							height : boxSize,
-							style : "width:" + legendWidth  + ";height:" + boxSize
+							height : boxsize,
+							style : "width:" + legendWidth  + ";height:" + boxsize
 						});
 
 				var ctx = constructCanvas($(legendRowId), boxsize, boxsize);						
@@ -250,21 +250,21 @@ var Heatmap = function() {
 			
 			//Add The NAN color to legend. 
 			
-				var legendRowId = "heatmapLegendRow" + Ext.id();
+				legendRowId = "heatmapLegendRow" + Ext.id();
 				Ext.DomHelper.append(legendDiv, {
 							id : legendRowId,
 							tag : 'div',
 							width : legendWidth,
-							height : boxSize,
-							style : "width:" + legendWidth  + ";height:" + boxSize
+							height : boxsize,
+							style : "width:" + legendWidth  + ";height:" + boxsize
 						});
 
-				var ctx = constructCanvas($(legendRowId), boxsize, boxsize);						
+				 var ctx = constructCanvas($(legendRowId), boxsize, boxsize);						
 					ctx.fillStyle = NAN_COLOR;
 					ctx.fillRect(0, 0, boxsize, boxsize);
 
-				var legendRowDiv = Ext.get(legendRowId);
-				var text = Ext.DomHelper.append(legendRowDiv, {
+				 var legendRowDiv = Ext.get(legendRowId);
+				 var text = Ext.DomHelper.append(legendRowDiv, {
 						        id : "legendRowlabel" + Ext.id(),
 								tag : 'div',
 								html : " NaN"
