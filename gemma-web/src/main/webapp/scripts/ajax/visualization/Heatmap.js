@@ -7,7 +7,7 @@ var Heatmap = function() {
 	var NAN_COLOR = "grey";
 	var SHOW_LABEL_MIN_SIZE = 5;
 	var MIN_BOX_HEIGHT = 2;
-	var MAX_BOX_HEIGHT = 16;
+	var MAX_BOX_HEIGHT = 20;
 	var TRIM = 10;
 	
 	//TODO put constants in config object so they can programtically changed on the fly
@@ -52,7 +52,10 @@ var Heatmap = function() {
 			var panelHeight = target.getHeight() - TRIM;
 			
 			var calculatedBoxHeight = Math.ceil(panelHeight/vectorObjs.length);
-			if (calculatedBoxHeight > MIN_BOX_HEIGHT){
+			if(calculatedBoxHeight > MAX_BOX_HEIGHT){
+				boxHeight = MAX_BOX_HEIGHT;	
+			}
+			else if (calculatedBoxHeight > MIN_BOX_HEIGHT){
 				boxHeight = calculatedBoxHeight;
 			}
 			else{
@@ -144,7 +147,7 @@ var Heatmap = function() {
 								tag : 'div',
 								html : rowLabel 
 							}, true);
-					Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + usablePanelWidth + "px;font-size:8px");
+					Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + usablePanelWidth + "px");
 				}
 			}
 			//this.loadMask.hide();
