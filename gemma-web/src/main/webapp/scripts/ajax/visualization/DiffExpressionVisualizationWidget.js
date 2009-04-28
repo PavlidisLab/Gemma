@@ -16,7 +16,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	
 	initComponent : function() {
 		
-		var template = Gemma.getTemplate();  //get the correct view (heatmap or graph
+		var template = Gemma.getDiffExpressionTemplate();
 			
 		this.dv = new Ext.DataView({
 			autoHeight : true,
@@ -74,6 +74,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 				// probe, genes
 				var flotrData = [];
 				var coordinateProfile = data.profiles;
+				//var eevo = data.eevo;
+
 
 				for (var i = 0; i < coordinateProfile.size(); i++) {
 					var coordinateObject = coordinateProfile[i].points;
@@ -108,7 +110,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						data : oneProfile,
 						color : color,
 						genes : genes,
-						label : pvalue + " (" + geneNames + ")",
+						label : (pvalue != 1) ? sprintf("%.3e", pvalue) + " (" + geneNames + ")" : "n/a (" + geneNames + ")",
 						lines : {
 							lineWidth : Gemma.LINE_THICKNESS
 						},
@@ -118,6 +120,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						probe : { id : probeId, name : probe},
 						points : coordinateObject,
 						PValue : pvalue
+
 
 					};
 

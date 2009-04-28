@@ -55,6 +55,8 @@ public class VisualizationValueObject {
     private ExpressionExperimentValueObject eevo = null;
 
     private Collection<FactorProfile> factorProfiles;
+    
+    private static long DEFAULT_P_VALUE = 1;    //FIXME is this correct?
 
     /**
      * Initialize the factor profiles.
@@ -173,13 +175,11 @@ public class VisualizationValueObject {
             }
 
                 int valid = 1;
-                double pValue=0;  //FIXME  What should default value be?
+                double pValue=DEFAULT_P_VALUE;
                 
-                if (validatedProbes != null){
-                    
+                if (validatedProbes != null){                    
                     for(DifferentialExpressionValueObject devo : validatedProbes){
-                        if (devo.getProbeId() == vector.getDesignElement().getId()){
-                                log.debug("Id's equal: " + devo.getProbeId());
+                        if (devo.getProbeId().equals( vector.getDesignElement().getId())){                         
                                 pValue = devo.getP();
                                 valid = 2;
                                 break;
