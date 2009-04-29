@@ -368,7 +368,15 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
         }
         double c = sxy / ( ssi * ssj );
 
+        // should never have roundoff errors this large.
         assert c > -1.0001 && c < 1.0001 : c;
+
+        // roundoff guard
+        if ( c < -1.0 ) {
+            c = -1.0;
+        } else if ( c > 1.0 ) {
+            c = 1.0;
+        }
 
         return c;
     }
