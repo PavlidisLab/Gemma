@@ -99,7 +99,8 @@ public class DEDVController extends BaseFormController {
         Collection<DoubleVectorValueObject> dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
 
-        experimentalDesignVisualizationService.sortVectorDataByDesign( dedvMap );
+        //FIXME: Commented out for performance and factor info not displayed on front end yet anyway. 
+       // experimentalDesignVisualizationService.sortVectorDataByDesign( dedvMap );
 
         watch.stop();
         Long time = watch.getTime();
@@ -139,8 +140,10 @@ public class DEDVController extends BaseFormController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
-                .sortVectorDataByDesign( dedvs );
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+
+        //FIXME: Commented out for performance and factor info not displayed on front end yet anyway. 
+        //layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         watch.stop();
         Long time = watch.getTime();
@@ -186,8 +189,9 @@ public class DEDVController extends BaseFormController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes );
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
-                .sortVectorDataByDesign( dedvs );
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        //FIXME: Commented out for performance and factor info not displayed on front end yet anyway. 
+        //layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         watch.stop();
         Long time = watch.getTime();

@@ -54,7 +54,8 @@ Gemma.GRAPH_ZOOM_CONFIG = {
 		noTicks : 0
 	},
 	grid : {
-		labelMargin : 0
+		labelMargin : 0,
+		marginColor : "white"
 		// => margin in pixels
 		// color : "white" //this turns the letters in the legend to white
 	},
@@ -227,6 +228,7 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 
 		
 Gemma.HEATMAP_VIEW = false;
+Gemma.MAX_EE_NAME_LENGTH = 25;
 
 //TODO refactor so don't have getTemplate and getDiffExpressionTemplate
 //Tried making getTemplate take a string, then passing in the template string as a variable. Still didn't work when switching back and forth between views
@@ -234,13 +236,13 @@ Gemma.getTemplate = function(){
 		var template;
 		if (Gemma.HEATMAP_VIEW){
 			template =  new Gemma.HeatmapTemplate('<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
+				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> </div>',
 				'</tpl></tpl>');			
 		}
 		else{
 			template = new Gemma.ProfileTemplate(
 				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[sprintf("%.35s",values.name)]} </small> </div>',
+				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}  </b> <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> </div>',
 				'</tpl></tpl>');			
 		}
 		
@@ -253,13 +255,13 @@ Gemma.getDiffExpressionTemplate = function(){
 		if (Gemma.HEATMAP_VIEW){
 
 			template = new Gemma.HeatmapTemplate('<tpl for="."><tpl for="eevo">',
-					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}</b>: <small> {[sprintf("%.35s",values.name)]} </small> <i> {[(values.minPvalue < 1) ? sprintf("%.3e", values.minPvalue) : "-"]}  </i></div>',
+					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}</b>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i> {[(values.minPvalue < 1) ? sprintf("%.3e", values.minPvalue) : "-"]}  </i></div>',
 					'</tpl></tpl>');
 				}
 		else{
 			template = 	new Gemma.ProfileTemplate(
 					'<tpl for="."><tpl for="eevo">',
-					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}</b>: <small> {[sprintf("%.35s",values.name)]} </small> <i> {[(values.minPvalue < 1) ? sprintf("%.3e", values.minPvalue) : "-"]}  </i></div>',
+					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}</b>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i> {[(values.minPvalue < 1) ? sprintf("%.3e", values.minPvalue) : "-"]}  </i></div>',
 					'</tpl></tpl>');
 		}
 		

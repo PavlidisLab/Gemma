@@ -415,7 +415,9 @@ var Flotr = (function(){
 					color: '#545454',		// => primary color used for outline and labels
 					backgroundColor: null,	// => null for transparent, else color
 					tickColor: '#dddddd',	// => color used for the ticks
-					labelMargin: 3			// => margin in pixels
+					labelMargin: 3,			// => margin in pixels\
+					marginColor: '#545454'  // => color of grid margin/border
+					
 				},
 				selection: {
 					mode: null,				// => one of null, 'x', 'y' or 'xy'
@@ -928,7 +930,7 @@ var Flotr = (function(){
 			 * Draw axis/grid border.
 			 */
 			ctx.lineWidth = 2;
-			ctx.strokeStyle = options.grid.color;
+			ctx.strokeStyle = options.grid.marginColor;
 			ctx.lineJoin = 'round';
 			ctx.strokeRect(0, 0, plotWidth, plotHeight);
 			ctx.restore();

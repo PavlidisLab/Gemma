@@ -145,7 +145,7 @@ var Heatmap = function() {
 					var text = Ext.DomHelper.append(canvasDiv, {
 						        id : "heatmaplabel" + Ext.id(),
 								tag : 'div',
-								html : rowLabel 
+								html : "&nbsp;" + rowLabel 
 							}, true);
 					Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + usablePanelWidth + "px");
 				}
@@ -225,7 +225,7 @@ var Heatmap = function() {
 			
 			for (var i = 0; i < COLOR_16.length; i++) {
 				
-				var rowLabel = sprintf("%.4s",rangeMin) + " to " + sprintf("%.4s",rangeMin + binsize);	
+				var rowLabel = "&nbsp;" + sprintf("%.4s",rangeMin) + " to " + sprintf("%.4s",rangeMin + binsize);	
 				rangeMin = rangeMin+binsize;
 				
 				var legendRowId = "heatmapLegendRow" + Ext.id();
@@ -270,7 +270,7 @@ var Heatmap = function() {
 				 var text = Ext.DomHelper.append(legendRowDiv, {
 						        id : "legendRowlabel" + Ext.id(),
 								tag : 'div',
-								html : " NaN"
+								html : "&nbsp; NaN"
 							}, true);
 				Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + boxsize + "px;font-size:10px");
 			

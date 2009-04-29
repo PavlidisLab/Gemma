@@ -219,7 +219,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					html : {
 						id : 'graphzoompanel',
 						tag : 'div',
-						style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px;'
+						style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px; margin:5px 2px 2px 5px;'
 					},
 
 					refreshWindow : function(profiles) {

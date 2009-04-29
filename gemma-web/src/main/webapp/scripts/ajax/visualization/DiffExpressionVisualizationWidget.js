@@ -188,7 +188,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					html : {
 						id : 'graphzoompanel',
 						tag : 'div',
-						style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px;'
+						style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px; margin:5px 2px 2px 5px;'
 					},
 
 					refreshWindow : function(profiles) {
@@ -273,7 +273,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 			Gemma.HEATMAP_VIEW = true;
 		}
 		
-		var template = Gemma.getTemplate();
+		var template = Gemma.getDiffExpressionTemplate();
 		
 		this.dv.setTemplate(template, false);
 		 
