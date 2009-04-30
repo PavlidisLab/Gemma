@@ -117,6 +117,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#find(ubic.gemma.model.expression.bioAssayData
      * .DesignElementDataVector)
      */
+    @SuppressWarnings("unchecked")
     public RawExpressionDataVector find( RawExpressionDataVector designElementDataVector ) {
 
         BusinessKey.checkKey( designElementDataVector );

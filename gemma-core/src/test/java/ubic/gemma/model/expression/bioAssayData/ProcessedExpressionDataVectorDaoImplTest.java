@@ -108,23 +108,6 @@ public class ProcessedExpressionDataVectorDaoImplTest extends BaseSpringContextT
         assertEquals( 40, v.size() );
     }
 
-    // public void testGetProcessedDataCache() {
-    // endTransaction();
-    // Collection<ExpressionExperiment> ees = getDataset();
-    // Collection<Gene> genes = getGeneAssociatedWithEe();
-    // Collection<DoubleVectorValueObject> v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
-    // assertEquals( 40, v.size() );
-    // Cache cache = this.processedDataVectorDao.getProcessedDataVectorCache().getCache( ees.iterator().next() );
-    // cache.clearStatistics();
-    // processedDataVectorDao.getProcessedDataArrays( ees, genes );
-    // v = processedDataVectorDao.getProcessedDataArrays( ees, genes );
-    // assertEquals( 40, v.size() );
-    // long hits = cache.getStatistics().getCacheHits();
-    //
-    // // It really should be 86!
-    // assertTrue( hits > 80 );
-    // }
-
     /**
      * @return
      */
