@@ -36,7 +36,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.NonUniqueObjectException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -60,7 +59,6 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
@@ -1514,6 +1512,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 }
             }
             v.setHasBothIntensities( hasBothIntensities && !mayBeOneChannel );
+            v.setHasEitherIntensity( hasIntensityA || hasIntensityB );
         }
     }
 

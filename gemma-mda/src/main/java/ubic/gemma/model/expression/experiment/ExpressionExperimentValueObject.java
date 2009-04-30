@@ -35,7 +35,121 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      */
     private static final long serialVersionUID = -5678747537830051610L;
 
+    private java.lang.String accession;
+
+    private long arrayDesignCount;
+
+    private long bioAssayCount;
+
+    private java.lang.Long bioMaterialCount = null;
+
+    private java.lang.String clazz;
+
+    private java.lang.Long coexpressionLinkCount = null;
+
+    private java.util.Date dateArrayDesignLastUpdated;
+
+    private java.util.Date dateCached;
+
+    private java.util.Date dateCreated;
+
+    private java.util.Date dateDifferentialAnalysis;
+
+    private java.util.Date dateLastUpdated;
+
+    private java.util.Date dateLinkAnalysis;
+
+    private java.util.Date dateMissingValueAnalysis;
+
+    private java.util.Date dateProcessedDataVectorComputation;
+
+    private long designElementDataVectorCount;
+
+    private java.lang.String differentialAnalysisEventType;
+
+    private java.lang.Long differentialExpressionAnalysisId;
+
+    private java.lang.String externalDatabase;
+
+    private java.lang.String externalUri;
+
+    private boolean hasBothIntensities = false;
+
+    private Boolean hasEitherIntensity = false;
+
+    private java.lang.Boolean hasProbeSpecificForQueryGene;
+
+    private java.lang.Long id;
+
+    private java.lang.String investigators;
+
+    private boolean isPublic = true;
+
+    private java.lang.String linkAnalysisEventType;
+
+    private java.lang.Double minPvalue;
+
+    private java.lang.String missingValueAnalysisEventType;
+
+    private java.lang.String name;
+
+    private java.lang.Integer numAnnotations;
+
+    private java.lang.Integer numPopulatedFactors;
+
+    private java.lang.String owner;
+
+    private java.lang.String processedDataVectorComputationEventType;
+
+    private java.lang.Long processedExpressionVectorCount = null;
+
+    private java.lang.Integer pubmedId;
+
+    private java.lang.Long rawCoexpressionLinkCount = null;
+
+    private java.util.Collection<AuditEventValueObject> sampleRemovedFlags;
+
+    private java.lang.String shortName;
+
+    private java.lang.String source;
+
+    private java.lang.Long sourceExperiment;
+
+    private java.lang.String taxon;
+
+    private java.lang.String technologyType;
+
+    private AuditEventValueObject troubleFlag;
+
+    private AuditEventValueObject validatedFlag;
+
     public ExpressionExperimentValueObject() {
+    }
+
+    /**
+     * Copies constructor from other ExpressionExperimentValueObject
+     * 
+     * @param otherBean, cannot be <code>null</code>
+     * @throws java.lang.NullPointerException if the argument is <code>null</code>
+     */
+    public ExpressionExperimentValueObject( ExpressionExperimentValueObject otherBean ) {
+        this( otherBean.getId(), otherBean.getName(), otherBean.getExternalDatabase(), otherBean.getExternalUri(),
+                otherBean.getSource(), otherBean.getAccession(), otherBean.getBioAssayCount(), otherBean.getTaxon(),
+                otherBean.getBioMaterialCount(), otherBean.getDesignElementDataVectorCount(), otherBean
+                        .getArrayDesignCount(), otherBean.getShortName(), otherBean.getLinkAnalysisEventType(),
+                otherBean.getDateArrayDesignLastUpdated(), otherBean.getValidatedFlag(), otherBean.getTechnologyType(),
+                otherBean.isHasBothIntensities(), otherBean.getNumAnnotations(), otherBean.getNumPopulatedFactors(),
+                otherBean.getDateDifferentialAnalysis(), otherBean.getDifferentialAnalysisEventType(), otherBean
+                        .getSampleRemovedFlags(), otherBean.isIsPublic(), otherBean.getClazz(), otherBean
+                        .getSourceExperiment(), otherBean.getDifferentialExpressionAnalysisId(), otherBean
+                        .getPubmedId(), otherBean.getInvestigators(), otherBean.getOwner(), otherBean.getDateCreated(),
+                otherBean.getTroubleFlag(), otherBean.getCoexpressionLinkCount(), otherBean
+                        .getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
+                otherBean.getDateLinkAnalysis(), otherBean.getRawCoexpressionLinkCount(), otherBean
+                        .getDateProcessedDataVectorComputation(), otherBean.getDateMissingValueAnalysis(), otherBean
+                        .getProcessedExpressionVectorCount(), otherBean.getDateLastUpdated(),
+                otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue(),
+                otherBean.getHasEitherIntensity() );
     }
 
     public ExpressionExperimentValueObject( java.lang.Long id, java.lang.String name,
@@ -102,32 +216,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     }
 
     /**
-     * Copies constructor from other ExpressionExperimentValueObject
-     * 
-     * @param otherBean, cannot be <code>null</code>
-     * @throws java.lang.NullPointerException if the argument is <code>null</code>
-     */
-    public ExpressionExperimentValueObject( ExpressionExperimentValueObject otherBean ) {
-        this( otherBean.getId(), otherBean.getName(), otherBean.getExternalDatabase(), otherBean.getExternalUri(),
-                otherBean.getSource(), otherBean.getAccession(), otherBean.getBioAssayCount(), otherBean.getTaxon(),
-                otherBean.getBioMaterialCount(), otherBean.getDesignElementDataVectorCount(), otherBean
-                        .getArrayDesignCount(), otherBean.getShortName(), otherBean.getLinkAnalysisEventType(),
-                otherBean.getDateArrayDesignLastUpdated(), otherBean.getValidatedFlag(), otherBean.getTechnologyType(),
-                otherBean.isHasBothIntensities(), otherBean.getNumAnnotations(), otherBean.getNumPopulatedFactors(),
-                otherBean.getDateDifferentialAnalysis(), otherBean.getDifferentialAnalysisEventType(), otherBean
-                        .getSampleRemovedFlags(), otherBean.isIsPublic(), otherBean.getClazz(), otherBean
-                        .getSourceExperiment(), otherBean.getDifferentialExpressionAnalysisId(), otherBean
-                        .getPubmedId(), otherBean.getInvestigators(), otherBean.getOwner(), otherBean.getDateCreated(),
-                otherBean.getTroubleFlag(), otherBean.getCoexpressionLinkCount(), otherBean
-                        .getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
-                otherBean.getDateLinkAnalysis(), otherBean.getRawCoexpressionLinkCount(), otherBean
-                        .getDateProcessedDataVectorComputation(), otherBean.getDateMissingValueAnalysis(), otherBean
-                        .getProcessedExpressionVectorCount(), otherBean.getDateLastUpdated(),
-                otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue(),
-                otherBean.getHasEitherIntensity() );
-    }
-
-    /**
      * Copies all properties from the argument value object into this value object.
      */
     public void copy( ExpressionExperimentValueObject otherBean ) {
@@ -178,137 +266,12 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         }
     }
 
-    private java.lang.Long id;
-
-    /**
-     * 
-     */
-    public java.lang.Long getId() {
-        return this.id;
-    }
-
-    public void setId( java.lang.Long id ) {
-        this.id = id;
-    }
-
-    private java.lang.String name;
-
-    /**
-     * 
-     */
-    public java.lang.String getName() {
-        return this.name;
-    }
-
-    public void setName( java.lang.String name ) {
-        this.name = name;
-    }
-
-    private java.lang.String externalDatabase;
-
-    /**
-     * 
-     */
-    public java.lang.String getExternalDatabase() {
-        return this.externalDatabase;
-    }
-
-    public void setExternalDatabase( java.lang.String externalDatabase ) {
-        this.externalDatabase = externalDatabase;
-    }
-
-    private java.lang.String externalUri;
-
-    /**
-     * 
-     */
-    public java.lang.String getExternalUri() {
-        return this.externalUri;
-    }
-
-    public void setExternalUri( java.lang.String externalUri ) {
-        this.externalUri = externalUri;
-    }
-
-    private java.lang.String source;
-
-    /**
-     * 
-     */
-    public java.lang.String getSource() {
-        return this.source;
-    }
-
-    public void setSource( java.lang.String source ) {
-        this.source = source;
-    }
-
-    private java.lang.String accession;
-
     /**
      * 
      */
     public java.lang.String getAccession() {
         return this.accession;
     }
-
-    public void setAccession( java.lang.String accession ) {
-        this.accession = accession;
-    }
-
-    private long bioAssayCount;
-
-    /**
-     * 
-     */
-    public long getBioAssayCount() {
-        return this.bioAssayCount;
-    }
-
-    public void setBioAssayCount( long bioAssayCount ) {
-        this.bioAssayCount = bioAssayCount;
-    }
-
-    private java.lang.String taxon;
-
-    /**
-     * 
-     */
-    public java.lang.String getTaxon() {
-        return this.taxon;
-    }
-
-    public void setTaxon( java.lang.String taxon ) {
-        this.taxon = taxon;
-    }
-
-    private java.lang.Long bioMaterialCount = null;
-
-    /**
-     * 
-     */
-    public java.lang.Long getBioMaterialCount() {
-        return this.bioMaterialCount;
-    }
-
-    public void setBioMaterialCount( java.lang.Long bioMaterialCount ) {
-        this.bioMaterialCount = bioMaterialCount;
-    }
-
-    private long designElementDataVectorCount;
-
-    /**
-     * 
-     */
-    public long getDesignElementDataVectorCount() {
-        return this.designElementDataVectorCount;
-    }
-
-    public void setDesignElementDataVectorCount( long designElementDataVectorCount ) {
-        this.designElementDataVectorCount = designElementDataVectorCount;
-    }
-
-    private long arrayDesignCount;
 
     /**
      * 
@@ -317,50 +280,35 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         return this.arrayDesignCount;
     }
 
-    public void setArrayDesignCount( long arrayDesignCount ) {
-        this.arrayDesignCount = arrayDesignCount;
-    }
-
-    private java.lang.String shortName;
-
-    private Boolean hasEitherIntensity;
-
     /**
-     * @return true if the experiment has any intensity information available. Relevant for two-channel studies.
+     * 
      */
-    public Boolean getHasEitherIntensity() {
-        return hasEitherIntensity;
-    }
-
-    public void setHasEitherIntensity( Boolean hasEitherIntensity ) {
-        this.hasEitherIntensity = hasEitherIntensity;
+    public long getBioAssayCount() {
+        return this.bioAssayCount;
     }
 
     /**
      * 
      */
-    public java.lang.String getShortName() {
-        return this.shortName;
+    public java.lang.Long getBioMaterialCount() {
+        return this.bioMaterialCount;
     }
 
-    public void setShortName( java.lang.String shortName ) {
-        this.shortName = shortName;
+    /**
+     * <p>
+     * The type of BioAssaySet this represents.
+     * </p>
+     */
+    public java.lang.String getClazz() {
+        return this.clazz;
     }
-
-    private java.lang.String linkAnalysisEventType;
 
     /**
      * 
      */
-    public java.lang.String getLinkAnalysisEventType() {
-        return this.linkAnalysisEventType;
+    public java.lang.Long getCoexpressionLinkCount() {
+        return this.coexpressionLinkCount;
     }
-
-    public void setLinkAnalysisEventType( java.lang.String linkAnalysisEventType ) {
-        this.linkAnalysisEventType = linkAnalysisEventType;
-    }
-
-    private java.util.Date dateArrayDesignLastUpdated;
 
     /**
      * <p>
@@ -373,50 +321,149 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         return this.dateArrayDesignLastUpdated;
     }
 
-    public void setDateArrayDesignLastUpdated( java.util.Date dateArrayDesignLastUpdated ) {
-        this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
+    /**
+     * <p>
+     * The date this object was generated.
+     * </p>
+     */
+    public java.util.Date getDateCached() {
+        return this.dateCached;
     }
-
-    private AuditEventValueObject validatedFlag;
 
     /**
      * 
      */
-    public AuditEventValueObject getValidatedFlag() {
-        return this.validatedFlag;
+    public java.util.Date getDateCreated() {
+        return this.dateCreated;
     }
-
-    public void setValidatedFlag( AuditEventValueObject validatedFlag ) {
-        this.validatedFlag = validatedFlag;
-    }
-
-    private java.lang.String technologyType;
 
     /**
      * 
      */
-    public java.lang.String getTechnologyType() {
-        return this.technologyType;
+    public java.util.Date getDateDifferentialAnalysis() {
+        return this.dateDifferentialAnalysis;
     }
-
-    public void setTechnologyType( java.lang.String technologyType ) {
-        this.technologyType = technologyType;
-    }
-
-    private boolean hasBothIntensities;
 
     /**
      * 
      */
-    public boolean isHasBothIntensities() {
-        return this.hasBothIntensities;
+    public java.util.Date getDateLastUpdated() {
+        return this.dateLastUpdated;
     }
 
-    public void setHasBothIntensities( boolean hasBothIntensities ) {
-        this.hasBothIntensities = hasBothIntensities;
+    /**
+     * 
+     */
+    public java.util.Date getDateLinkAnalysis() {
+        return this.dateLinkAnalysis;
     }
 
-    private java.lang.Integer numAnnotations;
+    /**
+     * 
+     */
+    public java.util.Date getDateMissingValueAnalysis() {
+        return this.dateMissingValueAnalysis;
+    }
+
+    /**
+     * 
+     */
+    public java.util.Date getDateProcessedDataVectorComputation() {
+        return this.dateProcessedDataVectorComputation;
+    }
+
+    /**
+     * 
+     */
+    public long getDesignElementDataVectorCount() {
+        return this.designElementDataVectorCount;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getDifferentialAnalysisEventType() {
+        return this.differentialAnalysisEventType;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.Long getDifferentialExpressionAnalysisId() {
+        return this.differentialExpressionAnalysisId;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getExternalDatabase() {
+        return this.externalDatabase;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getExternalUri() {
+        return this.externalUri;
+    }
+
+    /**
+     * @return true if the experiment has any intensity information available. Relevant for two-channel studies.
+     */
+    public Boolean getHasEitherIntensity() {
+        return hasEitherIntensity;
+    }
+
+    /**
+     * <p>
+     * Used in display of gene-wise analysis results.
+     * </p>
+     */
+    public java.lang.Boolean getHasProbeSpecificForQueryGene() {
+        return this.hasProbeSpecificForQueryGene;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.Long getId() {
+        return this.id;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getInvestigators() {
+        return this.investigators;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getLinkAnalysisEventType() {
+        return this.linkAnalysisEventType;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.Double getMinPvalue() {
+        return this.minPvalue;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getMissingValueAnalysisEventType() {
+        return this.missingValueAnalysisEventType;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getName() {
+        return this.name;
+    }
 
     /**
      * <p>
@@ -427,12 +474,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         return this.numAnnotations;
     }
 
-    public void setNumAnnotations( java.lang.Integer numAnnotations ) {
-        this.numAnnotations = numAnnotations;
-    }
-
-    private java.lang.Integer numPopulatedFactors;
-
     /**
      * <p>
      * The number of experimental factors the experiment has (counting those that are populated with biomaterials)
@@ -442,37 +483,45 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         return this.numPopulatedFactors;
     }
 
-    public void setNumPopulatedFactors( java.lang.Integer numPopulatedFactors ) {
-        this.numPopulatedFactors = numPopulatedFactors;
+    /**
+     * <p>
+     * The user name of the experiment's owner, if any.
+     * </p>
+     */
+    public java.lang.String getOwner() {
+        return this.owner;
     }
-
-    private java.util.Date dateDifferentialAnalysis;
 
     /**
      * 
      */
-    public java.util.Date getDateDifferentialAnalysis() {
-        return this.dateDifferentialAnalysis;
+    public java.lang.String getProcessedDataVectorComputationEventType() {
+        return this.processedDataVectorComputationEventType;
     }
-
-    public void setDateDifferentialAnalysis( java.util.Date dateDifferentialAnalysis ) {
-        this.dateDifferentialAnalysis = dateDifferentialAnalysis;
-    }
-
-    private java.lang.String differentialAnalysisEventType;
 
     /**
      * 
      */
-    public java.lang.String getDifferentialAnalysisEventType() {
-        return this.differentialAnalysisEventType;
+    public java.lang.Long getProcessedExpressionVectorCount() {
+        return this.processedExpressionVectorCount;
     }
 
-    public void setDifferentialAnalysisEventType( java.lang.String differentialAnalysisEventType ) {
-        this.differentialAnalysisEventType = differentialAnalysisEventType;
+    /**
+     * 
+     */
+    public java.lang.Integer getPubmedId() {
+        return this.pubmedId;
     }
 
-    private java.util.Collection<AuditEventValueObject> sampleRemovedFlags;
+    /**
+     * <p>
+     * The amount of raw links that the EE contributed to any of the coexpressed genes. by raw we mean before
+     * filtering/stringency was applied.
+     * </p>
+     */
+    public java.lang.Long getRawCoexpressionLinkCount() {
+        return this.rawCoexpressionLinkCount;
+    }
 
     /**
      * <p>
@@ -482,6 +531,217 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      */
     public java.util.Collection<AuditEventValueObject> getSampleRemovedFlags() {
         return this.sampleRemovedFlags;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getShortName() {
+        return this.shortName;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getSource() {
+        return this.source;
+    }
+
+    /**
+     * <p>
+     * The ID of the source experiment, if this is an ExpressionExperimentSubSet
+     * </p>
+     */
+    public java.lang.Long getSourceExperiment() {
+        return this.sourceExperiment;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getTaxon() {
+        return this.taxon;
+    }
+
+    /**
+     * 
+     */
+    public java.lang.String getTechnologyType() {
+        return this.technologyType;
+    }
+
+    /**
+     * 
+     */
+    public AuditEventValueObject getTroubleFlag() {
+        return this.troubleFlag;
+    }
+
+    /**
+     * 
+     */
+    public AuditEventValueObject getValidatedFlag() {
+        return this.validatedFlag;
+    }
+
+    /**
+     * 
+     */
+    public boolean isHasBothIntensities() {
+        return this.hasBothIntensities;
+    }
+
+    /**
+     * <p>
+     * If true, this data set has been made public. If false, it is private and is only viewable by some users.
+     * </p>
+     */
+    public boolean isIsPublic() {
+        return this.isPublic;
+    }
+
+    public void setAccession( java.lang.String accession ) {
+        this.accession = accession;
+    }
+
+    public void setArrayDesignCount( long arrayDesignCount ) {
+        this.arrayDesignCount = arrayDesignCount;
+    }
+
+    public void setBioAssayCount( long bioAssayCount ) {
+        this.bioAssayCount = bioAssayCount;
+    }
+
+    public void setBioMaterialCount( java.lang.Long bioMaterialCount ) {
+        this.bioMaterialCount = bioMaterialCount;
+    }
+
+    public void setClazz( java.lang.String clazz ) {
+        this.clazz = clazz;
+    }
+
+    public void setCoexpressionLinkCount( java.lang.Long coexpressionLinkCount ) {
+        this.coexpressionLinkCount = coexpressionLinkCount;
+    }
+
+    public void setDateArrayDesignLastUpdated( java.util.Date dateArrayDesignLastUpdated ) {
+        this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
+    }
+
+    public void setDateCached( java.util.Date dateCached ) {
+        this.dateCached = dateCached;
+    }
+
+    public void setDateCreated( java.util.Date dateCreated ) {
+        this.dateCreated = dateCreated;
+    }
+
+    public void setDateDifferentialAnalysis( java.util.Date dateDifferentialAnalysis ) {
+        this.dateDifferentialAnalysis = dateDifferentialAnalysis;
+    }
+
+    public void setDateLastUpdated( java.util.Date dateLastUpdated ) {
+        this.dateLastUpdated = dateLastUpdated;
+    }
+
+    public void setDateLinkAnalysis( java.util.Date dateLinkAnalysis ) {
+        this.dateLinkAnalysis = dateLinkAnalysis;
+    }
+
+    public void setDateMissingValueAnalysis( java.util.Date dateMissingValueAnalysis ) {
+        this.dateMissingValueAnalysis = dateMissingValueAnalysis;
+    }
+
+    public void setDateProcessedDataVectorComputation( java.util.Date dateProcessedDataVectorComputation ) {
+        this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
+    }
+
+    public void setDesignElementDataVectorCount( long designElementDataVectorCount ) {
+        this.designElementDataVectorCount = designElementDataVectorCount;
+    }
+
+    public void setDifferentialAnalysisEventType( java.lang.String differentialAnalysisEventType ) {
+        this.differentialAnalysisEventType = differentialAnalysisEventType;
+    }
+
+    public void setDifferentialExpressionAnalysisId( java.lang.Long differentialExpressionAnalysisId ) {
+        this.differentialExpressionAnalysisId = differentialExpressionAnalysisId;
+    }
+
+    public void setExternalDatabase( java.lang.String externalDatabase ) {
+        this.externalDatabase = externalDatabase;
+    }
+
+    public void setExternalUri( java.lang.String externalUri ) {
+        this.externalUri = externalUri;
+    }
+
+    public void setHasBothIntensities( boolean hasBothIntensities ) {
+        this.hasBothIntensities = hasBothIntensities;
+    }
+
+    public void setHasEitherIntensity( Boolean hasEitherIntensity ) {
+        this.hasEitherIntensity = hasEitherIntensity;
+    }
+
+    public void setHasProbeSpecificForQueryGene( java.lang.Boolean hasProbeSpecificForQueryGene ) {
+        this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
+    }
+
+    public void setId( java.lang.Long id ) {
+        this.id = id;
+    }
+
+    public void setInvestigators( java.lang.String investigators ) {
+        this.investigators = investigators;
+    }
+
+    public void setIsPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
+    }
+
+    public void setLinkAnalysisEventType( java.lang.String linkAnalysisEventType ) {
+        this.linkAnalysisEventType = linkAnalysisEventType;
+    }
+
+    public void setMinPvalue( java.lang.Double minPvalue ) {
+        this.minPvalue = minPvalue;
+    }
+
+    public void setMissingValueAnalysisEventType( java.lang.String missingValueAnalysisEventType ) {
+        this.missingValueAnalysisEventType = missingValueAnalysisEventType;
+    }
+
+    public void setName( java.lang.String name ) {
+        this.name = name;
+    }
+
+    public void setNumAnnotations( java.lang.Integer numAnnotations ) {
+        this.numAnnotations = numAnnotations;
+    }
+
+    public void setNumPopulatedFactors( java.lang.Integer numPopulatedFactors ) {
+        this.numPopulatedFactors = numPopulatedFactors;
+    }
+
+    public void setOwner( java.lang.String owner ) {
+        this.owner = owner;
+    }
+
+    public void setProcessedDataVectorComputationEventType( java.lang.String processedDataVectorComputationEventType ) {
+        this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
+    }
+
+    public void setProcessedExpressionVectorCount( java.lang.Long processedExpressionVectorCount ) {
+        this.processedExpressionVectorCount = processedExpressionVectorCount;
+    }
+
+    public void setPubmedId( java.lang.Integer pubmedId ) {
+        this.pubmedId = pubmedId;
+    }
+
+    public void setRawCoexpressionLinkCount( java.lang.Long rawCoexpressionLinkCount ) {
+        this.rawCoexpressionLinkCount = rawCoexpressionLinkCount;
     }
 
     public void setSampleRemovedFlags( java.util.Collection<AuditEventValueObject> sampleRemovedFlags ) {
@@ -502,292 +762,32 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.sampleRemovedFlags = converted;
     }
 
-    private boolean isPublic = true;
-
-    /**
-     * <p>
-     * If true, this data set has been made public. If false, it is private and is only viewable by some users.
-     * </p>
-     */
-    public boolean isIsPublic() {
-        return this.isPublic;
+    public void setShortName( java.lang.String shortName ) {
+        this.shortName = shortName;
     }
 
-    public void setIsPublic( boolean isPublic ) {
-        this.isPublic = isPublic;
-    }
-
-    private java.lang.String clazz;
-
-    /**
-     * <p>
-     * The type of BioAssaySet this represents.
-     * </p>
-     */
-    public java.lang.String getClazz() {
-        return this.clazz;
-    }
-
-    public void setClazz( java.lang.String clazz ) {
-        this.clazz = clazz;
-    }
-
-    private java.lang.Long sourceExperiment;
-
-    /**
-     * <p>
-     * The ID of the source experiment, if this is an ExpressionExperimentSubSet
-     * </p>
-     */
-    public java.lang.Long getSourceExperiment() {
-        return this.sourceExperiment;
+    public void setSource( java.lang.String source ) {
+        this.source = source;
     }
 
     public void setSourceExperiment( java.lang.Long sourceExperiment ) {
         this.sourceExperiment = sourceExperiment;
     }
 
-    private java.lang.Long differentialExpressionAnalysisId;
-
-    /**
-     * 
-     */
-    public java.lang.Long getDifferentialExpressionAnalysisId() {
-        return this.differentialExpressionAnalysisId;
+    public void setTaxon( java.lang.String taxon ) {
+        this.taxon = taxon;
     }
 
-    public void setDifferentialExpressionAnalysisId( java.lang.Long differentialExpressionAnalysisId ) {
-        this.differentialExpressionAnalysisId = differentialExpressionAnalysisId;
-    }
-
-    private java.lang.Integer pubmedId;
-
-    /**
-     * 
-     */
-    public java.lang.Integer getPubmedId() {
-        return this.pubmedId;
-    }
-
-    public void setPubmedId( java.lang.Integer pubmedId ) {
-        this.pubmedId = pubmedId;
-    }
-
-    private java.lang.String investigators;
-
-    /**
-     * 
-     */
-    public java.lang.String getInvestigators() {
-        return this.investigators;
-    }
-
-    public void setInvestigators( java.lang.String investigators ) {
-        this.investigators = investigators;
-    }
-
-    private java.lang.String owner;
-
-    /**
-     * <p>
-     * The user name of the experiment's owner, if any.
-     * </p>
-     */
-    public java.lang.String getOwner() {
-        return this.owner;
-    }
-
-    public void setOwner( java.lang.String owner ) {
-        this.owner = owner;
-    }
-
-    private java.util.Date dateCreated;
-
-    /**
-     * 
-     */
-    public java.util.Date getDateCreated() {
-        return this.dateCreated;
-    }
-
-    public void setDateCreated( java.util.Date dateCreated ) {
-        this.dateCreated = dateCreated;
-    }
-
-    private AuditEventValueObject troubleFlag;
-
-    /**
-     * 
-     */
-    public AuditEventValueObject getTroubleFlag() {
-        return this.troubleFlag;
+    public void setTechnologyType( java.lang.String technologyType ) {
+        this.technologyType = technologyType;
     }
 
     public void setTroubleFlag( AuditEventValueObject troubleFlag ) {
         this.troubleFlag = troubleFlag;
     }
 
-    private java.lang.Long coexpressionLinkCount = null;
-
-    /**
-     * 
-     */
-    public java.lang.Long getCoexpressionLinkCount() {
-        return this.coexpressionLinkCount;
-    }
-
-    public void setCoexpressionLinkCount( java.lang.Long coexpressionLinkCount ) {
-        this.coexpressionLinkCount = coexpressionLinkCount;
-    }
-
-    private java.lang.String processedDataVectorComputationEventType;
-
-    /**
-     * 
-     */
-    public java.lang.String getProcessedDataVectorComputationEventType() {
-        return this.processedDataVectorComputationEventType;
-    }
-
-    public void setProcessedDataVectorComputationEventType( java.lang.String processedDataVectorComputationEventType ) {
-        this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
-    }
-
-    private java.lang.String missingValueAnalysisEventType;
-
-    /**
-     * 
-     */
-    public java.lang.String getMissingValueAnalysisEventType() {
-        return this.missingValueAnalysisEventType;
-    }
-
-    public void setMissingValueAnalysisEventType( java.lang.String missingValueAnalysisEventType ) {
-        this.missingValueAnalysisEventType = missingValueAnalysisEventType;
-    }
-
-    private java.util.Date dateLinkAnalysis;
-
-    /**
-     * 
-     */
-    public java.util.Date getDateLinkAnalysis() {
-        return this.dateLinkAnalysis;
-    }
-
-    public void setDateLinkAnalysis( java.util.Date dateLinkAnalysis ) {
-        this.dateLinkAnalysis = dateLinkAnalysis;
-    }
-
-    private java.lang.Long rawCoexpressionLinkCount = null;
-
-    /**
-     * <p>
-     * The amount of raw links that the EE contributed to any of the coexpressed genes. by raw we mean before
-     * filtering/stringency was applied.
-     * </p>
-     */
-    public java.lang.Long getRawCoexpressionLinkCount() {
-        return this.rawCoexpressionLinkCount;
-    }
-
-    public void setRawCoexpressionLinkCount( java.lang.Long rawCoexpressionLinkCount ) {
-        this.rawCoexpressionLinkCount = rawCoexpressionLinkCount;
-    }
-
-    private java.util.Date dateProcessedDataVectorComputation;
-
-    /**
-     * 
-     */
-    public java.util.Date getDateProcessedDataVectorComputation() {
-        return this.dateProcessedDataVectorComputation;
-    }
-
-    public void setDateProcessedDataVectorComputation( java.util.Date dateProcessedDataVectorComputation ) {
-        this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
-    }
-
-    private java.util.Date dateMissingValueAnalysis;
-
-    /**
-     * 
-     */
-    public java.util.Date getDateMissingValueAnalysis() {
-        return this.dateMissingValueAnalysis;
-    }
-
-    public void setDateMissingValueAnalysis( java.util.Date dateMissingValueAnalysis ) {
-        this.dateMissingValueAnalysis = dateMissingValueAnalysis;
-    }
-
-    private java.lang.Long processedExpressionVectorCount = null;
-
-    /**
-     * 
-     */
-    public java.lang.Long getProcessedExpressionVectorCount() {
-        return this.processedExpressionVectorCount;
-    }
-
-    public void setProcessedExpressionVectorCount( java.lang.Long processedExpressionVectorCount ) {
-        this.processedExpressionVectorCount = processedExpressionVectorCount;
-    }
-
-    private java.util.Date dateLastUpdated;
-
-    /**
-     * 
-     */
-    public java.util.Date getDateLastUpdated() {
-        return this.dateLastUpdated;
-    }
-
-    public void setDateLastUpdated( java.util.Date dateLastUpdated ) {
-        this.dateLastUpdated = dateLastUpdated;
-    }
-
-    private java.util.Date dateCached;
-
-    /**
-     * <p>
-     * The date this object was generated.
-     * </p>
-     */
-    public java.util.Date getDateCached() {
-        return this.dateCached;
-    }
-
-    public void setDateCached( java.util.Date dateCached ) {
-        this.dateCached = dateCached;
-    }
-
-    private java.lang.Boolean hasProbeSpecificForQueryGene;
-
-    /**
-     * <p>
-     * Used in display of gene-wise analysis results.
-     * </p>
-     */
-    public java.lang.Boolean getHasProbeSpecificForQueryGene() {
-        return this.hasProbeSpecificForQueryGene;
-    }
-
-    public void setHasProbeSpecificForQueryGene( java.lang.Boolean hasProbeSpecificForQueryGene ) {
-        this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
-    }
-
-    private java.lang.Double minPvalue;
-
-    /**
-     * 
-     */
-    public java.lang.Double getMinPvalue() {
-        return this.minPvalue;
-    }
-
-    public void setMinPvalue( java.lang.Double minPvalue ) {
-        this.minPvalue = minPvalue;
+    public void setValidatedFlag( AuditEventValueObject validatedFlag ) {
+        this.validatedFlag = validatedFlag;
     }
 
 }

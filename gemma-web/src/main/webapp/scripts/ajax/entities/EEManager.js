@@ -23,6 +23,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				name : "hasBothIntensities",
 				type : 'bool'
 			}, {
+				name : "hasEitherIntensity",
+				type : 'bool'
+			}, {
 				name : "bioAssayCount",
 				type : "int"
 			}, {
