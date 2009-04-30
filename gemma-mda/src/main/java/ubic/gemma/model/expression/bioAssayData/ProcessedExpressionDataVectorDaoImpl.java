@@ -89,9 +89,14 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
 
         // We need to commit the remove transaction, or we can end up with 'object exists in session'
+        this.getHibernateTemplate().flush();
         this.getHibernateTemplate().clear();
         expressionExperiment.setProcessedExpressionDataVectors( null );
         this.getHibernateTemplate().update( expressionExperiment );
+        this.getHibernateTemplate().flush();
+        this.getHibernateTemplate().clear();
+
+        assert this.getProcessedVectors( expressionExperiment ).size() == 0;
 
         log.info( "Computing processed expression vectors for " + expressionExperiment );
 
@@ -514,7 +519,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /**
      * @param ees
-     * @param cs2gene
+     * @param cs2gene Map of probe to genes.
      * @return
      */
     private Map<ProcessedExpressionDataVector, Collection<Gene>> getProcessedVectors(
@@ -569,10 +574,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
              * Fill in the map, because we want to track information on the specificity of the probes used in the data
              * vectors.
              */
-            cs2gene = CommonQueries.getFullCs2GeneMap( cs2gene.keySet(), this.getSession() );
+            cs2gene = CommonQueries.getFullCs2AllGeneMap( cs2gene.keySet(), this.getSession() );
 
             Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
                     needToSearch, cs2gene );
+            log.info( processedDataVectors.size() );
             Collection<DoubleVectorValueObject> newResults = unpack( processedDataVectors );
             cacheResults( newResults );
             results.addAll( newResults );
