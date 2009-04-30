@@ -363,6 +363,7 @@ public class ProbeLinkCoexpressionAnalyzer {
             result.put( id, index );
             index++;
         }
+        assert result.size() == experiments.size();
         return result;
     }
 
