@@ -125,7 +125,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * @param auditable
-     * @param eventClass
+     * @param eventClass can be null
      * @return
      */
     protected boolean needToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
@@ -136,17 +136,19 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
         boolean okToRun = true; // assume okay unless indicated otherwise
 
-        // figure out if we need to run it by date
-        if ( skipIfLastRunLaterThan != null ) {
-            for ( int j = events.size() - 1; j >= 0; j-- ) {
-                AuditEvent event = events.get( j );
-                if ( event.getEventType() != null && eventClass != null
-                        && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+        // figure out if we need to run it by date; or if there is no event of the given class
+        for ( int j = events.size() - 1; j >= 0; j-- ) {
+            AuditEvent event = events.get( j );
+            if ( event.getEventType() != null && eventClass != null
+                    && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+                if ( skipIfLastRunLaterThan != null ) {
                     if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
                         log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
                         errorObjects.add( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
                         needToRun = false;
                     }
+                } else {
+                    needToRun = false; // it has been run already at some point
                 }
             }
         }
@@ -154,7 +156,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         /*
          * Always skip if we have trouble.
          */
-        // if ( autoSeek || skipIfLastRunLaterThan != null ) {
         AuditEvent lastTrouble = this.auditTrailService.getLastTroubleEvent( auditable );
 
         // special case for expression experiments - check associated ADs.
