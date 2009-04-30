@@ -784,7 +784,6 @@ public class ExpressionDataMatrixBuilder {
 /*
  * Helper class
  */
-@SuppressWarnings("hiding")
 class QuantitationTypeData {
 
     Map<BioAssayDimension, QuantitationType> backgroundChannelA = new HashMap<BioAssayDimension, QuantitationType>();
