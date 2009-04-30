@@ -619,6 +619,7 @@
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataArrays=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataVectors=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getRanks=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getRanksByProbe=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.createProcessedDataVectors=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.update=PROPAGATION_REQUIRED

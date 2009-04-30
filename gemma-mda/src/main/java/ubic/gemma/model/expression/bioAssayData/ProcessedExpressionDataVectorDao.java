@@ -70,4 +70,14 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
 
+    /**
+     * Retrieve expression level information for genes in experiments.
+     * 
+     * @param expressionExperiments
+     * @param genes
+     * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
+     */
+    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
+
 }

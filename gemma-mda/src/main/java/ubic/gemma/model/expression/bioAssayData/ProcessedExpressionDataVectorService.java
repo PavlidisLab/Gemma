@@ -105,4 +105,14 @@ public interface ProcessedExpressionDataVectorService {
      */
     public void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
 
+    /**
+     * Retrieve expression level information for genes in experiments.
+     * 
+     * @param expressionExperiments
+     * @param genes
+     * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
+     */
+    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
+            Collection<ExpressionExperiment> eeCol, Collection<Gene> pars );
+
 }

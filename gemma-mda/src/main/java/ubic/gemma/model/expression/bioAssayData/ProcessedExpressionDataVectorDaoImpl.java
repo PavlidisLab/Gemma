@@ -87,6 +87,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             log.info( "Removing old processed vectors" );
             this.remove( oldVectors );
         }
+
+        // We need to commit the remove transaction, or we can end up with 'object exists in session'
+        this.getHibernateTemplate().clear();
         expressionExperiment.setProcessedExpressionDataVectors( null );
         this.getHibernateTemplate().update( expressionExperiment );
 
@@ -294,6 +297,56 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             }
         }
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
+        if ( cs2gene.keySet().size() == 0 ) {
+            log.warn( "No composite sequences found for genes" );
+            return new HashMap<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>>();
+        }
+
+        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
+                + " inner join dedv.bioAssayDimension bd "
+                + " inner join dedv.designElement de  "
+                + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
+
+        List qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
+                new Object[] { cs2gene.keySet(), expressionExperiments } );
+
+        Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> resultnew = new HashMap<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>>();
+        for ( Object o : qr ) {
+            Object[] oa = ( Object[] ) o;
+            ExpressionExperiment e = ( ExpressionExperiment ) oa[0];
+            DesignElement d = ( DesignElement ) oa[1];
+            Double rMean = ( Double ) oa[2];
+            Double rMax = ( Double ) oa[3];
+
+            if ( !resultnew.containsKey( e ) ) {
+                resultnew.put( e, new HashMap<Gene, Map<DesignElement, Double[]>>() );
+            }
+
+            Map<Gene, Map<DesignElement, Double[]>> rmapnew = resultnew.get( e );
+
+            Collection<Gene> genes4probe = cs2gene.get( d );
+
+            for ( Gene gene : genes4probe ) {
+                if ( !rmapnew.containsKey( gene ) ) {
+                    rmapnew.put( gene, new HashMap<DesignElement, Double[]>() );
+                }
+
+                // return BOTH mean and max
+
+                if ( rMean == null || rMax == null ) {
+                    continue;
+                }
+                Double[] MeanMax = new Double[] { rMean, rMax };
+                rmapnew.get( gene ).put( d, MeanMax );
+            }
+        }
+        return resultnew;
     }
 
     /*
