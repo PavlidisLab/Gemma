@@ -162,6 +162,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         Collection<ProcessedExpressionDataVector> results = this.create( result );
         log.info( "Creating " + results.size() + " processed data vectors" );
+
+        this.getHibernateTemplate().clear();
         this.getHibernateTemplate().lock( expressionExperiment, LockMode.READ );
         Hibernate.initialize( expressionExperiment.getProcessedExpressionDataVectors() );
         expressionExperiment.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>( results ) );
