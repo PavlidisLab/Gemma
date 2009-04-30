@@ -85,7 +85,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param expExp
      * @param arrayDesign
      */
-    @SuppressWarnings("unchecked")
     public void switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
         ArrayDesign arrayDesign = locateMergedDesign( expExp );
         if ( arrayDesign == null )
@@ -180,7 +179,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 log.info( "Updating " + count + " vectors for " + type );
                 if ( vectorClass != null ) {
                     if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
-                        designElementDataVectorService.update( ( Collection<RawExpressionDataVector> ) vectorsForQt );
+                        designElementDataVectorService.update( vectorsForQt );
                     } else {
                         processedExpressionDataVectorService
                                 .update( ( Collection<ProcessedExpressionDataVector> ) vectorsForQt );
@@ -201,7 +200,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         log.info( "Done switching " + expExp );
     }
 
-    @SuppressWarnings("unchecked")
     private ArrayDesign locateMergedDesign( ExpressionExperiment expExp ) {
         // get the array designs for this EE
         ArrayDesign arrayDesign = null;
