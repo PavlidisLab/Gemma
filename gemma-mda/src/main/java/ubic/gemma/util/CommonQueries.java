@@ -173,12 +173,32 @@ public class CommonQueries {
     public static Map<CompositeSequence, Collection<Gene>> getFullCs2GeneMap( Collection<CompositeSequence> probes,
             Session session ) {
 
-        StopWatch timer = new StopWatch();
-        timer.start();
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
                 + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) and gene.class='GeneImpl'";
 
+        return getFullCs2GeneMap( probes, session, csQueryString );
+    }
+
+    /**
+     * @param probes
+     * @param session
+     * @return map of probes to all the genes 'detected' by those probes -- including PARs and predicted genes.
+     */
+    public static Map<CompositeSequence, Collection<Gene>> getFullCs2AllGeneMap( Collection<CompositeSequence> probes,
+            Session session ) {
+
+        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) ";
+
+        return getFullCs2GeneMap( probes, session, csQueryString );
+    }
+
+    private static Map<CompositeSequence, Collection<Gene>> getFullCs2GeneMap( Collection<CompositeSequence> probes,
+            Session session, final String csQueryString ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
         Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
