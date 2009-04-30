@@ -110,7 +110,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         addOption( extraMissingIndicators );
 
-        addDateOption();
+        super.addDateOption();
+        super.addForceOption();
     }
 
     /*
