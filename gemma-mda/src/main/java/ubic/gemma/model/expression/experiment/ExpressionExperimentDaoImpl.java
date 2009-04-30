@@ -255,11 +255,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         Hibernate.initialize( designElementDataVectors );
                         toDelete.setRawExpressionDataVectors( null );
 
-                        Collection<ProcessedExpressionDataVector> processedVectors = toDelete
-                                .getProcessedExpressionDataVectors();
-                        Hibernate.initialize( processedVectors );
-                        toDelete.setProcessedExpressionDataVectors( null );
-
                         int count = 0;
                         log.info( "Removing Design Element Data Vectors ..." );
                         for ( RawExpressionDataVector dv : designElementDataVectors ) {
@@ -277,20 +272,30 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         }
                         count = 0;
                         designElementDataVectors.clear();
-                        for ( ProcessedExpressionDataVector dv : processedVectors ) {
-                            dims.add( dv.getBioAssayDimension() );
-                            qts.add( dv.getQuantitationType() );
-                            dv.setBioAssayDimension( null );
-                            dv.setQuantitationType( null );
-                            session.delete( dv );
-                            if ( ++count % 1000 == 0 ) {
-                                session.flush();
+
+                        Collection<ProcessedExpressionDataVector> processedVectors = toDelete
+                                .getProcessedExpressionDataVectors();
+
+                        Hibernate.initialize( processedVectors );
+                        if ( processedVectors != null && processedVectors.size() > 0 ) {
+
+                            toDelete.setProcessedExpressionDataVectors( null );
+
+                            for ( ProcessedExpressionDataVector dv : processedVectors ) {
+                                dims.add( dv.getBioAssayDimension() );
+                                qts.add( dv.getQuantitationType() );
+                                dv.setBioAssayDimension( null );
+                                dv.setQuantitationType( null );
+                                session.delete( dv );
+                                if ( ++count % 1000 == 0 ) {
+                                    session.flush();
+                                }
+                                if ( count % 20000 == 0 ) {
+                                    log.info( count + " processed design Element data vectors deleted" );
+                                }
                             }
-                            if ( count % 20000 == 0 ) {
-                                log.info( count + " processed design Element data vectors deleted" );
-                            }
+                            processedVectors.clear();
                         }
-                        processedVectors.clear();
 
                         // this can take a while.
                         log.info( "Flushing changes ..." );
