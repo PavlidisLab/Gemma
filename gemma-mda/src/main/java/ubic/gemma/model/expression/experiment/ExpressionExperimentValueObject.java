@@ -54,7 +54,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             java.util.Date dateLinkAnalysis, java.lang.Long rawCoexpressionLinkCount,
             java.util.Date dateProcessedDataVectorComputation, java.util.Date dateMissingValueAnalysis,
             java.lang.Long processedExpressionVectorCount, java.util.Date dateLastUpdated, java.util.Date dateCached,
-            java.lang.Boolean hasProbeSpecificForQueryGene, java.lang.Double minPvalue ) {
+            java.lang.Boolean hasProbeSpecificForQueryGene, java.lang.Double minPvalue, Boolean hasEitherIntensity ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -98,6 +98,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.dateCached = dateCached;
         this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
         this.minPvalue = minPvalue;
+        this.hasEitherIntensity = hasEitherIntensity;
     }
 
     /**
@@ -122,7 +123,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
                 otherBean.getDateLinkAnalysis(), otherBean.getRawCoexpressionLinkCount(), otherBean
                         .getDateProcessedDataVectorComputation(), otherBean.getDateMissingValueAnalysis(), otherBean
                         .getProcessedExpressionVectorCount(), otherBean.getDateLastUpdated(),
-                otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue() );
+                otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue(),
+                otherBean.getHasEitherIntensity() );
     }
 
     /**
@@ -320,6 +322,19 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     }
 
     private java.lang.String shortName;
+
+    private Boolean hasEitherIntensity;
+
+    /**
+     * @return true if the experiment has any intensity information available. Relevant for two-channel studies.
+     */
+    public Boolean getHasEitherIntensity() {
+        return hasEitherIntensity;
+    }
+
+    public void setHasEitherIntensity( Boolean hasEitherIntensity ) {
+        this.hasEitherIntensity = hasEitherIntensity;
+    }
 
     /**
      * 

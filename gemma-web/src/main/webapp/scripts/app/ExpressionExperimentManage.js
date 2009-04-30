@@ -116,7 +116,6 @@ Ext.onReady(function() {
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 		}
-
 	};
 
 	var missingValueAnalysisRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
@@ -124,7 +123,10 @@ Ext.onReady(function() {
 		var runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
 				+ id
 				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run missing value analysis" alt="missing value computation"  /></a>';
-		if (record.get('technologyType') != 'ONECOLOR') {
+		
+		/* Offer missing value analysis if it's possible (this might need tweaking). */
+		
+		if (record.get('technologyType') != 'ONECOLOR' && record.get('hasEitherIntensity') {
 			if (record.get('dateMissingValueAnalysis')) {
 				var type = record.get('missingValueAnalysisEventType');
 				var color = "#000";
@@ -142,7 +144,7 @@ Ext.onReady(function() {
 			}
 
 		} else {
-			return '<span style="color:#CCF;" ext:qtip="Only relevant for two-channel microarray studies">NA</span>';
+			return '<span style="color:#CCF;" ext:qtip="Only relevant for two-channel microarray studies with intensity data available.">NA</span>';
 		}
 	};
 
