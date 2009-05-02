@@ -21,10 +21,6 @@ package ubic.gemma.model.association.coexpression;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -42,15 +38,13 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
 
-    private static Log log = LogFactory.getLog( Probe2ProbeCoexpressionDaoImplTest.class.getName() );
-
     ExpressionExperiment ee;
     ExpressionExperimentService ees;
     Long firstProbeId;
     Long secondProbeId;
 
     Probe2ProbeCoexpressionService ppcs;
- 
+
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
@@ -91,7 +85,7 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
 
         this.firstProbeId = dvl.get( 0 ).getDesignElement().getId();
         this.secondProbeId = dvl.get( 1 ).getDesignElement().getId();
-        
+
         for ( int i = 0; i < j - 1; i += 2 ) {
             Probe2ProbeCoexpression ppc = MouseProbeCoExpression.Factory.newInstance();
             ppc.setFirstVector( dvl.get( i ) );
@@ -125,37 +119,31 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
     }
 
     /**
-     * 
-     *
      */
-    public void testHandleDeleteLinksExpressionExperiment() {
+    public void testHandleDeleteLinksExpressionExperiment() throws Exception {
         ppcs.deleteLinks( ee );
         Integer countLinks = ppcs.countLinks( ee );
         assertEquals( 0, countLinks.intValue() );
     }
-    
-    public void testValidateProbesInCoexpression(){
+
+    /**
+     * @throws Exception
+     */
+    public void testValidateProbesInCoexpression() throws Exception {
         Collection<Long> queryProbeIds = new ArrayList<Long>();
-        queryProbeIds.add( new Long( this.firstProbeId) );
-        queryProbeIds.add( new Long( 3));
-        queryProbeIds.add( new Long( 100 ));
-        
+        queryProbeIds.add( this.firstProbeId );
+        queryProbeIds.add( 3L );
+        queryProbeIds.add( 100L );
+
         Collection<Long> coexpressedProbeIds = new ArrayList<Long>();
-        coexpressedProbeIds.add( new Long( this.secondProbeId));
-        coexpressedProbeIds.add( new Long( 4));
-        coexpressedProbeIds.add( new Long( 101 ));
-        
+        coexpressedProbeIds.add( this.secondProbeId );
+        coexpressedProbeIds.add( 4L );
+        coexpressedProbeIds.add( 101L );
+
         Collection<Long> results = null;
-        try{
-           results = ppcs.validateProbesInCoexpression(queryProbeIds,coexpressedProbeIds, ee,"mouse" );
-        }catch(Exception e){
-            log.info( "Boom!  " + e );
-        }
-        
-        log.info( "ee id: " + ee.getId() );
-        
-        assertFalse( results.contains(  new Long(100) ));
-        assertTrue( results.contains( new Long(this.firstProbeId) ));
+        results = ppcs.validateProbesInCoexpression( queryProbeIds, coexpressedProbeIds, ee, "mouse" );
+        assertFalse( results.contains( 100L ) );
+        assertTrue( results.contains( this.firstProbeId ) );
     }
 
 }

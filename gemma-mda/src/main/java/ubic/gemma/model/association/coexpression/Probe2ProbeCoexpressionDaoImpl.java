@@ -19,12 +19,12 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.Statement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +48,6 @@ import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.coexpression.Link;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -132,6 +131,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCountLinks(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
 
@@ -154,6 +154,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         return 0;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected List handleCreate( final List links ) {
         List result = ( List ) this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
@@ -411,8 +412,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * Collection, java.util.Collection)
      */
     @Override
-    protected Map<Gene, Collection<DesignElementDataVector>> handleGetVectorsForLinks( Collection genes, Collection ees )
-            throws Exception {
+    protected Map<Gene, Collection<DesignElementDataVector>> handleGetVectorsForLinks( Collection<Gene> genes,
+            Collection<ExpressionExperiment> ees ) throws Exception {
 
         Gene testG = ( Gene ) genes.iterator().next(); // todo: check to make sure that all the given genes are of the
         // same taxon throw exception
@@ -508,16 +509,15 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * Collection, java.lang.String, boolean)
      */
     @Override
-    protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )
-            throws Exception {
+    protected void handlePrepareForShuffling( Collection<ExpressionExperiment> ees, String taxon,
+            boolean filterNonSpecific ) throws Exception {
         String tableName = getTableName( taxon, true );
         createTable( tableName );
         int i = 1;
         for ( Object ee : ees ) {
-            log.info( "Filtering EE " + ( ( ExpressionExperiment ) ee ).getShortName() + "(" + i + "/" + ees.size()
-                    + ")" );
-            doFiltering( ( ExpressionExperiment ) ee, taxon, filterNonSpecific );
-            i++;
+            log.info( "Preparing simplified probe-level links for EE " + ( ( ExpressionExperiment ) ee ).getShortName()
+                    + " (" + i++ + "/" + ees.size() + ")" );
+            processRawLinksForExperiment( ( ExpressionExperiment ) ee, taxon, filterNonSpecific );
         }
     }
 
@@ -546,44 +546,57 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @param tableName
      * @throws Exception
      */
-    private void createTable( String tableName ) throws Exception {
-        Session session = getSessionFactory().openSession();
-        Connection conn = session.connection();
-        Statement s = conn.createStatement();
-
+    private void createTable( final String tableName ) throws Exception {
         // guard against mistakes...
         if ( !tableName.startsWith( TMP_TABLE_PREFIX ) ) {
             throw new IllegalStateException( "Attempt to create table named " + tableName );
         }
-        String queryString = "DROP TABLE IF EXISTS " + tableName + ";";
-        s.executeUpdate( queryString );
-        queryString = "CREATE TABLE " + tableName
-                + "(id BIGINT NOT NULL AUTO_INCREMENT, FIRST_DESIGN_ELEMENT_FK BIGINT NOT NULL, "
-                + "SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, SCORE DOUBLE, EXPRESSION_EXPERIMENT_FK BIGINT NOT NULL, "
-                + "PRIMARY KEY(id), KEY(EXPRESSION_EXPERIMENT_FK)) " + "ENGINE=MYISAM";
-        s.executeUpdate( queryString );
-        conn.close();
-        session.close();
+
+        this.getHibernateTemplate().execute( new HibernateCallback() {
+
+            @Override
+            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+                String queryString = "DROP TABLE IF EXISTS " + tableName + ";";
+
+                session.createSQLQuery( queryString ).executeUpdate();
+
+                queryString = "CREATE TABLE "
+                        + tableName
+                        + "(id BIGINT NOT NULL AUTO_INCREMENT, FIRST_DESIGN_ELEMENT_FK BIGINT NOT NULL, "
+                        + "SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, SCORE DOUBLE, EXPRESSION_EXPERIMENT_FK BIGINT NOT NULL, "
+                        + "PRIMARY KEY(id), KEY(EXPRESSION_EXPERIMENT_FK)) " + "ENGINE=MYISAM";
+
+                session.createSQLQuery( queryString ).executeUpdate();
+                session.flush();
+                return null;
+            }
+        } );
 
     }
 
     /**
+     * Dump the probe-probe data for an experiment to the working table for shuffling. This ignores links for probes
+     * that are not mapped to 'known' genes.
+     * 
      * @param ee
      * @param taxon
      * @throws Exception
      */
-    private void doFiltering( ExpressionExperiment ee, String taxon, boolean filterNonSpecific ) throws Exception {
+    private void processRawLinksForExperiment( ExpressionExperiment ee, String taxon, boolean filterNonSpecific )
+            throws Exception {
         String tableName = getTableName( taxon, false );
         Collection<ProbeLink> links = getLinks( ee, tableName );
         Set<Long> csIds = new HashSet<Long>();
         for ( ProbeLink link : links ) {
+            assert link.getFirstDesignElementId() != null;
+            assert link.getSecondDesignElementId() != null;
             csIds.add( link.getFirstDesignElementId() );
             csIds.add( link.getSecondDesignElementId() );
         }
         Map<Long, Collection<Long>> cs2genes = getCs2GenesMap( csIds );
         links = filterNonSpecificAndRedundant( links, cs2genes, filterNonSpecific );
         String workingTableName = getTableName( taxon, true );
-        saveLinks( links, ee, workingTableName );
+        savedSimplifiedLinks( links, ee, workingTableName );
 
     }
 
@@ -635,98 +648,50 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @param csIds
      * @return
      */
-    private Map<Long, Collection<Long>> getCs2GenesMap( Collection<Long> csIds ) {
-        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
-        if ( csIds == null || csIds.size() == 0 ) return cs2genes;
-        int count = 0;
-        int CHUNK_LIMIT = 10000;
-        int total = csIds.size();
-        Collection<Long> idsInOneChunk = new HashSet<Long>();
-        Session session = getSessionFactory().openSession();
-
-        for ( Long csId : csIds ) {
-            idsInOneChunk.add( csId );
-            count++;
-            total--;
-            if ( count == CHUNK_LIMIT || total == 0 ) {
-                String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and "
-                        + " CS in (" + StringUtils.join( idsInOneChunk.iterator(), "," ) + ")";
-
-                org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-                queryObject.addScalar( "id", new LongType() );
-                queryObject.addScalar( "geneId", new LongType() );
-
-                ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-                while ( scroll.next() ) {
-                    Long id = scroll.getLong( 0 );
-                    Long geneId = scroll.getLong( 1 );
-                    Collection<Long> geneIds = cs2genes.get( id );
-                    if ( geneIds == null ) {
-                        geneIds = new HashSet<Long>();
-                        cs2genes.put( id, geneIds );
-                    }
-                    geneIds.add( geneId );
-                }
-                count = 0;
-                idsInOneChunk.clear();
-            }
-        }
-        session.close();
-        return cs2genes;
-    }
-
-    /**
-     * @param genes
-     * @return map of CS ids to Gene ids.
-     */
-    private Map<Long, Collection<Long>> getCs2GenesMapFromGenes( Collection<Long> genes ) {
-        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
-
-        Session session = getSessionFactory().openSession();
-        String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "csid", new LongType() );
-        queryObject.addScalar( "geneId", new LongType() );
-
-        queryObject.setParameterList( "geneIds", genes );
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( scroll.next() ) {
-            Long csid = scroll.getLong( 0 );
-            Long geneId = scroll.getLong( 1 );
-            if ( !cs2genes.containsKey( csid ) ) {
-                cs2genes.put( csid, new HashSet<Long>() );
-            }
-            cs2genes.get( csid ).add( geneId );
-        }
-
-        session.close();
-        return cs2genes;
-    }
-
-    /**
-     * @param gene
-     * @return
-     */
     @SuppressWarnings("unchecked")
-    private Collection<DesignElement> getCsForGene( Gene gene ) {
-        Long id = gene.getId();
-        String queryString = "SELECT CS as id from GENE2CS WHERE GENE = " + id;
-        Collection<Long> results = new HashSet<Long>();
-        Session session = getSessionFactory().openSession();
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "id", new LongType() );
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( scroll.next() ) {
-            Long cid = scroll.getLong( 0 );
-            results.add( cid );
-        }
-        session.close();
-        if ( results.size() == 0 ) {
-            return new HashSet<DesignElement>();
-        }
+    private Map<Long, Collection<Long>> getCs2GenesMap( final Collection<Long> csIds ) {
 
-        return this.getHibernateTemplate().findByNamedParam( "from DesignElementImpl d where d.id in (:ids)", "ids",
-                results );
+        final Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+        if ( csIds == null || csIds.size() == 0 ) return cs2genes;
+
+        this.getHibernateTemplate().execute( new HibernateCallback() {
+
+            @Override
+            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+                int CHUNK_LIMIT = 1000;
+
+                Collection<Long> batch = new HashSet<Long>();
+
+                for ( Iterator<Long> it = csIds.iterator(); it.hasNext(); ) {
+                    batch.add( it.next() );
+
+                    if ( batch.size() > 0 && ( batch.size() == CHUNK_LIMIT || !it.hasNext() ) ) {
+                        String queryString = "SELECT CS, GENE FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and "
+                                + " CS in (" + StringUtils.join( batch, "," ) + ")";
+
+                        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+                        List results = queryObject.list();
+                        for ( Object r : results ) {
+                            Object[] or = ( Object[] ) r;
+                            Long csid = ( ( BigInteger ) or[0] ).longValue();
+                            Long geneId = ( ( BigInteger ) or[1] ).longValue();
+
+                            Collection<Long> geneIds = cs2genes.get( csid );
+                            if ( geneIds == null ) {
+                                geneIds = new HashSet<Long>();
+                                cs2genes.put( csid, geneIds );
+                            }
+                            geneIds.add( geneId );
+                        }
+                        session.clear();
+                        batch.clear();
+                    }
+                }
+                return null;
+            }
+        } );
+
+        return cs2genes;
     }
 
     /**
@@ -763,70 +728,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @return
      * @throws Exception
      */
-    private Collection<ProbeLink> getLinks( Collection<Long> probeIds, String tableName ) {
-
-        StringBuilder probeIdString = new StringBuilder();
-        probeIdString.append( '(' );
-
-        probeIdString.append( StringUtils.join( probeIds, "," ) );
-        probeIdString.append( ')' );
-
-        final String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM "
-                + tableName + " WHERE FIRST_DESIGN_ELEMENT_FK IN " + probeIdString.toString()
-                + "OR SECOND_DESIGN_ELEMENT_FK IN " + probeIdString.toString() + " limit ";
-
-        final int chunkSize = 1000000;
-        final Collection<ProbeLink> links = new ArrayList<ProbeLink>();
-        getHibernateTemplate().execute( new HibernateCallback() {
-
-            public Object doInHibernate( Session session ) throws HibernateException {
-                long start = 0;
-
-                while ( true ) {
-                    String queryString = baseQueryString + start + "," + chunkSize + ";";
-
-                    org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-                    queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
-                    queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
-                    queryObject.addScalar( "SCORE", new DoubleType() );
-
-                    ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-                    int count = 0;
-                    int iterations = 0;
-                    while ( scroll.next() ) {
-                        Long first_design_element_fk = scroll.getLong( 0 );
-                        Long second_design_element_fk = scroll.getLong( 1 );
-                        Double score = scroll.getDouble( 2 );
-
-                        ProbeLink oneLink = new ProbeLink();
-                        oneLink.setFirstDesignElementId( first_design_element_fk );
-                        oneLink.setSecondDesignElementId( second_design_element_fk );
-                        oneLink.setScore( score );
-                        links.add( oneLink );
-                        count++;
-                        if ( count == chunkSize ) {
-                            start = start + chunkSize;
-                            System.err.print( "." );
-                            iterations++;
-                            if ( iterations % 10 == 0 ) System.err.println();
-                        }
-                    }
-                    if ( count < chunkSize ) break;
-                }
-                log.info( "Load " + links.size() );
-                return null;
-            }
-        } );
-
-        return links;
-    }
-
-    /**
-     * @param probeIds
-     * @param tableName
-     * @return
-     * @throws Exception
-     */
     private Collection<ProbeLink> getLinks( Collection<Long> probeSetAIds, Collection<Long> probeSetBIds, Long eeId,
             String tableName ) {
 
@@ -850,15 +751,15 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 + probeSetAIdsString.toString() + " AND SECOND_DESIGN_ELEMENT_FK IN " + probeSetBIdsString.toString()
                 + " limit ";
 
-        final int chunkSize = 1000000;
+        final int chunkSize = 500000;
         final Collection<ProbeLink> links = new ArrayList<ProbeLink>();
         getHibernateTemplate().execute( new HibernateCallback() {
 
             public Object doInHibernate( Session session ) throws HibernateException {
-                long start = 0;
+                long offset = 0;
 
                 while ( true ) {
-                    String queryString = baseQueryString + start + "," + chunkSize + ";";
+                    String queryString = baseQueryString + offset + "," + chunkSize + ";";
 
                     org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
                     queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
@@ -866,7 +767,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
                     ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
                     int count = 0;
-                    int iterations = 0;
                     while ( scroll.next() ) {
                         Long first_design_element_fk = scroll.getLong( 0 );
                         Long second_design_element_fk = scroll.getLong( 1 );
@@ -876,16 +776,15 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                         oneLink.setSecondDesignElementId( second_design_element_fk );
 
                         links.add( oneLink );
-                        count++;
-                        if ( count == chunkSize ) {
-                            start = start + chunkSize;
-                            System.err.print( "." );
-                            iterations++;
-                            if ( iterations % 10 == 0 ) System.err.println();
+                        if ( ++count == chunkSize ) {
+                            offset = offset + chunkSize;
+                            log.info( "Read " + offset );
                         }
                     }
                     if ( count < chunkSize ) break;
                 }
+
+                session.clear();
                 return null;
             }
         } );
@@ -899,48 +798,53 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @return
      * @throws Exception
      */
-    private Collection<ProbeLink> getLinks( ExpressionExperiment expressionExperiment, String tableName ) {
+    private Collection<ProbeLink> getLinks( final ExpressionExperiment expressionExperiment, String tableName ) {
         final String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM "
                 + tableName + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
-        final int chunkSize = 1000000;
+        final int chunkSize = 500000;
         final Collection<ProbeLink> links = new ArrayList<ProbeLink>();
         getHibernateTemplate().execute( new HibernateCallback() {
 
+            @SuppressWarnings("unchecked")
             public Object doInHibernate( Session session ) throws HibernateException {
-                long start = 0;
+                long offset = 0;
 
                 while ( true ) {
-                    String queryString = baseQueryString + start + "," + chunkSize + ";";
+                    String queryString = baseQueryString + offset + "," + chunkSize + ";";
 
                     org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
                     queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
                     queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
                     queryObject.addScalar( "SCORE", new DoubleType() );
 
-                    ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-                    int count = 0;
-                    int iterations = 0;
-                    while ( scroll.next() ) {
-                        Long first_design_element_fk = scroll.getLong( 0 );
-                        Long second_design_element_fk = scroll.getLong( 1 );
-                        Double score = scroll.getDouble( 2 );
+                    List results = queryObject.list();
 
-                        ProbeLink oneLink = new ProbeLink();
-                        oneLink.setFirstDesignElementId( first_design_element_fk );
-                        oneLink.setSecondDesignElementId( second_design_element_fk );
-                        oneLink.setScore( score );
-                        links.add( oneLink );
-                        count++;
-                        if ( count == chunkSize ) {
-                            start = start + chunkSize;
-                            System.err.print( "." );
-                            iterations++;
-                            if ( iterations % 10 == 0 ) System.err.println();
+                    int count = 0;
+                    for ( Object o : results ) {
+                        Object[] oa = ( Object[] ) o;
+                        Long firstProbeId = ( Long ) oa[0];
+                        Long secondProbeId = ( Long ) oa[1];
+                        Double score = ( Double ) oa[2];
+
+                        ProbeLink link = new ProbeLink();
+
+                        assert firstProbeId != null;
+                        assert secondProbeId != null;
+
+                        link.setFirstDesignElementId( firstProbeId );
+                        link.setSecondDesignElementId( secondProbeId );
+                        link.setScore( score );
+                        links.add( link );
+                        if ( ++count == chunkSize ) {
+                            offset = offset + chunkSize;
+                            log.info( "Read " + offset );
                         }
                     }
+
                     if ( count < chunkSize ) break;
                 }
-                log.info( "Load " + links.size() );
+                log.info( "Done with " + expressionExperiment.getShortName() + ": Fetched " + links.size() );
+                session.clear();
                 return null;
             }
         } );
@@ -1004,52 +908,56 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     }
 
     /**
-     * Used for creating simplified 'shuffled' links etc.
+     * Write probe-level links to a temporary table; Used for creating simplified 'shuffled' links etc. The links
+     * obtained are taken from the permanent store.
      * 
      * @param links
      * @param ee
      * @param tableName
      * @throws Exception
      */
-    private void saveLinks( Collection<ProbeLink> links, ExpressionExperiment ee, String tableName ) throws Exception {
+    private void savedSimplifiedLinks( final Collection<ProbeLink> links, final ExpressionExperiment ee,
+            final String tableName ) throws Exception {
         if ( links == null || links.size() == 0 ) return;
-        String queryString = "";
-        Session session = getSessionFactory().openSession();
-        Connection conn = session.connection();
-        Statement s = conn.createStatement();
 
-        int count = 0;
-        int CHUNK_LIMIT = 10000;
-        int total = links.size();
-        Collection<String> linksInOneChunk = new ArrayList<String>();
-        log.info( ee + ": Writing " + links.size() + " links into tables" );
-        int chunkNum = 0;
-        for ( ProbeLink link : links ) {
-            link.setEeId( ee.getId() );
-            linksInOneChunk.add( link.toSqlString() );
-            count++;
-            total--;
-            if ( count == CHUNK_LIMIT || total == 0 ) {
-                queryString = "INSERT INTO " + tableName
-                        + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE, EXPRESSION_EXPERIMENT_FK) "
-                        + " VALUES " + StringUtils.join( linksInOneChunk, "," ) + ";";
-                s.executeUpdate( queryString );
-                // conn.commit(); //not needed if autocomsmit is true.
-                count = 0;
-                linksInOneChunk.clear();
-                chunkNum++;
-                System.err.print( total + " " );
-                if ( chunkNum % 20 == 0 ) System.err.println();
+        final int CHUNK_LIMIT = 10000;
+
+        this.getHibernateTemplate().execute( new HibernateCallback() {
+
+            @Override
+            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+                Collection<String> chunk = new ArrayList<String>();
+                log.info( ee + ": Writing " + links.size() + " links into tables" );
+                int chunkNum = 0;
+
+                for ( Iterator<ProbeLink> it = links.iterator(); it.hasNext(); ) {
+                    ProbeLink link = it.next();
+                    link.setEeId( ee.getId() );
+                    chunk.add( link.toSqlString() );
+                    if ( chunk.size() > 0 && ( chunk.size() == CHUNK_LIMIT || !it.hasNext() ) ) {
+                        String queryString = "INSERT INTO "
+                                + tableName
+                                + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE, EXPRESSION_EXPERIMENT_FK) "
+                                + " VALUES " + StringUtils.join( chunk, "," ) + ";";
+                        SQLQuery query = session.createSQLQuery( queryString );
+                        int updated = query.executeUpdate();
+                        session.flush();
+                        session.clear();
+                        chunk.clear();
+                        if ( ++chunkNum % 20 == 0 ) {
+                            log.info( "Processed chunk " + chunkNum + ", " + updated + " in current chunk" );
+                        }
+                    }
+                }
+                log.info( " Finished writing " + links.size() + " links." );
+                return null;
             }
-        }
-        log.info( " Finished writing " + links.size() + " links." );
-        conn.close();
-        session.close();
+        } );
 
     }
 
     /**
-     *
+     * Helper class.
      */
     public class ProbeLink implements Link {
         private Long firstDesignElementId = 0L;

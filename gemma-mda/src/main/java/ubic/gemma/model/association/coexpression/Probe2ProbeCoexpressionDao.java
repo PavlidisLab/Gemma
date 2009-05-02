@@ -25,6 +25,7 @@ package ubic.gemma.model.association.coexpression;
 import java.util.Collection;
 import java.util.HashMap;
 
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -51,27 +52,6 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
      * @return either the entity or the object transformed from the entity.
      */
     public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
 
     /**
      * Updates the <code>probe2ProbeCoexpression</code> instance in the persistent store.
@@ -127,7 +107,7 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
      * DesignElementDataVectors that are coexpressed
      * </p>
      */
-    public java.util.Map getVectorsForLinks( java.util.Collection<Gene> genes,
+    public java.util.Map<Gene, DesignElementDataVector> getVectorsForLinks( java.util.Collection<Gene> genes,
             java.util.Collection<ExpressionExperiment> ees );
 
     /**
@@ -191,7 +171,6 @@ public interface Probe2ProbeCoexpressionDao extends ubic.gemma.model.association
     public java.util.Map getExpressionExperimentsTestedIn( java.util.Collection<Long> geneIds,
             java.util.Collection<Long> experiments, boolean filterNonSpecific );
 
-    
     public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
             Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon );
 

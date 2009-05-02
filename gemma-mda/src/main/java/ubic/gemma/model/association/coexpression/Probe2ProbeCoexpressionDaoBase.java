@@ -21,6 +21,8 @@ package ubic.gemma.model.association.coexpression;
 import java.util.Collection;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * <p>
@@ -28,13 +30,12 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  * <code>ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression</code>.
  * </p>
  * 
+ * @version $Id$
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression
  */
 public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.association.RelationshipDaoImpl implements
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao {
 
-    
-    
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#load(int, java.lang.Long)
      */
@@ -54,26 +55,6 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
     @Override
     public ubic.gemma.model.association.Relationship load( java.lang.Long id ) {
         return ( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionImpl.class );
-        this.transformEntities( transform, results );
-        return results;
     }
 
     /**
@@ -150,7 +131,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
      *      java.util.Collection)
      */
     public java.util.Collection getVectorsForLinks( final ubic.gemma.model.genome.Gene gene,
-            final java.util.Collection ees ) {
+            final java.util.Collection<ExpressionExperiment> ees ) {
         try {
             return this.handleGetVectorsForLinks( gene, ees );
         } catch ( Throwable th ) {
@@ -164,7 +145,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
      * Performs the core logic for {@link #getVectorsForLinks(ubic.gemma.model.genome.Gene, java.util.Collection)}
      */
     protected abstract java.util.Collection handleGetVectorsForLinks( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection ees ) throws java.lang.Exception;
+            java.util.Collection<ExpressionExperiment> ees ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
@@ -223,7 +204,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
     /**
      * Performs the core logic for {@link #getVectorsForLinks(java.util.Collection, java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetVectorsForLinks( java.util.Collection genes, java.util.Collection ees )
+    protected abstract java.util.Map handleGetVectorsForLinks( java.util.Collection<Gene> genes, java.util.Collection<ExpressionExperiment> ees )
             throws java.lang.Exception;
 
     /**
@@ -254,8 +235,8 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#prepareForShuffling(java.util.Collection,
      *      java.lang.String, boolean)
      */
-    public void prepareForShuffling( final java.util.Collection ees, final java.lang.String taxon,
-            final boolean filterNonSpecific ) {
+    public void prepareForShuffling( final java.util.Collection<ExpressionExperiment> ees,
+            final java.lang.String taxon, final boolean filterNonSpecific ) {
         try {
             this.handlePrepareForShuffling( ees, taxon, filterNonSpecific );
         } catch ( Throwable th ) {
@@ -268,8 +249,8 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends ubic.gemma.model.as
     /**
      * Performs the core logic for {@link #prepareForShuffling(java.util.Collection, java.lang.String, boolean)}
      */
-    protected abstract void handlePrepareForShuffling( java.util.Collection ees, java.lang.String taxon,
-            boolean filterNonSpecific ) throws java.lang.Exception;
+    protected abstract void handlePrepareForShuffling( java.util.Collection<ExpressionExperiment> ees,
+            java.lang.String taxon, boolean filterNonSpecific ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
