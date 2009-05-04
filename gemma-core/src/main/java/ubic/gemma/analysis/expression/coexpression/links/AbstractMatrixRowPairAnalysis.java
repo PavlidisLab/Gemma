@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -92,6 +93,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     private int numUniqueGenes = 0;
 
     private boolean omitNegativeCorrelationLinks = false;
+    private HashMap<CompositeSequence, Collection<Gene>> flatProbe2GeneMap;
 
     /**
      * Read back the histogram as a DoubleArrayList of counts.
@@ -436,6 +438,25 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
+     * Determine if the probes at this location in the matrix assay any of the same gene(s)
+     * 
+     * @param i
+     * @param j
+     * @return true if the probes hit the same gene; false otherwise.
+     */
+    private boolean crossHybridizes( int i, int j ) {
+        if ( this.dataMatrix == null ) return false; // can happen in tests.
+        ExpressionDataMatrixRowElement itemA = this.dataMatrix.getRowElement( i );
+        ExpressionDataMatrixRowElement itemB = this.dataMatrix.getRowElement( j );
+
+        Collection<Gene> genesA = this.flatProbe2GeneMap.get( itemA.getDesignElement() );
+        Collection<Gene> genesB = this.flatProbe2GeneMap.get( itemB.getDesignElement() );
+
+        return CollectionUtils.containsAny( genesA, genesB );
+
+    }
+
+    /**
      * Checks for valid values of correlation and encoding.
      * 
      * @param i int
@@ -446,8 +467,14 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected void setCorrel( int i, int j, double correl, int numused ) {
         if ( Double.isNaN( correl ) ) return;
 
-        if ( correl < -1.0 || correl > 1.0 ) {
-            throw new IllegalArgumentException( "Invalid correlation value: " + correl );
+        if ( correl < -1.00001 || correl > 1.00001 ) {
+            throw new IllegalArgumentException( "Correlation out of valid range: " + correl );
+        }
+
+        if ( correl < -1.0 ) {
+            correl = -1.0;
+        } else if ( correl > 1.0 ) {
+            correl = 1.0;
         }
 
         double acorrel = Math.abs( correl );
@@ -455,7 +482,8 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         // it is possible, due to roundoff, to overflow the bins.
         int lastBinIndex = fastHistogram.length - 1;
 
-        if ( !histogramIsFilled ) {
+        if ( !histogramIsFilled && !crossHybridizes( i, j ) ) {
+
             if ( useAbsoluteValue ) {
                 int bin = Math.min( ( int ) ( ( 1.0 + acorrel ) * HALF_BIN ), lastBinIndex );
                 fastHistogram[bin]++;
@@ -498,8 +526,14 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     private void initGeneToProbeMap() {
         int[] stats = new int[10];
         this.numUniqueGenes = 0;
+        this.flatProbe2GeneMap = new HashMap<CompositeSequence, Collection<Gene>>();
         this.geneToProbeMap = new HashMap<Gene, Collection<CompositeSequence>>();
         for ( CompositeSequence cs : probeToGeneMap.keySet() ) {
+
+            if ( !this.flatProbe2GeneMap.containsKey( cs ) ) {
+                this.flatProbe2GeneMap.put( cs, new HashSet<Gene>() );
+            }
+
             Collection<Collection<Gene>> genes = probeToGeneMap.get( cs );
             for ( Collection<Gene> cluster : genes ) {
                 numUniqueGenes++;
@@ -508,6 +542,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
                         geneToProbeMap.put( g, new HashSet<CompositeSequence>() );
                     }
                     this.geneToProbeMap.get( g ).add( cs );
+                    this.flatProbe2GeneMap.get( cs ).add( g );
                 }
 
                 if ( cluster.size() >= stats.length ) {

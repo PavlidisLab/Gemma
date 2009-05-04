@@ -182,6 +182,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
                         setCorrel( i, j, 0.0, numused );
                     } else {
                         double correl = ( sxy - sx * sy / numused ) / Math.sqrt( denom );
+
                         setCorrel( i, j, correl, numused );
                     }
                 }
