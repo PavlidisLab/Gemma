@@ -111,7 +111,6 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
 
     }
 
-    @Override
     public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> eeCol, Collection<Gene> genes ) {
         return this.getProcessedExpressionDataVectorDao().getRanksByProbe( eeCol, genes );

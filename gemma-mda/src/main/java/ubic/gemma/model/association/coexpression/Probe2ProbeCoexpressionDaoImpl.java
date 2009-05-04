@@ -554,7 +554,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         this.getHibernateTemplate().execute( new HibernateCallback() {
 
-            @Override
             public Object doInHibernate( Session session ) throws HibernateException, SQLException {
                 String queryString = "DROP TABLE IF EXISTS " + tableName + ";";
 
@@ -656,7 +655,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         this.getHibernateTemplate().execute( new HibernateCallback() {
 
-            @Override
             public Object doInHibernate( Session session ) throws HibernateException, SQLException {
                 int CHUNK_LIMIT = 1000;
 
@@ -924,7 +922,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         this.getHibernateTemplate().execute( new HibernateCallback() {
 
-            @Override
             public Object doInHibernate( Session session ) throws HibernateException, SQLException {
                 Collection<String> chunk = new ArrayList<String>();
                 log.info( ee + ": Writing " + links.size() + " links into tables" );
