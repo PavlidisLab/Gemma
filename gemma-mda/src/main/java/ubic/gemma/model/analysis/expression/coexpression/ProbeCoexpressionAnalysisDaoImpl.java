@@ -24,9 +24,14 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
@@ -36,9 +41,11 @@ import ubic.gemma.model.genome.Taxon;
 public class ProbeCoexpressionAnalysisDaoImpl extends
         ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDaoBase {
 
+    private static Log log = LogFactory.getLog( ProbeCoexpressionAnalysisDaoImpl.class.getName() );
+
     @Override
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
-        final String queryString = "select distinct a from ProbeCoexpressionAnalysisImpl a where :e in elements (a.experimentsAnalyzed)";
+        final String queryString = "select distinct a from ProbeCoexpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed s where :e in elements (s.experiments)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
@@ -55,9 +62,26 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
 
     @Override
     protected Collection handleFindByTaxon( Taxon taxon ) {
-        final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as poa inner join poa.experimentsAnalyzed  as ee "
+        final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as"
+                + " poa inner join poa.expressionExperimentSetAnalyzed s inner join s.experiments  as ee "
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
+        Collection<ProbeCoexpressionAnalysis> analyses = this.findByInvestigation( experiment );
+
+        if ( analyses.size() == 0 ) {
+            log.warn( "No analyses available for " + experiment );
+            return new HashSet<CompositeSequence>();
+        }
+
+        final String queryString = "select distinct c from  ProbeCoexpressionAnalysisImpl poa inner join poa.probesUsed c where poa in (:analyses)";
+
+        return this.getHibernateTemplate().findByNamedParam( queryString, "analyses", analyses );
+
     }
 }

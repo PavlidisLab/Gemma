@@ -22,10 +22,26 @@
 //
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import java.util.Collection;
+
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis
  */
 public interface ProbeCoexpressionAnalysisDao extends
         ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDao<ProbeCoexpressionAnalysis> {
+
+    /**
+     * Retrieve the list of probes used in the probe-level coexpression analysis for the given experiment. This assumes
+     * there is just one analysis available for the experiment - if there are multiple, the union of all probes used
+     * will be returned (This is probably okay because 1) usually there is just one analysis and 2) even if there were
+     * more than one, this method presupposes that the question is at the level of the experiment).
+     * 
+     * @param experiment
+     * @return
+     */
+    public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment );
 
 }

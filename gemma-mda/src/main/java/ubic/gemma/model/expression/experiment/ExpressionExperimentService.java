@@ -171,24 +171,6 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
 
     /**
      * <p>
-     * Retrieve a collection of the genes assayed in the experiment.
-     * </p>
-     */
-    public java.util.Collection<Gene> getAssayedGenes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            java.lang.Double rankThreshold );
-
-    /**
-     * <p>
-     * See getAssayedGenes
-     * </p>
-     */
-    public java.util.Collection<CompositeSequence> getAssayedProbes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            java.lang.Double rankThreshold );
-
-    /**
-     * <p>
      * Counts the number of biomaterials associated with this expression experiment.
      * </p>
      */

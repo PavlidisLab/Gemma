@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
@@ -117,6 +118,11 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
     @Override
     protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getProbeCoexpressionAnalysisDao().loadAll();
+    }
+
+    @Override
+    public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
+        return this.getProbeCoexpressionAnalysisDao().getAssayedProbes( experiment );
     }
 
 }

@@ -338,24 +338,6 @@ public interface ExpressionExperimentDao extends
 
     /**
      * <p>
-     * Retrieve a collection of the genes assayed in the experiment.
-     * </p>
-     */
-    public java.util.Collection<Gene> getAssayedGenes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            java.lang.Double rankThreshold );
-
-    /**
-     * <p>
-     * See getAssayedGenes
-     * </p>
-     */
-    public java.util.Collection<CompositeSequence> getAssayedProbes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            java.lang.Double rankThreshold );
-
-    /**
-     * <p>
      * Gets the AuditEvents of the specified expression experiment ids. This returns a map of id -> AuditEvent. If the
      * events do not exist, the map entry will point to null.
      * </p>
@@ -388,12 +370,14 @@ public interface ExpressionExperimentDao extends
     /**
      * 
      */
-    public java.util.Collection getDesignElementDataVectors( java.util.Collection<QuantitationType> quantitationTypes );
+    public java.util.Collection<DesignElementDataVector> getDesignElementDataVectors(
+            java.util.Collection<QuantitationType> quantitationTypes );
 
     /**
      * 
      */
-    public java.util.Collection getDesignElementDataVectors( java.util.Collection<DesignElement> designElements,
+    public java.util.Collection<DesignElementDataVector> getDesignElementDataVectors(
+            java.util.Collection<DesignElement> designElements,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**

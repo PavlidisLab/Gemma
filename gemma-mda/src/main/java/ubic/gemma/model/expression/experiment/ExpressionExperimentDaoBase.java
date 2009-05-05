@@ -640,38 +640,6 @@ public abstract class ExpressionExperimentDaoBase extends
     }
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAssayedGenes(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      java.lang.Double)
-     */
-    public java.util.Collection<Gene> getAssayedGenes(
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            final java.lang.Double rankThreshold ) {
-        try {
-            return this.handleGetAssayedGenes( expressionExperiment, rankThreshold );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentDao.getAssayedGenes(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.Double rankThreshold)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAssayedProbes(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      java.lang.Double)
-     */
-    public java.util.Collection<CompositeSequence> getAssayedProbes(
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            final java.lang.Double rankThreshold ) {
-        try {
-            return this.handleGetAssayedProbes( expressionExperiment, rankThreshold );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentDao.getAssayedProbes(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.Double rankThreshold)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getAuditEvents(java.util.Collection)
      */
     public java.util.Map getAuditEvents( final java.util.Collection<Long> ids ) {
@@ -1247,22 +1215,6 @@ public abstract class ExpressionExperimentDaoBase extends
      */
     protected abstract java.util.Map handleGetArrayDesignAuditEvents( java.util.Collection<Long> ids )
             throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for
-     * {@link #getAssayedGenes(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.Double)}
-     */
-    protected abstract java.util.Collection<Gene> handleGetAssayedGenes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            java.lang.Double rankThreshold ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for
-     * {@link #getAssayedProbes(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.Double)}
-     */
-    protected abstract java.util.Collection<CompositeSequence> handleGetAssayedProbes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            java.lang.Double rankThreshold ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getAuditEvents(java.util.Collection)}

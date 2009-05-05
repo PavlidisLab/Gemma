@@ -65,8 +65,11 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByQuantitationType( type );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getBioAssayDimensions(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentService#getBioAssayDimensions(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         return this.getExpressionExperimentDao().getBioAssayDimensions( expressionExperiment );
@@ -85,7 +88,7 @@ public class ExpressionExperimentServiceImpl extends
     protected Integer handleCountAll() throws Exception {
         return this.getExpressionExperimentDao().countAll();
     }
-    
+
     /*
      * (non-Javadoc)
      * @see
@@ -290,22 +293,6 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected Collection<ArrayDesign> handleGetArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
         return this.getExpressionExperimentDao().getArrayDesignsUsed( expressionExperiment );
-    }
-
-    /*
-     * (non-Javadoc) This only returns 1 taxon, the 1st taxon as decided by the join which ever that is. The good news
-     * is as a buisness rule we only allow 1 taxon per EE.
-     */
-
-    @Override
-    protected Collection<Gene> handleGetAssayedGenes( ExpressionExperiment ee, Double rankThreshold ) throws Exception {
-        return this.getExpressionExperimentDao().getAssayedGenes( ee, rankThreshold );
-    }
-
-    @Override
-    protected Collection<CompositeSequence> handleGetAssayedProbes( ExpressionExperiment expressionExperiment,
-            Double rankThreshold ) throws Exception {
-        return this.getExpressionExperimentDao().getAssayedProbes( expressionExperiment, rankThreshold );
     }
 
     /*

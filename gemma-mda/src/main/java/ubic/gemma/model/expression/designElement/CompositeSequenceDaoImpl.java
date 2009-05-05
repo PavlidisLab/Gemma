@@ -304,7 +304,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             genesToFetch.add( gene );
         }
 
-        session.close();
+        session.clear();
 
         // nothing found?
         if ( genesToFetch.size() == 0 ) {
@@ -558,25 +558,34 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
-        Collection<CompositeSequence> compositeSequences = null;
-        final String queryString = "select distinct cs from CompositeSequenceImpl cs where cs.id in (:ids)";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            compositeSequences = queryObject.list();
+    protected Collection handleLoad( Collection<Long> ids ) throws Exception {
+        final String queryString = "select cs from CompositeSequenceImpl cs where cs.id in (:ids)";
+        org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+        int batchSize = 2000;
+        Collection<Long> batch = new HashSet<Long>();
+        Collection<CompositeSequence> results = new HashSet<CompositeSequence>();
+        for ( Long id : ids ) {
+            batch.add( id );
 
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            if ( batch.size() == batchSize ) {
+                queryObject.setParameterList( "ids", batch );
+                results.addAll( queryObject.list() );
+                batch.clear();
+            }
         }
-        return compositeSequences;
+
+        // tail end.
+        if ( batch.size() > 0 ) {
+            queryObject.setParameterList( "ids", batch );
+            results.addAll( queryObject.list() );
+        }
+        return results;
     }
 
     @Override
-    protected void handleThaw( final Collection compositeSequences ) throws Exception {
+    protected void handleThaw( final Collection<CompositeSequence> compositeSequences ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            @SuppressWarnings("unchecked")
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 int i = 0;
                 /*

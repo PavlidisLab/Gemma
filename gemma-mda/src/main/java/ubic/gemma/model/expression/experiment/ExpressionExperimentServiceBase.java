@@ -30,8 +30,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisD
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * <p>
@@ -312,38 +310,6 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.experiment.ExpressionExperimentServiceException(
                     "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentService.getArrayDesignsUsed(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getAssayedGenes(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      java.lang.Double)
-     */
-    public java.util.Collection getAssayedGenes(
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            final java.lang.Double rankThreshold ) {
-        try {
-            return this.handleGetAssayedGenes( expressionExperiment, rankThreshold );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentService.getAssayedGenes(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.Double rankThreshold)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getAssayedProbes(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      java.lang.Double)
-     */
-    public java.util.Collection getAssayedProbes(
-            final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            final java.lang.Double rankThreshold ) {
-        try {
-            return this.handleGetAssayedProbes( expressionExperiment, rankThreshold );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentService.getAssayedProbes(ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.Double rankThreshold)' --> "
                             + th, th );
         }
     }
@@ -970,22 +936,6 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
     protected abstract java.util.Collection<ArrayDesign> handleGetArrayDesignsUsed(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment )
             throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for
-     * {@link #getAssayedGenes(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.Double)}
-     */
-    protected abstract java.util.Collection<Gene> handleGetAssayedGenes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            java.lang.Double rankThreshold ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for
-     * {@link #getAssayedProbes(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.Double)}
-     */
-    protected abstract java.util.Collection<CompositeSequence> handleGetAssayedProbes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
-            java.lang.Double rankThreshold ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for

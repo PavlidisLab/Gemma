@@ -486,8 +486,7 @@
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getLastArrayDesignUpdate=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getLastTroubleEvent=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getLastValidationEvent=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getAssayedGenes=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getAssayedProbes=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService.getAssayedProbes=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByBioMaterial=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByFactorValue=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.getAnnotationCounts=PROPAGATION_REQUIRED,readOnly
