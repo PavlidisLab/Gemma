@@ -40,7 +40,7 @@ Gemma.EEPanel = Ext
 
 					save : function() {
 						var snField = Ext.getCmp('shortname');
-						var dField = Ext.getCmp('description')
+						var dField = Ext.getCmp('description');
 						var nField = Ext.getCmp('name');
 						var shortName = snField.getValue();
 						var description = dField.getValue();
@@ -66,7 +66,7 @@ Gemma.EEPanel = Ext
 								function(data) {
 									var k = new Gemma.WaitHandler();
 									k.handleWait(data, 'updated', false);
-								}.createDelegate(this))
+								}.createDelegate(this));
 					},
 
 					savePubMed : function() {
@@ -88,7 +88,7 @@ Gemma.EEPanel = Ext
 									callback : function(data) {
 										var k = new Gemma.WaitHandler();
 										k.handleWait(data, 'pubmedRemove',
-												false)
+												false);
 									}.createDelegate(this)
 								});
 					},
@@ -111,7 +111,7 @@ Gemma.EEPanel = Ext
 							baseCls :'x-plain-panel',
 							html :pubmedUrl,
 							width :380
-						}
+						};
 						return pubmedRegion;
 					},
 
@@ -845,7 +845,9 @@ Ext.onReady( function() {
 
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-	var eePanel = new Gemma.EEPanel(Ext.get("eeId").getValue());
+			var eePanel = new Gemma.EEPanel(Ext.get("eeId").getValue());
+			
+			var vizPanel = new Gemma.EEDetailsVisualizationWidget();
 
 	eePanel.on("ready", function(panel) {
 		setTimeout( function() {

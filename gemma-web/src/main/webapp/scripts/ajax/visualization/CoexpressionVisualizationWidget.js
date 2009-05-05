@@ -226,7 +226,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 						// Should redraw to fit current window width and hight.
 
 						if (profiles == null) {
-							var window = this.findParentByType(Gemma.CoexpressionVisualizationWindow)
+							var window = this.findParentByType(Gemma.CoexpressionVisualizationWindow);
 							var record = window.dv.getSelectedRecords()[0];
 							// This gets called because window gets resized at startup.
 							if (record == null)

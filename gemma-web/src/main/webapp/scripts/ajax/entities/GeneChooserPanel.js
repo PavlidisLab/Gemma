@@ -458,6 +458,32 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 
 	taxonChanged : function(taxon) {
 		this.toolbar.taxonChanged(taxon);
+	},
+	
+	
+	//returns gene objects in an array
+	//gene = {id, officialSymbol, officialName, taxon}
+	getGenes : function(){
+		
+		var genes = [];
+		var all = this.geneGrid.getStore().getRange();
+		for (var i = 0; i < all.length; ++i) {
+			genes.push(all[i].data);
+		}
+		var gene = this.toolbar.geneCombo.getGene();
+		if (gene) {
+			for (var i = 0; i < genes.length; ++i) {
+				// don't add twice.
+				if (genes[i].id == gene.id) {
+					return genes;
+				}
+			}
+			genes.push(gene);
+		}
+		return genes;
+		
+		
+		
 	}
 
 });

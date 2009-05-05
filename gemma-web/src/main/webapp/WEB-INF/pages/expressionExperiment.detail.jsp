@@ -4,6 +4,7 @@
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/eeDataFetch.js' />
 	<jwr:script src='/scripts/app/ExpressionExperimentDetails.js' />
+	
 </head>
 
 
@@ -44,6 +45,7 @@
 		<div id="eeDesignMatrix"></div>
 	</div>
 
+ 	<div id="visualization"> </div>
 
 	<div id="bioMaterialMapping" style="padding: 5px;"></div>
 
