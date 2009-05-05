@@ -124,11 +124,13 @@
 		<url-pattern>*.jsp</url-pattern>
 	</filter-mapping>
 
-	<!-- Acegi -->
+	<!-- Acegi This filter causes and invalid xml parsing error on tomcat startup.  * not cool!
 	<filter-mapping>
 		<filter-name>securityFilter</filter-name>
 		<url-pattern>*</url-pattern>
 	</filter-mapping>
+	-->
+	
 	<!--<filter-mapping>
 			<filter-name>securityFilter</filter-name>
 			<url-pattern>/j_security_check</url-pattern>

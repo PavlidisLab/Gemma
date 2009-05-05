@@ -120,7 +120,6 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
         return this.getProbeCoexpressionAnalysisDao().loadAll();
     }
 
-    @Override
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
         return this.getProbeCoexpressionAnalysisDao().getAssayedProbes( experiment );
     }

@@ -70,7 +70,6 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
         Collection<ProbeCoexpressionAnalysis> analyses = this.findByInvestigation( experiment );
 
