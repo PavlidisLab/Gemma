@@ -25,12 +25,16 @@ HEATMAP_CONFIG = {
 
 Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 
+	height :100,
+	width : 220,
 	listeners : {
 				resize : {
 							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
 
 								// Change the div so that it is the size of the panel surrounding it.
 								vizDiv = Ext.get('vizDiv');
+								if (!vizDiv)
+									return;
 								vizDiv.setHeight(rawHeight - 27); // magic 27
 								vizDiv.setWidth(rawWidth - 1);
 								vizDiv.repaint();
@@ -104,6 +108,9 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 				
 				
 				Heatmap.draw(Ext.get('vizDiv'), m_profiles, HEATMAP_CONFIG);
+				
+				//$("heatmapLoadMask").loadMask.hide();
+				this.loadMask.hide();
 
 			
 	},
@@ -130,6 +137,16 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 				});
 				
 		this.show();
+		
+		Ext.apply(this, {
+			loadMask : new Ext.LoadMask(this.getEl(), {
+				id : "heatmapLoadMask",
+				msg : "Loading probe level data ..."
+			})
+		});
+
+		this.loadMask.show();
+
 
 	},
 	
@@ -229,6 +246,8 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 
 				this.visWindow = new Gemma.EEDetailsVisualizationWindow({
 				});
+//				this.visWindow.setHeight(100);
+//				this.visWindow.setWidth(220);
 				
 				
 				var geneList = this.geneChooserPanel.getGenes();
