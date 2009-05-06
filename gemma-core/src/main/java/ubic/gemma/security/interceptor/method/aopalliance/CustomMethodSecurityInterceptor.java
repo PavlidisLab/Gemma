@@ -20,14 +20,15 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.util.SecurityUtil;
 
 /**
- * A custom MethodInterceptor.
+ * A custom MethodInterceptor. The customization is needed by Gemma to allow Quartz-scheduled events to run as
+ * administrator.
  * <p>
  * Provides security interception of AOP Alliance based method invocations.
  * </p>
  * <p>
- * The <code>ObjectDefinitionSource</code> required by this security interceptor is of type {@link
- * MethodDefinitionSource}. This is shared with the AspectJ based security interceptor (<code>AspectJSecurityInterceptor</code>),
- * since both work with Java <code>Method</code>s.
+ * The <code>ObjectDefinitionSource</code> required by this security interceptor is of type
+ * {@link MethodDefinitionSource}. This is shared with the AspectJ based security interceptor (
+ * <code>AspectJSecurityInterceptor</code>), since both work with Java <code>Method</code>s.
  * </p>
  * <p>
  * Refer to {@link AbstractSecurityInterceptor} for details on the workflow.
@@ -40,12 +41,12 @@ import ubic.gemma.util.SecurityUtil;
 public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor implements MethodInterceptor {
 
     private static final String ADMINISTRATOR = "administrator"; // this isn't such a good idea to hardcode like
-                                                                    // this.
+    // this.
 
     private static final String DEFAULT_QUARTZ_SCHEDULER = "QuartzScheduler";
 
     private UserDetailsService userDetailsService = null;
-    protected static Log log = LogFactory.getLog(CustomMethodSecurityInterceptor.class.getName());
+    protected static Log log = LogFactory.getLog( CustomMethodSecurityInterceptor.class.getName() );
 
     // ~ Instance fields
     // ================================================================================================
@@ -74,7 +75,7 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
     public Object invoke( MethodInvocation mi ) throws Throwable {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
+
         if ( authentication == null ) {
 
             /*
@@ -90,11 +91,10 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
                 SecurityContextHolder.getContext().setAuthentication( authentication );
             }
         }
-    
+
         Object result = null;
         InterceptorStatusToken token = super.beforeInvocation( mi );
 
-        
         try {
             result = mi.proceed();
         } finally {
