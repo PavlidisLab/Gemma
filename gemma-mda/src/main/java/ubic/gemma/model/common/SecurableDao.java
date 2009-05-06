@@ -22,6 +22,10 @@
 //
 package ubic.gemma.model.common;
 
+import java.util.Collection;
+
+import org.springframework.security.acl.AclEntry;
+
 /**
  * Defines methods that apply to all Securable objects. Security on objects is controlled by authorization based on
  * access control lists (ACL). ACL information is stored separately from the entity. An ACL entry for an entity defines
@@ -46,6 +50,14 @@ public interface SecurableDao<T extends Securable> {
      *         have an ACL entry, so this should always return a non-null value.
      */
     public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable );
+
+    /**
+     * Get a collection of AclEntries for a securable.
+     * 
+     * @param target
+     * @return
+     */
+    public Collection<AclEntry> getAclEntries( final Securable target );
 
     /**
      * Get the id of the acl_object_identity which the given securable's ACL entry inherits from, in the ACL hierarchy.

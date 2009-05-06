@@ -383,6 +383,7 @@
                 ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getRanks=user,admin,ROLE_ANONYMOUS  
                 ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.update=user,admin
                 ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.thaw=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService.getAssayedProbes=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate=user,admin
 				ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService.findOrCreate=user,admin
 				ubic.gemma.model.expression.biomaterial.BioMaterialService.countAll=user,admin,ROLE_ANONYMOUS 

@@ -18,6 +18,22 @@
  */
 package ubic.gemma.model.common;
 
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hibernate.HibernateException;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.security.acl.AclEntry;
+import org.springframework.security.acl.basic.AclObjectIdentity;
+import org.springframework.security.acl.basic.NamedEntityObjectIdentity;
+import org.springframework.security.acl.basic.SimpleAclEntry;
+
 import ubic.gemma.util.EntityUtils;
 
 /**
@@ -26,6 +42,7 @@ import ubic.gemma.util.EntityUtils;
  * @see ubic.gemma.model.common.Securable
  */
 public class SecurableDaoImpl<T extends Securable> extends ubic.gemma.model.common.SecurableDaoBase<T> {
+    protected Log log = LogFactory.getLog( getClass().getName() );
 
     /*
      * (non-Javadoc)
@@ -51,6 +68,36 @@ public class SecurableDaoImpl<T extends Securable> extends ubic.gemma.model.comm
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<AclEntry> getAclEntries( final Securable target ) {
+        Long oid = this.getAclObjectIdentityId( target );
+        final AclObjectIdentity aoi = getObjectIdentity( target );
+        final AclObjectIdentity parentOi = getParentObjectIdentity( target );
+        final String queryString = "SELECT a.recipient, a.mask FROM acl_permission a inner join acl_object_identity o ON o.id=a.acl_object_identity WHERE o.object_identity = ?";
+
+        return ( Collection<AclEntry> ) this.getHibernateTemplate().execute( new HibernateCallback() {
+
+            @Override
+            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+                Query q = session.createSQLQuery( queryString );
+                q.setParameter( 0, createObjectIdentityFromObject( target ) );
+                List list = q.list();
+
+                Collection<AclEntry> results = new HashSet<AclEntry>();
+                for ( Object object : list ) {
+                    Object[] oa = ( Object[] ) object;
+                    String recipient = ( String ) oa[0];
+                    Integer mask = ( Integer ) oa[1];
+                    AclEntry ae = new SimpleAclEntry( recipient, aoi, parentOi, mask );
+                    results.add( ae );
+                }
+
+                return results;
+            }
+        } );
+
     }
 
     /*
@@ -86,5 +133,46 @@ public class SecurableDaoImpl<T extends Securable> extends ubic.gemma.model.comm
         Long id = implementation.getId();
 
         return implementation.getClass().getName() + ":" + id;
+    }
+
+    /**
+     * @param target
+     * @return AclObjectIdentity representing the target.
+     */
+    private AclObjectIdentity getObjectIdentity( Securable target ) {
+        Securable implementation = ( Securable ) EntityUtils.getImplementationForProxy( target );
+        Long id = implementation.getId();
+        return new NamedEntityObjectIdentity( implementation.getClass().getName(), id.toString() );
+    }
+
+    /**
+     * @param target
+     * @return
+     */
+    @SuppressWarnings("deprecation")
+    private AclObjectIdentity getParentObjectIdentity( Securable target ) {
+        Integer id = this.getAclObjectIdentityParentId( target );
+
+        if ( id == null ) {
+            return null;
+        }
+
+        String queryString = "select object_identity from acl_object_identity where id = :id";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setParameter( "id", id );
+
+            Object o = queryObject.uniqueResult();
+
+            String oi = ( String ) o;
+
+            return new NamedEntityObjectIdentity( oi.substring( 0, oi.indexOf( ':' ) ), oi.substring(
+                    oi.indexOf( ':' ) + 1, oi.length() ) );
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
     }
 }

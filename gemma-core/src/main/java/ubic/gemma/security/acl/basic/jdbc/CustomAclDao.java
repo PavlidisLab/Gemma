@@ -18,6 +18,8 @@
  */
 package ubic.gemma.security.acl.basic.jdbc;
 
+import java.util.Collection;
+
 import javax.sql.DataSource;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -25,6 +27,7 @@ import org.springframework.security.acl.basic.AbstractBasicAclEntry;
 import org.springframework.security.acl.basic.BasicAclEntry;
 
 import ubic.gemma.model.common.Securable;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * This Dao should be used to do things to the acl_permission and acl_object_identity tables that are not included as
@@ -109,6 +112,20 @@ public class CustomAclDao {
      */
     public void setDataSource( DataSource dataSource ) {
         this.dataSource = dataSource;
+    }
+
+    /**
+     * Creates the object_identity to be used in the acl_object_identity table. NOTE copied from SecurableDao.
+     * 
+     * @param target
+     * @return
+     */
+    private String createObjectIdentityFromObject( Securable target ) {
+
+        Securable implementation = ( Securable ) EntityUtils.getImplementationForProxy( target );
+        Long id = implementation.getId();
+
+        return implementation.getClass().getName() + ":" + id;
     }
 
 }

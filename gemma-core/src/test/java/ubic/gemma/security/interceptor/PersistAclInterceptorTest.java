@@ -18,6 +18,9 @@
  */
 package ubic.gemma.security.interceptor;
 
+import java.util.HashSet;
+
+import org.springframework.security.acl.basic.BasicAclEntry;
 import org.springframework.security.acl.basic.BasicAclExtendedDao;
 import org.springframework.security.acl.basic.NamedEntityObjectIdentity;
 
@@ -29,13 +32,16 @@ import ubic.gemma.model.common.protocol.ProtocolService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
- * Tests of ACL management.
+ * Tests of ACL management. (AclAdvice)
  * 
  * @author keshav
  * @version $Id$
@@ -46,11 +52,56 @@ public class PersistAclInterceptorTest extends BaseSpringContextTest {
     ArrayDesignService arrayDesignService;
     ExpressionExperimentService expressionExperimentService;
     ProtocolService protocolService;
+    ExperimentalDesignService experimentalDesignService;
+    ExperimentalFactorService experimentalFactorService;
+
+    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
+        this.experimentalFactorService = experimentalFactorService;
+    }
+
+    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
+        this.experimentalDesignService = experimentalDesignService;
+    }
+
     HardwareService hardwareService;
 
     /**
-     * Calling the method saveArrayDesign, which should have the PersistAclInterceptor.invoke called on it after the
-     * actual method invocation.
+     * Test that when a new associated object is persisted by a cascade, it gets the permissions of the 'parent' object.
+     * 
+     * @throws Exception
+     */
+    public void testUpdateAcl() throws Exception {
+
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+
+        BasicAclEntry[] parentAcls = basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) );
+
+        expressionExperimentService.thawLite( ee );
+
+        ExperimentalDesign ed = experimentalDesignService.load( ee.getExperimentalDesign().getId() );
+
+        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        ef.setExperimentalDesign( ed );
+        ef.setName( "factor" );
+        ef.setDescription( "I am a factor" );
+        ExperimentalFactor persistedFactor = experimentalFactorService.create( ef );
+
+        if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
+        ed.getExperimentalFactors().add( ef );
+
+        experimentalDesignService.update( ed );
+
+        BasicAclEntry[] newAcls = basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( persistedFactor ) );
+
+        assertNotNull( "Failed to create ACL for " + persistedFactor, newAcls );
+
+        assertEquals( parentAcls.length, newAcls.length );
+
+    }
+
+    /**
+     * Calling the method saveArrayDesign, which should have the AclAdvice called on it after the actual method
+     * invocation.
      * 
      * @throws Exception
      */

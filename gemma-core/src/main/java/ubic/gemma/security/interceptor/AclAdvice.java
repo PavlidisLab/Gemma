@@ -36,6 +36,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.Authentication;
 import org.springframework.security.GrantedAuthority;
+import org.springframework.security.acl.AclEntry;
 import org.springframework.security.acl.basic.AbstractBasicAclEntry;
 import org.springframework.security.acl.basic.AclObjectIdentity;
 import org.springframework.security.acl.basic.BasicAclExtendedDao;
@@ -77,15 +78,81 @@ import ubic.gemma.util.ReflectionUtil;
  * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  * @spring.property name="customAclDao" ref="customAclDao"
  * @spring.property name="securableDao" ref="securableDao"
+ * @deprecated as we will move to the updated Spring Security 2.0 API.
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public class AclAdvice implements AfterReturningAdvice {
 
-    CrudUtils crudUtils;
-
-    public AclAdvice() {
-        this.crudUtils = new CrudUtils();
+    /**
+     * @param object
+     */
+    private static boolean checkValidPrimaryKey( Securable object ) {
+        Class<? extends Securable> clazz = object.getClass();
+        try {
+            String methodName = "getId";
+            Method m = clazz.getMethod( methodName, new Class[] {} );
+            Object result = m.invoke( object, new Object[] {} );
+            if ( result == null ) {
+                return false;
+            }
+        } catch ( NoSuchMethodException nsme ) {
+            throw new IllegalArgumentException( "Object of class '" + clazz
+                    + "' does not provide the required getId() method: " + object );
+        } catch ( IllegalArgumentException e ) {
+            throw new RuntimeException( e );
+        } catch ( IllegalAccessException e ) {
+            throw new RuntimeException( e );
+        } catch ( InvocationTargetException e ) {
+            throw new RuntimeException( e );
+        }
+        return true;
     }
+
+    /**
+     * When an 'admin' loads data, we want to make this readable by everyone so we set the mask to SimpleAclEntry.READ
+     * (anonymous). When a 'user' loads data, we want to make this readable and writeable by that user only so we set
+     * the mask to SimpleAclEntry.READ_WRITE.
+     * 
+     * @return Integer
+     */
+    protected static Integer getMaskByAuthority() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        GrantedAuthority[] authorities = auth.getAuthorities();
+        for ( GrantedAuthority a : authorities ) {
+            if ( a.getAuthority() == "admin" ) {
+                /*
+                 * When an admin loads data, we want to make this readable by everyone (anonymous) ... unless the admin
+                 * adds a new user to the system in which case the new user should should be readable and writeable by
+                 * himself/herself. This handled later by using the UserRole of the User that was added.
+                 */
+                return SimpleAclEntry.READ;
+
+            }
+        }
+        /*
+         * When a user loads data, we want to make this readable and writeable by that user
+         */
+        return SimpleAclEntry.READ_WRITE;
+    }
+
+    /**
+     * Forms the object identity to be inserted in acl_object_identity table.
+     * 
+     * @param object
+     * @return object identity.
+     */
+    private static AclObjectIdentity makeObjectIdentity( Securable object ) {
+        assert checkValidPrimaryKey( object ) : "No valid primary key for object " + object;
+        try {
+            return new NamedEntityObjectIdentity( object );
+        } catch ( IllegalAccessException e ) {
+            throw new RuntimeException( e );
+        } catch ( InvocationTargetException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    CrudUtils crudUtils;
 
     private static Log log = LogFactory.getLog( AclAdvice.class.getName() );
 
@@ -105,11 +172,73 @@ public class AclAdvice implements AfterReturningAdvice {
 
     private SecurableDao<? extends Securable> securableDao;
 
-    /*
-     * (non-Javadoc)
+    public AclAdvice() {
+        this.crudUtils = new CrudUtils();
+    }
+
+    /**
+     * Creates the acl_permission object and the acl_object_identity object.
      * 
+     * @param object The domain object.
+     */
+    private void addAclEntry( Securable object ) {
+
+        /* If the securable already has an acl object identity, then don't add another one. (DOES THIS HAPPEN?) */
+        if ( securableDao.getAclObjectIdentityId( object ) != null ) return;
+
+        /*
+         * User entities are a special case. When adding a new user to the system, make sure they can see the public
+         * data by adding a "control node" (row in acl_permission table) for that user and set the acl_object_identity
+         * of this to CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID
+         */
+        if ( object instanceof UserImpl ) {
+            User u = ( User ) object;
+            String recipient = u.getUserName();
+            customAclDao.insertPublicAccessControlNodeForRecipient( recipient, SimpleAclEntry.READ );
+        }
+
+        //
+        // Add AclEntry(s) for the entity.
+        //        
+        // When persisting to the database, the acl_permission may not [?Might not?] be
+        // persisted.
+        // Create acl_permission entry in database only if one of the following is true.
+        // 1. creating a new user
+        // 2. adding Securable(s) and _not_ logged in as an admin. If user is
+        // logged in as an admin, the data they load will be public because their
+        // corresponding acl_object_identity.parent_object will be set to
+        // CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID.
+
+        AbstractBasicAclEntry simpleAclEntry = this.createNonPersistentAclEntry( object );
+
+        try {
+
+            boolean isAdmin = SecurityService.isUserAdmin();
+
+            boolean createAclPermission = false; // default case for admin
+
+            if ( object instanceof UserImpl ) createAclPermission = true;
+
+            if ( object instanceof UserRoleImpl ) createAclPermission = true;
+
+            if ( !isAdmin ) createAclPermission = true;
+
+            ( ( CustomJdbcExtendedDaoImpl ) basicAclExtendedDao ).create( simpleAclEntry, createAclPermission );
+
+        } catch ( DataIntegrityViolationException ignored ) {
+            // This happens in two situations:
+            // 1. When a 'findOrCreate' resulted in just a 'find'.
+            // 2. When a create was called, but some associated object was
+            // already in the system.
+            //              
+            // Either way, we can ignore it.
+        }
+    }
+
+    /*
+     * Entry point for the advice. (non-Javadoc)
      * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
-     *      java.lang.Object[], java.lang.Object)
+     * java.lang.Object[], java.lang.Object)
      */
     @SuppressWarnings( { "unchecked" })
     public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
@@ -129,92 +258,91 @@ public class AclAdvice implements AfterReturningAdvice {
         }
 
         if ( persistentObject == null ) return;
+
+        // Note feed in the acls for the top-level objects; only used if this is an 'update'
+
+        boolean isUpdate = CrudUtils.methodIsUpdate( m );
+
+        // Case 1: collection of securables.
         if ( Collection.class.isAssignableFrom( persistentObject.getClass() ) ) {
             for ( Object o : ( Collection<Object> ) persistentObject ) {
                 if ( !Securable.class.isAssignableFrom( o.getClass() ) ) {
                     return; // they will all be the same type.
                 }
-                processObject( m, o );
+
+                Securable s = ( Securable ) o;
+                if ( !isUpdate ) {
+                    processObject( m, s );
+                } else {
+                    startUpdate( m, s );
+                }
             }
-        } else { // note that check for securable is in the pointcut.
-            processObject( m, persistentObject );
+        } else {
+            // Case 2: single securable (note that check for securable is in the pointcut)
+            Securable s = ( Securable ) persistentObject;
+            if ( !isUpdate ) {
+                processObject( m, s );
+            } else {
+                startUpdate( m, s );
+            }
         }
 
         sess.close();
     }
 
     /**
-     * Creates the acl_permission object and the acl_object_identity object.
+     * Set up a AclEntry with some defaults.
      * 
-     * @param object The domain object.
+     * @param object
+     * @return AbstractBasicAclEntry
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
      */
-    public void addPermission( Securable object ) {
+    private AbstractBasicAclEntry createNonPersistentAclEntry( Securable object ) {
+        SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
+        simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
+        simpleAclEntry.setMask( getMaskByAuthority() );
+        simpleAclEntry.setRecipient( UserDetailsServiceImpl.getCurrentUsername() );
+        simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( CustomAclDao.PUBLIC_CONTROL_NODE,
+                CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID ) );
 
-        /* If the securable already has an acl object identity, then don't add another one. */
-        if ( securableDao.getAclObjectIdentityId( object ) != null ) return;
-
+        /* If we are logged in, then we are adding private data. */
+        if ( SecurityService.isUserLoggedIn() ) {
+            simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( CustomAclDao.ADMIN_CONTROL_NODE,
+                    CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID ) );
+        }
         /*
-         * When adding a new user to the system, make sure they can see the public data by adding a "control node" (row
-         * in acl_permission table) for that user and set the acl_object_identity of this to
-         * CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID
+         * Now check to see if the data we are adding is a new user (UserImpl). If so, decide what mask to use depending
+         * on the type of user (i.e. based on role: user, admin).
          */
         if ( object instanceof UserImpl ) {
-            User u = ( User ) object;
-            String recipient = u.getUserName();
-            customAclDao.insertPublicAccessControlNodeForRecipient( recipient, SimpleAclEntry.READ );
+            simpleAclEntry.setMask( SimpleAclEntry.READ_WRITE );
+
+            UserImpl newUser = ( UserImpl ) object;
+
+            simpleAclEntry.setRecipient( newUser.getUserName() );
+
+            if ( SecurityService.isUserAdmin() ) {
+                simpleAclEntry.setMask( SimpleAclEntry.ADMINISTRATION );
+                // FIXME - do we need to add a parent other than the global if
+                // we are adding another admin to the
+                // system.
+            }
         }
 
         /*
-         * Set up the SimpleAclEntry, which includes both acl_permission and acl_object_identity stuff.
+         * Check if we are adding a role (UserRoleImpl). If so, set the mask to SimpleAclEntry.READ so the user cannot
+         * change their role.
          */
-        // When persisting to the database, the acl_permission may not be
-        // persisted.
-        // Create acl_permission entry in database only if:
-        // 1. creating a new user
-        // 2. adding Securable(s) and not logged in as an admin. If user is
-        // logged in
-        // as an admin, the data they load will be public because their
-        // corresponding
-        // acl_object_identity.parent_object will be set to
-        // CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID.
-        /*                                                                                              */
-        AbstractBasicAclEntry simpleAclEntry = this.createNonPersistentAclEntry( object );
+        if ( object instanceof UserRoleImpl ) {
+            simpleAclEntry.setMask( SimpleAclEntry.READ );
 
-        try {
-            boolean isAdmin = SecurityService.isUserAdmin();
+            UserRoleImpl role = ( UserRoleImpl ) object;
 
-            boolean createAclPermission = false;// default case for admin
-
-            if ( object instanceof UserImpl ) createAclPermission = true;
-
-            if ( object instanceof UserRoleImpl ) createAclPermission = true;
-
-            if ( !isAdmin ) createAclPermission = true;
-
-            ( ( CustomJdbcExtendedDaoImpl ) basicAclExtendedDao ).create( simpleAclEntry, createAclPermission );
-
-        } catch ( DataIntegrityViolationException ignored ) {
-
-            // This happens in two situations:
-            // 1. When a 'findOrCreate' resulted in just a 'find'.
-            // 2. When a create was called, but some associated object was
-            // already in the system.
-            //              
-            // Either way, we can ignore it.
-            //              
-            //
-            // if ( method.getName().equals( "findOrCreate" ) ) {
-            // do nothing. This happens when the object already exists and has
-            // permissions assigned (for example,
-            // findOrCreate resulted in a 'find')
-            // } else {
-            // something else must be wrong
-            // log.fatal( method.getName() + " on " + getAuthority() + " for
-            // recipient " + getUsername() + " on " +
-            // object, ignored );
-            // throw ( ignored );
-            // }
+            simpleAclEntry.setRecipient( role.getUserName() );
         }
+
+        return simpleAclEntry;
     }
 
     /**
@@ -224,7 +352,7 @@ public class AclAdvice implements AfterReturningAdvice {
      * @throws IllegalArgumentException
      * @throws DataAccessException
      */
-    public void deletePermission( Securable object ) throws DataAccessException, IllegalArgumentException {
+    private void deletePermission( Securable object ) throws DataAccessException, IllegalArgumentException {
         if ( object == null ) return;
         try {
             basicAclExtendedDao.delete( makeObjectIdentity( object ) );
@@ -239,13 +367,6 @@ public class AclAdvice implements AfterReturningAdvice {
             log.debug( "Deleted object " + object + " ACL permissions for recipient "
                     + UserDetailsServiceImpl.getCurrentUsername() );
         }
-    }
-
-    /**
-     * @param basicAclExtendedDao
-     */
-    public void setBasicAclExtendedDao( BasicAclExtendedDao basicAclExtendedDao ) {
-        this.basicAclExtendedDao = basicAclExtendedDao;
     }
 
     /**
@@ -272,7 +393,7 @@ public class AclAdvice implements AfterReturningAdvice {
 
         EntityPersister persister = crudUtils.getEntityPersister( object );
         if ( persister == null ) {
-            // FIXME this happens when the object is a proxy.
+            // this happens when the object is a proxy.
             log.error( "No Entity Persister found for " + object.getClass().getName() );
             return;
         }
@@ -329,10 +450,14 @@ public class AclAdvice implements AfterReturningAdvice {
     }
 
     /**
-     * @param m method that was called. This is used to determine what action to take.
+     * @param m method that was called. This is used to determine what action to take. This is basically valid only for
+     *        calls of 'create' and 'delete'. In the case of create we add default ACL entries as appropriate. For
+     *        delete, we try to clean up.
      * @param object. If null, no action is taken.
+     * @param acls Existing permissions on the (parent) object that should be propogated
      * @throws IllegalAccessException
      * @throws InvocationTargetException
+     * @see updateObject for update procedures.
      */
     private void processObject( Method m, Object object ) throws IllegalAccessException, InvocationTargetException {
 
@@ -350,11 +475,14 @@ public class AclAdvice implements AfterReturningAdvice {
         if ( log.isDebugEnabled() ) {
             log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
         }
-        if ( CrudUtils.methodIsCreate( m ) || CrudUtils.methodIsUpdate( m ) ) {
-            addPermission( ( Securable ) object );
+        Securable securable = ( Securable ) object;
+        if ( CrudUtils.methodIsCreate( m ) ) {
+            addAclEntry( securable );
             processAssociations( m, object );
+        } else if ( CrudUtils.methodIsUpdate( m ) ) {
+            throw new IllegalArgumentException( "Don't use this for 'update'" );
         } else if ( CrudUtils.methodIsDelete( m ) ) {
-            deletePermission( ( Securable ) object );
+            deletePermission( securable );
             processAssociations( m, object );
         } else {
             // nothing to do.
@@ -362,136 +490,10 @@ public class AclAdvice implements AfterReturningAdvice {
     }
 
     /**
-     * @param class1
-     * @return
+     * @param basicAclExtendedDao
      */
-    private boolean unsecuredClassesContains( Class<? extends Object> c ) {
-        for ( Class<? extends Object> clazz : unsecuredClasses ) {
-            if ( clazz.isAssignableFrom( c ) ) return true;
-        }
-        return false;
-    }
-
-    /**
-     * @param object
-     * @return AbstractBasicAclEntry
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     */
-    public AbstractBasicAclEntry createNonPersistentAclEntry( Securable object ) {
-        SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
-        simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
-        simpleAclEntry.setMask( getMaskByAuthority() );
-        simpleAclEntry.setRecipient( UserDetailsServiceImpl.getCurrentUsername() );
-        simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( CustomAclDao.PUBLIC_CONTROL_NODE,
-                CustomAclDao.PUBLIC_CONTROL_NODE_PARENT_ID ) );
-
-        /* If we are logged in, then we are adding private data. */
-        if ( SecurityService.isUserLoggedIn() ) {
-            simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( CustomAclDao.ADMIN_CONTROL_NODE,
-                    CustomAclDao.ADMIN_CONTROL_NODE_PARENT_ID ) );
-        }
-        /*
-         * Now check to see if the data we are adding is a new user (UserImpl). If so, decide what mask to use depending
-         * on the type of user (i.e. based on role: user, admin).
-         */
-        if ( object instanceof UserImpl ) {
-            simpleAclEntry.setMask( SimpleAclEntry.READ_WRITE );
-
-            UserImpl newUser = ( UserImpl ) object;
-
-            simpleAclEntry.setRecipient( newUser.getUserName() );
-
-            if ( SecurityService.isUserAdmin() ) {
-                simpleAclEntry.setMask( SimpleAclEntry.ADMINISTRATION );
-                // FIXME - do we need to add a parent other than the global if
-                // we are adding another admin to the
-                // system.
-            }
-        }
-
-        /*
-         * Check if we are adding a role (UserRoleImpl). If so, set the mask to SimpleAclEntry.READ so the user cannot
-         * change their role.
-         */
-        if ( object instanceof UserRoleImpl ) {
-            simpleAclEntry.setMask( SimpleAclEntry.READ );
-
-            UserRoleImpl role = ( UserRoleImpl ) object;
-
-            simpleAclEntry.setRecipient( role.getUserName() );
-        }
-
-        return simpleAclEntry;
-    }
-
-    /**
-     * @param object
-     */
-    private static boolean checkValidPrimaryKey( Securable object ) {
-        Class<? extends Securable> clazz = object.getClass();
-        try {
-            String methodName = "getId";
-            Method m = clazz.getMethod( methodName, new Class[] {} );
-            Object result = m.invoke( object, new Object[] {} );
-            if ( result == null ) {
-                return false;
-            }
-        } catch ( NoSuchMethodException nsme ) {
-            throw new IllegalArgumentException( "Object of class '" + clazz
-                    + "' does not provide the required getId() method: " + object );
-        } catch ( IllegalArgumentException e ) {
-            throw new RuntimeException( e );
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
-            throw new RuntimeException( e );
-        }
-        return true;
-    }
-
-    /**
-     * Forms the object identity to be inserted in acl_object_identity table.
-     * 
-     * @param object
-     * @return object identity.
-     */
-    private static AclObjectIdentity makeObjectIdentity( Securable object ) {
-        assert checkValidPrimaryKey( object ) : "No valid primary key for object " + object;
-        try {
-            return new NamedEntityObjectIdentity( object );
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * When an 'admin' loads data, we want to make this readable by everyone so we set the mask to SimpleAclEntry.READ
-     * (anonymous). When a 'user' loads data, we want to make this readable and writeable by that user only so we set
-     * the mask to SimpleAclEntry.READ_WRITE.
-     * 
-     * @return Integer
-     */
-    protected static Integer getMaskByAuthority() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        GrantedAuthority[] authorities = auth.getAuthorities();
-        for ( GrantedAuthority a : authorities ) {
-            if ( a.getAuthority() == "admin" ) {
-                /*
-                 * When an admin loads data, we want to make this readable by everyone (anonymous) ... unless the admin
-                 * adds a new user to the system in which case the new user should should be readable and writeable by
-                 * himself/herself. This handled later by using the UserRole of the User that was added.
-                 */
-                return SimpleAclEntry.READ;
-
-            }
-        }
-        /*
-         * When a user loads data, we want to make this readable and writeable by that user
-         */
-        return SimpleAclEntry.READ_WRITE;
+    public void setBasicAclExtendedDao( BasicAclExtendedDao basicAclExtendedDao ) {
+        this.basicAclExtendedDao = basicAclExtendedDao;
     }
 
     /**
@@ -513,5 +515,141 @@ public class AclAdvice implements AfterReturningAdvice {
      */
     public void setSecurableDao( SecurableDao<? extends Securable> securableDao ) {
         this.securableDao = securableDao;
+    }
+
+    /**
+     * Kick off an update. This is executed when we call blaService.update(s). The basic issue is to update the
+     * permissions on any <em>new</em> associated objects.
+     * 
+     * @param m the update method
+     * @param s the securable being updated.
+     */
+    private void startUpdate( Method m, Securable s ) {
+        Collection<AclEntry> aclEntries = securableDao.getAclEntries( s );
+        updateAssociations( s, m, aclEntries );
+    }
+
+    /**
+     * @param class1
+     * @return
+     */
+    private boolean unsecuredClassesContains( Class<? extends Object> c ) {
+        for ( Class<? extends Object> clazz : unsecuredClasses ) {
+            if ( clazz.isAssignableFrom( c ) ) return true;
+        }
+        return false;
+    }
+
+    /**
+     * add existing permissions to the object
+     */
+    private void updateAclEntry( Securable object, Collection<AclEntry> parentAcls ) {
+
+        if ( parentAcls == null || parentAcls.size() == 0 ) {
+            return;
+        }
+
+        Collection<AclEntry> acls = securableDao.getAclEntries( object );
+
+        /*
+         * Don't process unless the object is new -- it will have no permissions.
+         */
+        if ( acls.size() > 0 ) {
+            return;
+        }
+
+        /*
+         * Make copies of all of these ACLs to the object.
+         */
+        for ( AclEntry aclEntry : parentAcls ) {
+
+            if ( !( aclEntry instanceof SimpleAclEntry ) ) {
+                throw new IllegalStateException( "Can't handle " + aclEntry.getClass() );
+            }
+            SimpleAclEntry s = ( SimpleAclEntry ) aclEntry;
+
+            AbstractBasicAclEntry copiedEntry = this.createNonPersistentAclEntry( object );
+            copiedEntry.setMask( s.getMask() );
+            copiedEntry.setRecipient( s.getRecipient() );
+
+            ( ( CustomJdbcExtendedDaoImpl ) basicAclExtendedDao ).create( copiedEntry, false );
+        }
+
+    }
+
+    /**
+     * @param s
+     * @param m- must be an 'update' method, but we need the exact one to work out cascade conditions.
+     * @param acls
+     */
+    @SuppressWarnings("unchecked")
+    private void updateAssociations( Securable s, Method m, Collection<AclEntry> acls ) {
+        EntityPersister persister = crudUtils.getEntityPersister( s );
+        if ( persister == null ) {
+            // this happens when the object is a proxy.
+            log.error( "No Entity Persister found for " + s.getClass().getName() );
+            return;
+        }
+        CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+        String[] propertyNames = persister.getPropertyNames();
+
+        for ( int j = 0; j < propertyNames.length; j++ ) {
+            CascadeStyle cs = cascadeStyles[j];
+            if ( !crudUtils.needCascade( m, cs ) ) {
+                // log.debug( "Not processing association " + propertyNames[j] +
+                // ", Cascade=" + cs );
+                continue;
+            }
+
+            PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( s.getClass(), propertyNames[j] );
+
+            /*
+             * This can yield a lazy-load error if the property is not initialized...
+             */
+            Object associatedObject = null;
+            try {
+                associatedObject = ReflectionUtil.getProperty( s, descriptor );
+            } catch ( Exception e ) {
+                log.fatal( e.getClass() + " while processing: " + s.getClass() + " --> " + propertyNames[j] );
+                throw ( new RuntimeException( e ) );
+            }
+
+            if ( associatedObject == null ) continue;
+
+            Class<?> propertyType = descriptor.getPropertyType();
+
+            if ( Securable.class.isAssignableFrom( propertyType ) ) {
+                if ( log.isDebugEnabled() ) log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs );
+                updateObject( m, ( Securable ) associatedObject, acls );
+            } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
+
+                /*
+                 * This block was previously commented out because of lazy-load problems.
+                 */
+                Collection<Object> associatedObjects = ( Collection<Object> ) associatedObject;
+                if ( Hibernate.isInitialized( associatedObjects ) ) {
+                    for ( Object object2 : associatedObjects ) {
+                        if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
+                            if ( log.isDebugEnabled() ) {
+                                log.debug( "Processing ACL for member " + object2 + " of collection "
+                                        + propertyNames[j] + ", Cascade=" + cs );
+                            }
+                            updateObject( m, ( Securable ) object2, acls );
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    /**
+     * @param m - must be an 'update' method, but we need the exact one to work out cascade conditions.
+     * @param s
+     * @param acls to be propogated to child objects as needed.
+     */
+    private void updateObject( Method m, Securable s, Collection<AclEntry> acls ) {
+        updateAclEntry( s, acls );
+        updateAssociations( s, m, acls );
     }
 }
