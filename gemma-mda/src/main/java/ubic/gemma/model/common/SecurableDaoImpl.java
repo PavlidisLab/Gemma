@@ -79,7 +79,6 @@ public class SecurableDaoImpl<T extends Securable> extends ubic.gemma.model.comm
 
         return ( Collection<AclEntry> ) this.getHibernateTemplate().execute( new HibernateCallback() {
 
-            @Override
             public Object doInHibernate( Session session ) throws HibernateException, SQLException {
                 Query q = session.createSQLQuery( queryString );
                 q.setParameter( 0, createObjectIdentityFromObject( target ) );
