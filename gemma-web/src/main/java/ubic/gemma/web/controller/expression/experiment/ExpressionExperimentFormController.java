@@ -34,8 +34,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.tools.ant.filters.StringInputStream;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
@@ -97,7 +95,6 @@ import com.sdicons.json.parser.JSONParser;
  * @spring.property name = "quantitationTypeService" ref="quantitationTypeService"
  */
 public class ExpressionExperimentFormController extends BaseFormController {
-    private static Log log = LogFactory.getLog( ExpressionExperimentFormController.class.getName() );
 
     ExpressionExperimentService expressionExperimentService = null;
     ContactService contactService = null;
@@ -139,7 +136,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @return Object
      * @throws ServletException
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
         Long id = null;
@@ -200,7 +196,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         ModelAndView mav = super.processFormSubmission( request, response, command, errors );
 
-        Set s = expressionExperimentService.getQuantitationTypeCountById( id ).entrySet();
+        Set<Entry<QuantitationType, Long>> s = expressionExperimentService.getQuantitationTypeCountById( id )
+                .entrySet();
         mav.addObject( "qtCountSet", s );
 
         // add count of designElementDataVectors
@@ -369,10 +366,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
             for ( Long oldBioMaterialId : oldBioMaterials ) {
                 if ( newBioMaterials.contains( oldBioMaterialId ) ) {
                     continue;
-                } else {
-                    BioMaterial oldMaterial = bioMaterialService.load( oldBioMaterialId );
-                    deleteAssociations.put( bioAssay, oldMaterial );
                 }
+                BioMaterial oldMaterial = bioMaterialService.load( oldBioMaterialId );
+                deleteAssociations.put( bioAssay, oldMaterial );
+
             }
 
         }
@@ -391,7 +388,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @param expressionExperiment
      * @param updatedQuantitationTypes
      */
-    @SuppressWarnings("unchecked")
     private void updateQuantTypes( HttpServletRequest request, ExpressionExperiment expressionExperiment,
             Collection<QuantitationType> updatedQuantitationTypes ) {
 

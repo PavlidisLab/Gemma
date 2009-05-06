@@ -69,7 +69,6 @@ public class ArrayDesignReportService {
      * 
      * @param adVos
      */
-    @SuppressWarnings("unchecked")
     public void fillEventInformation( Collection<ArrayDesignValueObject> adVos ) {
 
         if ( adVos == null || adVos.size() == 0 ) return;
@@ -138,7 +137,6 @@ public class ArrayDesignReportService {
 
     }
 
-    @SuppressWarnings("unchecked")
     public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : valueObjects ) {
@@ -238,7 +236,6 @@ public class ArrayDesignReportService {
      * 
      *
      */
-    @SuppressWarnings("unchecked")
     public void generateArrayDesignReport() {
         initDirectories();
         generateAllArrayDesignReport();
@@ -305,7 +302,6 @@ public class ArrayDesignReportService {
      * @param id
      * @return
      */
-    @SuppressWarnings("unchecked")
     public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
         Collection<Long> ids = new ArrayList<Long>();
         ids.add( id );
@@ -313,10 +309,10 @@ public class ArrayDesignReportService {
         if ( adVo != null && adVo.size() > 0 ) {
             generateArrayDesignReport( adVo.iterator().next() );
             return getSummaryObject( id );
-        } else {
-            log.warn( "No value objects return for requested array designs" );
-            return null;
         }
+        log.warn( "No value objects return for requested array designs" );
+        return null;
+
     }
 
     /**
@@ -461,12 +457,11 @@ public class ArrayDesignReportService {
 
         if ( events.size() == 0 ) {
             return "[None]";
-        } else {
-
-            // add the most recent events to the report. fixme check there are events.
-            AuditEvent lastEvent = events.get( events.size() - 1 );
-            analysisEventString = DateFormatUtils.format( lastEvent.getDate(), "yyyy.MMM.dd hh:mm aa" );
         }
+
+        // add the most recent events to the report. fixme check there are events.
+        AuditEvent lastEvent = events.get( events.size() - 1 );
+        analysisEventString = DateFormatUtils.format( lastEvent.getDate(), "yyyy.MMM.dd hh:mm aa" );
 
         return analysisEventString;
     }
