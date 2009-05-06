@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.expression.designElement;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -255,45 +256,50 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             throws Exception {
         Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<CompositeSequence, Collection<Gene>>();
 
+        int BATCH_SIZE = 2000;
+
         if ( compositeSequences.size() == 0 ) return returnVal;
+
+        /*
+         * Get the cs->gene mapping
+         */
+        final String nativeQuery = "select CS, GENE from GENE2CS WHERE CS IN (:csids) ";
 
         for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
             returnVal.put( cs, new HashSet<Gene>() );
         }
-
-        // build the query for fetching the cs -> gene relation
-        final String nativeQuery = "select CS, GENE from GENE2CS WHERE CS IN ";
-
-        StringBuilder buf = new StringBuilder();
-        buf.append( nativeQuery );
-        buf.append( "(" );
-        for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
-            buf.append( cs.getId() );
-            buf.append( "," );
-        }
-        buf.setCharAt( buf.length() - 1, ')' );
-        Session session = getSessionFactory().openSession();
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( buf.toString() );
+        List<Object> csGene = new ArrayList<Object>();
+        org.hibernate.classic.Session session = this.getHibernateTemplate().getSessionFactory().getCurrentSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( nativeQuery );
         queryObject.addScalar( "cs", new LongType() );
         queryObject.addScalar( "gene", new LongType() );
 
+        Collection<Long> csIdBatch = new HashSet<Long>();
+        for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+            csIdBatch.add( cs.getId() );
+
+            if ( csIdBatch.size() == BATCH_SIZE ) {
+                queryObject.setParameterList( "csids", csIdBatch );
+                csGene.addAll( queryObject.list() );
+                session.clear();
+                csIdBatch.clear();
+            }
+        }
+
+        if ( csIdBatch.size() > 0 ) {
+            queryObject.setParameterList( "csids", csIdBatch );
+            csGene.addAll( queryObject.list() );
+            session.clear();
+        }
+
         StopWatch watch = new StopWatch();
-        if ( log.isDebugEnabled() ) log.debug( "Beginning query" );
-        watch.start();
-
-        List result = queryObject.list();
-
-        if ( log.isDebugEnabled() )
-            log.debug( "Done with initial query in " + watch.getTime() + " ms, got " + result.size()
-                    + " cs-to-gene mappings." );
-        watch.reset();
         watch.start();
 
         int count = 0;
         Collection<Long> genesToFetch = new HashSet<Long>();
         Map<Long, Collection<Long>> cs2geneIds = new HashMap<Long, Collection<Long>>();
 
-        for ( Object object : result ) {
+        for ( Object object : csGene ) {
             Object[] ar = ( Object[] ) object;
             Long cs = ( Long ) ar[0];
             Long gene = ( Long ) ar[1];
@@ -304,8 +310,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             genesToFetch.add( gene );
         }
 
-        session.clear();
-
         // nothing found?
         if ( genesToFetch.size() == 0 ) {
             returnVal.clear();
@@ -315,8 +319,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         if ( log.isDebugEnabled() )
             log.debug( "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size()
                     + " genes." );
-        watch.reset();
-        watch.start();
 
         // fetch the genes
         Collection<Long> batch = new HashSet<Long>();
@@ -324,7 +326,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         String geneQuery = "from GeneImpl g where g.id in ( :gs )";
 
         org.hibernate.Query geneQueryObject = super.getSession( false ).createQuery( geneQuery ).setFetchSize( 1000 );
-        int BATCH_SIZE = 10000;
+
         for ( Long gene : genesToFetch ) {
             batch.add( gene );
             if ( batch.size() == BATCH_SIZE ) {
