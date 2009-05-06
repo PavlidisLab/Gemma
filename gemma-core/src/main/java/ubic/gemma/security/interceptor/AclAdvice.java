@@ -246,6 +246,8 @@ public class AclAdvice implements AfterReturningAdvice {
         assert args != null;
         Object persistentObject = getPersistentObject( retValue, m, args );
 
+        if ( persistentObject == null ) return;
+
         Session sess = crudUtils.getSessionFactory().openSession();
 
         try {
@@ -278,7 +280,9 @@ public class AclAdvice implements AfterReturningAdvice {
                 }
             }
         } else {
-            // Case 2: single securable (note that check for securable is in the pointcut)
+            // Case 2: single securable
+            if ( !( persistentObject instanceof Securable ) ) return;
+
             Securable s = ( Securable ) persistentObject;
             if ( !isUpdate ) {
                 processObject( m, s );
@@ -377,6 +381,12 @@ public class AclAdvice implements AfterReturningAdvice {
      */
     private Object getPersistentObject( Object retValue, Method m, Object[] args ) {
         if ( CrudUtils.methodIsDelete( m ) || CrudUtils.methodIsUpdate( m ) ) {
+
+            /*
+             * Only deal with single-argument update methods.
+             */
+            if ( args.length > 1 ) return null;
+
             assert args.length > 0;
             return args[0];
         }

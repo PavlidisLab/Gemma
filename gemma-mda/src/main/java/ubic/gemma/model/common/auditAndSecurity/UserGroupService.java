@@ -37,4 +37,5 @@ public interface UserGroupService {
      */
     public void update( java.lang.String groupName, ubic.gemma.model.common.auditAndSecurity.User groupMember );
 
+    public void update( UserGroup group );
 }

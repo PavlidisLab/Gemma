@@ -37,7 +37,6 @@ public class AclPointcut extends StaticMethodMatcherPointcut {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.aop.MethodMatcher#matches(java.lang.reflect.Method, java.lang.Class)
      */
     public boolean matches( Method method, Class targetClass ) {
@@ -61,7 +60,6 @@ public class AclPointcut extends StaticMethodMatcherPointcut {
      * @param m
      * @return
      */
-    @SuppressWarnings("unused")
     private boolean methodTriggersACLAction( Method m, Class targetClass ) {
         return methodsTriggersACLAddition( m ) || methodTriggersACLDelete( m );
     }

@@ -82,6 +82,11 @@ public class UserGroupServiceImpl extends ubic.gemma.model.common.auditAndSecuri
         Collection<User> groupMembers = userGroup.getGroupMembers();
         groupMembers.add( groupMember );
 
-        this.getUserGroupDao().update( userGroup );
+        this.update( userGroup );
+    }
+
+    @Override
+    public void update( UserGroup group ) {
+        this.getUserGroupDao().update( group );
     }
 }
