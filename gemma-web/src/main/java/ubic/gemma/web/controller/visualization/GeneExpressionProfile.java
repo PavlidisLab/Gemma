@@ -90,10 +90,14 @@ public class GeneExpressionProfile {
     private Collection<GeneValueObject> convert2GeneValueObjects( Collection<Gene> genes ) {
 
         Collection<GeneValueObject> converted = new HashSet<GeneValueObject>();
-        for ( Gene g : genes )
+        if (genes == null) return converted;
+        
+        for ( Gene g : genes ){
+            if (g == null) continue;
             converted.add( new GeneValueObject( g.getId(), g.getName(), g.getNcbiId(), g.getOfficialSymbol(), g
                     .getOfficialName(), g.getDescription() ) );
-
+        }
+        
         return converted;
     }
 

@@ -74,6 +74,9 @@ import ubic.gemma.web.view.TextView;
  */
 public class DEDVController extends BaseFormController {
 
+    private static final int SAMPLE_SIZE = 20;  //Number of dedvs to return if no genes given 
+    
+    
     private DesignElementDataVectorService designElementDataVectorService;
     private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
     private ExpressionExperimentService expressionExperimentService;
@@ -93,12 +96,15 @@ public class DEDVController extends BaseFormController {
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
         if ( ees == null || ees.isEmpty() ) return null;
 
+        
+        Collection<DoubleVectorValueObject>  dedvMap;
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
-        if ( genes == null || genes.isEmpty() ) return null;
-
-        Collection<DoubleVectorValueObject> dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees,
-                genes );
-
+        if ( genes == null || genes.isEmpty() ) {
+            dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(),50 );
+        }
+        else{
+            dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes );
+        }
         //FIXME: Commented out for performance and factor info not displayed on front end yet anyway. 
        // experimentalDesignVisualizationService.sortVectorDataByDesign( dedvMap );
 
@@ -224,17 +230,22 @@ public class DEDVController extends BaseFormController {
 
     public VisualizationValueObject[] getDEDVForVisualization( Collection<Long> eeIds, Collection<Long> geneIds ) {
 
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
-        if ( ees == null || ees.isEmpty() ) return null;
-
-        Collection<Gene> genes = geneService.loadMultiple( geneIds );
-        if ( genes == null || genes.isEmpty() ) return null;
 
         StopWatch watch = new StopWatch();
         watch.start();
+        
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+        if ( ees == null || ees.isEmpty() ) return null;
 
-        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
-                genes );
+        Collection<DoubleVectorValueObject> dedvs;
+        
+        Collection<Gene> genes = geneService.loadMultiple( geneIds );
+        if ( genes == null || genes.isEmpty() ) {
+            dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(),SAMPLE_SIZE );
+        }
+        else{
+            dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes );
+        }
 
         watch.stop();
         Long time = watch.getTime();

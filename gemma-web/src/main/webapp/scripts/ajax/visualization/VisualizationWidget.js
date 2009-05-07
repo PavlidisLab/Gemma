@@ -97,6 +97,14 @@ Gemma.graphSort = function(a, b) {
 	
 	
 	//All Else being equal, then sort by gene name 
+		
+		if ((!a.genes || a.genes.size() < 1) && (!b.genes || b.genes.size() < 1))
+			return 0;		
+		if (!a.genes || a.genes.size() < 1)
+			return -1;
+		if (!b.genes || b.genes.size() < 1)
+			return 1;
+			
 		if (a.genes[0].name > b.genes[0].name) {
 			return 1;
 		} else if (a.genes[0].name < b.genes[0].name) {
@@ -127,6 +135,12 @@ Gemma.sortByFactor = function(a, b) {
 	}	
 	
 	//All Else being equal, then sort by gene name 
+	
+		if (!a.genes || a.genes.size() < 0)
+			return -1;
+		if (!b.genes || b.genes.size() < 0)
+			return 1;
+			
 		if (a.genes[0].name > b.genes[0].name) {
 			return 1;
 		} else if (a.genes[0].name < b.genes[0].name) {

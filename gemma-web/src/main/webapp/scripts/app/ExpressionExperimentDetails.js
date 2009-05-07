@@ -8,10 +8,7 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  * @class Gemma.EEPanel
  * @extends Ext.Component
  */
-Gemma.EEPanel = Ext
-		.extend(
-				Ext.Component,
-				{
+Gemma.EEPanel = Ext.extend(Ext.Component,{
 
 					constructor : function(id) {
 
@@ -456,6 +453,8 @@ Gemma.EEPanel = Ext
 						id :e.id
 					});
 
+					var vizPanel = new Gemma.EEDetailsVisualizationWidget({taxon : e.taxon});
+					
 					/*
 					 * This is needed to make the annotator initialize properly.
 					 */
@@ -846,8 +845,6 @@ Ext.onReady( function() {
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
 			var eePanel = new Gemma.EEPanel(Ext.get("eeId").getValue());
-			
-			var vizPanel = new Gemma.EEDetailsVisualizationWidget();
 
 	eePanel.on("ready", function(panel) {
 		setTimeout( function() {

@@ -1,6 +1,6 @@
 var Heatmap = function() {
 
-	var MAX_LABEL_LENGTH_PIXELS = 80;
+	var MAX_LABEL_LENGTH_PIXELS = 90;
 	var MIN_BOX_WIDTH = 2;
 	var CLIP = 3;
 	var NAN_COLOR = "grey";

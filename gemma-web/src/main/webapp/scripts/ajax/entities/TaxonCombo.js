@@ -134,9 +134,29 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	setTaxon : function(taxon) {
 		if (taxon.id) {
 			this.setValue(taxon.id);
-		} else {
-			this.setValue(taxon);
+		} else{ 
+				this.setValue(taxon);
 		}
+	},
+	
+	setTaxonByCommonName : function(commonName){
+		var records = this.store.getRange();
+
+		if (!records || records.size() < 1){			
+			return false;
+		}
+		
+		var taxonId = -1;
+		for(var i = 0; i<records.size(); i++){
+			if (records[i].data.commonName === commonName){
+					this.setTaxon(records[i].data.id);
+					return true;
+			}				
+		}
+		
+		return false;
+		
+		
 	}
 
 });

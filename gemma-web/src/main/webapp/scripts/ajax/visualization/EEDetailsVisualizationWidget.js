@@ -4,6 +4,7 @@ var m_profiles =[];	//Data returned by server for visulization (alread processed
 var m_eevo;
 var m_geneIds;
 var m_geneSymbols;
+var m_myVizLoadMask;
 
 HEATMAP_CONFIG = {
 		xaxis : {
@@ -53,7 +54,7 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 
 				//No data to visulize just 
 				if (!data || data.size() == 0){
-						this.loadMask.hide();
+						m_myVizLoadMask.hide();
 						this.hide();
 						Ext.Msg.alert('Status', 'No visulization data available for: ' + m_geneSymbols);
 				}
@@ -76,17 +77,21 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 					var probe = coordinateProfile[i].probe.name;
 					var genes = coordinateProfile[i].genes;
 
-					var geneNames = genes[0].name;				
-					for (var k = 1; k < genes.size(); k++) {
-						//Put search gene in begining of list
-						if (Gemma.geneContained(genes[k].name, m_geneSymbols)) {
-							geneNames = genes[k].name + "," + geneNames;							
-						}
-						else {
-							geneNames = geneNames + "," + genes[k].name;
+					var geneNames = "n/a";				
+
+					if (genes && genes.size()>0 && genes[0]){
+			
+						geneNames = genes[0].name;
+						for (var k = 1; k < genes.size(); k++) {
+							//Put search gene in begining of list
+							if (Gemma.geneContained(genes[k].name, m_geneSymbols)) {
+								geneNames = genes[k].name + "," + geneNames;							
+							}
+							else {
+								geneNames = geneNames + "," + genes[k].name;
+							}
 						}
 					}
-
 					// turn data points into a structure usuable by heatmap
 					var oneProfile = [];
 					for (var j = 0; j < coordinateObject.size(); j++) {
@@ -122,9 +127,7 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 				
 				
 				Heatmap.draw(Ext.get('vizDiv'), m_profiles, HEATMAP_CONFIG);
-				
-				//$("heatmapLoadMask").loadMask.hide();
-				this.loadMask.hide();
+				m_myVizLoadMask.hide();
 
 			
 	},
@@ -152,14 +155,17 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 				
 		this.show();
 		
-		Ext.apply(this, {
-			loadMask : new Ext.LoadMask(this.getEl(), {
+		
+		 m_myVizLoadMask = new Ext.LoadMask(this.getEl(), {
 				id : "heatmapLoadMask",
 				msg : "Loading probe level data ..."
-			})
+			});
+
+		Ext.apply(this, {
+			loadMask : m_myVizLoadMask
 		});
 
-		this.loadMask.show();
+		m_myVizLoadMask.show();
 
 
 	},
@@ -249,7 +255,17 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 	frame : true,
 
 	
-	visualizeHandler : function(){
+		constructor : function(taxon) {
+
+						this.taxon = taxon;
+
+						Gemma.EEDetailsVisualizationWidget.superclass.constructor.call(this);
+
+				
+		},
+
+		
+		visualizeHandler : function(){
 		//Get expressionExperiment ID
 		//Get Gene IDs
 		//DedvController.
@@ -266,11 +282,11 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 				
 				var geneList = this.geneChooserPanel.getGenes();
 				
-				if (geneList.size() < 1){
-					Ext.Msg.alert('Status', 'Please select a gene first');
-					return;
-
-				}
+//				if (geneList.size() < 1){
+//					Ext.Msg.alert('Status', 'Please select a gene first');
+//					return;
+//
+//				}
 				var eeId = Ext.get("eeId").getValue();
 				
 				this.visWindow.displayWindow(eeId, geneList);
@@ -279,16 +295,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 	
 	
 	onRender : function() {
-		Gemma.EEDetailsVisualizationWidget.superclass.onRender.apply(this, arguments);
-
-		Ext.apply(this, {
-			loadMask : new Ext.LoadMask(this.getEl(), {
-				id : "geneLoadMask",
-				msg : "Preparing Coexpression Interface  ..."
-			})
-		});
-
-		this.loadMask.show();
+		Gemma.EEDetailsVisualizationWidget.superclass.onRender.apply(this, arguments);		
 
 	},
 	
@@ -300,7 +307,8 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 			region : 'center',
 			id : 'gene-chooser-panel'
 		});
-
+		
+		
 		var allPanel = new Ext.Panel({
 			renderTo : 'visualization',
 			layout : 'table',
@@ -342,10 +350,8 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 		 * This horrible mess. We listen to taxon ready event and filter the presets on the taxon.
 		 */
 		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
-			//Hiding load mask doesn't work....
-			//Ext.getCmp("geneLoadMask").hide();
-			//this.loadMask.hide();
-				
+
+			var success = this.geneChooserPanel.toolbar.taxonCombo.setTaxonByCommonName(this.taxon.taxon);
 			
 			}.createDelegate(this), this);
 	}
