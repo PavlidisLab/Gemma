@@ -43,10 +43,11 @@ public interface ProcessedExpressionDataVectorService {
 
     /**
      * @param expressionExperiments
+     * @param limit (null limit = default hibernate limit). 
      * @return
      */
-    public Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments );
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            ExpressionExperiment ee, int limit );
 
     /**
      * @param expressionExperiments

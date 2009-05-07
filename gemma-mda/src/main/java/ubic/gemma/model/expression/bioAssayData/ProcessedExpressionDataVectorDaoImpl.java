@@ -248,6 +248,29 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         this.thaw( result );
         return result;
     }
+    
+    /**
+     * @param ee
+     * @param limit
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
+        final String queryString = " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
+        
+        if (limit == null){
+            return this.getProcessedVectors( ee );
+        }
+        
+        int oldmax = getHibernateTemplate().getMaxResults();
+        getHibernateTemplate().setMaxResults( limit );
+        Collection<ProcessedExpressionDataVector> result = this.getHibernateTemplate().findByNamedParam( queryString,
+                "ee", ee );
+        
+        getHibernateTemplate().setMaxResults( oldmax );
+        this.thaw( result );
+        return result;
+    }
 
     /*
      * (non-Javadoc)
@@ -672,6 +695,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     private Collection<DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data ) {
         Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
+        
         for ( DesignElementDataVector v : data ) {
             result.add( new DoubleVectorValueObject( v ) );
         }
@@ -690,6 +714,19 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return result;
     }
 
+    /**
+     * @param data
+     * @return
+     */
+    private Collection<DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data, Map<? extends CompositeSequence, Collection<Gene>> cs2GeneMap ) {
+        Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
+    
+        for ( DesignElementDataVector v : data ) {
+            result.add( new DoubleVectorValueObject( v, cs2GeneMap.get( v.getDesignElement() )) );
+        }
+        return result;
+    }
+    
     private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends DesignElementDataVector> data ) {
         Collection<BooleanVectorValueObject> result = new HashSet<BooleanVectorValueObject>();
 
@@ -699,9 +736,19 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return result;
     }
 
-    public Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments ) {
-        throw new UnsupportedOperationException();
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            ExpressionExperiment ee, int limit ) {  
+        
+        Collection<ProcessedExpressionDataVector> pedvs = this.getProcessedVectors( ee, limit );
+        
+        Collection<CompositeSequence> probes = new ArrayList<CompositeSequence>();
+        for(ProcessedExpressionDataVector pedv : pedvs){
+            probes.add( (CompositeSequence) pedv.getDesignElement());
+        }        
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getFullCs2GeneMap(  probes, this.getSession() );        
+        log.info( "cs2geneMap" +  cs2gene );
+        
+       return unpack(pedvs, cs2gene);
     }
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(

@@ -45,8 +45,8 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
             ExpressionExperiment expressionExperiment );
 
-    public Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments );
+    public  Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            ExpressionExperiment ee, int limit );
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
@@ -62,6 +62,9 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      */
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment );
 
+    public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment, Integer limit );
+
+    
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );
 
