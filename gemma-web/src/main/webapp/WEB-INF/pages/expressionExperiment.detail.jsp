@@ -45,7 +45,9 @@
 		<div id="eeDesignMatrix"></div>
 	</div>
 
- 	<div id="visualization"> </div>
+
+	<br>
+ 	<div id="visualization"> 	<h3> Visualization</h3>  </div>
 
 	<div id="bioMaterialMapping" style="padding: 5px;"></div>
 

@@ -23,6 +23,8 @@ HEATMAP_CONFIG = {
 		label : true	
 };
 
+
+
 Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 
 	height :100,
@@ -46,11 +48,17 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 					},
 					
 	dedvCallback : function(data){
-	
-			
 				// Need to transform the coordinate data from an object to an
 				// array for flotr/HeatMap display
-		
+
+				//No data to visulize just 
+				if (!data || data.size() == 0){
+						this.loadMask.hide();
+						this.hide();
+						Ext.Msg.alert('Status', 'No visulization data available for: ' + m_geneSymbols);
+				}
+						
+
 				var flotrData = [];
 				var coordinateProfile = data[0].data.profiles;
 
@@ -68,9 +76,15 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 					var probe = coordinateProfile[i].probe.name;
 					var genes = coordinateProfile[i].genes;
 
-					var geneNames = genes[0].name;
+					var geneNames = genes[0].name;				
 					for (var k = 1; k < genes.size(); k++) {
-						geneNames = geneNames + "," + genes[k].name;
+						//Put search gene in begining of list
+						if (Gemma.geneContained(genes[k].name, m_geneSymbols)) {
+							geneNames = genes[k].name + "," + geneNames;							
+						}
+						else {
+							geneNames = geneNames + "," + genes[k].name;
+						}
 					}
 
 					// turn data points into a structure usuable by heatmap
@@ -83,7 +97,7 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 					var plotConfig = {
 						data : oneProfile,
 						genes : genes,
-						label : probe + " (" + geneNames + ")",
+						label : " <a  href='/Gemma/compositeSequence/show.html?id="+probeId +"' target='_blank' ext:qtip= '" + probe + " (" + geneNames + ")"  + "'> " + Ext.util.Format.ellipsis( geneNames, Gemma.MAX_LABEL_LENGTH_CHAR) + "</a>",
 						labelID : probeId,
 						lines : {
 							lineWidth : Gemma.LINE_THICKNESS
@@ -102,9 +116,9 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 				m_profiles = flotrData;
 				m_eevo = data[0].data.eevo;
 
-				var downloadDedvLink =  String.format("<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > [download raw data]</a>",
+				var downloadDedvLink =  String.format("<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > <img src='/Gemma/images/asc.gif'/></a>",
 				m_eevo.id,m_geneIds);
-				this.setTitle( "Visualization of " +m_geneSymbols + " in "+ m_eevo.shortName +"<br>" + downloadDedvLink);
+				this.setTitle( "Visualization of " +m_geneSymbols + " in "+ m_eevo.shortName + downloadDedvLink);
 				
 				
 				Heatmap.draw(Ext.get('vizDiv'), m_profiles, HEATMAP_CONFIG);
@@ -289,7 +303,6 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 
 		var allPanel = new Ext.Panel({
 			renderTo : 'visualization',
-			title : "Visualization",
 			layout : 'table',
 			baseCls : 'x-plain-panel',
 			autoHeight : true,
@@ -329,9 +342,11 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 		 * This horrible mess. We listen to taxon ready event and filter the presets on the taxon.
 		 */
 		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
-
-			$("geneLoadMask").loadMask.hide();
-
+			//Hiding load mask doesn't work....
+			//Ext.getCmp("geneLoadMask").hide();
+			//this.loadMask.hide();
+				
+			
 			}.createDelegate(this), this);
 	}
 

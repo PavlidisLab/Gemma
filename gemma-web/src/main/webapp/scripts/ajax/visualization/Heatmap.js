@@ -1,7 +1,6 @@
 var Heatmap = function() {
 
 	var MAX_LABEL_LENGTH_PIXELS = 80;
-	var MAX_LABEL_LENGTH_CHAR = 12;
 	var MIN_BOX_WIDTH = 2;
 	var CLIP = 3;
 	var NAN_COLOR = "grey";
@@ -138,9 +137,7 @@ var Heatmap = function() {
 				if (config.label){
 					var rowLabel = "n/a";
 					if (vectorObjs[i].label){
-						var fullLabel = vectorObjs[i].label;
-						var geneLabel = fullLabel.substring(fullLabel.indexOf('(') + 1, fullLabel.indexOf(')') );						
-						rowLabel = " <a  href='/Gemma/compositeSequence/show.html?id="+vectorObjs[i].labelID +"' target='_blank' ext:qtip= '" + vectorObjs[i].label + "'> " + Ext.util.Format.ellipsis( geneLabel, MAX_LABEL_LENGTH_CHAR) + "</a>";
+						rowLabel = vectorObjs[i].label;
 					}
 					var text = Ext.DomHelper.append(canvasDiv, {
 						        id : "heatmaplabel" + Ext.id(),

@@ -2,6 +2,9 @@ Ext.namespace('Gemma');
 
 Gemma.ZOOM_PLOT_SIZE = 400;	//This constant doesn't get picked up intime from VisualizationWidget.js
 
+var m_queryGene;
+var m_coexpressedGene;
+
 Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 	id : 'CoexpressionVisualizationWindow',
 	closeAction : 'destroy',
@@ -120,10 +123,17 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					var factor = coordinateProfile[i].factor;
 					var fade = factor < 2;
 
-					var geneNames = genes[0].name;
+					var geneNames = genes[0].name;				
 					for (var k = 1; k < genes.size(); k++) {
-						geneNames = geneNames + "," + genes[k].name;
+						//Put search gene in begining of list
+						if (Gemma.geneContained(genes[k].name, [m_coexpressedGene, m_queryGene])) {
+							geneNames = genes[k].name + "," + geneNames;							
+						}
+						else {
+							geneNames = geneNames + "," + genes[k].name;
+						}
 					}
+					
 					if (factor == 2) {
 						geneNames = geneNames + "*";
 					}
@@ -139,11 +149,12 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 						color = color == 'red' ? Gemma.HOT_FADE_COLOR : Gemma.COLD_FADE_COLOR;
 					}
 
+					
 					var plotConfig = {
 						data : oneProfile,
 						color : color,
 						genes : genes,
-						label : probe + " (" + geneNames + ")",
+						label : " <a  href='/Gemma/compositeSequence/show.html?id="+probeId +"' target='_blank' ext:qtip= '" + probe + " (" + geneNames + ")"  + "'> " + Ext.util.Format.ellipsis( geneNames, Gemma.MAX_LABEL_LENGTH_CHAR) + "</a>",
 						labelID : probeId,
 						factor : factor,
 						lines : {
@@ -322,13 +333,13 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 		this.setTitle("Visualization of query gene: <a   target='_blank' ext:qtip=' "+ queryGene.officialName+ " ' href='/Gemma/gene/showGene.html?id=" + queryGene.id + "'> " + queryGene.officialSymbol
 		+ "</a> with coexpressed gene <a  target='_blank' ext:qtip=' "+ coexpressedGene.officialName+ " ' href='/Gemma/gene/showGene.html?id=" + coexpressedGene.id + "'> " + coexpressedGene.officialSymbol + "</a>"	 );
 
-		var downloadDedvLink =  String.format("<a ext:qtip='Download coexpression data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > [download raw data]</a>",
+		var downloadDedvLink =  String.format("<a ext:qtip='Download coexpression data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>",
 				eeIds, queryGene.id, coexpressedGene.id);
 
-		this.thumbnailPanel.setTitle(queryGene.officialSymbol + " (red) with " + coexpressedGene.officialSymbol
-				+ " (black)  <br>" + downloadDedvLink);
+		this.thumbnailPanel.setTitle("Thumbnails &nbsp;" + downloadDedvLink);
 
-				
+			m_queryGene = queryGene.officialSymbol;	
+			m_coexpressedGene = coexpressedGene.officialSymbol;
 				
 				
 		var params = [];

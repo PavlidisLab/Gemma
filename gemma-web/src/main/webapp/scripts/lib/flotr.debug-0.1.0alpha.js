@@ -415,8 +415,8 @@ var Flotr = (function(){
 					color: '#545454',		// => primary color used for outline and labels
 					backgroundColor: null,	// => null for transparent, else color
 					tickColor: '#dddddd',	// => color used for the ticks
-					labelMargin: 3,			// => margin in pixels\
-					marginColor: '#545454'  // => color of grid margin/border
+					labelMargin: 1,			// => margin in pixels\
+					marginColor: '#DDDDDD'  // => color of grid margin/border
 					
 				},
 				selection: {

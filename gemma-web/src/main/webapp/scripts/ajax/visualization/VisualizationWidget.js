@@ -45,6 +45,8 @@ Gemma.PLOT_SIZE = 100;
 
 Gemma.HOT_FADE_COLOR = "#FFDDDD";
 Gemma.COLD_FADE_COLOR = "#DDDDDD";
+Gemma.MAX_LABEL_LENGTH_CHAR = 12;
+
 
 Gemma.GRAPH_ZOOM_CONFIG = {
 	xaxis : {
@@ -72,7 +74,9 @@ Gemma.GRAPH_ZOOM_CONFIG = {
 // identity.
 Gemma.geneContained = function(geneName, arrayOfGenes) {
 	for (var i = 0; i < arrayOfGenes.size(); i++) {
-		if (arrayOfGenes[i].name === geneName)
+		if (arrayOfGenes[i] === geneName)
+			return true;
+		if (arrayOfGenes[i].name && (arrayOfGenes[i].name === geneName))
 			return true;
 	}
 	return false;
