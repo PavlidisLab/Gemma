@@ -745,6 +745,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         for(ProcessedExpressionDataVector pedv : pedvs){
             probes.add( (CompositeSequence) pedv.getDesignElement());
         }        
+        
+        if (probes.isEmpty()){
+            return unpack(pedvs);
+        }
+        
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getFullCs2GeneMap(  probes, this.getSession() );        
         log.info( "cs2geneMap" +  cs2gene );
         

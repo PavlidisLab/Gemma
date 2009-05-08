@@ -139,22 +139,28 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 		}
 	},
 	
+	/**
+	 * returns complete taxon object that matches the common name given if successful.  Else return -1.
+	 * 
+	 * @param {commonName} the common name of the taxon 
+	 *            
+	 */
 	setTaxonByCommonName : function(commonName){
 		var records = this.store.getRange();
 
 		if (!records || records.size() < 1){			
-			return false;
+			return -1;
 		}
 		
 		var taxonId = -1;
 		for(var i = 0; i<records.size(); i++){
 			if (records[i].data.commonName === commonName){
 					this.setTaxon(records[i].data.id);
-					return true;
+					return records[i].data;
 			}				
 		}
 		
-		return false;
+		return -1;
 		
 		
 	}

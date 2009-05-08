@@ -57,6 +57,7 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 						m_myVizLoadMask.hide();
 						this.hide();
 						Ext.Msg.alert('Status', 'No visulization data available for: ' + m_geneSymbols);
+						return;
 				}
 						
 
@@ -351,7 +352,9 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 		 */
 		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
 
-			var success = this.geneChooserPanel.toolbar.taxonCombo.setTaxonByCommonName(this.taxon.taxon);
+												
+			var foundTaxon = this.geneChooserPanel.toolbar.taxonCombo.setTaxonByCommonName(this.taxon.taxon);			
+			this.geneChooserPanel.taxonChanged(foundTaxon, false);
 			
 			}.createDelegate(this), this);
 	}
