@@ -87,9 +87,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
-     *      .ExpressionExperiment, java.util.Collection)
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, java.util.Collection)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
@@ -211,9 +211,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
             probeAnalysisResult.setProbe( cs );
-            probeAnalysisResult.setPvalue( pvalues[i] );
-            probeAnalysisResult.setCorrectedPvalue( qvalues[i] );
-            probeAnalysisResult.setScore( tstatistics[i] );
+            probeAnalysisResult.setPvalue( Double.isNaN( pvalues[i] ) ? null : pvalues[i] );
+            probeAnalysisResult.setCorrectedPvalue( Double.isNaN( qvalues[i] ) ? null : qvalues[i] );
+            probeAnalysisResult.setScore( Double.isNaN( tstatistics[i] ) ? null : tstatistics[i] );
             probeAnalysisResult.setQuantitationType( quantitationType );
 
             analysisResults.add( probeAnalysisResult );
@@ -238,9 +238,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      java.util.ArrayList, int, int, int, double[])
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     * java.util.ArrayList, int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,

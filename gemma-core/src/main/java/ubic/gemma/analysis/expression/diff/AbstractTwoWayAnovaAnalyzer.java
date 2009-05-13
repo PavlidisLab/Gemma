@@ -132,18 +132,27 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                 // probeAnalysisResult.setParameters( parameters );
 
                 if ( j % numResultsFromR == mainEffectAIndex ) {
-                    probeAnalysisResult.setPvalue( mainEffectAPvalues[l] );
-                    probeAnalysisResult.setCorrectedPvalue( mainEffectAQvalues[l] );
+                    probeAnalysisResult.setPvalue(  Double.isNaN(mainEffectAPvalues[l] ) ? null : mainEffectAPvalues[l] );
+                    probeAnalysisResult.setCorrectedPvalue( Double.isNaN( mainEffectAQvalues[l] ) ? null
+                            : mainEffectAQvalues[l] );
                     analysisResultsMainEffectA.add( probeAnalysisResult );
                     l++;
                 } else if ( j % numResultsFromR == mainEffectBIndex ) {
-                    probeAnalysisResult.setPvalue( mainEffectBPvalues[m] );
-                    probeAnalysisResult.setCorrectedPvalue( mainEffectBQvalues[m] );
+                    probeAnalysisResult.setPvalue(  Double.isNaN(mainEffectBPvalues[m] ) ? null : mainEffectBPvalues[m] );
+                    probeAnalysisResult.setCorrectedPvalue(  Double.isNaN(mainEffectBQvalues[m] ) ? null
+                            : mainEffectBQvalues[m] );
                     analysisResultsMainEffectB.add( probeAnalysisResult );
                     m++;
                 } else if ( j % numResultsFromR == mainEffectInteractionIndex ) {
-                    probeAnalysisResult.setPvalue( interactionEffectPvalues[n] );
-                    probeAnalysisResult.setCorrectedPvalue( interactionEffectQvalues[n] );
+                    if ( interactionEffectPvalues != null ) {
+                        probeAnalysisResult.setPvalue(  Double.isNaN(interactionEffectPvalues[n] ) ? null
+                                : interactionEffectPvalues[n] );
+                    }
+
+                    if ( interactionEffectQvalues != null ) {
+                        probeAnalysisResult.setCorrectedPvalue( Double.isNaN( interactionEffectQvalues[n] ) ? null
+                                : interactionEffectQvalues[n] );
+                    }
                     analysisResultsInteractionEffect.add( probeAnalysisResult );
                     n++;
                 }
@@ -207,9 +216,9 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
-     *      .ExpressionExperiment, java.util.Collection)
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, java.util.Collection)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,

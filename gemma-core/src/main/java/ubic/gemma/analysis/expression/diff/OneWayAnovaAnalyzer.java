@@ -82,9 +82,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.AbstractDifferentialExpressionAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression
-     *      .experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.analysis.diff.AbstractDifferentialExpressionAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment ) {
@@ -97,9 +97,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
-     *      .ExpressionExperiment, java.util.Collection)
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, java.util.Collection)
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
@@ -117,9 +117,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      java.util.ArrayList, int, int, int, double[])
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     * java.util.ArrayList, int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
@@ -312,9 +312,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
             probeAnalysisResult.setProbe( cs );
-            probeAnalysisResult.setPvalue( pvalues[i] );
-            probeAnalysisResult.setCorrectedPvalue( qvalues[i] );
-            probeAnalysisResult.setScore( fstatistics[i] );
+            probeAnalysisResult.setPvalue( Double.isNaN( pvalues[i] ) ? null : pvalues[i] );
+            probeAnalysisResult.setCorrectedPvalue( Double.isNaN( qvalues[i] ) ? null : qvalues[i] );
+            probeAnalysisResult.setScore( Double.isNaN( fstatistics[i] ) ? null : fstatistics[i] );
 
             probeAnalysisResult.setQuantitationType( quantitationType );
 
