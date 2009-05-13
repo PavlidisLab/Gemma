@@ -348,6 +348,51 @@ public class GoMetric {
     }
     
     /**
+     * Tailored to handle computing overlap between two gene lists which may
+     * contain duplicate genes of the same name but different IDs.  If gene
+     * lists do not contain duplicates (size = 1) the result will be the same as that of
+     * computing simple overlap.
+     * @param sameGenes1
+     * @param sameGenes2
+     * @param geneGoMap
+     * @return number of overlapping terms between merged sets of GO terms for duplicate gene lists
+     */    
+    public Double computeMergedOverlap(List<Gene> sameGenes1, List<Gene> sameGenes2, Map<Long, Collection<String>> geneGoMap ){
+        HashSet<String> mergedGoTerms1 = new HashSet<String>();
+        HashSet<String> mergedGoTerms2 = new HashSet<String>();
+        
+        for(Gene gene1 : sameGenes1){
+            if ( geneGoMap.containsKey( gene1.getId() ) ){
+                mergedGoTerms1.addAll( geneGoMap.get( gene1.getId()) );
+            }
+        }
+        for(Gene gene2 : sameGenes2){
+            if ( geneGoMap.containsKey( gene2.getId() ) ){
+                mergedGoTerms2.addAll( geneGoMap.get( gene2.getId()) );
+            }
+        }
+        
+        if ( mergedGoTerms1.isEmpty() || mergedGoTerms2.isEmpty()) return 0.0;
+        
+        double score = 0.0;
+        
+        for ( String goTerm1 : mergedGoTerms1 ) {
+            if ( goTerm1.equalsIgnoreCase( process ) || goTerm1.equalsIgnoreCase( function )
+                    || goTerm1.equalsIgnoreCase( component ) ) continue;
+            for ( String goTerm2 : mergedGoTerms2 ) {
+
+                if ( goTerm2.equalsIgnoreCase( process ) || goTerm2.equalsIgnoreCase( function )
+                        || goTerm2.equalsIgnoreCase( component ) ) continue;
+
+                if ( goTerm1.equalsIgnoreCase( goTerm2 ) )
+                    score++;
+            }
+        }        
+        
+        return score;
+    }
+    
+    /**
      * @param gene2go Map
      * @param boolean weight
      * @return Sparse matrix of genes x GOterms
