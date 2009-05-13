@@ -7,6 +7,17 @@ Ext.namespace('Gemma');
  */
 Gemma.PagingDataStore = Ext.extend(Ext.data.Store, {
 
+	initComponent : function() {
+
+		Gemma.PagingDataStore.superclass.initComponent.call(this);
+
+		this.on("add", this.checkStartIndex);
+		this.on("clear", this.checkStartIndex);
+		this.on("remove", this.checkStartIndex);
+		this.on("load", this.checkStartIndex);
+		this.on("dataChange", this.checkStartIndex);
+	},
+
 	pageSize : 10,
 	currentStartIndex : 0,
 
@@ -19,14 +30,14 @@ Gemma.PagingDataStore = Ext.extend(Ext.data.Store, {
 	},
 
 	getRange : function(start, end) {
-		
-		//needed incase start or end is null
-		var windowStart = start ? this.currentStartIndex + start:  this.currentStartIndex;
-		var windowEnd =  end ? this.currentStartIndex + end:  this.getTotalCount();
-		
-//		if (windowEnd > this.currentStartIndex + this.pageSize - 1) {
-//			windowEnd = this.currentStartIndex + this.pageSize - 1;
-//		}
+
+		// needed incase start or end is null
+		var windowStart = start ? this.currentStartIndex + start : this.currentStartIndex;
+		var windowEnd = end ? this.currentStartIndex + end : this.getTotalCount();
+
+		// if (windowEnd > this.currentStartIndex + this.pageSize - 1) {
+		// windowEnd = this.currentStartIndex + this.pageSize - 1;
+		// }
 		return Gemma.PagingDataStore.superclass.getRange.call(this, windowStart, windowEnd);
 	},
 
@@ -41,8 +52,21 @@ Gemma.PagingDataStore = Ext.extend(Ext.data.Store, {
 	},
 
 	add : function(records) {
-		Gemma.PagingDataStore.superclass.add.call(this, records);
-		this.totalLength = this.data.length;
+		// check for duplicates -- though this shouldn't really be necessary.
+		for (var i = 0, len = records.length; i < len; i++) {
+			if (!this.getById(records[i].id)) {
+				Gemma.PagingDataStore.superclass.add.call(this, [records[i]]);
+			}
+		}
+	},
+
+	insert : function(index, records) {
+		// check for duplicates
+		for (var i = 0, len = records.length; i < len; i++) {
+			if (!this.getById(records[i].id)) {
+				Gemma.PagingDataStore.superclass.insert.call(this, index, [records[i]]);
+			}
+		}
 	},
 
 	load : function(options) {
@@ -72,25 +96,14 @@ Gemma.PagingDataStore = Ext.extend(Ext.data.Store, {
 	loadRecords : function(o, options, success) {
 		Gemma.PagingDataStore.superclass.loadRecords.call(this, o, options, success);
 
-		this.checkStartIndex();
 	},
 
 	remove : function(record) {
 		Gemma.PagingDataStore.superclass.remove.call(this, record);
-
-		// no idea why I should have to do this...
-		this.totalLength = this.data.length;
-
-		this.checkStartIndex();
 	},
 
 	removeAll : function() {
 		Gemma.PagingDataStore.superclass.removeAll.call(this);
-
-		// no idea why I should have to do this...
-		this.totalLength = this.data.length;
-
-		this.checkStartIndex();
 	},
 
 	checkStartIndex : function() {
@@ -104,10 +117,10 @@ Gemma.PagingDataStore = Ext.extend(Ext.data.Store, {
 		if (this.currentStartIndex != previousIndex) {
 			// update the paging toolbar...
 			this.fireEvent("load", this, [], {
-				params : {
-					start : this.currentStartIndex
-				}
-			});
+						params : {
+							start : this.currentStartIndex
+						}
+					});
 		}
 	},
 

@@ -102,6 +102,13 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 			initComponent : function() {
 				Gemma.DataSetSearchAndGrabToolbar.superclass.initComponent.call(this);
 				this.addEvents("grabbed");
+
+			},
+
+			addSelections : function(sels) {
+				if (sels.length > 0) {
+					this.targetGrid.getStore().insert(0, sels);
+				}
 			},
 
 			afterRender : function() {
@@ -114,12 +121,8 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 							handler : function(button, ev) {
 								var selmo = this.grid.getSelectionModel();
 								var sels = selmo.getSelections();
-								if (sels.length > 0) {
-									this.targetGrid.getStore().add(sels);
-									this.targetGrid.getView().refresh();
-									this.fireEvent("grabbed", sels);
-								}
-							},
+								this.addSelections(sels);
+							}.createDelegate(this),
 							scope : this
 						});
 
@@ -130,12 +133,7 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 							tooltip : "Transfer all the results to the set",
 							handler : function(button, ev) {
 								var sels = this.grid.getStore().getRange();
-								if (sels.length > 0) {
-									// console.log("Adding " + sels.length);
-									this.targetGrid.getStore().add(sels);
-									this.targetGrid.getView().refresh();
-									this.fireEvent("grabbed", sels);
-								}
+								this.addSelections(sels);
 							},
 							scope : this
 						});
@@ -147,6 +145,14 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 				this.add(allGrabber);
 				this.addSeparator();
 				this.add(grabber);
+
+				this.targetGrid.getStore().on("add", function(store, recs, index) {
+							this.targetGrid.getView().refresh();
+							this.fireEvent("grabbed", recs);
+							if (this.targetGrid.getBottomToolBar && this.targetGrid.getBottomToolBar.changePage) {
+								this.targetGrid.getBottomToolBar().changePage(1);
+							}
+						}.createDelegate(this));
 			}
 
 		});
