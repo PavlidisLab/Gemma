@@ -299,7 +299,6 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						 * Offer missing value analysis if it's possible (this
 						 * might need tweaking).
 						 */	
-						console.log(ee);
 
 						if (ee.technologyType != 'ONECOLOR'
 								&& ee.hasEitherIntensity ) {

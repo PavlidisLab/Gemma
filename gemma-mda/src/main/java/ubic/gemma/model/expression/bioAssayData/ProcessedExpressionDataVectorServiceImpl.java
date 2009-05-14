@@ -36,8 +36,8 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataMatrices(java.util
      * .Collection)
      */
-    public  Collection<DoubleVectorValueObject> getProcessedDataArrays(ExpressionExperiment ee, int limit) {
-        return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( ee, limit);
+    public  Collection<DoubleVectorValueObject> getProcessedDataArrays(ExpressionExperiment ee, int limit, boolean fullMap) {
+        return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( ee, limit, fullMap);
     }
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
@@ -58,6 +58,11 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
             Collection<Gene> genes ) {
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiment, genes );
+    }
+
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, Boolean fullMapping ) {
+        return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes, fullMapping );
     }
 
     /*

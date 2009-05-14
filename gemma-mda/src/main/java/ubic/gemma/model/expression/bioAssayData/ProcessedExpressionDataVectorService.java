@@ -44,10 +44,11 @@ public interface ProcessedExpressionDataVectorService {
     /**
      * @param expressionExperiments
      * @param limit (null limit = default hibernate limit). 
+     * @param boolean fullMap true returns pars, predicted genes and known genes, false just returns known genes
      * @return
      */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            ExpressionExperiment ee, int limit );
+            ExpressionExperiment ee, int limit, boolean fullMap );
 
     /**
      * @param expressionExperiments
@@ -56,6 +57,16 @@ public interface ProcessedExpressionDataVectorService {
      */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
+
+    
+    /**
+     * @param expressionExperiments
+     * @param genes
+     * @param fullMapping  if false only returns probe to known gene mappings, if true returns all (PARs, PGs, KGs), 
+     * @return
+     */
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, Boolean fullMapping );
 
     /**
      * @param expressionExperiment

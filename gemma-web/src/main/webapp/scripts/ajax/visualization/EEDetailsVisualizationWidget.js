@@ -5,6 +5,7 @@ var m_eevo;
 var m_geneIds;
 var m_geneSymbols;
 var m_myVizLoadMask;
+var DEFAULT_LABEL ="--";
 
 HEATMAP_CONFIG = {
 		xaxis : {
@@ -78,7 +79,7 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 					var probe = coordinateProfile[i].probe.name;
 					var genes = coordinateProfile[i].genes;
 
-					var geneNames = "n/a";				
+					var geneNames = DEFAULT_LABEL;				
 
 					if (genes && genes.size()>0 && genes[0]){
 			

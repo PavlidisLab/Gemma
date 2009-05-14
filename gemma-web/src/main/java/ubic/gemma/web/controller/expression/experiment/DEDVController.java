@@ -100,7 +100,7 @@ public class DEDVController extends BaseFormController {
         Collection<DoubleVectorValueObject>  dedvMap;
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
         if ( genes == null || genes.isEmpty() ) {
-            dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(),50 );
+            dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(),50, false );
         }
         else{
             dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes );
@@ -144,7 +144,7 @@ public class DEDVController extends BaseFormController {
         if ( genes.isEmpty() ) return null;
 
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
-                genes );
+                genes,false );
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
 
@@ -193,7 +193,7 @@ public class DEDVController extends BaseFormController {
         if ( genes == null || genes.isEmpty() ) return null;
 
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
-                genes );
+                genes, false );
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
         //FIXME: Commented out for performance and factor info not displayed on front end yet anyway. 
@@ -241,10 +241,10 @@ public class DEDVController extends BaseFormController {
         
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
         if ( genes == null || genes.isEmpty() ) {
-            dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(),SAMPLE_SIZE );
+            dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(),SAMPLE_SIZE, false );
         }
         else{
-            dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes );
+            dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes, false );
         }
 
         watch.stop();

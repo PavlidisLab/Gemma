@@ -46,11 +46,14 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
             ExpressionExperiment expressionExperiment );
 
     public  Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            ExpressionExperiment ee, int limit );
+            ExpressionExperiment ee, int limit, boolean fullMap );
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, boolean fullMap );
+    
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,

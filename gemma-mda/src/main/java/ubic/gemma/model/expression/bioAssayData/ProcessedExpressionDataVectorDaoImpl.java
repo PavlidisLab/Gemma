@@ -231,7 +231,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             Collection<Gene> genes ) {
         Collection<ExpressionExperiment> expressionExperiments = new HashSet<ExpressionExperiment>();
         expressionExperiments.add( expressionExperiment );
-        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes );
+        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, true );
     }
 
     /*
@@ -569,7 +569,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
 
     private Collection<DoubleVectorValueObject> handleGetProcessedExpressionDataArrays(
-            Collection<ExpressionExperiment> ees, Collection<Gene> genes ) {
+            Collection<ExpressionExperiment> ees, Collection<Gene> genes, boolean fullMap ) {
 
         // ees must be thawed first as currently implemented (?)
 
@@ -584,8 +584,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         if ( needToSearch.size() != 0 ) {
 
-            Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genesToSearch, this
-                    .getSession() );
+            Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genesToSearch, this .getSession() );
+                   
             if ( cs2gene.size() == 0 ) {
                 if ( results.isEmpty() ) {
                     log.warn( "No composite sequences found for genes" );
@@ -599,11 +599,17 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
              * Fill in the map, because we want to track information on the specificity of the probes used in the data
              * vectors.
              */
-            cs2gene = CommonQueries.getFullCs2AllGeneMap( cs2gene.keySet(), this.getSession() );
-
+            
+            if (fullMap){
+                cs2gene = CommonQueries.getFullCs2AllGeneMap( cs2gene.keySet(), this.getSession() );
+            }
+            else{
+                cs2gene = CommonQueries.getFullCs2GeneMap( cs2gene.keySet(), this.getSession() );
+            }
+            
             Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
                     needToSearch, cs2gene );
-            log.info( processedDataVectors.size() );
+
             Collection<DoubleVectorValueObject> newResults = unpack( processedDataVectors );
             cacheResults( newResults );
             results.addAll( newResults );
@@ -737,7 +743,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            ExpressionExperiment ee, int limit ) {  
+            ExpressionExperiment ee, int limit, boolean fullMap  ) {  
         
         Collection<ProcessedExpressionDataVector> pedvs = this.getProcessedVectors( ee, limit );
         
@@ -750,15 +756,23 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             return unpack(pedvs);
         }
         
-        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getFullCs2GeneMap(  probes, this.getSession() );        
-        log.info( "cs2geneMap" +  cs2gene );
-        
+        Map<CompositeSequence, Collection<Gene>> cs2gene = null;
+        if (fullMap){
+             cs2gene = CommonQueries.getFullCs2AllGeneMap(  probes, this.getSession() );
+        }else{
+             cs2gene = CommonQueries.getFullCs2GeneMap(  probes, this.getSession() );        
+        }
        return unpack(pedvs, cs2gene);
     }
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
-        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes );
+        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, true );
+    }
+    
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, boolean fullMap ) {
+        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, fullMap );
     }
 
     @Override
@@ -768,7 +782,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment ) {
-        throw new UnsupportedOperationException();
+        return getProcessedDataArrays(expressionExperiment, 50, false);
     }
 
 }

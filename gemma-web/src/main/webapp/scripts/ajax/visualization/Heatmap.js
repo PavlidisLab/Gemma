@@ -8,6 +8,7 @@ var Heatmap = function() {
 	var MIN_BOX_HEIGHT = 2;
 	var MAX_BOX_HEIGHT = 20;
 	var TRIM = 10;
+	var DEFAULT_ROW_LABEL = "&nbsp;";
 	
 	//TODO put constants in config object so they can programtically changed on the fly
 	var DEFAULT_CONFIG = {label : false, //shows labels at end of row
@@ -135,7 +136,7 @@ var Heatmap = function() {
 				
 				//Add label or not
 				if (config.label){
-					var rowLabel = "n/a";
+					var rowLabel = DEFAULT_ROW_LABEL;
 					if (vectorObjs[i].label){
 						rowLabel = vectorObjs[i].label;
 					}
