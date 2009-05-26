@@ -217,9 +217,9 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/expression</prop>
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/expression</prop>
 				<prop key="compass.engine.lockFile">
-					file://${gemma.appdata.home}/compass/gemma/expression/expression.lock
+					file://${gemma.compass.dir}/compass/gemma/expression/expression.lock
 				</prop>
 				<prop key="compass.transaction.factory">
 					org.compass.spring.transaction.SpringSyncTransactionFactory
@@ -248,8 +248,8 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/gene</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gemma/gene/gene.lock</prop>
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/gene</prop>
+				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/gene/gene.lock</prop>
 				<prop key="compass.transaction.factory">
 					org.compass.spring.transaction.SpringSyncTransactionFactory
 				</prop>
@@ -278,8 +278,8 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/array</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gemma/array/array.lock</prop>
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/array</prop>
+				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/array/array.lock</prop>
 				<prop key="compass.transaction.factory">
 					org.compass.spring.transaction.SpringSyncTransactionFactory
 				</prop>
@@ -307,8 +307,8 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/probe</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gemma/probe/probe.lock</prop>
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/probe</prop>
+				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/probe/probe.lock</prop>
 				<prop key="compass.transaction.factory">
 					org.compass.spring.transaction.SpringSyncTransactionFactory
 				</prop>
@@ -336,9 +336,9 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/biosequence</prop>
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/biosequence</prop>
 				<prop key="compass.engine.lockFile">
-					file://${gemma.appdata.home}/compass/gemma/biosequence/biosequence.lock
+					file://${gemma.compass.dir}/compass/gemma/biosequence/biosequence.lock
 				</prop>
 				<prop key="compass.transaction.factory">
 					org.compass.spring.transaction.SpringSyncTransactionFactory
@@ -367,9 +367,9 @@
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/bibliographic</prop>
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/bibliographic</prop>
 				<prop key="compass.engine.lockFile">
-					file://${gemma.appdata.home}/compass/gemma/bibliographic/bibliographic.lock
+					file://${gemma.compass.dir}/compass/gemma/bibliographic/bibliographic.lock
 				</prop>
 				<prop key="compass.transaction.factory">
 					org.compass.spring.transaction.SpringSyncTransactionFactory
