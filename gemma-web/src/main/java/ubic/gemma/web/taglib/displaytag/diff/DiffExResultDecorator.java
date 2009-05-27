@@ -25,7 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
-import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.util.AnchorTagUtil;
 
 /**

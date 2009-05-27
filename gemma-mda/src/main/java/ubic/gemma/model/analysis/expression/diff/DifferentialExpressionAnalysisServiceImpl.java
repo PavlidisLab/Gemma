@@ -60,6 +60,19 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         return this.getDifferentialExpressionAnalysisDao().findResultsForGeneInExperimentsMetThreshold( gene,
                 experimentsAnalyzed, threshold );
     }
+    
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
+     Collection<ExpressionExperiment> experimentsAnalyzed, double threshold ) {
+        return this.getDifferentialExpressionAnalysisDao().findGenesInExperimentsThatMetThreshold(experimentsAnalyzed, threshold );
+    }
+    
+    
+    public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(
+            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed,
+            double threshold ){
+        return this.getDifferentialExpressionAnalysisDao().findGenesInResultSetsThatMetThreshold(resultsAnalyzed, threshold );
+
+    }
 
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
@@ -95,6 +108,11 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         return this.getDifferentialExpressionAnalysisDao().find( gene, resultSet, threshold );
     }
 
+    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets(java.util.Collection<Long> resultSetIds ) {
+        return null;
+    }
+
+    
     @Override
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
         return this.getDifferentialExpressionAnalysisDao().findByInvestigation( investigation );

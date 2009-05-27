@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -126,5 +127,17 @@ public interface ProcessedExpressionDataVectorService {
      */
     public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> eeCol, Collection<Gene> pars );
+
+    
+    /**
+     * Retireves DEDV's by probes and experiments
+     * 
+     * @param expressionExperiments
+     * @param compositeSequences
+     * @param fullMap
+     * @return DVVOs 
+     */
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences, boolean fullMap );
 
 }

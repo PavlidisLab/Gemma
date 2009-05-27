@@ -22,6 +22,7 @@
 //
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -87,12 +88,34 @@ public interface DifferentialExpressionAnalysisService extends
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
             double threshold );
 
+    
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
+            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
+            double threshold );
+    
+    
+    /**
+     * Given a list of result sets finds the diff expression results that met the given threshold
+     * 
+     * @param resultsAnalyzed
+     * @param threshold
+     * @return
+     */
+    
+    public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(
+            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed,
+            double threshold );
+    
     /**
      * 
      */
     public java.util.Collection getResultSets(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
-
+    
+    
+    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets(java.util.Collection<Long> resultSetIds );
+    
+    
     /**
      * 
      */

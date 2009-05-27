@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -123,5 +124,12 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
             Collection<ExpressionExperiment> eeCol, Collection<Gene> genes ) {
         return this.getProcessedExpressionDataVectorDao().getRanksByProbe( eeCol, genes );
     }
+    
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences, boolean fullMap ){
+        
+        return this.getProcessedExpressionDataVectorDao().getProcessedDataArraysByProbe( expressionExperiments, compositeSequences, fullMap );
+    }
+    
 
 }

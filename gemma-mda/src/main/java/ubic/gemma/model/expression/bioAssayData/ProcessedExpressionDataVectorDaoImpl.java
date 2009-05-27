@@ -618,7 +618,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return results;
 
     }
-
+    
     /**
      * @param newResults
      * @return
@@ -785,4 +785,54 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return getProcessedDataArrays(expressionExperiment, 50, false);
     }
 
+
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
+            Collection<ExpressionExperiment> ees, Collection<CompositeSequence> probes, boolean fullMap ) {
+
+
+        Collection<DoubleVectorValueObject> results = new HashSet<DoubleVectorValueObject>();
+        
+        Map<CompositeSequence, Collection<Gene>> cs2gene = null;
+        if (fullMap){
+            cs2gene = CommonQueries.getFullCs2AllGeneMap( probes, this.getSession() );
+        }
+        else{
+            cs2gene =  CommonQueries.getFullCs2GeneMap( probes, this.getSession() );
+        }
+        /*
+         * To Check the cached we need the list of genes 1st.
+         *  Get from CS2Gene list then check the cache.
+         */
+        Collection<Gene> genes = new HashSet<Gene>();
+        for(CompositeSequence cs : cs2gene.keySet()){
+            genes.addAll( cs2gene.get( cs ) );
+        }
+        
+        Collection<ExpressionExperiment> needToSearch = new HashSet<ExpressionExperiment>();
+        Collection<Gene> genesToSearch = new HashSet<Gene>();
+        checkCache( ees, genes, results, needToSearch, genesToSearch );
+
+        if ( needToSearch.size() != 0 ) {
+                  
+            if ( cs2gene.size() == 0 ) {
+                if ( results.isEmpty() ) {
+                    log.warn( "No composite sequences found for genes" );
+                    return new HashSet<DoubleVectorValueObject>();
+                }
+                return results;
+
+            }
+
+            
+            Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
+                    needToSearch, cs2gene );
+
+            Collection<DoubleVectorValueObject> newResults = unpack( processedDataVectors );
+            cacheResults( newResults );
+            results.addAll( newResults );
+        }
+
+        return results;
+
+    }
 }

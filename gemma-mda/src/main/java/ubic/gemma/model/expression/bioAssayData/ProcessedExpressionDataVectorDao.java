@@ -22,6 +22,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -58,6 +59,9 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
             Collection<Gene> genes );
+
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> probes, boolean fullMap );
 
     /**
      * @param expressionExperiment

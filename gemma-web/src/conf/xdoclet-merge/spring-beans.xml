@@ -635,6 +635,8 @@
 							<value>getDEDVForCoexpressionVisualization</value>
 							<value>getDEDVForDiffExVisualization</value>
 							<value>getVectorData</value>
+							<value>getDEDVForVisualizationByProbe</value>
+							<value>getDEDVForDiffExVisualizationByThreshold</value>
 						</list>
 					</property>
 				</bean>
@@ -1234,6 +1236,12 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
+
+			<entry key="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>			
 			<entry key="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
@@ -1367,12 +1375,12 @@
 					</property>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject">
+			<entry key="ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.analysis.expression.experiment.FactorValueValueObject">
+			<entry key="ubic.gemma.model.expression.experiment.FactorValueValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>

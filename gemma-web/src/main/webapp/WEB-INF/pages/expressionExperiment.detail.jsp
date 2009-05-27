@@ -1,9 +1,10 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
 	<title>Details for ${expressionExperiment.shortName}</title>
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/eeDataFetch.js' />
-	<jwr:script src='/scripts/app/ExpressionExperimentDetails.js' />
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' useRandomParam="false" />
+	<jwr:script src='/scripts/app/eeDataFetch.js' useRandomParam="false" />
+	<jwr:script src='/scripts/app/ExpressionExperimentDetails.js' useRandomParam="false"/>
+	<jwr:script src='/scripts/ajax/visualization/EEDetailsVisualizationWidget.js' useRandomParam="false"/>
 	
 </head>
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.expression.experiment;
+package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,8 +32,13 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$ This is the "experimentalFActor"
  *          value object
  */
-public class ExperimentalFactorValueObject {
+public class ExperimentalFactorValueObject implements java.io.Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -2615804031123874251L;
+    
     private long id;
     private String name;
     private String description;

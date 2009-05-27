@@ -48,6 +48,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			}, {
 				name : "coexpressionLinkCount"
 			}, {
+				name : "diffExpressedProbes"	
+			}, {
 				name : "validatedFlag"
 			}, {
 				name : "troubleFlag"

@@ -22,6 +22,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
@@ -122,6 +123,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     private AuditEventValueObject troubleFlag;
 
     private AuditEventValueObject validatedFlag;
+    
+    private Collection<DifferentialExpressionSummaryValueObject> diffExpressedProbes;
 
     public ExpressionExperimentValueObject() {
     }
@@ -149,7 +152,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
                         .getDateProcessedDataVectorComputation(), otherBean.getDateMissingValueAnalysis(), otherBean
                         .getProcessedExpressionVectorCount(), otherBean.getDateLastUpdated(),
                 otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue(),
-                otherBean.getHasEitherIntensity() );
+                otherBean.getHasEitherIntensity(), otherBean.getDiffExpressedProbes() );
     }
 
     public ExpressionExperimentValueObject( java.lang.Long id, java.lang.String name,
@@ -168,7 +171,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             java.util.Date dateLinkAnalysis, java.lang.Long rawCoexpressionLinkCount,
             java.util.Date dateProcessedDataVectorComputation, java.util.Date dateMissingValueAnalysis,
             java.lang.Long processedExpressionVectorCount, java.util.Date dateLastUpdated, java.util.Date dateCached,
-            java.lang.Boolean hasProbeSpecificForQueryGene, java.lang.Double minPvalue, Boolean hasEitherIntensity ) {
+            java.lang.Boolean hasProbeSpecificForQueryGene, java.lang.Double minPvalue, Boolean hasEitherIntensity, Collection<DifferentialExpressionSummaryValueObject> probeIds ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -213,6 +216,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
         this.minPvalue = minPvalue;
         this.hasEitherIntensity = hasEitherIntensity;
+        this.diffExpressedProbes = probeIds;
     }
 
     /**
@@ -263,6 +267,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             this.setDateCached( otherBean.getDateCached() );
             this.setHasProbeSpecificForQueryGene( otherBean.getHasProbeSpecificForQueryGene() );
             this.setMinPvalue( otherBean.getMinPvalue() );
+            this.setDiffExpressedProbes( otherBean.getDiffExpressedProbes() );
         }
     }
 
@@ -788,6 +793,14 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     public void setValidatedFlag( AuditEventValueObject validatedFlag ) {
         this.validatedFlag = validatedFlag;
+    }
+
+    public Collection<DifferentialExpressionSummaryValueObject> getDiffExpressedProbes() {
+        return diffExpressedProbes;
+    }
+
+    public void setDiffExpressedProbes( Collection<DifferentialExpressionSummaryValueObject> diffExpressedProbes ) {
+        this.diffExpressedProbes = diffExpressedProbes;
     }
 
 }

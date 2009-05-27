@@ -102,6 +102,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 							pubmedUrl = pubmedUrl + '<a href="#" onClick="Ext.getCmp(\'ee-details-panel\').removePubMed()">' + '<img src="/Gemma/images/icons/cross.png"  ext:qtip="Remove publication"  /></a>&nbsp;';
 						}
 
+					
 						var pubmedRegion = {
 							id :'pubmed-region',
 							xtype :'panel',
@@ -195,7 +196,35 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						}
 						return result;
 					},
+					renderDiffExpressionDetails : function(ee){
+												
+						if (!ee.diffExpressedProbes){					
+							return "none";
+						}
+						
+	
+						var diffExpressionSummary= "";									
+						for(var i = 0; i<ee.diffExpressedProbes.size(); i++){
+							
+							var factors = "";
+							for (var j = 0; j<ee.diffExpressedProbes[i].experimentalFactors.size(); j++){
+								factors = factors + ee.diffExpressedProbes[i].experimentalFactors[j].description;
+							}
+							diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +')" ext:qtip="Visulize differentially expressed Genes for: '+ factors + ' (threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
+						}
+					
+						this.visDiffWindow = new Gemma.EEDetailsDiffExpressionVisualizationWindow({});							
+						return diffExpressionSummary; 
+						
+						
+					},
+					
+					visualizeDiffExpressionHandler : function(eeid, diffResultId){
 
+						this.visDiffWindow.displayWindow(eeid, diffResultId);
+						
+					},
+					
 					renderSourceDatabaseEntry : function(ee) {
 						var result = '';
 
@@ -717,8 +746,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 											html :'Source:'
 										},
 										{
-											html :this
-													.renderSourceDatabaseEntry(e)
+											html :this.renderSourceDatabaseEntry(e)
 										},
 										{
 											html :'Samples:'
@@ -740,8 +768,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 										},
 										{
 											id :'arrayDesign-region',
-											html :this
-													.renderArrayDesigns(e.arrayDesigns),
+											html :this.renderArrayDesigns(e.arrayDesigns),
 											width :480
 										},
 										{
@@ -751,6 +778,14 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 											id :'coexpressionLinkCount-region',
 											html :e.coexpressionLinkCount,
 											width :60
+										},
+										{
+											html :'Number of Diff Expressed Genes'
+										},
+										{
+											id :'DiffExpressedProbes-region',
+											html:this.renderDiffExpressionDetails(e),
+											width :80
 										},
 										{
 											html :'Publication:'

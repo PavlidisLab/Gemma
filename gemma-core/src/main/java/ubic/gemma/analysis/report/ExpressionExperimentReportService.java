@@ -41,6 +41,12 @@ import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.Securable;
@@ -76,9 +82,14 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @spring.property name="auditEventService" ref="auditEventService"
  * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="securityService" ref="securityService"
+ * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
+ * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
+ * 
  * @version $Id$
  */
 public class ExpressionExperimentReportService extends BaseSpacesTask implements ExpressionExperimentReportTask {
+    private static final double CUT_OFF = 0.5;
+
     private AuditEventService auditEventService;
 
     private AuditTrailService auditTrailService;
@@ -90,9 +101,12 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private SecurityService securityService;
     private String taskId = null;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService;
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @Override
@@ -102,6 +116,7 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
      */
     public TaskResult execute( TaskCommand spacesCommand ) {
@@ -303,6 +318,7 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
                 eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
+                eeVo.setDiffExpressedProbes(cacheVo.getDiffExpressedProbes()  );
                 eeVo.setDateCached( cacheVo.getDateCached() );
                 eeVo.setDateCreated( cacheVo.getDateCreated() );
                 eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
@@ -380,6 +396,7 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
      */
     @Override
@@ -507,6 +524,44 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
     }
 
     /**
+     * @param eeid
+     * @param threshold
+     * @return A collection of probe ids for the probes that met the threshold
+     */
+    private Collection<DifferentialExpressionSummaryValueObject> getDiffExpressedProbes( ExpressionExperiment ee, double threshold ) {
+
+        //TODO: Make faster: use differentialExpressionAnalysisService.findGenesInExperimentsThatMetThreshold( experimentsAnalyzed, threshold )
+       
+        Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
+        Collection<DifferentialExpressionSummaryValueObject> summaries = new ArrayList<DifferentialExpressionSummaryValueObject>();
+        
+        for ( ExpressionAnalysisResultSet par : results ) {
+
+            DifferentialExpressionSummaryValueObject desvo = new DifferentialExpressionSummaryValueObject();
+            differentialExpressionAnalysisResultService.thaw(par);            
+            
+            desvo.setThreshold( threshold );
+            desvo.setExperimentalFactors(par.getExperimentalFactor()  );
+            desvo.setResultSetId( par.getId() );                       
+            
+            int probesThatMetThreshold = 0;
+            for ( DifferentialExpressionAnalysisResult dear : par.getResults() ) {                
+                if ( dear.getCorrectedPvalue() <= threshold ) {
+                        probesThatMetThreshold++;
+                }
+
+            }
+            desvo.setNumberOfDiffExpressedProbes( probesThatMetThreshold );
+            log.info( "Probes that met threshold: " + probesThatMetThreshold );
+            summaries.add( desvo);
+
+        }
+        
+        return summaries;
+
+   }
+
+    /**
      * @param object
      */
     private void getStats( ExpressionExperimentValueObject eeVo ) {
@@ -516,6 +571,8 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
         eeVo
                 .setProcessedExpressionVectorCount( expressionExperimentService
                         .getProcessedExpressionVectorCount( tempEe ) );
+
+        eeVo.setDiffExpressedProbes( getDiffExpressedProbes( tempEe, CUT_OFF ) );
 
         long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
         log.debug( numLinks + " links." );
@@ -699,6 +756,16 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
             filteredIds.add( ee.getId() );
         }
         return filteredIds;
+    }
+
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    public void setDifferentialExpressionAnalysisResultService(
+            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
+        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
     }
 
 }

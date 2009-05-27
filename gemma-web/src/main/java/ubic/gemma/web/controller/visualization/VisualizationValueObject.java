@@ -110,7 +110,8 @@ public class VisualizationValueObject {
             Collection<Long> validatedProbeIdList, Double minPvalue ) {
         this();
 
-        populateColorMap( genes );
+        if (genes != null && !genes.isEmpty())
+            populateColorMap( genes );
 
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
@@ -121,11 +122,13 @@ public class VisualizationValueObject {
             }
 
             String color = null;
-            for ( Gene g : genes ) {
-                if ( !vector.getGenes().contains( g ) ) {
-                    continue;
+            if (genes != null){
+                for ( Gene g : genes ) {
+                    if ( !vector.getGenes().contains( g ) ) {
+                        continue;
+                    }
+                    color = colorMap.get( g.getId() );
                 }
-                color = colorMap.get( g.getId() );
             }
 
             int valid = 1;

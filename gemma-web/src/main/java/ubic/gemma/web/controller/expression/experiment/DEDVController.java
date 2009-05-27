@@ -34,20 +34,25 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.time.StopWatch;
 import org.springframework.web.servlet.ModelAndView;
 
-import cern.colt.list.DoubleArrayList;
-
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
-import ubic.gemma.analysis.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.analysis.AnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -57,6 +62,7 @@ import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.visualization.ExpressionProfileDataObject;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 import ubic.gemma.web.view.TextView;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * Exposes methods for accessing underlying Design Element Data Vectors. eg: ajax methods for visualization
@@ -69,12 +75,18 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name="geneDifferentialExpressionService" ref="geneDifferentialExpressionService"
  * @spring.property name="experimentalDesignVisualizationService" ref="experimentalDesignVisualizationService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
+ * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
+ * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
+ * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
+
+ * 
  * @author kelsey
  * @version $Id$
  */
 public class DEDVController extends BaseFormController {
 
     private static final int SAMPLE_SIZE = 20;  //Number of dedvs to return if no genes given 
+    private static final double DEFAULT_THRESHOLD = 0.05;
     
     
     private DesignElementDataVectorService designElementDataVectorService;
@@ -84,7 +96,10 @@ public class DEDVController extends BaseFormController {
     private GeneService geneService;
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
+    private CompositeSequenceService compositeSequenceService;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService;
+    
     /**
      * Given a collection of expression experiment Ids and a geneId returns a map of DEDV value objects to a collection
      * of genes. The EE info is in the value object.
@@ -117,6 +132,8 @@ public class DEDVController extends BaseFormController {
         return makeVectorMap( dedvMap );
 
     }
+    
+    
 
     /**
      * AJAX exposed method
@@ -173,7 +190,7 @@ public class DEDVController extends BaseFormController {
 
     /**
      * AJAX exposed method
-     * 
+     *  private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService;
      * @param eeIds
      * @param geneIds (could be just one)
      * @param threshold for 'significance'
@@ -219,7 +236,113 @@ public class DEDVController extends BaseFormController {
         return makeDiffVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes, layouts );
 
     }
+    
+    /**
+     * AJAX exposed method
+     * 
+     * @param eeIds
+     * @param geneIds (could be just one)
+     * @param threshold for 'significance'
+     * @param factorMap Collection of DiffExpressionSelectedFactorCommand showing which factors to use.
+     * @return
+     */
+    public VisualizationValueObject[] getDEDVForVisualizationByProbe( Collection<Long> eeIds, Collection<Long> probeIds) {
 
+        if ( eeIds.isEmpty() || probeIds.isEmpty() ) return null;
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+        if ( ees == null || ees.isEmpty() ) return null;
+        
+        Collection<CompositeSequence> probes = this.compositeSequenceService.loadMultiple( probeIds );
+        if ( probes == null || probes.isEmpty() ) return null;
+
+        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe( ees, probes, false );
+
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        //FIXME: Commented out for performance and factor info not displayed on front end yet anyway. 
+        //layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+
+        watch.stop();
+        Long time = watch.getTime();
+
+        log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + probeIds.size()
+                + " genes in " + time + " ms." );
+
+
+        return makeVisCollection( dedvs, null, null, null );
+
+    }
+
+
+    /**
+     * AJAX exposed method
+     * 
+     * @param resultSetIds
+     * @param threshold for 'significance'
+     * @return collection of visualization value objects
+     */
+    public VisualizationValueObject[] getDEDVForDiffExVisualizationByThreshold( Long eeId, Long resultSetId, Double givenThreshold){
+
+        if (resultSetId == null)  return null;
+        
+        if (eeId == null) return null;
+        
+        
+        double threshold = DEFAULT_THRESHOLD;
+        
+        if (givenThreshold != null){
+            threshold = givenThreshold;
+            log.warn( "Threshold specified not using default value: " + givenThreshold );
+            
+        }
+        
+        
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
+        AnalysisResultSet ar = differentialExpressionAnalysisResultService.loadAnalysisResult( resultSetId );
+        if ( ar == null) return null;
+          
+        Collection<ExpressionAnalysisResultSet> ars = new ArrayList<ExpressionAnalysisResultSet>();
+         ars.add( (ExpressionAnalysisResultSet) ar );
+ 
+         ExpressionExperiment ee = expressionExperimentService.load( eeId );
+         if (ee == null) return null;
+        Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
+        ees.add( ee );
+        
+        Map<ExpressionAnalysisResultSet,Collection<ProbeAnalysisResult>> ee2probeResults = differentialExpressionAnalysisService.findGenesInResultSetsThatMetThreshold(ars, threshold);
+        
+        if(ee2probeResults == null || ee2probeResults.isEmpty()) return null;
+        
+        
+        Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
+        //TODO: put a limit on the results in the DAO        
+        for (ProbeAnalysisResult par : ee2probeResults.get(ar )){            
+            probes.add(par.getProbe());
+                if (probes.size() > 200) break;
+        }
+        
+        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(ees , probes, false );
+
+        //Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        //FIXME: Commented out for performance and factor info not displayed on front end yet anyway. 
+        //layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+
+        watch.stop();
+        Long time = watch.getTime();
+
+        log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ar.getId() + " ResultSetId and " + probes.size()
+                + " genes in " + time + " ms." );
+
+
+        return makeVisCollection( dedvs, null, null, null );
+
+    }
+
+    
     /**
      * AJAX exposed method
      * 
@@ -725,6 +848,23 @@ public class DEDVController extends BaseFormController {
 
         return result;
 
+    }
+
+
+
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+    
+    public void setDifferentialExpressionAnalysisService(DifferentialExpressionAnalysisService differentialExpressionAnalysisService){
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+
+
+    public void setDifferentialExpressionAnalysisResultService(
+            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
+        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
     }
 
 }

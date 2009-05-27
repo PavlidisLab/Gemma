@@ -73,6 +73,9 @@ Gemma.GRAPH_ZOOM_CONFIG = {
 // Tests if gene is in the array of genes. uses the name of the gene to resolove
 // identity.
 Gemma.geneContained = function(geneName, arrayOfGenes) {
+	if(arrayOfGenes == null)
+		return false;
+		
 	for (var i = 0; i < arrayOfGenes.size(); i++) {
 		if (arrayOfGenes[i] === geneName)
 			return true;

@@ -7,6 +7,8 @@ var m_geneSymbols;
 var m_myVizLoadMask;
 var DEFAULT_LABEL ="--";
 
+var THRESHOLD = 0.5;
+
 HEATMAP_CONFIG = {
 		xaxis : {
 			noTicks : 0
@@ -24,6 +26,216 @@ HEATMAP_CONFIG = {
 	
 		label : true	
 };
+
+
+
+Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
+
+	height :100,
+	width : 220,
+
+	listeners : {
+				resize : {
+							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
+
+								// Change the div so that it is the size of the panel surrounding it.
+								vizDiv = Ext.get('vizDiffDiv');
+								if (!vizDiv)
+									return;
+								vizDiv.setHeight(rawHeight - 27); // magic 27
+								vizDiv.setWidth(rawWidth - 1);
+								vizDiv.repaint();
+
+								component.vizPanel.refreshWindow();
+
+							}.createDelegate(this)
+						}
+					},
+					
+	dedvCallback : function(data){
+				// Need to transform the coordinate data from an object to an
+				// array for flotr/HeatMap display
+				
+				console.log(data);
+				//No data to visulize just 
+				if (!data || data.size() == 0){
+						//m_myVizLoadMask.hide();
+						this.hide();
+						Ext.Msg.alert('Status', 'No visulization data available for: ' + m_geneSymbols);
+						return;
+				}
+						
+
+				var flotrData = [];
+				var coordinateProfile = data[0].data.profiles;
+
+	
+				for (var i = 0; i < coordinateProfile.size(); i++) { 
+					var coordinateObject = coordinateProfile[i].points;
+
+					var probeId = coordinateProfile[i].probe.id;
+					var probe = coordinateProfile[i].probe.name;
+					var genes = coordinateProfile[i].genes;
+
+					var geneNames = DEFAULT_LABEL;				
+
+					if (genes && genes.size()>0 && genes[0]){
+			
+						geneNames = genes[0].name;
+						for (var k = 1; k < genes.size(); k++) {
+							//Put search gene in begining of list
+							if (Gemma.geneContained(genes[k].name, m_geneSymbols)) {
+								geneNames = genes[k].name + "," + geneNames;							
+							}
+							else {
+								geneNames = geneNames + "," + genes[k].name;
+							}
+						}
+					}
+					// turn data points into a structure usuable by heatmap
+					var oneProfile = [];
+					for (var j = 0; j < coordinateObject.size(); j++) {
+						var point = [coordinateObject[j].x, coordinateObject[j].y];
+						oneProfile.push(point);
+					}
+
+					var plotConfig = {
+						data : oneProfile,
+						genes : genes,
+						label : " <a  href='/Gemma/compositeSequence/show.html?id="+probeId +"' target='_blank' ext:qtip= '" + probe + " (" + geneNames + ")"  + "'> " + Ext.util.Format.ellipsis( geneNames, Gemma.MAX_LABEL_LENGTH_CHAR) + "</a>",
+						labelID : probeId,
+						lines : {
+							lineWidth : Gemma.LINE_THICKNESS
+						},
+						//Needs to be added so switching views work 
+						probe : { id : probeId, name : probe},
+						points : coordinateObject
+
+
+					};
+
+					flotrData.push(plotConfig);
+				}
+
+				//flotrData.sort(Gemma.graphSort);
+				m_profiles = flotrData;
+				m_eevo = data[0].data.eevo;
+	
+				this.setTitle( "Visualization of differentially expressed probes in " + m_eevo.shortName);
+				
+				Heatmap.draw( $('vizDiffDiv'), m_profiles, HEATMAP_CONFIG);
+				//m_myVizLoadMask.hide();
+
+			
+	},
+	
+	displayWindow : function(eeId, resultSetId) {
+
+		
+		var params = [];
+		params.push(eeId);
+		params.push(resultSetId)
+		params.push(THRESHOLD);
+							
+		this.dv.store.load({
+					params : params,
+					callback : this.dedvCallback.createDelegate(this)
+				});
+				
+		this.show();
+		
+		
+//		 m_myVizLoadMask = new Ext.LoadMask(this.getEl(), {
+//				id : "heatmapLoadMask",
+//				msg : "Loading probe level data ..."
+//			});
+
+//		Ext.apply(this, {
+//			loadMask : m_myVizLoadMask
+//		});
+
+//		m_myVizLoadMask.show();
+
+
+	},
+	
+	initComponent : function() {
+		
+		this.dv = new Ext.DataView({
+			autoHeight : true,
+			emptyText : 'Unable to visualize missing data',
+			loadingText : 'Loading data ...',
+			store : new Gemma.VisualizationStore({
+						readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold
+					})
+		});
+
+
+		this.vizPanel = new Ext.Panel({
+
+					id : 'visualizationWindow',
+					closeAction : 'destroy',
+					bodyStyle : "background:white",
+					constrainHeader : true,
+					layout : 'fit',
+					// hidden : true,
+					stateful : false,
+					autoScroll : true,
+
+					html : {
+						id : 'vizDiffDiv',
+						tag : 'div',
+						style : 'width:' + 220 + 'px;height:' + 100 + 'px; margin:5px 2px 2px 5px;'
+					},
+
+					refreshWindow : function(data) {
+						// Should redraw to fit current window width and hight.
+						if (data == null) {
+							if (m_profiles != null)
+								data = m_profiles;
+							else return;
+						}
+
+						$('vizDiffDiv').innerHTML = '';
+				
+						Heatmap.draw($('vizDiffDiv'), data, HEATMAP_CONFIG);
+
+						},
+
+					displayWindow : function(eevo, data) {
+
+						if (data == null)
+							data = m_profiles;
+							
+						if (eevo == null)
+							eevo = m_eevo;
+							
+						this.setTitle("<a   target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +eevo.id+ " '> " + eevo.shortName + "</a>: "  +eevo.name);
+
+						if (!this.isVisible()) {
+							this.setVisible(true);
+							this.show();
+						}
+
+							$('vizDiffDiv').innerHTML = '';
+							Heatmap.draw($('vizDiffDiv'), data, HEATMAP_CONFIG);
+						
+	
+					}
+
+				});
+
+		Ext.apply(this, {
+					items : [ this.vizPanel]
+				});
+
+		Gemma.EEDetailsDiffExpressionVisualizationWindow.superclass.initComponent.call(this);
+
+	}
+
+	
+});
+
 
 
 
