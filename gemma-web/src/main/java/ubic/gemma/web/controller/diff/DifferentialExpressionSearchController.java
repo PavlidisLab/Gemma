@@ -34,9 +34,11 @@ import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -64,6 +66,7 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "expressionExperimentSetService" ref="expressionExperimentSetService"
+ * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
@@ -76,6 +79,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private GeneService geneService = null;
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSetService expressionExperimentSetService = null;
+    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
     
     /**
      * 
@@ -320,8 +324,42 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
 
-        if ( request.getParameter( "export" ) != null ) {
+        if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
 
+        //If the EE parameter is set then just download the entire diff expression results for the entire expresion experiment 
+        //Used by EE Details page
+        if (request.getParameter("ee") != null){
+            Long eeId = null;
+            try{        
+             eeId =   Long.parseLong(request.getParameter("ee"));
+            }catch (NumberFormatException nfe){
+                log.warn( "Invalid Expression experiment id.  Unable to provide ");
+                return new ModelAndView( this.getFormView() );
+            }
+            
+            ExpressionExperiment ee = expressionExperimentService.load( eeId );
+            Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
+            
+            ModelAndView mav = new ModelAndView( new TextView() );
+            StringBuilder buf = new StringBuilder();
+            buf.append( "# Differentail Expression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n " );
+            
+            for ( ExpressionAnalysisResultSet par : results ) {
+                differentialExpressionAnalysisResultService.thaw(par);   
+                buf.append( par );             
+                             
+            }
+                       
+            String output = buf.toString();
+
+            mav.addObject( "text", output.length() > 0 ? output : "no results" );
+            return mav;
+            
+        }
+        
+        //-------------------------
+        //Download  diff expression data for a specific diff expresion search 
+        
             double threshold = DEFAULT_THRESHOLD;
             try {
                 threshold = Double.parseDouble( request.getParameter( "t" ) );
@@ -352,6 +390,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             ModelAndView mav = new ModelAndView( new TextView() );
 
             StringBuilder buf = new StringBuilder();
+   
             for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
                 buf.append( demavo );
             }
@@ -360,8 +399,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             mav.addObject( "text", output.length() > 0 ? output : "no results" );
             return mav;
-        }
-        return new ModelAndView( this.getFormView() );
 
     }
 
@@ -430,6 +467,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
     public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
         this.expressionExperimentSetService = expressionExperimentSetService;
+    }
+
+    public void setDifferentialExpressionAnalysisResultService(
+            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
+        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
     }
 
 }

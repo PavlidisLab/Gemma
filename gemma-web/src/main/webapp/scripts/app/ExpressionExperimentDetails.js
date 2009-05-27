@@ -210,17 +210,20 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 							for (var j = 0; j<ee.diffExpressedProbes[i].experimentalFactors.size(); j++){
 								factors = factors + ee.diffExpressedProbes[i].experimentalFactors[j].description;
 							}
-							diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +')" ext:qtip="Visulize differentially expressed Genes for: '+ factors + ' (threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
+							diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +',\'' + factors +'\')" ext:qtip="Visulize differentially expressed Genes for: '+ factors + ' (threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
 						}
-					
-						this.visDiffWindow = new Gemma.EEDetailsDiffExpressionVisualizationWindow({});							
-						return diffExpressionSummary; 
+								
+						var downloadDiffDataLink =  String.format("<a ext:qtip='Download all differential expression data in a tab delimted format'  target='_blank'  href='/Gemma//diff/diffExpressionSearch.html?ee={0}&export' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>", ee.id);
+
+						return diffExpressionSummary + downloadDiffDataLink; 
 						
 						
 					},
 					
-					visualizeDiffExpressionHandler : function(eeid, diffResultId){
+					visualizeDiffExpressionHandler : function(eeid, diffResultId, factorDetails){
 
+						var params = {}
+						this.visDiffWindow = new Gemma.EEDetailsDiffExpressionVisualizationWindow({factorDetails: factorDetails});						
 						this.visDiffWindow.displayWindow(eeid, diffResultId);
 						
 					},

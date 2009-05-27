@@ -34,6 +34,16 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 	height :100,
 	width : 220,
 
+	constructor : function(factorDetails) {
+
+						this.factorDetails= factorDetails;
+
+						Gemma.EEDetailsDiffExpressionVisualizationWindow.superclass.constructor.call(this);
+
+				
+		},
+
+	
 	listeners : {
 				resize : {
 							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
@@ -121,7 +131,8 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 				m_profiles = flotrData;
 				m_eevo = data[0].data.eevo;
 	
-				this.setTitle( "Visualization of differentially expressed probes in " + m_eevo.shortName);
+				console.log(this.factorDetails);
+				this.setTitle( "Visualization of differentially expressed probes in " + m_eevo.shortName + " for " + this.factorDetails.factorDetails);
 				
 				Heatmap.draw( $('vizDiffDiv'), m_profiles, HEATMAP_CONFIG);
 				//m_myVizLoadMask.hide();
