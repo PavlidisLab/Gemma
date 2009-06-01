@@ -87,7 +87,7 @@ public class DEDVController extends BaseFormController {
 
     private static final int SAMPLE_SIZE = 20;  //Number of dedvs to return if no genes given 
     private static final double DEFAULT_THRESHOLD = 0.05;
-    private static final int MAX_RESULTS_TO_RETURN = 100;
+    private static final int MAX_RESULTS_TO_RETURN = 50;
     
     
     private DesignElementDataVectorService designElementDataVectorService;
@@ -314,16 +314,14 @@ public class DEDVController extends BaseFormController {
         Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
         ees.add( ee );
         
-        Map<ExpressionAnalysisResultSet,Collection<ProbeAnalysisResult>> ee2probeResults = differentialExpressionAnalysisService.findGenesInResultSetsThatMetThreshold(ars, threshold);
+        Map<ExpressionAnalysisResultSet,Collection<ProbeAnalysisResult>> ee2probeResults = differentialExpressionAnalysisService.findGenesInResultSetsThatMetThreshold(ars, threshold, MAX_RESULTS_TO_RETURN);
         
         if(ee2probeResults == null || ee2probeResults.isEmpty()) return null;
         
         
         Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
-        //TODO: put a limit on the results in the DAO        
         for (ProbeAnalysisResult par : ee2probeResults.get(ar )){            
-            probes.add(par.getProbe());
-                if (probes.size() > MAX_RESULTS_TO_RETURN) break;
+            probes.add(par.getProbe());               
         }
         
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(ees , probes, false );

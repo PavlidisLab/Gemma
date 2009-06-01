@@ -33,6 +33,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -129,10 +130,18 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(
             java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed,
-            double threshold ) {
+            double threshold,
+            Integer limit) {
 
         final String qs = fetchResultsByResultSetQuery + " and r.correctedPvalue < :threshold";
 
+        
+        int oldmax = getHibernateTemplate().getMaxResults();        
+        if (limit != null ){
+            getHibernateTemplate().setMaxResults( limit );
+        }
+
+        
         Map<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>>();
 
         if ( resultsAnalyzed.size() == 0 ) {
@@ -155,6 +164,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             }
 
             results.get( ee ).add( probeResult );
+        }
+
+        if (limit != null ){
+            getHibernateTemplate().setMaxResults( oldmax );
         }
 
         return results;
@@ -204,9 +217,14 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
-            double threshold ) {
+            double threshold, Integer limit ) {
 
         final String qs = fetchResultsByExperimentsQuery + " and r.correctedPvalue < :threshold";
+
+        int oldmax = getHibernateTemplate().getMaxResults();        
+        if (limit != null ){
+            getHibernateTemplate().setMaxResults( limit );
+        }
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
@@ -230,6 +248,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             }
 
             results.get( ee ).add( probeResult );
+        }
+
+        if (limit != null){
+            getHibernateTemplate().setMaxResults( oldmax );
         }
 
         return results;

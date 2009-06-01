@@ -61,16 +61,28 @@ public class DifferentialExpressionAnalysisServiceImpl extends
                 experimentsAnalyzed, threshold );
     }
     
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
-     Collection<ExpressionExperiment> experimentsAnalyzed, double threshold ) {
-        return this.getDifferentialExpressionAnalysisDao().findGenesInExperimentsThatMetThreshold(experimentsAnalyzed, threshold );
+    public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(
+            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed,
+            double threshold, 
+            Integer limit){
+     
+        return this.getDifferentialExpressionAnalysisDao().findGenesInResultSetsThatMetThreshold( resultsAnalyzed, threshold, limit );
     }
     
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
+     Collection<ExpressionExperiment> experimentsAnalyzed, double threshold ) {
+        return this.getDifferentialExpressionAnalysisDao().findGenesInExperimentsThatMetThreshold(experimentsAnalyzed, threshold, null );
+    }
+    
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
+            Collection<ExpressionExperiment> experimentsAnalyzed, double threshold, Integer limit ) {
+               return this.getDifferentialExpressionAnalysisDao().findGenesInExperimentsThatMetThreshold(experimentsAnalyzed, threshold, limit );
+     }
     
     public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(
             java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed,
             double threshold ){
-        return this.getDifferentialExpressionAnalysisDao().findGenesInResultSetsThatMetThreshold(resultsAnalyzed, threshold );
+        return this.getDifferentialExpressionAnalysisDao().findGenesInResultSetsThatMetThreshold(resultsAnalyzed, threshold, null );
 
     }
 

@@ -93,9 +93,12 @@ public interface DifferentialExpressionAnalysisService extends
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
             double threshold );
     
-    
+    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
+            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
+            double threshold, Integer limit );
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
+     * Could require pulling alot of information from the DB.  Potentially slow. 
      * 
      * @param resultsAnalyzed
      * @param threshold
@@ -105,6 +108,21 @@ public interface DifferentialExpressionAnalysisService extends
     public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(
             java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed,
             double threshold );
+    
+    
+    /**
+     * Given a list of result sets finds the diff expression results that met the given threshold.  Number of results will not exceed given limit
+     * 
+     * @param resultsAnalyzed
+     * @param threshold
+     * @param limit
+     * @return
+     */
+    
+    public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(
+            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed,
+            double threshold, 
+            Integer limit);
     
     /**
      * 

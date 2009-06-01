@@ -85,7 +85,7 @@ public interface DifferentialExpressionAnalysisDao extends
      */
     public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
-            double threshold );
+            double threshold, Integer limit );
 
    
     
@@ -98,7 +98,7 @@ public interface DifferentialExpressionAnalysisDao extends
      */
     public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(
             java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed,
-            double threshold );
+            double threshold, Integer limit );
     
     /**
      * 
