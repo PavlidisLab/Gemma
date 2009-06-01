@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -342,7 +343,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             
             ModelAndView mav = new ModelAndView( new TextView() );
             StringBuilder buf = new StringBuilder();
+            Date timestamp = new Date( System.currentTimeMillis() );
             buf.append( "# Differentail Expression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n " );
+            buf.append("# " + timestamp + " \n");
             
             for ( ExpressionAnalysisResultSet par : results ) {
                 differentialExpressionAnalysisResultService.thaw(par);   

@@ -42,7 +42,6 @@ import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -88,7 +87,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @version $Id$
  */
 public class ExpressionExperimentReportService extends BaseSpacesTask implements ExpressionExperimentReportTask {
-    private static final double CUT_OFF = 0.5;
+    private static final double CUT_OFF = 0.05;
 
     private AuditEventService auditEventService;
 

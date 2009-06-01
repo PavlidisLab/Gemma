@@ -87,6 +87,7 @@ public class DEDVController extends BaseFormController {
 
     private static final int SAMPLE_SIZE = 20;  //Number of dedvs to return if no genes given 
     private static final double DEFAULT_THRESHOLD = 0.05;
+    private static final int MAX_RESULTS_TO_RETURN = 100;
     
     
     private DesignElementDataVectorService designElementDataVectorService;
@@ -322,7 +323,7 @@ public class DEDVController extends BaseFormController {
         //TODO: put a limit on the results in the DAO        
         for (ProbeAnalysisResult par : ee2probeResults.get(ar )){            
             probes.add(par.getProbe());
-                if (probes.size() > 200) break;
+                if (probes.size() > MAX_RESULTS_TO_RETURN) break;
         }
         
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(ees , probes, false );

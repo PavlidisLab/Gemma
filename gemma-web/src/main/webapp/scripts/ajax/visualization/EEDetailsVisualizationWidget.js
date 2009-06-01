@@ -7,7 +7,7 @@ var m_geneSymbols;
 var m_myVizLoadMask;
 var DEFAULT_LABEL ="--";
 
-var THRESHOLD = 0.5;
+var THRESHOLD = 0.05;
 
 HEATMAP_CONFIG = {
 		xaxis : {
@@ -66,7 +66,6 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 				// Need to transform the coordinate data from an object to an
 				// array for flotr/HeatMap display
 				
-				console.log(data);
 				//No data to visulize just 
 				if (!data || data.size() == 0){
 						//m_myVizLoadMask.hide();
@@ -131,7 +130,6 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 				m_profiles = flotrData;
 				m_eevo = data[0].data.eevo;
 	
-				console.log(this.factorDetails);
 				this.setTitle( "Visualization of differentially expressed probes in " + m_eevo.shortName + " for " + this.factorDetails.factorDetails);
 				
 				Heatmap.draw( $('vizDiffDiv'), m_profiles, HEATMAP_CONFIG);
