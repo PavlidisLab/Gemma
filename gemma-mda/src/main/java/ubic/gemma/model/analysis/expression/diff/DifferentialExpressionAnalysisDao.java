@@ -116,5 +116,8 @@ public interface DifferentialExpressionAnalysisDao extends
      */
     public void thaw(
             ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    
+    
+    public long countProbesMeetingThreshold(ExpressionAnalysisResultSet ears, double threshold);
 
 }

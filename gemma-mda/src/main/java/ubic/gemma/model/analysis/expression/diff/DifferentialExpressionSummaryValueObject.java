@@ -34,7 +34,7 @@ public class DifferentialExpressionSummaryValueObject implements java.io.Seriali
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private Double qValue;
     private Double threshold;
-    private int numberOfDiffExpressedProbes;
+    private long numberOfDiffExpressedProbes;
     private long resultSetId;
 
     public DifferentialExpressionSummaryValueObject() {
@@ -88,11 +88,11 @@ public class DifferentialExpressionSummaryValueObject implements java.io.Seriali
         this.threshold = threshold;
     }
 
-    public int getNumberOfDiffExpressedProbes() {
+    public long getNumberOfDiffExpressedProbes() {
         return numberOfDiffExpressedProbes;
     }
 
-    public void setNumberOfDiffExpressedProbes( int numberOfDiffExpressedProbes ) {
+    public void setNumberOfDiffExpressedProbes( long numberOfDiffExpressedProbes ) {
         this.numberOfDiffExpressedProbes = numberOfDiffExpressedProbes;
     }
 

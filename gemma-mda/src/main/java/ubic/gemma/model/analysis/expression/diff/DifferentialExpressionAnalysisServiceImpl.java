@@ -256,4 +256,12 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) throws Exception {
         this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
     }
+    
+    
+    public long countProbesMeetingThreshold(ExpressionAnalysisResultSet ears, double threshold){
+        return this.getDifferentialExpressionAnalysisDao().countProbesMeetingThreshold(ears, threshold);
+        
+    }
+    
+    
 }

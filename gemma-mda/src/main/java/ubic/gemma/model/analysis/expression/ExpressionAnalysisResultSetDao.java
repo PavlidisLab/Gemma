@@ -139,4 +139,11 @@ public interface ExpressionAnalysisResultSetDao extends
      */
     public void update( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet );
 
+    /**
+     * @param resultSet  
+     * Only thaws the factor not the probe information
+     */
+    public void thawLite( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
+
+    
 }

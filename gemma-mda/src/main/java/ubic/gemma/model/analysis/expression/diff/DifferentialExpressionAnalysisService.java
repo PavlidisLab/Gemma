@@ -89,10 +89,23 @@ public interface DifferentialExpressionAnalysisService extends
             double threshold );
 
     
+    /**
+     * Returns everything and can subsequently take some time
+     * @param experimentsAnalyzed
+     * @param threshold
+     * @return
+     */
     public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
             double threshold );
     
+    /**
+     * If the given limit is null then returns everything. If a valid limit is given then just the top 'limit' genes will be returned. 
+     * @param experimentsAnalyzed
+     * @param threshold
+     * @param limit
+     * @return
+     */
     public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
             double threshold, Integer limit );
@@ -144,5 +157,15 @@ public interface DifferentialExpressionAnalysisService extends
      */
     public void thaw(
             ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    
+    
+    /**
+     * @param ExpressionAnalysisResultSet
+     * @param threshold (double)
+     * @return   an integer count of all the probes that met the given threshold in the given expressionAnalysisResultSet
+     */
+    public long countProbesMeetingThreshold(ExpressionAnalysisResultSet ears, double threshold);
+    
+    
 
 }

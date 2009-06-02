@@ -58,5 +58,23 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         } );
 
     }
+    
+  
+    
+    public void thawLite( final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {
+
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
+            public Object doInHibernate( Session session ) throws HibernateException {
+                session.lock( resultSet, LockMode.NONE );
+                for ( ExperimentalFactor factor : resultSet.getExperimentalFactor() ) {
+                    Hibernate.initialize( factor );
+                }
+                
+                return null;
+            }
+        } );
+
+    }
+    
 
 }

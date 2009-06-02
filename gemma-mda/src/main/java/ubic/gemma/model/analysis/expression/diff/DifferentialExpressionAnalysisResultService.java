@@ -48,6 +48,14 @@ public interface DifferentialExpressionAnalysisResultService {
      * 
      */
     public void thaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
+    
+    /**
+     * 
+     * Does not thaw the collection of probes (just the factor information)
+     * @param resultSet
+     */
+    public void thawLite( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
+
 
     public void thawAnalysisResult( final DifferentialExpressionAnalysisResult result ) throws Exception;
     

@@ -133,12 +133,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             double threshold,
             Integer limit) {
 
-        final String qs = fetchResultsByResultSetQuery + " and r.correctedPvalue < :threshold";
+        String qs = fetchResultsByResultSetQuery + " and r.correctedPvalue < :threshold";
 
         
         int oldmax = getHibernateTemplate().getMaxResults();        
         if (limit != null ){
             getHibernateTemplate().setMaxResults( limit );
+            qs += " order by r.correctedPvalue";
         }
 
         
@@ -219,11 +220,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
             double threshold, Integer limit ) {
 
-        final String qs = fetchResultsByExperimentsQuery + " and r.correctedPvalue < :threshold";
+        String qs = fetchResultsByExperimentsQuery + " and r.correctedPvalue < :threshold";
 
         int oldmax = getHibernateTemplate().getMaxResults();        
         if (limit != null ){
             getHibernateTemplate().setMaxResults( limit );
+            qs += " order by r.correctedPvalue";
         }
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
@@ -470,4 +472,32 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         } );
     }
 
+    
+    public long countProbesMeetingThreshold(ExpressionAnalysisResultSet ears, double threshold){
+        
+      String query = "select count(r) "
+        + " from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl bs2gp"
+        + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
+        + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
+        + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
+        + " where bs2gp.bioSequence=bs and rs = :resultAnalyzed and r.correctedPvalue < :threshold";
+        
+      
+      String[] paramNames = { "resultAnalyzed", "threshold" };
+      Object[] objectValues = { ears, threshold };
+
+      List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
+      
+      Long count = null;
+      for ( Object o : qresult ) {
+
+          count = ( Long ) o;
+          log.info( "Found " + count + " differentially expressed genes in result set (" + ears.getId() + ") at a threshold of " + threshold );
+
+      }
+          return count;
+    }
+    
+    
+    
 }

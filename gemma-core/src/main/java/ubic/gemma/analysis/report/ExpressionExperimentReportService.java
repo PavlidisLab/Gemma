@@ -42,7 +42,6 @@ import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject;
@@ -528,30 +527,23 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
      * @return A collection of probe ids for the probes that met the threshold
      */
     private Collection<DifferentialExpressionSummaryValueObject> getDiffExpressedProbes( ExpressionExperiment ee, double threshold ) {
-
-        //TODO: Make faster: use differentialExpressionAnalysisService.findGenesInExperimentsThatMetThreshold( experimentsAnalyzed, threshold )
        
+        
         Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
         Collection<DifferentialExpressionSummaryValueObject> summaries = new ArrayList<DifferentialExpressionSummaryValueObject>();
         
         for ( ExpressionAnalysisResultSet par : results ) {
 
             DifferentialExpressionSummaryValueObject desvo = new DifferentialExpressionSummaryValueObject();
-            differentialExpressionAnalysisResultService.thaw(par);            
-            
+            differentialExpressionAnalysisResultService.thawLite( par );  //need the thaw for the experimental factor
             desvo.setThreshold( threshold );
             desvo.setExperimentalFactors(par.getExperimentalFactor()  );
             desvo.setResultSetId( par.getId() );                       
             
-            int probesThatMetThreshold = 0;
-            for ( DifferentialExpressionAnalysisResult dear : par.getResults() ) {                
-                if ( dear.getCorrectedPvalue() <= threshold ) {
-                        probesThatMetThreshold++;
-                }
-
-            }
+            long probesThatMetThreshold = differentialExpressionAnalysisService.countProbesMeetingThreshold(par, threshold);           
             desvo.setNumberOfDiffExpressedProbes( probesThatMetThreshold );
-            log.info( "Probes that met threshold: " + probesThatMetThreshold );
+            
+            log.info( "Probes that met threshold in result set - " + par.getId() + " : " + probesThatMetThreshold );
             summaries.add( desvo);
 
         }

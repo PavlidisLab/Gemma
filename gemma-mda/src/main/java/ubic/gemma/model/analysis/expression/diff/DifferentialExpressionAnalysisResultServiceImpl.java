@@ -66,7 +66,13 @@ public class DifferentialExpressionAnalysisResultServiceImpl extends
     }
     
     public AnalysisResultSet loadAnalysisResult(Long analysisResultId){
-        return this.getExpressionAnalysisResultSetDao().load( analysisResultId );
+        return this.getExpressionAnalysisResultSetDao().load( analysisResultId );        
+    }
+
+    
+    public void thawLite( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ){
+        this.getExpressionAnalysisResultSetDao().thawLite( resultSet );
+        
     }
 
 
