@@ -38,15 +38,20 @@ import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneImpl;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
@@ -346,13 +351,84 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             Date timestamp = new Date( System.currentTimeMillis() );
             buf.append( "# Differentail Expression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n " );
             buf.append("# " + timestamp + " \n");
+            buf.append("Probe_Name \t  Gene_Name \t Gene_Symbol \t");// column information
+            Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
             
-            for ( ExpressionAnalysisResultSet par : results ) {
-                differentialExpressionAnalysisResultService.thaw(par);   
-                buf.append( par );             
+            for ( ExpressionAnalysisResultSet ears : results ) {
+                differentialExpressionAnalysisResultService.thaw(ears);   
+
+                buf.append( "PValue (" );
+                // add the factor names to the columns
+                int count = 0;
+                for(ExperimentalFactor ef : ears.getExperimentalFactor()){
+                    buf.append(ef.getName() + ",");     
+                    count++;
+                }
+                if (count != 0)
+                    buf.deleteCharAt( buf.lastIndexOf( "," ) ); //removing trailing ,
+                buf.append( ") \t");
+               
+                
+                //Generate probe details
+                for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
+                    StringBuilder probeBuffer = new StringBuilder();
+                    
+                    
+                    if (dear instanceof ProbeAnalysisResult){
+                        CompositeSequence cs = ((ProbeAnalysisResult) dear).getProbe();
+
+                       //Make a hashmap so we can organize the data by probe with factors as colums 
+                       if ( probe2String.containsKey( cs.getId() )){
+                           probeBuffer = probe2String.get( cs.getId() );
+                       }else{//no entry for probe yet
+                           probeBuffer.append(cs.getName() + "\t");
+                           StringBuilder geneSymbols = new StringBuilder();
+                           for (BioSequence2GeneProduct bs2gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct()){
+                               Gene g = bs2gp.getGeneProduct().getGene();
+                              
+                               if (g instanceof GeneImpl){
+                                   String name = bs2gp.getGeneProduct().getGene().getOfficialName();
+                                   String symbol = bs2gp.getGeneProduct().getGene().getOfficialSymbol();
+                                   
+                                   if  (!StringUtils.isBlank( name ))
+                                       probeBuffer.append( bs2gp.getGeneProduct().getGene().getOfficialName() + ",");
+                                   
+                                   if (!StringUtils.isBlank( symbol ))
+                                       geneSymbols.append( bs2gp.getGeneProduct().getGene().getOfficialSymbol() + ",");
+                                   
+                               }
+                           }
+                           
+                           if ((geneSymbols.length() != 0) && (geneSymbols.charAt(geneSymbols.length() -1) == ',')){
+                               geneSymbols.deleteCharAt( geneSymbols.lastIndexOf( "," ) ); //removing trailing ,
+                           }
+                           
+                           if ((probeBuffer.length() != 0) && (probeBuffer.charAt( probeBuffer.length() -1 ) == ','))
+                               probeBuffer.deleteCharAt( probeBuffer.lastIndexOf( "," ) );
+
+                           
+                           probeBuffer.append( "\t" + geneSymbols );
+                           probe2String.put( cs.getId(), probeBuffer );
+                       }
+                                                                      
+                       probeBuffer.append("\t" + dear.getCorrectedPvalue() );
+
+                    }
+                    else{
+                        log.warn("probe details missing.  Unable to retrieve probe level information. Skipping  " + dear.getClass() + " with id: " + dear.getId()  );                       
+                    }
+                 
+                }// ears.getResults loop                
                              
+            }// ears loop
+                          
+            buf.append( "\n" );
+            
+            for(StringBuilder sb: probe2String.values()){
+                buf.append( sb );
+                buf.append( "\n" );                
             }
-                       
+            
             String output = buf.toString();
 
             mav.addObject( "text", output.length() > 0 ? output : "no results" );

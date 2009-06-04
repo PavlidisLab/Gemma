@@ -1,10 +1,13 @@
 Ext.namespace('Gemma');
 
 var m_profiles =[];	//Data returned by server for visulization (alread processed by client)
+var m_diffProfiles= [];
 var m_eevo;
 var m_geneIds;
 var m_geneSymbols;
 var m_myVizLoadMask;
+var m_myDiffVizLoadMask;
+
 var DEFAULT_LABEL ="--";
 
 var THRESHOLD = 0.05;
@@ -68,7 +71,7 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 				
 				//No data to visulize just 
 				if (!data || data.size() == 0){
-						//m_myVizLoadMask.hide();
+						m_myDiffVizLoadMask.hide();
 						this.hide();
 						Ext.Msg.alert('Status', 'No visulization data available for: ' + m_geneSymbols);
 						return;
@@ -127,13 +130,13 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 				}
 
 				//flotrData.sort(Gemma.graphSort);
-				m_profiles = flotrData;
+				m_diffProfiles = flotrData;
 				m_eevo = data[0].data.eevo;
 	
 				this.setTitle( "Visualization of differentially expressed probes in " + m_eevo.shortName + " for " + this.factorDetails.factorDetails);
 				
-				Heatmap.draw( $('vizDiffDiv'), m_profiles, HEATMAP_CONFIG);
-				//m_myVizLoadMask.hide();
+				Heatmap.draw( $('vizDiffDiv'), m_diffProfiles, HEATMAP_CONFIG);
+				m_myDiffVizLoadMask.hide();
 
 			
 	},
@@ -154,16 +157,16 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 		this.show();
 		
 		
-//		 m_myVizLoadMask = new Ext.LoadMask(this.getEl(), {
-//				id : "heatmapLoadMask",
-//				msg : "Loading probe level data ..."
-//			});
+		 m_myDiffVizLoadMask = new Ext.LoadMask(this.getEl(), {
+				id : "heatmapLoadMask",
+				msg : "Loading differentially expressed genes that met the threshold."
+			});
 
-//		Ext.apply(this, {
-//			loadMask : m_myVizLoadMask
-//		});
+		Ext.apply(this, {
+			loadMask : m_myDiffVizLoadMask
+		});
 
-//		m_myVizLoadMask.show();
+		m_myDiffVizLoadMask.show();
 
 
 	},
@@ -200,8 +203,8 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					refreshWindow : function(data) {
 						// Should redraw to fit current window width and hight.
 						if (data == null) {
-							if (m_profiles != null)
-								data = m_profiles;
+							if (m_diffProfiles != null)
+								data = m_diffProfiles;
 							else return;
 						}
 
@@ -214,7 +217,7 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					displayWindow : function(eevo, data) {
 
 						if (data == null)
-							data = m_profiles;
+							data = m_diffProfiles;
 							
 						if (eevo == null)
 							eevo = m_eevo;
