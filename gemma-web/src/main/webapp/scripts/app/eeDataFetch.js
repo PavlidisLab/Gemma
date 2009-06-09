@@ -31,7 +31,7 @@ function handleStartSuccess(taskId) {
 	}
 }
 
-function fetchData(filter, eeId, formatType, qtId, eeDId) {
+function fetchData( filter, eeId, formatType, qtId, eeDId ) {
 
 	var callParams = [];
 
@@ -62,5 +62,55 @@ function fetchData(filter, eeId, formatType, qtId, eeDId) {
 	Ext.DomHelper.append("messages", "&nbsp;Fetching ...");
 
 	ExpressionExperimentDataFetchController.getDataFile.apply(this, callParams);
+
+}
+
+
+
+function fetchCoExpressionData( eeId ) {
+
+	var callParams = [];
+	callParams.push(eeId);
+
+	// callback is just for initiating the process.
+	var cb = handleStartSuccess;
+	var errorHandler = handleFailure;
+
+	callParams.push({
+				callback : cb,
+				errorHandler : errorHandler
+			});
+
+	Ext.DomHelper.overwrite("messages", {
+				tag : 'img',
+				src : '/Gemma/images/default/tree/loading.gif'
+			});
+	Ext.DomHelper.append("messages", "&nbsp;Fetching ...");
+
+	ExpressionExperimentDataFetchController.getCoExpressionDataFile.apply(this, callParams);
+}
+
+
+function fetchDiffExpressionData(eeId) {
+
+	var callParams = [];
+	callParams.push(eeId);
+
+	// callback is just for initiating the process.
+	var cb = handleStartSuccess;
+	var errorHandler = handleFailure;
+
+	callParams.push({
+				callback : cb,
+				errorHandler : errorHandler
+			});
+
+	Ext.DomHelper.overwrite("messages", {
+				tag : 'img',
+				src : '/Gemma/images/default/tree/loading.gif'
+			});
+	Ext.DomHelper.append("messages", "&nbsp;Fetching ...");
+
+	ExpressionExperimentDataFetchController.getDiffExpressionDataFile.apply(this, callParams);
 
 }

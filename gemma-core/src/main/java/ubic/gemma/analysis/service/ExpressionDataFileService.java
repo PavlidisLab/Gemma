@@ -25,11 +25,13 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -39,15 +41,26 @@ import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneImpl;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -62,6 +75,9 @@ import ubic.gemma.util.ConfigUtils;
  * @spring.property name="expressionDataMatrixService" ref="expressionDataMatrixService"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
+ * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
+ * @spring.property name = "probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @author paul
  * @version $Id$
  */
@@ -83,6 +99,12 @@ public class ExpressionDataFileService {
     private ExpressionDataMatrixService expressionDataMatrixService;
 
     private ExpressionExperimentService expressionExperimentService;
+
+    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
+
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+
+    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService = null;
 
     /**
      * @param ee
@@ -139,6 +161,20 @@ public class ExpressionDataFileService {
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setDifferentialExpressionAnalysisResultService(
+            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
+        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
+    }
+
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
+        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
     }
 
     /**
@@ -291,6 +327,212 @@ public class ExpressionDataFileService {
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * Locate or create the differential expression data file for a given experiment.
+     * 
+     * @param ee
+     * @param forceWrite
+     * @return
+     */
+    public File writeOrLocateDiffExpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) {
+
+        expressionExperimentService.thawLite( ee );
+
+        String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_diffExp"
+                + DATA_FILE_SUFFIX;
+        try {
+            File f = getOutputFile( filename );
+            if ( !forceWrite && f.canRead() ) {
+                log.info( f + " exists, not regenerating" );
+                return f;
+            }
+
+            log.info( "Creating new Differential Expression data file: " + f );
+            writeDiffExpressionData( f, ee );
+            return f;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    /**
+     * Write or located the coexpression data file for a given experiment
+     * 
+     * @param ee
+     * @param forceWrite
+     * @return
+     */
+    public File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) {
+
+        expressionExperimentService.thawLite( ee );
+
+        String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_coExp" + DATA_FILE_SUFFIX;
+        try {
+            File f = getOutputFile( filename );
+            if ( !forceWrite && f.canRead() ) {
+                log.info( f + " exists, not regenerating" );
+                return f;
+            }
+
+            log.info( "Creating new Co-Expression data file: " + f );
+            writeCoexpressionData( f, ee );
+            return f;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    /**
+     * Loads the probe to probe coexpression link information for a given expression experiment and writes it to disk.
+     * 
+     * @param file
+     * @param ee
+     * @throws IOException
+     */
+    private void writeCoexpressionData( File file, ExpressionExperiment ee ) throws IOException {
+
+        // FIXME: should use temporary table or not?
+        Taxon tax = expressionExperimentService.getTaxon( ee.getId() );
+        Collection<ProbeLink> probeLinks = probe2ProbeCoexpressionService.getProbeCoExpression( ee,
+                tax.getCommonName(), true );
+
+        // TODO add gene info to file?
+        // Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
+        // Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
+
+        Date timestamp = new Date( System.currentTimeMillis() );
+        StringBuffer buf = new StringBuffer();
+
+        // Write header information
+        buf.append( "# Coexpression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n " );
+        buf.append( "# Generated On: " + timestamp + " \n" );
+        // Columns
+        buf.append( "probe1 \t probe2 \t score \n" );
+
+        // Data
+        for ( ProbeLink link : probeLinks ) {
+            buf.append( link.getFirstDesignElementId() + "\t" );
+            buf.append( link.getSecondDesignElementId() + "\t" );
+            buf.append( link.getScore() + "\n" );
+        }
+
+        // Write coexpression data to file (zipped of course)
+        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
+        writer.write( buf.toString() );
+        writer.flush();
+        writer.close();
+
+    }
+
+    /**
+     * Loads the differential expression Data from the DB and writes it to disk.
+     * 
+     * @param file
+     * @param ee
+     * @throws IOException
+     */
+    private void writeDiffExpressionData( File file, ExpressionExperiment ee ) throws IOException {
+
+        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
+
+        Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
+        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
+        Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
+
+        StringBuilder buf = new StringBuilder();
+        Date timestamp = new Date( System.currentTimeMillis() );
+        buf.append( "# Differentail Expression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n " );
+        buf.append( "# " + timestamp + " \n" );
+        buf.append( "Probe_Name \t  Gene_Name \t Gene_Symbol \t" );// column information
+
+        Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
+
+        for ( ExpressionAnalysisResultSet ears : results ) {
+            differentialExpressionAnalysisResultService.thaw( ears );
+
+            buf.append( "PValue (" );
+            // add the factor names to the columns
+            int count = 0;
+            for ( ExperimentalFactor ef : ears.getExperimentalFactor() ) {
+                buf.append( ef.getName() + "," );
+                count++;
+            }
+            if ( count != 0 ) buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
+            buf.append( ") \t" );
+
+            // Generate probe details
+            for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
+                StringBuilder probeBuffer = new StringBuilder();
+
+                if ( dear instanceof ProbeAnalysisResult ) {
+                    CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
+
+                    // Make a hashmap so we can organize the data by probe with factors as colums
+                    // Need to cache the information untill we have it organized in the correct format to write
+                    if ( probe2String.containsKey( cs.getId() ) ) {
+                        probeBuffer = probe2String.get( cs.getId() );
+                    } else {// no entry for probe yet
+                        probeBuffer.append( cs.getName() + "\t" );
+                        StringBuilder geneSymbols = new StringBuilder();
+
+                        Collection<Gene> genes = geneAnnotations.get( cs.getId() );
+
+                        if ( genes != null ) {
+                            for ( Gene g : genes ) {
+
+                                if ( g instanceof GeneImpl ) {
+                                    String name = g.getOfficialName();
+                                    String symbol = g.getOfficialSymbol();
+
+                                    if ( !StringUtils.isBlank( name ) ) probeBuffer.append( name + "," );
+
+                                    if ( !StringUtils.isBlank( symbol ) ) geneSymbols.append( symbol + "," );
+
+                                }
+                            }
+
+                            if ( ( geneSymbols.length() != 0 )
+                                    && ( geneSymbols.charAt( geneSymbols.length() - 1 ) == ',' ) ) {
+                                geneSymbols.deleteCharAt( geneSymbols.lastIndexOf( "," ) ); // removing trailing ,
+                            }
+
+                            if ( ( probeBuffer.length() != 0 )
+                                    && ( probeBuffer.charAt( probeBuffer.length() - 1 ) == ',' ) )
+                                probeBuffer.deleteCharAt( probeBuffer.lastIndexOf( "," ) );
+
+                            probeBuffer.append( "\t" + geneSymbols );
+                            probe2String.put( cs.getId(), probeBuffer );
+                        }
+                        else{
+                         probe2String.put( cs.getId(), probeBuffer.append( "\t \t" ) );   
+                        }
+                    }
+
+                    probeBuffer.append( "\t" + dear.getCorrectedPvalue() );
+
+                } else {
+                    log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
+                            + dear.getClass() + " with id: " + dear.getId() );
+                }
+
+            }// ears.getResults loop
+
+        }// ears loop
+
+        buf.append( "\n" );
+
+        for ( StringBuilder sb : probe2String.values() ) {
+            buf.append( sb );
+            buf.append( "\n" );
+        }
+
+        writer.write( buf.toString() );
+        writer.flush();
+        writer.close();
     }
 
     /**

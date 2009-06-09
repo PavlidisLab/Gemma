@@ -196,6 +196,15 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						}
 						return result;
 					},
+					renderCoExpressionLinkCount : function(ee){
+						
+						
+						var downloadCoExpressionDataLink =  String.format("<a ext:qtip='Download all coexpression  data in a tab delimted format'  href='#' onClick='fetchCoExpressionData({0})' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>", ee.id);
+
+						return ee.coexpressionLinkCount + " " + downloadCoExpressionDataLink;
+						
+					},
+					
 					renderDiffExpressionDetails : function(ee){
 												
 						if (!ee.diffExpressedProbes){					
@@ -213,8 +222,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 							diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +',\'' + factors +'\')" ext:qtip="Visulize differentially expressed Genes for: '+ factors + ' (threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
 						}
 								
-						var downloadDiffDataLink =  String.format("<a ext:qtip='Download all differential expression data in a tab delimted format'  target='_blank'  href='/Gemma//diff/diffExpressionSearch.html?ee={0}&export' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>", ee.id);
-
+						var downloadDiffDataLink =  String.format("<a ext:qtip='Download all differential expression data in a tab delimted format'  href='#' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>", ee.id);
+						
 						return diffExpressionSummary + downloadDiffDataLink; 
 						
 						
@@ -779,7 +788,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 										},
 										{
 											id :'coexpressionLinkCount-region',
-											html :e.coexpressionLinkCount,
+											html :this.renderCoExpressionLinkCount(e),											
 											width :60
 										},
 										{

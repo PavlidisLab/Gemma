@@ -25,6 +25,7 @@ package ubic.gemma.model.association.coexpression;
 import java.util.Collection;
 import java.util.HashMap;
 
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -146,6 +147,19 @@ public interface Probe2ProbeCoexpressionService {
     
     public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
             Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon );
+    
+    /**
+     * 
+     * Returns the top coexpressed links under a given threshold for a given experiment up to a given limit. 
+     * If the limit is null then all results under the threshold will be returned. 
+     * 
+     * @param ee
+     * @param threshold
+     * @param limit
+     * @return
+     */
+    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit );
+
 
 
 }

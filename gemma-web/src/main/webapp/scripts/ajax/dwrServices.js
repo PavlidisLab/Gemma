@@ -341,6 +341,14 @@ ExpressionExperimentDataFetchController.getDataFile = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
 			'getDataFile', p0, callback);
 }
+ExpressionExperimentDataFetchController.getDiffExpressionDataFile = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
+			'getDiffExpressionDataFile', p0, callback);
+}
+ExpressionExperimentDataFetchController.getCoExpressionDataFile = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
+			'getCoExpressionDataFile', p0, callback);
+}
 // ====================================================================================
 if (ExpressionExperimentLoadController == null)
 	var ExpressionExperimentLoadController = {};

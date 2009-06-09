@@ -153,6 +153,63 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
         return 0;
     }
+    
+    
+    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit ) {
+
+        for ( String p2pClassName : p2pClassNames ) {
+
+            final String queryString = "SELECT p2p.firstVector, p2p.secondVector, p2p.score FROM " + getTableName( p2pClassName, false ) 
+                    + " as p2p where EXPRESSION_EXPERIMENT_FK = :eeid AND score <= :threshold order by p2p.score";
+
+            int oldmax = getHibernateTemplate().getMaxResults();        
+            if (limit != null )
+                getHibernateTemplate().setMaxResults( limit );
+                
+            SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setMaxResults( 1 );
+            queryObject.setParameter( "eeid", ee.getId() );
+            queryObject.setParameter("threshold" , threshold );
+            List results = queryObject.list();
+
+            //Was the right taxon or not?
+            if (results.iterator().next() == null){
+                if (limit != null ){
+                    getHibernateTemplate().setMaxResults( oldmax );
+                }
+                continue;                
+            }
+                       
+            Collection<ProbeLink> links = new ArrayList<ProbeLink>();
+            
+            for ( Object o : results ) {
+                Object[] oa = ( Object[] ) o;
+                Long firstProbeId = ( Long ) oa[0];
+                Long secondProbeId = ( Long ) oa[1];
+                Double score = ( Double ) oa[2];
+
+                ProbeLink link = new ProbeLink();
+
+                assert firstProbeId != null;
+                assert secondProbeId != null;
+
+                link.setFirstDesignElementId( firstProbeId );
+                link.setSecondDesignElementId( secondProbeId );
+                link.setScore( score );
+                links.add( link );
+                       
+            }
+                        
+            if (limit != null ){
+                getHibernateTemplate().setMaxResults( oldmax );
+            }
+            
+            return links;
+
+        }
+        return null;
+    }
+    
 
     @SuppressWarnings("unchecked")
     @Override

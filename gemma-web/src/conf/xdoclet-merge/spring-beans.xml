@@ -287,6 +287,8 @@
 					<property name="includes">
 						<list>
 							<value>getDataFile</value>
+							<value>getCoExpressionDataFile</value>
+							<value>getDiffExpressionDataFile</value>
 						</list>
 					</property>
 				</bean>

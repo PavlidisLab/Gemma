@@ -58,6 +58,7 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
     private QuantitationTypeService quantitationTypeService;
 
     /**
+     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited experiment design data file
      * @param command
      * @return
      */
@@ -67,6 +68,28 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
         return ( String ) super.startJob( runner ).getModel().get( "taskId" );
     }
 
+    /**
+     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited differential expression data file
+     * @param eeId
+     * @return
+     */
+    public String getDiffExpressionDataFile( Long eeId ) {
+        DiffExpressionDataWriterJob runner = new DiffExpressionDataWriterJob( eeId );
+        runner.setDoForward( false );
+        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
+    }
+    
+    /**
+     * AJAX Method -  kicks off a job to start generating (if need be) the text based tab delimited co-expression data file
+     * @param eeId
+     * @return
+     */
+    public String getCoExpressionDataFile( Long eeId ) {
+        CoExpressionDataWriterJob runner = new CoExpressionDataWriterJob( eeId );
+        runner.setDoForward( false );
+        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
+    }
+    
     public void setExpressionDataFileService( ExpressionDataFileService expressionDataFileService ) {
         this.expressionDataFileService = expressionDataFileService;
     }
@@ -222,4 +245,104 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
         }
 
     }
+    
+    //==========================================================
+    class DiffExpressionDataWriterJob extends BackgroundControllerJob<ModelAndView> {
+
+        public DiffExpressionDataWriterJob( Long eeId ) {
+            super( getMessageUtil() );
+            this.command = eeId;
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see java.util.concurrent.Callable#call()
+         */
+        public ModelAndView call() throws Exception {
+
+            init();
+
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "" );
+
+            /* start time */
+            StopWatch watch = new StopWatch();
+            watch.start();
+
+            assert this.command != null;
+            Long eeId = ( Long ) this.command;
+            ExpressionExperiment ee = expressionExperimentService.load( eeId );
+
+            if ( ee == null ) {
+                throw new RuntimeException(
+                        "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
+            }
+
+            File f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, false ); 
+   
+            ProgressManager.destroyProgressJob( job );
+            watch.stop();
+            log.debug( "Finished writing and downloading differential expression file; done in " + watch.getTime() + " milliseconds" );
+
+            String url = "/Gemma/getData.html?file=" + f.getName();
+
+            ModelAndView mav = new ModelAndView( new RedirectView( url ) );
+
+            return mav;
+
+        }
+
+    }
+    
+    //========================================================
+    
+    //==========================================================
+    class CoExpressionDataWriterJob extends BackgroundControllerJob<ModelAndView> {
+
+        public CoExpressionDataWriterJob( Long eeId ) {
+            super( getMessageUtil() );
+            this.command = eeId;
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see java.util.concurrent.Callable#call()
+         */
+        public ModelAndView call() throws Exception {
+
+            init();
+
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "" );
+
+            /* start time */
+            StopWatch watch = new StopWatch();
+            watch.start();
+
+            /* 'do yer thang' */
+            assert this.command != null;
+            Long eeId = ( Long ) this.command;
+            ExpressionExperiment ee = expressionExperimentService.load( eeId );
+
+            if ( ee == null ) {
+                throw new RuntimeException(
+                        "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
+            }
+
+            File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false ); 
+   
+            ProgressManager.destroyProgressJob( job );
+            watch.stop();
+            log.debug( "Finished writing and downloading co-expression file; done in " + watch.getTime() + " milliseconds" );
+
+            String url = "/Gemma/getData.html?file=" + f.getName();
+
+            ModelAndView mav = new ModelAndView( new RedirectView( url ) );
+
+            return mav;
+
+        }
+
+    }
+    
 }

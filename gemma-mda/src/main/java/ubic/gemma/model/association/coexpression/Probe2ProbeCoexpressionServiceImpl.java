@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -211,4 +212,10 @@ public class Probe2ProbeCoexpressionServiceImpl extends
         return this.getProbe2ProbeCoexpressionDao().validateProbesInCoexpression(queryProbeIds,coexpressedProbeIds,ee, taxon);
     }
 
+    
+    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit ){        
+        return this.getProbe2ProbeCoexpressionDao().getTopCoexpressedLinks( ee, threshold, limit );
+    }
+
+    
 }

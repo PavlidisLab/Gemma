@@ -44,6 +44,7 @@ import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
@@ -341,6 +342,63 @@ public class DEDVController extends BaseFormController {
 
     }
 
+    /**
+     * Not used, cause doesn't make a whole lot of sense. 
+     * Was supposed to be the analogous to getDEDVForDiffExVisualizationByThreshold but it can't be..
+     */ 
+     
+    public VisualizationValueObject[] getDEDVForCoexpressionVisualizationByThreshold( Long eeId, Double givenThreshold){
+
+        
+        if (eeId == null) return null;
+        
+        
+        double threshold = DEFAULT_THRESHOLD;
+        
+        if (givenThreshold != null){
+            threshold = givenThreshold;
+            log.warn( "Threshold specified not using default value: " + givenThreshold );
+            
+        }
+        
+        
+        StopWatch watch = new StopWatch();
+        watch.start();        
+           
+         ExpressionExperiment ee = expressionExperimentService.load( eeId );
+         if (ee == null) return null;
+         Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
+         ees.add( ee );
+        
+        Collection<ProbeLink> links = probe2ProbeCoexpressionService.getTopCoexpressedLinks( ee, threshold, MAX_RESULTS_TO_RETURN );
+        if(links == null || links.isEmpty()) return null;
+        
+        
+        Collection<Long> probeIds = new HashSet<Long>();
+        for (ProbeLink pl : links){            
+            probeIds.add(pl.getFirstDesignElementId());
+            probeIds.add(pl.getSecondDesignElementId());
+        }
+        
+        Collection<CompositeSequence> probes = compositeSequenceService.loadMultiple( probeIds );
+        
+        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(ees , probes, false );
+
+        //Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        //FIXME: Commented out for performance and factor info not displayed on front end yet anyway. 
+        //layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+
+        watch.stop();
+        Long time = watch.getTime();
+
+        log.info( "Retrieved " + dedvs.size() + " DEDVs in expression experiment " + ee.getId() + "  and under threshold " + threshold + probes.size()
+                + " probes in " + time + " ms." );
+
+
+        return makeVisCollection( dedvs, null, null, null );
+
+    }
+    
     
     /**
      * AJAX exposed method
