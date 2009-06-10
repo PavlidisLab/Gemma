@@ -34,8 +34,8 @@ HEATMAP_CONFIG = {
 
 Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 
-	height :100,
-	width : 220,
+//	height :200,
+	width : 200,
 
 	constructor : function(factorDetails) {
 
@@ -253,8 +253,8 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 
 Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 
-	height :100,
-	width : 220,
+//	height :200,
+	width : 200,
 	listeners : {
 				resize : {
 							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
