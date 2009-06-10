@@ -35,7 +35,7 @@ HEATMAP_CONFIG = {
 Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 
 //	height :200,
-	width : 200,
+	width : 220,
 
 	constructor : function(factorDetails) {
 
@@ -197,7 +197,7 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					html : {
 						id : 'vizDiffDiv',
 						tag : 'div',
-						style : 'width:' + 220 + 'px;height:' + 100 + 'px; margin:5px 2px 2px 5px;'
+						style : 'width:' + 200 + 'px;height:' + 200 + 'px; margin:5px 2px 2px 5px;'
 					},
 
 					refreshWindow : function(data) {
@@ -254,7 +254,7 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 
 //	height :200,
-	width : 200,
+	width : 220,
 	listeners : {
 				resize : {
 							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
@@ -423,7 +423,7 @@ Gemma.EEDetailsVisualizationWindow = Ext.extend(Ext.Window, {
 					html : {
 						id : 'vizDiv',
 						tag : 'div',
-						style : 'width:' + 220 + 'px;height:' + 100 + 'px; margin:5px 2px 2px 5px;'
+						style : 'width:' + 200 + 'px;height:' + 200 + 'px; margin:5px 2px 2px 5px;'
 					},
 
 					refreshWindow : function(data) {
