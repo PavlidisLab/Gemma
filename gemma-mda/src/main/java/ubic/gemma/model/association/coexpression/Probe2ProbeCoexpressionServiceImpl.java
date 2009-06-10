@@ -164,6 +164,11 @@ public class Probe2ProbeCoexpressionServiceImpl extends
         // cleaned: a temporary table is created.s
         return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, cleaned );
     }
+    
+    public java.util.Collection<ProbeLink> getProbeCoExpression(
+            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon){
+        return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, false );
+    }
 
     @Override
     protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )

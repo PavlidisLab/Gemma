@@ -106,6 +106,14 @@ public interface Probe2ProbeCoexpressionService {
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon,
             boolean useWorkingTable );
 
+    
+    /**
+     * <p>
+     * get the co-expression by using native sql query but doesn't use a temporary DB table.
+     * </p>
+     */
+    public java.util.Collection<ProbeLink> getProbeCoExpression(
+            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon);
     /**
      * <p>
      * Return a list of all ExpressionExperiments in which the given gene was tested for coexpression in, among the

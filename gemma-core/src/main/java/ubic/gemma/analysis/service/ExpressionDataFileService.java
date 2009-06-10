@@ -193,7 +193,7 @@ public class ExpressionDataFileService {
                 log.info( f + " exists, not regenerating" );
                 return f;
             }
-            log.info( "Creating new expression data file: " + f );
+            log.info( "Creating new expression data file: " + f.getName() );
             ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered, f );
 
             Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
@@ -223,7 +223,7 @@ public class ExpressionDataFileService {
                 return f;
             }
 
-            log.info( "Creating new quantitation type expression data file: " + f );
+            log.info( "Creating new quantitation type expression data file: " + f.getName());
 
             Collection<? extends DesignElementDataVector> vectors = designElementDataVectorService.find( type );
             Collection<ArrayDesign> arrayDesigns = getArrayDesigns( vectors );
@@ -261,7 +261,7 @@ public class ExpressionDataFileService {
                 return f;
             }
 
-            log.info( "Creating new experimental design file: " + f );
+            log.info( "Creating new experimental design file: " + f.getName() );
             writeDesignMatrix( f, ee );
             return f;
         } catch ( IOException e ) {
@@ -286,7 +286,7 @@ public class ExpressionDataFileService {
                 return f;
             }
 
-            log.info( "Creating new JSON expression data file: " + f );
+            log.info( "Creating new JSON expression data file: " + f.getName() );
             ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered, f );
 
             Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
@@ -313,7 +313,7 @@ public class ExpressionDataFileService {
                 return f;
             }
 
-            log.info( "Creating new quantitation type  JSON data file: " + f );
+            log.info( "Creating new quantitation type  JSON data file: " + f.getName() );
 
             Collection<? extends DesignElementDataVector> vectors = designElementDataVectorService.find( type );
 
@@ -349,7 +349,7 @@ public class ExpressionDataFileService {
                 return f;
             }
 
-            log.info( "Creating new Differential Expression data file: " + f );
+            log.info( "Creating new Differential Expression data file: " + f.getName() );
             writeDiffExpressionData( f, ee );
             return f;
         } catch ( IOException e ) {
@@ -377,7 +377,7 @@ public class ExpressionDataFileService {
                 return f;
             }
 
-            log.info( "Creating new Co-Expression data file: " + f );
+            log.info( "Creating new Co-Expression data file: " + f.getName() );
             writeCoexpressionData( f, ee );
             return f;
         } catch ( IOException e ) {
@@ -394,15 +394,13 @@ public class ExpressionDataFileService {
      * @throws IOException
      */
     private void writeCoexpressionData( File file, ExpressionExperiment ee ) throws IOException {
-
-        // FIXME: should use temporary table or not?
+        
         Taxon tax = expressionExperimentService.getTaxon( ee.getId() );
         Collection<ProbeLink> probeLinks = probe2ProbeCoexpressionService.getProbeCoExpression( ee,
-                tax.getCommonName(), true );
+                tax.getCommonName() );
 
-        // TODO add gene info to file?
-        // Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-        // Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
+        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
+        Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         StringBuffer buf = new StringBuffer();
@@ -486,6 +484,10 @@ public class ExpressionDataFileService {
 
                                 if ( g instanceof GeneImpl ) {
                                     String name = g.getOfficialName();
+                                    
+                                    if(StringUtils.contains( name, "$"))
+                                            log.info( name );
+                                    
                                     String symbol = g.getOfficialSymbol();
 
                                     if ( !StringUtils.isBlank( name ) ) probeBuffer.append( name + "," );
@@ -495,11 +497,13 @@ public class ExpressionDataFileService {
                                 }
                             }
 
+                            //Remove trailing ',' if necessary
                             if ( ( geneSymbols.length() != 0 )
                                     && ( geneSymbols.charAt( geneSymbols.length() - 1 ) == ',' ) ) {
-                                geneSymbols.deleteCharAt( geneSymbols.lastIndexOf( "," ) ); // removing trailing ,
+                                geneSymbols.deleteCharAt( geneSymbols.lastIndexOf( "," ) ); 
                             }
 
+                            //Remove trailing ',' if necessary
                             if ( ( probeBuffer.length() != 0 )
                                     && ( probeBuffer.charAt( probeBuffer.length() - 1 ) == ',' ) )
                                 probeBuffer.deleteCharAt( probeBuffer.lastIndexOf( "," ) );
@@ -507,7 +511,7 @@ public class ExpressionDataFileService {
                             probeBuffer.append( "\t" + geneSymbols );
                             probe2String.put( cs.getId(), probeBuffer );
                         }
-                        else{
+                        else{//If no gene annotation information available just skip it
                          probe2String.put( cs.getId(), probeBuffer.append( "\t \t" ) );   
                         }
                     }
