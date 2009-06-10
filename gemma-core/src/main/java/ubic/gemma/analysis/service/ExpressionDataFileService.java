@@ -411,16 +411,29 @@ public class ExpressionDataFileService {
         buf.append( "# Coexpression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n" );
         buf.append( "# Generated On: " + timestamp + " \n" );
         buf.append( DISCLAIMER );
-        buf.append( "probe_1 \t gene_symbol_1 \t gene_name_1 \t probe_2 \t gene_symbol_2 \t gene_name_2 \t score \n" );
+        if(geneAnnotations.isEmpty()){
+            log.info( "Micro Array Annotation File Missing for Experiment, unable to include annotation information" );
+            buf.append("# The micro array annotation file is missing for this Experiment, unable to include gene annotation information \n" );
+            buf.append( "probeId_1 \t probeId_2 \t score \n" );
+        }
+        else
+            buf.append( "probe_1 \t gene_symbol_1 \t gene_name_1 \t probe_2 \t gene_symbol_2 \t gene_name_2 \t score \n" );
+
 
         // Data
         for ( ProbeLink link : probeLinks ) {
-            
-            String[] firstAnnotation = geneAnnotations.get(link.getFirstDesignElementId());
-            String[] secondAnnotation = geneAnnotations.get(link.getSecondDesignElementId());
-            
-            buf.append(firstAnnotation[0] + "\t" + firstAnnotation[1] + "\t" + firstAnnotation[2] + "\t");
-            buf.append( secondAnnotation[0] + "\t" + secondAnnotation[1] + "\t" + secondAnnotation[2] + "\t" );
+    
+            if(geneAnnotations.isEmpty()){
+                buf.append(link.getFirstDesignElementId() + "\t" + link.getSecondDesignElementId() + "\t");
+            }
+            else{
+                String[] firstAnnotation = geneAnnotations.get(link.getFirstDesignElementId());
+                String[] secondAnnotation = geneAnnotations.get(link.getSecondDesignElementId());
+                
+                buf.append(firstAnnotation[0] + "\t" + firstAnnotation[1] + "\t" + firstAnnotation[2] + "\t");
+                buf.append( secondAnnotation[0] + "\t" + secondAnnotation[1] + "\t" + secondAnnotation[2] + "\t" );
+            }
+
             buf.append( StringUtils.substring( link.getScore().toString(), 0, 5 ) + "\n" );
         }
 
@@ -441,19 +454,23 @@ public class ExpressionDataFileService {
      */
     private void writeDiffExpressionData( File file, ExpressionExperiment ee ) throws IOException {
 
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-
-        Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
+              Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
         Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsString( arrayDesigns );
 
         StringBuilder buf = new StringBuilder();
         Date timestamp = new Date( System.currentTimeMillis() );
-        buf.append( "# Differentail Expression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n" );
+        buf.append( "# Differential Expression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n" );
         buf.append( "# " + timestamp + " \n" );
         buf.append( DISCLAIMER );
 
-        buf.append( "Probe_Name \t  Gene_Name \t Gene_Symbol \t" );// column information
+        if(geneAnnotations.isEmpty()){
+            log.info( "Micro Array Annotation File Missing for this Experiment, unable to include gene annotation information" );
+            buf.append("# The micro array annotation file is missing for this Experiment, unable to include gene annotation information \n" );
+            buf.append( "Probe_Name \t" );
+        }
+        else
+            buf.append( "Probe_Name \t  Gene_Name \t Gene_Symbol \t" );// column information
 
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
 
@@ -486,11 +503,12 @@ public class ExpressionDataFileService {
                         probeBuffer = probe2String.get( cs.getId() );
                     } else {// no entry for probe yet
                         probeBuffer.append( cs.getName() + "\t" );
-                        probeBuffer.append( geneAnnotations.get( cs.getId() )[1] + "\t" + geneAnnotations.get( cs.getId() )[2] );
+                        if (!geneAnnotations.isEmpty())
+                            probeBuffer.append( geneAnnotations.get( cs.getId() )[1] + "\t" + geneAnnotations.get( cs.getId() )[2]  + "\t");
                         probe2String.put( cs.getId(), probeBuffer );
                     }
 
-                    probeBuffer.append( "\t" + dear.getCorrectedPvalue() + "\t" + dear.getScore() );
+                    probeBuffer.append( dear.getCorrectedPvalue() + "\t" + dear.getScore() + "\t" );
                 } else {
                     log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
                             + dear.getClass() + " with id: " + dear.getId() );
@@ -507,6 +525,7 @@ public class ExpressionDataFileService {
             buf.append( "\n" );
         }
 
+        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
         writer.write( buf.toString() );
         writer.flush();
         writer.close();

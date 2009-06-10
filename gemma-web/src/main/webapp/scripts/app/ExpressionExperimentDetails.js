@@ -200,8 +200,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						
 						
 						var downloadCoExpressionDataLink =  String.format("<a ext:qtip='Download all coexpression  data in a tab delimted format'  href='#' onClick='fetchCoExpressionData({0})' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>", ee.id);
-
-						return ee.coexpressionLinkCount + " " + downloadCoExpressionDataLink;
+						var count = ee.coexpressionLinkCount != null ?  ee.coexpressionLinkCount : "not available";
+						return count + " " + downloadCoExpressionDataLink;
 						
 					},
 					
@@ -212,14 +212,23 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						}
 						
 	
-						var diffExpressionSummary= "";									
+						var diffExpressionSummary= "";		
 						for(var i = 0; i<ee.diffExpressedProbes.size(); i++){
-							
-							var factors = "";
-							for (var j = 0; j<ee.diffExpressedProbes[i].experimentalFactors.size(); j++){
-								factors = factors + ee.diffExpressedProbes[i].experimentalFactors[j].description;
+							var factors;
+							if (ee.diffExpressedProbes[i].experimentalFactors == null || ee.diffExpressedProbes[i].experimentalFactors.size() == 0  ){
+								factors = "n/a";
+							}else{	
+								factors = "'" + ee.diffExpressedProbes[i].experimentalFactors[0].name + "'";
+
+								for (var j = 1; j<ee.diffExpressedProbes[i].experimentalFactors.size(); j++){
+									factors = factors + ", '" + ee.diffExpressedProbes[i].experimentalFactors[j].name + "'";
+								}
 							}
-							diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +',\'' + factors +'\')" ext:qtip="Visulize differentially expressed Genes for: '+ factors + ' (threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
+							if ( ee.diffExpressedProbes[i].numberOfDiffExpressedProbes == 0){
+								diffExpressionSummary = diffExpressionSummary + "&nbsp; 0";
+							}else{
+								diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +',\'' + factors +'\')" ext:qtip="Click to see differentially expressed probes for: '+ factors + ' (FDR threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
+							}
 						}
 								
 						var downloadDiffDataLink =  String.format("<a ext:qtip='Download all differential expression data in a tab delimted format'  href='#' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>", ee.id);
@@ -784,7 +793,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 											width :480
 										},
 										{
-											html :'Coexp. Links:'
+											html :'Co-exp. Links:'
 										},
 										{
 											id :'coexpressionLinkCount-region',
@@ -792,7 +801,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 											width :60
 										},
 										{
-											html :'Number of Diff Expressed Genes'
+											html :'Diff-exp. Probes'
 										},
 										{
 											id :'DiffExpressedProbes-region',
