@@ -200,7 +200,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						
 						
 						var downloadCoExpressionDataLink =  String.format("<a ext:qtip='Download all coexpression  data in a tab delimted format'  href='#' onClick='fetchCoExpressionData({0})' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>", ee.id);
-						var count = ee.coexpressionLinkCount != null ?  ee.coexpressionLinkCount : "not available";
+						var count = ee.coexpressionLinkCount != null ?  ee.coexpressionLinkCount : "Unavailable";
 						return count + " " + downloadCoExpressionDataLink;
 						
 					},
@@ -208,7 +208,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 					renderDiffExpressionDetails : function(ee){
 												
 						if (!ee.diffExpressedProbes){					
-							return "none";
+							return "Unavailable";
 						}
 						
 	
@@ -218,10 +218,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 							if (ee.diffExpressedProbes[i].experimentalFactors == null || ee.diffExpressedProbes[i].experimentalFactors.size() == 0  ){
 								factors = "n/a";
 							}else{	
-								factors = "'" + ee.diffExpressedProbes[i].experimentalFactors[0].name + "'";
+								factors = "`" + ee.diffExpressedProbes[i].experimentalFactors[0].name + "`";
 
 								for (var j = 1; j<ee.diffExpressedProbes[i].experimentalFactors.size(); j++){
-									factors = factors + ", '" + ee.diffExpressedProbes[i].experimentalFactors[j].name + "'";
+									factors = factors + ", `" + ee.diffExpressedProbes[i].experimentalFactors[j].name + "`";
 								}
 							}
 							if ( ee.diffExpressedProbes[i].numberOfDiffExpressedProbes == 0){
