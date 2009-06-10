@@ -90,6 +90,8 @@ public class ExpressionDataFileService {
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
 
+    public static final String DISCLAIMER = "# If you use this file for your research, please cite the Gemma web site\n";
+    
     private static Log log = LogFactory.getLog( ArrayDesignAnnotationService.class.getName() );
 
     ArrayDesignService arrayDesignService;
@@ -223,7 +225,7 @@ public class ExpressionDataFileService {
                 return f;
             }
 
-            log.info( "Creating new quantitation type expression data file: " + f.getName());
+            log.info( "Creating new quantitation type expression data file: " + f.getName() );
 
             Collection<? extends DesignElementDataVector> vectors = designElementDataVectorService.find( type );
             Collection<ArrayDesign> arrayDesigns = getArrayDesigns( vectors );
@@ -394,28 +396,32 @@ public class ExpressionDataFileService {
      * @throws IOException
      */
     private void writeCoexpressionData( File file, ExpressionExperiment ee ) throws IOException {
-        
+
         Taxon tax = expressionExperimentService.getTaxon( ee.getId() );
-        Collection<ProbeLink> probeLinks = probe2ProbeCoexpressionService.getProbeCoExpression( ee,
-                tax.getCommonName() );
+        Collection<ProbeLink> probeLinks = probe2ProbeCoexpressionService
+                .getProbeCoExpression( ee, tax.getCommonName() );
 
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-        Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
+        Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsString( arrayDesigns );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         StringBuffer buf = new StringBuffer();
 
         // Write header information
-        buf.append( "# Coexpression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n " );
+        buf.append( "# Coexpression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n" );
         buf.append( "# Generated On: " + timestamp + " \n" );
-        // Columns
-        buf.append( "probe1 \t probe2 \t score \n" );
+        buf.append( DISCLAIMER );
+        buf.append( "probe_1 \t gene_symbol_1 \t gene_name_1 \t probe_2 \t gene_symbol_2 \t gene_name_2 \t score \n" );
 
         // Data
         for ( ProbeLink link : probeLinks ) {
-            buf.append( link.getFirstDesignElementId() + "\t" );
-            buf.append( link.getSecondDesignElementId() + "\t" );
-            buf.append( link.getScore() + "\n" );
+            
+            String[] firstAnnotation = geneAnnotations.get(link.getFirstDesignElementId());
+            String[] secondAnnotation = geneAnnotations.get(link.getSecondDesignElementId());
+            
+            buf.append(firstAnnotation[0] + "\t" + firstAnnotation[1] + "\t" + firstAnnotation[2] + "\t");
+            buf.append( secondAnnotation[0] + "\t" + secondAnnotation[1] + "\t" + secondAnnotation[2] + "\t" );
+            buf.append( StringUtils.substring( link.getScore().toString(), 0, 5 ) + "\n" );
         }
 
         // Write coexpression data to file (zipped of course)
@@ -439,12 +445,14 @@ public class ExpressionDataFileService {
 
         Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-        Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
+        Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsString( arrayDesigns );
 
         StringBuilder buf = new StringBuilder();
         Date timestamp = new Date( System.currentTimeMillis() );
-        buf.append( "# Differentail Expression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n " );
+        buf.append( "# Differentail Expression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n" );
         buf.append( "# " + timestamp + " \n" );
+        buf.append( DISCLAIMER );
+
         buf.append( "Probe_Name \t  Gene_Name \t Gene_Symbol \t" );// column information
 
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
@@ -452,16 +460,19 @@ public class ExpressionDataFileService {
         for ( ExpressionAnalysisResultSet ears : results ) {
             differentialExpressionAnalysisResultService.thaw( ears );
 
-            buf.append( "PValue (" );
-            // add the factor names to the columns
-            int count = 0;
+           
+            // Generate a descrition of the factors involved "(factor1, factor2, ...., factorN)"
+            String factorColumnName = new String( "(" );            
             for ( ExperimentalFactor ef : ears.getExperimentalFactor() ) {
-                buf.append( ef.getName() + "," );
-                count++;
+                factorColumnName +=  ef.getName() + "," ;
             }
-            if ( count != 0 ) buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
-            buf.append( ") \t" );
-
+            factorColumnName =  StringUtils.chomp( factorColumnName, "," ) + ")";
+            
+            //Generate headers
+            buf.append( "QValue" + factorColumnName + "\t");
+            buf.append( "PValue" + factorColumnName + "\t");
+            
+            
             // Generate probe details
             for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
                 StringBuilder probeBuffer = new StringBuilder();
@@ -475,57 +486,19 @@ public class ExpressionDataFileService {
                         probeBuffer = probe2String.get( cs.getId() );
                     } else {// no entry for probe yet
                         probeBuffer.append( cs.getName() + "\t" );
-                        StringBuilder geneSymbols = new StringBuilder();
-
-                        Collection<Gene> genes = geneAnnotations.get( cs.getId() );
-
-                        if ( genes != null ) {
-                            for ( Gene g : genes ) {
-
-                                if ( g instanceof GeneImpl ) {
-                                    String name = g.getOfficialName();
-                                    
-                                    if(StringUtils.contains( name, "$"))
-                                            log.info( name );
-                                    
-                                    String symbol = g.getOfficialSymbol();
-
-                                    if ( !StringUtils.isBlank( name ) ) probeBuffer.append( name + "," );
-
-                                    if ( !StringUtils.isBlank( symbol ) ) geneSymbols.append( symbol + "," );
-
-                                }
-                            }
-
-                            //Remove trailing ',' if necessary
-                            if ( ( geneSymbols.length() != 0 )
-                                    && ( geneSymbols.charAt( geneSymbols.length() - 1 ) == ',' ) ) {
-                                geneSymbols.deleteCharAt( geneSymbols.lastIndexOf( "," ) ); 
-                            }
-
-                            //Remove trailing ',' if necessary
-                            if ( ( probeBuffer.length() != 0 )
-                                    && ( probeBuffer.charAt( probeBuffer.length() - 1 ) == ',' ) )
-                                probeBuffer.deleteCharAt( probeBuffer.lastIndexOf( "," ) );
-
-                            probeBuffer.append( "\t" + geneSymbols );
-                            probe2String.put( cs.getId(), probeBuffer );
-                        }
-                        else{//If no gene annotation information available just skip it
-                         probe2String.put( cs.getId(), probeBuffer.append( "\t \t" ) );   
-                        }
+                        probeBuffer.append( geneAnnotations.get( cs.getId() )[1] + "\t" + geneAnnotations.get( cs.getId() )[2] );
+                        probe2String.put( cs.getId(), probeBuffer );
                     }
 
-                    probeBuffer.append( "\t" + dear.getCorrectedPvalue() );
-
+                    probeBuffer.append( "\t" + dear.getCorrectedPvalue() + "\t" + dear.getScore() );
                 } else {
                     log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
                             + dear.getClass() + " with id: " + dear.getId() );
                 }
 
-            }// ears.getResults loop
+            } // ears.getResults loop
 
-        }// ears loop
+        } // ears loop
 
         buf.append( "\n" );
 
@@ -581,6 +554,19 @@ public class ExpressionDataFileService {
         for ( ArrayDesign arrayDesign : ads ) {
             arrayDesignService.thawLite( arrayDesign );
             annots.putAll( ArrayDesignAnnotationService.readAnnotationFile( arrayDesign ) );
+        }
+        return annots;
+    }
+
+    /**
+     * @param ads
+     * @return
+     */
+    private Map<Long, String[]> getGeneAnnotationsAsString( Collection<ArrayDesign> ads ) {
+        Map<Long, String[]> annots = new HashMap<Long, String[]>();
+        for ( ArrayDesign arrayDesign : ads ) {
+            arrayDesignService.thawLite( arrayDesign );
+            annots.putAll( ArrayDesignAnnotationService.readAnnotationFileAsString( arrayDesign ) );
         }
         return annots;
     }

@@ -149,18 +149,28 @@ public class ArrayDesignAnnotationService {
                 List<String> geneNames = Arrays.asList( StringUtils.split( fields[2], '|' ) );
 
                 for ( int i = 0; i < geneSymbols.size(); i++ ) {
-                    Gene g = Gene.Factory.newInstance();
+
                     String symbol = geneSymbols.get( i );
+                    String name = geneNames.get( i );
+
                     if ( StringUtils.isBlank( symbol ) ) {
                         continue;
                     }
-                    g.setOfficialSymbol( symbol );
 
-                    if ( i < geneNames.size() ) {
-                        g.setOfficialName( geneNames.get( i ) );
+                    String[] symbolsb = StringUtils.split( symbol, ',' );
+                    String[] namesb = StringUtils.split( name, '$' );
+
+                    for ( int j = 0; j < symbolsb.length; j++ ) {
+
+                        String s = symbolsb[j];
+                        String n = namesb[j];
+
+                        Gene g = Gene.Factory.newInstance();
+                        g.setOfficialSymbol( s );
+                        g.setName( n );
+
+                        results.get( probeId ).add( g );
                     }
-
-                    results.get( probeId ).add( g );
                 }
             }
 
@@ -172,6 +182,62 @@ public class ArrayDesignAnnotationService {
         }
     }
 
+    /**
+     * @param arrayDesign
+     * @return Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol, gene Name] for a given probe id. 
+     * format of string is geneSymbol then geneNames same as found in annotation file
+     */
+    public static Map<Long, String[]> readAnnotationFileAsString( ArrayDesign arrayDesign ) {
+        Map<Long, String[]> results = new HashMap<Long, String[]>();
+        File f = new File( ANNOT_DATA_DIR + mungeFileName( arrayDesign.getShortName() ) + STANDARD_FILE_SUFFIX
+                + ANNOTATION_FILE_SUFFIX );
+        if ( !f.canRead() ) {
+            log.info( "Gene annotations are not available from " + f );
+            return results;
+        }
+
+        Map<String, Long> probeNameToId = new HashMap<String, Long>();
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            results.put( cs.getId(), new String[3] );
+            if ( probeNameToId.containsKey( cs.getName() ) ) {
+                log.warn( "Duplicate probe name: " + cs.getName() );
+            }
+            probeNameToId.put( cs.getName(), cs.getId() );
+        }
+
+        try {
+            log.info( "Reading annotations from: " + f );
+            InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
+            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+            String line = null;
+
+            while ( ( line = br.readLine() ) != null ) {
+                if ( StringUtils.isBlank( line ) || line.startsWith( COMMENT_CHARACTER ) ) {
+                    continue;
+                }
+                String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
+
+                if ( fields.length < 3 ) continue; // means there are no gene annotations.
+
+                String probeName = fields[0];
+
+                if ( !probeNameToId.containsKey( probeName ) ) continue;
+                Long probeId = probeNameToId.get( probeName );
+
+                results.get( probeId )[0] = probeName;    //Probe Name
+                results.get( probeId )[1] = fields[1];   //Gene Symbol 
+                results.get( probeId )[2] = fields[2];  //Gene Name
+              
+            }
+
+            return results;
+        } catch ( FileNotFoundException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+    
     private Gene2GOAssociationService gene2GOAssociationService;
 
     private GeneOntologyService goService;
