@@ -99,7 +99,7 @@ public class LinkAnalysis {
         log.info( "Current Options: \n" + this.config );
         this.calculateDistribution();
 
-        if ( this.config.isUseDb() ) this.writeDistribution();
+        this.writeDistribution();
 
         this.getLinks();
 
@@ -129,7 +129,21 @@ public class LinkAnalysis {
      */
     public void writeDistribution() {
 
-        File outputDir = new File( ConfigUtils.getAnalysisStoragePath() );
+        File outputDir = null;
+
+        if ( this.config.isUseDb() ) {
+            outputDir = new File( ConfigUtils.getAnalysisStoragePath() );
+        } else {
+            outputDir = new File( System.getProperty( "user.home" ) + File.separator + "gemma.output" );
+            if ( !outputDir.exists() ) {
+                boolean ok = outputDir.mkdirs();
+                if ( !ok ) {
+                    log.warn( "Cannot create " + outputDir + ", correlation distribution will not be saved to disk" );
+                    return;
+                }
+            }
+        }
+
         if ( !outputDir.canWrite() ) {
             log.warn( "Cannot write to " + outputDir + ", correlation distribution will not be saved to disk" );
             return;
