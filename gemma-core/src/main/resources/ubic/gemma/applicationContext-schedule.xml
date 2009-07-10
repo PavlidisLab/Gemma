@@ -113,7 +113,7 @@
 	<bean id="expressionExperimentReportJobDetail"
 		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
-			<ref bean="expressionExperimentReportGenerationService"/>
+			<ref bean="expressionExperimentReportService"/>
 		</property>
 		<property name="targetMethod">
 			<value>generateSummaryObjects</value>

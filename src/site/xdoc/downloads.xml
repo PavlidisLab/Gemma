@@ -21,7 +21,7 @@
 							gemmaCli-1.4.jar
 						</a>
 						- The Gemma command line tool package.
-					</li>
+					</li>														
 				</ul>
 				<p>
 					Note that these files are not likely to be of immediate use, as most functionality requires a
@@ -38,9 +38,9 @@
 					</li>
 					<li>
 						<a href="http://chibi.ubc.ca/Gemma/resources/dist/basecode-1.0.6-src.zip">
-							basecode-1.0.6-src.zip
+							baseCode-1.0.6-src.zip
 						</a>
-						- Basecode is a set of code used by multiple projects in our lab. More details about basecode
+						- BaseCode is a set of code used by multiple projects in our lab. More details about basecode
 						are
 						<a href="http://chibi.ubc.ca/faculty/pavlidis/basecode/">here</a>
 						.

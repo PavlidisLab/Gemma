@@ -99,7 +99,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					}.createDelegate(this)
 				});
 
-		ExpressionExperimentController.updateReport.apply(this, callParams);
+		ExpressionExperimentReportGenerationController.run.apply(this, callParams);
 	},
 
 	updateAllEEReports : function() {
@@ -115,7 +115,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					}.createDelegate(this)
 				});
 
-		ExpressionExperimentController.updateAllReports.apply(this, callParams);
+		ExpressionExperimentReportGenerationController.runAll.apply(this, callParams);
 	},
 
 	tagger : function(id) {

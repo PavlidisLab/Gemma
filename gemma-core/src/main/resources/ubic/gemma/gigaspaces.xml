@@ -61,14 +61,14 @@
 			</value>
 		</property>
 	</bean>
-
+	
 
 	<bean id="expressionExperimentReportGenerationWorker"
 		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
-			<ref bean="expressionExperimentReportService" />
+			<ref bean="expressionExperimentReportTask" />
 		</property>
 		<property name="businessInterface">
 			<value>
@@ -263,6 +263,16 @@
 		class="ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskImpl">
 		<property name="processedExpressionDataVectorCreateService">
 			<ref bean="processedExpressionDataVectorCreateService" />
+		</property>
+		<property name="gigaSpacesTemplate">
+			<ref bean="gigaspacesTemplate" />
+		</property>
+	</bean>
+	
+	<bean id="expressionExperimentReportTask"
+		class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTaskImpl">
+		<property name="expressionExperimentReportService">
+			<ref bean="expressionExperimentReportService" />
 		</property>
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />

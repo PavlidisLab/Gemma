@@ -1155,7 +1155,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     /**
      * Update all summary reports. This takes a while so should only be called by administrators.
-     * 
+     * AJAX
+     * @deprecated use expressionExperimentReportGenerationController
      * @return
      */
     public String updateAllReports() {
@@ -1206,7 +1207,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     /**
      * Update the Summary resport for a single experiment
-     * 
+     * AJAX
+     * @deprecated use expressionExperimentReportGenerationController
      * @param id
      * @return
      */

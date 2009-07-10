@@ -37,10 +37,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.TaskCommand;
-import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -66,7 +62,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * Handles creation, serialization and/or marshalling of reports about expression experiments. Reports are stored in
@@ -85,7 +80,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * 
  * @version $Id$
  */
-public class ExpressionExperimentReportService extends BaseSpacesTask implements ExpressionExperimentReportTask {
+public class ExpressionExperimentReportService {
     private static final double CUT_OFF = 0.05;
 
     private AuditEventService auditEventService;
@@ -98,29 +93,8 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
     private Log log = LogFactory.getLog( this.getClass() );
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private SecurityService securityService;
-    private String taskId = null;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
-     */
-    public TaskResult execute( TaskCommand spacesCommand ) {
-        this.generateSummaryObjects();
-        return null;
-    }
 
     /**
      * Populate information about how many annotations there are, and how many factor values there are.
@@ -392,15 +366,6 @@ public class ExpressionExperimentReportService extends BaseSpacesTask implements
         return probe2ProbeCoexpressionService;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
-     */
-    @Override
-    public String getTaskId() {
-        return taskId;
-    }
 
     /**
      * retrieves a collection of cached value objects containing summary information

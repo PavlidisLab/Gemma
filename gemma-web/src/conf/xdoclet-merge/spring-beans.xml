@@ -407,6 +407,24 @@
 					</property>
 				</bean>
 			</entry>
+			
+			<entry key="ExpressionExperimentReportGenerationController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="expressionExperimentReportGenerationService" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>run</value>
+							<value>runAll</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			
+			
 			<entry key="DifferentialExpressionAnalysisController">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">

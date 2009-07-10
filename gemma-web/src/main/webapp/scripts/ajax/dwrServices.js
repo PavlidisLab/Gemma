@@ -385,6 +385,20 @@ ExpressionExperimentSetController.getExperimentsInSet = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
 			'getExperimentsInSet', p0, callback);
 }
+//====================================================================================
+
+if (ExpressionExperimentReportGenerationController == null)
+	var ExpressionExperimentReportGenerationController = {};
+ExpressionExperimentReportGenerationController._path = '/Gemma/dwr';
+
+ExpressionExperimentReportGenerationController.run = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentReportGenerationController._path, 'ExpressionExperimentReportGenerationController', 'run', p0,
+			callback);
+}
+ExpressionExperimentReportGenerationController.runAll = function(callback) {
+	dwr.engine._execute(ExpressionExperimentReportGenerationController._path, 'ExpressionExperimentReportGenerationController',
+			'runAll',  callback);
+}
 // ====================================================================================
 if (ExtCoexpressionSearchController == null)
 	var ExtCoexpressionSearchController = {};
