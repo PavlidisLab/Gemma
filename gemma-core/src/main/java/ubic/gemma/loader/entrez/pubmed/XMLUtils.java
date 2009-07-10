@@ -19,12 +19,22 @@
 package ubic.gemma.loader.entrez.pubmed;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * Handy methods for dealing with XML.
@@ -33,6 +43,8 @@ import org.w3c.dom.NodeList;
  * @version $Id$
  */
 public class XMLUtils {
+
+    protected static final Log log = LogFactory.getLog( XMLUtils.class );
 
     /**
      * Make the horrible DOM API slightly more bearable: get the text value we know this element contains.
@@ -84,4 +96,53 @@ public class XMLUtils {
         }
         return null;
     }
+    
+    /**
+     * @param doc - the xml document to search through
+     * @param tag  -the name of the element we are looking for
+     * @return  a collection of strings that represent all the data contained within the given tag (for each instance of that tag)
+     */
+    public static Collection<String> extractTagData( Document doc, String tag) {
+        Collection<String> result = new HashSet<String>();
+        NodeList idList = doc.getElementsByTagName( tag );
+        assert idList != null;
+        log.debug( "Got " + idList.getLength() );
+        // NodeList idNodes = idList.item( 0 ).getChildNodes();
+        // Node ids = idList.item( 0 );
+        try {
+            for ( int i = 0; i < idList.getLength(); i++ ) {
+                Node item = idList.item( i );
+                String value = XMLUtils.getTextValue( ( Element ) item );
+                log.debug( "Got " + value );
+                result.add( value );
+            }
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+        return result;
+    }
+    
+ 
+    /**
+     * @param is
+     * @return
+     * @throws IOException
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     */
+    public static Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
+        if ( is.available() == 0 ) {
+            throw new IOException( "XML stream contains no data." );
+        }
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setIgnoringComments( true );
+        // factory.setValidating( true );
+
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse( is );
+        return document;
+    }
+    
 }

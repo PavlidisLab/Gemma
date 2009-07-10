@@ -40,6 +40,9 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.util.AlanBrainAtlasService;
+import ubic.gemma.util.Image;
+import ubic.gemma.util.ImageSeries;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -55,6 +58,7 @@ import ubic.gemma.web.remote.EntityDelegator;
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
+ * @spring.property name="alanBrainAtlasService" ref="alanBrainAtlasService"
  * @spring.property name="methodNameResolver" ref="geneActions"
  */
 public class GeneController extends BaseMultiActionController {
@@ -67,6 +71,7 @@ public class GeneController extends BaseMultiActionController {
     private Gene2GOAssociationService gene2GOAssociationService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private CompositeSequenceService compositeSequenceService = null;
+    private AlanBrainAtlasService alanBrainAtlasService = null;
 
     private GeneOntologyService geneOntologyService;
 
@@ -148,6 +153,11 @@ public class GeneController extends BaseMultiActionController {
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
     }
+    
+    
+    public void setAlanBrainAtlasService(AlanBrainAtlasService alanBrainAtlasService){
+        this.alanBrainAtlasService = alanBrainAtlasService;
+    }
 
     /**
      * @param request
@@ -189,6 +199,29 @@ public class GeneController extends BaseMultiActionController {
         // Get the composite sequences
         Long compositeSequenceCount = geneService.getCompositeSequenceCountById( id );
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
+        
+        
+        //Get alan brain atalas represntative images
+        Collection<ImageSeries> imageSeries = alanBrainAtlasService.getRepresentativeSaggitalImages( gene.getOfficialSymbol() );
+        Collection<Image> representativeImages = new HashSet<Image>(); 
+       
+        for ( ImageSeries is : imageSeries ) {
+            if (is.getImages() == null )
+                    continue;
+            
+            for ( Image img : is.getImages() ) {
+                //Convert the urls into fully qualified ones for ez display on jsp page. 
+                String args[] = {"2", "3",img.getDownloadExpressionPath()};    
+                img.setDownloadExpressionPath(alanBrainAtlasService.buildUrlString( AlanBrainAtlasService.GET_IMAGE_URL, args ) );
+                img.setExpressionThumbnailUrl( AlanBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
+                representativeImages.add(img);                               
+            }
+        }
+       
+        if (!representativeImages.isEmpty())
+            mav.addObject( "representativeImages", representativeImages );
+        
+       
         return mav;
     }
 

@@ -1,8 +1,13 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:directive.page import="org.apache.commons.lang.StringUtils" />
 <jsp:directive.page import="java.util.Collection" />
+<jsp:directive.page import="java.util.HashSet" />
 <jsp:directive.page import="ubic.gemma.model.genome.gene.*" />
+<jsp:directive.page import="ubic.gemma.util.Image" />
+
 <jsp:useBean id="gene" scope="request" class="ubic.gemma.model.genome.GeneImpl" />
+<jsp:useBean id="representativeImages" scope="request" class="java.util.HashSet" />
+
 
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/gene.detail.js' />
@@ -180,6 +185,36 @@
 			<%
 			}
 			%>
+		
+	<tr>
+		<td align="right" valign="top">
+			<b>Alan Brain Atlas Expression Images </b><a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'A picture of the expression profile from the alan bran atlas'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+		</td>
+		<td valign="top">
+		 
+		<%		   		
+		 for ( Object obj : representativeImages ) {		
+		 	 ubic.gemma.util.Image img = (ubic.gemma.util.Image) obj;	               
+		%>
+		
+				 	&nbsp;&nbsp;
+				<a title="Alan Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
+				   href="<%out.print(img.getDownloadExpressionPath());%>">
+				   <img	src="<%out.print(img.getExpressionThumbnailUrl());%>" /> </a>
+				   				  
+	
+		
+		<%			                  
+		 }//end of for loop
+		%>
+			   
+		</td>
+	</tr>
+	
+	
+	
 	
 		
 </table>

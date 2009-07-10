@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -177,6 +175,7 @@ public class GeneOntologyService implements InitializingBean {
         return BASE_GO_URI + uriTerm;
     }
 
+    @SuppressWarnings("unused")
     private CacheManager cacheManager;
 
     /**
