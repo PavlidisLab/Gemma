@@ -18,15 +18,17 @@
  */
 
 
-package ubic.gemma.util;
+package ubic.gemma.image.aba;
 
 import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * @author kelsey
  *  
  *  A class that represents the ImageSeries information gotten from the alan brain atals
+ *  
+ *  @version $Id$ @author kelsey
+ * 
  */
 
 

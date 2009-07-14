@@ -16,14 +16,12 @@
  * limitations under the License.
  *
  */
-
-
-
-package ubic.gemma.util;
+package ubic.gemma.image.aba;
 
 /**
- * Alan brain Atlas Image class.  represents 1 image in the alan brain atlas library. 
- * @author kelsey
+ * Alan brain Atlas Image class.  represents 1 image in the alan brain atlas library.
+ *  
+ * @version $Id$ @author kelsey
  *
  */
 public class Image {

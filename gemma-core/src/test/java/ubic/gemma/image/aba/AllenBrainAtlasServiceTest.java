@@ -1,4 +1,4 @@
-package ubic.gemma.util;
+package ubic.gemma.image.aba;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -6,13 +6,17 @@ import java.util.HashSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.image.aba.AbaGene;
+import ubic.gemma.image.aba.AllenBrainAtlasService;
+import ubic.gemma.image.aba.Image;
+import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 
-public class AlanBrainAtlasServiceTest  extends BaseSpringContextTest {
+public class AllenBrainAtlasServiceTest  extends BaseSpringContextTest {
 
-    private AlanBrainAtlasService abaService = null;
-    private static Log log = LogFactory.getLog( AlanBrainAtlasServiceTest.class.getName() );
+    private AllenBrainAtlasService abaService = null;
+    private static Log log = LogFactory.getLog( AllenBrainAtlasServiceTest.class.getName() );
     
     public void testGetGene() throws Exception {
 
@@ -49,7 +53,7 @@ public class AlanBrainAtlasServiceTest  extends BaseSpringContextTest {
     
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        abaService = ( AlanBrainAtlasService ) getBean( "alanBrainAtlasService" );        
+        abaService = ( AllenBrainAtlasService ) getBean( "alanBrainAtlasService" );        
     }
 
 }

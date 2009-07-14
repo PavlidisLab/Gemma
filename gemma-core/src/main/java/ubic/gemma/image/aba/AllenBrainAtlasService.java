@@ -17,7 +17,7 @@
  *
  */
 
-package ubic.gemma.util;
+package ubic.gemma.image.aba;
 
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -56,9 +56,9 @@ import ubic.gemma.loader.entrez.pubmed.XMLUtils;
  * @spring.bean id="alanBrainAtlasService"
  */
 
-public class AlanBrainAtlasService {
+public class AllenBrainAtlasService {
 
-    private static Log log = LogFactory.getLog( AlanBrainAtlasService.class.getName() );
+    private static Log log = LogFactory.getLog( AllenBrainAtlasService.class.getName() );
 
     /**
      * http://brain-map.org
@@ -144,7 +144,7 @@ public class AlanBrainAtlasService {
     protected boolean useFileCache;
     protected String cacheDir;
 
-    public AlanBrainAtlasService() {
+    public AllenBrainAtlasService() {
         initDefaults();
     }
 
@@ -234,7 +234,7 @@ public class AlanBrainAtlasService {
 
     public AbaGene getGene( String gene ) {
 
-        File outputFile = getFile(gene);
+        File outputFile = getFile( gene );
         Document geneDoc = null;
 
         try {
@@ -263,7 +263,7 @@ public class AlanBrainAtlasService {
 
         NodeList idList = geneDoc.getChildNodes().item( 0 ).getChildNodes();
 
-        //log.debug( "Got " + idList.getLength() );
+        // log.debug( "Got " + idList.getLength() );
 
         for ( int i = 0; i < idList.getLength(); i++ ) {
             Node item = idList.item( i );
@@ -284,7 +284,7 @@ public class AlanBrainAtlasService {
 
                     Node c = childNodes.item( m );
 
-                    //log.info( c.getNodeName() );
+                    // log.info( c.getNodeName() );
                     String n = c.getNodeName();
                     try {
                         if ( n.equals( "imageseriesid" ) ) {
@@ -315,42 +315,36 @@ public class AlanBrainAtlasService {
 
     }
 
-    public Collection<ImageSeries> getRepresentativeSaggitalImages(String gene){
-        
-        
-        
-        
+    public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) {
+
         AbaGene grin1 = this.getGene( gene );
         Collection<ImageSeries> representativeSaggitalImages = new HashSet<ImageSeries>();
-        
+
         for ( ImageSeries is : grin1.getImageSeries() ) {
-            if (is.getPlane().equalsIgnoreCase( "sagittal" )){
-              
-                Collection<Image> images = this.getImageseries( is.getImageSeriesId() );              
-              Collection<Image> representativeImages = new HashSet<Image>();
-              
-              for(Image img : images){
-                  if ((2600 > img.getPosition()) && (img.getPosition() > 2200)){
-                      representativeImages.add( img );
-                  }
-              }
-              
-              if (representativeImages.isEmpty())
-                  continue;
-              
-              //Only add if there is something to add
-              is.setImages( representativeImages );
-              representativeSaggitalImages.add( is );
+            if ( is.getPlane().equalsIgnoreCase( "sagittal" ) ) {
+
+                Collection<Image> images = this.getImageseries( is.getImageSeriesId() );
+                Collection<Image> representativeImages = new HashSet<Image>();
+
+                for ( Image img : images ) {
+                    if ( ( 2600 > img.getPosition() ) && ( img.getPosition() > 2200 ) ) {
+                        representativeImages.add( img );
+                    }
+                }
+
+                if ( representativeImages.isEmpty() ) continue;
+
+                // Only add if there is something to add
+                is.setImages( representativeImages );
+                representativeSaggitalImages.add( is );
             }
         }
-        //grin1.setImageSeries( representativeSaggitalImages );
-        
+        // grin1.setImageSeries( representativeSaggitalImages );
+
         return representativeSaggitalImages;
-        
-        
+
     }
-    
-    
+
     public boolean getImageseries( Integer imageseriesId, OutputStream out ) throws MalformedURLException, IOException {
 
         String args[] = { imageseriesId.toString() };
@@ -359,9 +353,9 @@ public class AlanBrainAtlasService {
         return ( doPageDownload( getImageseriesUrl, out ) );
     }
 
-    public Collection<Image> getImageseries(Integer imageseriesId){
-        
-        File outputFile = getFile("ImageseriesId_" + imageseriesId.toString());
+    public Collection<Image> getImageseries( Integer imageseriesId ) {
+
+        File outputFile = getFile( "ImageseriesId_" + imageseriesId.toString() );
         Document imageSeriesDoc = null;
 
         try {
@@ -379,11 +373,10 @@ public class AlanBrainAtlasService {
         } catch ( IOException io ) {
 
         }
-        
-        
+
         NodeList idList = imageSeriesDoc.getChildNodes().item( 0 ).getChildNodes();
         Collection<Image> results = new HashSet<Image>();
-        
+
         for ( int i = 0; i < idList.getLength(); i++ ) {
             Node item = idList.item( i );
 
@@ -394,11 +387,11 @@ public class AlanBrainAtlasService {
             for ( int j = 0; j < imageList.getLength(); j++ ) {
 
                 Node image = imageList.item( j );
-                
+
                 if ( !image.getNodeName().equals( "image" ) ) continue;
 
                 NodeList childNodes = image.getChildNodes();
-                
+
                 Integer imageId = null;
                 String displayName = null;
                 Integer position = null;
@@ -408,24 +401,24 @@ public class AlanBrainAtlasService {
                 String expressionThumbnailUrl = null;
                 String downloadImagePath = null;
                 String downloadExpressionPath = null;
-                               
+
                 for ( int m = 0; m < childNodes.getLength(); m++ ) {
 
                     Node c = childNodes.item( m );
 
-                   //log.info( c.getNodeName() );
+                    // log.info( c.getNodeName() );
                     String n = c.getNodeName();
                     try {
-                        if (n.equals("#text")){
+                        if ( n.equals( "#text" ) ) {
                             continue; // added to make faster as half of comparisions are empty nodes of this type!
                         } else if ( n.equals( "imageid" ) ) {
                             imageId = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
                         } else if ( n.equals( "imagedisplayname" ) ) {
                             displayName = XMLUtils.getTextValue( ( Element ) c );
                         } else if ( n.equals( "position" ) ) {
-                            position = Integer.parseInt(  XMLUtils.getTextValue( ( Element ) c ));
+                            position = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
                         } else if ( n.equals( "referenceatlasindex" ) ) {
-                            referenceAtlasIndex = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ));
+                            referenceAtlasIndex = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
                         } else if ( n.equals( "thumbnailurl" ) ) {
                             thumbnailUrl = XMLUtils.getTextValue( ( Element ) c );
                         } else if ( n.equals( "zoomifiednisslurl" ) ) {
@@ -435,31 +428,29 @@ public class AlanBrainAtlasService {
                         } else if ( n.equals( "downloadImagePath" ) ) {
                             downloadImagePath = XMLUtils.getTextValue( ( Element ) c );
                         } else if ( n.equals( "downloadExpressionPath" ) ) {
-                            downloadExpressionPath = XMLUtils.getTextValue( ( Element ) c );                                     
+                            downloadExpressionPath = XMLUtils.getTextValue( ( Element ) c );
                         } else {
                             continue;
                         }
                     } catch ( IOException ioe ) {
                         log.warn( ioe );
                     }
-                }//for loop
+                }// for loop
 
-               
-                
                 if ( imageId != null && downloadImagePath != null ) {
-                    Image img = new Image(displayName, imageId,position,referenceAtlasIndex,thumbnailUrl, zoomifiedNisslUrl, expressionThumbnailUrl,downloadImagePath, downloadExpressionPath );
+                    Image img = new Image( displayName, imageId, position, referenceAtlasIndex, thumbnailUrl,
+                            zoomifiedNisslUrl, expressionThumbnailUrl, downloadImagePath, downloadExpressionPath );
                     results.add( img );
                 } else {
-                    log.info( "Skipping adding image to collection cause necessary data missing after parsing image xml" );
+                    log
+                            .info( "Skipping adding image to collection cause necessary data missing after parsing image xml" );
                 }
 
             }
         }
-        
-        
+
         return results;
 
-        
     }
 
     public boolean getNeuroblast( Integer imageseriesId, String structure, String plane, OutputStream out )
@@ -512,14 +503,14 @@ public class AlanBrainAtlasService {
 
         return ( doPageDownload( getImageMapUrl, out ) );
     }
-    
-    public Document getAtlasImageMap(Integer imageseriesId){
-        File outputFile = getFile("atlasImageMap" + imageseriesId.toString());
+
+    public Document getAtlasImageMap( Integer imageseriesId ) {
+        File outputFile = getFile( "atlasImageMap" + imageseriesId.toString() );
         Document atlasImageMapDoc = null;
 
         try {
             FileOutputStream out = new FileOutputStream( outputFile );
-            this.getAtlasImageMap(  imageseriesId, out );
+            this.getAtlasImageMap( imageseriesId, out );
 
             atlasImageMapDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
         } catch ( ParserConfigurationException pce ) {
@@ -532,10 +523,9 @@ public class AlanBrainAtlasService {
         } catch ( IOException io ) {
 
         }
-        
+
         return atlasImageMapDoc;
 
-        
     }
 
     public boolean getImageInfo( Integer imageId, OutputStream out ) throws MalformedURLException, IOException {

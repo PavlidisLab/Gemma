@@ -18,7 +18,7 @@
  */
 
 
-package ubic.gemma.util;
+package ubic.gemma.image.aba;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -110,6 +110,7 @@ public class AbaGene {
         imageSeries.add( is );
         
     }
+    @Override
     public String toString(){
       StringBuffer sb = new StringBuffer();
       sb.append( "GeneId: " + this.geneId + "\n");
