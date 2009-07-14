@@ -31,6 +31,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
+import ubic.gemma.image.aba.AllenBrainAtlasService;
+import ubic.gemma.image.aba.Image;
+import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -40,9 +43,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
-import ubic.gemma.util.AlanBrainAtlasService;
-import ubic.gemma.util.Image;
-import ubic.gemma.util.ImageSeries;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -71,7 +71,7 @@ public class GeneController extends BaseMultiActionController {
     private Gene2GOAssociationService gene2GOAssociationService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private CompositeSequenceService compositeSequenceService = null;
-    private AlanBrainAtlasService alanBrainAtlasService = null;
+    private AllenBrainAtlasService allenBrainAtlasService = null;
 
     private GeneOntologyService geneOntologyService;
 
@@ -155,8 +155,8 @@ public class GeneController extends BaseMultiActionController {
     }
     
     
-    public void setAlanBrainAtlasService(AlanBrainAtlasService alanBrainAtlasService){
-        this.alanBrainAtlasService = alanBrainAtlasService;
+    public void setAlanBrainAtlasService(AllenBrainAtlasService allenBrainAtlasService){
+        this.allenBrainAtlasService = allenBrainAtlasService;
     }
 
     /**
@@ -202,7 +202,7 @@ public class GeneController extends BaseMultiActionController {
         
         
         //Get alan brain atalas represntative images
-        Collection<ImageSeries> imageSeries = alanBrainAtlasService.getRepresentativeSaggitalImages( gene.getOfficialSymbol() );
+        Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( gene.getOfficialSymbol() );
         Collection<Image> representativeImages = new HashSet<Image>(); 
        
         for ( ImageSeries is : imageSeries ) {
@@ -212,8 +212,8 @@ public class GeneController extends BaseMultiActionController {
             for ( Image img : is.getImages() ) {
                 //Convert the urls into fully qualified ones for ez display on jsp page. 
                 String args[] = {"2", "3",img.getDownloadExpressionPath()};    
-                img.setDownloadExpressionPath(alanBrainAtlasService.buildUrlString( AlanBrainAtlasService.GET_IMAGE_URL, args ) );
-                img.setExpressionThumbnailUrl( AlanBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
+                img.setDownloadExpressionPath(allenBrainAtlasService.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
+                img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
                 representativeImages.add(img);                               
             }
         }
