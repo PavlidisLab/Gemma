@@ -16,8 +16,6 @@
  * limitations under the License.
  *
  */
-
-
 package ubic.gemma.image.aba;
 
 import java.util.Collection;

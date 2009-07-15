@@ -211,7 +211,7 @@ public class GeneController extends BaseMultiActionController {
             
             for ( Image img : is.getImages() ) {
                 //Convert the urls into fully qualified ones for ez display on jsp page. 
-                String args[] = {"2", "3",img.getDownloadExpressionPath()};    
+                String args[] = {"2", "2", img.getDownloadExpressionPath()};    
                 img.setDownloadExpressionPath(allenBrainAtlasService.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
                 img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
                 representativeImages.add(img);                               

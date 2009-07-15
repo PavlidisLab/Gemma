@@ -16,15 +16,13 @@
  * limitations under the License.
  *
  */
-
-
 package ubic.gemma.image.aba;
 
 import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * @author kelsey
+ * @version $Id$ @author kelsey
  *
  * Represents a gene in the  alan brain atals
  */
@@ -37,6 +35,20 @@ public class AbaGene {
      Integer entrezGeneId;
      String ncbiAccession;
      Collection<ImageSeries> imageSeries;
+     String geneUrl;
+    
+    public String getGeneUrl() {
+        return geneUrl;
+    }
+
+    public void setGeneUrl( String geneUrl ) {
+        this.geneUrl = geneUrl;
+    }
+
+    
+    public AbaGene(){
+        super();
+    }
     
     public AbaGene(
                     Integer geneId, 
@@ -44,14 +56,17 @@ public class AbaGene {
                     String geneName,               
                     Integer entrezGeneId,
                     String ncbiAccession, 
+                    String geneUrl,
                     Collection<ImageSeries> imageSeries) {
-                                     
+                          
+        this();
         this.geneId = geneId;
         this.geneSymbol = geneSymbol;
         this.geneName = geneName;
         this.entrezGeneId = entrezGeneId;
         this.ncbiAccession = ncbiAccession;
         this.imageSeries = imageSeries;
+        this.geneUrl = geneUrl;
     }
 
     public Integer getGeneId() {
@@ -112,12 +127,13 @@ public class AbaGene {
     }
     @Override
     public String toString(){
-      StringBuffer sb = new StringBuffer();
+      StringBuilder sb = new StringBuilder();
       sb.append( "GeneId: " + this.geneId + "\n");
       sb.append( "GeneSymbol: " + this.geneSymbol + "\n");
       sb.append( "GeneName: " + this.geneName + "\n");
       sb.append( "EntrezId: " + this.entrezGeneId + "\n");
       sb.append( "NCBI Accession: " + this.ncbiAccession + "\n");
+      sb.append( "aba Gene Url: " + this.geneUrl + "\n");
 
       for(ImageSeries is : imageSeries){
           sb.append( "==> ");

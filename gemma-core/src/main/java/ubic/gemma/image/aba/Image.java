@@ -35,6 +35,8 @@ public class Image {
     String expressionThumbnailUrl;
     String downloadImagePath;
     String downloadExpressionPath;
+    Integer height;
+    Integer width;
     
     
    
@@ -46,7 +48,7 @@ public class Image {
 
     public Image( String displayName, Integer id, Integer position, Integer referenceAtlasIndex, String thumbnailUrl,
             String zoomifiedNisslUrl, String expressionThumbnailUrl, String downloadImagePath,
-            String downloadExpressionPath ) {
+            String downloadExpressionPath, Integer height, Integer width ) {
         
         this();
         this.displayName = displayName;
@@ -58,6 +60,8 @@ public class Image {
         this.expressionThumbnailUrl = expressionThumbnailUrl;
         this.downloadImagePath = downloadImagePath;
         this.downloadExpressionPath = downloadExpressionPath;
+        this.height = height;
+        this.width = width;
     }
     
     
@@ -114,6 +118,26 @@ public class Image {
     }
     public void setDownloadExpressionPath( String downloadExpressionPath ) {
         this.downloadExpressionPath = downloadExpressionPath;
+    }
+
+
+    public Integer getHeight() {
+        return height;
+    }
+
+
+    public void setHeight( Integer height ) {
+        this.height = height;
+    }
+
+
+    public Integer getWidth() {
+        return width;
+    }
+
+
+    public void setWidth( Integer width ) {
+        this.width = width;
     }
     
 }

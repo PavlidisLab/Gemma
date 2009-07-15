@@ -3,7 +3,7 @@
 <jsp:directive.page import="java.util.Collection" />
 <jsp:directive.page import="java.util.HashSet" />
 <jsp:directive.page import="ubic.gemma.model.genome.gene.*" />
-<jsp:directive.page import="ubic.gemma.util.Image" />
+<jsp:directive.page import="ubic.gemma.image.aba.Image" />
 
 <jsp:useBean id="gene" scope="request" class="ubic.gemma.model.genome.GeneImpl" />
 <jsp:useBean id="representativeImages" scope="request" class="java.util.HashSet" />
@@ -187,6 +187,7 @@
 			%>
 		
 	<tr>
+		<div id="abaWindow"> </div>
 		<td align="right" valign="top">
 			<b>Alan Brain Atlas Expression Images </b><a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'A picture of the expression profile from the alan bran atlas'); return false"><img
@@ -196,12 +197,20 @@
 		 
 		<%		   		
 		 for ( Object obj : representativeImages ) {		
-		 	 ubic.gemma.util.Image img = (ubic.gemma.util.Image) obj;	               
+		 	 ubic.gemma.image.aba.Image img = (ubic.gemma.image.aba.Image) obj;	               
 		%>
 		
 				 	&nbsp;&nbsp;
 				<a title="Alan Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
-				   href="<%out.print(img.getDownloadExpressionPath());%>">
+				   onClick="
+				   			        imgSrc = '<img	src=\'<%out.print(img.getDownloadExpressionPath());%>\'>';
+	  
+				   					  win = new Ext.Window({							             							  							            						             				          
+							                html: imgSrc,           
+							                autoScroll : true 
+						        });
+						        win.show(this);
+       						 " >
 				   <img	src="<%out.print(img.getExpressionThumbnailUrl());%>" /> </a>
 				   				  
 	

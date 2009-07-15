@@ -12,7 +12,12 @@ import ubic.gemma.image.aba.Image;
 import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.testing.BaseSpringContextTest;
 
-
+/**
+ * Alan brain Atlas service test.
+ *  
+ * @version $Id$ @author kelsey
+ *
+ */
 public class AllenBrainAtlasServiceTest  extends BaseSpringContextTest {
 
     private AllenBrainAtlasService abaService = null;

@@ -16,7 +16,6 @@
  * limitations under the License.
  *
  */
-
 package ubic.gemma.image.aba;
 
 import java.io.DataInputStream;
@@ -130,6 +129,11 @@ public class AllenBrainAtlasService {
      * /aba/api/gene/search?term=[some text, which will be used in a contains query for symbol, name & aliases]
      */
     public static final String SEARCH_GENE_URL = "/aba/api/gene/search?term=@";
+
+    /**
+     * For showing details about gene information on the alan brain atlas web site
+     */
+    public static final String HTML_GENE_DETAILS_URL = "/brain/@.html?ispopup=1";
 
     /**
      * requesting an ROI with MIME_IMAGE from a browser will let the image be shown within the browser; using
@@ -258,8 +262,9 @@ public class AllenBrainAtlasService {
         String geneSymbol = XMLUtils.extractTagData( geneDoc, "genesymbol" ).iterator().next();
         Integer entrezGeneId = Integer.parseInt( XMLUtils.extractTagData( geneDoc, "entrezgeneid" ).iterator().next() );
         String ncbiAccessionNumber = XMLUtils.extractTagData( geneDoc, "ncbiaccessionnumber" ).iterator().next();
+        String geneUrl = this.getGeneUrl( geneSymbol );
 
-        AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber, null );
+        AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber,geneUrl, null );
 
         NodeList idList = geneDoc.getChildNodes().item( 0 ).getChildNodes();
 
@@ -313,6 +318,17 @@ public class AllenBrainAtlasService {
 
         return geneData;
 
+    }
+
+    /**
+     * Given a valid official symbol for a gene (case sensitive) returns an allen brain atals gene details URL
+     * 
+     * @param gene
+     * @return
+     */
+    public String getGeneUrl( String gene ) {
+        String args[] = { gene };
+        return buildUrlString( HTML_GENE_DETAILS_URL, args );
     }
 
     public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) {
@@ -439,7 +455,7 @@ public class AllenBrainAtlasService {
 
                 if ( imageId != null && downloadImagePath != null ) {
                     Image img = new Image( displayName, imageId, position, referenceAtlasIndex, thumbnailUrl,
-                            zoomifiedNisslUrl, expressionThumbnailUrl, downloadImagePath, downloadExpressionPath );
+                            zoomifiedNisslUrl, expressionThumbnailUrl, downloadImagePath, downloadExpressionPath, 0, 0 );
                     results.add( img );
                 } else {
                     log
