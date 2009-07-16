@@ -47,7 +47,24 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     private String datasetVector;
     private Boolean containsMyData;
     private Collection<Long> supportingExperiments;
+    private String abaFoundGeneUrl;
+    private String abaQueryGeneUrl;
 
+    public String getAbaQueryGeneUrl() {
+        return abaQueryGeneUrl;
+    }
+
+    public void setAbaQueryGeneUrl( String abaQueryGeneUrl ) {
+        this.abaQueryGeneUrl = abaQueryGeneUrl;
+    }
+
+    public String getAbaFoundGeneUrl() {
+        return abaFoundGeneUrl;
+    }
+
+    public void setAbaFoundGeneUrl( String abaFoundGeneUrl ) {
+        this.abaFoundGeneUrl = abaFoundGeneUrl;
+    }
     public Gene getQueryGene() {
         return queryGene;
     }

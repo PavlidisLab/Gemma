@@ -229,6 +229,12 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					}, {
 						name : "containsMyData",
 						type : "boolean"
+					}, {
+					    name : "abaFoundGeneUrl",
+					    type : "string"
+					}, {
+						name : "abaQueryGeneUrl",
+						type : "string"
 					}]),
 
 			/**
@@ -285,6 +291,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				if (g.officialName === null) {
 					g.officialName = "";
 				}
+				g.abaGeneUrl = record.data.abaFoundGeneUrl;
+				
 				return this.foundGeneTemplate.apply(g);
 			},
 
@@ -295,6 +303,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				if (g.officialName === null) {
 					g.officialName = "";
 				}
+				
+				g.abaGeneUrl = record.data.abaQueryGeneUrl;
+				
 				return this.foundGeneTemplate.apply(g);
 			},
 			bitImageStyler : function(value, metadata, record, row, col, ds) {
@@ -347,7 +358,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			},
 
 			detailsStyler : function(value, metadata, record, row, col, ds) {
-				return "<img src='/Gemma/images/icons/magnifier.png' ext:qtip='Show probe-level details' />";
+				return "<img src='/Gemma/images/icons/magnifier.png' ext:qtip='Show probe-level details' /> ";
 			},
 
 			//Creates a link for downloading raw dedv's data in tab delimted format
@@ -404,7 +415,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			foundGeneTemplate : new Ext.Template(
 					"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
-					" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}")
+					"&nbsp;", "<a href='{abaGeneUrl}'   target='_blank'><img height=15 width =15 src='/Gemma/images/logo/abaLogo.jpg' ext:qtip='Link to Allen Brain Atlas details' /></a> ",
+					" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"				
+					)
 
 		});
 

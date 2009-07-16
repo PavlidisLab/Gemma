@@ -114,6 +114,17 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     private Map<Long, Collection<Long>> queryProbeInfo;
 
     private Long taxonId;
+    
+    
+    private String abaGeneUrl;
+
+    public String getAbaGeneUrl() {
+        return abaGeneUrl;
+    }
+
+    public void setAbaGeneUrl( String abaGeneUrl ) {
+        this.abaGeneUrl = abaGeneUrl;
+    }
 
     public CoexpressionValueObject() {
         geneName = "";

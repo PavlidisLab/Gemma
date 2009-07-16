@@ -104,6 +104,8 @@ public class XMLUtils {
      */
     public static Collection<String> extractTagData( Document doc, String tag) {
         Collection<String> result = new HashSet<String>();
+        if (doc == null)
+            return result;
         NodeList idList = doc.getElementsByTagName( tag );
         assert idList != null;
         log.debug( "Got " + idList.getLength() );

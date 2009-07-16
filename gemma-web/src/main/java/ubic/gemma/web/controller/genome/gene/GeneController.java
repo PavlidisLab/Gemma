@@ -58,7 +58,7 @@ import ubic.gemma.web.remote.EntityDelegator;
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
- * @spring.property name="alanBrainAtlasService" ref="alanBrainAtlasService"
+ * @spring.property name="allenBrainAtlasService" ref="allenBrainAtlasService"
  * @spring.property name="methodNameResolver" ref="geneActions"
  */
 public class GeneController extends BaseMultiActionController {
@@ -155,7 +155,7 @@ public class GeneController extends BaseMultiActionController {
     }
     
     
-    public void setAlanBrainAtlasService(AllenBrainAtlasService allenBrainAtlasService){
+    public void setAllenBrainAtlasService(AllenBrainAtlasService allenBrainAtlasService){
         this.allenBrainAtlasService = allenBrainAtlasService;
     }
 
@@ -203,6 +203,11 @@ public class GeneController extends BaseMultiActionController {
         
         //Get alan brain atalas represntative images
         Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( gene.getOfficialSymbol() );
+        String abaGeneUrl = allenBrainAtlasService.getGeneUrl( gene.getOfficialSymbol() );
+        
+        if (imageSeries == null)
+            return mav;
+        
         Collection<Image> representativeImages = new HashSet<Image>(); 
        
         for ( ImageSeries is : imageSeries ) {
@@ -218,9 +223,10 @@ public class GeneController extends BaseMultiActionController {
             }
         }
        
-        if (!representativeImages.isEmpty())
+        if (!representativeImages.isEmpty()){
             mav.addObject( "representativeImages", representativeImages );
-        
+            mav.addObject( "abaGeneUrl", abaGeneUrl );
+        }
        
         return mav;
     }

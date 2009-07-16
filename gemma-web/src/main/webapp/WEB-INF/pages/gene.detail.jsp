@@ -8,7 +8,6 @@
 <jsp:useBean id="gene" scope="request" class="ubic.gemma.model.genome.GeneImpl" />
 <jsp:useBean id="representativeImages" scope="request" class="java.util.HashSet" />
 
-
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/gene.detail.js' />
 
@@ -187,33 +186,32 @@
 			%>
 		
 	<tr>
-		<div id="abaWindow"> </div>
 		<td align="right" valign="top">
 			<b>Alan Brain Atlas Expression Images </b><a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'A picture of the expression profile from the alan bran atlas'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
+		
 		<td valign="top">
-		 
+		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value="${abaGeneUrl}" />	><img
+					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/> </a>
 		<%		   		
 		 for ( Object obj : representativeImages ) {		
 		 	 ubic.gemma.image.aba.Image img = (ubic.gemma.image.aba.Image) obj;	               
 		%>
 		
 				 	&nbsp;&nbsp;
-				<a title="Alan Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
+			<a title="Alan Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
 				   onClick="
-				   			        imgSrc = '<img	src=\'<%out.print(img.getDownloadExpressionPath());%>\'>';
+				   			        imgSrc =  '<a  title= \' Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%> \'  href= 	<c:out value="${abaGeneUrl}" />   target=\'_blank\'/> <img	src=\'<%out.print(img.getDownloadExpressionPath());%>\'> </a>';
 	  
 				   					  win = new Ext.Window({							             							  							            						             				          
 							                html: imgSrc,           
 							                autoScroll : true 
 						        });
 						        win.show(this);
-       						 " >
+       						 " />
 				   <img	src="<%out.print(img.getExpressionThumbnailUrl());%>" /> </a>
-				   				  
-	
 		
 		<%			                  
 		 }//end of for loop

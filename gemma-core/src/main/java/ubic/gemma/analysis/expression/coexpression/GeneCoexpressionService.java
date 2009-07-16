@@ -29,10 +29,12 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.image.aba.AllenBrainAtlasService;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -54,8 +56,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
-import ubic.gemma.util.CountingMap;
 import ubic.gemma.util.AnchorTagUtil;
+import ubic.gemma.util.CountingMap;
 
 /**
  * Provides access to Gene2Gene and Probe2Probe links. The use of this service provides 'high-level' access to
@@ -71,6 +73,8 @@ import ubic.gemma.util.AnchorTagUtil;
  * @spring.property name = "probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer"
  * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
+ * @spring.property name="allenBrainAtlasService" ref="allenBrainAtlasService"
+ * 
  */
 public class GeneCoexpressionService {
 
@@ -79,6 +83,11 @@ public class GeneCoexpressionService {
      * instead...
      */
     private static class SimpleGene extends Gene {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
         public SimpleGene( Long id, String name, String officialName ) {
             super();
             this.setId( id );
@@ -99,6 +108,8 @@ public class GeneCoexpressionService {
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
     private GeneOntologyService geneOntologyService;
     private GeneService geneService;
+    private AllenBrainAtlasService allenBrainAtlasService = null;
+
 
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
 
@@ -370,6 +381,10 @@ public class GeneCoexpressionService {
         }
         return ecvos;
 
+    }
+    
+    public void setAllenBrainAtlasService(AllenBrainAtlasService allenBrainAtlasService){
+        this.allenBrainAtlasService = allenBrainAtlasService;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -684,6 +699,12 @@ public class GeneCoexpressionService {
 
                 cvo.setQueryGene( queryGene );
                 cvo.setFoundGene( foundGene );
+                //for allen brain atals website 1st letter of gene symbol is capatilized, rest are not (webservice is case sensitive)
+                String foundGeneSymbol = StringUtils.capitalize( StringUtils.lowerCase( foundGene.getOfficialSymbol()));
+                String queryGeneSymbol = StringUtils.capitalize( StringUtils.lowerCase( queryGene.getOfficialSymbol()));
+                
+                cvo.setAbaFoundGeneUrl(allenBrainAtlasService.getGeneUrl(foundGeneSymbol));
+                cvo.setAbaQueryGeneUrl(allenBrainAtlasService.getGeneUrl(queryGeneSymbol));
 
                 Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
                         positionToIDMap );

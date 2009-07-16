@@ -52,7 +52,7 @@ import ubic.gemma.loader.entrez.pubmed.XMLUtils;
  * 
  * @author kelsey
  * @version $Id$
- * @spring.bean id="alanBrainAtlasService"
+ * @spring.bean id="allenBrainAtlasService"
  */
 
 public class AllenBrainAtlasService {
@@ -133,7 +133,7 @@ public class AllenBrainAtlasService {
     /**
      * For showing details about gene information on the alan brain atlas web site
      */
-    public static final String HTML_GENE_DETAILS_URL = "/brain/@.html?ispopup=1";
+    public static final String HTML_GENE_DETAILS_URL = "http://mouse.brain-map.org/brain/@.html?ispopup=1";
 
     /**
      * requesting an ROI with MIME_IMAGE from a browser will let the image be shown within the browser; using
@@ -257,13 +257,27 @@ public class AllenBrainAtlasService {
 
         }
 
-        Integer geneId = Integer.parseInt( XMLUtils.extractTagData( geneDoc, "geneid" ).iterator().next() );
-        String geneName = XMLUtils.extractTagData( geneDoc, "genename" ).iterator().next();
-        String geneSymbol = XMLUtils.extractTagData( geneDoc, "genesymbol" ).iterator().next();
-        Integer entrezGeneId = Integer.parseInt( XMLUtils.extractTagData( geneDoc, "entrezgeneid" ).iterator().next() );
-        String ncbiAccessionNumber = XMLUtils.extractTagData( geneDoc, "ncbiaccessionnumber" ).iterator().next();
-        String geneUrl = this.getGeneUrl( geneSymbol );
+        Collection<String> xmlData =  XMLUtils.extractTagData( geneDoc, "geneid" );       
+        Integer geneId = xmlData.isEmpty() ? null :Integer.parseInt(xmlData.iterator().next() );
+        
+        xmlData =  XMLUtils.extractTagData( geneDoc, "genename" );
+        String geneName = xmlData.isEmpty() ? null : xmlData.iterator().next();
+        
+        xmlData = XMLUtils.extractTagData( geneDoc, "genesymbol" );
+        String geneSymbol = xmlData.isEmpty() ? null : xmlData.iterator().next();
+        
+        xmlData = XMLUtils.extractTagData( geneDoc, "entrezgeneid" );
+        Integer entrezGeneId = xmlData.isEmpty() ? null : Integer.parseInt( xmlData.iterator().next() );
 
+        xmlData = XMLUtils.extractTagData( geneDoc, "ncbiaccessionnumber" );
+        String ncbiAccessionNumber = xmlData.isEmpty() ? null : xmlData.iterator().next();
+             
+        
+        String geneUrl = (geneSymbol==null) ? null : this.getGeneUrl( geneSymbol );
+
+        if (geneId == null && geneSymbol == null)
+                return null;
+        
         AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber,geneUrl, null );
 
         NodeList idList = geneDoc.getChildNodes().item( 0 ).getChildNodes();
@@ -327,13 +341,14 @@ public class AllenBrainAtlasService {
      * @return
      */
     public String getGeneUrl( String gene ) {
-        String args[] = { gene };
-        return buildUrlString( HTML_GENE_DETAILS_URL, args );
+       return HTML_GENE_DETAILS_URL.replaceFirst( "@", gene );       
     }
 
     public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) {
 
         AbaGene grin1 = this.getGene( gene );
+        if (grin1 == null) return null;
+        
         Collection<ImageSeries> representativeSaggitalImages = new HashSet<ImageSeries>();
 
         for ( ImageSeries is : grin1.getImageSeries() ) {
