@@ -58,7 +58,7 @@ public class AllenBrainAtlasServiceTest  extends BaseSpringContextTest {
     
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        abaService = ( AllenBrainAtlasService ) getBean( "alanBrainAtlasService" );        
+        abaService = ( AllenBrainAtlasService ) getBean( "allenBrainAtlasService" );        
     }
 
 }
