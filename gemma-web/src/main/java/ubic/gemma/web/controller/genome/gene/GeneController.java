@@ -208,21 +208,9 @@ public class GeneController extends BaseMultiActionController {
         if (imageSeries == null)
             return mav;
         
-        Collection<Image> representativeImages = new HashSet<Image>(); 
+        Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
        
-        for ( ImageSeries is : imageSeries ) {
-            if (is.getImages() == null )
-                    continue;
-            
-            for ( Image img : is.getImages() ) {
-                //Convert the urls into fully qualified ones for ez display on jsp page. 
-                String args[] = {"2", "2", img.getDownloadExpressionPath()};    
-                img.setDownloadExpressionPath(allenBrainAtlasService.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
-                img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
-                representativeImages.add(img);                               
-            }
-        }
-       
+        
         if (!representativeImages.isEmpty()){
             mav.addObject( "representativeImages", representativeImages );
             mav.addObject( "abaGeneUrl", abaGeneUrl );

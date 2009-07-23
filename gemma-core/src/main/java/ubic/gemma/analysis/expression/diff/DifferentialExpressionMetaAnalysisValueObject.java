@@ -2,6 +2,7 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
+import ubic.gemma.image.LinkOutValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
@@ -20,6 +21,7 @@ public class DifferentialExpressionMetaAnalysisValueObject {
     private int numSearchedExperiments;
     private int numExperimentsInScope;
     private int numMetThreshold;
+    private LinkOutValueObject linkOut;
 
     private Collection<ExpressionExperiment> activeExperiments = null;
 
@@ -101,6 +103,14 @@ public class DifferentialExpressionMetaAnalysisValueObject {
             buf.append( result + "\n" );
         }
         return buf.toString();
+    }
+
+    public LinkOutValueObject getLinkOut() {
+        return this.linkOut;
+    }
+
+    public void setLinkOut( LinkOutValueObject linkOut ) {
+        this.linkOut = linkOut;
     }
 
 }

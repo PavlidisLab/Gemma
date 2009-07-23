@@ -29,7 +29,6 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -74,7 +73,6 @@ import ubic.gemma.util.CountingMap;
  * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
  * @spring.property name="allenBrainAtlasService" ref="allenBrainAtlasService"
- * 
  */
 public class GeneCoexpressionService {
 
@@ -109,7 +107,6 @@ public class GeneCoexpressionService {
     private GeneOntologyService geneOntologyService;
     private GeneService geneService;
     private AllenBrainAtlasService allenBrainAtlasService = null;
-
 
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
 
@@ -382,8 +379,8 @@ public class GeneCoexpressionService {
         return ecvos;
 
     }
-    
-    public void setAllenBrainAtlasService(AllenBrainAtlasService allenBrainAtlasService){
+
+    public void setAllenBrainAtlasService( AllenBrainAtlasService allenBrainAtlasService ) {
         this.allenBrainAtlasService = allenBrainAtlasService;
     }
 
@@ -699,12 +696,9 @@ public class GeneCoexpressionService {
 
                 cvo.setQueryGene( queryGene );
                 cvo.setFoundGene( foundGene );
-                //for allen brain atals website 1st letter of gene symbol is capatilized, rest are not (webservice is case sensitive)
-                String foundGeneSymbol = StringUtils.capitalize( StringUtils.lowerCase( foundGene.getOfficialSymbol()));
-                String queryGeneSymbol = StringUtils.capitalize( StringUtils.lowerCase( queryGene.getOfficialSymbol()));
-                
-                cvo.setAbaFoundGeneUrl(allenBrainAtlasService.getGeneUrl(foundGeneSymbol));
-                cvo.setAbaQueryGeneUrl(allenBrainAtlasService.getGeneUrl(queryGeneSymbol));
+
+                cvo.setAbaFoundGeneUrl( allenBrainAtlasService.getGeneUrl( foundGene.getOfficialSymbol() ) );
+                cvo.setAbaQueryGeneUrl( allenBrainAtlasService.getGeneUrl( queryGene.getOfficialSymbol() ) );
 
                 Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
                         positionToIDMap );

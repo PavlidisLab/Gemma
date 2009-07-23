@@ -38,7 +38,10 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						type : "string"
 					}, {
 						name : "probeResults"
-					}]),
+					}, {
+						name : "linkOut"					
+					}
+					]),
 
 			initComponent : function() {
 
@@ -88,8 +91,8 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										id : 'gene',
 										dataIndex : "gene",
 										header : "Query Gene",
-										renderer : function(value, metadata, record, row, col, ds) {
-											return String.format("<a href='/Gemma/gene/showGene.html?id={0}' ext:qtip='{1}'> {2} </a> ", value.id, value.officialName, value.officialSymbol); 
+										renderer : function(value, metadata, record, row, col, ds) {				
+											return String.format(" &nbsp; <a href='/Gemma/gene/showGene.html?id={0}' ext:qtip='{1}'> {2} </a> ",  value.id, value.officialName, value.officialSymbol); 
 										},
 										sortable : false
 									}, {
@@ -122,6 +125,14 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										width : 75,
 										tooltip : "How many datasets met the q-value threshold you selected / # testing gene",
 										renderer : this.metThresholdStyler
+									}, {
+										id : 'linkOut',
+										dataIndex : "linkOut",
+										header : "Out links",
+										sortable : false,
+										width : 30,
+										tooltip : "Links to other websites for more relevent information (if relevent and/or available)",
+										renderer : this.linkOutStyler
 									}]
 						});
 
@@ -138,6 +149,21 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				this.getView().refresh(true); // refresh column headers
 			},
 
+			linkOutStyler : function(value, metadata, record, row, col, ds){
+				var d = record.data;
+			
+				if (d.linkOut == null)
+					return "n/a";
+
+					var popUpWin =String.format( "var win = new Ext.Window({  html: '<img src={0}>',   autoScroll : true}); win.show(this);",d.linkOut.abaGeneImageUrls[0]);					
+					return String.format('<a title="Alan Brian Atlas Image"  onClick="{0}"> <img height=15 width =15 src="/Gemma/images/logo/abaLogo.jpg" ext:qtip="Link to Allen Brain Atlas details" /> </a>', popUpWin);
+	  
+				   			
+				 
+			
+					
+				return String.format("<a href='{0}'   target='_blank'></a> ", d.abaGeneUrl); 
+			},
 			metThresholdStyler : function(value, metadata, record, row, col, ds) {
 				var d = record.data;
 				return String.format("{0}/{1}", d.numMetThreshold, d.activeExperiments.size());

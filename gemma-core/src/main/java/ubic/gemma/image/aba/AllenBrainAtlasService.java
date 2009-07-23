@@ -36,6 +36,7 @@ import java.util.HashSet;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -236,8 +237,20 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getGeneUrl, out ) );
     }
 
-    public AbaGene getGene( String gene ) {
+    /**
+     *    The allen brain atals website 1st letter of gene symbol is capatilized, rest are not (webservice is case sensitive)             
+     * @param geneName
+     * @return
+     */
+    private String correctCase(String geneName){
+        return StringUtils.capitalize( StringUtils.lowerCase( geneName));
+    }
+   
+    
+    public AbaGene getGene( String givenGene ) {
 
+        String gene = correctCase(givenGene);
+        
         File outputFile = getFile( gene );
         Document geneDoc = null;
 
@@ -341,7 +354,7 @@ public class AllenBrainAtlasService {
      * @return
      */
     public String getGeneUrl( String gene ) {
-       return HTML_GENE_DETAILS_URL.replaceFirst( "@", gene );       
+       return HTML_GENE_DETAILS_URL.replaceFirst( "@", this.correctCase( gene) );       
     }
 
     public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) {
@@ -384,6 +397,35 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getImageseriesUrl, out ) );
     }
 
+    
+ /*  
+  * Convieniece method for striping out the images from the image series. 
+  * Also fully qaulifies URLs for link to allen brain atlas web site 
+  * @param imageSeries
+  * @return
+  */
+
+    public Collection<Image> getImagesFromImageSeries(Collection<ImageSeries> imageSeries){
+       
+       Collection<Image> representativeImages = new HashSet<Image>(); 
+       
+       for ( ImageSeries is : imageSeries ) {
+           if (is.getImages() == null )
+                   continue;
+           
+           for ( Image img : is.getImages() ) {
+               //Convert the urls into fully qualified ones for ez displaying 
+               String args[] = {"2", "2", img.getDownloadExpressionPath()};    
+               img.setDownloadExpressionPath(this.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
+               img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
+               representativeImages.add(img);                               
+           }
+       }
+             
+       return representativeImages;
+       
+   }
+   
     public Collection<Image> getImageseries( Integer imageseriesId ) {
 
         File outputFile = getFile( "ImageseriesId_" + imageseriesId.toString() );

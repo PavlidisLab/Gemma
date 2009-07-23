@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -35,23 +34,21 @@ import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.image.LinkOutValueObject;
+import ubic.gemma.image.aba.AllenBrainAtlasService;
+import ubic.gemma.image.aba.Image;
+import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.association.BioSequence2GeneProduct;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneImpl;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
@@ -73,6 +70,8 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "expressionExperimentSetService" ref="expressionExperimentSetService"
  * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
+  * @spring.property name="allenBrainAtlasService" ref="allenBrainAtlasService"
+
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
@@ -86,7 +85,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSetService expressionExperimentSetService = null;
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
+    private AllenBrainAtlasService allenBrainAtlasService;
     
+    
+    
+    
+    public void setAllenBrainAtlasService( AllenBrainAtlasService allenBrainAtlasService ) {
+        this.allenBrainAtlasService = allenBrainAtlasService;
+    }
+
     /**
      * 
      */
@@ -199,6 +206,23 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         DifferentialExpressionMetaAnalysisValueObject mavo = geneDifferentialExpressionService
                 .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
 
+        
+        //Get alan brain atalas represntative images
+        Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( g.getOfficialSymbol() );
+        String abaGeneUrl = allenBrainAtlasService.getGeneUrl( g.getOfficialSymbol() );
+        
+        if (imageSeries == null)
+            return mavo;
+        
+        Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
+        Collection<String> imageUrls = new ArrayList<String>();
+        for ( Image image : representativeImages ) {
+            imageUrls.add( image.getDownloadExpressionPath() );
+        }
+
+        if (!imageUrls.isEmpty())
+            mavo.setLinkOut( new LinkOutValueObject(imageUrls, abaGeneUrl) );
+        
         return mavo;
     }
 
