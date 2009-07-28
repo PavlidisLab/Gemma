@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.image.LinkOutValueObject;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -47,24 +48,17 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     private String datasetVector;
     private Boolean containsMyData;
     private Collection<Long> supportingExperiments;
-    private String abaFoundGeneUrl;
-    private String abaQueryGeneUrl;
+    private LinkOutValueObject linkOut;
 
-    public String getAbaQueryGeneUrl() {
-        return abaQueryGeneUrl;
+
+    public LinkOutValueObject getLinkOut() {
+        return this.linkOut;
     }
 
-    public void setAbaQueryGeneUrl( String abaQueryGeneUrl ) {
-        this.abaQueryGeneUrl = abaQueryGeneUrl;
+    public void setLinkOut( LinkOutValueObject linkOut ) {
+        this.linkOut = linkOut;
     }
 
-    public String getAbaFoundGeneUrl() {
-        return abaFoundGeneUrl;
-    }
-
-    public void setAbaFoundGeneUrl( String abaFoundGeneUrl ) {
-        this.abaFoundGeneUrl = abaFoundGeneUrl;
-    }
     public Gene getQueryGene() {
         return queryGene;
     }

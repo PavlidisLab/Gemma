@@ -156,10 +156,8 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					return "n/a";
 					var quickLink = "ABA_site_details";
 					var popUpWin =String.format( "var win = new Ext.Window({  html: '<a href={0} target={1} > <img src={2}> </a>',   autoScroll : true}); win.show(this);",d.linkOut.abaGeneUrl ,"_blank",d.linkOut.abaGeneImageUrls[0]);					
-					return String.format('<a title="Alan Brian Atlas Image"  onClick="{0}"> <img height=15 width =15 src="/Gemma/images/logo/abaLogo.jpg" ext:qtip="Link to Allen Brain Atlas details" /> </a>', popUpWin);
-	  
 					
-				return String.format("<a href='{0}'   target='_blank'></a> ", d.abaGeneUrl); 
+					return String.format('<a title="Alan Brian Atlas Image"  onClick="{0}"> <img height=15 width =15 src="/Gemma/images/logo/abaLogo.jpg" ext:qtip="Link to Allen Brain Atlas details" /> </a>', popUpWin);
 			},
 			metThresholdStyler : function(value, metadata, record, row, col, ds) {
 				var d = record.data;

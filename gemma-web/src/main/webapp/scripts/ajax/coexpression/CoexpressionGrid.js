@@ -138,6 +138,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										renderer : this.bitImageStyler.createDelegate(this),
 										tooltip : "Dataset relevence map",
 										sortable : false
+									}, {
+										id : 'linkOut',
+										dataIndex : "linkOut",
+										header : "Out links",
+										sortable : false,
+										width : 30,
+										tooltip : "Links to other websites for more relevent information (if relevent and/or available)",
+										renderer : this.linkOutStyler
 									}]
 
 						});
@@ -235,8 +243,26 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					}, {
 						name : "abaQueryGeneUrl",
 						type : "string"
+					}, {
+						name : "linkOut"					
 					}]),
 
+			
+				linkOutStyler : function(value, metadata, record, row, col, ds){
+					var d = record.data;
+			
+					if (d.linkOut == null)
+						return "n/a";
+	
+					var quickLink = "ABA_site_details";
+					var popUpWin =String.format( "var win = new Ext.Window({  html: '<a href={0} target={1} > <img src={2}> </a>',   autoScroll : true}); win.show(this);",d.linkOut.abaGeneUrl ,"_blank",d.linkOut.abaGeneImageUrls[0]);					
+				
+					return String.format('<a title="Alan Brian Atlas Image"  onClick="{0}"> <img height=15 width =15 src="/Gemma/images/logo/abaLogo.jpg" ext:qtip="Link to Allen Brain Atlas details" /> </a>', popUpWin);
+	  
+
+				
+			},
+			
 			/**
 			 * 
 			 */
@@ -291,7 +317,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				if (g.officialName === null) {
 					g.officialName = "";
 				}
-				g.abaGeneUrl = record.data.abaFoundGeneUrl;
 				
 				return this.foundGeneTemplate.apply(g);
 			},
@@ -414,8 +439,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			},
 
 			foundGeneTemplate : new Ext.Template(
-					"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
-					"&nbsp;", "<a href='{abaGeneUrl}'   target='_blank'><img height=15 width =15 src='/Gemma/images/logo/abaLogo.jpg' ext:qtip='Link to Allen Brain Atlas details' /></a> ",
+					"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",			
 					" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"				
 					)
 

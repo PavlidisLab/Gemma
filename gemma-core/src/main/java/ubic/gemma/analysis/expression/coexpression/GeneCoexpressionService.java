@@ -33,7 +33,10 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.image.LinkOutValueObject;
 import ubic.gemma.image.aba.AllenBrainAtlasService;
+import ubic.gemma.image.aba.Image;
+import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -697,8 +700,21 @@ public class GeneCoexpressionService {
                 cvo.setQueryGene( queryGene );
                 cvo.setFoundGene( foundGene );
 
-                cvo.setAbaFoundGeneUrl( allenBrainAtlasService.getGeneUrl( foundGene.getOfficialSymbol() ) );
-                cvo.setAbaQueryGeneUrl( allenBrainAtlasService.getGeneUrl( queryGene.getOfficialSymbol() ) );
+                // Get Allen Brain Atal information and put in value object
+                Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( foundGene
+                        .getOfficialSymbol() );
+
+                if ( imageSeries != null ) {
+                    String abaGeneUrl = allenBrainAtlasService.getGeneUrl( foundGene.getOfficialSymbol() );
+                    Collection<Image> representativeImages = allenBrainAtlasService
+                            .getImagesFromImageSeries( imageSeries );
+                    Collection<String> imageUrls = new ArrayList<String>();
+                    for ( Image image : representativeImages ) {
+                        imageUrls.add( image.getDownloadExpressionPath() );
+                    }
+
+                    if ( !imageUrls.isEmpty() ) cvo.setLinkOut( new LinkOutValueObject( imageUrls, abaGeneUrl ) );
+                }
 
                 Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
                         positionToIDMap );

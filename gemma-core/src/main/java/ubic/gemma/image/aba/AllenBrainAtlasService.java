@@ -265,7 +265,7 @@ public class AllenBrainAtlasService {
         } catch ( SAXException se ) {
             log.error( se );
         } catch ( FileNotFoundException fnfe ) {
-            log.error( fnfe );
+            log.error( gene + " gene not found in aba. Actualy error: " + fnfe );
         } catch ( IOException io ) {
 
         }
