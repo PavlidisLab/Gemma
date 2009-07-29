@@ -48,16 +48,7 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     private String datasetVector;
     private Boolean containsMyData;
     private Collection<Long> supportingExperiments;
-    private LinkOutValueObject linkOut;
 
-
-    public LinkOutValueObject getLinkOut() {
-        return this.linkOut;
-    }
-
-    public void setLinkOut( LinkOutValueObject linkOut ) {
-        this.linkOut = linkOut;
-    }
 
     public Gene getQueryGene() {
         return queryGene;

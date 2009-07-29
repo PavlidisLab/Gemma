@@ -140,7 +140,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 										sortable : false
 									}, {
 										id : 'linkOut',
-										dataIndex : "linkOut",
+										dataIndex : "foundGene",
 										header : "Out links",
 										sortable : false,
 										width : 30,
@@ -237,30 +237,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					}, {
 						name : "containsMyData",
 						type : "boolean"
-					}, {
-					    name : "abaFoundGeneUrl",
-					    type : "string"
-					}, {
-						name : "abaQueryGeneUrl",
-						type : "string"
-					}, {
-						name : "linkOut"					
 					}]),
 
 			
-				linkOutStyler : function(value, metadata, record, row, col, ds){
-					var d = record.data;
+					
+			linkOutStyler : function(value, metadata, record, row, col, ds){
 			
-					if (d.linkOut == null)
-						return "n/a";
-	
-					var quickLink = "ABA_site_details";
-					var popUpWin =String.format( "var win = new Ext.Window({  html: '<a href={0} target={1} > <img src={2}> </a>',   autoScroll : true}); win.show(this);",d.linkOut.abaGeneUrl ,"_blank",d.linkOut.abaGeneImageUrls[0]);					
-				
+				var popUpWin = "LinkOutController.getAlanBrainAtalsLinks('" + value.officialSymbol + "',Gemma.linkOutPopUp)";
 					return String.format('<a title="Alan Brian Atlas Image"  onClick="{0}"> <img height=15 width =15 src="/Gemma/images/logo/abaLogo.jpg" ext:qtip="Link to Allen Brain Atlas details" /> </a>', popUpWin);
-	  
-
-				
 			},
 			
 			/**
@@ -460,3 +444,20 @@ Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 	}
 	return Gemma.CoexpressionGrid.bitImageMapTemplate;
 };
+
+	Gemma.linkOutPopUp = function(linkOutValueObject){
+
+			//TODO:  Make pop up window show more than one image (have a button for scrolling to next image)
+				var popUpHtml;
+				
+				if (linkOutValueObject == null){
+					window.alert("No Allen Brain Atlas details available for this gene");
+					return;
+				}else{
+					popUpHtml = String.format("<a href={0} target='_blank' > <img src={1}> </a>", linkOutValueObject.abaGeneUrl, linkOutValueObject.abaGeneImageUrls[0]);
+				}
+					
+				popUpLinkOutWin = new Ext.Window({  html: popUpHtml,   autoScroll : true});
+				popUpLinkOutWin.show(this);													
+
+			};

@@ -21,7 +21,6 @@ public class DifferentialExpressionMetaAnalysisValueObject {
     private int numSearchedExperiments;
     private int numExperimentsInScope;
     private int numMetThreshold;
-    private LinkOutValueObject linkOut;
 
     private Collection<ExpressionExperiment> activeExperiments = null;
 
@@ -105,12 +104,5 @@ public class DifferentialExpressionMetaAnalysisValueObject {
         return buf.toString();
     }
 
-    public LinkOutValueObject getLinkOut() {
-        return this.linkOut;
-    }
-
-    public void setLinkOut( LinkOutValueObject linkOut ) {
-        this.linkOut = linkOut;
-    }
 
 }

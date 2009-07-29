@@ -602,3 +602,10 @@ UserListController.getUsers = function(callback) {
 UserListController.saveUser = function(p0, callback) {
 	dwr.engine._execute(UserListController._path, 'UserListController', 'saveUser', p0, callback);
 }
+//=====================================================================================
+if (LinkOutController == null)
+	var LinkOutController = {};
+LinkOutController._path = '/Gemma/dwr';
+LinkOutController.getAlanBrainAtalsLinks = function(p0, callback) {
+	dwr.engine._execute(LinkOutController._path, 'LinkOutController', 'getAlanBrainAtalsLinks',p0, callback);
+}

@@ -34,10 +34,6 @@ import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
-import ubic.gemma.image.LinkOutValueObject;
-import ubic.gemma.image.aba.AllenBrainAtlasService;
-import ubic.gemma.image.aba.Image;
-import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -70,7 +66,6 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "expressionExperimentSetService" ref="expressionExperimentSetService"
  * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
-  * @spring.property name="allenBrainAtlasService" ref="allenBrainAtlasService"
 
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
@@ -85,15 +80,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSetService expressionExperimentSetService = null;
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
-    private AllenBrainAtlasService allenBrainAtlasService;
     
     
-    
-    
-    public void setAllenBrainAtlasService( AllenBrainAtlasService allenBrainAtlasService ) {
-        this.allenBrainAtlasService = allenBrainAtlasService;
-    }
-
     /**
      * 
      */
@@ -206,22 +194,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         DifferentialExpressionMetaAnalysisValueObject mavo = geneDifferentialExpressionService
                 .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
 
-        
-        //Get alan brain atalas represntative images
-        Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( g.getOfficialSymbol() );
-        String abaGeneUrl = allenBrainAtlasService.getGeneUrl( g.getOfficialSymbol() );
-        
-        if (imageSeries == null)
-            return mavo;
-        
-        Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-        Collection<String> imageUrls = new ArrayList<String>();
-        for ( Image image : representativeImages ) {
-            imageUrls.add( image.getDownloadExpressionPath() );
-        }
-
-        if (!imageUrls.isEmpty())
-            mavo.setLinkOut( new LinkOutValueObject(imageUrls, abaGeneUrl) );
         
         return mavo;
     }

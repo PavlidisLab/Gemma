@@ -46,6 +46,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.loader.entrez.pubmed.XMLUtils;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Acts as a convient front end to the Alan Brain Atlas REST (web) services Used the ABAapi.java as the original
@@ -224,7 +225,7 @@ public class AllenBrainAtlasService {
     private void initDefaults() {
         this.verbose = false;
         this.useFileCache = false;
-        this.cacheDir = ".";
+        this.cacheDir = ConfigUtils.getString( "gemma.appdata.home" ) + "/abaCache";
         this.infoOut = System.out;
         this.errOut = System.err;
     }

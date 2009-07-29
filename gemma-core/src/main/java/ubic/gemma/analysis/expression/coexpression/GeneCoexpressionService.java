@@ -33,10 +33,6 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.image.LinkOutValueObject;
-import ubic.gemma.image.aba.AllenBrainAtlasService;
-import ubic.gemma.image.aba.Image;
-import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -75,7 +71,6 @@ import ubic.gemma.util.CountingMap;
  * @spring.property name = "probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer"
  * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
- * @spring.property name="allenBrainAtlasService" ref="allenBrainAtlasService"
  */
 public class GeneCoexpressionService {
 
@@ -109,7 +104,6 @@ public class GeneCoexpressionService {
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
     private GeneOntologyService geneOntologyService;
     private GeneService geneService;
-    private AllenBrainAtlasService allenBrainAtlasService = null;
 
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
 
@@ -381,10 +375,6 @@ public class GeneCoexpressionService {
         }
         return ecvos;
 
-    }
-
-    public void setAllenBrainAtlasService( AllenBrainAtlasService allenBrainAtlasService ) {
-        this.allenBrainAtlasService = allenBrainAtlasService;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -699,22 +689,6 @@ public class GeneCoexpressionService {
 
                 cvo.setQueryGene( queryGene );
                 cvo.setFoundGene( foundGene );
-
-                // Get Allen Brain Atal information and put in value object
-                Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( foundGene
-                        .getOfficialSymbol() );
-
-                if ( imageSeries != null ) {
-                    String abaGeneUrl = allenBrainAtlasService.getGeneUrl( foundGene.getOfficialSymbol() );
-                    Collection<Image> representativeImages = allenBrainAtlasService
-                            .getImagesFromImageSeries( imageSeries );
-                    Collection<String> imageUrls = new ArrayList<String>();
-                    for ( Image image : representativeImages ) {
-                        imageUrls.add( image.getDownloadExpressionPath() );
-                    }
-
-                    if ( !imageUrls.isEmpty() ) cvo.setLinkOut( new LinkOutValueObject( imageUrls, abaGeneUrl ) );
-                }
 
                 Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
                         positionToIDMap );

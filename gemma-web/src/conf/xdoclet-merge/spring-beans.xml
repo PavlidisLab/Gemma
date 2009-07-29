@@ -708,6 +708,20 @@
 					</property>
 				</bean>
 			</entry>
+			<entry key="LinkOutController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="linkOutController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getAlanBrainAtalsLinks</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
 		</map>
 	</property>
 	<!--

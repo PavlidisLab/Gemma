@@ -39,9 +39,10 @@ Ext.onReady(function() {
 			var record = this.getStore().getAt(rowIndex);
 			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
 			var queryGene = record.get("queryGene");
-			var foundGene = record.get("foundGene");
-
-			if (fieldName == 'foundGene') {
+			var foundGene = record.get("foundGene");			
+				
+	
+			if (fieldName == 'foundGene' && columnIndex != 7) {  //problem with outlink column field name also returns name as foundGene 
 				searchPanel.searchForGene(foundGene.id);
 			} else if (fieldName == 'visualize') {
 
