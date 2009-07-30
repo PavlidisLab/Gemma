@@ -208,7 +208,6 @@
 
 				   					  win = new Ext.Window({							             							  							            						             				          
 							                html: imgSrc,
-							                resizeable : false, 
 							                autoScroll : true 
 						        });						        						                
 						        win.show(this);
