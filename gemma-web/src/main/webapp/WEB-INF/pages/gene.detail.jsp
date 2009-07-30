@@ -194,7 +194,7 @@
 		
 		<td valign="top">
 		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value='${abaGeneUrl}' />	><img
-					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/>  <img height=10  src=/Gemma/images/abaExpressionLegend.gif> </a>
+					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/>  <img height=10  src='/Gemma/images/abaExpressionLegend.gif'> </a>
 		<%		   		
 		 for ( Object obj : representativeImages ) {		
 		 	 ubic.gemma.image.aba.Image img = (ubic.gemma.image.aba.Image) obj;	               
