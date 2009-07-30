@@ -207,8 +207,12 @@
 
 				   					  win = new Ext.Window({							             							  							            						             				          
 							                html: imgSrc,
+							                resizeable : false, 
 							                autoScroll : true 
-						        });
+						        });						        						                
+							                 
+	
+						        win.setTitle( ' <img height=12  src=/Gemma/images/abaExpressionLegend.gif> ');
 						        win.show(this);
        						 " />
 				   <img	src="<%out.print(img.getExpressionThumbnailUrl());%>" /> </a>
