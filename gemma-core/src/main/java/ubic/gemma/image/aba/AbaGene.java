@@ -24,7 +24,7 @@ import java.util.HashSet;
 /**
  * @version $Id$ @author kelsey
  *
- * Represents a gene in the  alan brain atals
+ * Represents a gene in the  allen brain atals
  */
 public class AbaGene {
 

@@ -187,13 +187,13 @@
 		
 	<tr>
 		<td align="right" valign="top">
-			<b>Alan Brain Atlas Expression Images </b><a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'A picture of the expression profile from the alan bran atlas'); return false"><img
+			<b>Allen Brain Atlas Expression Images </b><a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'A picture of the expression profile from the allen bran atlas'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		
 		<td valign="top">
-		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value="${abaGeneUrl}" />	><img
+		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value='${abaGeneUrl}' />	><img
 					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/> </a>
 		<%		   		
 		 for ( Object obj : representativeImages ) {		
@@ -201,9 +201,9 @@
 		%>
 		
 				 	&nbsp;&nbsp;
-			<a title="Alan Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
+			<a title="Allen Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
 				   onClick="
-				   			        imgSrc =  '<a  title= \' Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%> \'  href= 	<c:out value="${abaGeneUrl}" />   target=\'_blank\'/> <img	src=\'<%out.print(img.getDownloadExpressionPath());%>\'> </a>';
+				   			        imgSrc =  '<a  title= \' Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%> \'  href= 	<c:out value='${abaGeneUrl}' />   target=\'_blank\'/> <img	src=\'<%out.print(img.getDownloadExpressionPath());%>\'> </a>';
 	  								imgTitle = '<img height=15  src=/Gemma/images/abaExpressionLegend.gif> ';
 				   					  win = new Ext.Window({							             							  							            						             				          
 							                html: imgSrc,    

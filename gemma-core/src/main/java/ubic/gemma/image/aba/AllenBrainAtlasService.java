@@ -49,7 +49,7 @@ import ubic.gemma.loader.entrez.pubmed.XMLUtils;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Acts as a convient front end to the Alan Brain Atlas REST (web) services Used the ABAapi.java as the original
+ * Acts as a convient front end to the Allen Brain Atlas REST (web) services Used the ABAapi.java as the original
  * template for this Service (found in ABA demo code).
  * 
  * @author kelsey
@@ -133,7 +133,7 @@ public class AllenBrainAtlasService {
     public static final String SEARCH_GENE_URL = "/aba/api/gene/search?term=@";
 
     /**
-     * For showing details about gene information on the alan brain atlas web site
+     * For showing details about gene information on the allen brain atlas web site
      */
     public static final String HTML_GENE_DETAILS_URL = "http://mouse.brain-map.org/brain/@.html?ispopup=1";
 

@@ -19,7 +19,7 @@
 package ubic.gemma.image.aba;
 
 /**
- * Alan brain Atlas Image class.  represents 1 image in the alan brain atlas library.
+ * allen brain Atlas Image class.  represents 1 image in the Allen brain atlas library.
  *  
  * @version $Id$ @author kelsey
  *
