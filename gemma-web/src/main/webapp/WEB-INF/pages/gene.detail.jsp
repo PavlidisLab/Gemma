@@ -194,12 +194,13 @@
 		
 		<td valign="top">
 		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value='${abaGeneUrl}' />	><img
-					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/> </a>
+					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/>  <img height=10  src=/Gemma/images/abaExpressionLegend.gif> </a>
 		<%		   		
 		 for ( Object obj : representativeImages ) {		
 		 	 ubic.gemma.image.aba.Image img = (ubic.gemma.image.aba.Image) obj;	               
 		%>
 		
+		<!--  totally failed at adding legend to title bar.  Works locally but fails on production. Giving up. Going to put legend statically on page and not in pop up window -->
 				 	&nbsp;&nbsp;
 			<a title="Allen Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
 				   onClick="
@@ -210,9 +211,6 @@
 							                resizeable : false, 
 							                autoScroll : true 
 						        });						        						                
-							                 
-	
-						        win.setTitle( \" <img height=15  src=/Gemma/images/abaExpressionLegend.gif> \");
 						        win.show(this);
        						 " />
 				   <img	src="<%out.print(img.getExpressionThumbnailUrl());%>" /> </a>
