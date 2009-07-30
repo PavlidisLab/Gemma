@@ -201,7 +201,7 @@ public class AllenBrainAtlasService {
 
     private File getFile( String fileName ) {
 
-        File outputFile = new File( "aba_" + fileName + ".xml" );
+        File outputFile = new File(this.cacheDir + "aba_" + fileName + ".xml" );
 
         if ( outputFile.exists() ) {
             outputFile.delete();
@@ -225,7 +225,7 @@ public class AllenBrainAtlasService {
     private void initDefaults() {
         this.verbose = false;
         this.useFileCache = false;
-        this.cacheDir = ConfigUtils.getString( "gemma.appdata.home" ) + "/abaCache";
+        this.cacheDir = ConfigUtils.getString( "gemma.appdata.home" ) + "/abaCache/";
         this.infoOut = System.out;
         this.errOut = System.err;
     }
