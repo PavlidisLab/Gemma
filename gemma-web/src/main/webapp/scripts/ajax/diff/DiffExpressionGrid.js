@@ -148,7 +148,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			},
 
 			linkOutStyler : function(value, metadata, record, row, col, ds){
-					var popUpWin = "LinkOutController.getAlanBrainAtalsLinks('" + value.officialSymbol + "',Gemma.linkOutPopUp)";
+					var popUpWin = "LinkOutController.getAlanBrainAtalsLinks('" + value.officialSymbol + "',Gemma.DiffExpressionGrid.linkOutPopUp)";
 					return String.format('<a title="Alan Brian Atlas Image"  onClick="{0}"> <img height=15 width =15 src="/Gemma/images/logo/abaLogo.jpg" ext:qtip="Link to Allen Brain Atlas details" /> </a>', popUpWin);
 			},
 		
@@ -196,7 +196,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		});
 		
-		Gemma.linkOutPopUp = function(linkOutValueObject){
+		Gemma.DiffExpressionGrid.linkOutPopUp = function(linkOutValueObject){
 
 			//TODO:  Make pop up window show more than one image (have a button for scrolling to next image)
 				var popUpHtml;
@@ -206,10 +206,12 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					return;
 				}
 				else{
-					popUpHtml = String.format("<a href={0} target='_blank' > <img src={1}> </a>", linkOutValueObject.abaGeneUrl, linkOutValueObject.abaGeneImageUrls[0]);
+					popUpHtml = String.format("<a href='{0}' target='_blank' > <img height=200 width=400 src={1}> </a>", linkOutValueObject.abaGeneUrl, linkOutValueObject.abaGeneImageUrls[0]);
 				}
 					
-				popUpLinkOutWin = new Ext.Window({  html: popUpHtml,   autoScroll : true});
+				popUpLinkOutWin = new Ext.Window({  html: popUpHtml,   resizable : false});
+				popUpLinkOutWin.setTitle("<img height=15 src=/Gemma/images/abaExpressionLegend.gif>");
+
 				popUpLinkOutWin.show(this);													
 
 			};

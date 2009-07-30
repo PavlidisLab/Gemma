@@ -243,7 +243,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					
 			linkOutStyler : function(value, metadata, record, row, col, ds){
 			
-				var popUpWin = "LinkOutController.getAlanBrainAtalsLinks('" + value.officialSymbol + "',Gemma.linkOutPopUp)";
+				var popUpWin = "LinkOutController.getAlanBrainAtalsLinks('" + value.officialSymbol + "',Gemma.CoexpressionGrid.linkOutPopUp)";
 					return String.format('<a title="Alan Brian Atlas Image"  onClick="{0}"> <img height=15 width =15 src="/Gemma/images/logo/abaLogo.jpg" ext:qtip="Link to Allen Brain Atlas details" /> </a>', popUpWin);
 			},
 			
@@ -445,7 +445,8 @@ Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 	return Gemma.CoexpressionGrid.bitImageMapTemplate;
 };
 
-	Gemma.linkOutPopUp = function(linkOutValueObject){
+
+	Gemma.CoexpressionGrid.linkOutPopUp = function(linkOutValueObject){
 
 			//TODO:  Make pop up window show more than one image (have a button for scrolling to next image)
 				var popUpHtml;
@@ -454,10 +455,33 @@ Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 					window.alert("No Allen Brain Atlas details available for this gene");
 					return;
 				}else{
-					popUpHtml = String.format("<a href={0} target='_blank' > <img src={1}> </a>", linkOutValueObject.abaGeneUrl, linkOutValueObject.abaGeneImageUrls[0]);
+					popUpHtml = String.format("<img height=200 width=400 src={0}>", linkOutValueObject.abaGeneImageUrls[0]);
 				}
 					
-				popUpLinkOutWin = new Ext.Window({  html: popUpHtml,   autoScroll : true});
+				popUpLinkOutWin = new Ext.Window({  html: popUpHtml,   resizable : false});
+				popUpLinkOutWin.setTitle("<a href='" + linkOutValueObject.abaGeneUrl + "' target='_blank'>  <img height=15 width =15 src='/Gemma/images/logo/abaLogo.jpg' ext:qtip='Link to Allen Brain Atlas gene details' />  </a> &nbsp; &nbsp;<img height=15  src=/Gemma/images/abaExpressionLegend.gif>  ");
+				
+//  An attempt at adding a button to the window so that the different image from allen brain atlas could be seen clicking on it. 
+//  failed to work because window wouldn't refresh with new html information. :(  
+//  Also was a host of scope issue... should have made in own widget. 			
+//				popUpLinkOutWin.linkOutValueObject = linkOutValueObject;
+//				popUpLinkOutWin.currentImageIndex = 0;
+//
+//				popUpLinkOutWin.nextImage = function(e){
+//					
+//					console.log(e);
+//					if (e.scope.currentImageIndex == e.scope.linkOutValueObject.abaGeneImageUrls.length)
+//						e.scope.currentImageIndex = 0;
+//					else
+//						e.scope.currentImageIndex++;
+//						
+//					e.scope.innerHTML= String.format("<img height=200 width=400 src={0}>",  e.scope.linkOutValueObject.abaGeneImageUrls[e.scope.currentImageIndex]);
+//					e.scope.render();
+//					
+//				};
+//				popUpLinkOutWin.addButton('next image', popUpLinkOutWin.nextImage.createDelegate(this), popUpLinkOutWin);
+			
+				
 				popUpLinkOutWin.show(this);													
 
 			};
