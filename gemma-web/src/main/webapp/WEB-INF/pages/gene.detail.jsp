@@ -204,10 +204,9 @@
 			<a title="Allen Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
 				   onClick="
 				   			        imgSrc =  '<a  title= \' Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%> \'  href= 	<c:out value="${abaGeneUrl}" />   target=\'_blank\'/> <img	src=\'<%out.print(img.getDownloadExpressionPath());%>\'> </a>';
+
 				   					  win = new Ext.Window({							             							  							            						             				          
-							                html: imgSrc,    
-							                title : '<img height=15  src=/Gemma/images/abaExpressionLegend.gif> ',   
-							                resizeable : false,    
+							                html: imgSrc,
 							                autoScroll : true 
 						        });
 						        win.show(this);
