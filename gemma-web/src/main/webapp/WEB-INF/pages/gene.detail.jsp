@@ -193,8 +193,8 @@
 		</td>
 		
 		<td valign="top">
-		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value='${abaGeneUrl}' />	><img
-					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/>  </a>
+		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value="${abaGeneUrl}" />	><img
+					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/> </a>
 		<%		   		
 		 for ( Object obj : representativeImages ) {		
 		 	 ubic.gemma.image.aba.Image img = (ubic.gemma.image.aba.Image) obj;	               
@@ -205,11 +205,11 @@
 			<a title="Allen Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
 				   onClick="
 				   			        imgSrc =  '<a  title= \' Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%> \'  href= 	<c:out value="${abaGeneUrl}" />   target=\'_blank\'/> <img	src=\'<%out.print(img.getDownloadExpressionPath());%>\'> </a>';
-
+	  
 				   					  win = new Ext.Window({							             							  							            						             				          
-							                html: imgSrc,
+							                html: imgSrc,           
 							                autoScroll : true 
-						        });						        						                
+						        });
 						        win.show(this);
        						 " />
 				   <img	src="<%out.print(img.getExpressionThumbnailUrl());%>" /> </a>
