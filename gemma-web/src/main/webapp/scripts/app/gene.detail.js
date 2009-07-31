@@ -1,3 +1,7 @@
+Ext.namespace('Gemma');
+
+
+
 var goTermGrid = function() {
 	var ds;
 	var grid; // component
@@ -145,3 +149,17 @@ Ext.onReady(function() {
 	});
 
 });
+
+
+Gemma.geneLinkOutPopUp = function(abaImageUrl){
+	  
+		  win = new Ext.Window({							             							  							            						             				          
+                html: "<img src='"+ abaImageUrl +"'>",    
+                autoScroll : true 
+		    });
+		    win.setTitle("<img height=15  src='/Gemma/images/abaExpressionLegend.gif'>");
+    		win.show(this);
+   	
+
+};
+

@@ -191,9 +191,7 @@
 				onclick="showHelpTip(event, 'A picture of the expression profile from the allen bran atlas'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
-		
-		<!-- <img height=10  src='/Gemma/images/abaExpressionLegend.gif'>  totally failed at adding legend to title bar or anywhere on the page.  Works locally but fails on production. Giving up. -->
-		
+				
 		<td valign="top">
 		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value="${abaGeneUrl}" />	><img
 					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/> </a>
@@ -204,16 +202,7 @@
 		
 				 	&nbsp;&nbsp;
 			<a title="Allen Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
-				   onClick="
-				   			        imgSrc =  '<a  title= \' Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%> \'  href= 	<c:out value="${abaGeneUrl}" />   target=\'_blank\'/> <img	src=\'<%out.print(img.getDownloadExpressionPath());%>\'> </a>';
-	  
-				   					  win = new Ext.Window({							             							  							            						             				          
-							                html: imgSrc,           
-							                autoScroll : true 
-						        });
-						        win.show(this);
-       						 " />
-				   <img	src="<%out.print(img.getExpressionThumbnailUrl());%>" /> </a>
+				   onClick="Gemma.geneLinkOutPopUp('<%out.print(img.getDownloadExpressionPath());%>')"/>  <img	src="<%out.print(img.getExpressionThumbnailUrl());%>">  </a>
 		
 		<%			                  
 		 }//end of for loop
