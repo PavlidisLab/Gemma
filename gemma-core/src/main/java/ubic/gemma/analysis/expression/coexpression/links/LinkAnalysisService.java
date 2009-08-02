@@ -655,6 +655,7 @@ public class LinkAnalysisService {
         Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
         double subsetSize = la.getConfig().getSubsetSize();
+        StringBuilder buf = new StringBuilder();
         if ( la.getConfig().isSubset() && links.size() > subsetSize ) {
             la.getConfig().setSubsetUsed( true );
         }
@@ -730,14 +731,18 @@ public class LinkAnalysisService {
                 continue;
             }
 
-            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + gene1String + "\t" + gene2String + "\t" + nf.format( w )
-                    + "\n" );
+            buf.append(p1.getId() + "\t" + p2.getId() + "\t" + gene1String + "\t" + gene2String + "\t" + nf.format( w ) + "\n" );
+            //wr.write( p1.getId() + "\t" + p2.getId() + "\t" + gene1String + "\t" + gene2String + "\t" + nf.format( w ) + "\n" );
 
             if ( ++numPrinted > 0 && numPrinted % 50000 == 0 ) {
                 log.info( numPrinted + " links printed" );
             }
 
         }
+        
+        wr.write( "# totalLinks:" + numPrinted + "\n" );
+        wr.write( buf.toString() );
+        
         if ( la.getConfig().isSubset() && links.size() > subsetSize ) {// subset option activated
             log.info( "Done, " + numPrinted + "/" + links.size()
                             + " links printed (subset printed with some filtered)" );
