@@ -193,7 +193,7 @@
 		</td>
 				
 		<td valign="top">
-		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value="${abaGeneUrl}" />	><img
+		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value="${abaGeneUrl}" /> target="_blank" > <img
 					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/> </a>
 		<%		   		
 		 for ( Object obj : representativeImages ) {		
@@ -202,7 +202,7 @@
 		
 				 	&nbsp;&nbsp;
 			<a title="Allen Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
-				   onClick="Gemma.geneLinkOutPopUp('<%out.print(img.getDownloadExpressionPath());%>')"/>  <img	src="<%out.print(img.getExpressionThumbnailUrl());%>">  </a>
+				  onClick="Gemma.geneLinkOutPopUp('<%out.print(img.getDownloadExpressionPath());%>')"/>  <img	src="<%out.print(img.getExpressionThumbnailUrl());%>">  </a>
 		
 		<%			                  
 		 }//end of for loop
