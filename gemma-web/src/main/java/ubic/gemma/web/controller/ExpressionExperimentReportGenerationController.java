@@ -35,6 +35,9 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @version $Id$ *
  * @spring.bean name="expressionExperimentReportGenerationService"
  * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * 
+ * 
  */
 public class ExpressionExperimentReportGenerationController extends AbstractSpacesController<Boolean> {
 

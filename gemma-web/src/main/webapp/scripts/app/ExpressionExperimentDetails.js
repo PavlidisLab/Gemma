@@ -200,8 +200,13 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						
 						
 						var downloadCoExpressionDataLink =  String.format("<a ext:qtip='Download all coexpression  data in a tab delimted format'  href='#' onClick='fetchCoExpressionData({0})' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>", ee.id);
-						var count = ee.coexpressionLinkCount != null ?  ee.coexpressionLinkCount : "Unavailable";
-						return count + " " + downloadCoExpressionDataLink;
+						var count;
+						if ( ee.coexpressionLinkCount == null )
+						 	 return "Unavailable";
+						else if (ee.coexpressionLinkCount == 0)
+							return "None";
+							
+						return ee.coexpressionLinkCount  + "&nbsp;" + downloadCoExpressionDataLink;
 						
 					},
 					
@@ -227,7 +232,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 							if ( ee.diffExpressedProbes[i].numberOfDiffExpressedProbes == 0){
 								diffExpressionSummary = diffExpressionSummary + "&nbsp; 0";
 							}else{
-								diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +',\'' + factors +'\')" ext:qtip="Click to see differentially expressed probes for: '+ factors + ' (FDR threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
+								diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +',\'' + factors +'\')" ext:qtip="Click to visualize differentially expressed probes for: '+ factors + ' (FDR threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
 							}
 						}
 								
@@ -798,7 +803,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 										{
 											id :'coexpressionLinkCount-region',
 											html :this.renderCoExpressionLinkCount(e),											
-											width :60
+											width :80
 										},
 										{
 											html :'Diff-exp. Probes'

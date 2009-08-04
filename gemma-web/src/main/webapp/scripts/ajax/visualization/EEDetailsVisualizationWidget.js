@@ -133,7 +133,7 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext.extend(Ext.Window, {
 				m_diffProfiles = flotrData;
 				m_eevo = data[0].data.eevo;
 	
-				this.setTitle( "Visualization of differentially expressed probes in " + m_eevo.shortName + " for " + this.factorDetails.factorDetails);
+				this.setTitle( "Top differentially expressed probes in " + m_eevo.shortName + " for " + this.factorDetails.factorDetails);
 				
 				Heatmap.draw( $('vizDiffDiv'), m_diffProfiles, HEATMAP_CONFIG);
 				m_myDiffVizLoadMask.hide();
