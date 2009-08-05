@@ -101,6 +101,9 @@ public class ProbeMapper {
                 log.debug( blatResultsForSequence.size() + " Blat results for " + sequence );
             }
 
+            /*
+             * Filter based on quality of hit.
+             */
             Double fractionRepeats = sequence.getFractionRepeats();
             if ( fractionRepeats != null && fractionRepeats > config.getMaximumRepeatFraction()
                     && blatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
