@@ -681,8 +681,24 @@ public class GeneCoexpressionService {
 
             List<Long> relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
 
+            HashMap<Gene, Collection<Gene2GeneCoexpression>> foundGenes = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
+              
+                //FIXME Symptom fix for duplicate found genes  
+                //Keep track of the found genes that we can correctly identify duplicates.  
+                //All keep the g2g object for debugging purposes. 
+                if ( foundGenes.containsKey( foundGene ) ) {
+                    foundGenes.get( foundGene ).add( g2g );
+                    log.warn( "Duplicate gene found in coexpression results, skipping: " + foundGene + " From analysis: " + g2g.getSourceAnalysis().getId() );
+                    continue;   //Found a duplicate gene, don't add to results just our debugging list
+
+                } else {
+                    foundGenes.put( foundGene, new ArrayList<Gene2GeneCoexpression>() );
+                    foundGenes.get( foundGene ).add( g2g );
+                }
+
                 CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
 
                 geneService.thawLite( foundGene );
@@ -776,6 +792,19 @@ public class GeneCoexpressionService {
 
             }
 
+            //FIXME This is only necessary for debugging purposes. Helps us keep track of duplicate genes found above.  
+            if (log.isDebugEnabled()){
+                for ( Gene foundGene : foundGenes.keySet() ) {
+                    if ( foundGenes.get( foundGene ).size() > 1 ) {
+                        log.debug( "** DUPLICATE: " + foundGene.getOfficialSymbol() + " found multiple times. Gene2Genes objects are: " );
+                        for ( Gene2GeneCoexpression g1g : foundGenes.get( foundGene ) ) {
+                            log.debug( " ============ Gene2Gene Id: " + g1g.getId() + " 1st gene: " + g1g.getFirstGene().getOfficialSymbol() + " 2nd gene: "
+                                    + g1g.getSecondGene().getOfficialSymbol() + " Source Analysis: " + g1g.getSourceAnalysis().getId()  + " # of dataSets: " + g1g.getNumDataSets());
+                        }
+                    }
+                }
+            }
+            
             CoexpressionSummaryValueObject summary = makeSummary( eevos, allTestedDataSets,
                     allDatasetsWithSpecificProbes, linksMetPositiveStringency, linksMetNegativeStringency );
             result.getSummary().put( queryGene.getOfficialSymbol(), summary );
