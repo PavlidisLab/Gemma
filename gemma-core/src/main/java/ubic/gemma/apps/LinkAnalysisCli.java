@@ -18,15 +18,38 @@
  */
 package ubic.gemma.apps;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.NormalizationMethod;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -69,17 +92,18 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
 
+    private String dataFileName = null;
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#buildOptions()
+     */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildOptions();
 
         super.addDateOption();
-
-        Option geneFileOption = OptionBuilder.hasArg().withArgName( "dataSet" ).withDescription(
-                "Short name of the expression experiment to analyze (default is to analyze all found in the database)" )
-                .withLongOpt( "dataSet" ).create( 'e' );
-        addOption( geneFileOption );
 
         Option cdfCut = OptionBuilder.hasArg().withArgName( "Tolerance Thresold" ).withDescription(
                 "The tolerance threshold for coefficient value" ).withLongOpt( "cdfcut" ).create( 'c' );
@@ -108,6 +132,17 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .withLongOpt( "nodb" ).create( 'd' );
         addOption( useDB );
 
+        Option fileOpt = OptionBuilder
+                .withDescription(
+                        "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' option " )
+                .create( "dataFile" );
+        addOption( fileOpt );
+
+        Option arrayOpt = OptionBuilder.withDescription(
+                "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
+                .create( "array" );
+        addOption( arrayOpt );
+
         Option textOutOpt = OptionBuilder.withDescription( "Output links as text to STOUT" ).create( "text" );
         addOption( textOutOpt );
 
@@ -128,13 +163,18 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addOption( normalizationOption );
 
         Option subsetOption = OptionBuilder.hasArg().withArgName( "Subset of coexpression links" ).withDescription(
-        "Only random subset of total coexpression links will be written to output with size given" ).create( "subset" );
-        addOption( subsetOption );        
-        
-        Option chooseCutOption = OptionBuilder.hasArg().withArgName( "Singular correlation threshold" ).withDescription(
-        "Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none" ).create( "choosecut" );
-        addOption( chooseCutOption );        
-        
+                "Only random subset of total coexpression links will be written to output with size given" ).create(
+                "subset" );
+        addOption( subsetOption );
+
+        Option chooseCutOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Singular correlation threshold" )
+                .withDescription(
+                        "Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none" )
+                .create( "choosecut" );
+        addOption( chooseCutOption );
+
         addForceOption();
         addAutoOption();
     }
@@ -148,16 +188,126 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         this.linkAnalysisService = ( LinkAnalysisService ) this.getBean( "linkAnalysisService" );
 
-        for ( BioAssaySet ee : expressionExperiments ) {
-            if ( ee instanceof ExpressionExperiment ) {
-                processExperiment( ( ExpressionExperiment ) ee );
-            } else {
-                throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
+        if ( this.dataFileName != null ) {
+            /*
+             * Read vectors from file. Could provide as a matrix, but it's easier to provide vectors (less mess in later
+             * code)
+             */
+
+            ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+
+            ArrayDesign arrayDesign = arrayDesignService.findByShortName( this.linkAnalysisConfig.getArrayName() );
+
+            if ( arrayDesign == null ) {
+                return new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
             }
+
+            arrayDesignService.thawLite( arrayDesign );
+
+            Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<ProcessedExpressionDataVector>();
+
+            Map<String, CompositeSequence> csMap = new HashMap<String, CompositeSequence>();
+            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                csMap.put( cs.getName(), cs );
+            }
+
+            QuantitationType qtype = makeQuantitationType();
+
+            SimpleExpressionDataLoaderService simpleExpressionDataLoaderService = ( SimpleExpressionDataLoaderService ) this
+                    .getBean( "simpleExpressionDataLoaderService" );
+            ByteArrayConverter bArrayConverter = new ByteArrayConverter();
+            try {
+                InputStream data = new FileInputStream( new File( this.dataFileName ) );
+                DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
+
+                BioAssayDimension bad = makeBioAssayDimension( arrayDesign, matrix );
+
+                for ( int i = 0; i < matrix.rows(); i++ ) {
+                    byte[] bdata = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );
+
+                    ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
+                    vector.setData( bdata );
+
+                    CompositeSequence cs = csMap.get( matrix.getRowName( i ) );
+                    if ( cs == null ) {
+                        continue;
+                    }
+                    vector.setDesignElement( cs );
+
+                    vector.setBioAssayDimension( bad );
+                    vector.setQuantitationType( qtype );
+
+                    dataVectors.add( vector );
+
+                }
+                log.info( "Read " + dataVectors.size() + " data vectors" );
+
+            } catch ( Exception e ) {
+                return e;
+            }
+
+            this.linkAnalysisService.process( dataVectors, filterConfig, linkAnalysisConfig );
+        } else {
+
+            for ( BioAssaySet ee : expressionExperiments ) {
+                if ( ee instanceof ExpressionExperiment ) {
+                    processExperiment( ( ExpressionExperiment ) ee );
+                } else {
+                    throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
+                }
+            }
+            summarizeProcessing();
         }
 
-        summarizeProcessing();
         return null;
+    }
+
+    /**
+     * @return
+     */
+    private QuantitationType makeQuantitationType() {
+        QuantitationType qtype = QuantitationType.Factory.newInstance();
+        qtype.setName( "Dummy" );
+        qtype.setGeneralType( GeneralType.QUANTITATIVE );
+        qtype.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
+        qtype.setIsPreferred( Boolean.TRUE );
+        qtype.setIsNormalized( Boolean.TRUE );
+        qtype.setIsBackgroundSubtracted( Boolean.TRUE );
+        qtype.setIsBackground( false );
+        qtype.setType( StandardQuantitationType.AMOUNT );// this shouldn't get used, just filled in to keep everybody
+        // happy.
+        qtype.setIsMaskedPreferred( true );
+
+        qtype.setScale( ScaleType.OTHER );// this shouldn't get used, just filled in to keep everybody happy.
+        qtype.setIsRatio( false ); // this shouldn't get used, just filled in to keep everybody happy.
+        return qtype;
+    }
+
+    /**
+     * @param arrayDesign
+     * @param matrix
+     * @return
+     */
+    private BioAssayDimension makeBioAssayDimension( ArrayDesign arrayDesign, DoubleMatrix<String, String> matrix ) {
+        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
+        bad.setName( "For " + this.dataFileName );
+        bad.setDescription( "Generated from flat file" );
+        for ( int i = 0; i < matrix.columns(); i++ ) {
+            Object columnName = matrix.getColName( i );
+
+            BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
+            bioMaterial.setName( columnName.toString() );
+            bioMaterial.setSourceTaxon( taxon );
+            Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
+            bioMaterials.add( bioMaterial );
+
+            BioAssay assay = BioAssay.Factory.newInstance();
+            assay.setName( columnName.toString() );
+            assay.setArrayDesignUsed( arrayDesign );
+            assay.setSamplesUsed( bioMaterials );
+            bad.getBioAssays().add( assay );
+        }
+        return bad;
     }
 
     /**
@@ -186,6 +336,25 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void processOptions() {
         super.processOptions();
+
+        if ( hasOption( "dataFile" ) ) {
+
+            if ( this.expressionExperiments.size() > 0 ) {
+                log.error( "The 'dataFile' option is incompatible with other data set selection options" );
+                this.bail( ErrorCode.INVALID_OPTION );
+            }
+
+            if ( hasOption( "array" ) ) {
+                this.linkAnalysisConfig.setArrayName( getOptionValue( "array" ) );
+            } else {
+                log.error( "Must provide 'array' option if you  use 'dataFile" );
+                this.bail( ErrorCode.INVALID_OPTION );
+            }
+
+            this.dataFileName = getOptionValue( "dataFile" );
+
+            this.linkAnalysisConfig.setUseDb( false );
+        }
 
         if ( hasOption( 'c' ) ) {
             this.linkAnalysisConfig.setCdfCut( Double.parseDouble( getOptionValue( 'c' ) ) );
@@ -228,29 +397,30 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( "normalizemethod" ) ) {
             String optionValue = getOptionValue( "normalizemethod" );
 
-            NormalizationMethod value = NormalizationMethod.valueOf( optionValue);
+            NormalizationMethod value = NormalizationMethod.valueOf( optionValue );
             if ( value == null ) {
                 log.error( "No such normalization method: " + value );
                 this.bail( ErrorCode.INVALID_OPTION );
             }
             this.linkAnalysisConfig.setNormalizationMethod( value );
         }
-        
-        if (hasOption("subset")){
-            String subsetSize = getOptionValue("subset");
+
+        if ( hasOption( "subset" ) ) {
+            String subsetSize = getOptionValue( "subset" );
             log.info( "Representative subset of links requested for output" );
-            this.linkAnalysisConfig.setSubsetSize(Double.parseDouble( subsetSize ) );
+            this.linkAnalysisConfig.setSubsetSize( Double.parseDouble( subsetSize ) );
             this.linkAnalysisConfig.setSubset( true );
         }
-        
-        if (hasOption("choosecut")){
-            String singularThreshold = getOptionValue("choosecut");
-            if(singularThreshold.equals( "fwe" ) || singularThreshold.equals( "cdfCut" ) || singularThreshold.equals( "none" )){
-                log.info("Singular correlation threshold chosen");
+
+        if ( hasOption( "choosecut" ) ) {
+            String singularThreshold = getOptionValue( "choosecut" );
+            if ( singularThreshold.equals( "fwe" ) || singularThreshold.equals( "cdfCut" )
+                    || singularThreshold.equals( "none" ) ) {
+                log.info( "Singular correlation threshold chosen" );
                 this.linkAnalysisConfig.setSingularThreshold( singularThreshold );
-            }
-            else{
-                log.error("Must choose 'fwe', 'cdfCut', or 'none' as the singular correlation threshold, defaulting to 'none'");
+            } else {
+                log
+                        .error( "Must choose 'fwe', 'cdfCut', or 'none' as the singular correlation threshold, defaulting to 'none'" );
             }
         }
 

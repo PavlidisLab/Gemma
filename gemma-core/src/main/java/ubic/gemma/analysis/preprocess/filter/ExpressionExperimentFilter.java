@@ -34,7 +34,6 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
@@ -82,18 +81,14 @@ public class ExpressionExperimentFilter {
 
     Collection<ArrayDesign> arrayDesignsUsed;
 
-    ExpressionExperiment ee;
-
     private final FilterConfig config;
 
     /**
-     * @param ee
+     * @param arrayDesignsUsed
      * @param config configuration used for all filtering. This must be defined at construction and cannot be changed
      *        afterwards.
      */
-    public ExpressionExperimentFilter( ExpressionExperiment ee, Collection<ArrayDesign> arrayDesignsUsed,
-            FilterConfig config ) {
-        this.ee = ee;
+    public ExpressionExperimentFilter( Collection<ArrayDesign> arrayDesignsUsed, FilterConfig config ) {
         this.arrayDesignsUsed = arrayDesignsUsed;
         this.config = config;
     }
@@ -249,12 +244,11 @@ public class ExpressionExperimentFilter {
 
         if ( !config.isIgnoreMinimumSampleThreshold() ) {
             if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
-                throw new InsufficientSamplesException( "Not enough samples " + ee.getShortName()
-                        + ", must have at least " + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
+                throw new InsufficientSamplesException( "Not enough samples, must have at least "
+                        + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
             } else if ( !config.isIgnoreMinimumRowsThreshold()
                     && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-                throw new InsufficientProbesException( "To few rows in " + ee.getShortName() + " ("
-                        + eeDoubleMatrix.rows()
+                throw new InsufficientProbesException( "To few rows in (" + eeDoubleMatrix.rows()
                         + ") prior to filtering, data sets are not analyzed unless they have at least "
                         + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
             }
@@ -263,18 +257,18 @@ public class ExpressionExperimentFilter {
         eeDoubleMatrix = this.doFilter( eeDoubleMatrix );
 
         if ( eeDoubleMatrix == null )
-            throw new IllegalStateException( "Failed to get filtered data matrix, it was null " + ee.getShortName() );
+            throw new IllegalStateException( "Failed to get filtered data matrix, it was null" );
 
         if ( eeDoubleMatrix.rows() == 0 ) {
             log.info( "No rows left after filtering" );
             throw new InsufficientProbesException( "No rows left after filtering" );
         } else if ( !config.isIgnoreMinimumRowsThreshold()
                 && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( "To few rows in " + ee.getShortName() + " (" + eeDoubleMatrix.rows()
+            throw new InsufficientProbesException( "To few rows in   (" + eeDoubleMatrix.rows()
                     + ") after filtering, data sets are not analyzed unless they have at least "
                     + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
         } else if ( !config.isIgnoreMinimumSampleThreshold() && eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
-            throw new InsufficientSamplesException( "Not enough samples " + ee.getShortName() + ", must have at least "
+            throw new InsufficientSamplesException( "Not enough samples, must have at least "
                     + FilterConfig.MINIMUM_SAMPLE + " to be eligible for link analysis." );
         }
 

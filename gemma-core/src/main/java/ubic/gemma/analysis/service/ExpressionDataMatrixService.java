@@ -20,6 +20,7 @@ package ubic.gemma.analysis.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -32,6 +33,7 @@ import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao;
@@ -47,6 +49,7 @@ import ubic.gemma.model.genome.Gene;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="processedExpressionDataVectorService" ref="processedExpressionDataVectorService"
  * @spring.property name="dedvService" ref="designElementDataVectorService"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @author keshav
  * @version $Id$
  */
@@ -57,6 +60,8 @@ public class ExpressionDataMatrixService {
     ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     DesignElementDataVectorService dedvService;
+
+    ArrayDesignService arrayDesignService;
 
     /**
      * Provide a filtered expression data matrix.
@@ -69,7 +74,35 @@ public class ExpressionDataMatrixService {
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, arrayDesignsUsed, filterConfig );
+        return getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
+    }
+
+    /**
+     * @param arrayDesignName
+     * @param filterConfig
+     * @param dataVectors
+     * @return
+     */
+    public ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
+            Collection<ProcessedExpressionDataVector> dataVectors ) {
+        ArrayDesign ad = arrayDesignService.findByName( arrayDesignName );
+        if ( ad == null ) {
+            throw new IllegalArgumentException( "No array design named '" + arrayDesignName + "'" );
+        }
+        Collection<ArrayDesign> arrayDesignsUsed = new HashSet<ArrayDesign>();
+        arrayDesignsUsed.add( ad );
+        return this.getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
+    }
+
+    /**
+     * @param filterConfig
+     * @param dataVectors
+     * @param arrayDesignsUsed
+     * @return
+     */
+    private ExpressionDataDoubleMatrix getFilteredMatrix( FilterConfig filterConfig,
+            Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) {
+        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
         ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
         return eeDoubleMatrix;
     }

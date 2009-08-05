@@ -327,18 +327,22 @@ public class SimpleExpressionDataLoaderService {
      */
     private QuantitationType convertQuantitationType( SimpleExpressionExperimentMetaData metaData ) {
         QuantitationType result = QuantitationType.Factory.newInstance();
-        result.setName( metaData.getQuantitationTypeName() );
-        result.setDescription( metaData.getQuantitationTypeDescription() );
+
         result.setGeneralType( GeneralType.QUANTITATIVE );
-        result.setType( metaData.getType() );
         result.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
         result.setIsPreferred( Boolean.TRUE );
-        result.setIsMaskedPreferred( metaData.getIsMaskedPreferred() );
         result.setIsNormalized( Boolean.TRUE );
         result.setIsBackgroundSubtracted( Boolean.TRUE );
+        result.setIsBackground( false );
+
+        result.setName( metaData.getQuantitationTypeName() );
+        result.setDescription( metaData.getQuantitationTypeDescription() );
+        result.setType( metaData.getType() );
+        result.setIsMaskedPreferred( metaData.getIsMaskedPreferred() );
+
         result.setScale( metaData.getScale() );
         result.setIsRatio( metaData.getIsRatio() );
-        result.setIsBackground( false );
+
         return result;
     }
 

@@ -31,42 +31,56 @@ import ubic.gemma.model.common.protocol.Protocol;
  */
 public class LinkAnalysisConfig implements Serializable {
 
+    public enum NormalizationMethod {
+        none, SPELL, SVD
+    }
+
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
 
-    public enum NormalizationMethod {
-        none, SPELL, SVD
-    }
-
-    private double upperTailCut = 0.01;
-    private double lowerTailCut = 0.01;
-
-    private String metric = "pearson"; // spearman
     private boolean absoluteValue = false;
-    private double fwe = 0.01;
+    private String arrayName = null;
+
     private double cdfCut = 0.01; // 1.0 means, keep everything.
-    private double subsetSize = 0.0;
-    private String singularThreshold = "none"; //fwe|cdfCut
-
-    private boolean subset = false;
-    private boolean subsetUsed = false;
+    private double correlationCacheThreshold = 0.8;
+    private double fwe = 0.01;
     private boolean knownGenesOnly = false;
-    private boolean useDb = true;
-    private boolean makeSampleCorrMatImages = true;
     private boolean lowerCdfCutUsed = false;
-    private boolean upperCdfCutUsed = false;
-    
-    private NormalizationMethod normalizationMethod = NormalizationMethod.none;
 
+    private double lowerTailCut = 0.01;
+    private boolean makeSampleCorrMatImages = true;
+    private String metric = "pearson"; // spearman
+    private NormalizationMethod normalizationMethod = NormalizationMethod.none;
     /*
      * Remove negative correlated values at the end.
      */
     private boolean omitNegLinks = false;
+    private String singularThreshold = "none"; // fwe|cdfCut
+    private boolean subset = false;
 
-    private double correlationCacheThreshold = 0.8;
+    private double subsetSize = 0.0;
+    private boolean subsetUsed = false;
+
     private boolean textOut;
+
+    private boolean upperCdfCutUsed = false;
+
+    private double upperTailCut = 0.01;
+
+    private boolean useDb = true;
+
+    private void checkValidMetric( String m ) {
+        if ( m.equalsIgnoreCase( "pearson" ) ) return;
+        if ( m.equalsIgnoreCase( "spearman" ) ) return;
+        throw new IllegalArgumentException( "Unrecognized metric: " + m
+                + ", valid options are 'pearson' and 'spearman'" );
+    }
+
+    public String getArrayName() {
+        return arrayName;
+    }
 
     public double getCdfCut() {
         return cdfCut;
@@ -88,6 +102,24 @@ public class LinkAnalysisConfig implements Serializable {
         return metric;
     }
 
+    /**
+     * @return the normalizationMethod
+     */
+    public NormalizationMethod getNormalizationMethod() {
+        return normalizationMethod;
+    }
+
+    /**
+     * @return the singularThreshold
+     */
+    public String getSingularThreshold() {
+        return singularThreshold;
+    }
+
+    public double getSubsetSize() {
+        return subsetSize;
+    }
+
     public double getUpperTailCut() {
         return upperTailCut;
     }
@@ -100,8 +132,41 @@ public class LinkAnalysisConfig implements Serializable {
         return knownGenesOnly;
     }
 
+    /**
+     * @return the lowerCdfCutUsed
+     */
+    public boolean isLowerCdfCutUsed() {
+        return lowerCdfCutUsed;
+    }
+
+    public boolean isMakeSampleCorrMatImages() {
+        return makeSampleCorrMatImages;
+    }
+
+    /**
+     * @return the omitNegLinks
+     */
+    public boolean isOmitNegLinks() {
+        return omitNegLinks;
+    }
+
+    public boolean isSubset() {
+        return subset;
+    }
+
+    public boolean isSubsetUsed() {
+        return subsetUsed;
+    }
+
     public boolean isTextOut() {
         return textOut;
+    }
+
+    /**
+     * @return the upperCdfCutUsed
+     */
+    public boolean isUpperCdfCutUsed() {
+        return upperCdfCutUsed;
     }
 
     public boolean isUseDb() {
@@ -110,6 +175,10 @@ public class LinkAnalysisConfig implements Serializable {
 
     public void setAbsoluteValue( boolean absoluteValue ) {
         this.absoluteValue = absoluteValue;
+    }
+
+    public void setArrayName( String arrayName ) {
+        this.arrayName = arrayName;
     }
 
     public void setCdfCut( double cdfCut ) {
@@ -128,8 +197,19 @@ public class LinkAnalysisConfig implements Serializable {
         this.knownGenesOnly = knownGenesOnly;
     }
 
+    /**
+     * @param lowerCdfCutUsed the lowerCdfCutUsed to set
+     */
+    public void setLowerCdfCutUsed( boolean lowerCdfCutUsed ) {
+        this.lowerCdfCutUsed = lowerCdfCutUsed;
+    }
+
     public void setLowerTailCut( double lowerTailCut ) {
         this.lowerTailCut = lowerTailCut;
+    }
+
+    public void setMakeSampleCorrMatImages( boolean makeSampleCorrMatImages ) {
+        this.makeSampleCorrMatImages = makeSampleCorrMatImages;
     }
 
     public void setMetric( String metric ) {
@@ -137,8 +217,48 @@ public class LinkAnalysisConfig implements Serializable {
         this.metric = metric;
     }
 
+    /**
+     * @param normalizationMethod the normalizationMethod to set
+     */
+    public void setNormalizationMethod( NormalizationMethod normalizationMethod ) {
+        this.normalizationMethod = normalizationMethod;
+    }
+
+    /**
+     * @param omitNegLinks the omitNegLinks to set
+     */
+    public void setOmitNegLinks( boolean omitNegLinks ) {
+        this.omitNegLinks = omitNegLinks;
+    }
+
+    /**
+     * @param singularThreshold the singularThreshold to set
+     */
+    public void setSingularThreshold( String singularThreshold ) {
+        this.singularThreshold = singularThreshold;
+    }
+
+    public void setSubset( boolean subset ) {
+        this.subset = subset;
+    }
+
+    public void setSubsetSize( double subsetSize ) {
+        this.subsetSize = subsetSize;
+    }
+
+    public void setSubsetUsed( boolean subsetUsed ) {
+        this.subsetUsed = subsetUsed;
+    }
+
     public void setTextOut( boolean b ) {
         this.textOut = b;
+    }
+
+    /**
+     * @param upperCdfCutUsed the upperCdfCutUsed to set
+     */
+    public void setUpperCdfCutUsed( boolean upperCdfCutUsed ) {
+        this.upperCdfCutUsed = upperCdfCutUsed;
     }
 
     public void setUpperTailCut( double upperTailCut ) {
@@ -175,19 +295,17 @@ public class LinkAnalysisConfig implements Serializable {
         buf.append( "# knownGenesOnly:" + this.isKnownGenesOnly() + "\n" );
         buf.append( "# normalizationMethod:" + this.getNormalizationMethod() + "\n" );
         buf.append( "# omitNegLinks:" + this.isOmitNegLinks() + "\n" );
-        if(this.isSubsetUsed()){
+        if ( this.isSubsetUsed() ) {
             buf.append( "# subset:" + this.subsetSize + "\n" );
         }
-        if(this.isUpperCdfCutUsed()){
+        if ( this.isUpperCdfCutUsed() ) {
             buf.append( "# upperCutUsed:cdfCut\n" );
-        }
-        else{
+        } else {
             buf.append( "# upperCutUsed:fwe\n" );
         }
-        if(this.isLowerCdfCutUsed()){
+        if ( this.isLowerCdfCutUsed() ) {
             buf.append( "# lowerCutUsed:cdfCut\n" );
-        }
-        else{
+        } else {
             buf.append( "# lowerCutUsed:fwe\n" );
         }
         buf.append( "# singularThreshold:" + this.getSingularThreshold() + "\n" );
@@ -199,114 +317,5 @@ public class LinkAnalysisConfig implements Serializable {
      */
     public boolean useKnownGenesOnly() {
         return knownGenesOnly;
-    }
-
-    private void checkValidMetric( String m ) {
-        if ( m.equalsIgnoreCase( "pearson" ) ) return;
-        if ( m.equalsIgnoreCase( "spearman" ) ) return;
-        throw new IllegalArgumentException( "Unrecognized metric: " + m
-                + ", valid options are 'pearson' and 'spearman'" );
-    }
-
-    public boolean isMakeSampleCorrMatImages() {
-        return makeSampleCorrMatImages;
-    }
-
-    public void setMakeSampleCorrMatImages( boolean makeSampleCorrMatImages ) {
-        this.makeSampleCorrMatImages = makeSampleCorrMatImages;
-    }
-
-    /**
-     * @return the omitNegLinks
-     */
-    public boolean isOmitNegLinks() {
-        return omitNegLinks;
-    }
-
-    /**
-     * @param omitNegLinks the omitNegLinks to set
-     */
-    public void setOmitNegLinks( boolean omitNegLinks ) {
-        this.omitNegLinks = omitNegLinks;
-    }
-
-    /**
-     * @return the normalizationMethod
-     */
-    public NormalizationMethod getNormalizationMethod() {
-        return normalizationMethod;
-    }
-
-    /**
-     * @param normalizationMethod the normalizationMethod to set
-     */
-    public void setNormalizationMethod( NormalizationMethod normalizationMethod ) {
-        this.normalizationMethod = normalizationMethod;
-    }
-
-    public double getSubsetSize() {
-        return subsetSize;
-    }
-
-    public void setSubsetSize( double subsetSize ) {
-        this.subsetSize = subsetSize;
-    }
-    
-    public void setSubset( boolean subset ) {
-        this.subset = subset;
-    }
-
-    public boolean isSubset(){
-        return subset;
-    }
-
-    public boolean isSubsetUsed() {
-        return subsetUsed;
-    }
-
-    public void setSubsetUsed( boolean subsetUsed ) {
-        this.subsetUsed = subsetUsed;
-    }
-
-    /**
-     * @return the lowerCdfCutUsed
-     */
-    public boolean isLowerCdfCutUsed() {
-        return lowerCdfCutUsed;
-    }
-
-    /**
-     * @param lowerCdfCutUsed the lowerCdfCutUsed to set
-     */
-    public void setLowerCdfCutUsed( boolean lowerCdfCutUsed ) {
-        this.lowerCdfCutUsed = lowerCdfCutUsed;
-    }
-
-    /**
-     * @return the upperCdfCutUsed
-     */
-    public boolean isUpperCdfCutUsed() {
-        return upperCdfCutUsed;
-    }
-
-    /**
-     * @param upperCdfCutUsed the upperCdfCutUsed to set
-     */
-    public void setUpperCdfCutUsed( boolean upperCdfCutUsed ) {
-        this.upperCdfCutUsed = upperCdfCutUsed;
-    }
-
-    /**
-     * @return the singularThreshold
-     */
-    public String getSingularThreshold() {
-        return singularThreshold;
-    }
-
-    /**
-     * @param singularThreshold the singularThreshold to set
-     */
-    public void setSingularThreshold( String singularThreshold ) {
-        this.singularThreshold = singularThreshold;
     }
 }
