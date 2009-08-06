@@ -174,56 +174,7 @@ public class LinkAnalysisService {
             Collection<ProcessedExpressionDataVector> dataVectors = expressionDataMatrixService
                     .getProcessedExpressionDataVectors( ee );
 
-            checkVectors( ee, dataVectors );
-
-            ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
-                    dataVectors );
-
-            if ( datamatrix.rows() == 0 ) {
-                log.info( "No rows left after filtering" );
-                throw new InsufficientProbesException( "No rows left after filtering" );
-            } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-                throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
-                        + "), data sets are not analyzed unless they have at least "
-                        + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
-            }
-
-            datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
-
-            /*
-             * Might as well while we have the data handy
-             */
-            if ( linkAnalysisConfig.isMakeSampleCorrMatImages() ) {
-                log.info( "Creating sample correlation matrix ..." );
-                ExpressionDataSampleCorrelation.process( datamatrix, ee );
-            }
-
-            /*
-             * Link analysis section.
-             */
-            log.info( "Starting link analysis... " + ee );
-            setUpForAnalysis( ee, la, dataVectors, datamatrix );
-            addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
-            Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
-            la.analyze();
-
-            // output
-            if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
-
-                Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-                ees.add( ee );
-
-                saveLinks( p2v, la );
-
-                audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
-
-            } else if ( linkAnalysisConfig.isTextOut() ) {
-                try {
-                    writeLinks( la, filterConfig, new PrintWriter( System.out ) );
-                } catch ( IOException e ) {
-                    throw new RuntimeException( e );
-                }
-            }
+            process( ee, filterConfig, linkAnalysisConfig, la, dataVectors );
 
             log.info( "Done with processing of " + ee );
         } catch ( Exception e ) {
@@ -234,6 +185,102 @@ public class LinkAnalysisService {
             throw new RuntimeException( e );
         }
 
+    }
+
+    /**
+     * Used when the input is data vectors from another source, instead of from a DB-bound expressionExperiment. Example
+     * would be vectors read from a file. Output is always 'text', and DB is not used. Intensity-level-based filtering
+     * is not available, so the data should be pre-filtered if you need that.
+     * 
+     * @param dataVectors
+     * @param filterConfig
+     * @param linkAnalysisConfig - must include the array name.
+     */
+    public void process( Collection<ProcessedExpressionDataVector> dataVectors, FilterConfig filterConfig,
+            LinkAnalysisConfig linkAnalysisConfig ) {
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( linkAnalysisConfig
+                .getArrayName(), filterConfig, dataVectors );
+
+        if ( datamatrix.rows() == 0 ) {
+            log.info( "No rows left after filtering" );
+            throw new InsufficientProbesException( "No rows left after filtering" );
+        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
+                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
+                    + " rows" );
+        }
+        LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
+        datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
+        setUpForAnalysis( null, la, dataVectors, datamatrix );
+
+        la.analyze();
+        try {
+            writeLinks( la, filterConfig, new PrintWriter( System.out ) );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    /**
+     * @param ee
+     * @param filterConfig
+     * @param linkAnalysisConfig
+     * @param la
+     * @param dataVectors
+     */
+    private void process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig,
+            LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors ) {
+        checkVectors( ee, dataVectors );
+
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
+                dataVectors );
+
+        if ( datamatrix.rows() == 0 ) {
+            log.info( "No rows left after filtering" );
+            throw new InsufficientProbesException( "No rows left after filtering" );
+        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
+                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
+                    + " rows" );
+        }
+
+        datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
+
+        /*
+         * Might as well while we have the data handy
+         */
+        if ( linkAnalysisConfig.isMakeSampleCorrMatImages() ) {
+            log.info( "Creating sample correlation matrix ..." );
+            ExpressionDataSampleCorrelation.process( datamatrix, ee );
+        }
+
+        /*
+         * Link analysis section.
+         */
+        log.info( "Starting link analysis... " + ee );
+        setUpForAnalysis( ee, la, dataVectors, datamatrix );
+        addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
+        Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
+        la.analyze();
+
+        // output
+        if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
+
+            Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+            ees.add( ee );
+
+            saveLinks( p2v, la );
+
+            audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
+
+        } else if ( linkAnalysisConfig.isTextOut() ) {
+            try {
+                writeLinks( la, filterConfig, new PrintWriter( System.out ) );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
     }
 
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
@@ -292,7 +339,6 @@ public class LinkAnalysisService {
         analysis.getProtocol().setDescription(
                 analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
 
-        assert ee.getId() != null;
         analysis.getExpressionExperimentSetAnalyzed().getExperiments().add( ee );
 
         /*
@@ -638,8 +684,11 @@ public class LinkAnalysisService {
             Collection<ProcessedExpressionDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
 
         la.setDataMatrix( eeDoubleMatrix );
-        la.setTaxon( eeService.getTaxon( ee.getId() ) );
-        la.setExpressionExperiment( ee );
+
+        if ( ee != null ) {
+            la.setTaxon( eeService.getTaxon( ee.getId() ) );
+            la.setExpressionExperiment( ee );
+        }
 
         getProbe2GeneMap( la, dataVectors, eeDoubleMatrix );
     }
