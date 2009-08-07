@@ -295,9 +295,9 @@ public class LinkAnalysisConfig implements Serializable {
         buf.append( "# knownGenesOnly:" + this.isKnownGenesOnly() + "\n" );
         buf.append( "# normalizationMethod:" + this.getNormalizationMethod() + "\n" );
         buf.append( "# omitNegLinks:" + this.isOmitNegLinks() + "\n" );
-        if ( this.isSubsetUsed() ) {
+/*        if ( this.isSubsetUsed() ) {
             buf.append( "# subset:" + this.subsetSize + "\n" );
-        }
+        }*/
         if ( this.isUpperCdfCutUsed() ) {
             buf.append( "# upperCutUsed:cdfCut\n" );
         } else {
