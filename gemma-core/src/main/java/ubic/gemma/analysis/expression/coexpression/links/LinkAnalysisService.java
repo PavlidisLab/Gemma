@@ -704,7 +704,7 @@ public class LinkAnalysisService {
         Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
         double subsetSize = la.getConfig().getSubsetSize();
-        ArrayList<String> buf = new ArrayList<String>();
+        List<String> buf = new ArrayList<String>();
         if ( la.getConfig().isSubset() && links.size() > subsetSize ) {
             la.getConfig().setSubsetUsed( true );
         }
@@ -722,16 +722,13 @@ public class LinkAnalysisService {
         };
 
         int i = 0;
-        int numPrinted = 0;
+        int keptLinksCount = 0;
         Random generator = new Random();
         double rand = 0.0;
         double fraction = subsetSize / links.size();
 
         for ( int n = links.size(); i < n; i++ ) {
-            if ( la.getConfig().isSubsetUsed() ) {
-                rand = generator.nextDouble();
-                if ( rand > fraction ) continue;
-            }
+
             Object val = links.getQuick( i );
             if ( val == null ) continue;
             Link m = ( Link ) val;
@@ -750,10 +747,10 @@ public class LinkAnalysisService {
                 if ( la.getConfig().useKnownGenesOnly() ) {
                     removeNonKnownGenes( cluster );
                 }
+
+                if ( cluster.isEmpty() ) continue;
+
                 String t = StringUtils.join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," );
-                if ( StringUtils.isBlank( t ) ) {
-                    continue;
-                }
                 genes1.add( t );
             }
 
@@ -762,10 +759,10 @@ public class LinkAnalysisService {
                 if ( la.getConfig().useKnownGenesOnly() ) {
                     removeNonKnownGenes( cluster );
                 }
+
+                if ( cluster.isEmpty() ) continue;
+
                 String t = StringUtils.join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," );
-                if ( StringUtils.isBlank( t ) ) {
-                    continue;
-                }
                 genes2.add( t );
             }
 
@@ -780,27 +777,36 @@ public class LinkAnalysisService {
                 continue;
             }
 
-            buf.add(p1.getId() + "\t" + p2.getId() + "\t" + gene1String + "\t" + gene2String + "\t" + nf.format( w ) + "\n" );//save links
-            //wr.write( p1.getId() + "\t" + p2.getId() + "\t" + gene1String + "\t" + gene2String + "\t" + nf.format( w ) + "\n" );
-
-            if ( ++numPrinted > 0 && numPrinted % 50000 == 0 ) {
-                log.info( numPrinted + " links printed" );
+            if ( ++keptLinksCount % 50000 == 0 ) {
+                log.info( keptLinksCount + " links retained" );
             }
 
+            if ( la.getConfig().isSubsetUsed() ) {
+                rand = generator.nextDouble();
+                if ( rand > fraction ) continue;
+            }
+
+            buf.add( p1.getId() + "\t" + p2.getId() + "\t" + gene1String + "\t" + gene2String + "\t" + nf.format( w )
+                    + "\n" );// save links
+            // wr.write( p1.getId() + "\t" + p2.getId() + "\t" + gene1String + "\t" + gene2String + "\t" + nf.format( w
+            // ) + "\n" );
+
         }
-        
-        wr.write( "# totalLinks:" + numPrinted + "\n" );
-        for(String line: buf){//write links to file
-            wr.write(line);            
+
+        wr.write( "# totalLinks:" + keptLinksCount + "\n" );
+        wr.write( "# printedLinks:" + buf.size() + "\n" );
+
+        for ( String line : buf ) {// write links to file
+            wr.write( line );
         }
-        
-        if ( la.getConfig().isSubset() && links.size() > subsetSize ) {// subset option activated
-            log.info( "Done, " + numPrinted + "/" + links.size()
-                            + " links printed (subset printed with some filtered)" );
+
+        if ( la.getConfig().isSubsetUsed()) {// subset option activated
+            log.info( "Done, " + keptLinksCount + "/" + links.size()
+                    + " links kept, " + buf.size() + " links printed" );
             // wr.write("# Amount of links before subsetting/after subsetting: " + links.size() + "/" + numPrinted +
             // "\n" );
         } else {
-            log.info( "Done, " + numPrinted + "/" + links.size() + " links printed (some may have been filtered)" );
+            log.info( "Done, " + keptLinksCount + "/" + links.size() + " links printed (some may have been filtered)" );
         }
         wr.flush();
 
