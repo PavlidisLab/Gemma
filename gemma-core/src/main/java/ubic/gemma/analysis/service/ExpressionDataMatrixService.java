@@ -68,6 +68,19 @@ public class ExpressionDataMatrixService {
      * 
      * @param ee
      * @param filterConfig
+     * @return
+     */
+    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) {
+        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
+        return this.getFilteredMatrix( ee, filterConfig, dataVectors );
+    }
+
+    /**
+     * Provide a filtered expression data matrix.
+     * 
+     * @param ee
+     * @param filterConfig
      * @param dataVectors
      * @return
      */
@@ -75,6 +88,19 @@ public class ExpressionDataMatrixService {
             Collection<ProcessedExpressionDataVector> dataVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         return getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
+    }
+
+    /**
+     * @param filterConfig
+     * @param dataVectors
+     * @param arrayDesignsUsed
+     * @return
+     */
+    private ExpressionDataDoubleMatrix getFilteredMatrix( FilterConfig filterConfig,
+            Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) {
+        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
+        ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
+        return eeDoubleMatrix;
     }
 
     /**
@@ -92,32 +118,6 @@ public class ExpressionDataMatrixService {
         Collection<ArrayDesign> arrayDesignsUsed = new HashSet<ArrayDesign>();
         arrayDesignsUsed.add( ad );
         return this.getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
-    }
-
-    /**
-     * @param filterConfig
-     * @param dataVectors
-     * @param arrayDesignsUsed
-     * @return
-     */
-    private ExpressionDataDoubleMatrix getFilteredMatrix( FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) {
-        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
-        ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
-        return eeDoubleMatrix;
-    }
-
-    /**
-     * Provide a filtered expression data matrix.
-     * 
-     * @param ee
-     * @param filterConfig
-     * @return
-     */
-    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) {
-        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
-                .getProcessedDataVectors( ee );
-        return this.getFilteredMatrix( ee, filterConfig, dataVectors );
     }
 
     /**
@@ -180,16 +180,20 @@ public class ExpressionDataMatrixService {
         return matrix;
     }
 
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    public void setDedvService( DesignElementDataVectorService dedvService ) {
+        this.dedvService = dedvService;
+    }
+
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
 
     public void setProcessedExpressionDataVectorService( ProcessedExpressionDataVectorService vectorService ) {
         this.processedExpressionDataVectorService = vectorService;
-    }
-
-    public void setDedvService( DesignElementDataVectorService dedvService ) {
-        this.dedvService = dedvService;
     }
 
 }
