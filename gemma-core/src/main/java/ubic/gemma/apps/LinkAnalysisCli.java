@@ -96,6 +96,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -162,9 +163,13 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .create( "normalizemethod" );
         addOption( normalizationOption );
 
-        Option subsetOption = OptionBuilder.hasArg().withArgName( "Subset of coexpression links" ).withDescription(
-                "Only random subset of total coexpression links will be written to output with size given" ).create(
-                "subset" );
+        Option subsetOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Number of coexpression links to print out" )
+                .withDescription(
+                        "Only a random subset of total coexpression links will be written to output with approximate "
+                                + "size given as the argument; recommended if thresholds are loose to avoid memory problems or gigantic files." )
+                .create( "subset" );
         addOption( subsetOption );
 
         Option chooseCutOption = OptionBuilder
