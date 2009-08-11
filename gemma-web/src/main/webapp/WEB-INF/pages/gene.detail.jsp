@@ -202,7 +202,9 @@
 		
 				 	&nbsp;&nbsp;
 			<a title="Allen Brian Atlas Image for <%out.print(gene.getOfficialSymbol());%> "
-				  onClick="Gemma.geneLinkOutPopUp( &#34; <%out.print(img.getDownloadExpressionPath());%> &#34; )"/>  <img	src="<%out.print(img.getExpressionThumbnailUrl());%>"/>  </a>
+				  onclick="Gemma.geneLinkOutPopUp( &#34; <%out.print(img.getDownloadExpressionPath());%> &#34; )"> 
+				   <img	src="<%out.print(img.getExpressionThumbnailUrl());%>"/> 
+			</a>
 		
 		<%			                  
 		 }//end of for loop
