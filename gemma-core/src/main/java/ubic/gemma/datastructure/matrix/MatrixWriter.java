@@ -82,10 +82,18 @@ public class MatrixWriter<T> {
                 addGeneInfo( buf, probeForRow, geneAnnotations );
             }
 
+            int orderedBioMLastIndex = orderedBioMaterials.size() - 1;
+            
             for ( BioMaterial bioMaterial : orderedBioMaterials ) {
                 int i = matrix.getColumnIndex( bioMaterial );
                 T val = matrix.get( j, i );
-                buf.append( val + "\t" );
+
+                //Don't want line to contain a trailing unnecessary tab
+                if (orderedBioMaterials.indexOf( bioMaterial ) == orderedBioMLastIndex)
+                    buf.append( val );
+                else
+                    buf.append( val + "\t" );
+
             }
 
             buf.append( "\n" );
