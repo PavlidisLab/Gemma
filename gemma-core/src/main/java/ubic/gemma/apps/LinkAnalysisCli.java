@@ -133,13 +133,12 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .withLongOpt( "nodb" ).create( 'd' );
         addOption( useDB );
 
-        Option fileOpt = OptionBuilder
-                .withDescription(
+        Option fileOpt = OptionBuilder.hasArg().withArgName( "Expression data file" ).withDescription(
                         "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' option " )
                 .create( "dataFile" );
         addOption( fileOpt );
 
-        Option arrayOpt = OptionBuilder.withDescription(
+        Option arrayOpt = OptionBuilder.hasArg().withArgName( "Array Design" ).withDescription(
                 "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
                 .create( "array" );
         addOption( arrayOpt );
