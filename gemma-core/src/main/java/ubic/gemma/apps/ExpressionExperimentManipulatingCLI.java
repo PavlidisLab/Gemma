@@ -234,8 +234,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             log.info( "Processing all experiments for " + taxon.getCommonName() );
             this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
         } else {
-            log.info( "Processing all experiments (futher filtering may modify)" );
-            this.expressionExperiments = new HashSet( eeService.loadAll() );
+            if(!(hasOption("dataFile"))){
+                log.info( "Processing all experiments (futher filtering may modify)" );
+                this.expressionExperiments = new HashSet( eeService.loadAll() );
+            }
         }
 
         if ( hasOption( 'x' ) ) {
@@ -259,7 +261,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             log.info( "Final list: " + this.expressionExperiments.size()
                     + " expressionExperiments (futher filtering may modify)" );
         } else if ( expressionExperiments.size() == 0 ) {
-            log.info( "No experiments selected" );
+            if(hasOption("dataFile")){
+                log.info( "Expression matrix from data file selected" );
+            }
+            else{
+                log.info( "No experiments selected" );
+            }
         }
 
     }
