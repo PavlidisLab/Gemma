@@ -192,11 +192,12 @@ public class LinkAnalysisService {
      * would be vectors read from a file. Output is always 'text', and DB is not used. Intensity-level-based filtering
      * is not available, so the data should be pre-filtered if you need that.
      * 
+     * @param t
      * @param dataVectors
      * @param filterConfig
      * @param linkAnalysisConfig - must include the array name.
      */
-    public void process( Collection<ProcessedExpressionDataVector> dataVectors, FilterConfig filterConfig,
+    public void process( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors, FilterConfig filterConfig,
             LinkAnalysisConfig linkAnalysisConfig ) {
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( linkAnalysisConfig
                 .getArrayName(), filterConfig, dataVectors );
@@ -211,7 +212,7 @@ public class LinkAnalysisService {
         }
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
         datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
-        setUpForAnalysis( null, la, dataVectors, datamatrix );
+        setUpForAnalysis( t, la, dataVectors, datamatrix );
 
         la.analyze();
         try {
@@ -693,6 +694,22 @@ public class LinkAnalysisService {
         getProbe2GeneMap( la, dataVectors, eeDoubleMatrix );
     }
 
+    /**
+     * Initializes the LinkAnalysis object for data file input; populates the probe2gene map.
+     * 
+     * @param ee
+     * @param la
+     * @param dataVectors
+     * @param eeDoubleMatrix
+     */
+    private void setUpForAnalysis( Taxon t, LinkAnalysis la,
+            Collection<ProcessedExpressionDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+
+        la.setDataMatrix( eeDoubleMatrix );
+        la.setTaxon( t );
+        getProbe2GeneMap( la, dataVectors, eeDoubleMatrix );
+    }    
+    
     /**
      * Write links as text. If "known genes only", only known genes will be displayed, even if the probe in question
      * targets other "types" of genes.
