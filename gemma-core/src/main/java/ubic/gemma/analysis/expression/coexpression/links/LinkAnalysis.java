@@ -98,8 +98,10 @@ public class LinkAnalysis {
 
         log.info( "Current Options: \n" + this.config );
         this.calculateDistribution();
-
-        this.writeDistribution();
+        
+        if(expressionExperiment != null){//input is not from expression data file
+            this.writeDistribution();
+        }
 
         this.getLinks();
 
