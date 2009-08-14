@@ -132,7 +132,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         addOption( eeSetOption );
 
         Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" ).withDescription(
-                "Taxon of the expression experiments and genes (required if using 'dataFile' option)" ).withLongOpt( "taxon" ).create( 't' );
+                "Taxon of the expression experiments and genes" ).withLongOpt( "taxon" ).create( 't' );
         addOption( taxonOption );
 
         Option excludeEeOption = OptionBuilder.hasArg().withArgName( "Expression experiment list file" )
@@ -230,13 +230,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         } else if ( hasOption( 'q' ) ) {
             log.info( "Processing all experiments that match query " + getOptionValue( 'q' ) );
             this.expressionExperiments = this.findExpressionExperimentsByQuery( getOptionValue( 'q' ), taxon );
-        } else if(!hasOption("dataFile")){ 
-            if ( taxon != null ) {
-                    log.info( "Processing all experiments for " + taxon.getCommonName() );
-                    this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
-            } else {
-                    log.info( "Processing all experiments (futher filtering may modify)" );
-                    this.expressionExperiments = new HashSet( eeService.loadAll() );
+        } else if ( taxon != null ) {
+                log.info( "Processing all experiments for " + taxon.getCommonName() );
+                this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
+        } else {
+            if(!hasOption("dataFile")){ 
+                log.info( "Processing all experiments (futher filtering may modify)" );
+                this.expressionExperiments = new HashSet( eeService.loadAll() );
             }
         }
 

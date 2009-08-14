@@ -134,7 +134,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addOption( useDB );
 
         Option fileOpt = OptionBuilder.hasArg().withArgName( "Expression data file" ).withDescription(
-                        "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' option and 'taxon' option" )
+                        "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' option" )
                 .create( "dataFile" );
         addOption( fileOpt );
 
@@ -205,7 +205,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( arrayDesign == null ) {
                 return new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
             }
-
+            
+            this.taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+            
             arrayDesignService.thawLite( arrayDesign );
 
             Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<ProcessedExpressionDataVector>();
@@ -342,10 +344,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         super.processOptions();
 
         if ( hasOption( "dataFile" ) ) {
-            if(this.taxon == null){
-                log.error("Must provide 'taxon' parameter if you use 'dataFile'");
-                this.bail( ErrorCode.MISSING_ARGUMENT );
-            }
             if ( this.expressionExperiments.size() > 0 ) {
                 log.error( "The 'dataFile' option is incompatible with other data set selection options" );
                 this.bail( ErrorCode.INVALID_OPTION );
