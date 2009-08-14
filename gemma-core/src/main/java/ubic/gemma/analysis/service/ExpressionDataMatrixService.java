@@ -111,7 +111,7 @@ public class ExpressionDataMatrixService {
      */
     public ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) {
-        ArrayDesign ad = arrayDesignService.findByName( arrayDesignName );
+        ArrayDesign ad = arrayDesignService.findByShortName( arrayDesignName );
         if ( ad == null ) {
             throw new IllegalArgumentException( "No array design named '" + arrayDesignName + "'" );
         }
