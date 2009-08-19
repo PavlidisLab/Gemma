@@ -1024,6 +1024,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+
                 long lastTime = 0;
                 // The following are VERY important for performance. (actually not so sure anymore as we now have the
                 // transaction
@@ -1074,10 +1075,16 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                                     + " ... (" + timer.getTime() / 1000 + "s elapsed)" );
                             lastTime = timer.getTime();
                         }
-                        // /////
-                        session.clear();
                     }
 
+                    // if ( i % 100 == 0 ) {
+                    /*
+                     * Using 'clear' here is very slow the first time because it must clear
+                     * arrayDesign.getCompositeSequences().
+                     */
+                    // session.clear();
+                    // log.info( session.getStatistics().getEntityCount() );
+                    // }
                     if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
                     if ( cs.getId() != null ) session.lock( cs, LockMode.NONE );
 
@@ -1086,14 +1093,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         session.lock( bs, LockMode.NONE );
                         if ( !Hibernate.isInitialized( bs ) ) {
                             Hibernate.initialize( bs );
+                            session.evict( bs );
                         }
-
                     }
 
-                    /*
-                     * Might be better to do a clear, periodically. See dommended
-                     */
-                    // session.evict( cs );
+                    session.evict( cs );
+
                 }
 
                 if ( timer.getTime() > 5000 )
