@@ -145,8 +145,14 @@ public class ArrayDesignAnnotationService {
                 if ( !probeNameToId.containsKey( probeName ) ) continue;
                 Long probeId = probeNameToId.get( probeName );
 
-                List<String> geneSymbols = Arrays.asList( StringUtils.split( fields[1], '|' ) );
-                List<String> geneNames = Arrays.asList( StringUtils.split( fields[2], '|' ) );
+                List<String> geneSymbols = Arrays.asList( StringUtils.splitPreserveAllTokens( fields[1], '|' ) );
+                List<String> geneNames = Arrays.asList( StringUtils.splitPreserveAllTokens( fields[2], '|' ) );
+
+                if ( geneSymbols.size() != geneNames.size() ) {
+                    log.warn( "Annotation file format error: Unequal number of gene symbols and names for probe="
+                            + probeName + ", skipping row" );
+                    continue;
+                }
 
                 for ( int i = 0; i < geneSymbols.size(); i++ ) {
 
@@ -184,8 +190,8 @@ public class ArrayDesignAnnotationService {
 
     /**
      * @param arrayDesign
-     * @return Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol, gene Name] for a given probe id. 
-     * format of string is geneSymbol then geneNames same as found in annotation file
+     * @return Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol, gene Name] for
+     *         a given probe id. format of string is geneSymbol then geneNames same as found in annotation file
      */
     public static Map<Long, String[]> readAnnotationFileAsString( ArrayDesign arrayDesign ) {
         Map<Long, String[]> results = new HashMap<Long, String[]>();
@@ -224,10 +230,10 @@ public class ArrayDesignAnnotationService {
                 if ( !probeNameToId.containsKey( probeName ) ) continue;
                 Long probeId = probeNameToId.get( probeName );
 
-                results.get( probeId )[0] = probeName;    //Probe Name
-                results.get( probeId )[1] = fields[1];   //Gene Symbol 
-                results.get( probeId )[2] = fields[2];  //Gene Name
-              
+                results.get( probeId )[0] = probeName; // Probe Name
+                results.get( probeId )[1] = fields[1]; // Gene Symbol
+                results.get( probeId )[2] = fields[2]; // Gene Name
+
             }
 
             return results;
@@ -237,7 +243,7 @@ public class ArrayDesignAnnotationService {
             throw new RuntimeException( e );
         }
     }
-    
+
     private Gene2GOAssociationService gene2GOAssociationService;
 
     private GeneOntologyService goService;
