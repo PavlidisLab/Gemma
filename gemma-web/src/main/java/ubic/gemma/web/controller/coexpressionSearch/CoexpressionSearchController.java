@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.coexpressionSearch;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -69,6 +70,55 @@ public class CoexpressionSearchController extends BaseFormController {
     private ExpressionExperimentSecureService expressionExperimentSecureService;
     private ExpressionExperimentSetService expressionExperimentSetService;
 
+    
+    /**
+     * @param searchOptions
+     * @return
+     */
+    public CoexpressionMetaValueObject doQuickSearch( CoexpressionSearchCommand searchOptions ) {
+
+        CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
+
+        if ( searchOptions.getGeneIds().size() != 1 ) {
+            result.setErrorState( "Too many genes selected, please limit searches to one" );
+            return result;
+        }
+
+        Gene gene = geneService.load( searchOptions.getGeneIds().iterator().next() );
+
+        if ( gene == null ) {
+            result.setErrorState( "Invalid gene id(s) - no genes found" );
+            return result;
+
+        }
+
+        this.geneService.thawLite( gene ); // need to thaw externalDB in taxon for marshling back to client...
+
+        Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( "All " + gene.getTaxon()
+                .getCommonName() );
+
+        Long eeSetId;
+        if ( eeSets.size() != 1 ) {
+            log.error( "more than one set found using 1st." );
+        }
+        eeSetId = eeSets.iterator().next().getId();
+        List<Gene> genes = new ArrayList<Gene>();
+        genes.add( gene );
+        result.setQueryGenes( genes );
+
+        Collection<CoexpressionValueObjectExt> geneResults  = geneCoexpressionService.coexpressionSearchQuick( eeSetId,genes , 2, 20, false, true );
+        result.setKnownGeneResults( geneResults );
+        
+        if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
+            result
+                    .setErrorState( "<b> Sorry, No genes are currently coexpressed under the selected search conditions </b>" );
+            log.info( "No search results for query: " + searchOptions );
+        }
+        
+        return result;
+
+    }
+
     /**
      * Main AJAX entry point
      * 
@@ -84,17 +134,21 @@ public class CoexpressionSearchController extends BaseFormController {
             return getEmptyResult();
         }
 
+        if ( searchOptions.isQuick() ) {
+            return doQuickSearch( searchOptions );
+        }
+
         if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_QUERY ) {
-            result.setErrorState("Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY );
+            result.setErrorState( "Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY );
             return result;
         }
 
         Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
 
         if ( genes.size() == 0 ) {
-            result.setErrorState("Invalid gene id(s) - no genes found" );
+            result.setErrorState( "Invalid gene id(s) - no genes found" );
             return result;
-            
+
         }
 
         this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...
@@ -105,7 +159,8 @@ public class CoexpressionSearchController extends BaseFormController {
         if ( searchOptions.getTaxonId() != null ) {
             for ( Gene gene : genes ) {
                 if ( !gene.getTaxon().getId().equals( searchOptions.getTaxonId() ) ) {
-                    result.setErrorState( "Search for gene from wrong taxon. Please check the genes match the selected taxon");
+                    result
+                            .setErrorState( "Search for gene from wrong taxon. Please check the genes match the selected taxon" );
                     return result;
                 }
             }
@@ -133,9 +188,9 @@ public class CoexpressionSearchController extends BaseFormController {
             if ( eeSets.size() == 1 ) {
                 eeSetId = eeSets.iterator().next().getId();
             } else {
-                result.setErrorState(  "Unknown or ambiguous set name: " + searchOptions.getEeSetName());
+                result.setErrorState( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
                 return result;
-  
+
             }
         }
 
@@ -155,8 +210,9 @@ public class CoexpressionSearchController extends BaseFormController {
             addMyDataFlag( result, myEE );
         }
 
-        if (result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty()){
-            result.setErrorState(  "<b> Sorry, No genes are currently coexpressed under the selected search conditions </b>");
+        if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
+            result
+                    .setErrorState( "<b> Sorry, No genes are currently coexpressed under the selected search conditions </b>" );
             log.info( "No search results for query: " + searchOptions );
         }
         return result;

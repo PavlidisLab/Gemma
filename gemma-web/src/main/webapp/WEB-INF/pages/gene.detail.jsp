@@ -27,6 +27,9 @@
 		renderTo : 'auditTrail',
 		auditable : auditable
 	});
+	
+	
+	
 });
 </script>
 </security:authorize>
@@ -184,7 +187,17 @@
 			<%
 			}
 			%>
-		
+	
+	<tr>
+	<td align="right" valign="top"> <b> Datasets differentially expressed in </b> </td>
+	<td valign="top"> <div id="diffExpression-msg"> </div> <div id="diff-grid" height=300 width=600> </div></td>
+	</tr>	
+	<tr>
+	
+	<tr>
+	<td align="right" valign="top"> <b> Top Coexpressed Genes </b> </td>
+	<td valign="top"> <div id="coexpression-msg"> </div> <div id="coexpression-grid" height=300 width=300> </div></td>
+	</tr>	
 	<tr>
 		<td align="right" valign="top">
 			<b>Allen Brain Atlas Expression Images </b><a class="helpLink" href="?"

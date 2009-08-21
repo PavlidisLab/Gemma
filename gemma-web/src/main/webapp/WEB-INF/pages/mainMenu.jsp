@@ -10,9 +10,9 @@
 		Ext.QuickTips.init();
 		Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-		// Coexpression form.
-			var searchForm = new Gemma.CoexpressionSearchFormLite( {
-				renderTo :"coexpression-form"
+		// gene form.
+			var searchForm = new Gemma.GeneSearch( {
+				renderTo :"gene-query-form"
 			});
 
 			var feed = new Gemma.NewsDisplay( {
@@ -25,7 +25,7 @@
 </head>
 
 
-<div class="rightcolumn" style="width: 200px; float: right; font-size: smaller">
+<div class="rightcolumn" style="width: 250px; float: right; font-size: smaller">
 
 	<div class="roundedcornr_box_777249" style="margin-bottom: 15px;">
 		<div class="roundedcornr_top_777249">
@@ -82,21 +82,12 @@
 	</div>
 
 
-	<div id="coexpression-area">
-		<div id="coexpression-messages" style="font-size: smaller; width: 200px;">
-			<h3>
-				Coexpression query
-			</h3>
-		</div>
-
-		<div id="coexpression-form"></div>
-
-		<div id="sampleQueries" style="padding: 4px; width: 200px; margin-bottom: 6px;">
-			Examples: rat
-			<a href='<c:url value="/searchCoexpression.html?g=942962&s=3&t=3&an=All rat" />'>Ddn</a>; mouse
-			<a href='<c:url value="/searchCoexpression.html?g=598735&t=2&s=3&an=All Mouse" />'>Mapk3</a>
-		</div>
+<div id="news-wrapper" style="width: 250; margin-top: 10px">
+	<span style="font-size: 1.3em">News</span>
+	<div style="padding: 0 4 2 0px; margin: 0px;" id="newsfeed">
 	</div>
+	<a style="font-size: 0.90em" href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">More news</a>
+</div>
 
 
 	<security:authorize ifAnyGranted="admin">
@@ -151,10 +142,19 @@
 
 </div>
 
+<div id="query-gemma">
+		<div id="geneSearchMessages" style="font-size: smaller; width: 300px;">
+		
+		</div>
+		<br> <br> 
+	<h3>
+				Gene query
+	</h3>
+		<div id="gene-query-form" width: 300px; height: 30px;></div>
 
-<div id="news-wrapper" style="width: 470; margin-top: 10px">
-	<span style="font-size: 1.3em">News</span>
-	<div style="padding: 0 4 2 0px; margin: 0px;" id="newsfeed">
+		<div id="sampleQueries" style="padding: 4px; width: 300px; margin-bottom: 6px;">
+			Examples: 
+			<a href='<c:url value="/gene/showGene.html?id=938103"/>'>Grin1</a> (Rat) 
+			<a href='<c:url value="gene/showGene.html?id=598735" />'>Mapk3</a> (Mouse)
+		</div>
 	</div>
-	<a style="font-size: 0.90em" href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">More news</a>
-</div>

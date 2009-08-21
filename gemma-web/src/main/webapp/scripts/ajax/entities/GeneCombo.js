@@ -130,3 +130,90 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 			}
 
 		});
+		
+//===================================================//
+		
+		
+/**
+ * 
+ * @class Gemma.GeneSearch
+ * @extends Ext.FormPanel
+ */
+ 
+Gemma.GeneSearch = Ext.extend(Ext.FormPanel, {
+
+			autoHeight : true,
+			frame : true,
+			stateEvents : ["beforesearch"],
+			labelAlign : "top",
+			width : 350,
+			height : 30,
+			buttonAlign : 'right',
+			layout : 'fit', 
+	
+			initComponent : function() {
+
+				Gemma.GeneSearch.superclass.initComponent.call(this);
+
+				this.geneCombo = new Gemma.GeneCombo({
+							hiddenName : 'g',
+							id : 'gene-combo',
+							fieldLabel : 'Select a gene'							
+						});
+
+				this.geneCombo.on("focus", this.clearMessages, this);
+
+				var submitButton = new Ext.Button({
+							text : "Search",
+							handler : function() {
+								var msg = this.validateSearch(this.geneCombo.getValue());
+								if (msg.length === 0) {
+
+						
+
+									if (typeof pageTracker != 'undefined') {
+										pageTracker._trackPageview("/Gemma/gene/showGene");
+									}
+									document.location.href = String.format("/Gemma/gene/showGene.html?id={0}",this.geneCombo.getValue() );
+								} else {
+									this.handleError(msg);
+								}
+							}.createDelegate(this)
+						});
+	
+				this.add(this.geneCombo);
+				this.addButton(submitButton);
+			},
+
+
+
+
+			validateSearch : function(gene) {
+				if (!gene || gene.length === 0) {
+					return "Please select a valid query gene";
+				}
+				return "";
+			},
+
+			handleError : function(msg, e) {
+				Ext.DomHelper.overwrite("geneSearchMessages", {
+							tag : 'img',
+							src : '/Gemma/images/icons/warning.png'
+						});
+				Ext.DomHelper.append("geneSearchMessages", {
+							tag : 'span',
+							html : "&nbsp;&nbsp;" + msg
+						});
+			},
+
+			clearMessages : function() {
+				if (Ext.DomQuery.select("geneSearchMessages").length > 0) {
+					Ext.DomHelper.overwrite("geneSearchMessages", {
+								tag : 'h3',
+								html : "Gene Query"
+							});
+				}
+			}
+
+
+		});

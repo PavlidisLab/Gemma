@@ -32,6 +32,8 @@ public class CoexpressionSearchCommand {
      */
     private boolean dirty = false;
 
+    private boolean quick = false;  //if set to true will do a quick coexpression search 
+    
     private Collection<Long> eeIds;
 
     /*
@@ -153,6 +155,14 @@ public class CoexpressionSearchCommand {
                 + this.forceProbeLevelSearch + " QueryGenesOnly=" + this.getQueryGenesOnly() + " tax=" + getTaxonId()
                 + " Stringency=" + stringency + " ees="
                 + StringUtils.abbreviate( StringUtils.join( getEeIds(), "," ), 100 );
+    }
+
+    public boolean isQuick() {
+        return quick;
+    }
+
+    public void setQuick( boolean quick ) {
+        this.quick = quick;
     }
 
 }
