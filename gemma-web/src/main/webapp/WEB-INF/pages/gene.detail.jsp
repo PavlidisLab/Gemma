@@ -34,95 +34,28 @@
 </script>
 </security:authorize>
 
-<title><fmt:message key="gene.details" /></title>
+<title> <c:if test="${gene.officialSymbol != null}">
+	 <jsp:getProperty name="gene" property="officialSymbol" /> </c:if> <fmt:message key="gene.details" />
+</title>
 
-<h1>
-	<fmt:message key="gene.details" />
+<h3>
 	<c:if test="${gene.officialSymbol != null}">
-	for <jsp:getProperty name="gene" property="officialSymbol" />
-	</c:if>
-</h1>
-<table cellspacing="6">
-	<tr>
-		<td align="right" valign="top">
-			<b> <fmt:message key="gene.officialSymbol" /> </b>
-		</td>
-		<td valign="top">
-			<%
-			if ( gene.getOfficialSymbol() != null ) {
-			%>
-			<jsp:getProperty name="gene" property="officialSymbol" />
-			<%
-			                } else {
-			                out.print( "No official symbol available" );
-			            }
-			%>
-			<%
-			if ( gene.getNcbiId() != null ) {
-			%>
-			&nbsp;&nbsp;
-			<a title="NCBI Gene link"
-				href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=<%out.print(gene.getNcbiId()); %>">
-				<img alt="NCBI Gene Link" src="<c:url value='/images/logo/ncbi.gif'/>" /> </a>
-			<%
-			}
-			%>					
-
-		</td>
-	</tr>
-
-	<tr>
-		<td align="right" valign="top">
-			<b> <fmt:message key="gene.officialName" /> </b>
-		</td>
-		<td valign="top">
-			<%
+	 <jsp:getProperty name="gene" property="officialSymbol" />
+		<%
 			if ( gene.getOfficialName() != null ) {
-			%>
-			<jsp:getProperty name="gene" property="officialName" />
-			<%
-			                } else {
-			                out.print( "No official name available" );
-			            }
-			%>
-		</td>
-	</tr>
+		%>
+			<i> <jsp:getProperty name="gene" property="officialName" /></i>			
+		<%} 
 
-	<tr>
-		<td align="right" valign="top">
-			<b> <fmt:message key="gene.description" /> </b>
-		</td>
-		<td valign="top">
+			   if ( gene.getTaxon() != null ) {
+			                out.print( "[" + gene.getTaxon().getScientificName() + "]");
+			   }
+		%>
+	</h3>
+	</c:if>
 
-			<%
-			if ( gene.getDescription() != null ) {
-			%>
-			<div class="clob" style="height: 20px;">
-				<jsp:getProperty name="gene" property="description" />
-			</div>
-			<%
-			                } else {
-			                out.print( "Description unavailable" );
-			            }
-			%>
-		</td>
-	</tr>
 
-	<tr>
-		<td align="right" valign="top">
-			<b> <fmt:message key="gene.taxon" /> </b>
-		</td>
-		<td valign="top">
-			<%
-			                if ( gene.getTaxon() != null ) {
-			                out.print( gene.getTaxon().getScientificName() );
-			            } else {
-			                out.print( "Taxon unavailable" );
-			            }
-			%>
-		</td>
-	</tr>
-
+<table cellspacing="6">
 	<tr>
 		<td align="right" valign="top">
 			<b> <fmt:message key="gene.aliases" /> </b>
@@ -142,11 +75,25 @@
 			                out.print( "No aliases defined" );
 			            }
 			%>
+			
+		<%
+			if ( gene.getNcbiId() != null ) {
+		%>
+			&nbsp;&nbsp;
+			<a title="NCBI Gene link"
+				href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=<%out.print(gene.getNcbiId()); %>">
+				<img alt="NCBI Gene Link" src="<c:url value='/images/logo/ncbi.gif'/>" /> </a>
+			<%
+			}
+			%>	
+			
+			
+			
 		</td>
 	</tr>
 	<tr>
 		<td align="right" valign="top">
-			<b>Probes</b><a class="helpLink" href="?"
+			<b>Probes</b> &nbsp; <a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Number of probes for this gene on expression platforms in Gemma'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
@@ -156,58 +103,44 @@
 			<img src="<c:url value='/images/magnifier.png'/>" />   
 			</a>
 		</td>
-	</tr>
-	
-		<%
-			if ( (gene.getId() != null) && (gene.getOfficialSymbol() != null) && (gene.getTaxon() != null)  && (gene.getTaxon().getCommonName() != null) ) {
-		%>
-		
-	<tr>
-		<td align="right" valign="top">
-			<b>Run Analysis </b><a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'A quick link to using this gene in a coexpression or differential analysis'); return false"><img
+	</tr>	
+			
+</table>
+
+
+
+<h3>
+ Datasets differentially expressed in 
+ 		<a title="Do Advanced Differential Expression Search with <%out.print(gene.getOfficialSymbol()); %>"
+				   href="/Gemma/diff/diffExpressionSearch.html?g=<%out.print(gene.getId());%>&thres=0.01&t=<%out.print(gene.getTaxon().getId());%>&setName=All <%out.print(gene.getTaxon().getCommonName());%>">
+				   <img	src="<c:url value='/images/icons/diff-ex.png'/>" /> </a>
+				   
+				   &nbsp;
+				   <a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'A quick link for getting a more detailed differential analysis'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
-		</td>
-		<td valign="top">
-		 
-		 	&nbsp;&nbsp;
-				<a title="Do Coexpression Search with <%out.print(gene.getOfficialSymbol()); %>"
+ 
+ </h3>
+	<div id="diffExpression-msg"> </div> <div id="diff-grid" height=300 width=600> </div>
+<h3>	
+	 Top Coexpressed Genes 	<a title="Do Advanced Coexpression Search with <%out.print(gene.getOfficialSymbol()); %>"
 				   href="/Gemma/searchCoexpression.html?g=<%out.print(gene.getId());%>&s=3&t=<%out.print(gene.getTaxon().getId());%>&an=All <%out.print(gene.getTaxon().getCommonName());%>">
 				   <img	src="<c:url value='/images/icons/co-ex.png'/>" /> </a>
 				   
-				   
-			&nbsp;&nbsp;
-				<a title="Do Differential Expression Search with <%out.print(gene.getOfficialSymbol()); %>"
-				   href="/Gemma/diff/diffExpressionSearch.html?g=<%out.print(gene.getId());%>&thres=0.01&t=<%out.print(gene.getTaxon().getId());%>&setName=All <%out.print(gene.getTaxon().getCommonName());%>">
-				   <img	src="<c:url value='/images/icons/diff-ex.png'/>" /> </a>
-
-				   
-		</td>
-	</tr>
-			<%
-			}
-			%>
-	
-	<tr>
-	<td align="right" valign="top"> <b> Datasets differentially expressed in </b> </td>
-	<td valign="top"> <div id="diffExpression-msg"> </div> <div id="diff-grid" height=300 width=600> </div></td>
-	</tr>	
-	<tr>
-	
-	<tr>
-	<td align="right" valign="top"> <b> Top Coexpressed Genes </b> </td>
-	<td valign="top"> <div id="coexpression-msg"> </div> <div id="coexpression-grid" height=300 width=300> </div></td>
-	</tr>	
-	<tr>
-		<td align="right" valign="top">
-			<b>Allen Brain Atlas Expression Images </b><a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'A picture of the expression profile from the allen bran atlas'); return false"><img
+				   &nbsp;
+				   <a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'A quick link for getting a more detailed coexpression analysis'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
-		</td>
-				
-		<td valign="top">
+</h3>
+	<div id="coexpression-msg"> </div> <div id="coexpression-grid" height=300 width=300> </div>		
+
+
+		<h3> Allen Brain Atlas Expression Images 
+		<a class="helpLink" href="?" onclick="showHelpTip(event, 'A picture of the expression profile from the allen bran atlas'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+
 		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value="${abaGeneUrl}" /> target="_blank" > <img
-					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/> </a>
+					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/> </a> </h3> 
 		<%		   		
 		 for ( Object obj : representativeImages ) {		
 		 	 ubic.gemma.image.aba.Image img = (ubic.gemma.image.aba.Image) obj;	               
@@ -222,18 +155,6 @@
 		<%			                  
 		 }//end of for loop
 		%>
-			   
-		</td>
-	</tr>
-	
-	
-	
-	
-		
-</table>
-
-
-
 
 <h3>
 	<fmt:message key="gene.ontology" />
@@ -255,6 +176,22 @@
 
 <div id="geneproduct-grid" class="x-grid-mso"
 	style="border: 1px solid #c3daf9; overflow: hidden; width: 430px; height: 250px;"></div>
+
+<tr>
+	
+<h3> <fmt:message key="gene.description" /> </h3>
+	
+			<%
+			if ( gene.getDescription() != null ) {
+			%>
+			<div class="clob" style="height: 20px;">
+				<jsp:getProperty name="gene" property="description" />
+			</div>
+			<%
+			                } else {
+			                out.print( "Description unavailable" );
+			            }
+			%>
 
 
 <security:authorize ifAnyGranted="admin">

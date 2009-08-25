@@ -13,11 +13,12 @@ Gemma.SHOW_ALL = "Show all results";
 
 Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 
-			collapsible : true,
 			editable : false,
 			autoHeight : true,
 			style : "margin-bottom: 1em;",
 			stateful : false,
+			loadMask : true,
+
 
 			viewConfig : {
 				forceFit : true
@@ -32,8 +33,8 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 											id : "id"
 										}, this.record),
 								sortInfo : {
-									field : 'sortKey',
-									direction : 'ASC'
+									field : 'posSupp',
+									direction : 'DESC'
 								},
 								pageSize : this.pageSize
 							});
@@ -42,14 +43,14 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 								store : this.store
 							});
 				} else {
-					this.ds = new Ext.data.Store({
+					this.store = new Ext.data.Store({
 								proxy : new Ext.data.MemoryProxy([]),
 								reader : new Ext.data.ListRangeReader({
 											id : "id"
 										}, this.record),
 								sortInfo : {
-									field : 'sortKey',
-									direction : 'ASC'
+									field : 'posSupp',
+									direction : 'DESC'
 								}
 							});
 				}
@@ -289,8 +290,7 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 						type : "string"
 					}, {
 						name : "supportKey",
-						type : "int",
-						sortType : Ext.data.SortTypes.asInt,
+						type : "int",	
 						sortDir : "DESC"
 					}, {
 						name : "posSupp",
@@ -326,20 +326,25 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 					var s = "";
 					if (d.posSupp) {
 						s = s
-								+ String.format("<span class='positiveLink'>{0}{1}</span> ", d.posSupp, this
-												.getSpecificLinkString(d.posSupp, d.nonSpecPosSupp));
+								+ String.format("<span class='positiveLink'>{0}</span> ", d.posSupp);
+						d.supportKey = d.posSupp;
+								
 					}
 					if (d.negSupp) {
 						s = s
-								+ String.format("<span class='negativeLink'>{0}{1}</span> ", d.negSupp, this
-												.getSpecificLinkString(d.negSupp, d.nonSpecNegSupp));
-					}
+								+ String.format("<span class='negativeLink'>{0}{1}</span> ", d.negSupp);
+					
+
+						if (!d.posSupp){
+					 		d.supportKey = d.negSupp;
+							}		
 					//TODO numTestedIn isn't set in the quick coexpressio method... might want this info
 					//s = s + String.format("/ {0}", d.numTestedIn);
+					}
 					return s;
 				} else {
 					return "-";
-				}
+					}
 			},
 
 			getSpecificLinkString : function(total, nonSpecific) {
@@ -411,7 +416,27 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 		},
 			
 
+		doSearch : function(csc){
+				
+				Ext.apply(this, {
+					loadMask : new Ext.LoadMask(this.getEl(), {
+								msg : "Loading Coexpressed Genes ..."
+							})
+				});
+				this.loadMask.show();
+				
+			
+				ExtCoexpressionSearchController.doSearch(csc, {
+					callback : function(result){
+									this.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults, result.knownGeneDatasets);
+									this.loadMask.hide();
+					}.createDelegate(this),
+					errorHandler : function(error){console.log(error);}
+					});
+		
+		},
 			loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
+				
 				var queryIndex = this.getColumnModel().getIndexById('query');
 				if (numQueryGenes > 1) {
 					this.getColumnModel().setHidden(queryIndex, false);
@@ -424,8 +449,7 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 				this.getStore().reload({
 							resetPage : true
 						});
-				// this.getView().refresh(true); // refresh column headers
-				this.resizeDatasetColumn();
+				
 			},
 
 			resizeDatasetColumn : function() {

@@ -154,46 +154,20 @@ Ext.onReady(function() {
 
 	var coexpressedGeneGrid = new Gemma.CoexpressionGridLite({
 		width : 400,
-		title : "Coexpressed genes",
-		autoHeight : true,
-		pageSize : 15,
 		colspan : 2,
 		//user : false, 
 		renderTo : "coexpression-grid"
 	});
-	
-	
-	
-	
-	var returnFromCoexpressionSearch = function(result){
-				coexpressedGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
-				result.knownGeneDatasets);
-				
-				//this.loadMask.hide();
-	};
-	
-	var errorHandler = function(error){
-		console.log(error);
-	};
-	 
-	 
-//	 this.loadMask = new Ext.LoadMask( {
-//		msg : "Searching for coexpressions ..."
-//	});
-//	this.loadMask.show();
-//	
-	var geneid = dwr.util.getValue("gene");
+		
 
-	var csc = {geneIds : [geneid],
+	var geneid = dwr.util.getValue("gene");
+			
+	
+	coexpressedGeneGrid.doSearch({geneIds : [geneid],
 				quick: true,
 			stringency : 2,
-			forceProbeLevelSearch : false};
-			
-		ExtCoexpressionSearchController.doSearch(csc, {
-					callback : returnFromCoexpressionSearch.createDelegate(this),
-					errorHandler : errorHandler.createDelegate(this)
-				});
-
+			forceProbeLevelSearch : false});
+	
 // diff expression grid
 				
 			var diffExGrid = new Gemma.ProbeLevelDiffExGrid({

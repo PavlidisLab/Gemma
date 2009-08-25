@@ -92,6 +92,8 @@ public class CoexpressionSearchController extends BaseFormController {
 
         }
 
+        log.info( "Coexpression search: " + searchOptions );
+
         this.geneService.thawLite( gene ); // need to thaw externalDB in taxon for marshling back to client...
 
         Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( "All " + gene.getTaxon()
