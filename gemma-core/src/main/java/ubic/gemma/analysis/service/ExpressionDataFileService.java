@@ -451,6 +451,7 @@ public class ExpressionDataFileService {
      * @param ee
      * @throws IOException
      */
+    @SuppressWarnings("unchecked")
     private void writeDiffExpressionData( File file, ExpressionExperiment ee ) throws IOException {
 
               Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
@@ -507,7 +508,7 @@ public class ExpressionDataFileService {
                         probe2String.put( cs.getId(), probeBuffer );
                     }
 
-                    probeBuffer.append( dear.getCorrectedPvalue() + "\t" + dear.getScore() + "\t" );
+                    probeBuffer.append( dear.getCorrectedPvalue() + "\t" + dear.getPvalue() + "\t" );
                 } else {
                     log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
                             + dear.getClass() + " with id: " + dear.getId() );
