@@ -35,6 +35,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 
 /**
  * Prints preferred data matrix to a file.
@@ -53,6 +54,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     }
 
     private String outFileName;
+    
+    private boolean filter = false;
 
     private boolean addGeneInfo = false;
 
@@ -73,12 +76,16 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         Option geneInfoOption = OptionBuilder.withDescription(
                 "Write the gene information.  If not set, the gene information will not be written." ).create( 'g' );
         addOption( geneInfoOption );
+        
+        Option filteredOption = OptionBuilder.withDescription("Filter expression matrix under default parameters").create("filter");
+        addOption(filteredOption);
 
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
+        FilterConfig fCon = new FilterConfig();
         processCommandLine( "expressionDataMatrixWriterCLI", args );
 
         ExpressionDataMatrixService ahs = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
@@ -86,8 +93,13 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
 
         for ( BioAssaySet ee : expressionExperiments ) {
-
-            ExpressionDataDoubleMatrix dataMatrix = ahs.getProcessedExpressionDataMatrix( ( ExpressionExperiment ) ee );
+            ExpressionDataDoubleMatrix dataMatrix; 
+            if(filter){//filtered expression matrix desired
+                dataMatrix = ahs.getFilteredMatrix( (ExpressionExperiment)ee, fCon );
+            }
+            else{
+                dataMatrix = ahs.getProcessedExpressionDataMatrix( ( ExpressionExperiment ) ee );
+            }
 
             Map<Long, Collection<Gene>> genesByProbeId = new HashMap<Long, Collection<Gene>>();
 
@@ -120,5 +132,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         outFileName = getOptionValue( 'o' );
 
         addGeneInfo = hasOption( 'g' );
+        if(hasOption( "filter" )){
+            filter = true;
+        }
     }
 }
