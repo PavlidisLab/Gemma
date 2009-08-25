@@ -111,32 +111,39 @@
 
 <h3>
  Datasets differentially expressed in 
- 		<a title="Do Advanced Differential Expression Search with <%out.print(gene.getOfficialSymbol()); %>"
+ 	
+				   <a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Below are the data sets the gene is Differentially expressed in. Beside is a quick link for going to a more detailed differential analysis'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+					
+									   &nbsp;
+					
+						<a title="Go To Advanced Differential Expression Search with <%out.print(gene.getOfficialSymbol()); %>"
 				   href="/Gemma/diff/diffExpressionSearch.html?g=<%out.print(gene.getId());%>&thres=0.01&t=<%out.print(gene.getTaxon().getId());%>&setName=All <%out.print(gene.getTaxon().getCommonName());%>">
 				   <img	src="<c:url value='/images/icons/diff-ex.png'/>" /> </a>
 				   
-				   &nbsp;
-				   <a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'A quick link for getting a more detailed differential analysis'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
  
  </h3>
-	<div id="diffExpression-msg"> </div> <div id="diff-grid" height=300 width=600> </div>
+	<div id="diffExpression-msg"> </div> <div id="diff-grid"> </div>
 <h3>	
-	 Top Coexpressed Genes 	<a title="Do Advanced Coexpression Search with <%out.print(gene.getOfficialSymbol()); %>"
+	 Top Coexpressed Genes 
+	 
+		   <a class="helpLink" href="?"	onclick="showHelpTip(event, 'Below is a summary coexpression analysis, beside is a link to go to the detailed coexpression results'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+
+	 		   &nbsp;
+					
+	 	<a title="Do Advanced Coexpression Search with <%out.print(gene.getOfficialSymbol()); %>"
 				   href="/Gemma/searchCoexpression.html?g=<%out.print(gene.getId());%>&s=3&t=<%out.print(gene.getTaxon().getId());%>&an=All <%out.print(gene.getTaxon().getCommonName());%>">
 				   <img	src="<c:url value='/images/icons/co-ex.png'/>" /> </a>
 				   
-				   &nbsp;
-				   <a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'A quick link for getting a more detailed coexpression analysis'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
+		
 </h3>
-	<div id="coexpression-msg"> </div> <div id="coexpression-grid" height=300 width=300> </div>		
+	<div id="coexpression-msg"> </div> <div id="coexpression-grid"> </div>		
 
 
 		<h3> Allen Brain Atlas Expression Images 
-		<a class="helpLink" href="?" onclick="showHelpTip(event, 'A picture of the expression profile from the allen bran atlas'); return false"><img
+		<a class="helpLink" href="?" onclick="showHelpTip(event, 'Below is a sampling of expression profile pictures from the allen brain atlas. Beside is a link to the allen brain atlas'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 
 		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value="${abaGeneUrl}" /> target="_blank" > <img

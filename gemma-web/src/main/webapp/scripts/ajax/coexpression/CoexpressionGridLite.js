@@ -14,7 +14,7 @@ Gemma.SHOW_ALL = "Show all results";
 Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 
 			editable : false,
-			autoHeight : true,
+			height : 300,
 			style : "margin-bottom: 1em;",
 			stateful : false,
 			loadMask : true,
