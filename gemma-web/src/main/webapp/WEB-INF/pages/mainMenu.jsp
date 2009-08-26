@@ -143,14 +143,12 @@
 </div>
 
 <div id="query-gemma">
-		<div id="geneSearchMessages" style="font-size: smaller; width: 300px;">
-		
-		</div>
+		<div id="geneSearchMessages" style="font-size: smaller; width: 300px;">  </div>
 		<br> <br> 
 	<h3>
 				Gene query
 	</h3>
-		<div id="gene-query-form" width: 300px; height: 30px;></div>
+		<div id="gene-query-form" ></div>
 
 		<div id="sampleQueries" style="padding: 4px; width: 300px; margin-bottom: 6px;">
 			Examples: 

@@ -158,14 +158,14 @@ Gemma.GeneSearch = Ext.extend(Ext.FormPanel, {
 				this.geneCombo = new Gemma.GeneCombo({
 							hiddenName : 'g',
 							id : 'gene-combo',
-							fieldLabel : 'Select a gene'							
+							fieldLabel : 'Select a gene',
+							enableKeyEvents : true
 						});
 
 				this.geneCombo.on("focus", this.clearMessages, this);
-
-				var submitButton = new Ext.Button({
-							text : "Search",
-							handler : function() {
+				
+				
+				var submitButtonHandler =  function(object, event) {
 								var msg = this.validateSearch(this.geneCombo.getValue());
 								if (msg.length === 0) {
 
@@ -178,7 +178,35 @@ Gemma.GeneSearch = Ext.extend(Ext.FormPanel, {
 								} else {
 									this.handleError(msg);
 								}
-							}.createDelegate(this)
+							};
+							
+				var enterButtonPressed = function(object, event){
+					
+					var keycode = event.getKey();
+						if (keycode == 13){  //13 = keycode for "enter" button
+						
+								var msg = this.validateSearch(this.geneCombo.getValue());
+								if (msg.length === 0) {
+
+						
+
+									if (typeof pageTracker != 'undefined') {
+										pageTracker._trackPageview("/Gemma/gene/showGene");
+									}
+									document.location.href = String.format("/Gemma/gene/showGene.html?id={0}",this.geneCombo.getValue() );
+								} else {
+									this.handleError(msg);
+								}
+							
+						}
+				};
+							
+							
+				this.geneCombo.on("keypress",enterButtonPressed.createDelegate(this) );
+
+				var submitButton = new Ext.Button({
+							text : "Search",
+							handler : submitButtonHandler.createDelegate(this)
 						});
 	
 				this.add(this.geneCombo);

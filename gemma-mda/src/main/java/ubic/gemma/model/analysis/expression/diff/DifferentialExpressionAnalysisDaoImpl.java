@@ -48,7 +48,7 @@ import ubic.gemma.util.CommonQueries;
 public class DifferentialExpressionAnalysisDaoImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase {
 
-    private final String fetchResultsByGeneAndExperimentsQuery = "select e, r"
+    private final String fetchResultsByGeneAndExperimentsQuery = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl bs2gp"
             + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
             + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
@@ -56,14 +56,14 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             + " where bs2gp.bioSequence=bs and g=:gene and e in (:experimentsAnalyzed)";
 
     
-    private final String fetchResultsByExperimentsQuery = "select e, r"
+    private final String fetchResultsByExperimentsQuery = "select distinct e, r"
         + " from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl bs2gp"
         + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
         + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
         + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
         + " where bs2gp.bioSequence=bs and e in (:experimentsAnalyzed)";
 
-    private final String fetchResultsByResultSetQuery = "select rs, r"
+    private final String fetchResultsByResultSetQuery = "select distinct rs, r"
         + " from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl bs2gp"
         + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
         + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
@@ -428,7 +428,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     @Override
     protected Collection<ExpressionAnalysisResultSet> handleGetResultSets( ExpressionExperiment expressionExperiment )
             throws Exception {
-        final String query = "select r from ExpressionAnalysisResultSetImpl r inner join r.analysis a"
+        final String query = "select distinct r from ExpressionAnalysisResultSetImpl r inner join r.analysis a"
                 + " inner join a.expressionExperimentSetAnalyzed eeset inner join eeset.experiments ee where ee=:expressionExperiment ";
         return this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", expressionExperiment );
     }

@@ -332,7 +332,7 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 					}
 					if (d.negSupp) {
 						s = s
-								+ String.format("<span class='negativeLink'>{0}{1}</span> ", d.negSupp);
+								+ String.format("<span class='negativeLink'>{0}</span> ", d.negSupp);
 					
 
 						if (!d.posSupp){
