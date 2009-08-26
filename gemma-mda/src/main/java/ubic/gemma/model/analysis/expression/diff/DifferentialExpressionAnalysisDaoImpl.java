@@ -474,15 +474,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     
     public long countProbesMeetingThreshold(ExpressionAnalysisResultSet ears, double threshold){
         
-      String query = "select count(r) "
-        + " from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl bs2gp"
-        + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
-        + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
-        + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
-        + " where bs2gp.bioSequence=bs and rs = :resultAnalyzed and r.correctedPvalue < :threshold";
-        
+      String query = "select count(r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold"; 
       
-      String[] paramNames = { "resultAnalyzed", "threshold" };
+      String[] paramNames = { "rs", "threshold" };
       Object[] objectValues = { ears, threshold };
 
       List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
