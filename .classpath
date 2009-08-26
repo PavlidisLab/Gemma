@@ -41,7 +41,11 @@
 			<attribute name="javadoc_location" value="http://jakarta.apache.org/commons/beanutils/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.1/commons-collections-3.1.jar" sourcepath="/JAR_SOURCE/commons-collections-3.1/src/java"/>
+	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.1/commons-collections-3.1.jar" sourcepath="/JAR_SOURCE/commons-collections-3.1/src/java">
+		<attributes>
+			<attribute name="javadoc_location" value="http://commons.apache.org/collections/api-release/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/commons-validator/commons-validator/1.3.0/commons-validator-1.3.0.jar" sourcepath="/JAR_SOURCE/commons-validator-1.3.0-src/src/share"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring/2.5.5/spring-2.5.5.jar" sourcepath="/M2_REPO/org/springframework/spring/2.5.5/spring-2.5.5-sources.jar">
 		<attributes>
@@ -82,7 +86,7 @@
 	<classpathentry kind="var" path="M2_REPO/oro/oro/2.0.8/oro-2.0.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/tuckey/urlrewrite/2.5.2/urlrewrite-2.5.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xml-apis/xml-apis/1.0.b2/xml-apis-1.0.b2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/commons-cli/commons-cli/1.0/commons-cli-1.0.jar" sourcepath="/JAR_SOURCE/commons-cli-1.0/src/java">
+	<classpathentry kind="var" path="M2_REPO/commons-cli/commons-cli/1.2/commons-cli-1.2.jar" sourcepath="/JAR_SOURCE/commons-cli-1.0/src/java">
 		<attributes>
 			<attribute name="javadoc_location" value="http://jakarta.apache.org/commons/cli/api-release/"/>
 		</attributes>
@@ -108,7 +112,7 @@
 			<attribute name="javadoc_location" value="http://www.jajakarta.org/ant/ant-1.6.1/docs/ja/manual/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/RoSuDA/Rserve/0.5-0/Rserve-0.5-0.jar" sourcepath="/JAR_SOURCE/Rserve_0.5-0/src/client/java-new"/>
+	<classpathentry kind="var" path="M2_REPO/RoSuDA/Rserve/0.5-3/Rserve-0.5-3.jar" sourcepath="/JAR_SOURCE/Rserve_0.5-0/src/client/java-new"/>
 	<classpathentry kind="var" path="M2_REPO/org/springmodules/spring-modules-validation/0.9/spring-modules-validation-0.9.jar" sourcepath="/JAR_SOURCE/spring-modules-0.8/sources/spring-modules-validation-src.zip"/>
 	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.3/commons-codec-1.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-dbcp/commons-dbcp/1.2/commons-dbcp-1.2.jar" sourcepath="/JAR_SRC/commons-dbcp-1.2.2-src/src/java"/>
@@ -178,12 +182,12 @@
 	<classpathentry kind="var" path="M2_REPO/org/easymock/easymockclassextension/2.2/easymockclassextension-2.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/ws/spring-ws-core/1.5.4/spring-ws-core-1.5.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/ws/spring-xml/1.5.4/spring-xml-1.5.4.jar"/>
-	<classpathentry kind="var" path="M2_REPO/RoSuDA/REngine/0.5-0/REngine-0.5-0.jar">
+	<classpathentry kind="var" path="M2_REPO/RoSuDA/REngine/0.5-3/REngine-0.5-3.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://icbtools.med.cornell.edu/javadocs/Rserve/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/RoSuDA/JRI/0.4-0/JRI-0.4-0.jar" sourcepath="/JAR_SOURCE/JRI/src">
+	<classpathentry kind="var" path="M2_REPO/RoSuDA/JRI/0.4-3/JRI-0.4-3.jar" sourcepath="/JAR_SOURCE/JRI/src">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.rosuda.org/R/nightly/JavaDoc/org/rosuda/JRI/package-frame.html"/>
 		</attributes>
