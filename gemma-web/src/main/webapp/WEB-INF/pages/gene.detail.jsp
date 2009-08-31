@@ -143,11 +143,19 @@
 
 
 		<h3> Allen Brain Atlas Expression Images 
+		
 		<a class="helpLink" href="?" onclick="showHelpTip(event, 'Below is a sampling of expression profile pictures from the allen brain atlas. Beside is a link to the allen brain atlas'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 
 		 <a title=" Allen Brain Atas details for <%out.print(gene.getOfficialSymbol());%>" href= <c:out value="${abaGeneUrl}" /> target="_blank" > <img
 					src="/Gemma/images/logo/abaLogo.jpg" height=20 width=20/> </a> </h3> 
+		
+		<% 
+			   if ( gene.getTaxon() != null  && gene.getTaxon().getId() !=2) {	//2 is mouse taxon id
+			                out.print( "<h5> [ Taken from mouse gene:  " + gene.getOfficialSymbol() + "] </h5>");
+			   }
+		%>
+		
 		<%		   		
 		 for ( Object obj : representativeImages ) {		
 		 	 ubic.gemma.image.aba.Image img = (ubic.gemma.image.aba.Image) obj;	               
