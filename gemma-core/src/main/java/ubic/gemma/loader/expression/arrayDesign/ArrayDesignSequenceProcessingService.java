@@ -266,12 +266,18 @@ public class ArrayDesignSequenceProcessingService {
         return notFound;
     }
 
+    /**
+     * @param arrayDesign
+     * @param accessionsToFetch
+     * @param sequenceProvided
+     * @param noSequence
+     */
     private void informAboutFetchListResults( ArrayDesign arrayDesign, Map<String, BioSequence> accessionsToFetch,
             int sequenceProvided, int noSequence ) {
         log.info( "Array Design has " + accessionsToFetch.size() + " accessions to fetch for "
                 + arrayDesign.getCompositeSequences().size() + " compositeSequences" );
         log.info( sequenceProvided + " had sequences already and will not be replaced" );
-        log.info( noSequence + " has no BioSequence association at all and will not be processed further." );
+        log.info( noSequence + " have no BioSequence association at all and will not be processed further." );
     }
 
     /**
@@ -872,6 +878,7 @@ public class ArrayDesignSequenceProcessingService {
         if ( !notFound.isEmpty() ) {
             logMissingSequences( arrayDesign, notFound );
         }
+
         return finalResult;
 
     }
@@ -1090,8 +1097,8 @@ public class ArrayDesignSequenceProcessingService {
     /**
      * Copy sequences into the original versions, or create new sequences in the DB, as needed.
      * 
-     * @param accessionsToFetch
-     * @param retrievedSequences
+     * @param accessionsToFetch accessions that we need to fill in
+     * @param retrievedSequences candidate sequence information for copying into the database.
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
      *        information in the BioSequence will be overwritten.
      * @return Items that were found.
@@ -1178,7 +1185,8 @@ public class ArrayDesignSequenceProcessingService {
      * @param found a new (nonpersistent) biosequence that can be used to create a new entry or update an existing one
      *        with the sequence. The sequence would have come from Genbank.
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *        information in the BioSequence will be overwritten.
+     *        information in the BioSequence will be overwritten. Otherwise, the sequence will only be updated if the
+     *        actual sequence information was missing in our DB and 'found' has a sequence.
      * @return persistent BioSequence.
      */
     private BioSequence createOrUpdateGenbankSequence( BioSequence found, boolean force ) {
@@ -1208,11 +1216,13 @@ public class ArrayDesignSequenceProcessingService {
 
         assert result != null;
         // note that no matter what we make sure the database entry is filled in.
-        if ( force ) {
+        if ( force || ( StringUtils.isBlank( result.getSequence() ) && !StringUtils.isBlank( found.getSequence() ) ) ) {
             result = updateExistingWithSequenceData( found, result );
         } else {
             fillInDatabaseEntry( found, result );
         }
+
+        bioSequenceService.thaw( result );
 
         return result;
     }
