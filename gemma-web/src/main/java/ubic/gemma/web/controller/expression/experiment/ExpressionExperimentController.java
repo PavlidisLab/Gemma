@@ -660,7 +660,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
             finalResult.setPrimaryCitation( formatCitation( ee.getPrimaryPublication() ) );
-            finalResult.setPubmedId( Integer.parseInt( ee.getPrimaryPublication().getPubAccession().getAccession() ) );
+            String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
+
+            try {
+                finalResult.setPubmedId( Integer.parseInt( accession ) );
+            } catch ( NumberFormatException e ) {
+                log.warn( "Pubmed id not formatted correctly: " + accession );
+            }
         }
 
         return finalResult;
@@ -1154,8 +1160,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * Update all summary reports. This takes a while so should only be called by administrators.
-     * AJAX
+     * Update all summary reports. This takes a while so should only be called by administrators. AJAX
+     * 
      * @deprecated use expressionExperimentReportGenerationController
      * @return
      */
@@ -1206,8 +1212,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * Update the Summary resport for a single experiment
-     * AJAX
+     * Update the Summary resport for a single experiment AJAX
+     * 
      * @deprecated use expressionExperimentReportGenerationController
      * @param id
      * @return
