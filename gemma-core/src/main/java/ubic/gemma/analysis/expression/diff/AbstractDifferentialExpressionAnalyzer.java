@@ -30,6 +30,9 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import cern.colt.list.DoubleArrayList;
+
+import ubic.basecode.math.Rank;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -230,5 +233,21 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         ExpressionDataDoubleMatrix dmatrix = builder.getProcessedData();
 
         return dmatrix;
+    }
+
+    /**
+     * @param pvalues
+     * @return normalized ranks of the pvalues.
+     */
+    protected double[] computeRanks( double[] pvalues ) {
+        if ( pvalues == null ) throw new IllegalArgumentException( "Null pvalues" );
+        if ( pvalues.length == 0 ) throw new IllegalArgumentException( "Empty pvalues array" );
+        DoubleArrayList pvalDal = new DoubleArrayList( pvalues );
+        DoubleArrayList ranks = Rank.rankTransform( pvalDal );
+        double[] normalizedRanks = new double[ranks.size()];
+        for ( int i = 0; i < ranks.size(); i++ ) {
+            normalizedRanks[i] = ranks.get( i ) / ranks.size();
+        }
+        return normalizedRanks;
     }
 }

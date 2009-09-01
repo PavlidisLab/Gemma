@@ -266,6 +266,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         log.info( "Calculating p values.  R analysis started." );
         double[] pvalues = rc.doubleArrayEvalWithLogging( pvalueCmd );
+        double[] ranks = computeRanks( pvalues );
 
         if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
@@ -315,7 +316,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             probeAnalysisResult.setPvalue( Double.isNaN( pvalues[i] ) ? null : pvalues[i] );
             probeAnalysisResult.setCorrectedPvalue( Double.isNaN( qvalues[i] ) ? null : qvalues[i] );
             probeAnalysisResult.setScore( Double.isNaN( fstatistics[i] ) ? null : fstatistics[i] );
-
+            probeAnalysisResult.setRank( Double.isNaN( pvalues[i] ) ? null : ranks[i] );
             probeAnalysisResult.setQuantitationType( quantitationType );
 
             analysisResults.add( probeAnalysisResult );

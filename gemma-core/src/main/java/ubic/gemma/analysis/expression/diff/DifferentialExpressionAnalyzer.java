@@ -57,7 +57,7 @@ public class DifferentialExpressionAnalyzer {
     private int FACTOR_VALUE_TWO = 2;
     private Log log = LogFactory.getLog( this.getClass() );
     private OneWayAnovaAnalyzer oneWayAnovaAnalyzer = null;
-    private TTestAnalyzer studenttTestAnalyzer = null;
+    private AbstractDifferentialExpressionAnalyzer studenttTestAnalyzer = null;
     private TwoWayAnovaWithInteractionsAnalyzer twoWayAnovaWithInteractionsAnalyzer = null;
 
     private TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer = null;
@@ -130,7 +130,7 @@ public class DifferentialExpressionAnalyzer {
         this.oneWayAnovaAnalyzer = oneWayAnovaAnalyzer;
     }
 
-    public void setStudenttTestAnalyzer( TTestAnalyzer studenttTestAnalyzer ) {
+    public void setStudenttTestAnalyzer( AbstractDifferentialExpressionAnalyzer studenttTestAnalyzer ) {
         this.studenttTestAnalyzer = studenttTestAnalyzer;
     }
 

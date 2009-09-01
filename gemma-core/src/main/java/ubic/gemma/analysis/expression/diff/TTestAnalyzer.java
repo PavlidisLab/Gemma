@@ -173,6 +173,8 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         log.info( "Calculating p values.  R analysis started." );
         double[] pvalues = rc.doubleArrayEvalWithLogging( pvalueCommand.toString() );
 
+        double[] ranks = computeRanks( pvalues );
+
         /* write out histogram */
         writePValuesHistogram( pvalues, expressionExperiment, null );
 
@@ -215,6 +217,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
             probeAnalysisResult.setCorrectedPvalue( Double.isNaN( qvalues[i] ) ? null : qvalues[i] );
             probeAnalysisResult.setScore( Double.isNaN( tstatistics[i] ) ? null : tstatistics[i] );
             probeAnalysisResult.setQuantitationType( quantitationType );
+            probeAnalysisResult.setRank( Double.isNaN( pvalues[i] ) ? null : ranks[i] );
 
             analysisResults.add( probeAnalysisResult );
         }

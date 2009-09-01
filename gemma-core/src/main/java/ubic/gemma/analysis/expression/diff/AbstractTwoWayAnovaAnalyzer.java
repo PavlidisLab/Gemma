@@ -107,8 +107,13 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         double[] mainEffectAQvalues = super.getQValues( mainEffectAPvalues );
         double[] mainEffectBQvalues = super.getQValues( mainEffectBPvalues );
 
+        double[] ranksA = computeRanks( mainEffectAPvalues );
+        double[] ranksB = computeRanks( mainEffectBPvalues );
+        double[] ranksI = new double[mainEffectAPvalues.length]; // temporary.
+
         double[] interactionEffectQvalues = null;
         if ( interactionEffectPvalues != null ) {
+            ranksI = computeRanks( interactionEffectPvalues );
             interactionEffectQvalues = super.getQValues( interactionEffectPvalues );
         }
 
@@ -132,21 +137,26 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                 // probeAnalysisResult.setParameters( parameters );
 
                 if ( j % numResultsFromR == mainEffectAIndex ) {
-                    probeAnalysisResult.setPvalue(  Double.isNaN(mainEffectAPvalues[l] ) ? null : mainEffectAPvalues[l] );
+                    probeAnalysisResult
+                            .setPvalue( Double.isNaN( mainEffectAPvalues[l] ) ? null : mainEffectAPvalues[l] );
                     probeAnalysisResult.setCorrectedPvalue( Double.isNaN( mainEffectAQvalues[l] ) ? null
                             : mainEffectAQvalues[l] );
+                    probeAnalysisResult.setRank( Double.isNaN( mainEffectAPvalues[l] ) ? null : ranksA[l] );
                     analysisResultsMainEffectA.add( probeAnalysisResult );
                     l++;
                 } else if ( j % numResultsFromR == mainEffectBIndex ) {
-                    probeAnalysisResult.setPvalue(  Double.isNaN(mainEffectBPvalues[m] ) ? null : mainEffectBPvalues[m] );
-                    probeAnalysisResult.setCorrectedPvalue(  Double.isNaN(mainEffectBQvalues[m] ) ? null
+                    probeAnalysisResult
+                            .setPvalue( Double.isNaN( mainEffectBPvalues[m] ) ? null : mainEffectBPvalues[m] );
+                    probeAnalysisResult.setCorrectedPvalue( Double.isNaN( mainEffectBQvalues[m] ) ? null
                             : mainEffectBQvalues[m] );
+                    probeAnalysisResult.setRank( Double.isNaN( mainEffectBPvalues[m] ) ? null : ranksB[m] );
                     analysisResultsMainEffectB.add( probeAnalysisResult );
                     m++;
                 } else if ( j % numResultsFromR == mainEffectInteractionIndex ) {
                     if ( interactionEffectPvalues != null ) {
-                        probeAnalysisResult.setPvalue(  Double.isNaN(interactionEffectPvalues[n] ) ? null
+                        probeAnalysisResult.setPvalue( Double.isNaN( interactionEffectPvalues[n] ) ? null
                                 : interactionEffectPvalues[n] );
+                        probeAnalysisResult.setRank( Double.isNaN( interactionEffectPvalues[n] ) ? null : ranksI[n] );
                     }
 
                     if ( interactionEffectQvalues != null ) {
