@@ -101,6 +101,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
             super.successObjects.add( ee.toString() );
         } catch ( Exception e ) {
+            log.error( e, e );
             super.errorObjects.add( ee + ": " + e.getMessage() );
         }
     }
