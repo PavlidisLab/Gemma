@@ -100,8 +100,17 @@ public class GeoSeries extends GeoData {
         this.keyWords.add( keyword );
     }
 
+    /**
+     * 
+     * @param id in format "1239954" or "1239954,2194919", etc. The latter will be split into two.
+     */
     public void addToPubmedIds( String id ) {
-        this.pubmedIds.add( id );
+        String[] ids = id.split( "," );
+        assert ids.length > 0;
+        for ( String s : ids ) {
+            this.pubmedIds.add( s );
+        }
+        assert this.pubmedIds.size() > 0;
     }
 
     /**
