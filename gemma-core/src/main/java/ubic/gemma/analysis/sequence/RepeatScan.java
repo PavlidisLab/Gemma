@@ -203,7 +203,7 @@ public class RepeatScan {
                 }
                 Thread.sleep( UPDATE_INTERVAL_MS );
                 String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-                log.info( "Repeatmasker: " + minutes + " minutes elapsed)" );
+                log.info( "Repeatmasker: " + minutes + " minutes elapsed" );
             }
 
             overallWatch.stop();
