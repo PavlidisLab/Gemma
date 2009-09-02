@@ -171,12 +171,15 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
 
         ExpressionDataMatrixRowElement itemA = null;
         double[] vectorA = null;
-        int count = 0;
+        int skipped = 0;
         int numComputed = 0;
         for ( int i = 0; i < numrows; i++ ) { // first vector
             itemA = this.dataMatrix.getRowElement( i );
 
-            if ( !this.hasGene( itemA ) ) continue;
+            if ( !this.hasGene( itemA ) ) {
+                skipped++;
+                continue;
+            }
 
             if ( doCalcs ) {
                 vectorA = rankTransformedData[i];
@@ -210,11 +213,12 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
 
             ++numComputed;
 
-            if ( ++count % 2000 == 0 ) {
-                log.info( count + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
+            if ( (i+1) % 2000 == 0 ) {
+                log.info( (i+1) + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
                         + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
+        log.info( skipped + " rows skipped, due to no BLAT association");
         finishMetrics();
 
     }
@@ -372,11 +376,14 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
         ExpressionDataMatrixRowElement itemA = null;
         ExpressionDataMatrixRowElement itemB = null;
         double[] vectorA = null;
-        int count = 0;
+        int skipped = 0;
         int numComputed = 0;
         for ( int i = 0; i < numrows; i++ ) {
             itemA = this.dataMatrix.getRowElement( i );
-            if ( !this.hasGene( itemA ) ) continue;
+            if ( !this.hasGene( itemA ) ){
+                skipped++;
+                continue;
+            }
             if ( docalcs ) {
                 vectorA = rankTransformedData[i];
             }
@@ -395,12 +402,12 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
                 setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
                 ++numComputed;
             }
-            if ( ++count % 2000 == 0 ) {
-                log.info( count + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
+            if ( (i+1) % 2000 == 0 ) {
+                log.info( (i+1) + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
                         + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
-
+        log.info( skipped + " rows skipped, due to no BLAT association");
         finishMetrics();
     }
 
