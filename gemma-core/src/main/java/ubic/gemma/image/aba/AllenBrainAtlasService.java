@@ -261,14 +261,20 @@ public class AllenBrainAtlasService {
 
             geneDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
         } catch ( ParserConfigurationException pce ) {
-            log.error( pce );
+            log.warn( pce );
             return null;
         } catch ( SAXException se ) {
-            log.error( se );
+            log.warn( se );
         } catch ( FileNotFoundException fnfe ) {
-            log.error( gene + " gene not found in aba. Actualy error: " + fnfe );
-        } catch ( IOException io ) {
+            if (log.isDebugEnabled())
+                log.debug( gene + " gene not found in aba . Error thrown becuase cachefile not created: " + fnfe );
+            
+            log.info( gene + "not found in aba" );
 
+            return null;
+            
+        } catch ( IOException io ) {
+             log.warn (io);
         }
 
         Collection<String> xmlData =  XMLUtils.extractTagData( geneDoc, "geneid" );       
