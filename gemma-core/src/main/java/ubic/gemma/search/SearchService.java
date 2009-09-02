@@ -110,8 +110,8 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
- * This service is used for performing searches using free text or exact matches to items in the database. <h2>
- * Implementation notes</h2>
+ * This service is used for performing searches using free text or exact matches to items in the database.
+ * <h2> Implementation notes</h2>
  * <p>
  * Internally, there are generally two kinds of searches performed, percise database searches looking for exact matches
  * in the database and compass/lucene searches which look for matches in the stored index.
@@ -219,6 +219,7 @@ public class SearchService implements InitializingBean {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -904,6 +905,9 @@ public class SearchService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> compassSearch( Compass bean, final SearchSettings settings ) {
+        
+        if (!settings.isUseIndices()) return new HashSet<SearchResult>();
+        
         CompassTemplate template = new CompassTemplate( bean );
         Collection<SearchResult> searchResults = ( Collection<SearchResult> ) template.execute(
                 CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
@@ -1155,6 +1159,8 @@ public class SearchService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> databaseGeneSearch( SearchSettings settings ) {
+
+        if ( !settings.isUseDatabase() ) return new HashSet<SearchResult>();
 
         StopWatch watch = startTiming();
         String searchString = settings.getQuery();
@@ -1556,14 +1562,11 @@ public class SearchService implements InitializingBean {
         Set<SearchResult> combinedGeneList = new HashSet<SearchResult>();
         combinedGeneList.addAll( geneDbList );
 
-        /*
-         * Only do the other searches if the more precise database searches come up dry (might want to make this more
-         * configurable)
-         */
-        if ( geneDbList.size() == 0 ) {
-            Collection<SearchResult> geneCompassList = compassGeneSearch( settings );
+        Collection<SearchResult> geneCompassList = compassGeneSearch( settings );
+        combinedGeneList.addAll( geneCompassList );
+
+        if ( combinedGeneList.size() == 0 ) {
             Collection<SearchResult> geneCsList = databaseCompositeSequenceSearch( settings );
-            combinedGeneList.addAll( geneCompassList );
             combinedGeneList.addAll( geneCsList );
         }
 
