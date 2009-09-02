@@ -1023,6 +1023,8 @@ public class SearchService implements InitializingBean {
      */
     private Collection<SearchResult> databaseArrayDesignSearch( SearchSettings settings ) {
 
+        if ( !settings.isUseDatabase() ) return new HashSet<SearchResult>();
+
         StopWatch watch = startTiming();
 
         Collection<ArrayDesign> adSet = new HashSet<ArrayDesign>();
@@ -1050,6 +1052,9 @@ public class SearchService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> databaseBioSequenceSearch( SearchSettings settings ) {
+        
+        if ( !settings.isUseDatabase() ) return new HashSet<SearchResult>();
+
         StopWatch watch = startTiming();
 
         String searchString = settings.getQuery();
@@ -1080,6 +1085,8 @@ public class SearchService implements InitializingBean {
      * @throws Exception
      */
     private Collection<SearchResult> databaseCompositeSequenceSearch( final SearchSettings settings ) {
+
+        if ( !settings.isUseDatabase() ) return new HashSet<SearchResult>();
 
         StopWatch watch = startTiming();
 
@@ -1118,6 +1125,8 @@ public class SearchService implements InitializingBean {
      * @return {@link Collection}
      */
     private Collection<SearchResult> databaseExpressionExperimentSearch( final SearchSettings settings ) {
+
+        if ( !settings.isUseDatabase() ) return new HashSet<SearchResult>();
 
         StopWatch watch = startTiming();
 
