@@ -19,6 +19,8 @@
 
 package ubic.gemma.ontology;
 
+import java.util.Collection;
+
 import ubic.gemma.util.ConfigUtils;
 
 import com.hp.hpl.jena.ontology.OntModel;
@@ -35,6 +37,7 @@ import com.hp.hpl.jena.ontology.OntModel;
 public class BirnLexOntologyService extends AbstractOntologyService {
 
     private static final String BIRNLEX_ONTOLOGY_URL = "url.birnlexOntology";
+
     /*
      * (non-Javadoc)
      * 
@@ -51,9 +54,29 @@ public class BirnLexOntologyService extends AbstractOntologyService {
     }
 
     @Override
-    protected String getOntologyUrl() {      
-        return ConfigUtils.getString( BIRNLEX_ONTOLOGY_URL );       
+    protected String getOntologyUrl() {
+        return ConfigUtils.getString( BIRNLEX_ONTOLOGY_URL );
     }
-    
 
+    // FIXME: This is a hack to fix a problem with the birnlex ontology returning Organ as a child of liver.
+    // See BUG: http://www.chibi.ubc.ca/faculty/pavlidis/bugs/show_bug.cgi?id=1550
+    // Might be better to remove organ from all search results
+    @Override
+    public Collection<OntologyTerm> findTerm( String search ) {
+
+        Collection<OntologyTerm> results = super.findTerm( search );
+
+        if ( search.equalsIgnoreCase( "liver" ) ) {
+            for ( OntologyTerm ont : results ) {
+                if ( ont.getTerm().equalsIgnoreCase( "Organ" ) ) {
+                    log.info( "Liver condition met. Removing organ from results. Exact Term is: " + ont );
+                    results.remove( ont );
+                    break;
+                }
+            }
+        }
+
+        return results;
+
+    }
 }
