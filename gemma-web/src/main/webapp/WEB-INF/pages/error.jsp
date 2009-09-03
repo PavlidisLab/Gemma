@@ -1,5 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
-<%@ page language="java" isErrorPage="true"%>
+
+<%@ page language="java" isErrorPage="true"%>   <%--     This line causes an error in some versions of tomcat (versions previous to tomcat 5.5  --%>
 
 <title><fmt:message key="errorPage.title" />
 </title>
