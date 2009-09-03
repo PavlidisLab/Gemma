@@ -60,14 +60,10 @@ var DesignMatrix = {
 					collapsible : true,
 					title : "Experimental Design overview",
 					renderTo : "eeDesignMatrix",
-					autoHeight : true,
-					maxHeight : 300,
-					maxWidth : 800,
+					height : 125,
 					width : 600,
-					// autoWidth : true,
 					viewConfig : {
-						forceFit : true,
-						autoFill : true
+						forceFit : true
 					}
 				});
 		// this.grid.render();
