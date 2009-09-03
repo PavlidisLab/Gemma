@@ -125,10 +125,46 @@ public class ArrayDesignAnnotationService {
             }
             probeNameToId.put( cs.getName(), cs.getId() );
         }
-
         try {
             log.info( "Reading annotations from: " + f );
             InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
+            return parseAnnotationFile( results, is, probeNameToId );
+        } catch ( FileNotFoundException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * @param arrayDesign
+     * @param is InputStream with the annotations
+     * @return Map of composite sequence ids and transient (incomplete) genes. The genes only have the symbol filled in.
+     */
+    public static Map<Long, Collection<Gene>> readAnnotations( ArrayDesign arrayDesign, InputStream is ) {
+        Map<Long, Collection<Gene>> results = new HashMap<Long, Collection<Gene>>();
+        Map<String, Long> probeNameToId = new HashMap<String, Long>();
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            results.put( cs.getId(), new HashSet<Gene>() );
+            if ( probeNameToId.containsKey( cs.getName() ) ) {
+                log.warn( "Duplicate probe name: " + cs.getName() );
+            }
+            probeNameToId.put( cs.getName(), cs.getId() );
+        }
+
+        return parseAnnotationFile( results, is, probeNameToId );
+    }
+
+    /**
+     * @param results
+     * @param f
+     * @param probeNameToId
+     * @return
+     */
+    private static Map<Long, Collection<Gene>> parseAnnotationFile( Map<Long, Collection<Gene>> results,
+            InputStream is, Map<String, Long> probeNameToId ) {
+        try {
+
             BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
             String line = null;
 
