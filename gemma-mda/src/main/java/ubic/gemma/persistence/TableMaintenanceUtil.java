@@ -249,6 +249,7 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
         msg.setSubject( "Gene2Cs update status." );
         msg.setText( "Gene2Cs updating was run.\n" + results.getAnnotation() );
         mailEngine.send( msg );
+        log.info( "Email notification sent to " + adminEmailAddress );
     }
 
     /**
