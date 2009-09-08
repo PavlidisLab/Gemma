@@ -60,14 +60,14 @@
 					<tr>
 						<td valign="top">
 							<b> Array Design </b><a class="helpLink" href="?"
-								onclick="showHelpTip(event, 'The array design this probe belongs to.'); return false"><img
+								onclick="showHelpTip(event, 'The array design this probe belongs to. Hover over link to see the Array Design short name.'); return false"><img
 									src="/Gemma/images/help.png" /> </a>
 						</td>
 						<td>
 							<%
 							if ( ( compositeSequence.getArrayDesign().getName() != null ) &&  ( compositeSequence.getArrayDesign().getId() != null ) ){
 							%>
-							<a href="/Gemma/arrays/showArrayDesign.html?id=${ compositeSequence.arrayDesign.id }" >  ${ compositeSequence.arrayDesign.name} </a>
+							<a href="/Gemma/arrays/showArrayDesign.html?id=${ compositeSequence.arrayDesign.id }"  title="${compositeSequence.arrayDesign.shortName}">  ${ compositeSequence.arrayDesign.name} </a>
 							<%
 							                } else {
 							                out.print( "Array Design unavailable." );
