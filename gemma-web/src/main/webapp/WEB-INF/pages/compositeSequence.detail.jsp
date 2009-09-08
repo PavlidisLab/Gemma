@@ -65,9 +65,9 @@
 						</td>
 						<td>
 							<%
-							if ( compositeSequence.getArrayDesign().getName() != null ) {
+							if ( ( compositeSequence.getArrayDesign().getName() != null ) &&  ( compositeSequence.getArrayDesign().getId() != null ) ){
 							%>
-							${ compositeSequence.arrayDesign.name}
+							<a href="/Gemma/arrays/showArrayDesign.html?id=${ compositeSequence.arrayDesign.id }" >  ${ compositeSequence.arrayDesign.name} </a>
 							<%
 							                } else {
 							                out.print( "Array Design unavailable." );
