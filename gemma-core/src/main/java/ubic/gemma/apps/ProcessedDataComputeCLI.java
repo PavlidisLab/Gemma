@@ -70,6 +70,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
         super.buildOptions();
 
+        super.addForceOption();
         addDateOption();
     }
 
@@ -81,6 +82,11 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         Exception err = processCommandLine( "processed expression data updater ", args );
         if ( err != null ) {
             return err;
+        }
+
+        if ( expressionExperiments.size() == 0 ) {
+            log.error( "You did not select any usable expression experiments" );
+            return null;
         }
 
         for ( BioAssaySet ee : expressionExperiments ) {
@@ -116,7 +122,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             eeService.thawLite( ee );
             boolean needToRun = needToRun( ee, ProcessedVectorComputationEvent.class );
 
-            if ( !needToRun ) return;
+            if ( !needToRun && !force ) return;
             this.processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
             // Note tha tauditing is done by the service.
             successObjects.add( ee.toString() );

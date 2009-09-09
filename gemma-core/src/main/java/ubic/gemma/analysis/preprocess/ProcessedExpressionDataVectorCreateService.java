@@ -190,9 +190,13 @@ public class ProcessedExpressionDataVectorCreateService {
     }
 
     /**
+     * If possible, update the ranks for the processed data vectors. For data sets with only ratio expression values
+     * provided, ranks will not be computable.
+     * 
      * @param ee
      * @param processedVectors
-     * @return
+     * @return The vectors after updating them, or just the original vectors if ranks could not be computed. (The
+     *         vectors may be thawed in the process)
      */
     @SuppressWarnings("unchecked")
     private Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
@@ -217,13 +221,14 @@ public class ProcessedExpressionDataVectorCreateService {
             ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
             intensities = builder.getIntensity();
 
-            if ( intensities == null ) {
-                throw new IllegalStateException( "Could not locate intensity matrix for " + ee );
-            }
-
             ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();
 
-            this.maskMissingValues( intensities, missingValues );
+            if ( missingValues == null || intensities == null ) {
+                log.warn( "Could not locate intensity matrix for " + ee + ", rank computation skipped" );
+                return processedVectors;
+            } else {
+                this.maskMissingValues( intensities, missingValues );
+            }
 
         } else {
             intensities = new ExpressionDataDoubleMatrix( processedVectors );
