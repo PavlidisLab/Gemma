@@ -58,8 +58,8 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "gse432Short" ) );
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE432", false, true, false, false,
+                    + "GSE5949short" ) );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE5949", false, true, false, false,
                     false );
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
