@@ -102,7 +102,7 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 										width : 30
 									}, {
 										id : 'visualize',
-										hidden : true,
+										hidden : false,
 										header : "Visualize",
 										dataIndex : "visualize",
 										renderer : this.visStyler.createDelegate(this),
@@ -132,7 +132,7 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 				Gemma.CoexpressionGrid.superclass.initComponent.call(this);
 				
 					//TODO Add visualization and details?
-					//this.on("cellclick", this.geneLiteRowClickHandler.createDelegate(this), this);
+					this.on("cellclick", this.geneLiteRowClickHandler.createDelegate(this), this);
 
 			},
 

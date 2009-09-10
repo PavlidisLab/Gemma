@@ -91,6 +91,9 @@ var goTermGrid = function() {
 Ext.onReady(goTermGrid.init);
 
 Ext.onReady(function() {
+	
+	Ext.QuickTips.init();
+	
 	var geneid = dwr.util.getValue("gene");
 	var g = {
 		id : geneid
@@ -178,10 +181,65 @@ Ext.onReady(function() {
 		
 					var eeNameColumnIndex = diffExGrid.getColumnModel().getIndexById('expressionExperimentName');
 					diffExGrid.getColumnModel().setHidden(eeNameColumnIndex, true);
+					var visColumnIndex = diffExGrid.getColumnModel().getIndexById('visualize');
+					diffExGrid.getColumnModel().setHidden(visColumnIndex, false);
+
 			
 						
 		diffExGrid.getStore().load({params : [ geneid, 0.05, 50] });
 
+		
+	var geneDiffRowClickHandler = function(grid, rowIndex, columnIndex, e) {
+		if (this.getSelectionModel().hasSelection()) {
+
+			var record = this.getStore().getAt(rowIndex);
+			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+			var gene = record.data.gene;
+
+			if (fieldName == 'visualize') {
+				
+				var ee = record.data.expressionExperiment;
+
+				visWindow = new Gemma.VisualizationDifferentialWindow();
+				visWindow.dv.store = new Gemma.VisualizationStore({
+					readMethod :  DEDVController.getDEDVForVisualization
+				});
+	
+				
+				visWindow.displayWindow =  function(ee, geneId) {
+
+							this.setTitle("Visualization of probes in:  "
+									+ ee.shortName);
+					
+							var downloadDedvLink = String
+									.format(
+											"<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > <img src='/Gemma/images/asc.gif'/></a>",
+											ee.id, geneId);
+					
+							this.thumbnailPanel.setTitle("Thumbnails &nbsp; " + downloadDedvLink);
+														
+							var params = [];
+							params.push([ee.id]);
+							params.push([geneId]);	//Gene would be nicer but don't have access to the full object... hmmmm
+					
+							this.show();
+							this.dv.store.load({
+								params : params
+							});
+					
+					};
+				
+				var geneId = dwr.util.getValue("gene");
+
+				visWindow.displayWindow(ee, geneId);
+
+			
+			}
+		}
+	};
+
+	diffExGrid.on("cellclick", geneDiffRowClickHandler, diffExGrid);
+		
 	
 
 });

@@ -290,12 +290,12 @@ public class GeneCoexpressionService {
         Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
                 queryGenesOnly );
 
-        Collection<Long> eeIdsTouse = getIds( baseSet );
+        Collection<Long> eeIdsToUse = getIds( baseSet );
 
         /*
          * We get this prior to filtering so it matches the vectors stored with the analysis.
          */
-        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( eeIdsTouse );
+        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( eeIdsToUse );
 
         List<CoexpressionValueObjectExt> ecvos = new ArrayList<CoexpressionValueObjectExt>();
 
@@ -340,6 +340,7 @@ public class GeneCoexpressionService {
                     supportingDatasets.retainAll( specificDatasets );
                 }
 
+                cvo.setSupportingExperiments( supportingDatasets );
                 int numSupportingDatasets = supportingDatasets.size();
 
                 /*

@@ -70,7 +70,6 @@ public class CoexpressionSearchController extends BaseFormController {
     private ExpressionExperimentSecureService expressionExperimentSecureService;
     private ExpressionExperimentSetService expressionExperimentSetService;
 
-    
     /**
      * @param searchOptions
      * @return
@@ -96,27 +95,41 @@ public class CoexpressionSearchController extends BaseFormController {
 
         this.geneService.thawLite( gene ); // need to thaw externalDB in taxon for marshling back to client...
 
-        Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( "All " + gene.getTaxon()
-                .getCommonName() );
+        ExpressionExperimentSet eeSet = null;
+        Long eeSetId = null;
 
-        Long eeSetId;
-        if ( eeSets.size() != 1 ) {
-            log.error( "more than one set found using 1st." );
+        if ( searchOptions.getEeSetId() != null ) {
+            eeSet = expressionExperimentSetService.load( searchOptions.getEeSetId() );
+            if ( eeSet != null ) eeSetId = eeSet.getId();
+
+        } else {
+            Collection<ExpressionExperimentSet> eeSets = null;
+            if ( searchOptions.getEeSetName() != null ) {
+                eeSets = expressionExperimentSetService.findByName( searchOptions.getEeSetName() );
+            } else {
+                eeSets = expressionExperimentSetService.findByName( "All " + gene.getTaxon().getCommonName() );
+
+            }
+            if ( eeSets.size() != 1 ) {
+                log.warn( "more than one set found using 1st." );
+            }
+            eeSetId = eeSets.iterator().next().getId();
         }
-        eeSetId = eeSets.iterator().next().getId();
+        
         List<Gene> genes = new ArrayList<Gene>();
         genes.add( gene );
         result.setQueryGenes( genes );
 
-        Collection<CoexpressionValueObjectExt> geneResults  = geneCoexpressionService.coexpressionSearchQuick( eeSetId,genes , 2, 20, false, true );
+        Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick( eeSetId,
+                genes, 2, 20, false, true );
         result.setKnownGeneResults( geneResults );
-        
+
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
             result
                     .setErrorState( "<b> Sorry, No genes are currently coexpressed under the selected search conditions </b>" );
             log.info( "No search results for query: " + searchOptions );
         }
-        
+
         return result;
 
     }
