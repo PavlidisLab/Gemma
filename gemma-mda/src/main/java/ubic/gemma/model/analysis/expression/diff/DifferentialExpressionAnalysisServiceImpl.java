@@ -56,9 +56,9 @@ public class DifferentialExpressionAnalysisServiceImpl extends
      * 
      */
     public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperimentsMetThreshold(
-            Gene gene, Collection<ExpressionExperiment> experimentsAnalyzed, double threshold ) {
+            Gene gene, Collection<ExpressionExperiment> experimentsAnalyzed, double threshold, Integer limit ) {
         return this.getDifferentialExpressionAnalysisDao().findResultsForGeneInExperimentsMetThreshold( gene,
-                experimentsAnalyzed, threshold );
+                experimentsAnalyzed, threshold, limit );
     }
     
     public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(

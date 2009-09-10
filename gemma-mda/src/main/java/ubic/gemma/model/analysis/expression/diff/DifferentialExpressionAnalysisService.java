@@ -81,12 +81,13 @@ public interface DifferentialExpressionAnalysisService extends
      * @param gene
      * @param experimentsAnalyzed
      * @param threshold
+     * @param limit puts a limit on the number of results. if null then non limit is  imposed. 
      * @return
      */
     public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperimentsMetThreshold(
             ubic.gemma.model.genome.Gene gene,
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
-            double threshold );
+            double threshold, Integer limit );
 
     
     /**

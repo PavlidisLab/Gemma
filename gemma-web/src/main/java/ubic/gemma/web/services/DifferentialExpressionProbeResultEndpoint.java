@@ -181,7 +181,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
 
         for ( Gene gene : geneCol ) {
             Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionAnalysisService
-                    .findResultsForGeneInExperimentsMetThreshold( gene, eeCol, Double.parseDouble( threshold ) );
+                    .findResultsForGeneInExperimentsMetThreshold( gene, eeCol, Double.parseDouble( threshold ), null );
 
             for ( ExpressionExperiment ee : results.keySet() ) {
                 // main call to the DifferentialExpressionAnalysisService to retrieve ProbeAnalysisResultSet collection

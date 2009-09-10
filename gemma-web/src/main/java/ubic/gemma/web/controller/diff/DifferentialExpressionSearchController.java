@@ -206,10 +206,24 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param threshold
      * @return
      */
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold, Integer limit ) {
 
         Gene g = geneService.load( geneId );
-        return geneDifferentialExpressionService.getDifferentialExpression( g, threshold );
+        return geneDifferentialExpressionService.getDifferentialExpression( g, threshold, limit );
+    }
+    
+    
+    /**
+     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
+     * the gene with the id, geneId, are returned.
+     * 
+     * @param geneId
+     * @param threshold
+     * @return
+     */
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
+
+       return this.getDifferentialExpression( geneId, threshold, null );
     }
 
     /**

@@ -180,7 +180,7 @@ Ext.onReady(function() {
 					diffExGrid.getColumnModel().setHidden(eeNameColumnIndex, true);
 			
 						
-		diffExGrid.getStore().load({params : [ geneid, 0.05] });
+		diffExGrid.getStore().load({params : [ geneid, 0.05, 50] });
 
 	
 

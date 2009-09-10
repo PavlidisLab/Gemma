@@ -203,7 +203,7 @@ public class GeneDifferentialExpressionService {
         if ( gene == null ) return result;
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> rawDiffEx = differentialExpressionAnalysisService
-                .findResultsForGeneInExperimentsMetThreshold( gene, ees, threshold );
+                .findResultsForGeneInExperimentsMetThreshold( gene, ees, threshold, null );
 
         Collection<DifferentialExpressionValueObject> rawProcResults = postProcessDiffExResults( gene, threshold,
                 rawDiffEx );
@@ -244,7 +244,7 @@ public class GeneDifferentialExpressionService {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, double threshold ) {
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, double threshold, Integer limit) {
 
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
 
@@ -254,7 +254,7 @@ public class GeneDifferentialExpressionService {
                 .findExperimentsWithAnalyses( gene );
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionAnalysisService
-                .findResultsForGeneInExperimentsMetThreshold( gene, experimentsAnalyzed, threshold );
+                .findResultsForGeneInExperimentsMetThreshold( gene, experimentsAnalyzed, threshold, limit );
 
         return postProcessDiffExResults( gene, threshold, results );
     }

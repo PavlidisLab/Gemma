@@ -183,9 +183,20 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperimentsMetThreshold(
             ubic.gemma.model.genome.Gene gene,
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
-            double threshold ) {
+            double threshold, Integer limit ) {
 
-        final String qs = fetchResultsByGeneAndExperimentsQuery + " and r.correctedPvalue < :threshold";
+        
+        String qs = fetchResultsByGeneAndExperimentsQuery + " and r.correctedPvalue < :threshold";
+        
+        int oldmax = getHibernateTemplate().getMaxResults();        
+        //If null then no limit         
+            if (limit != null ){
+                getHibernateTemplate().setMaxResults( limit );
+                qs += " order by r.correctedPvalue";
+            }
+     
+        
+   
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
@@ -197,7 +208,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         Object[] objectValues = { gene, experimentsAnalyzed, threshold };
 
         List qresult = this.getHibernateTemplate().findByNamedParam( qs, paramNames, objectValues );
-
+        
         for ( Object o : qresult ) {
 
             Object[] oa = ( Object[] ) o;
@@ -210,8 +221,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
             results.get( ee ).add( probeResult );
         }
-        log.info( "Num experiments with probe analysis results: " + results.size() );
+        log.info( "Num experiments with probe analysis results (with limit = "+ limit +") : " + results.size() + ". Number of probes returned in total: " + qresult.size()); 
 
+        if (limit != null){
+            getHibernateTemplate().setMaxResults( oldmax );
+        }
+
+        
         return results;
     }
 

@@ -177,9 +177,9 @@ DifferentialExpressionAnalysisController.run = function(p0, callback) {
 if (DifferentialExpressionSearchController == null)
 	var DifferentialExpressionSearchController = {};
 DifferentialExpressionSearchController._path = '/Gemma/dwr';
-DifferentialExpressionSearchController.getDifferentialExpression = function(p0, p1, callback) {
+DifferentialExpressionSearchController.getDifferentialExpression = function(p0, p1,p2, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-			'getDifferentialExpression', p0, p1, callback);
+			'getDifferentialExpression', p0, p1, p2, callback);
 }
 DifferentialExpressionSearchController.getDiffExpressionForGenes = function(p0, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
