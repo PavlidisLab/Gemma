@@ -195,6 +195,9 @@ public class GeoBrowserService {
 
                 result = matcher.find();
             } while ( result );
+
+            matcher.appendTail( sb );
+
             details = sb.toString();
         }
 
