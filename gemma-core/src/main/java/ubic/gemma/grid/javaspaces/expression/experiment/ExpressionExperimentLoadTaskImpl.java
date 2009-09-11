@@ -55,7 +55,7 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
 
         String accession = jsEeLoadCommand.getAccession();
         boolean loadPlatformOnly = jsEeLoadCommand.isLoadPlatformOnly();
-        boolean doSampleMatching = jsEeLoadCommand.isSuppressMatching();
+        boolean doSampleMatching = !jsEeLoadCommand.isSuppressMatching();
         boolean aggressiveQtRemoval = jsEeLoadCommand.isAggressiveQtRemoval();
         boolean splitIncompatiblePlatforms = jsEeLoadCommand.isSplitIncompatiblePlatforms();
         boolean allowSuperSeriesLoad = jsEeLoadCommand.isAllowSuperSeriesLoad();
