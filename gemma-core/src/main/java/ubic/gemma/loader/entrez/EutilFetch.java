@@ -43,6 +43,10 @@ public class EutilFetch {
     private static String ESEARCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
     private static String EFETCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=";
 
+    public enum Mode {
+        HTML, TEXT, XML
+    }
+
     static DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
     /**
@@ -52,6 +56,17 @@ public class EutilFetch {
      * @return
      */
     public static String fetch( String db, String searchString, int limit ) {
+        return fetch( db, searchString, Mode.TEXT, limit );
+    }
+
+    /**
+     * @param db e.g., gds.
+     * @param searchString
+     * @param mode HTML,TEXT or XML
+     * @param limit - Maximum number of records to return.
+     * @return
+     */
+    public static String fetch( String db, String searchString, Mode mode, int limit ) {
         try {
             URL searchUrl = new URL( ESEARCH + db + "&usehistory=y&term=" + searchString );
             URLConnection conn = searchUrl.openConnection();
@@ -87,8 +102,8 @@ public class EutilFetch {
             String queryId = XMLUtils.getTextValue( queryIdEl );
             String cookie = XMLUtils.getTextValue( cookieEl );
 
-            URL fetchUrl = new URL( EFETCH + db + "&report=docsum&mode=text&query_key=" + queryId + "&WebEnv=" + cookie
-                    + "&retmax=" + limit );
+            URL fetchUrl = new URL( EFETCH + db + "&report=docsum&mode=" + mode.toString().toLowerCase()
+                    + "&query_key=" + queryId + "&WebEnv=" + cookie + "&retmax=" + limit );
 
             conn = fetchUrl.openConnection();
             conn.connect();

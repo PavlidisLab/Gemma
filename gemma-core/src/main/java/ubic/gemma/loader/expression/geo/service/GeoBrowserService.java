@@ -27,6 +27,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.hp.hpl.jena.assembler.Mode;
+
 import ubic.gemma.loader.entrez.EutilFetch;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -149,13 +151,27 @@ public class GeoBrowserService {
      */
     private String formatDetails( String details ) {
 
-        Pattern accPatt = Pattern.compile( "(G(PL|SE|SM|DS)[0-9]+)" );
+        // log.info( "====\n" + details + "\n======" );
+
+        /*
+         * Remove redundant information about the series that is listed with the dataset.
+         */
+        Pattern refPattern = Pattern.compile( "(Reference Series: GSE.+)(?=GSE)" );
+        Matcher m = refPattern.matcher( details );
+        details = m.replaceAll( "" );
+
+        // replace 1: ; leave GPL124: alone.
+        Pattern recordPattern = Pattern.compile( "(?<!G(PL|SE|SM|DS))[0-9]+:" );
+        m = recordPattern.matcher( details );
+        details = m.replaceAll( "" );
+
+        Pattern accPatt = Pattern.compile( "(?<!Parent Platform: )(G(PL|SE|SM|DS)[0-9]+)" );
         Matcher matcher = accPatt.matcher( details );
-        details = matcher.replaceAll( "<br /><strong>$1</strong>" );
-        matcher.reset();
+
         boolean result = matcher.find();
         if ( result ) {
             StringBuffer sb = new StringBuffer();
+            sb.append( "<div class=\"small\">" );
             do {
 
                 String match = matcher.group();
@@ -164,18 +180,17 @@ public class GeoBrowserService {
                     ArrayDesign arrayDesign = arrayDesignService.findByShortName( match );
 
                     if ( arrayDesign != null ) {
-                        matcher.appendReplacement( sb,
-                                "<br />\n<strong><a href=\"/Gemma/arrays/showArrayDesign.html?id="
-                                        + arrayDesign.getId() + "\">" + match + "</a></strong>" );
+                        matcher.appendReplacement( sb, "<p><strong><a href=\"/Gemma/arrays/showArrayDesign.html?id="
+                                + arrayDesign.getId() + "\">" + match + "</a></strong>" );
                     } else {
-                        matcher.appendReplacement( sb, "<br />\n<strong>$1 [New to Gemma]</strong>" );
+                        matcher.appendReplacement( sb, "<p><strong>$1 [New to Gemma]</strong>" );
                     }
 
                 } else if ( match.startsWith( "GSM" ) ) {
 
                     /*
-                     * TODO: check if sample is already in the system. NOte that we only get a partial list of the
-                     * samples anyway.
+                     * TODO: perhaps check if sample is already in the system. NOte that we only get a partial list of
+                     * the samples anyway.
                      */
 
                     matcher.appendReplacement( sb, "<br />\n<strong>$1</strong>" );
@@ -184,21 +199,23 @@ public class GeoBrowserService {
 
                     if ( ee != null ) {
                         matcher.appendReplacement( sb,
-                                "<br />\n<strong><a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                                "\n<p><strong><a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                                         + ee.getId() + "\">" + match + "</a></strong>" );
                     } else {
-                        matcher.appendReplacement( sb, "<br />\n<strong>$1 [new to Gemma]</strong>" );
+                        matcher.appendReplacement( sb, "\n<p><strong>$1 [new to Gemma]</strong>" );
                     }
                 } else {
-                    matcher.appendReplacement( sb, "<br />\n<strong>$1</strong>" );
+                    // GDS, etc.
+                    matcher.appendReplacement( sb, "\n<p><strong>$1</strong>" );
                 }
 
                 result = matcher.find();
             } while ( result );
 
             matcher.appendTail( sb );
-
+            sb.append( "</div>" );
             details = sb.toString();
+
         }
 
         return details;
