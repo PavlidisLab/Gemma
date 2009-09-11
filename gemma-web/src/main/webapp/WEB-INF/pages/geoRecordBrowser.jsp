@@ -9,7 +9,7 @@
 <body>
 	<security:authorize ifAnyGranted="admin">
 
-		<div id="messages" style="margin: 10px; width: 400px"></div>
+		<div id="messages" style="margin: 10px; width: 600px"></div>
 		<div id="taskId" style="display: none;"></div>
 		<div id="progress-area" style="padding: 5px;"></div>
 		<br />

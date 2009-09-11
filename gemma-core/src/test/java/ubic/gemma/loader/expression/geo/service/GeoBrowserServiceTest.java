@@ -13,7 +13,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
         details = gbs.getDetails( "GSE1295" );
         assertTrue( details.contains( "GSE1295" ) );
 
-        // log.info( details );
+         // log.info( details );
 
     }
 

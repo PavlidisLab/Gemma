@@ -151,7 +151,7 @@ public class GeoBrowserService {
      */
     private String formatDetails( String details ) {
 
-        // log.info( "====\n" + details + "\n======" );
+       // log.info( "====\n" + details + "\n======" );
 
         /*
          * Remove redundant information about the series that is listed with the dataset.
@@ -159,10 +159,12 @@ public class GeoBrowserService {
         Pattern refPattern = Pattern.compile( "(Reference Series: GSE.+)(?=GSE)" );
         Matcher m = refPattern.matcher( details );
         details = m.replaceAll( "" );
+        
+        details = details.replaceFirst( "(Samples: [0-9]+)", "<p>$1&nbsp&nbsp" );
 
-        // replace 1: ; leave GPL124: alone.
-        Pattern recordPattern = Pattern.compile( "(?<!G(PL|SE|SM|DS))[0-9]+:" );
-        m = recordPattern.matcher( details );
+        // replace 1: ; leave GSM12114: alone.
+        Pattern recordPattern = Pattern.compile( "(?<!GSM)(?<![0-9])[0-9]+:" );
+        m = recordPattern.matcher( details ); 
         details = m.replaceAll( "" );
 
         Pattern accPatt = Pattern.compile( "(?<!Parent Platform: )(G(PL|SE|SM|DS)[0-9]+)" );
@@ -180,7 +182,7 @@ public class GeoBrowserService {
                     ArrayDesign arrayDesign = arrayDesignService.findByShortName( match );
 
                     if ( arrayDesign != null ) {
-                        matcher.appendReplacement( sb, "<p><strong><a href=\"/Gemma/arrays/showArrayDesign.html?id="
+                        matcher.appendReplacement( sb, "<p><strong><a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
                                 + arrayDesign.getId() + "\">" + match + "</a></strong>" );
                     } else {
                         matcher.appendReplacement( sb, "<p><strong>$1 [New to Gemma]</strong>" );
@@ -193,13 +195,13 @@ public class GeoBrowserService {
                      * the samples anyway.
                      */
 
-                    matcher.appendReplacement( sb, "<br />\n<strong>$1</strong>" );
+                    matcher.appendReplacement( sb, "\n&nbsp;&nbsp;&nbsp;$1" );
                 } else if ( match.startsWith( "GSE" ) ) {
                     ExpressionExperiment ee = this.expressionExperimentService.findByShortName( match );
 
                     if ( ee != null ) {
                         matcher.appendReplacement( sb,
-                                "\n<p><strong><a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                                "\n<p><strong><a target=\"_blank\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                                         + ee.getId() + "\">" + match + "</a></strong>" );
                     } else {
                         matcher.appendReplacement( sb, "\n<p><strong>$1 [new to Gemma]</strong>" );
