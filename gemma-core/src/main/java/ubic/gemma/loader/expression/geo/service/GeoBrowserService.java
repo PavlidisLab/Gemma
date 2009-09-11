@@ -31,6 +31,9 @@ import com.hp.hpl.jena.assembler.Mode;
 
 import ubic.gemma.loader.entrez.EutilFetch;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.model.common.AuditableService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
@@ -51,6 +54,7 @@ import ubic.gemma.model.genome.TaxonService;
  * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="bioAssayService" ref="bioAssayService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  */
 public class GeoBrowserService {
     private static final int MIN_SAMPLES = 5;
@@ -58,6 +62,7 @@ public class GeoBrowserService {
     TaxonService taxonService;
     ExternalDatabaseService externalDatabaseService;
     ArrayDesignService arrayDesignService;
+    AuditTrailService auditTrailService;
 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
@@ -151,7 +156,7 @@ public class GeoBrowserService {
      */
     private String formatDetails( String details ) {
 
-       // log.info( "====\n" + details + "\n======" );
+        // log.info( "====\n" + details + "\n======" );
 
         /*
          * Remove redundant information about the series that is listed with the dataset.
@@ -159,15 +164,15 @@ public class GeoBrowserService {
         Pattern refPattern = Pattern.compile( "(Reference Series: GSE.+)(?=GSE)" );
         Matcher m = refPattern.matcher( details );
         details = m.replaceAll( "" );
-        
+
         details = details.replaceFirst( "(Samples: [0-9]+)", "<p>$1&nbsp&nbsp" );
 
         // replace 1: ; leave GSM12114: alone.
         Pattern recordPattern = Pattern.compile( "(?<!GSM)(?<![0-9])[0-9]+:" );
-        m = recordPattern.matcher( details ); 
+        m = recordPattern.matcher( details );
         details = m.replaceAll( "" );
 
-        Pattern accPatt = Pattern.compile( "(?<!Parent Platform: )(G(PL|SE|SM|DS)[0-9]+)" );
+        Pattern accPatt = Pattern.compile( "(?<!Parent Platform: )(?<!accessioned in GEO as )(G(PL|SE|SM|DS)[0-9]+)" );
         Matcher matcher = accPatt.matcher( details );
 
         boolean result = matcher.find();
@@ -182,8 +187,17 @@ public class GeoBrowserService {
                     ArrayDesign arrayDesign = arrayDesignService.findByShortName( match );
 
                     if ( arrayDesign != null ) {
-                        matcher.appendReplacement( sb, "<p><strong><a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
-                                + arrayDesign.getId() + "\">" + match + "</a></strong>" );
+
+                        String trouble = "";
+                        AuditEvent lastTroubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
+                        if ( lastTroubleEvent != null ) {
+                            trouble = "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
+                                    + lastTroubleEvent.getNote() + "\"/>";
+                        }
+
+                        matcher.appendReplacement( sb,
+                                "<p><strong><a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
+                                        + arrayDesign.getId() + "\">" + match + "</a></strong>" + trouble );
                     } else {
                         matcher.appendReplacement( sb, "<p><strong>$1 [New to Gemma]</strong>" );
                     }
