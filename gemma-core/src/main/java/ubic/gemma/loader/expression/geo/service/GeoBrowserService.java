@@ -27,11 +27,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.hp.hpl.jena.assembler.Mode;
-
 import ubic.gemma.loader.entrez.EutilFetch;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.model.common.AuditableService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -63,6 +60,10 @@ public class GeoBrowserService {
     ExternalDatabaseService externalDatabaseService;
     ArrayDesignService arrayDesignService;
     AuditTrailService auditTrailService;
+
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
