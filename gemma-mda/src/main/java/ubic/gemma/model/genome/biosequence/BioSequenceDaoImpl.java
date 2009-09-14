@@ -277,6 +277,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
                 for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
                     GeneProduct geneProduct = bs2gp.getGeneProduct();
+                    session.lock( geneProduct, LockMode.NONE );
+                    Hibernate.initialize( geneProduct );
                     Gene g = geneProduct.getGene();
                     if ( g != null ) {
                         Hibernate.initialize( g );
@@ -288,10 +290,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 }
 
                 session.evict( bioSequence );
-                // /*
-                // * For reasons unclear, biosequence is still a proxy at this point.
-                // */
-                // EntityUtils.unProxy( bioSequence );
+
                 return null;
             }
         } );
@@ -397,7 +396,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 session.clear();
                 session.setFlushMode( oldFlushMode );
                 session.setCacheMode( oldCacheMode );
-                log.info( "Thaw done" );
+
                 return null;
             }
         } );
