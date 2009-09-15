@@ -96,7 +96,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * If you know the arraydesigns are already in a merged state, you should use switchExperimentToMergedPlatform
      * 
      * @param expExp
-     * @param arrayDesign
+     * @param arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
+     *        changed for them.
      */
     public void switchExperimentToArrayDesign( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
@@ -151,7 +152,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                     continue;
                 }
 
-                // Collection<DesignElementDataVector> doomedToBeRemoved = new HashSet<DesignElementDataVector>();
                 int count = 0;
                 Class<? extends DesignElementDataVector> vectorClass = null;
                 for ( DesignElementDataVector vector : vectorsForQt ) {
@@ -233,6 +233,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param designElementMap
      * @param usedDesignElements
      * @param vector
+     * @throw IllegalStateException if there is no design element matching the vector's biosequence
      */
     private boolean processVector( Map<BioSequence, Collection<DesignElement>> designElementMap,
             Collection<DesignElement> usedDesignElements, DesignElementDataVector vector ) {
@@ -248,12 +249,14 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         boolean found = false;
 
-        for ( DesignElement newEl : newElCandidates ) {
-            if ( !usedDesignElements.contains( newEl ) ) {
-                vector.setDesignElement( newEl );
-                usedDesignElements.add( newEl );
-                found = true;
-                break;
+        if ( newElCandidates != null ) {
+            for ( DesignElement newEl : newElCandidates ) {
+                if ( !usedDesignElements.contains( newEl ) ) {
+                    vector.setDesignElement( newEl );
+                    usedDesignElements.add( newEl );
+                    found = true;
+                    break;
+                }
             }
         }
 
