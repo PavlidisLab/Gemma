@@ -990,7 +990,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @SuppressWarnings("unchecked")
     private Map<Long, Integer> getExpressionExperimentCountMap() {
-
         final String queryString = "select ad.id, count(distinct ee) from   "
                 + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
 
@@ -999,7 +998,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records)
         log.info( list.size() + " rows from getExpressionExperimentCountMap query" );
-        
+
         for ( Object[] o : list ) {
             Long id = ( Long ) o[0];
             Integer count = ( ( Long ) o[1] ).intValue();
@@ -1081,14 +1080,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         }
                     }
 
-                    // if ( i % 100 == 0 ) {
-                    /*
-                     * Using 'clear' here is very slow the first time because it must clear
-                     * arrayDesign.getCompositeSequences().
-                     */
-                    // session.clear();
-                    // log.info( session.getStatistics().getEntityCount() );
-                    // }
                     if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
                     if ( cs.getId() != null ) session.lock( cs, LockMode.NONE );
 
@@ -1102,6 +1093,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     }
 
                     session.evict( cs );
+
+                    // temporary code: more logging if we're getting really slow.
+                    if ( i % 500 == 0 && timer.getTime() > 2e5 ) {
+                        log.info( "Slow thaw: Last processed: " + cs + "," + i + "/" + numToDo );
+                    }
 
                 }
 
