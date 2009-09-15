@@ -131,11 +131,13 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 
 				Gemma.CoexpressionGrid.superclass.initComponent.call(this);
 				
-					//TODO Add visualization and details?
+					//TODO Add details window?
 					this.on("cellclick", this.geneLiteRowClickHandler.createDelegate(this), this);
 
 			},
-
+	 
+	 	coexpVisWindow : null,
+	 
 		geneLiteRowClickHandler : function(grid, rowIndex, columnIndex, e) {
 		if (this.getSelectionModel().hasSelection()) {
 
@@ -152,14 +154,16 @@ Gemma.CoexpressionGridLite = Ext.extend(Ext.grid.GridPanel, {
 				var foundGene = record.data.foundGene;
 				var activeExperiments = record.data.supportingExperiments;
 				// destroy if already open
-//				if (visWindow !== null) {
-//					visWindow.close();
-//				}
+				if (this.coexpVisWindow  != null) {
+					this.coexpVisWindow.close();
+					this.coexpVisWindow = null;
+				}
 
-				var visWindow = new Gemma.CoexpressionVisualizationWindow({
+				
+				this.coexpVisWindow = new Gemma.CoexpressionVisualizationWindow({
 					admin : false
 				});
-				visWindow.displayWindow(activeExperiments, queryGene, foundGene);
+				this.coexpVisWindow.displayWindow(activeExperiments, queryGene, foundGene);
 			} else if (fieldName == 'details') {
 
 				var supporting = getSupportingDatasetRecords(record, grid);

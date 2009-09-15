@@ -657,6 +657,7 @@
 							<value>getVectorData</value>
 							<value>getDEDVForVisualizationByProbe</value>
 							<value>getDEDVForDiffExVisualizationByThreshold</value>
+							<value>getDEDVForDiffExVisualizationByExperiment</value>
 						</list>
 					</property>
 				</bean>

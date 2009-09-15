@@ -259,6 +259,31 @@ public class GeneDifferentialExpressionService {
         return postProcessDiffExResults( gene, threshold, results );
     }
 
+    
+    /**
+     * Get the differential expression results for the given gene that is in a specified set of experiments.
+     * 
+     * @param gene : gene of interest
+     * @param Experiments  : set of experiments to search
+     * @param threshold : the cutoff to determine if diff expressed
+     * @param limit : the maximum number of results to return (null for all)
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, Collection<ExpressionExperiment> ees, double threshold, Integer limit) {
+
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+
+        if ( gene == null ) return devos;
+
+
+        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionAnalysisService
+                .findResultsForGeneInExperimentsMetThreshold( gene, ees, threshold, limit );
+
+        return postProcessDiffExResults( gene, threshold, results );
+    }
+    
+    
     /**
      * Convert the raw results into DifferentialExpressionValueObjects
      * 

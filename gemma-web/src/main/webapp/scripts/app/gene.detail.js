@@ -1,6 +1,6 @@
 Ext.namespace('Gemma');
 
-
+Gemma.DIFF_THRESHOLD = 0.05;
 
 var goTermGrid = function() {
 	var ds;
@@ -186,27 +186,31 @@ Ext.onReady(function() {
 
 			
 						
-		diffExGrid.getStore().load({params : [ geneid, 0.05, 50] });
+		diffExGrid.getStore().load({params : [ geneid, Gemma.DIFF_THRESHOLD, 50] });
 
+		var visDifWindow = null;
 		
-	var geneDiffRowClickHandler = function(grid, rowIndex, columnIndex, e) {
-		if (this.getSelectionModel().hasSelection()) {
+	diffExGrid.geneDiffRowClickHandler = function(grid, rowIndex, columnIndex, e) {
+		if (diffExGrid.getSelectionModel().hasSelection()) {
 
-			var record = this.getStore().getAt(rowIndex);
-			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+			var record = diffExGrid.getStore().getAt(rowIndex);
+			var fieldName = diffExGrid.getColumnModel().getDataIndex(columnIndex);
 			var gene = record.data.gene;
 
 			if (fieldName == 'visualize') {
 				
 				var ee = record.data.expressionExperiment;
 
-				visWindow = new Gemma.VisualizationDifferentialWindow();
-				visWindow.dv.store = new Gemma.VisualizationStore({
-					readMethod :  DEDVController.getDEDVForVisualization
-				});
+				if (visDifWindow != null)
+					visDifWindow.close();
+					
+				visDifWindow = new Gemma.VisualizationDifferentialWindow();
+				visDifWindow.dv.store = new Gemma.VisualizationStore({
+					readMethod :  DEDVController.getDEDVForDiffExVisualizationByExperiment
+					});
 	
 				
-				visWindow.displayWindow =  function(ee, geneId) {
+				visDifWindow.displayWindow =  function(ee, geneId) {
 
 							this.setTitle("Visualization of probes in:  "
 									+ ee.shortName);
@@ -219,8 +223,9 @@ Ext.onReady(function() {
 							this.thumbnailPanel.setTitle("Thumbnails &nbsp; " + downloadDedvLink);
 														
 							var params = [];
-							params.push([ee.id]);
-							params.push([geneId]);	//Gene would be nicer but don't have access to the full object... hmmmm
+							params.push(ee.id);
+							params.push(geneId);	//Gene would be nicer but don't have access to the full object... hmmmm
+							params.push(Gemma.DIFF_THRESHOLD);
 					
 							this.show();
 							this.dv.store.load({
@@ -231,14 +236,14 @@ Ext.onReady(function() {
 				
 				var geneId = dwr.util.getValue("gene");
 
-				visWindow.displayWindow(ee, geneId);
+				visDifWindow.displayWindow(ee, geneId);
 
 			
 			}
 		}
 	};
 
-	diffExGrid.on("cellclick", geneDiffRowClickHandler, diffExGrid);
+	diffExGrid.on("cellclick", diffExGrid.geneDiffRowClickHandler.createDelegate(this), diffExGrid);
 		
 	
 

@@ -403,6 +403,65 @@ public class DEDVController extends BaseFormController {
     /**
      * AJAX exposed method
      * 
+     * @param eeId
+     * @param geneId
+     * @param threshold (diff expression threshold)
+     * @return
+     */
+
+    public VisualizationValueObject[] getDEDVForDiffExVisualizationByExperiment( Long eeId, Long geneId, Double threshold ) {
+
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        if ( ee == null) return null;
+
+        Collection<DoubleVectorValueObject> dedvs;
+        
+        Gene gene = geneService.load(  geneId );
+        if ( gene == null ) {
+            return null;
+        }
+        
+        Collection<Gene> genes = new ArrayList<Gene>();
+        genes.add( gene );
+        Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
+        ees.add( ee );
+        
+        dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes, false );
+
+        watch.stop();
+        Long time = watch.getTime();
+
+        if ( time > 100 ) {
+            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ee.getShortName() + " and " + gene.getOfficialSymbol()
+                    + " gene in " + time + " ms (times <100ms not reported)." );
+        }
+
+        
+        watch = new StopWatch();
+        watch.start();
+
+       
+        Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<Long, Collection<DifferentialExpressionValueObject>>();
+        validatedProbes.put( ee.getId(), geneDifferentialExpressionService.getDifferentialExpression( gene, ees, threshold, null ));
+
+        watch.stop();
+        time = watch.getTime();
+
+        log.info( "Retrieved " + validatedProbes.size() + " valid probes in " + time + " ms." );
+
+        return makeDiffVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes, null );
+        
+       // return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), null, null );
+
+    }
+    
+    /**
+     * AJAX exposed method
+     * 
      * @param eeIds
      * @param geneIds
      * @return
@@ -434,8 +493,21 @@ public class DEDVController extends BaseFormController {
             log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
                     + " genes in " + time + " ms (times <100ms not reported)." );
         }
+        watch = new StopWatch();
+        watch.start();
 
-        return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), null, null );
+        Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = getProbeDiffExValidation( ees,
+                genes, 0.05, null );
+
+        watch.stop();
+        time = watch.getTime();
+
+        log.info( "Retrieved " + validatedProbes.size() + " valid probes in " + time + " ms." );
+
+        return makeDiffVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes, null );
+        
+       // return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), null, null );
+
 
     }
 
@@ -466,7 +538,7 @@ public class DEDVController extends BaseFormController {
 
         return result;
     }
-
+  
     public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
         this.designElementDataVectorService = designElementDataVectorService;
     }
@@ -501,8 +573,7 @@ public class DEDVController extends BaseFormController {
     /**
      * @param processedExpressionDataVectorService the processedExpressionDataVectorService to set
      */
-    public void setProcessedExpressionDataVectorService(
-            ProcessedExpressionDataVectorService processedExpressionDataVectorService ) {
+    public void setProcessedExpressionDataVectorService(ProcessedExpressionDataVectorService processedExpressionDataVectorService ) {
         this.processedExpressionDataVectorService = processedExpressionDataVectorService;
     }
 

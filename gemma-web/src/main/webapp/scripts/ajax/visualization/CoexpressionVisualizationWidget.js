@@ -2,6 +2,31 @@ Ext.namespace('Gemma');
 
 Gemma.ZOOM_PLOT_SIZE = 400;	//This constant doesn't get picked up intime from VisualizationWidget.js
 
+
+Gemma.COEXPRESSION_GRAPH_ZOOM_CONFIG = {
+	xaxis : {
+		noTicks : 0
+	},
+	yaxis : {
+		noTicks : 0
+	},
+	grid : {
+		labelMargin : 0,
+		marginColor : "white"
+		// => margin in pixels
+		// color : "white" //this turns the letters in the legend to white
+	},
+	shadowSize : 0,
+
+	legend : {
+		show : true,
+		container : 'coexpZoomLegend'
+	},
+	label : true
+
+};
+
+
 var m_queryGene;
 var m_coexpressedGene;
 
@@ -21,7 +46,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 			fn : function(window) {
 				this.onLegendClick = function(event, component) {
 					var probeId = event.getTarget().id;
-					var record = window.dv.getSelectedRecords()[0];
+					var record = window.coexpDataView.getSelectedRecords()[0];
 					var profiles = record.get("profiles");
 
 					// FIXME make legend bold so there is a user clue as to the line being bolded.
@@ -40,12 +65,12 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 						}
 					}
 
-					window.zoomPanel.refreshWindow(profiles);
+					window.coexpZoomPanel.refreshWindow(profiles);
 
 				};
 
-				var zoomLegendDiv = Ext.get("zoomLegend");
-				zoomLegendDiv.on('click', this.onLegendClick.createDelegate(this));
+				var coexpZoomLegendDiv = Ext.get("coexpZoomLegend");
+				coexpZoomLegendDiv.on('click', this.onLegendClick.createDelegate(this));
 
 			}.createDelegate(this)
 		}
@@ -55,7 +80,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 
 		var template = Gemma.getTemplate();
 		
-		this.dv = new Ext.DataView({
+		this.coexpDataView = new Ext.DataView({
 			autoHeight : true,
 			emptyText : 'Unable to visualize missing data',
 			loadingText : 'Loading data ...',
@@ -80,20 +105,20 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 			
 			listeners : {
 				selectionchange : {
-					fn : function(dv, nodes) {
+					fn : function(coexpDataView, nodes) {
 
-						var record = dv.getRecords(nodes)[0];
+						var record = coexpDataView.getRecords(nodes)[0];
 						if (!record) return;
 						
 						var eevo = record.get("eevo");
 						var profiles = record.get("profiles");
 
 						// An attempt to hide the zoom panel and have it expand out nicely... no luck *sigh*
-						if (!this.zoomPanel.isVisible()) {
+						if (!this.coexpZoomPanel.isVisible()) {
 							this.setWidth(Gemma.PLOT_SIZE + Gemma.ZOOM_PLOT_SIZE);
-							this.zoomPanel.show();
+							this.coexpZoomPanel.show();
 						}
-						this.zoomPanel.displayWindow(eevo, profiles);
+						this.coexpZoomPanel.displayWindow(eevo, profiles);
 
 					}.createDelegate(this)
 				}
@@ -177,7 +202,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 			}
 		});
 
-		this.thumbnailPanel = new Ext.Panel({
+		this.coexpThumbnailPanel = new Ext.Panel({
 					title : 'query gene (red) with coexpressed gene (black)',
 					region : 'west',
 					split : true,
@@ -185,18 +210,18 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					collapsible : true,
 					margins : '3 0 3 3',
 					cmargins : '3 3 3 3',
-					items : this.dv,
+					items : this.coexpDataView,
 					autoScroll : true,
 					stateful : false,
 					html : {
-						id : 'zoomLegend',
+						id : 'coexpZoomLegend',
 						tag : 'div',
 						style : 'width:' + Gemma.PLOT_SIZE + 'px;height:' + Gemma.PLOT_SIZE + 'px; float:left;'
 					}
 
 				});
 
-		this.zoomPanel = new Ext.Panel({
+		this.coexpZoomPanel = new Ext.Panel({
 
 					region : 'center',
 					split : true,
@@ -216,10 +241,10 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
 
 								// Change the div so that it is the size of the panel surrounding it.
-								zoomPanelDiv = Ext.get('graphzoompanel');
-								zoomPanelDiv.setHeight(rawHeight - 27); // magic 27
-								zoomPanelDiv.setWidth(rawWidth - 1);
-								zoomPanelDiv.repaint();
+								coexpZoomPanelDiv = Ext.get('graphcoexpZoomPanel');
+								coexpZoomPanelDiv.setHeight(rawHeight - 27); // magic 27
+								coexpZoomPanelDiv.setWidth(rawWidth - 1);
+								coexpZoomPanelDiv.repaint();
 
 								component.refreshWindow();
 
@@ -228,7 +253,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 					},
 
 					html : {
-						id : 'graphzoompanel',
+						id : 'graphcoexpZoomPanel',
 						tag : 'div',
 						style : 'width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE + 'px; margin:5px 2px 2px 5px;'
 					},
@@ -238,7 +263,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 
 						if (profiles == null) {
 							var window = this.findParentByType(Gemma.CoexpressionVisualizationWindow);
-							var record = window.dv.getSelectedRecords()[0];
+							var record = window.coexpDataView.getSelectedRecords()[0];
 							// This gets called because window gets resized at startup.
 							if (record == null)
 								return;
@@ -246,14 +271,14 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 						}
 
 						if (Gemma.HEATMAP_VIEW){
-							$('graphzoompanel').innerHTML = '';
+							$('graphcoexpZoomPanel').innerHTML = '';
 							//Sort data for heatmap view.
 							profiles.sort(Gemma.sortByCoexpressedGene);
-							Heatmap.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+							Heatmap.draw($('graphcoexpZoomPanel'), profiles, Gemma.COEXPRESSION_GRAPH_ZOOM_CONFIG);
 						}
 						else {
 							profiles.sort(Gemma.sortByFactor);
-							Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+							Flotr.draw($('graphcoexpZoomPanel'), profiles, Gemma.COEXPRESSION_GRAPH_ZOOM_CONFIG);
 
 						}
 					},
@@ -268,13 +293,13 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 						}
 
 						if (Gemma.HEATMAP_VIEW){
-							$('graphzoompanel').innerHTML = '';
+							$('graphcoexpZoomPanel').innerHTML = '';
 							profiles.sort(Gemma.sortByCoexpressedGene);
-							Heatmap.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+							Heatmap.draw($('graphcoexpZoomPanel'), profiles, Gemma.COEXPRESSION_GRAPH_ZOOM_CONFIG);
 						}
 						else{
 							profiles.sort(Gemma.sortByFactor);
-							Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
+							Flotr.draw($('graphcoexpZoomPanel'), profiles, Gemma.COEXPRESSION_GRAPH_ZOOM_CONFIG);
 
 						}
 	
@@ -283,7 +308,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 				});
 
 		Ext.apply(this, {
-					items : [this.thumbnailPanel, this.zoomPanel],
+					items : [this.coexpThumbnailPanel, this.coexpZoomPanel],
 					buttons : [{
 						text : "Switch View",
 						id : "toggleView",
@@ -297,24 +322,24 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 	
 	switchView : function(){
 
-		//TODO: change title in zoompanel (remove red and black info about genes)
+		//TODO: change title in coexpZoomPanel (remove red and black info about genes)
 		//TODO: change info on button to relfect curent state of viewing
 		toggleButton = Ext.get("toggleView");
 
 		if (Gemma.HEATMAP_VIEW){
 			//toggleButton.setText("HeatMap View");
-//			this.thumbnailPanel.setTitle(queryGene.officialSymbol + " (red) with " + coexpressedGene.officialSymbol
+//			this.coexpThumbnailPanel.setTitle(queryGene.officialSymbol + " (red) with " + coexpressedGene.officialSymbol
 //				+ " (black)  <br>" + downloadDedvLink);
 			Gemma.HEATMAP_VIEW = false;
 		}
 		else{
 			//toggleButton.setText("Graph View")
-//			this.thumbnailPanel.setTitle(queryGene.officialSymbol + " with " + coexpressedGene.officialSymbol
+//			this.coexpThumbnailPanel.setTitle(queryGene.officialSymbol + " with " + coexpressedGene.officialSymbol
 //				+ " <br> " + downloadDedvLink);
 				
-			var zoomLegendDiv = $("zoomLegend");
-			if (zoomLegendDiv){
-				zoomLegendDiv.innerHTML = '';
+			var coexpZoomLegendDiv = $("coexpZoomLegend");
+			if (coexpZoomLegendDiv){
+				coexpZoomLegendDiv.innerHTML = '';
 			}
 			
 			Gemma.HEATMAP_VIEW = true;
@@ -322,7 +347,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 		
 		var template = Gemma.getTemplate();
 		
-		this.dv.setTemplate ( template, false);
+		this.coexpDataView.setTemplate ( template, false);
 		 
 		
 	},
@@ -336,7 +361,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 		var downloadDedvLink =  String.format("<a ext:qtip='Download coexpression data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>",
 				eeIds, queryGene.id, coexpressedGene.id);
 
-		this.thumbnailPanel.setTitle("Thumbnails &nbsp;" + downloadDedvLink);
+		this.coexpThumbnailPanel.setTitle("Thumbnails &nbsp;" + downloadDedvLink);
 
 			m_queryGene = queryGene.officialSymbol;	
 			m_coexpressedGene = coexpressedGene.officialSymbol;
@@ -347,7 +372,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 		params.push(queryGene.id);
 		params.push(coexpressedGene.id);
 		this.show();
-		this.dv.store.load({
+		this.coexpDataView.store.load({
 					params : params
 				});
 
