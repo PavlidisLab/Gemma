@@ -313,7 +313,8 @@ public class DatasetCombiner {
         for ( GeoDataset dataset : dataSets ) {
             boolean found = false;
             GeoPlatform platform = dataset.getPlatform();
-            assert dataset.getSeries().size() > 0;
+
+            if ( dataset.getSeries().size() == 0 ) continue;
 
             Collection<GeoPlatform> seenPlatforms = new HashSet<GeoPlatform>();
 
