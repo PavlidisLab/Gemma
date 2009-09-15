@@ -189,8 +189,7 @@ public class ArrayDesignReportService {
     }
 
     /**
-     * 
-     *
+     * Report summarizing _all_ array designs.
      */
     public void generateAllArrayDesignReport() {
         log.info( "Generating report summarizing all array designs ... " );
@@ -217,6 +216,10 @@ public class ArrayDesignReportService {
             File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
                     + ARRAY_DESIGN_SUMMARY );
             if ( f.exists() ) {
+                if ( !f.canWrite() ) {
+                    log.warn( "Cannot write to file." );
+                    return;
+                }
                 f.delete();
             }
             FileOutputStream fos = new FileOutputStream( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR
@@ -233,13 +236,14 @@ public class ArrayDesignReportService {
     }
 
     /**
-     * 
-     *
+     * Generate reports for all array designs, as well as the "global" report.
      */
     public void generateArrayDesignReport() {
         initDirectories();
+        log.info( "Generating global report" );
         generateAllArrayDesignReport();
         Collection<ArrayDesignValueObject> ads = arrayDesignService.loadAllValueObjects();
+        log.info( "Creating reports for " + ads.size() + " array designs" );
         for ( ArrayDesignValueObject ad : ads ) {
             generateArrayDesignReport( ad );
         }
@@ -252,8 +256,6 @@ public class ArrayDesignReportService {
 
         ArrayDesign ad = arrayDesignService.load( adVo.getId() );
         if ( ad == null ) return;
-
-        log.info( "Generating report for array design " + ad.getId() );
 
         // obtain time information (for timestamping)
         Date d = new Date( System.currentTimeMillis() );
@@ -278,24 +280,32 @@ public class ArrayDesignReportService {
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
 
+        String reportFileName = HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                + ARRAY_DESIGN_SUMMARY + "." + adVo.getId();
+
         try {
-            // remove file first
-            File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                    + ARRAY_DESIGN_SUMMARY + "." + adVo.getId() );
+            // remove old file first (possible todo: don't do this until after new file is okayed - maybe this delete
+            // isn't needed, just clobber.)
+
+            File f = new File( reportFileName );
+
             if ( f.exists() ) {
+                if ( !f.canWrite() ) {
+                    log.error( "Report exists but cannot overwrite, leading the old one in place: " + reportFileName );
+                    return;
+                }
                 f.delete();
             }
-            FileOutputStream fos = new FileOutputStream( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR
-                    + File.separatorChar + ARRAY_DESIGN_SUMMARY + "." + adVo.getId() );
+            FileOutputStream fos = new FileOutputStream( reportFileName );
             ObjectOutputStream oos = new ObjectOutputStream( fos );
             oos.writeObject( adVo );
             oos.flush();
             oos.close();
         } catch ( Throwable e ) {
-            log.error( "Cannot write to file." );
+            log.error( "Cannot write to file: " + reportFileName );
             return;
         }
-        log.info( "Done making report." );
+        log.info( "Generated report for " + ad );
     }
 
     /**
@@ -475,14 +485,14 @@ public class ArrayDesignReportService {
         // check to see if the reports directory exists. If it doesn't, create it.
         FileTools.createDir( HOME_DIR );
         FileTools.createDir( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR );
-        File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR );
-        Collection<File> files = new ArrayList<File>();
-        File[] fileArray = f.listFiles();
-        for ( File file : fileArray ) {
-            files.add( file );
-        }
-        // clear out all files
-        FileTools.deleteFiles( files );
+        // File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR );
+        // Collection<File> files = new ArrayList<File>();
+        // File[] fileArray = f.listFiles();
+        // for ( File file : fileArray ) {
+        // files.add( file );
+        // }
+        // // clear out all files
+        // FileTools.deleteFiles( files );
     }
 
 }
