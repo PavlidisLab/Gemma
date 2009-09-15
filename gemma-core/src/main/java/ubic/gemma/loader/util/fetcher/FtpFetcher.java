@@ -102,6 +102,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
 
             if ( ftpClient == null || !ftpClient.isConnected() ) {
                 ftpClient = this.getNetDataSourceUtil().connect( FTP.BINARY_FILE_TYPE );
+                assert ftpClient != null; // otherwise should have gotten an exception from connect()
             }
 
             long expectedSize = getExpectedSize( seekFile );

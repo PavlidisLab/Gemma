@@ -62,8 +62,9 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     public Collection<LocalFile> fetch( String identifier ) {
         try {
             // FIXME this needs to deal with the URL.
-            if ( f == null || !f.isConnected() ) f = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
-            assert f != null;
+            if ( this.ftpClient == null || !this.ftpClient.isConnected() )
+                this.ftpClient = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
+            assert this.ftpClient != null;
             File newDir = mkdir( identifier );
             newDir = new File( newDir, "rawDataFiles" );
             if ( !newDir.canRead() && !newDir.mkdir() )
@@ -71,18 +72,21 @@ public class RawDataFetcher extends FtpArchiveFetcher {
             final String outputFileName = formLocalFilePath( identifier, newDir );
             final String seekFile = formRemoteFilePath( identifier );
             try {
-                NetUtils.checkForFile( f, seekFile );
+                NetUtils.checkForFile( this.ftpClient, seekFile );
             } catch ( FileNotFoundException e ) {
                 // that's okay, just return.
                 log.info( "There is apparently no raw data archive for " + identifier );
                 newDir.delete(); // nothing there.
-                f.disconnect(); // important to do this!
+                this.ftpClient.disconnect(); // important to do this!
                 return null;
+            }
+            if ( this.ftpClient == null || !this.ftpClient.isConnected() ) {
+                throw new IOException( "Lost FTP connection" );
             }
             long expectedSize = this.getExpectedSize( seekFile );
             FutureTask<Boolean> future = defineTask( outputFileName, seekFile );
             Collection<LocalFile> result = doTask( future, expectedSize, seekFile, outputFileName );
-            f.disconnect();
+            this.ftpClient.disconnect();
             return result;
         } catch ( SocketException e ) {
             throw new RuntimeException( e );
