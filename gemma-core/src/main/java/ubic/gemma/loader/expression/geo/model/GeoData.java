@@ -65,6 +65,14 @@ public abstract class GeoData {
     }
 
     /**
+     * @param columnName
+     */
+    public void addColumnName( String columnName ) {
+        assert columnName != null;
+        this.columnNames.add( columnName );
+    }
+
+    /**
      * @return
      */
     public GeoContact getContact() {

@@ -553,21 +553,26 @@ public class GeoConverter implements Converter<Object, Object> {
         GeoPlatform platform = geoDataset.getPlatform();
         ArrayDesign ad = seenPlatforms.get( platform.getGeoAccession() );
         if ( ad == null ) {
+            /*
+             * See bug 1672. Sometimes the platform for the dataset is wrong so we should just go on. The exception was
+             * otherwise catching a case we don't see under normal use.
+             */
             throw new IllegalStateException( "ArrayDesigns must be converted before datasets - didn't find "
-                    + geoDataset.getPlatform() );
-        }
+                    + geoDataset.getPlatform() + "; possibly dataset has incorrect platform?" );
+        } else {
+            ad.setDescription( ad.getDescription() + "\nFrom " + platform.getGeoAccession() + "\nLast Updated: "
+                    + platform.getLastUpdateDate() );
 
-        ad.setDescription( ad.getDescription() + "\nFrom " + platform.getGeoAccession() + "\nLast Updated: "
-                + platform.getLastUpdateDate() );
-
-        LocalFile arrayDesignRawFile = convertSupplementaryFileToLocalFile( platform );
-        if ( arrayDesignRawFile != null ) {
-            Collection<LocalFile> arrayDesignLocalFiles = ad.getLocalFiles();
-            if ( arrayDesignLocalFiles == null ) {
-                arrayDesignLocalFiles = new HashSet<LocalFile>();
+            LocalFile arrayDesignRawFile = convertSupplementaryFileToLocalFile( platform );
+            if ( arrayDesignRawFile != null ) {
+                Collection<LocalFile> arrayDesignLocalFiles = ad.getLocalFiles();
+                if ( arrayDesignLocalFiles == null ) {
+                    arrayDesignLocalFiles = new HashSet<LocalFile>();
+                }
+                arrayDesignLocalFiles.add( arrayDesignRawFile );
+                ad.setLocalFiles( arrayDesignLocalFiles );
             }
-            arrayDesignLocalFiles.add( arrayDesignRawFile );
-            ad.setLocalFiles( arrayDesignLocalFiles );
+
         }
 
         convertDataSetDataVectors( geoDataset.getSeries().iterator().next().getValues(), geoDataset, expExp );
@@ -856,7 +861,8 @@ public class GeoConverter implements Converter<Object, Object> {
         // convert the design element information.
         String identifier = platform.getIdColumnName();
         if ( identifier == null ) {
-            throw new IllegalStateException( "Cannot determine the platform design element id column." );
+            throw new IllegalStateException( "Cannot determine the platform design element id column for " + platform
+                    + "; " + platform.getColumnNames().size() + " column names available." );
         }
 
         Collection<String> externalReferences = determinePlatformExternalReferenceIdentifier( platform );
@@ -1030,6 +1036,9 @@ public class GeoConverter implements Converter<Object, Object> {
         } else if ( technology == PlatformType.singleChannel || technology == PlatformType.oligonucleotideBeads
                 || technology == PlatformType.inSituOligonucleotide ) {
             arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
+        } else if ( technology == null ) {
+            log.warn( "No technology type available for " + platform + ", provisionally setting to 'dual mode'" );
+            arrayDesign.setTechnologyType( TechnologyType.DUALMODE );
         } else {
             throw new IllegalArgumentException( "Don't know how to interpret technology type " + technology );
         }

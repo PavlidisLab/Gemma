@@ -301,6 +301,10 @@ public class GeoFamilyParser implements Parser {
      */
     private void addMissingData( GeoSample currentSample ) {
 
+        if ( currentSample.getPlatforms().size() > 1 ) {
+            log.warn( "Multi-platform sample: " + currentSample );
+        }
+
         GeoPlatform samplePlatform = currentSample.getPlatforms().iterator().next();
         assert samplePlatform != null;
         Collection<String> designElementNames = samplePlatform.getColumnData( samplePlatform.getIdColumnName() );
@@ -368,15 +372,15 @@ public class GeoFamilyParser implements Parser {
 
         try {
             if ( value == null ) {
-                log.warn( "Value is null for target=" + target + "property=" + property );
+                log.warn( "Value is null for target=" + target + " property=" + property );
                 return;
             }
             if ( target == null ) {
-                log.warn( "Target is null for value=" + value + "property=" + property );
+                log.warn( "Target is null for value=" + value + " property=" + property );
                 return;
             }
             if ( property == null ) {
-                log.warn( "Property is null for value=" + value + "target=" + target );
+                log.warn( "Property is null for value=" + value + " target=" + target );
             }
             Method adder = target.getClass().getMethod( "addTo" + WordUtils.capitalize( property ),
                     new Class[] { value.getClass() } );
@@ -562,10 +566,10 @@ public class GeoFamilyParser implements Parser {
     private void extractColumnIdentifier( String line, GeoData dataToAddTo ) {
         if ( dataToAddTo == null ) throw new IllegalArgumentException( "Data cannot be null" );
         Map<String, String> res = extractKeyValue( line );
-        String key = res.keySet().iterator().next();
-        dataToAddTo.getColumnNames().add( key );
-        dataToAddTo.getColumnDescriptions().add( res.get( key ) );
-        if ( log.isDebugEnabled() ) log.debug( "Adding " + key + " to column names for " + dataToAddTo );
+        String columnName = res.keySet().iterator().next();
+        dataToAddTo.addColumnName( columnName );
+        dataToAddTo.getColumnDescriptions().add( res.get( columnName ) );
+        if ( log.isDebugEnabled() ) log.debug( "Adding " + columnName + " to column names for " + dataToAddTo );
     }
 
     /**
@@ -649,7 +653,11 @@ public class GeoFamilyParser implements Parser {
         /*
          * In some data sets, the quantitation types are not in the same columns in different samples. ARRRGH!
          */
-        GeoPlatform platformForSample = this.currentSample().getPlatforms().iterator().next();
+        Collection<GeoPlatform> platforms = this.currentSample().getPlatforms();
+        if ( platforms.size() > 1 ) {
+            log.warn( "Multiple platforms for " + this.currentSample() );
+        }
+        GeoPlatform platformForSample = platforms.iterator().next();
         log.debug( "Initializing quantitation types for " + currentSample() + ", Platform=" + platformForSample );
 
         for ( String columnName : currentSample().getColumnNames() ) {
@@ -1446,7 +1454,7 @@ public class GeoFamilyParser implements Parser {
             // nooop.
         } else if ( startsWithIgnoreCase( line, "!Sample_type" ) ) {
             sampleTypeSet( currentSampleAccession, value );
-        } else if (startsWithIgnoreCase(line, "!Sample_comment")) {
+        } else if ( startsWithIgnoreCase( line, "!Sample_comment" ) ) {
             // noop.
         } else {
             log.error( "Unknown flag in sample: " + line );

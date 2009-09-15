@@ -69,7 +69,7 @@ public class GeoPlatform extends GeoData {
 
     private Collection<String> organisms = new HashSet<String>();
 
-    private List<List> platformData = new ArrayList<List>();
+    private List<List<String>> platformData = new ArrayList<List<String>>();
 
     private Collection<Integer> pubMedIds = new HashSet<Integer>();
 
@@ -241,7 +241,7 @@ public class GeoPlatform extends GeoData {
     /**
      * @return Returns the platformData.
      */
-    public List<List> getPlatformData() {
+    public List<List<String>> getPlatformData() {
         return this.platformData;
     }
 
@@ -332,7 +332,7 @@ public class GeoPlatform extends GeoData {
     /**
      * @param platformData The platformData to set.
      */
-    public void setPlatformData( List<List> platformData ) {
+    public void setPlatformData( List<List<String>> platformData ) {
         this.platformData = platformData;
     }
 

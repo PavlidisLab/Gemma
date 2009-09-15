@@ -448,13 +448,15 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     private Set<GeoPlatform> getPlatforms( GeoSeries series ) {
         Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
+
         if ( series.getDatasets().size() > 0 ) {
             for ( GeoDataset dataset : series.getDatasets() ) {
                 platforms.add( dataset.getPlatform() );
             }
         } else {
             for ( GeoSample sample : series.getSamples() ) {
-                platforms.addAll( sample.getPlatforms() );
+                Collection<GeoPlatform> samplePlatforms = sample.getPlatforms();
+                platforms.addAll( samplePlatforms );
             }
         }
         return platforms;
@@ -634,7 +636,7 @@ public class GeoDatasetService extends AbstractGeoService {
             if ( entity instanceof ExpressionExperiment ) {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
                 this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
-                
+
                 // no need to thaw here as we're still in a session.
 
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {

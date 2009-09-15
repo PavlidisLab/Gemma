@@ -166,8 +166,8 @@ public class GeoSampleCorrespondence {
                         + accession
                         + " ('"
                         + ( accToTitle != null && accToTitle.containsKey( accession ) ? accToTitle.get( accession )
-                                : "[no title]" ) + "' in "
-                        + ( accToDataset != null ? accToDataset.get( accession ) : "" ) + ")";
+                                : "[no title]" ) + "'"
+                        + ( accToDataset != null ? ( " in " + accToDataset.get( accession ) ) : "" ) + ")";
 
                 if ( sortedSet.size() == 1 ) {
                     singletons.append( group + "\n" );

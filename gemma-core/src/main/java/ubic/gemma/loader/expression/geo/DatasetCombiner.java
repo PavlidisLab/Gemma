@@ -296,9 +296,55 @@ public class DatasetCombiner {
         if ( dataSets.size() == 0 ) {
             throw new IllegalArgumentException( "No datasets!" );
         }
+
+        checkPlatformsMatchSeries( dataSets );
+
         fillAccessionMaps( dataSets );
         int numDatasets = dataSets.size();
         return findCorrespondence( numDatasets );
+    }
+
+    /**
+     * See bug 1672 for why this is needed.
+     * 
+     * @param dataSets
+     */
+    private void checkPlatformsMatchSeries( Collection<GeoDataset> dataSets ) {
+        for ( GeoDataset dataset : dataSets ) {
+            boolean found = false;
+            GeoPlatform platform = dataset.getPlatform();
+            assert dataset.getSeries().size() > 0;
+
+            Collection<GeoPlatform> seenPlatforms = new HashSet<GeoPlatform>();
+
+            for ( GeoSeries series : dataset.getSeries() ) {
+                for ( GeoSample sample : series.getSamples() ) {
+                    if ( sample.getPlatforms().contains( platform ) ) {
+                        found = true;
+                    }
+                    seenPlatforms.addAll( sample.getPlatforms() );
+                }
+            }
+
+            if ( !found ) {
+
+                if ( seenPlatforms.size() == 1 ) {
+                    log.warn( dataset + " is associated with wrong platform? " + platform
+                            + ", switching it to use series platform " + seenPlatforms.iterator().next() );
+                    dataset.setPlatform( seenPlatforms.iterator().next() );
+                } else {
+                    /*
+                     * Maybe there is a way to handle this, but not worth it. Dataset uses the wrong platform.
+                     */
+                    throw new IllegalStateException(
+                            platform
+                                    + " on dataset "
+                                    + dataset
+                                    + " is not used at all by associated series, can't determine correct platform as series uses more than one." );
+                }
+            }
+        }
+
     }
 
     /**
@@ -802,14 +848,22 @@ public class DatasetCombiner {
                 assert dataset.getSeries().size() > 0;
                 for ( GeoSeries series : dataset.getSeries() ) {
                     for ( GeoSample sample : series.getSamples() ) {
-                        sample.getPlatforms().add( platform );
+                        /*
+                         * Commented out because sometimes the dataset has the wrong platform. See bug 1672
+                         */
+                        // sample.addPlatform( platform );
+                        assert sample.getPlatforms().size() > 0;
                         fillAccessionMap( sample, dataset );
                     }
                 }
             } else {
                 for ( GeoSubset subset : dataset.getSubsets() ) {
                     for ( GeoSample sample : subset.getSamples() ) {
-                        sample.getPlatforms().add( platform );
+                        /*
+                         * Commented out because sometimes the dataset has the wrong platform. See bug 1672
+                         */
+                        // sample.addPlatform( platform );
+                        assert sample.getPlatforms().size() > 0;
                         fillAccessionMap( sample, dataset );
                     }
                 }
