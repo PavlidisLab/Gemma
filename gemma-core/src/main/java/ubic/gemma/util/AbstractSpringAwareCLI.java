@@ -136,11 +136,14 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
         boolean okToRun = true; // assume okay unless indicated otherwise
 
-        // figure out if we need to run it by date; or if there is no event of the given class
+        // figure out if we need to run it by date; or if there is no event of the given class; "Fail" type events don't
+        // count.
         for ( int j = events.size() - 1; j >= 0; j-- ) {
             AuditEvent event = events.get( j );
-            if ( event.getEventType() != null && eventClass != null
-                    && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+            AuditEventType eventType = event.getEventType();
+            if ( eventType != null && eventClass != null
+                    && eventClass.isAssignableFrom( eventType.getClass() )
+                    && !eventType.getClass().getSimpleName().startsWith( "Fail" ) ) {
                 if ( skipIfLastRunLaterThan != null ) {
                     if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
                         log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
