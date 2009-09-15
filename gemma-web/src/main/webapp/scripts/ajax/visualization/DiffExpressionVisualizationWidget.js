@@ -244,7 +244,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 							.findParentByType(Gemma.VisualizationDifferentialWindow);
 					var record = window.dv.getSelectedRecords()[0];
 					// This gets called because window gets resized at startup.
-					if (record === null)
+					if (record == null)
 						return;
 					profiles = record.get("profiles");
 					if (!profiles)
