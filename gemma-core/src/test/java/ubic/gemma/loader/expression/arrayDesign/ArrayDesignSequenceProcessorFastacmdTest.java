@@ -20,6 +20,7 @@ package ubic.gemma.loader.expression.arrayDesign;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.concurrent.ExecutionException;
 
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -78,9 +79,18 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
 
                 assertTrue( res.size() > 0 );
             }
-        } catch ( IllegalStateException e ) {
+        } catch ( Exception e ) {
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {
                 log.warn( "Test skipped: no fastacmd executable" );
+                return;
+            } else if ( e.getCause() instanceof ExecutionException ) {
+                log.error( "Failed to get file -- skipping rest of test" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.error( "Failed to connect to NCBI, skipping test" );
+                return;
+            } else if ( e.getCause() instanceof org.apache.commons.net.ftp.FTPConnectionClosedException ) {
+                log.error( "Failed to connect to NCBI, skipping test" );
                 return;
             }
             throw e;

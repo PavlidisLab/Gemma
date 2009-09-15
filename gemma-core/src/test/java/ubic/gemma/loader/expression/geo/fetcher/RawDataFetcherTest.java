@@ -54,7 +54,7 @@ public class RawDataFetcherTest extends TestCase {
     /*
      * Test method for 'ubic.gemma.loader.expression.geo.RawDataFetcher.fetch(String)'
      */
-    public void testFetch() {
+    public void testFetch() throws Exception {
         RawDataFetcher rdf = new RawDataFetcher();
         try {
             Collection<LocalFile> result = rdf.fetch( "GSE1105" );
@@ -66,7 +66,11 @@ public class RawDataFetcherTest extends TestCase {
             } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
                 log.error( "Failed to connect to NCBI, skipping test" );
                 return;
+            } else if ( e.getCause() instanceof org.apache.commons.net.ftp.FTPConnectionClosedException ) {
+                log.error( "Failed to connect to NCBI, skipping test" );
+                return;
             }
+            throw e;
         }
 
     }
