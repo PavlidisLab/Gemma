@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.expression.geo.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +28,12 @@ import java.util.List;
  * @author pavlidis
  * @version $Id$
  */
-public abstract class GeoData {
+public abstract class GeoData implements Serializable {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -859220901359581113L;
 
     protected GeoContact contact = new GeoContact();
 

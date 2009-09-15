@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoSample extends GeoData implements Comparable {
+public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     private static Log log = LogFactory.getLog( GeoSample.class.getName() );
 
@@ -62,10 +62,10 @@ public class GeoSample extends GeoData implements Comparable {
 
     private boolean isGenePix = false;
 
-    Collection<GeoPlatform> platforms;
+    private Collection<GeoPlatform> platforms;
 
-    Collection<GeoReplication> replicates;
-    Collection<GeoVariable> variables;
+    private Collection<GeoReplication> replicates;
+    private Collection<GeoVariable> variables;
 
     /**
      * Given a column number (count starts from zero) get the name of the corresponding quantitation type for this
@@ -83,9 +83,9 @@ public class GeoSample extends GeoData implements Comparable {
     }
 
     // SAGE items.
-    String anchor;
-    int tagCount;
-    int tagLength;
+    private String anchor;
+    private int tagCount;
+    private int tagLength;
 
     public GeoSample() {
         channels = new ArrayList<GeoChannel>();
@@ -98,6 +98,11 @@ public class GeoSample extends GeoData implements Comparable {
 
     public void addPlatform( GeoPlatform platform ) {
         if ( log.isDebugEnabled() ) log.debug( this + " is on " + platform );
+
+        if ( this.platforms.size() > 0 && !this.platforms.contains( platform ) ) {
+            log.warn( "Multi-platform sample: " + this );
+        }
+
         this.platforms.add( platform );
     }
 
@@ -316,11 +321,10 @@ public class GeoSample extends GeoData implements Comparable {
 
     /*
      * (non-Javadoc)
-     * 
      * @see java.lang.Comparable#compareTo(T)
      */
-    public int compareTo( Object o ) {
-        return ( ( GeoData ) o ).getGeoAccession().compareTo( this.getGeoAccession() );
+    public int compareTo( GeoData o ) {
+        return o.getGeoAccession().compareTo( this.getGeoAccession() );
     }
 
     /**
@@ -369,6 +373,14 @@ public class GeoSample extends GeoData implements Comparable {
 
     public void setSeriesAppearsIn( Collection<String> otherSeriesAppearsIn ) {
         this.seriesAppearsIn = otherSeriesAppearsIn;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString()
+                + ( this.getPlatforms().size() > 0 ? " on "
+                        + ( this.getPlatforms().size() == 1 ? this.getPlatforms().iterator().next() : ( this
+                                .getPlatforms().size() + " platforms" ) ) : "" );
     }
 
     /**

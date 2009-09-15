@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
 /**
  * Used to contain GEO summary information from the 'Browse' views.
  * 
@@ -32,16 +30,48 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class GeoRecord extends GeoData {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 2060148205381855991L;
+
     private int numSamples;
     private String contactName;
     private Date releaseDate;
     private Collection<String> organisms;
-    private Collection<ExpressionExperiment> correspondingExperiments;
+    private Collection<Long> correspondingExperiments;
+
+    /*
+     * How many times a curator has already looked at the details. this helps us track data sets we've already examined
+     * for usefulness.
+     */
+    private int previousClicks = 0;
+
+    public int getPreviousClicks() {
+        return previousClicks;
+    }
+
+    public void setPreviousClicks( int previousClicks ) {
+        this.previousClicks = previousClicks;
+    }
+
+    public boolean isUsable() {
+        return usable;
+    }
+
+    public void setUsable( boolean usable ) {
+        this.usable = usable;
+    }
+
+    /*
+     * Curator judgement about whether this is loadable. False indicates a problem.
+     */
+    private boolean usable = true;
 
     public GeoRecord() {
         super();
         this.organisms = new HashSet<String>();
-        this.correspondingExperiments = new HashSet<ExpressionExperiment>();
+        this.correspondingExperiments = new HashSet<Long>();
     }
 
     public String getContactName() {
@@ -81,11 +111,11 @@ public class GeoRecord extends GeoData {
         return super.toString() + " " + this.getTitle();
     }
 
-    public Collection<ExpressionExperiment> getCorrespondingExperiments() {
+    public Collection<Long> getCorrespondingExperiments() {
         return correspondingExperiments;
     }
 
-    public void setCorrespondingExperiments( Collection<ExpressionExperiment> correspondingExperiments ) {
+    public void setCorrespondingExperiments( Collection<Long> correspondingExperiments ) {
         this.correspondingExperiments = correspondingExperiments;
     }
 

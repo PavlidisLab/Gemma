@@ -18,12 +18,20 @@
  */
 package ubic.gemma.loader.expression.geo.model;
 
+import java.io.Serializable;
+
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class GeoContact {
+public class GeoContact implements Serializable {
 
+   
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -2042747972349661568L;
     private String city;
     private String department;
     private String email;
@@ -192,7 +200,6 @@ public class GeoContact {
 
     /*
      * (non-Javadoc)
-     * 
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -206,7 +213,6 @@ public class GeoContact {
 
     /*
      * (non-Javadoc)
-     * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override

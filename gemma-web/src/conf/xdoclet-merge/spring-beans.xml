@@ -637,6 +637,7 @@
 					<property name="includes">
 						<list>
 							<value>getDetails</value>
+							<value>toggleUsability</value>
 						</list>
 					</property>
 				</bean>

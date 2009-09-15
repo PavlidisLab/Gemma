@@ -9,6 +9,23 @@ function handleSuccess(data) {
 	});
 }
 
+function handleUsabilitySuccess(data, accession) {
+
+	if (data) {
+		Ext.DomHelper.overwrite( accession + "-rating", {
+		tag : 'img',
+		src : '/Gemma/images/icons/thumbsup.png'
+		});
+	} else {
+	Ext.DomHelper.overwrite( accession + "-rating", {
+		tag : 'img',
+		src : '/Gemma/images/icons/thumbsdown.png'
+		});
+	}
+
+	
+}
+
 function handleFailure(data, e) {
 	Ext.DomHelper.overwrite("taskId", "");
 	Ext.DomHelper.overwrite("messages", {
@@ -18,6 +35,25 @@ function handleFailure(data, e) {
 	Ext.DomHelper.append("messages", {
 		tag : 'span',
 		html : "&nbsp;There was an error: " + data
+	});
+}
+
+function toggleUsability(accession) {
+	var callParams = [];
+	callParams.push(accession);
+
+	var delegate = handleUsabilitySuccess.createDelegate(this, [accession], true);
+	var errorHandler = handleFailure.createDelegate(this, [], true);
+
+	callParams.push({
+		callback : delegate,
+		errorHandler : errorHandler
+	});
+
+	GeoBrowserService.toggleUsability.apply(this, callParams);
+	Ext.DomHelper.overwrite(accession + "-rating", {
+		tag : 'img',
+		src : '/Gemma/images/default/tree/loading.gif'
 	});
 }
 

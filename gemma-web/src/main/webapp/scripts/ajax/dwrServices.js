@@ -455,6 +455,9 @@ GeoBrowserService._path = '/Gemma/dwr';
 GeoBrowserService.getDetails = function(p0, callback) {
 	dwr.engine._execute(GeoBrowserService._path, 'GeoBrowserService', 'getDetails', p0, callback);
 }
+GeoBrowserService.toggleUsability = function(p0, callback) {
+	dwr.engine._execute(GeoBrowserService._path, 'GeoBrowserService', 'toggleUsability', p0, callback);
+}
 // ====================================================================================
 if (HibernateMonitorController == null)
 	var HibernateMonitorController = {};

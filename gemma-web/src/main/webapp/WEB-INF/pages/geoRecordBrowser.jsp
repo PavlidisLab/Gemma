@@ -46,6 +46,10 @@
 			<display:column property="taxa" sortable="true" titleKey="taxon.title" />
 
 			<display:column property="inGemma" sortable="true" title="In Gemma?" />
+			
+			<display:column property="usable" sortable="true" title="Usable?" />
+			
+			<display:column property="clicks" sortable="true" title="Examined?" />
 
 			<display:setProperty name="basic.empty.showtable" value="true" />
 		</display:table>

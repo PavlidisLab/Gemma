@@ -24,7 +24,6 @@ import java.util.Date;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author pavlidis
@@ -45,9 +44,9 @@ public class GeoRecordWrapper extends TableDecorator {
             return "<input type=\"button\" value=\"Load\" " + "\" onClick=\"load('" + accession + "')\" >";
         }
         StringBuilder buf = new StringBuilder();
-        for ( ExpressionExperiment ee : record.getCorrespondingExperiments() ) {
+        for ( Long ee : record.getCorrespondingExperiments() ) {
             buf.append( "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?" );
-            buf.append( "id=" + ee.getId() + "\">" + ee.getShortName() );
+            buf.append( "id=" + ee + "\">" + record.getGeoAccession() );
             buf.append( "</a> " );
         }
         return buf.toString();
@@ -57,6 +56,39 @@ public class GeoRecordWrapper extends TableDecorator {
         GeoRecord record = ( GeoRecord ) getCurrentRowObject();
         String accession = record.getGeoAccession();
         return "<a href=\"#\" onClick=\"showDetails(\'" + accession + "\')\">Details</a>";
+    }
+
+    /**
+     * @return
+     */
+    public String getUsable() {
+        GeoRecord record = ( GeoRecord ) getCurrentRowObject();
+        boolean usable = record.isUsable();
+        String accession = record.getGeoAccession();
+        if ( record.getCorrespondingExperiments().size() > 0 ) {
+            return "<img src=\"/Gemma/images/icons/gray-thumb.png\" width=\"16\" height=\"16\" alt=\"Already loaded\"/>"; // greyd
+            // out
+            // thumb
+        } else if ( !usable ) {
+            return "<span id=\""
+                    + accession
+                    + "-rating\"  onClick=\"toggleUsability('" + accession + "')\"  ><img src=\"/Gemma/images/icons/thumbsdown.png\"  alt=\"Judged unusable, click to toggle\"  width=\"16\" height=\"16\"  /></span>"; // thumbs
+            // down
+        }
+        return "<span id=\""
+                + accession
+                + "-rating\"  onClick=\"toggleUsability('" + accession + "')\"><img src=\"/Gemma/images/icons/thumbsup.png\"  width=\"16\" height=\"16\"   alt=\"Usable, click to toggle\" /></span>"; // thumbs
+        // up
+    }
+
+    public String getClicks() {
+        GeoRecord record = ( GeoRecord ) getCurrentRowObject();
+        StringBuilder buf = new StringBuilder();
+        for ( int i = 0; i < Math.min( record.getPreviousClicks(), 5 ); i++ ) {
+            buf.append( "&bull;" );
+        }
+        return buf.toString();
+
     }
 
     /**

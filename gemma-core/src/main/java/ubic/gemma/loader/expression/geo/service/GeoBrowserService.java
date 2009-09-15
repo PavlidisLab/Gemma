@@ -18,14 +18,22 @@
  */
 package ubic.gemma.loader.expression.geo.service;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 
 import ubic.gemma.loader.entrez.EutilFetch;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
@@ -41,6 +49,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -53,100 +62,24 @@ import ubic.gemma.model.genome.TaxonService;
  * @spring.property name="bioAssayService" ref="bioAssayService"
  * @spring.property name="auditTrailService" ref="auditTrailService"
  */
-public class GeoBrowserService {
+public class GeoBrowserService implements InitializingBean {
     private static final int MIN_SAMPLES = 5;
+    private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     ExpressionExperimentService expressionExperimentService;
     TaxonService taxonService;
     ExternalDatabaseService externalDatabaseService;
     ArrayDesignService arrayDesignService;
     AuditTrailService auditTrailService;
 
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
     BioAssayService bioAssayService;
+
+    Map<String, GeoRecord> localInfo;
 
     private static Log log = LogFactory.getLog( GeoBrowserService.class.getName() );
 
-    /**
-     * @param start
-     * @param count
-     * @return
-     */
-    public List<GeoRecord> getRecentGeoRecords( int start, int count ) {
-        GeoBrowser browser = new GeoBrowser();
-        List<GeoRecord> records = browser.getRecentGeoRecords( start, count );
-        ExternalDatabase geo = externalDatabaseService.find( "GEO" );
-        Collection<GeoRecord> toRemove = new HashSet<GeoRecord>();
-        assert geo != null;
-        rec: for ( GeoRecord record : records ) {
-
-            if ( record.getNumSamples() < MIN_SAMPLES ) {
-                toRemove.add( record );
-            }
-
-            Collection<String> organisms = record.getOrganisms();
-            if ( organisms == null || organisms.size() == 0 ) {
-                continue rec;
-            }
-            int i = 1;
-            for ( String string : organisms ) {
-                Taxon t = taxonService.findByCommonName( string );
-                if ( t == null ) {
-                    t = taxonService.findByScientificName( string );
-                    if ( t == null ) {
-                        toRemove.add( record );
-                        continue rec;
-                    }
-                }
-                String acc = record.getGeoAccession();
-                if ( organisms.size() > 1 ) {
-                    acc = acc + "." + i;
-                }
-                DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-                de.setExternalDatabase( geo );
-                de.setAccession( acc );
-
-                ExpressionExperiment ee = expressionExperimentService.findByAccession( de );
-                if ( ee != null ) {
-                    record.getCorrespondingExperiments().add( ee );
-                }
-
-            }
-            i++;
-        }
-
-        for ( GeoRecord record : toRemove ) {
-            records.remove( record );
-        }
-
-        return records;
-    }
-
-    /**
-     * Get details from GEO about an accession.
-     * 
-     * @param accession
-     * @return
-     */
-    public String getDetails( String accession ) {
-        /*
-         * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
-         * ... leaving some headroom)
-         */
-        String details = EutilFetch.fetch( "gds", accession, 25 );
-
-        return formatDetails( details );
-
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        initializeLocalInfo();
     }
 
     /**
@@ -238,6 +171,150 @@ public class GeoBrowserService {
         return details;
     }
 
+    /**
+     * Get details from GEO about an accession.
+     * 
+     * @param accession
+     * @return
+     */
+    public String getDetails( String accession ) {
+        /*
+         * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
+         * ... leaving some headroom)
+         */
+        String details = EutilFetch.fetch( "gds", accession, 25 );
+
+        initLocalRecord( accession );
+
+        /*
+         * increment click counts.
+         */
+        localInfo.get( accession ).setPreviousClicks( localInfo.get( accession ).getPreviousClicks() + 1 );
+
+        saveLocalInfo();
+
+        return formatDetails( details );
+
+    }
+
+    private File getInfoStoreFile() {
+        String path = ConfigUtils.getDownloadPath();
+        File f = new File( path + File.separatorChar + GEO_DATA_STORE_FILE_NAME );
+        return f;
+    }
+
+    /**
+     * @param start
+     * @param count
+     * @return
+     */
+    public List<GeoRecord> getRecentGeoRecords( int start, int count ) {
+        GeoBrowser browser = new GeoBrowser();
+        List<GeoRecord> records = browser.getRecentGeoRecords( start, count );
+        ExternalDatabase geo = externalDatabaseService.find( "GEO" );
+        Collection<GeoRecord> toRemove = new HashSet<GeoRecord>();
+        assert geo != null;
+        rec: for ( GeoRecord record : records ) {
+
+            if ( record.getNumSamples() < MIN_SAMPLES ) {
+                toRemove.add( record );
+            }
+
+            Collection<String> organisms = record.getOrganisms();
+            if ( organisms == null || organisms.size() == 0 ) {
+                continue rec;
+            }
+            int i = 1;
+            for ( String string : organisms ) {
+                Taxon t = taxonService.findByCommonName( string );
+                if ( t == null ) {
+                    t = taxonService.findByScientificName( string );
+                    if ( t == null ) {
+                        toRemove.add( record );
+                        continue rec;
+                    }
+                }
+                String acc = record.getGeoAccession();
+                if ( organisms.size() > 1 ) {
+                    acc = acc + "." + i;
+                }
+                DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+                de.setExternalDatabase( geo );
+                de.setAccession( acc );
+
+                ExpressionExperiment ee = expressionExperimentService.findByAccession( de );
+                if ( ee != null ) {
+                    record.getCorrespondingExperiments().add( ee.getId() );
+                }
+
+                record.setPreviousClicks( localInfo.containsKey( acc ) ? localInfo.get( acc ).getPreviousClicks() : 0 );
+
+                record.setUsable( localInfo.containsKey( acc ) ? localInfo.get( acc ).isUsable() : true );
+
+            }
+            i++;
+        }
+
+        for ( GeoRecord record : toRemove ) {
+            records.remove( record );
+        }
+
+        return records;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void initializeLocalInfo() {
+        File f = getInfoStoreFile();
+        try {
+            if ( f.exists() ) {
+                FileInputStream fis = new FileInputStream( f );
+                ObjectInputStream ois = new ObjectInputStream( fis );
+                this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
+                ois.close();
+                fis.close();
+            } else {
+                this.localInfo = new HashMap<String, GeoRecord>();
+            }
+        } catch ( Exception e ) {
+            log.error( "Failed to load local GEO info, reinitializing..." );
+            this.localInfo = new HashMap<String, GeoRecord>();
+        }
+        assert this.localInfo != null;
+    }
+
+    private void initLocalRecord( String accession ) {
+        assert localInfo != null;
+        if ( !localInfo.containsKey( accession ) ) {
+            localInfo.put( accession, new GeoRecord() );
+            localInfo.get( accession ).setGeoAccession( accession );
+        }
+    }
+
+    private void saveLocalInfo() {
+        if ( this.localInfo == null ) return;
+        try {
+            FileOutputStream fos = new FileOutputStream( getInfoStoreFile() );
+            ObjectOutputStream oos = new ObjectOutputStream( fos );
+            oos.writeObject( this.localInfo );
+            oos.flush();
+            oos.close();
+        } catch ( Exception e ) {
+            log.error( "Failed to save local GEO info", e );
+        }
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
+    }
+
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
@@ -248,6 +325,21 @@ public class GeoBrowserService {
 
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
+    }
+
+    /**
+     * @param accession
+     * @param currentState
+     */
+    public boolean toggleUsability( String accession ) {
+
+        initLocalRecord( accession );
+
+        localInfo.get( accession ).setUsable( !localInfo.get( accession ).isUsable() );
+
+        saveLocalInfo();
+
+        return localInfo.get( accession ).isUsable();
     }
 
 }
