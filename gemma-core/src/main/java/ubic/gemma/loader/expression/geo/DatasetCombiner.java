@@ -849,22 +849,17 @@ public class DatasetCombiner {
                 assert dataset.getSeries().size() > 0;
                 for ( GeoSeries series : dataset.getSeries() ) {
                     for ( GeoSample sample : series.getSamples() ) {
-                        /*
-                         * Commented out because sometimes the dataset has the wrong platform. See bug 1672
-                         */
-                        // sample.addPlatform( platform );
-                        assert sample.getPlatforms().size() > 0;
+
+                        if ( sample.getPlatforms().size() == 0 ) sample.addPlatform( platform );
                         fillAccessionMap( sample, dataset );
                     }
                 }
             } else {
                 for ( GeoSubset subset : dataset.getSubsets() ) {
                     for ( GeoSample sample : subset.getSamples() ) {
-                        /*
-                         * Commented out because sometimes the dataset has the wrong platform. See bug 1672
-                         */
-                        // sample.addPlatform( platform );
-                        assert sample.getPlatforms().size() > 0;
+
+                        if ( sample.getPlatforms().size() == 0 ) sample.addPlatform( platform );
+
                         fillAccessionMap( sample, dataset );
                     }
                 }
