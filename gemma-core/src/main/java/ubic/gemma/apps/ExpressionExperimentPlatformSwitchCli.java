@@ -74,6 +74,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                 .withLongOpt( "array" ).create( 'a' );
 
         addOption( arrayDesignOption );
+        this.addForceOption();
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
