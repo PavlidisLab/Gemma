@@ -47,7 +47,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 			listeners : {
 				selectionchange : {
 					fn : function(dv, nodes) {
-
+						
 						var record = dv.getRecords(nodes)[0];
 						if (!record)
 							return;
@@ -56,7 +56,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						var profiles = record.get("profiles");
 
 						// An attempt to hide the zoom panel and have it expand
-						// out nicely... no luck *sigh*
+						// out nicely... no luck *sigh* problem is: have to click on thumbnail twice to get to work....
 						if (!this.zoomPanel.isVisible()) {
 							this.setWidth(Gemma.PLOT_SIZE
 									+ Gemma.ZOOM_PLOT_SIZE);
@@ -64,6 +64,16 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						}
 						this.zoomPanel.displayWindow(eevo, profiles);
 
+					}.createDelegate(this)
+				}, 
+				show : {
+					fn : function(dv){
+						//FIXME doesn't select anything.  Thinking it is getting called before there is data to select....
+						//dv.selectRange(0,1);
+						//dv.select(0,false, false);
+						//console.log( "where" + this.dv.getNodes());
+						var nodes = this.dv.getNodes();
+						this.dv.select(nodes[0]);
 					}.createDelegate(this)
 				}
 			},
