@@ -96,7 +96,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -133,7 +132,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .withLongOpt( "nodb" ).create( 'd' );
         addOption( useDB );
 
-        Option fileOpt = OptionBuilder.hasArg().withArgName( "Expression data file" ).withDescription(
+        Option fileOpt = OptionBuilder
+                .hasArg()
+                .withArgName( "Expression data file" )
+                .withDescription(
                         "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' option" )
                 .create( "dataFile" );
         addOption( fileOpt );
@@ -205,9 +207,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( arrayDesign == null ) {
                 return new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
             }
-            
+
             this.taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
-            
+
             arrayDesignService.thawLite( arrayDesign );
 
             Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<ProcessedExpressionDataVector>();
@@ -323,6 +325,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         eeService.thawLite( ee );
 
         if ( !force && !needToRun( ee, LinkAnalysisEvent.class ) ) {
+            log.info( "Can't or Don't need to run " + ee );
             return;
         }
 
