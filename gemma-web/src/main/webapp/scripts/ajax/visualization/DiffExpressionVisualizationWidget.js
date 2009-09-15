@@ -1,7 +1,7 @@
 Ext.namespace('Gemma');
 
 Gemma.ZOOM_PLOT_SIZE = 400;
-var m_queryGene;
+var m_diffQueryGene;
 
 Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 	id : 'VisualizationDifferentialWindow',
@@ -49,17 +49,17 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					fn : function(dv, nodes) {
 						
 						var record = dv.getRecords(nodes)[0];
-						if (!record)
+						if (!record){
 							return;
-
+						}
+						
 						var eevo = record.get("eevo");
 						var profiles = record.get("profiles");
 
 						// An attempt to hide the zoom panel and have it expand
 						// out nicely... no luck *sigh* problem is: have to click on thumbnail twice to get to work....
 						if (!this.zoomPanel.isVisible()) {
-							this.setWidth(Gemma.PLOT_SIZE
-									+ Gemma.ZOOM_PLOT_SIZE);
+							this.setWidth(Gemma.PLOT_SIZE + Gemma.ZOOM_PLOT_SIZE);
 							this.zoomPanel.show();
 						}
 						this.zoomPanel.displayWindow(eevo, profiles);
@@ -116,7 +116,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					var geneNames = genes[0].name;				
 					for (var k = 1; k < genes.size(); k++) {
 						//Put search gene in begining of list
-						if (Gemma.geneContained(genes[k].name, [m_queryGene])) {
+						if (Gemma.geneContained(genes[k].name, [m_diffQueryGene])) {
 							geneNames = genes[k].name + "," + geneNames;							
 						}
 						else {
@@ -131,9 +131,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						oneProfile.push(point);
 					}
 
-					pvalueLabel = (pvalue != 1)
-							? sprintf("%.2e", pvalue)
-							: "n/a";
+					pvalueLabel = (pvalue != 1) ? sprintf("%.2e", pvalue) : "n/a";
 
 					var plotConfig = {
 						data : oneProfile,
@@ -246,7 +244,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 							.findParentByType(Gemma.VisualizationDifferentialWindow);
 					var record = window.dv.getSelectedRecords()[0];
 					// This gets called because window gets resized at startup.
-					if (record == null)
+					if (record === null)
 						return;
 					profiles = record.get("profiles");
 					if (!profiles)
@@ -349,7 +347,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 		this.thumbnailPanel.setTitle("Thumbnails &nbsp; " + downloadDedvLink);
 
-		m_queryGene  = gene.officialSymbol;				
+		m_diffQueryGene  = gene.officialSymbol;				
 				
 		var params = [];
 		params.push(eeIds);
