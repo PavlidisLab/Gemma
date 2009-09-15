@@ -162,12 +162,13 @@ public class ExpressionExperimentFilter {
         filteredMatrix = noSequencesFilter( eeDoubleMatrix );
         int afterSequenceRemovalRows = filteredMatrix.rows();
 
-        boolean twoColor = isTwoColor();
+        // boolean twoColor = isTwoColor();
 
         int afterAffyControlsFilter = afterSequenceRemovalRows;
         int afterMinPresentFilter = afterSequenceRemovalRows;
         int afterLowVarianceCut = afterSequenceRemovalRows;
         int afterLowExpressionCut = afterSequenceRemovalRows;
+        int afterZeroVarianceCut = afterSequenceRemovalRows;
 
         if ( usesAffymetrix() ) {
             log.info( "Filtering Affymetrix controls" );
@@ -181,18 +182,45 @@ public class ExpressionExperimentFilter {
             filteredMatrix = minPresentFilter( filteredMatrix );
             afterMinPresentFilter = filteredMatrix.rows();
             config.setAfterMinPresentFilter( afterMinPresentFilter );
+
+            if ( filteredMatrix.rows() == 0 ) {
+                throw new IllegalStateException( "No rows left after minimum non-missing data filtering" );
+            }
         }
 
+        /*
+         * Always remove rows that have a variance of zero.
+         */
+        log.info( "Filtering rows with zero variance" );
+        filteredMatrix = zeroVarianceFilter( filteredMatrix );
+        afterZeroVarianceCut = filteredMatrix.rows();
+        config.setAfterZeroVarianceCut( afterZeroVarianceCut );
+        if ( filteredMatrix.rows() == 0 ) {
+            throw new IllegalStateException( "No rows left after filtering rows with zero variance" );
+        }
+
+        /*
+         * Note that variance filtering is a little tricky. For ratiometric arrays, you clearly should use the variance.
+         * For 'signal' arrays, we used the CV, but this has problems when the mean is near zero. We could use a
+         * regularized CV, but it not really clear how to do this. If the data are on a log scale, and furthermore
+         * variance-stabilized (RMA for example), this is less of an issue. The variance is probably the safest bet and
+         * seems to be what others use. For example see Hackstadt and Hess, BMC Bioinformatics 2009 10:11. Iny any case,
+         * Vaneet has not found variance filtering to be all that effective, at least for coexpression analysis.
+         */
         if ( config.isLowVarianceCutIsSet() ) {
-            if ( twoColor ) {
-                log.info( "Filtering for low variance (ratiometric)" );
-                filteredMatrix = lowVarianceFilter( filteredMatrix );
-            } else {
-                log.info( "Filtering for low CV (signals)" );
-                filteredMatrix = lowCVFilter( filteredMatrix );
-            }
+            // if ( twoColor ) {
+            log.info( "Filtering for low variance " );
+            filteredMatrix = lowVarianceFilter( filteredMatrix );
+            // } else {
+            // log.info( "Filtering for low CV (signals)" );
+            // filteredMatrix = lowCVFilter( filteredMatrix );
+            // }
             afterLowVarianceCut = filteredMatrix.rows();
             config.setAfterLowVarianceCut( afterLowVarianceCut );
+
+            if ( filteredMatrix.rows() == 0 ) {
+                throw new IllegalStateException( "No rows left after variance filtering" );
+            }
         }
 
         if ( config.isLowExpressionCutIsSet() ) {
@@ -201,6 +229,10 @@ public class ExpressionExperimentFilter {
             filteredMatrix = lowExpressionFilter( filteredMatrix, ranks );
             afterLowExpressionCut = filteredMatrix.rows();
             config.setAfterLowExpressionCut( afterLowExpressionCut );
+
+            if ( filteredMatrix.rows() == 0 ) {
+                throw new IllegalStateException( "No rows left after expression level filtering" );
+            }
         }
 
         if ( log.isInfoEnabled() ) {
@@ -212,6 +244,7 @@ public class ExpressionExperimentFilter {
             buf.append( "After Sequence filtering\t" + afterSequenceRemovalRows + "\n" );
             buf.append( "After removing Affy controls\t" + afterAffyControlsFilter + "\n" );
             buf.append( "After MinPresent\t" + afterMinPresentFilter + "\n" );
+            buf.append( "AFter ZeroVar\t" + afterZeroVarianceCut + "\n" );
             buf.append( "After LowVar\t" + afterLowVarianceCut + "\n" );
             buf.append( "After LowExpr\t" + afterLowExpressionCut + "\n" );
             buf.append( "================================================================\n" );
@@ -341,6 +374,21 @@ public class ExpressionExperimentFilter {
         rowLevelFilter.setLowCut( config.getLowVarianceCut() );
         rowLevelFilter.setRemoveAllNegative( false );
         rowLevelFilter.setUseAsFraction( true );
+        return rowLevelFilter.filter( matrix );
+    }
+
+    /**
+     * Remove rows that have a variance of zero.
+     * 
+     * @param matrix
+     * @return
+     */
+    private ExpressionDataDoubleMatrix zeroVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
+        RowLevelFilter rowLevelFilter = new RowLevelFilter();
+        rowLevelFilter.setMethod( Method.VAR );
+        rowLevelFilter.setLowCut( 0 );
+        rowLevelFilter.setRemoveAllNegative( false );
+        rowLevelFilter.setUseAsFraction( false );
         return rowLevelFilter.filter( matrix );
     }
 

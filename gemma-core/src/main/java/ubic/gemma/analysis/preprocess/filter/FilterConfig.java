@@ -83,8 +83,17 @@ public class FilterConfig implements Serializable {
     private int afterMinPresentFilter = 0;
     private int afterLowVarianceCut = 0;
     private int afterLowExpressionCut = 0;
+    private int afterZeroVarianceCut = 0;
     
     
+    public int getAfterZeroVarianceCut() {
+        return afterZeroVarianceCut;
+    }
+
+    public void setAfterZeroVarianceCut( int afterZeroVarianceCut ) {
+        this.afterZeroVarianceCut = afterZeroVarianceCut;
+    }
+
     private boolean knownGenesOnly = false;
 
     /**

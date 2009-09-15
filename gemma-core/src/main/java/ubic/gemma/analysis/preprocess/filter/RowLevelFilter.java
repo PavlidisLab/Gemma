@@ -92,6 +92,10 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         double realHighCut = getHighThreshold( sortedCriteria, consideredRows );
         double realLowCut = getLowThreshold( numRows, sortedCriteria, consideredRows, startIndex );
 
+        if ( Double.isNaN( realHighCut ) ) {
+            throw new IllegalStateException( "High threshold cut is NaN" );
+        }
+
         log.debug( "Low cut = " + realLowCut );
         log.debug( "High cut = " + realHighCut );
 
@@ -102,8 +106,9 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         List<DesignElement> kept = new ArrayList<DesignElement>();
 
         for ( int i = 0; i < numRows; i++ ) {
-            // greater than but not equal to realLowCut to account for case when realLowCut = 0 with many ties in values,
-            // zeros should always be removed 
+            // greater than but not equal to realLowCut to account for case when realLowCut = 0 with many ties in
+            // values,
+            // zeros should always be removed
             if ( criteria.get( i ) > realLowCut && criteria.get( i ) <= realHighCut ) {
                 kept.add( data.getDesignElementForRow( i ) );
             }
@@ -356,8 +361,8 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
 
         double fracFiltered = ( double ) ( numRows - kept.size() ) / numRows;
 
-        log.info( "There are " + kept.size() + " rows left after filtering. Filter out " + nf.format( fracFiltered )
-                + " of rows." );
+        log.info( "There are " + kept.size() + " rows left after " + this.method + " filtering. Filtered out "
+                + ( numRows - kept.size() ) + " rows " + nf.format( 100 * fracFiltered ) + "%" );
     }
 
     public enum Method {
