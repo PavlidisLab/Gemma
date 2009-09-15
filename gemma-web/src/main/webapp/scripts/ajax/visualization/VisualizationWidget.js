@@ -249,6 +249,8 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 
 		
 Gemma.HEATMAP_VIEW = false;
+Gemma.DIFF_HEATMAP_VIEW = false;
+
 Gemma.MAX_EE_NAME_LENGTH = 25;
 
 //TODO refactor so don't have getTemplate and getDiffExpressionTemplate
@@ -273,7 +275,7 @@ Gemma.getTemplate = function(){
 
 Gemma.getDiffExpressionTemplate = function(){
 		var template;
-		if (Gemma.HEATMAP_VIEW){
+		if (Gemma.DIFF_HEATMAP_VIEW){
 
 			template = new Gemma.HeatmapTemplate('<tpl for="."><tpl for="eevo">',
 					'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}</b>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i> {[(values.minPvalue < 1) ? sprintf("%.3e", values.minPvalue) : "-"]}  </i></div>',

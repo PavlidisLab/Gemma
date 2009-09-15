@@ -253,7 +253,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						return;
 				}
 
-				if (Gemma.HEATMAP_VIEW) {
+				if (Gemma.DIFF_HEATMAP_VIEW) {
 					$('graphzoompanel').innerHTML = '';
 					// Sort data for heatmap view.
 					profiles.sort(Gemma.sortByPValue);
@@ -283,7 +283,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					this.show();
 				}
 
-				if (Gemma.HEATMAP_VIEW) {
+				if (Gemma.DIFF_HEATMAP_VIEW) {
 					$('graphzoompanel').innerHTML = '';
 					profiles.sort(Gemma.sortByPValue);
 					Heatmap.draw($('graphzoompanel'), profiles,
@@ -318,15 +318,15 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 		// TODO: change info on button to relfect curent state of viewing
 		toggleButton = Ext.get("toggleView");
 
-		if (Gemma.HEATMAP_VIEW) {
-			Gemma.HEATMAP_VIEW = false;
+		if (Gemma.DIFF_HEATMAP_VIEW) {
+			Gemma.DIFF_HEATMAP_VIEW = false;
 		} else {
 			var zoomLegendDiv = $("zoomLegend");
 			if (zoomLegendDiv) {
 				zoomLegendDiv.innerHTML = '';
 			}
 
-			Gemma.HEATMAP_VIEW = true;
+			Gemma.DIFF_HEATMAP_VIEW = true;
 		}
 
 		var template = Gemma.getDiffExpressionTemplate();
