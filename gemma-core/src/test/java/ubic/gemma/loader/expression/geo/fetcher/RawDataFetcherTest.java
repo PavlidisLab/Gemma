@@ -58,7 +58,7 @@ public class RawDataFetcherTest extends TestCase {
         RawDataFetcher rdf = new RawDataFetcher();
         try {
             Collection<LocalFile> result = rdf.fetch( "GSE1105" );
-            assert ( result.size() == 8 );
+            assertEquals( 8, result.size() );
         } catch ( Exception e ) {
             if ( e.getCause() instanceof ExecutionException ) {
                 log.error( "Failed to get file -- skipping rest of test" );

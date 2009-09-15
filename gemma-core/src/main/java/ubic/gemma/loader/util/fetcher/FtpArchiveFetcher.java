@@ -100,10 +100,11 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
             } else if ( methodName.equals( "zip" ) ) {
                 expander = null;
             } else {
+                // tar...
                 expander = new Untar();
                 expander.setProject( new Project() );
                 UntarCompressionMethod method = new UntarCompressionMethod();
-                method.setValue( methodName );
+                // method.setValue( methodName );
                 ( ( Untar ) expander ).setCompression( method );
             }
         }
@@ -150,7 +151,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
                 // probably cancelled.
                 return null;
             } else if ( future.get().booleanValue() ) {
-                if ( log.isInfoEnabled() ) log.info( "Unpacking " + outputFile );
+                log.info( "Unpacking " + outputFile );
                 unPack( outputFile );
                 cleanUp( outputFile );
                 if ( outputFile.isDirectory() ) return listFiles( seekFileName, outputFile, null );
@@ -183,7 +184,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
                     expander.setSrc( outputFile );
                     expander.setDest( outputFile.getParentFile() );
                     expander.perform();
-                } else if ( outputFile.getAbsolutePath().endsWith( "zip" ) ) {
+                } else if ( outputFile.getAbsolutePath().toLowerCase().endsWith( "zip" ) ) {
                     try {
                         FileTools.unZipFiles( outputFile.getAbsolutePath() );
                     } catch ( IOException e ) {

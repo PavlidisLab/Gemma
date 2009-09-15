@@ -46,7 +46,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     public RawDataFetcher() {
         super();
         this.setExcludePattern( ".tar" );
-        initArchiveHandler( null );
+        initArchiveHandler( "tar" );
     }
 
     @Override
@@ -86,7 +86,6 @@ public class RawDataFetcher extends FtpArchiveFetcher {
             long expectedSize = this.getExpectedSize( seekFile );
             FutureTask<Boolean> future = defineTask( outputFileName, seekFile );
             Collection<LocalFile> result = doTask( future, expectedSize, seekFile, outputFileName );
-            this.ftpClient.disconnect();
             return result;
         } catch ( SocketException e ) {
             throw new RuntimeException( e );
