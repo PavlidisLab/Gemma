@@ -32,7 +32,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -526,7 +525,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression
      * .designElement.CompositeSequence)
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
     @Override
     protected Collection handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults )
@@ -560,7 +558,12 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleLoad( Collection<Long> ids ) throws Exception {
+    protected Collection<CompositeSequence> handleLoad( Collection<Long> ids ) throws Exception {
+
+        if ( ids == null || ids.size() == 0 ) {
+            return new HashSet<CompositeSequence>();
+        }
+
         final String queryString = "select cs from CompositeSequenceImpl cs where cs.id in (:ids)";
         org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
         int batchSize = 2000;

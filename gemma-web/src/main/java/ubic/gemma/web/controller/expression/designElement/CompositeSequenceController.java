@@ -116,6 +116,9 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @return
      */
     public Collection<BlatResultGeneSummary> getBlatMappingSummary( EntityDelegator csd ) {
+        if ( csd == null || csd.getId() == null ) {
+            return new HashSet<BlatResultGeneSummary>();
+        }
         CompositeSequence cs = compositeSequenceService.load( csd.getId() );
         return this.getBlatMappingSummary( cs ).values();
     }
@@ -128,6 +131,11 @@ public class CompositeSequenceController extends BaseMultiActionController {
      */
     @SuppressWarnings("unchecked")
     public Collection<CompositeSequenceMapValueObject> getCsSummaries( Collection<Long> ids ) {
+
+        if ( ids == null || ids.size() == 0 ) {
+            return new HashSet<CompositeSequenceMapValueObject>();
+        }
+
         Collection compositeSequences = compositeSequenceService.loadMultiple( ids );
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
         return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
@@ -156,7 +164,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
         Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
         for ( SearchResult sr : searchResults ) {
             CompositeSequence cs = ( CompositeSequence ) sr.getResultObject();
-            if (arrayDesign == null || cs.getArrayDesign().equals( arrayDesign ) ) {
+            if ( arrayDesign == null || cs.getArrayDesign().equals( arrayDesign ) ) {
                 css.add( cs );
             }
         }

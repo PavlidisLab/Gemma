@@ -273,7 +273,9 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#getRawSummary(ubic.gemma.model.expression.designElement.CompositeSequence,
      *      java.lang.Integer)
+     * @Deprecated is this used anywhere?
      */
+    @Deprecated
     public java.util.Collection getRawSummary(
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence,
             final java.lang.Integer numResults ) {
@@ -302,7 +304,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#loadMultiple(java.util.Collection)
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+    public java.util.Collection<CompositeSequence> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -549,7 +551,8 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection<CompositeSequence> handleLoadMultiple( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #remove(java.util.Collection)}
