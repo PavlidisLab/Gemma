@@ -198,13 +198,15 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 					},
 					renderCoExpressionLinkCount : function(ee){
 						
-						
-						var downloadCoExpressionDataLink =  String.format("<a ext:qtip='Download all coexpression  data in a tab delimited format'  href='#' onClick='fetchCoExpressionData({0})' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>", ee.id);
-						var count;
 						if ( ee.coexpressionLinkCount == null )
 						 	 return "Unavailable";
-						else if (ee.coexpressionLinkCount == 0)
+						
+						if (ee.coexpressionLinkCount == 0)
 							return "None";
+						
+						var downloadCoExpressionDataLink =  String.format("<a ext:qtip='Download all coexpression  data in a tab delimited format'  href='#' onClick='fetchCoExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp; </a>", ee.id);
+						var count;
+				
 							
 						return ee.coexpressionLinkCount  + "&nbsp;" + downloadCoExpressionDataLink;
 						
@@ -214,6 +216,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 												
 						if (!ee.diffExpressedProbes){					
 							return "Unavailable";
+						}
+						
+						if (ee.diffExpressedProbes.size() == 0){
+							return "None";
 						}
 						
 	
@@ -236,7 +242,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 							}
 						}
 								
-						var downloadDiffDataLink =  String.format("<a ext:qtip='Download all differential expression data in a tab delimited format'  href='#' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>", ee.id);
+						var downloadDiffDataLink =  String.format("<a ext:qtip='Download all differential expression data in a tab delimited format'  href='#' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp; </a>", ee.id);
 						
 						return diffExpressionSummary + downloadDiffDataLink; 
 						

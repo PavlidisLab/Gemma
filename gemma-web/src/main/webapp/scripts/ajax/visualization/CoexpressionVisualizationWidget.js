@@ -358,7 +358,7 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 		this.setTitle("Visualization of query gene: <a   target='_blank' ext:qtip=' "+ queryGene.officialName+ " ' href='/Gemma/gene/showGene.html?id=" + queryGene.id + "'> " + queryGene.officialSymbol
 		+ "</a> with coexpressed gene <a  target='_blank' ext:qtip=' "+ coexpressedGene.officialName+ " ' href='/Gemma/gene/showGene.html?id=" + coexpressedGene.id + "'> " + coexpressedGene.officialSymbol + "</a>"	 );
 
-		var downloadDedvLink =  String.format("<a ext:qtip='Download coexpression data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > &nbsp; <img src='/Gemma/images/asc.gif'/> &nbsp; </a>",
+		var downloadDedvLink =  String.format("<a ext:qtip='Download coexpression data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp; </a>",
 				eeIds, queryGene.id, coexpressedGene.id);
 
 		this.coexpThumbnailPanel.setTitle("Thumbnails &nbsp;" + downloadDedvLink);

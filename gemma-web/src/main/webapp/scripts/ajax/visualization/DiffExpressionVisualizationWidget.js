@@ -342,7 +342,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 		var downloadDedvLink = String
 				.format(
-						"<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > <img src='/Gemma/images/asc.gif'/></a>",
+						"<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1},{2}' > <img src='/Gemma/images/download.gif'/></a>",
 						eeIds, gene.id);
 
 		this.thumbnailPanel.setTitle("Thumbnails &nbsp; " + downloadDedvLink);

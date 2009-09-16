@@ -217,7 +217,7 @@ Ext.onReady(function() {
 					
 							var downloadDedvLink = String
 									.format(
-											"<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > <img src='/Gemma/images/asc.gif'/></a>",
+											"<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > <img src='/Gemma/images/download.gif'/></a>",
 											ee.id, geneId);
 					
 							this.thumbnailPanel.setTitle("Thumbnails &nbsp; " + downloadDedvLink);
