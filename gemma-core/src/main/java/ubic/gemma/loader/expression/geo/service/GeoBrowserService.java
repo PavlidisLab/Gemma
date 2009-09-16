@@ -77,7 +77,6 @@ public class GeoBrowserService implements InitializingBean {
 
     private static Log log = LogFactory.getLog( GeoBrowserService.class.getName() );
 
-    @Override
     public void afterPropertiesSet() throws Exception {
         initializeLocalInfo();
     }
