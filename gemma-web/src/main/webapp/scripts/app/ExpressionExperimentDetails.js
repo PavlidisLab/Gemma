@@ -232,7 +232,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 							if ( ee.diffExpressedProbes[i].numberOfDiffExpressedProbes == 0){
 								diffExpressionSummary = diffExpressionSummary + "&nbsp; 0";
 							}else{
-								diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +',\'' + factors +'\')" ext:qtip="Click to visualize differentially expressed probes for: '+ factors + ' (FDR threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
+								diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +',' + factors +') "  ext:qtip="Click to visualize differentially expressed probes for: '+ factors + ' (FDR threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
 							}
 						}
 								
