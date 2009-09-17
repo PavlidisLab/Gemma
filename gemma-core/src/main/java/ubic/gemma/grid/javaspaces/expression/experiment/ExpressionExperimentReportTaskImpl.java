@@ -31,7 +31,6 @@ public class ExpressionExperimentReportTaskImpl extends BaseSpacesTask implement
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @Override
@@ -41,16 +40,25 @@ public class ExpressionExperimentReportTaskImpl extends BaseSpacesTask implement
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
      */
     public TaskResult execute( TaskCommand spacesCommand ) {
 
         SpacesProgressAppender spacesProgressAppender = super.initProgressAppender( this.getClass() );
 
+        ExpressionExperimentReportTaskCommand eertc = ( ExpressionExperimentReportTaskCommand ) spacesCommand;
+
         TaskResult result = new TaskResult();
-        expressionExperimentReportService.generateSummaryObjects();
         result.setTaskID( super.taskId );
+
+        if ( eertc.doAll() ) {
+            expressionExperimentReportService.generateSummaryObjects();
+        } else if ( eertc.getExpressionExperiment() != null ) {
+            expressionExperimentReportService.generateSummaryObject( eertc.getExpressionExperiment().getId() );
+        } else {
+            log.warn( "TaskCommand was not valid, nothing being done" );
+        }
+
         log.info( "Task execution complete ... returning result for task with id " + result.getTaskID() );
 
         super.tidyProgress( spacesProgressAppender );
@@ -60,7 +68,6 @@ public class ExpressionExperimentReportTaskImpl extends BaseSpacesTask implement
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
      */
     @Override
