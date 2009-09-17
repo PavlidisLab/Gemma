@@ -29,6 +29,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -37,6 +39,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
@@ -72,8 +75,12 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     // Service Beans
     protected ExpressionExperimentService eeService;
     protected ArrayDesignService adService;
+    protected ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private TwoChannelMissingValues tcmv;
+
     private boolean splitIncompatiblePlatforms = false;
     private boolean allowSuperSeriesLoad = true;
+    private boolean suppressPostProcessing = false;
 
     /*
      * (non-Javadoc)
@@ -125,6 +132,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                 .create( 'a' );
 
         addOption( arrayDesign );
+
+        addOption( OptionBuilder.withDescription( "Suppress postprocessing steps" ).create( "nopost" ) );
 
     }
 
@@ -248,6 +257,10 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         return null;
     }
 
+    /**
+     * @param aeService
+     * @param accession
+     */
     protected void processAEAccession( ArrayExpressLoadService aeService, String accession ) {
 
         try {
@@ -274,6 +287,10 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, doMatching,
                     this.aggressive, this.splitIncompatiblePlatforms, this.allowSuperSeriesLoad );
 
+            if ( !suppressPostProcessing ) {
+                postProcess( ees );
+            }
+
             for ( Object object : ees ) {
                 assert object instanceof ExpressionExperiment;
                 successObjects.add( ( ( Describable ) object ).getName() + " ("
@@ -284,6 +301,46 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             log.error( "**** Exception while processing " + accession + ": " + e.getMessage() + " ********" );
             log.error( e, e );
         }
+    }
+
+    /**
+     * Do missing value and processed vector creation steps.
+     * 
+     * @param ees
+     */
+    private void postProcess( Collection<ExpressionExperiment> ees ) {
+        log.info( "Postprocessing ..." );
+        for ( ExpressionExperiment ee : ees ) {
+
+            Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+            if ( arrayDesignsUsed.size() > 1 ) {
+                log.warn( "Skipping postprocessing because experiment uses "
+                        + "multiple array types. Please check valid entry and run postprocessing separately." );
+            }
+
+            ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+            processForMissingValues( ee, arrayDesignUsed );
+            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        }
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
+
+        boolean wasProcessed = false;
+
+        TechnologyType tt = design.getTechnologyType();
+        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+            log.info( ee + " uses a two-color array design, processing for missing values ..." );
+            eeService.thawLite( ee );
+            tcmv.computeMissingValues( ee );
+            wasProcessed = true;
+        }
+
+        return wasProcessed;
     }
 
     /**
@@ -345,9 +402,14 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             this.doMatching = false;
         }
 
+        if ( hasOption( "nopost" ) ) {
+            this.suppressPostProcessing = true;
+        }
+
         this.eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         this.adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
-
+        this.processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) getBean( "processedExpressionDataVectorCreateService" );
+        this.tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
     }
 
 }

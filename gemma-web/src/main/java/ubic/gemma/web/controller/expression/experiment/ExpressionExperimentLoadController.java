@@ -30,6 +30,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask;
@@ -39,7 +41,9 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -58,16 +62,35 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @spring.property name="geoDatasetService" ref="geoDatasetService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="arrayExpressLoadService" ref="arrayExpressLoadService"
+ * @spring.property name="eeService" ref="expressionExperimentService"
+ * @spring.property name="twoChannelMissingValueService" ref="twoChannelMissingValues"
+ * @spring.property name="processedExpressionDataVectorCreateService" ref="processedExpressionDataVectorCreateService"
  * @see ubic.gemma.web.controller.expression.experiment.ExpressionDataFileUploadController for how flat-file data is
  *      loaded.
  */
 public class ExpressionExperimentLoadController extends AbstractSpacesController<ModelAndView> {
+
+    public void setEeService( ExpressionExperimentService eeService ) {
+        this.eeService = eeService;
+    }
 
     GeoDatasetService geoDatasetService;
 
     ArrayDesignService arrayDesignService;
 
     ArrayExpressLoadService arrayExpressLoadService;
+    ExpressionExperimentService eeService;
+    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    TwoChannelMissingValues twoChannelMissingValueService;
+
+    public void setProcessedExpressionDataVectorCreateService(
+            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
+        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
+    }
+
+    public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
+        this.twoChannelMissingValueService = twoChannelMissingValueService;
+    }
 
     /**
      * Main entry point for AJAX calls.
@@ -319,7 +342,49 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
             Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accession, false,
                     doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
 
+            postProcess( result );
+
             return processGeoLoadResult( result );
+        }
+
+        /**
+         * Do missing value and processed vector creation steps.
+         * 
+         * @param ees
+         */
+        private void postProcess( Collection<ExpressionExperiment> ees ) {
+            log.info( "Postprocessing ..." );
+            for ( ExpressionExperiment ee : ees ) {
+
+                Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+                if ( arrayDesignsUsed.size() > 1 ) {
+                    log.warn( "Skipping postprocessing because experiment uses "
+                            + "multiple array types. Please check valid entry and run postprocessing separately." );
+                }
+
+                ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+                processForMissingValues( ee, arrayDesignUsed );
+                processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+            }
+        }
+
+        /**
+         * @param ee
+         * @return
+         */
+        private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
+
+            boolean wasProcessed = false;
+
+            TechnologyType tt = design.getTechnologyType();
+            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+                log.info( ee + " uses a two-color array design, processing for missing values ..." );
+                eeService.thawLite( ee );
+                twoChannelMissingValueService.computeMissingValues( ee );
+                wasProcessed = true;
+            }
+
+            return wasProcessed;
         }
 
         /**

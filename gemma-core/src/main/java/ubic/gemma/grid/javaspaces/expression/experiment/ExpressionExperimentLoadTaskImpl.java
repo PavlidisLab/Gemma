@@ -24,13 +24,17 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
 
 /**
@@ -42,6 +46,9 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
 
     private GeoDatasetService geoDatasetService = null;
     ArrayExpressLoadService arrayExpressLoadService;
+    ExpressionExperimentService eeService;
+    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    TwoChannelMissingValues twoChannelMissingValueService;
 
     /*
      * (non-Javadoc)
@@ -94,6 +101,9 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
             Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( accession, loadPlatformOnly,
                     doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
 
+            log.info( "Loading done, starting postprocessing" );
+            postProcess( datasets );
+
             ArrayList<ExpressionExperiment> minimalDatasets = null;
             if ( datasets != null ) {
                 /* Don't send the full experiments to space. Instead, create a minimal result. */
@@ -117,6 +127,57 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
         return result;
     }
 
+    public void setEeService( ExpressionExperimentService eeService ) {
+        this.eeService = eeService;
+    }
+
+    /**
+     * Do missing value and processed vector creation steps.
+     * 
+     * @param ees
+     */
+    private void postProcess( Collection<ExpressionExperiment> ees ) {
+        log.info( "Postprocessing ..." );
+        for ( ExpressionExperiment ee : ees ) {
+
+            Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+            if ( arrayDesignsUsed.size() > 1 ) {
+                log.warn( "Skipping postprocessing because experiment uses "
+                        + "multiple array types. Please check valid entry and run postprocessing separately." );
+            }
+
+            ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+            processForMissingValues( ee, arrayDesignUsed );
+            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        }
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
+
+        boolean wasProcessed = false;
+
+        TechnologyType tt = design.getTechnologyType();
+        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+            log.info( ee + " uses a two-color array design, processing for missing values ..." );
+            eeService.thawLite( ee );
+            twoChannelMissingValueService.computeMissingValues( ee );
+            wasProcessed = true;
+        }
+
+        return wasProcessed;
+    }
+
+    /**
+     * @param arrayExpressLoadService the arrayExpressLoadService to set
+     */
+    public void setArrayExpressLoadService( ArrayExpressLoadService arrayExpressLoadService ) {
+        this.arrayExpressLoadService = arrayExpressLoadService;
+    }
+
     /**
      * @param geoDatasetService
      */
@@ -125,11 +186,13 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
         this.geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
     }
 
-    /**
-     * @param arrayExpressLoadService the arrayExpressLoadService to set
-     */
-    public void setArrayExpressLoadService( ArrayExpressLoadService arrayExpressLoadService ) {
-        this.arrayExpressLoadService = arrayExpressLoadService;
+    public void setProcessedExpressionDataVectorCreateService(
+            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
+        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
+    }
+
+    public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
+        this.twoChannelMissingValueService = twoChannelMissingValueService;
     }
 
 }
