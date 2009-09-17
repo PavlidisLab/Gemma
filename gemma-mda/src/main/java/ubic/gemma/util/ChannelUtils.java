@@ -73,7 +73,8 @@ public class ChannelUtils {
                 || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) || name.toUpperCase().matches( "CY3.*" )
                 || name.toUpperCase().matches( "NORM(.*)CH1" ) || name.equals( "CH1Mean" )
                 || name.toUpperCase().equals( "CH1_SIGNAL" ) || name.equals( "\"log2(532), gN\"" )
-                || name.equals( "gProcessedSignal" ) || name.toUpperCase().equals( "CH1_SIG_MEDIAN" );
+                || name.equals( "gProcessedSignal" ) || name.toUpperCase().equals( "CH1_SIG_MEDIAN" )
+                || name.toUpperCase().equals( "INTENSITY1" );
     }
 
     /**
@@ -93,7 +94,7 @@ public class ChannelUtils {
                 || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "CY5.*" )
                 || name.toUpperCase().matches( "NORM(.*)CH2" ) || name.equals( "CH2Mean" )
                 || name.toUpperCase().equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
-                || name.equals( "rProcessedSignal" );
+                || name.equals( "rProcessedSignal" ) || name.toUpperCase().equals( "INTENSITY2" );
     }
 
 }
