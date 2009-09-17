@@ -213,7 +213,7 @@ public class CharacteristicBrowserController extends BaseFormController {
                     if ( vcFromDatabase.getValueUri() == null || vcFromDatabase.getValueUri() == null
                             || !vcFromDatabase.getValueUri().equals( vcFromClient.getValueUri() ) ) {
                         specialLogger.info( "Characteristic value update: " + vcFromDatabase + " "
-                                + vcFromDatabase.getValueUri() + " -> " + vcFromDatabase.getValueUri()
+                                + vcFromDatabase.getValueUri() + " -> " + vcFromClient.getValueUri()
                                 + " associated with " + parent );
                         vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
                     }
@@ -221,7 +221,7 @@ public class CharacteristicBrowserController extends BaseFormController {
                     if ( vcFromDatabase.getCategory() == null || vcFromDatabase.getCategoryUri() == null
                             || !vcFromDatabase.getCategoryUri().equals( vcFromClient.getCategoryUri() ) ) {
                         specialLogger.info( "Characteristic category update: " + vcFromDatabase + " "
-                                + vcFromDatabase.getCategoryUri() + " -> " + vcFromDatabase.getCategoryUri()
+                                + vcFromDatabase.getCategoryUri() + " -> " + vcFromClient.getCategoryUri()
                                 + " associated with " + parent );
                         vcFromDatabase.setCategoryUri( vcFromClient.getCategoryUri() );
                     }
