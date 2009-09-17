@@ -210,14 +210,15 @@ public class CharacteristicBrowserController extends BaseFormController {
                 vcFromDatabase = ( VocabCharacteristic ) cFromDatabase;
                 // FIXME: vcFromClient can be null here based on logic above.
                 if ( vcFromClient != null ) {
-                    if ( vcFromDatabase.getValueUri() == null
+                    if ( vcFromDatabase.getValueUri() == null || vcFromDatabase.getValueUri() == null
                             || !vcFromDatabase.getValueUri().equals( vcFromClient.getValueUri() ) ) {
-                        specialLogger.info( "Characteristic value update: " + vcFromDatabase + " " + vcFromDatabase.getValueUri()
-                                + " -> " + vcFromDatabase.getValueUri() + " associated with " + parent );
+                        specialLogger.info( "Characteristic value update: " + vcFromDatabase + " "
+                                + vcFromDatabase.getValueUri() + " -> " + vcFromDatabase.getValueUri()
+                                + " associated with " + parent );
                         vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
                     }
 
-                    if ( vcFromDatabase.getCategory() == null
+                    if ( vcFromDatabase.getCategory() == null || vcFromDatabase.getCategoryUri() == null
                             || !vcFromDatabase.getCategoryUri().equals( vcFromClient.getCategoryUri() ) ) {
                         specialLogger.info( "Characteristic category update: " + vcFromDatabase + " "
                                 + vcFromDatabase.getCategoryUri() + " -> " + vcFromDatabase.getCategoryUri()
