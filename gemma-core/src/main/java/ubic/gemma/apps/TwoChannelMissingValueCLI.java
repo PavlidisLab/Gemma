@@ -37,6 +37,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -170,21 +171,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
      * @param ee
      */
     private void processExperiment( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
-
-        boolean wasProcessed = false;
-        for ( ArrayDesign design : arrayDesignsUsed ) {
-            TechnologyType tt = design.getTechnologyType();
-            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-                log.info( ee + " uses a two-color array design, processing..." );
-                if ( arrayDesignsUsed.size() == 1 ) {
-                    processExperiment( ee, null ); // save the slower query.
-                } else {
-                    processExperiment( ee, design );
-                }
-                wasProcessed = true;
-            }
-        }
+        boolean wasProcessed = processForMissingValues( ee );
 
         if ( !wasProcessed ) {
             errorObjects.add( ee.getShortName() + " does not use a two-color array design." );
@@ -195,17 +182,36 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     }
 
+    private boolean processForMissingValues( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+
+        boolean wasProcessed = false;
+        for ( ArrayDesign design : arrayDesignsUsed ) {
+            TechnologyType tt = design.getTechnologyType();
+            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+                log.info( ee + " uses a two-color array design, processing..." );
+                if ( arrayDesignsUsed.size() == 1 ) {
+                    wasProcessed = processExperiment( ee, null ); // save the slower query.
+                } else {
+                    wasProcessed = processExperiment( ee, design );
+                }
+
+            }
+        }
+        return wasProcessed;
+    }
+
     /**
      * @param ee
      * @param ad
      */
-    private void processExperiment( ExpressionExperiment ee, ArrayDesign ad ) {
+    private boolean processExperiment( ExpressionExperiment ee, ArrayDesign ad ) {
 
         Collection<QuantitationType> types = eeService.getQuantitationTypes( ee );
 
         eeService.thawLite( ee );
 
-        if ( !needToRun( ee, MissingValueAnalysisEvent.class ) ) return;
+        if ( !needToRun( ee, MissingValueAnalysisEvent.class ) ) return false;
 
         QuantitationType previousMissingValueQt = null;
         for ( QuantitationType qType : types ) {
@@ -219,7 +225,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         if ( previousMissingValueQt != null && !force ) {
             log.warn( ee + " already has missing value vectors, skipping" );
-            return;
+            return false;
         }
 
         if ( force && previousMissingValueQt != null ) {
@@ -232,10 +238,18 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         log.info( "Computing missing value data.." );
 
-        tcmv.computeMissingValues( ee, s2n, this.extraMissingValueIndicators );
+        Collection<RawExpressionDataVector> missingValueVectors = tcmv.computeMissingValues( ee, s2n,
+                this.extraMissingValueIndicators );
+
+        if ( missingValueVectors.size() == 0 ) {
+            log.warn( "No missing value vectors computed" );
+            return false;
+        }
 
         log.info( "Saving processed data vectors" );
 
         pedvs.computeProcessedExpressionData( ee );
+
+        return true;
     }
 }

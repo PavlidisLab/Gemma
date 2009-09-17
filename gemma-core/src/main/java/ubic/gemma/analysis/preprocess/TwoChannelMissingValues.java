@@ -104,6 +104,14 @@ public class TwoChannelMissingValues {
     /**
      * @param expExp The expression experiment to analyze. The quantitation types to use are selected automatically. If
      *        you want more control use other computeMissingValues methods.
+     */
+    public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment expExp ) {
+        return this.computeMissingValues( expExp, DEFAULT_SIGNAL_TO_NOISE_THRESHOLD, null );
+    }
+
+    /**
+     * @param expExp The expression experiment to analyze. The quantitation types to use are selected automatically. If
+     *        you want more control use other computeMissingValues methods.
      * @param signalToNoiseThreshold A value such as 1.5 or 2.0; only spots for which at least ONE of the channel signal
      *        is more than signalToNoiseThreshold*background (and the preferred data are not missing) will be considered
      *        present.
@@ -206,10 +214,17 @@ public class TwoChannelMissingValues {
             ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold,
             Collection<Double> extraMissingValueIndicators ) {
 
-        validate( preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB, signalToNoiseThreshold );
+        boolean okToProceed = validate( preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB,
+                signalToNoiseThreshold );
+        Collection<RawExpressionDataVector> results = new HashSet<RawExpressionDataVector>();
+
+        if ( !okToProceed ) {
+            log.warn( "Missing value computation cannot proceed" );
+            return results;
+        }
 
         ByteArrayConverter converter = new ByteArrayConverter();
-        Collection<RawExpressionDataVector> results = new HashSet<RawExpressionDataVector>();
+
         QuantitationType present = getMissingDataQuantitationType( signalToNoiseThreshold );
         source.getQuantitationTypes().add( present );
 
@@ -354,17 +369,21 @@ public class TwoChannelMissingValues {
      * @param bkgChannelA
      * @param bkgChannelB
      * @param signalToNoiseThreshold
+     * @return true if okay, false if not.
      */
-    private void validate( ExpressionDataDoubleMatrix preferred, ExpressionDataDoubleMatrix signalChannelA,
+    private boolean validate( ExpressionDataDoubleMatrix preferred, ExpressionDataDoubleMatrix signalChannelA,
             ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
             ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold ) {
         // not exhaustive...
         if ( preferred == null || ( signalChannelA == null && signalChannelB == null ) ) {
-            throw new IllegalArgumentException( "Must have at least preferred and one intensity data matrix" );
+            log
+                    .warn( "Must have at least preferred and one intensity data matrix, missing value computation should not proceed" );
+            return false;
         }
 
         if ( ( bkgChannelA != null && bkgChannelA.rows() == 0 ) || ( bkgChannelB != null && bkgChannelB.rows() == 0 ) ) {
-            throw new IllegalArgumentException( "Background values must not be empty when non-null" );
+            log.warn( "Background values must not be empty when non-null" );
+            return false;
         }
 
         if ( signalChannelA != null && signalChannelB != null ) {
@@ -381,7 +400,8 @@ public class TwoChannelMissingValues {
             int numSamplesB = signalChannelB.columns();
 
             if ( numSamplesA != numSamplesB || numSamplesB != preferred.columns() ) {
-                throw new IllegalArgumentException( "Number of samples doesn't match!" );
+                log.warn( "Number of samples doesn't match!" );
+                return false;
             }
         }
 
@@ -390,8 +410,11 @@ public class TwoChannelMissingValues {
                     + bkgChannelB.rows() );
 
         if ( signalToNoiseThreshold <= 0.0 ) {
-            throw new IllegalArgumentException( "Signal-to-noise threshold must be greater than zero" );
+            log.warn( "Signal-to-noise threshold must be greater than zero" );
+            return false;
         }
+
+        return true;
 
     }
 
