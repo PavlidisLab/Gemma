@@ -20,7 +20,6 @@ package ubic.gemma.grid.javaspaces.expression.experiment;
 
 import net.jini.space.JavaSpace;
 import ubic.gemma.grid.javaspaces.SpacesTask;
-import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
 
 /**
