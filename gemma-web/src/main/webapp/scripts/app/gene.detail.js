@@ -232,7 +232,7 @@ Ext.onReady(function() {
 								params : params
 							});
 					
-					};
+					}.createDelegate(visDifWindow);		//Without the createDelegate IE has fails to re-render the zoom panel
 				
 				var geneId = dwr.util.getValue("gene");
 
@@ -243,7 +243,7 @@ Ext.onReady(function() {
 		}
 	};
 
-	diffExGrid.on("cellclick", diffExGrid.geneDiffRowClickHandler.createDelegate(this), diffExGrid);
+	diffExGrid.on("cellclick", diffExGrid.geneDiffRowClickHandler.createDelegate(visDifWindow), diffExGrid);
 		
 	
 

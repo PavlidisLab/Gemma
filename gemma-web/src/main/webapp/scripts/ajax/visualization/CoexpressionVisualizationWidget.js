@@ -268,6 +268,8 @@ Gemma.CoexpressionVisualizationWindow = Ext.extend(Ext.Window, {
 							if (record == null)
 								return;
 							profiles = record.get("profiles");
+							if (!profiles)
+									return;
 						}
 
 						if (Gemma.HEATMAP_VIEW){

@@ -65,16 +65,6 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 						this.zoomPanel.displayWindow(eevo, profiles);
 
 					}.createDelegate(this)
-				}, 
-				show : {
-					fn : function(dv){
-						//FIXME doesn't select anything.  Thinking it is getting called before there is data to select....
-						//dv.selectRange(0,1);
-						//dv.select(0,false, false);
-						//console.log( "where" + this.dv.getNodes());
-						var nodes = this.dv.getNodes();
-						this.dv.select(nodes[0]);
-					}.createDelegate(this)
 				}
 			},
 
@@ -239,7 +229,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 			refreshWindow : function(profiles) {
 				// Should redraw to fit current window width and hight.
 
-				if (!profiles) {
+				if (profiles == null) {
 					var window = this
 							.findParentByType(Gemma.VisualizationDifferentialWindow);
 					var record = window.dv.getSelectedRecords()[0];
@@ -255,12 +245,10 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 					$('graphzoompanel').innerHTML = '';
 					// Sort data for heatmap view.
 					profiles.sort(Gemma.sortByPValue);
-					Heatmap.draw($('graphzoompanel'), profiles,
-							Gemma.GRAPH_ZOOM_CONFIG);
+					Heatmap.draw($('graphzoompanel'), profiles,Gemma.GRAPH_ZOOM_CONFIG);
 				} else {
 					profiles.sort(Gemma.graphSort);
-					Flotr.draw($('graphzoompanel'), profiles,
-							Gemma.GRAPH_ZOOM_CONFIG);
+					Flotr.draw($('graphzoompanel'), profiles, Gemma.GRAPH_ZOOM_CONFIG);
 
 				}
 
@@ -293,6 +281,8 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Ext.Window, {
 
 				}
 
+				
+				
 			}
 
 		});
