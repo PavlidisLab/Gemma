@@ -128,19 +128,19 @@ public interface CompositeSequenceService {
     /**
      * 
      */
-    public java.util.Collection getRawSummary( java.util.Collection<CompositeSequence> compositeSequences,
+    public java.util.Collection<Object[]> getRawSummary( java.util.Collection<CompositeSequence> compositeSequences,
             java.lang.Integer numResults );
 
     /**
      * 
      */
-    public java.util.Collection getRawSummary( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            java.lang.Integer numResults );
+    public java.util.Collection<Object[]> getRawSummary(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, java.lang.Integer numResults );
 
     /**
-     * 
+     * @deprecated Not used?
      */
-    public java.util.Collection getRawSummary(
+    public java.util.Collection<Object[]> getRawSummary(
             ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence, java.lang.Integer numResults );
 
     /**
