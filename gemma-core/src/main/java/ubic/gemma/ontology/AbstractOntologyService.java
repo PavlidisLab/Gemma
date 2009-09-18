@@ -130,13 +130,21 @@ public abstract class AbstractOntologyService {
      * @return
      */
     public Collection<OntologyIndividual> getTermIndividuals( String uri ) {
+
+        if ( terms == null ) {
+            log.warn( "No term for URI=" + uri + " in " + this.getOntologyName()
+                    + " no terms loaded; make sure ontology is loaded and uri is valid" );
+            return new HashSet<OntologyIndividual>();
+        }
+
         OntologyTerm term = terms.get( uri );
         if ( term == null ) {
             /*
              * Either the onology hasn't been loaded, or the id was not valid.
              */
-            throw new IllegalArgumentException( "No term for URI=" + uri + " in " + this.getOntologyName()
+            log.warn( "No term for URI=" + uri + " in " + this.getOntologyName()
                     + "; make sure ontology is loaded and uri is valid" );
+            return new HashSet<OntologyIndividual>();
         }
         return term.getIndividuals( true );
 
@@ -290,7 +298,7 @@ public abstract class AbstractOntologyService {
 
         synchronized ( running ) {
             if ( running.get() ) return;
-            loadThread.setDaemon( true );   //So vm doesn't wait on these threads to shutdown (if shutting down)
+            loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
             loadThread.start();
         }
 
@@ -338,9 +346,9 @@ public abstract class AbstractOntologyService {
 
     /*
      * the number of milliseconds between keep-alive queries; this should be less than or equal to MySQL wait_timeout
-     * server variable.  Currently 4 hours.  (half of wait_timeout)
+     * server variable. Currently 4 hours. (half of wait_timeout)
      */
-    private static final int KEEPALIVE_PING_DELAY = 14400 * 1000;   
+    private static final int KEEPALIVE_PING_DELAY = 14400 * 1000;
 
     /*
      * a term to search for; matters not at all...
@@ -348,14 +356,14 @@ public abstract class AbstractOntologyService {
     private static final String KEEPALIVE_SEARCH_TERM = "dummy";
 
     private synchronized void startKeepAliveThread() {
-    	    	
+
         if ( keepAliveThreads.containsKey( this.getClass() ) ) {
-        	log.info("Didn't start keep alive thread for: " + this.getClass() + " because already started");
-        	return;
+            log.info( "Didn't start keep alive thread for: " + this.getClass() + " because already started" );
+            return;
         }
-        
+
         Thread keepAliveThread = new KeepAliveThread();
-        keepAliveThread.setDaemon( true );  //needed or else won't shut down cleanly
+        keepAliveThread.setDaemon( true ); // needed or else won't shut down cleanly
         keepAliveThread.start();
         keepAliveThreads.put( this.getClass(), keepAliveThread );
     }
