@@ -1162,14 +1162,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "ee.shortName as shortName, "
                 + "eventCreated.date as createdDate, "
                 + "AD.technologyType, "
-                + " ee.class "
+                + " ee.class, "
+                + " EDES.id as designId "
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distict SU) as bioMaterialCount " +
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail atr inner join atr.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
                 + "inner join SU.sourceTaxon as taxon left join ee.accession acc inner join acc.externalDatabase as ED "
-                + "WHERE eventCreated.action='C'" + " group by ee order by ee.name";
+                + " inner join ee.experimentalDesign as EDES " + " WHERE eventCreated.action='C'"
+                + " group by ee order by ee.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -1196,6 +1198,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setDateCreated( list.getDate( 10 ) );
                 String type = list.get( 11 ) != null ? list.get( 11 ).toString() : null;
                 v.setClazz( list.getString( 12 ) );
+                v.setExperimentalDesign( list.getLong( 13 ) );
                 fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 vo.put( eeId, v );
             }
@@ -1229,11 +1232,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "count(distinct AD) as arrayDesignCount, "
                 + "ee.shortName as shortName, "
                 + "eventCreated.date as createdDate, "
-                + "AD.technologyType, ee.class "
+                + "AD.technologyType, ee.class, "
+                + " EDES.id as designId "
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA left join ee.auditTrail atr left join atr.events as eventCreated "
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
-                + " where eventCreated.action='C' and ee.id in (:ids) " + " group by ee order by ee.name";
+                + " inner join ee.experimentalDesign as EDES " + " where eventCreated.action='C' and ee.id in (:ids) "
+                + " group by ee order by ee.name";
 
         try {
 
@@ -1274,6 +1279,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 }
                 v.setClazz( ( String ) res[12] );
+                v.setExperimentalDesign( ( Long ) res[13] );
                 vo.put( eeId, v );
             }
 

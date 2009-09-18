@@ -106,7 +106,7 @@ public abstract class ExperimentalFactorServiceBase extends ubic.gemma.model.com
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<ExperimentalFactor> loadAll() {
         try {
             return this.handleLoadAll();
         } catch ( Throwable th ) {
@@ -177,7 +177,7 @@ public abstract class ExperimentalFactorServiceBase extends ubic.gemma.model.com
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<ExperimentalFactor> handleLoadAll() throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.expression.experiment.ExperimentalFactor)}

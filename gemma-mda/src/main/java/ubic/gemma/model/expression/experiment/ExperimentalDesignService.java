@@ -66,7 +66,7 @@ public interface ExperimentalDesignService extends ubic.gemma.model.common.Audit
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<ExperimentalDesign> loadAll();
 
     /**
      * 

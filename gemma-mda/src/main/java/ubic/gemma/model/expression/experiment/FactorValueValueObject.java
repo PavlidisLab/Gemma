@@ -36,6 +36,8 @@ public class FactorValueValueObject implements Serializable {
     private String factor;
     private Long id;
 
+    private Long factorId;
+
     private String description;
 
     private String category;
@@ -124,13 +126,23 @@ public class FactorValueValueObject implements Serializable {
 
     /**
      * @param value
-     * @param c - specific characteristic we're focusing on (yes, this is confusing). Note that if the FV has no
-     *        characteristics, you can pass in the ExperimentalFactor's characteristic instead.
+     * @param c - specific characteristic we're focusing on (yes, this is confusing). This is necessary if the
+     *        FactorValue has multiple characteristics. DO NOT pass in the ExperimentalFactor category, this just
+     *        confuses things. If c is null, the plain "value" is used.
      */
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
+        super();
+        init( value, c );
+    }
 
+    /**
+     * @param value
+     * @param c
+     */
+    private void init( FactorValue value, Characteristic c ) {
         this.setId( value.getId() );
         this.setFactorValue( getSummaryString( value ) );
+        this.setFactorId( value.getExperimentalFactor().getId() );
 
         if ( value.getMeasurement() != null ) {
             this.setMeasurement( true );
@@ -144,24 +156,54 @@ public class FactorValueValueObject implements Serializable {
 
         if ( c != null ) {
             this.setCategory( c.getCategory() );
-            this.setValue( c.getValue() );
+            this.setValue( c.getValue() ); // clobbers if we set it already
             if ( c instanceof VocabCharacteristic ) {
                 VocabCharacteristic vc = ( VocabCharacteristic ) c;
                 this.setCategoryUri( vc.getCategoryUri() );
                 this.setValueUri( vc.getValueUri() );
             }
         }
+
+        /**
+         * Make sure we fill in the Category for this.
+         */
+        Characteristic factorCategory = value.getExperimentalFactor().getCategory();
+        if ( this.getCategory() == null && factorCategory != null ) {
+            this.setCategory( factorCategory.getCategory() );
+
+            if ( factorCategory instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = ( VocabCharacteristic ) factorCategory;
+                this.setCategoryUri( vc.getCategoryUri() );
+            }
+
+        }
+    }
+
+    public void setFactorId( Long factorId ) {
+        this.factorId = factorId;
+    }
+
+    public Long getFactorId() {
+        return factorId;
     }
 
     /**
      * @param fv
      */
     public FactorValueValueObject( FactorValue fv ) {
-        this( fv, fv.getExperimentalFactor().getCategory() );
+        super();
+        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() == 1 ) {
+            init( fv, fv.getCharacteristics().iterator().next() );
+        } else {
+            init( fv, null );
+        }
     }
 
     public FactorValueValueObject( ExperimentalFactor ef ) {
 
+        /*
+         * FIXME this constructor is messed up. We should not be using the Factor, this is for FactorValues!
+         */
         this.description = ef.getDescription();
         this.factor = ef.getName();
         this.id = ef.getId();

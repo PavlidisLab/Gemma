@@ -383,7 +383,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
                     category = Characteristic.Factory.newInstance();
                     category.setValue( value.getExperimentalFactor().getName() );
                 }
-                result.add( new FactorValueValueObject( value, category ) );
+                result.add( new FactorValueValueObject( value ) );
             }
         }
         return result;
@@ -638,15 +638,35 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             // VC can be null if this was imported from GEO etc.
             if ( vc == null ) {
                 vc = VocabCharacteristic.Factory.newInstance();
-                ef.setCategory( vc );
             }
+
+            String originalCategoryUri = vc.getCategoryUri();
 
             vc.setCategory( efvo.getCategory() );
             vc.setCategoryUri( efvo.getCategoryUri() );
             vc.setValue( efvo.getCategory() );
             vc.setValueUri( efvo.getCategoryUri() );
 
+            ef.setCategory( vc );
+
             experimentalFactorService.update( ef );
+
+            /*
+             * TODO: we might want to update the Category on the matching FactorValues (that use the original category).
+             * The following code should do this, but is commented out until we evaluate the implications.
+             */
+            // if ( !originalCategoryUri.equals( vc.getCategoryUri() ) ) {
+            // for ( FactorValue fv : ef.getFactorValues() ) {
+            // for ( Characteristic c : fv.getCharacteristics() ) {
+            // if ( c instanceof VocabCharacteristic
+            // && ( ( VocabCharacteristic ) c ).getCategoryUri().equals( originalCategoryUri ) ) {
+            // c.setCategory( vc.getCategory() );
+            // ( ( VocabCharacteristic ) c ).setCategoryUri( vc.getCategoryUri() );
+            // characteristicService.update( c );
+            // }
+            // }
+            // }
+            // }
         }
     }
 

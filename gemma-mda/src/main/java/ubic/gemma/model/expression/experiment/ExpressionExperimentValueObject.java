@@ -125,6 +125,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     private AuditEventValueObject validatedFlag;
     
     private Collection<DifferentialExpressionSummaryValueObject> diffExpressedProbes;
+    
+    private Long experimentalDesign;
 
     public ExpressionExperimentValueObject() {
     }
@@ -152,7 +154,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
                         .getDateProcessedDataVectorComputation(), otherBean.getDateMissingValueAnalysis(), otherBean
                         .getProcessedExpressionVectorCount(), otherBean.getDateLastUpdated(),
                 otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue(),
-                otherBean.getHasEitherIntensity(), otherBean.getDiffExpressedProbes() );
+                otherBean.getHasEitherIntensity(), otherBean.getDiffExpressedProbes(), otherBean.getExperimentalDesign() );
     }
 
     public ExpressionExperimentValueObject( java.lang.Long id, java.lang.String name,
@@ -171,7 +173,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             java.util.Date dateLinkAnalysis, java.lang.Long rawCoexpressionLinkCount,
             java.util.Date dateProcessedDataVectorComputation, java.util.Date dateMissingValueAnalysis,
             java.lang.Long processedExpressionVectorCount, java.util.Date dateLastUpdated, java.util.Date dateCached,
-            java.lang.Boolean hasProbeSpecificForQueryGene, java.lang.Double minPvalue, Boolean hasEitherIntensity, Collection<DifferentialExpressionSummaryValueObject> probeIds ) {
+            java.lang.Boolean hasProbeSpecificForQueryGene, java.lang.Double minPvalue, Boolean hasEitherIntensity, Collection<DifferentialExpressionSummaryValueObject> probeIds , Long experimentalDesign) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -217,6 +219,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.minPvalue = minPvalue;
         this.hasEitherIntensity = hasEitherIntensity;
         this.diffExpressedProbes = probeIds;
+        this.experimentalDesign = experimentalDesign;
     }
 
     /**
@@ -396,6 +399,14 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      */
     public java.lang.Long getDifferentialExpressionAnalysisId() {
         return this.differentialExpressionAnalysisId;
+    }
+
+    public Collection<DifferentialExpressionSummaryValueObject> getDiffExpressedProbes() {
+        return diffExpressedProbes;
+    }
+
+    public Long getExperimentalDesign() {
+        return experimentalDesign;
     }
 
     /**
@@ -673,6 +684,14 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.differentialExpressionAnalysisId = differentialExpressionAnalysisId;
     }
 
+    public void setDiffExpressedProbes( Collection<DifferentialExpressionSummaryValueObject> diffExpressedProbes ) {
+        this.diffExpressedProbes = diffExpressedProbes;
+    }
+
+    public void setExperimentalDesign( Long experimentalDesign ) {
+        this.experimentalDesign = experimentalDesign;
+    }
+
     public void setExternalDatabase( java.lang.String externalDatabase ) {
         this.externalDatabase = externalDatabase;
     }
@@ -793,14 +812,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     public void setValidatedFlag( AuditEventValueObject validatedFlag ) {
         this.validatedFlag = validatedFlag;
-    }
-
-    public Collection<DifferentialExpressionSummaryValueObject> getDiffExpressedProbes() {
-        return diffExpressedProbes;
-    }
-
-    public void setDiffExpressedProbes( Collection<DifferentialExpressionSummaryValueObject> diffExpressedProbes ) {
-        this.diffExpressedProbes = diffExpressedProbes;
     }
 
 }

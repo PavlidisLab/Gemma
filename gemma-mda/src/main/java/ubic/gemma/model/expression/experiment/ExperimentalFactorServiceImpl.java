@@ -78,7 +78,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#getAllExperimentalFactors()
      */
     @Override
-    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+    protected java.util.Collection<ExperimentalFactor> handleLoadAll() throws java.lang.Exception {
         return this.getExperimentalFactorDao().loadAll();
     }
 
