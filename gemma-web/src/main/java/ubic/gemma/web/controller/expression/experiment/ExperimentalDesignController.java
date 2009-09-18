@@ -653,7 +653,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 
             /*
              * TODO: we might want to update the Category on the matching FactorValues (that use the original category).
-             * The following code should do this, but is commented out until we evaluate the implications.
+             * The following code should do this, but is commented out until we evaluate the implications. See bug 1676.
              */
             // if ( !originalCategoryUri.equals( vc.getCategoryUri() ) ) {
             // for ( FactorValue fv : ef.getFactorValues() ) {
