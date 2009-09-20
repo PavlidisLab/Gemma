@@ -103,7 +103,6 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
      * 
      * @param expExp
      */
-    @SuppressWarnings("unchecked")
     public void mergeVectors( ExpressionExperiment expExp, Long dimId ) {
 
         expressionExperimentService.thawLite( expExp );
@@ -236,7 +235,13 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
         List<BioAssay> bioAssays = new ArrayList<BioAssay>();
         for ( BioAssayDimension bioAd : oldDims ) {
-            bioAssays.addAll( bioAd.getBioAssays() );
+            for ( BioAssay bioAssay : bioAd.getBioAssays() ) {
+                if ( bioAssays.contains( bioAssay ) ) {
+                    throw new IllegalStateException( "Duplicate bioassay for biodimension: " + bioAssay );
+                }
+                bioAssays.add( bioAssay );
+
+            }
         }
 
         // first see if we already have an equivalent one.
